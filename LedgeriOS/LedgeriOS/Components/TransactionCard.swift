@@ -29,7 +29,7 @@ struct TransactionCard: View {
         let isNonItemized = (transaction.itemIds ?? []).isEmpty
         let invoice: InvoiceStatus? = {
             guard isNonItemized, horizontalSizeClass == .regular, let id = transaction.id else { return nil }
-            return firstNonVoidedInvoiceStatus(forTransactionId: id, in: accountContext.allInvoices)
+            return firstNonCanceledInvoiceStatus(forTransactionId: id, in: accountContext.allInvoices)
         }()
         return TransactionCardCalculations.badgeItems(
             transactionType: transaction.transactionType,

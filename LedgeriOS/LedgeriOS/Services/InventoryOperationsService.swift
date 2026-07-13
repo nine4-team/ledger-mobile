@@ -245,7 +245,7 @@ struct InventoryOperationsService {
     /// Items have budgetCategoryId and projectId wiped (inventory invariant).
     ///
     /// `returnedPaidItemCredits` — runtime invoice contexts for items already
-    /// charged on a paid invoice. These create draft invoice credit lines in the
+    /// charged on a paid invoice. These create created-invoice credit lines in the
     /// same batch as the return. Pass an empty array when no paid credits apply.
     func returnToInventory(
         items: [Item],
@@ -1045,7 +1045,7 @@ struct InventoryOperationsService {
         return f.string(from: Date())
     }
 
-    /// Append ordinary draft invoice credit lines for returning items that were
+    /// Append ordinary created-invoice credit lines for returning items that were
     /// previously charged on a paid invoice. This does not create transactions.
     static func appendReturnedPaidItemCredits(
         returnedItems: [Item],
@@ -1056,7 +1056,7 @@ struct InventoryOperationsService {
     ) {
         let returnedItemIds = Set(returnedItems.compactMap(\.id))
         let credits = returnedPaidItemCredits.filter { returnedItemIds.contains($0.itemId) }
-        InvoiceService.appendReturnedPaidItemCreditDrafts(
+        InvoiceService.appendReturnedPaidItemCreditInvoices(
             accountId: accountId,
             credits: credits,
             batch: batch,

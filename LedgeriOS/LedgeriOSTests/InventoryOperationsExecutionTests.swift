@@ -983,8 +983,8 @@ struct InventoryLabelPassthroughTests {
         #expect(ret?["source"] as? String == "1584 Design Inventory")
     }
 
-    @Test("returnToInventory writes paid item credit as draft invoice, not transaction")
-    func returnToInventoryWritesPaidCreditDraftInvoice() async throws {
+    @Test("returnToInventory writes paid item credit as created invoice, not transaction")
+    func returnToInventoryWritesPaidCreditCreatedInvoice() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
         let items = [
@@ -1022,7 +1022,7 @@ struct InventoryLabelPassthroughTests {
         let invoiceSets = batch.sets.filter { $0.path.contains("/invoices/") }
         #expect(invoiceSets.count == 1)
         let invoice = invoiceSets[0].fields
-        #expect(invoice["status"] as? String == "draft")
+        #expect(invoice["status"] as? String == "created")
         #expect(invoice["projectId"] as? String == "proj1")
         #expect(invoice["itemIds"] as? [String] == [])
         #expect(invoice["transactionIds"] as? [String] == [])

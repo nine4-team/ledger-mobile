@@ -219,7 +219,7 @@ enum ReportAggregationCalculations {
         if let lines = invoice.lines, !lines.isEmpty {
             var chargeLines: [InvoiceLineEntry] = []
             var creditLines: [InvoiceLineEntry] = []
-            let useFrozenLines = (invoice.status ?? .draft) != .draft
+            let useFrozenLines = (invoice.status ?? .created) != .created
             for line in lines {
                 let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap, useFrozenLine: useFrozenLines)
                 switch line.sign {
@@ -232,7 +232,7 @@ enum ReportAggregationCalculations {
             return InvoiceReportData(chargeLines: chargeLines, creditLines: creditLines)
         }
 
-        // No stored lines — this is either a v2 draft (live preview) or a legacy
+        // No stored lines — this is either a created invoice (live preview) or a legacy
         // v1 invoice. Build entries directly from the membership index, using the
         // current item / transaction state. Items are always charges; transaction
         // sign is derived from shape via InvoiceLineCalculations.

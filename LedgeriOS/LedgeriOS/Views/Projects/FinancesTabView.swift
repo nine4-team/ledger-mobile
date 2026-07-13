@@ -99,7 +99,7 @@ private struct BillingSubTab: View {
 // MARK: - Billing Pipeline Section
 
 /// Three-segment view of the project's billable pipeline:
-/// - Available: items and non-itemized transactions not on any non-voided invoice.
+/// - Available: items and non-itemized transactions not on any non-canceled invoice.
 /// - Invoiced: everything on sent-but-unpaid invoices.
 /// - Paid: everything on paid invoices.
 /// Membership is derived via `InvoiceLineCalculations.billableMembership`.
@@ -292,13 +292,13 @@ private struct InvoiceRow: View {
     let items: [Item]
     let transactions: [Transaction]
 
-    private var status: InvoiceStatus { invoice.status ?? .draft }
+    private var status: InvoiceStatus { invoice.status ?? .created }
 
     /// Drafts are live previews — compute the displayed total from the current
-    /// item / transaction state. Sent / paid / voided invoices use the frozen
+    /// item / transaction state. Sent / paid / canceled invoices use the frozen
     /// `totalCents` snapshot written at `markSent`.
     private var displayedTotalCents: Int {
-        if status == .draft {
+        if status == .created {
             let itemIdSet = Set(invoice.itemIds ?? [])
             let txIdSet = Set(invoice.transactionIds ?? [])
             var lines: [InvoiceLine] = []
@@ -324,10 +324,10 @@ private struct InvoiceRow: View {
 
     private var statusColor: Color {
         switch status {
-        case .draft: return BrandColors.textSecondary
+        case .created: return BrandColors.textSecondary
         case .sent: return StatusColors.inProgressText
         case .paid: return StatusColors.metText
-        case .voided: return BrandColors.destructive
+        case .canceled: return BrandColors.destructive
         }
     }
 

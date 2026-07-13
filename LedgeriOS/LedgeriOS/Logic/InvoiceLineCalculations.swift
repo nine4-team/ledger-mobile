@@ -55,7 +55,7 @@ enum InvoiceLineCalculations {
 
         let existingCreditLineIds = Set(
             invoices
-                .filter { $0.status != .voided }
+                .filter { $0.status != .canceled }
                 .flatMap { $0.lines ?? [] }
                 .map(\.id)
                 .filter { $0.hasPrefix("returnCredit:") }
@@ -123,7 +123,7 @@ enum InvoiceLineCalculations {
 
     /// Items in a project represent goods purchased for the client, so every
     /// project item is a charge. Returned items that were on a paid invoice
-    /// generate ordinary draft invoice credit lines; the item itself isn't
+    /// generate ordinary created-invoice credit lines; the item itself isn't
     /// signed as a credit.
     static func sign(for item: Item) -> InvoiceLineSign {
         .charge
@@ -275,8 +275,8 @@ enum InvoiceLineCalculations {
     // MARK: - Billable membership
 
     /// The three disjoint buckets for a project's billable activity, plus the
-    /// "on a draft" set which is excluded from all three tabs but still excluded
-    /// from the Create Invoice picker.
+    /// "on a created invoice" set which is excluded from all three tabs but still
+    /// excluded from the Create Invoice picker.
     struct BillableMembership {
         /// Billable and not on any invoice for this project.
         var toInvoiceItemIds: Set<String>
@@ -287,18 +287,18 @@ enum InvoiceLineCalculations {
         /// On a paid invoice for this project.
         var paidItemIds: Set<String>
         var paidTransactionIds: Set<String>
-        /// On a draft invoice for this project. Not shown in any of the three
-        /// tabs, but excluded from the picker when creating a *different* draft.
-        var draftItemIds: Set<String>
-        var draftTransactionIds: Set<String>
+        /// On a created invoice for this project. Not shown in any of the three
+        /// tabs, but excluded from the picker when creating a *different* created invoice.
+        var createdItemIds: Set<String>
+        var createdTransactionIds: Set<String>
 
-        /// Union of draft + sent + paid — every source already claimed by some
-        /// non-voided invoice. Used to filter the To Invoice pool.
+        /// Union of created + sent + paid — every source already claimed by some
+        /// non-canceled invoice. Used to filter the To Invoice pool.
         var onAnyInvoiceItemIds: Set<String> {
-            draftItemIds.union(invoicedItemIds).union(paidItemIds)
+            createdItemIds.union(invoicedItemIds).union(paidItemIds)
         }
         var onAnyInvoiceTransactionIds: Set<String> {
-            draftTransactionIds.union(invoicedTransactionIds).union(paidTransactionIds)
+            createdTransactionIds.union(invoicedTransactionIds).union(paidTransactionIds)
         }
     }
 
@@ -309,7 +309,7 @@ enum InvoiceLineCalculations {
     ///   - items: candidate items (typically `projectContext.items`).
     ///   - transactions: candidate transactions (typically `projectContext.transactions`).
     ///   - invoices: all invoices for the account (typically `accountContext.allInvoices`).
-    ///   - excludingInvoiceId: when a draft is being edited in the picker,
+    ///   - excludingInvoiceId: when a created invoice is being edited in the picker,
     ///     exclude its own membership so the editing invoice's current selection
     ///     is still pickable. Pass nil when not editing.
     static func billableMembership(
@@ -321,8 +321,8 @@ enum InvoiceLineCalculations {
         lineageEdges: [LineageEdge] = [],
         excludingInvoiceId: String? = nil
     ) -> BillableMembership {
-        var draftItems: Set<String> = []
-        var draftTx: Set<String> = []
+        var createdItems: Set<String> = []
+        var createdTx: Set<String> = []
         var invoicedItems: Set<String> = []
         var invoicedTx: Set<String> = []
         var paidItems: Set<String> = []
@@ -330,29 +330,29 @@ enum InvoiceLineCalculations {
 
         for invoice in invoices {
             guard invoice.projectId == projectId else { continue }
-            guard invoice.status != .voided else { continue }
+            guard invoice.status != .canceled else { continue }
             if let excluded = excludingInvoiceId, invoice.id == excluded { continue }
 
             let itemIds = invoice.itemIds ?? []
             let txIds = invoice.transactionIds ?? []
 
-            switch invoice.status ?? .draft {
-            case .draft:
-                draftItems.formUnion(itemIds)
-                draftTx.formUnion(txIds)
+            switch invoice.status ?? .created {
+            case .created:
+                createdItems.formUnion(itemIds)
+                createdTx.formUnion(txIds)
             case .sent:
                 invoicedItems.formUnion(itemIds)
                 invoicedTx.formUnion(txIds)
             case .paid:
                 paidItems.formUnion(itemIds)
                 paidTx.formUnion(txIds)
-            case .voided:
+            case .canceled:
                 break
             }
         }
 
-        let onAnyItems = draftItems.union(invoicedItems).union(paidItems)
-        let onAnyTx = draftTx.union(invoicedTx).union(paidTx)
+        let onAnyItems = createdItems.union(invoicedItems).union(paidItems)
+        let onAnyTx = createdTx.union(invoicedTx).union(paidTx)
 
         var toInvoiceItems: Set<String> = []
         for item in items {
@@ -387,8 +387,8 @@ enum InvoiceLineCalculations {
             invoicedTransactionIds: invoicedTx,
             paidItemIds: paidItems,
             paidTransactionIds: paidTx,
-            draftItemIds: draftItems,
-            draftTransactionIds: draftTx
+            createdItemIds: createdItems,
+            createdTransactionIds: createdTx
         )
     }
 
@@ -469,16 +469,16 @@ enum InvoiceLineCalculations {
 
 // MARK: - Invoice membership helpers
 
-/// Resolve the status of the first non-voided invoice that references the
+/// Resolve the status of the first non-canceled invoice that references the
 /// given item id. Returns nil when the item isn't on any invoice.
-/// Paid wins over sent/draft to drive the card badge priority.
-func firstNonVoidedInvoiceStatus(forItemId id: String, in invoices: [Invoice]) -> InvoiceStatus? {
+/// Paid wins over sent/created to drive the card badge priority.
+func firstNonCanceledInvoiceStatus(forItemId id: String, in invoices: [Invoice]) -> InvoiceStatus? {
     return resolveInvoiceStatus(matching: id, in: invoices) { $0.itemIds ?? [] }
 }
 
-/// Resolve the status of the first non-voided invoice that references the
+/// Resolve the status of the first non-canceled invoice that references the
 /// given transaction id. Returns nil when the transaction isn't on any invoice.
-func firstNonVoidedInvoiceStatus(forTransactionId id: String, in invoices: [Invoice]) -> InvoiceStatus? {
+func firstNonCanceledInvoiceStatus(forTransactionId id: String, in invoices: [Invoice]) -> InvoiceStatus? {
     return resolveInvoiceStatus(matching: id, in: invoices) { $0.transactionIds ?? [] }
 }
 
@@ -489,12 +489,12 @@ private func resolveInvoiceStatus(
 ) -> InvoiceStatus? {
     var best: InvoiceStatus? = nil
     for invoice in invoices {
-        guard invoice.status != .voided else { continue }
+        guard invoice.status != .canceled else { continue }
         guard extract(invoice).contains(id) else { continue }
-        let status = invoice.status ?? .draft
+        let status = invoice.status ?? .created
         if status == .paid { return .paid }
         if best == nil { best = status }
-        else if best == .draft && status == .sent { best = .sent }
+        else if best == .created && status == .sent { best = .sent }
     }
     return best
 }

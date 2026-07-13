@@ -18,7 +18,7 @@ enum ItemCardCalculations {
         if let status = statusLabel, !status.isEmpty {
             badges.append(CardBadge(text: status, color: BrandColors.primary))
         }
-        if let invoice = invoiceStatus, invoice != .voided {
+        if let invoice = invoiceStatus, invoice != .canceled {
             let text = invoice == .paid ? "Paid" : "Invoiced"
             let color: Color = invoice == .paid ? StatusColors.metText : StatusColors.inProgressText
             badges.append(CardBadge(text: text, color: color))

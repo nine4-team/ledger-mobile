@@ -65,7 +65,7 @@ enum TransactionCardCalculations {
         // Invoice-derived badge — only for non-itemized transactions (itemized
         // derive from children). The caller is responsible for passing nil
         // when the transaction is itemized.
-        if let invoice = invoiceStatus, invoice != .voided {
+        if let invoice = invoiceStatus, invoice != .canceled {
             let text = invoice == .paid ? "Paid" : "Invoiced"
             let color: Color = invoice == .paid ? StatusColors.metText : StatusColors.inProgressText
             badges.append(CardBadge(text: text, color: color))

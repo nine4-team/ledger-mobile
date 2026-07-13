@@ -132,6 +132,14 @@ extension KeyedDecodingContainer {
 }
 
 enum InvoiceStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
-    case draft, sent, paid, voided
+    case created, sent, paid, canceled
+
+    static let legacyAliases = [
+        "draft": "created",
+        "voided": "canceled",
+        "void": "canceled",
+        "cancelled": "canceled",
+    ]
+
     var displayLabel: String { rawValue.capitalized }
 }

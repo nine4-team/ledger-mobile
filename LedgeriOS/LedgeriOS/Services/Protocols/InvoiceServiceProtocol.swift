@@ -3,9 +3,9 @@ import FirebaseFirestore
 protocol InvoiceServiceProtocol: Sendable {
     func getInvoice(accountId: String, invoiceId: String) async throws -> Invoice?
 
-    /// Create a draft invoice that references the given item and transaction ids.
-    /// Drafts are live previews — amounts are recomputed from the current item /
-    /// transaction state every time the draft is rendered. The draft document
+    /// Create an invoice in the created state that references the given item and transaction ids.
+    /// Created invoices are live previews — amounts are recomputed from the current item /
+    /// transaction state every time the invoice is rendered. The document
     /// therefore stores only the membership index (`itemIds`, `transactionIds`);
     /// `lines` and `totalCents` are materialized later, at `markSent`.
     ///
@@ -22,9 +22,9 @@ protocol InvoiceServiceProtocol: Sendable {
         userId: String?
     ) async throws -> String
 
-    /// Replace the membership on a draft invoice. Does not cascade and does not
-    /// write `lines` / `totalCents` — drafts are live previews (see `createInvoice`).
-    /// Any stale `lines` / `totalCents` left over from a pre-v2-live-draft write
+    /// Replace the membership on a created invoice. Does not cascade and does not
+    /// write `lines` / `totalCents` — created invoices are live previews (see `createInvoice`).
+    /// Any stale `lines` / `totalCents` left over from a pre-v2-live-preview write
     /// are cleared so readers fall through to the live-derivation path.
     func updateSelections(
         invoice: Invoice,
@@ -37,7 +37,7 @@ protocol InvoiceServiceProtocol: Sendable {
         userId: String?
     ) async throws
 
-    /// Transition a draft to sent. This is the canonical "snapshot at send time" —
+    /// Transition a created invoice to sent. This is the canonical "snapshot at send time" —
     /// `lines` and `totalCents` are materialized from the caller-supplied signed
     /// lines and written atomically with the status transition and `dateSent`.
     /// `itemIds` / `transactionIds` are rederived from `lines` so the membership
@@ -77,10 +77,10 @@ protocol InvoiceServiceProtocol: Sendable {
         userId: String?
     ) async throws
 
-    /// Status-only transition. Updates `invoice.status = .voided` and stamps `dateVoided`.
-    /// Does not cascade — voided invoices' members return to the unbilled pool
+    /// Status-only transition. Updates `invoice.status = .canceled` and stamps `dateCanceled`.
+    /// Does not cascade — canceled invoices' members return to the unbilled pool
     /// automatically via the derived billable-membership query.
-    func voidInvoice(invoice: Invoice, accountId: String, userId: String?) async throws
+    func cancelInvoice(invoice: Invoice, accountId: String, userId: String?) async throws
 
     func subscribeToInvoices(
         accountId: String,

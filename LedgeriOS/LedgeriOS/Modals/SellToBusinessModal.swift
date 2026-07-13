@@ -171,7 +171,7 @@ struct MoveToInventoryModal: View {
                 }
                 let credits = returnedPaidItemCredits
                 if !credits.isEmpty {
-                    Text("\(credits.count) paid item credit\(credits.count == 1 ? "" : "s") will be added as a draft credit invoice.")
+                    Text("\(credits.count) paid item credit\(credits.count == 1 ? "" : "s") will be added as a credit invoice.")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Multi-step modal for creating an invoice from a project's billable pool
-/// (items + non-itemized transactions not on any other non-voided invoice).
+/// (items + non-itemized transactions not on any other non-canceled invoice).
 /// Step 1: pick billables. Step 2: confirm + optional invoice number / notes.
 /// On Create, `InvoiceService.createInvoice` writes signed lines onto the
 /// invoice document; items and transactions are not mutated.
@@ -44,7 +44,7 @@ struct CreateInvoiceModal: View {
     // MARK: - Source data
 
     /// Items and transactions eligible for this invoice: anything in the
-    /// project's `toInvoice` pool (not on any other non-voided invoice) plus,
+    /// project's `toInvoice` pool (not on any other non-canceled invoice) plus,
     /// in edit mode, the items/transactions already on this invoice.
     private var membership: InvoiceLineCalculations.BillableMembership {
         InvoiceLineCalculations.billableMembership(

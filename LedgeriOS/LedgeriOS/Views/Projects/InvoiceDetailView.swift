@@ -3,7 +3,7 @@ import SwiftUI
 /// Invoice detail screen — shows the polished invoice (the same rendering the
 /// client receives as a PDF) inline, with operator controls in the nav chrome.
 /// Edit and Download live in a row above the preview; lifecycle actions
-/// (Mark Sent / Mark Paid / Void) live in the toolbar kebab menu.
+/// (Mark Sent / Mark Collected / Cancel) live in the toolbar kebab menu.
 struct InvoiceDetailView: View {
     let invoice: Invoice
 
@@ -14,7 +14,7 @@ struct InvoiceDetailView: View {
 
     @State private var showingMenu = false
     @State private var showingMarkPaidConfirm = false
-    @State private var showingVoidConfirm = false
+    @State private var showingCancelConfirm = false
     @State private var showingEdit = false
     @State private var isWorking = false
     @State private var errorMessage: String?
@@ -25,7 +25,7 @@ struct InvoiceDetailView: View {
     }
 
     private var status: InvoiceStatus {
-        liveInvoice.status ?? .draft
+        liveInvoice.status ?? .created
     }
 
     private var reportData: InvoiceReportData {
@@ -94,14 +94,14 @@ struct InvoiceDetailView: View {
             Text("Creates payment-to-business transaction records for the collected payment and links them to this invoice.")
         }
         .confirmationDialog(
-            "Void this invoice?",
-            isPresented: $showingVoidConfirm,
+            "Cancel this invoice?",
+            isPresented: $showingCancelConfirm,
             titleVisibility: .visible
         ) {
-            Button("Void Invoice", role: .destructive) { performVoid() }
+            Button("Cancel Invoice", role: .destructive) { performCancel() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Voided invoices are removed from totals. The items and project costs on this invoice become billable again.")
+            Text("Canceled invoices are removed from totals. The items and project costs on this invoice become billable again.")
         }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },
@@ -120,7 +120,7 @@ struct InvoiceDetailView: View {
         HStack(spacing: Spacing.md) {
             statusBadge
             Spacer()
-            if status == .draft {
+            if status == .created {
                 Button {
                     showingEdit = true
                 } label: {
@@ -140,10 +140,10 @@ struct InvoiceDetailView: View {
     private var statusBadge: some View {
         let color: Color = {
             switch status {
-            case .draft: return BrandColors.textSecondary
+            case .created: return BrandColors.textSecondary
             case .sent: return StatusColors.inProgressText
             case .paid: return StatusColors.metText
-            case .voided: return BrandColors.destructive
+            case .canceled: return BrandColors.destructive
             }
         }()
         return Text(status.displayLabel)
@@ -159,14 +159,14 @@ struct InvoiceDetailView: View {
 
     private var menuItems: [ActionMenuItem] {
         var items: [ActionMenuItem] = []
-        if status == .draft {
+        if status == .created {
             items.append(ActionMenuItem(id: "sent", label: "Mark Sent", icon: "paperplane", onPress: { performMarkSent() }))
         }
-        if status == .draft || status == .sent {
+        if status == .created || status == .sent {
             items.append(ActionMenuItem(id: "collected", label: "Mark Collected", icon: "checkmark.circle", onPress: { showingMarkPaidConfirm = true }))
         }
-        if status != .voided && status != .paid {
-            items.append(ActionMenuItem(id: "void", label: "Void Invoice", icon: "trash", isDestructive: true, onPress: { showingVoidConfirm = true }))
+        if status != .canceled && status != .paid {
+            items.append(ActionMenuItem(id: "cancel", label: "Cancel Invoice", icon: "trash", isDestructive: true, onPress: { showingCancelConfirm = true }))
         }
         return items
     }
@@ -196,7 +196,7 @@ struct InvoiceDetailView: View {
         let userId = authManager.currentUser?.uid
 
         // Materialize the snapshot: build signed lines from the current item /
-        // transaction state. Drafts intentionally store no lines; sending is the
+        // transaction state. Created invoices intentionally store no lines; sending is the
         // moment they freeze.
         let itemIdSet = Set(liveInvoice.itemIds ?? [])
         let txIdSet = Set(liveInvoice.transactionIds ?? [])
@@ -261,11 +261,11 @@ struct InvoiceDetailView: View {
         }
     }
 
-    private func performVoid() {
+    private func performCancel() {
         let acctId = accountContext.currentAccountId ?? ""
         let inv = liveInvoice
         let userId = authManager.currentUser?.uid
-        runService { try await InvoiceService().voidInvoice(invoice: inv, accountId: acctId, userId: userId) }
+        runService { try await InvoiceService().cancelInvoice(invoice: inv, accountId: acctId, userId: userId) }
     }
 
     private func runService(_ block: @escaping @Sendable () async throws -> Void) {

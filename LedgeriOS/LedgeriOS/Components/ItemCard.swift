@@ -33,7 +33,7 @@ struct ItemCard: View {
 
     private var resolvedInvoiceStatus: InvoiceStatus? {
         guard let id = item.id else { return nil }
-        return firstNonVoidedInvoiceStatus(forItemId: id, in: accountContext.allInvoices)
+        return firstNonCanceledInvoiceStatus(forItemId: id, in: accountContext.allInvoices)
     }
 
     private var badges: [CardBadge] {

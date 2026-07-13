@@ -67,7 +67,7 @@ enum BillingSummaryCalculations {
 
         for invoice in invoices {
             if let pid = projectId, invoice.projectId != pid { continue }
-            guard invoice.status != .voided else { continue }
+            guard invoice.status != .canceled else { continue }
 
             let demand = demandCents(
                 for: invoice,
@@ -75,8 +75,8 @@ enum BillingSummaryCalculations {
                 transactionAmounts: nonItemizedTxAmounts
             )
 
-            switch invoice.status ?? .draft {
-            case .draft, .voided:
+            switch invoice.status ?? .created {
+            case .created, .canceled:
                 break
             case .sent:
                 invoiced += demand

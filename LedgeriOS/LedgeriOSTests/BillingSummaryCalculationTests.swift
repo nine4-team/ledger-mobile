@@ -31,16 +31,16 @@ struct BillingSummaryCalculationTests {
         return category
     }
 
-    @Test("Membership across draft/sent/paid/voided produces correct totals")
+    @Test("Membership across created/sent/paid/canceled produces correct totals")
     func mixedStatuses() {
         let projectId = "p1"
 
-        // Items — unbilled, on draft, on sent (invoiced-only), on paid.
+        // Items — unbilled, on created, on sent (invoiced-only), on paid.
         let unbilledItem = makeItem(id: "i-unbilled", projectId: projectId, purchasePriceCents: 1000)
-        let draftItem = makeItem(id: "i-draft", projectId: projectId, purchasePriceCents: 2000)
+        let createdItem = makeItem(id: "i-created", projectId: projectId, purchasePriceCents: 2000)
         let sentItem = makeItem(id: "i-sent", projectId: projectId, purchasePriceCents: 3000)
         let paidItem = makeItem(id: "i-paid", projectId: projectId, purchasePriceCents: 4000)
-        let items = [unbilledItem, draftItem, sentItem, paidItem]
+        let items = [unbilledItem, createdItem, sentItem, paidItem]
 
         // Transactions — non-itemized variants + one itemized (excluded).
         let unbilledTx = makeTransaction(id: "t-unbilled", projectId: projectId, amountCents: 500, itemIds: nil)
@@ -50,10 +50,10 @@ struct BillingSummaryCalculationTests {
         let transactions = [unbilledTx, sentTx, paidTx, itemizedTx]
 
         let invoices: [Invoice] = [
-            makeInvoice(id: "inv-draft", projectId: projectId, status: .draft, itemIds: ["i-draft"]),
+            makeInvoice(id: "inv-created", projectId: projectId, status: .created, itemIds: ["i-created"]),
             makeInvoice(id: "inv-sent", projectId: projectId, status: .sent, itemIds: ["i-sent"], transactionIds: ["t-sent"]),
             makeInvoice(id: "inv-paid", projectId: projectId, status: .paid, itemIds: ["i-paid"], transactionIds: ["t-paid"]),
-            makeInvoice(id: "inv-voided", projectId: projectId, status: .voided, itemIds: ["i-unbilled"]),
+            makeInvoice(id: "inv-canceled", projectId: projectId, status: .canceled, itemIds: ["i-unbilled"]),
         ]
 
         let summary = BillingSummaryCalculations.summarize(
@@ -459,7 +459,7 @@ struct BillingSummaryCalculationTests {
     @Test("Voided invoice membership doesn't count")
     func voidedDoesNotCount() {
         let item = makeItem(id: "i", projectId: "p1", purchasePriceCents: 5000)
-        let inv = makeInvoice(id: "inv", projectId: "p1", status: .voided, itemIds: ["i"])
+        let inv = makeInvoice(id: "inv", projectId: "p1", status: .canceled, itemIds: ["i"])
         let summary = BillingSummaryCalculations.summarize(
             projectId: "p1", items: [item], transactions: [], invoices: [inv]
         )

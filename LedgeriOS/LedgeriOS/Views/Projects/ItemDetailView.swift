@@ -484,7 +484,7 @@ struct ItemDetailView: View {
 
     private var derivedBillingLabel: String {
         guard let id = liveItem.id else { return "Unbilled" }
-        if let status = firstNonVoidedInvoiceStatus(forItemId: id, in: accountContext.allInvoices) {
+        if let status = firstNonCanceledInvoiceStatus(forItemId: id, in: accountContext.allInvoices) {
             return status.displayLabel
         }
         return "Unbilled"

@@ -75,7 +75,7 @@ struct InvoiceLine: Codable, Hashable {
 /// A project-scoped invoice that references items + non-itemized project-cost transactions.
 /// Stored at `accounts/{accountId}/invoices/{invoiceId}` with a `projectId` field.
 ///
-/// Lifecycle: draft → sent → paid (or → voided).
+/// Lifecycle: created → sent → paid (or → canceled).
 ///
 /// **v2 model:** `lines: [InvoiceLine]?` carries signed charge/credit entries;
 /// `totalCents` is the net (charges − credits). `itemIds` / `transactionIds` are
@@ -106,6 +106,7 @@ struct Invoice: Codable, Identifiable, Hashable {
     var dateIssued: Date?
     var dateSent: Date?
     var datePaid: Date?
+    var dateCanceled: Date?
     var dateVoided: Date?
     var createdBy: String?
     var updatedBy: String?
@@ -115,7 +116,7 @@ struct Invoice: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, status, itemIds, transactionIds, lines,
              totalCents, containsCompanyRevenue, feeCategoryIds, notes, invoiceNumber,
-             dateIssued, dateSent, datePaid, dateVoided,
+             dateIssued, dateSent, datePaid, dateCanceled, dateVoided,
              createdBy, updatedBy
         // createdAt / updatedAt intentionally omitted — written via FieldValue.serverTimestamp(),
         // matching the convention used by Item and Transaction.

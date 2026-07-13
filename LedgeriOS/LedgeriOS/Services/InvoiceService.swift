@@ -7,10 +7,10 @@ import FirebaseFirestore
 /// (derived from `lines`) so "is this source on any invoice?" queries don't
 /// have to scan every line.
 ///
-/// **Drafts are live previews.** While an invoice is `status == .draft`,
+/// **Created invoices are live previews.** While an invoice is `status == .created`,
 /// the document stores only `itemIds` / `transactionIds` — the membership index.
 /// `lines` and `totalCents` are materialized at `markSent` from the then-current
-/// item / transaction state. Readers of a draft recompute the displayed total
+/// item / transaction state. Readers of a created invoice recompute the displayed total
 /// from that live state; readers of a sent / paid invoice read the frozen snapshot.
 struct InvoiceService: InvoiceServiceProtocol {
     enum InvoiceServiceError: Error {
@@ -58,7 +58,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         repo(accountId: accountId).subscribe(id: invoiceId, onChange: onChange)
     }
 
-    // MARK: - Create (draft — live preview, no stored lines/total)
+    // MARK: - Create (live preview, no stored lines/total)
 
     func createInvoice(
         accountId: String,
@@ -79,7 +79,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         var invoiceFields: [String: Any] = [
             "accountId": accountId,
             "projectId": projectId,
-            "status": InvoiceStatus.draft.rawValue,
+            "status": InvoiceStatus.created.rawValue,
             "itemIds": itemIds,
             "transactionIds": transactionIds,
             "dateIssued": now,
@@ -99,7 +99,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         return invoiceId
     }
 
-    // MARK: - Update Selections (draft-only per UI gate)
+    // MARK: - Update Selections (created-only per UI gate)
 
     func updateSelections(
         invoice: Invoice,
@@ -119,7 +119,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         var invoiceFields: [String: Any] = [
             "itemIds": newItemIds,
             "transactionIds": newTransactionIds,
-            // Clear any stale total snapshot — drafts render totals live from
+            // Clear any stale total snapshot — created invoices render totals live from
             // membership plus stored manual lines.
             "totalCents": FieldValue.delete(),
             "updatedAt": now,
@@ -311,17 +311,17 @@ struct InvoiceService: InvoiceServiceProtocol {
         try await batch.commit()
     }
 
-    // MARK: - Void (status only — members return to pool via derived query)
+    // MARK: - Cancel (status only — members return to pool via derived query)
 
-    func voidInvoice(invoice: Invoice, accountId: String, userId: String?) async throws {
+    func cancelInvoice(invoice: Invoice, accountId: String, userId: String?) async throws {
         guard let invoiceId = invoice.id else { return }
 
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
 
         var invoiceFields: [String: Any] = [
-            "status": InvoiceStatus.voided.rawValue,
-            "dateVoided": now,
+            "status": InvoiceStatus.canceled.rawValue,
+            "dateCanceled": now,
             "updatedAt": now,
         ]
         if let userId { invoiceFields["updatedBy"] = userId }
@@ -331,7 +331,7 @@ struct InvoiceService: InvoiceServiceProtocol {
 
     // MARK: - Helpers
 
-    static func appendReturnedPaidItemCreditDrafts(
+    static func appendReturnedPaidItemCreditInvoices(
         accountId: String,
         credits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext],
         batch: any BatchWriting,
@@ -361,7 +361,7 @@ struct InvoiceService: InvoiceServiceProtocol {
             var fields: [String: Any] = [
                 "accountId": accountId,
                 "projectId": projectId,
-                "status": InvoiceStatus.draft.rawValue,
+                "status": InvoiceStatus.created.rawValue,
                 "itemIds": [],
                 "transactionIds": [],
                 "lines": lines.map(Self.encodeLine),

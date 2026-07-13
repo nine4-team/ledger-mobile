@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import LedgeriOS
 
-/// Tests for the v2 billing model's draft-is-live-preview behavior: `markSent`
+/// Tests for the v2 billing model's created-is-live-preview behavior: `markSent`
 /// is the moment an invoice freezes into a stored `lines` + `totalCents` snapshot.
-@Suite("InvoiceService — draft/markSent snapshotting")
+@Suite("InvoiceService — created/markSent snapshotting")
 struct InvoiceServiceTests {
 
     private let acct = "acc1"
@@ -18,7 +18,7 @@ struct InvoiceServiceTests {
 
     // MARK: - createInvoice
 
-    @Test("createInvoice — writes only membership on a draft, no lines/total")
+    @Test("createInvoice — writes only membership on a created invoice, no lines/total")
     func createInvoiceOmitsLinesAndTotal() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -37,7 +37,7 @@ struct InvoiceServiceTests {
         #expect(batch.sets.count == 1)
         let set = batch.sets[0]
         let fields = set.fields
-        #expect(fields["status"] as? String == "draft")
+        #expect(fields["status"] as? String == "created")
         #expect(fields["itemIds"] as? [String] == ["i1", "i2"])
         #expect(fields["transactionIds"] as? [String] == ["t1"])
         #expect(fields["lines"] == nil)
@@ -48,7 +48,7 @@ struct InvoiceServiceTests {
 
     // MARK: - updateSelections
 
-    @Test("updateSelections — clears stale lines/totalCents on edited drafts")
+    @Test("updateSelections — clears stale lines/totalCents on edited created invoices")
     func updateSelectionsClearsSnapshot() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -311,8 +311,8 @@ struct InvoiceServiceTests {
         }
     }
 
-    @Test("appendReturnedPaidItemCreditDrafts — writes ordinary draft invoice with manual credit line")
-    func appendReturnedPaidItemCreditDraftsWritesDraftInvoice() async throws {
+    @Test("appendReturnedPaidItemCreditInvoices — writes ordinary created invoice with manual credit line")
+    func appendReturnedPaidItemCreditInvoicesWritesCreatedInvoice() async throws {
         let batch = RecordingBatch()
         let credit = InvoiceLineCalculations.ReturnedPaidItemCreditContext(
             itemId: "item1",
@@ -325,7 +325,7 @@ struct InvoiceServiceTests {
             lineId: "returnCredit:paid-inv:paid-line:item1"
         )
 
-        InvoiceService.appendReturnedPaidItemCreditDrafts(
+        InvoiceService.appendReturnedPaidItemCreditInvoices(
             accountId: acct,
             credits: [credit],
             batch: batch,
@@ -335,7 +335,7 @@ struct InvoiceServiceTests {
         #expect(batch.sets.count == 1)
         let set = batch.sets[0]
         #expect(set.path.hasPrefix("accounts/\(acct)/invoices/"))
-        #expect(set.fields["status"] as? String == "draft")
+        #expect(set.fields["status"] as? String == "created")
         #expect(set.fields["projectId"] as? String == "proj1")
         #expect(set.fields["itemIds"] as? [String] == [])
         #expect(set.fields["transactionIds"] as? [String] == [])
@@ -386,7 +386,7 @@ struct ReturnedPaidItemCreditContextTests {
         #expect(contexts[0].lineId == "returnCredit:paid-inv:paid-line:item1")
     }
 
-    @Test("existing non-voided deterministic credit line dedupes")
+    @Test("existing non-canceled deterministic credit line dedupes")
     func existingCreditLineDedupes() throws {
         var item = Item()
         item.id = "item1"
@@ -403,7 +403,7 @@ struct ReturnedPaidItemCreditContextTests {
         var creditInvoice = Invoice()
         creditInvoice.id = "credit-inv"
         creditInvoice.projectId = "proj1"
-        creditInvoice.status = .draft
+        creditInvoice.status = .created
         creditInvoice.lines = [
             InvoiceLine(id: "returnCredit:paid-inv:paid-line:item1", sourceType: .manual, amountCents: 1_000, sign: .credit, budgetCategoryId: "cat1"),
         ]
