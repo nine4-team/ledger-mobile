@@ -97,6 +97,39 @@ struct FeeInstallmentsService: FeeInstallmentsServiceProtocol {
             existingInstallments: existingInstallments
         )
 
+        return try await createFeeInstallment(
+            accountId: accountId,
+            projectId: projectId,
+            budgetCategoryId: budgetCategoryId,
+            label: label,
+            amountCents: amountCents,
+            sortOrder: sortOrder,
+            totalCents: projectBudgetCategory?.budgetCents,
+            existingInvoicedCents: FeeInstallmentCalculations.invoicedCents(
+                budgetCategoryId: budgetCategoryId,
+                installments: existingInstallments
+            ),
+            userId: userId
+        )
+    }
+
+    func createFeeInstallment(
+        accountId: String,
+        projectId: String,
+        budgetCategoryId: String,
+        label: String,
+        amountCents: Int,
+        sortOrder: Int?,
+        totalCents: Int?,
+        existingInvoicedCents: Int,
+        userId: String?
+    ) async throws -> String {
+        try validate(
+            amountCents: amountCents,
+            totalCents: totalCents,
+            existingInvoicedCents: existingInvoicedCents
+        )
+
         let installmentId = UUID().uuidString
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
@@ -180,6 +213,20 @@ struct FeeInstallmentsService: FeeInstallmentsServiceProtocol {
             installments: existingInstallments,
             excluding: installmentId
         ) else {
+            throw FeeInstallmentsServiceError.amountExceedsFeeTotal
+        }
+    }
+
+    private func validate(
+        amountCents: Int,
+        totalCents: Int?,
+        existingInvoicedCents: Int
+    ) throws {
+        guard amountCents > 0 else {
+            throw FeeInstallmentsServiceError.amountExceedsFeeTotal
+        }
+        guard let totalCents else { return }
+        guard existingInvoicedCents + amountCents <= totalCents else {
             throw FeeInstallmentsServiceError.amountExceedsFeeTotal
         }
     }

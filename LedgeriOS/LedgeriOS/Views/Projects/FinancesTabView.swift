@@ -813,8 +813,11 @@ private struct FeeInstallmentFormSheet: View {
         errorMessage = nil
         let service = FeeInstallmentsService()
         let trimmedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines)
-        let projectBudgetCategory = group.projectBudgetCategory
-        let existingInstallments = projectContext.feeInstallments
+        let totalCents = group.totalCents
+        let existingInvoicedCents = FeeInstallmentCalculations.invoicedCents(
+            budgetCategoryId: group.id,
+            installments: projectContext.feeInstallments
+        )
         let userId = authManager.currentUser?.uid
         Task { @MainActor in
             do {
@@ -825,8 +828,8 @@ private struct FeeInstallmentFormSheet: View {
                     label: trimmedLabel,
                     amountCents: cents,
                     sortOrder: nil,
-                    projectBudgetCategory: projectBudgetCategory,
-                    existingInstallments: existingInstallments,
+                    totalCents: totalCents,
+                    existingInvoicedCents: existingInvoicedCents,
                     userId: userId
                 )
                 await MainActor.run {
