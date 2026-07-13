@@ -109,6 +109,12 @@ private enum CandidateSourceFilter: String, CaseIterable {
     }
 }
 
+private extension CandidateSourceFilter {
+    var segmentOption: SegmentOption<CandidateSourceFilter> {
+        SegmentOption(id: self, label: label)
+    }
+}
+
 private enum CandidateMembershipState: Equatable {
     case available
     case created(invoiceName: String?)
@@ -297,6 +303,10 @@ private struct CandidateReceivablesSection: View {
                     filtersAreActive: filtersAreActive,
                     onFilter: { showingFilters = true }
                 )
+                SegmentedControl(
+                    selection: $sourceFilter,
+                    options: CandidateSourceFilter.allCases.map(\.segmentOption)
+                )
 
                 if hasVisibleRows {
                     receivableContent
@@ -317,15 +327,12 @@ private struct CandidateReceivablesSection: View {
     @ViewBuilder
     private var receivableContent: some View {
         if !visibleFeeGroups.isEmpty {
-            BillingSubsectionLabel("Fees")
             feeGroupList
         }
         if !visibleItemRows.isEmpty {
-            BillingSubsectionLabel("Items")
             itemRows
         }
         if !visibleTransactionRows.isEmpty {
-            BillingSubsectionLabel("Expenses")
             transactionRows
         }
     }
@@ -373,7 +380,7 @@ private struct CandidateReceivablesSection: View {
     }
 
     private var filtersAreActive: Bool {
-        availabilityFilter != .available || sourceFilter != .all
+        availabilityFilter != .available
     }
 
     private var summaryLabel: String {
@@ -390,15 +397,7 @@ private struct CandidateReceivablesSection: View {
                 onPress: { availabilityFilter = option }
             )
         }
-        let sources = CandidateSourceFilter.allCases.map { option in
-            ActionMenuItem(
-                id: "source-\(option.rawValue)",
-                label: option.label,
-                isSelected: sourceFilter == option,
-                onPress: { sourceFilter = option }
-            )
-        }
-        return availability + sources
+        return availability
     }
 
     private func shouldDefaultExpand(_ display: FeeGroupDisplay) -> Bool {
