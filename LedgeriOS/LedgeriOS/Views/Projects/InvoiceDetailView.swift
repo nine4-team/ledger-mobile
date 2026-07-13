@@ -32,7 +32,8 @@ struct InvoiceDetailView: View {
         ReportAggregationCalculations.computeInvoiceReport(
             for: liveInvoice,
             items: projectContext.items,
-            transactions: projectContext.transactions
+            transactions: projectContext.transactions,
+            feeInstallments: projectContext.feeInstallments
         )
     }
 
@@ -215,7 +216,17 @@ struct InvoiceDetailView: View {
                 lines.append(line)
             }
         }
-        for line in liveInvoice.lines ?? [] where line.sourceType == .manual {
+        for line in liveInvoice.lines ?? [] where line.sourceType == .feeInstallment {
+            var resolvedLine = line
+            if let sourceId = line.sourceId,
+               let installment = projectContext.feeInstallments.first(where: { $0.id == sourceId }) {
+                resolvedLine.amountCents = installment.amountCents
+                resolvedLine.snapshotName = installment.label
+                resolvedLine.budgetCategoryId = installment.budgetCategoryId
+            }
+            lines.append(resolvedLine)
+        }
+        for line in liveInvoice.lines ?? [] where line.sourceType == .feeInstallment || line.sourceType == .manual {
             lines.append(line)
         }
         let total = InvoiceLineCalculations.netTotalCents(lines: lines)

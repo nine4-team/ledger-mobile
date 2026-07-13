@@ -397,7 +397,7 @@ struct InvoiceService: InvoiceServiceProtocol {
             case .transaction:
                 guard let sourceId = line.sourceId else { continue }
                 if seenTx.insert(sourceId).inserted { txIds.append(sourceId) }
-            case .manual:
+            case .feeInstallment, .manual:
                 continue
             }
         }

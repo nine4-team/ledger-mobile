@@ -30,6 +30,7 @@ enum BillingSummaryCalculations {
         items: [Item],
         transactions: [Transaction],
         invoices: [Invoice],
+        feeInstallments: [FeeInstallment] = [],
         budgetCategories: [String: BudgetCategory] = [:]
     ) -> Summary {
         let scopedItems = items.filter { item in
@@ -48,6 +49,10 @@ enum BillingSummaryCalculations {
         let nonItemizedTxAmounts = Dictionary(uniqueKeysWithValues: scopedTransactions.compactMap { tx -> (String, Int)? in
             guard let id = tx.id, isNonItemized(tx, budgetCategories: budgetCategories) else { return nil }
             return (id, tx.amountCents ?? 0)
+        })
+        let feeInstallmentAmounts = Dictionary(uniqueKeysWithValues: feeInstallments.compactMap { installment -> (String, Int)? in
+            guard let id = installment.id else { return nil }
+            return (id, installment.amountCents)
         })
 
         let settlementByInvoiceId = Dictionary(grouping: scopedTransactions.compactMap { tx -> (String, Int)? in
@@ -73,7 +78,8 @@ enum BillingSummaryCalculations {
                 for: invoice,
                 status: invoice.status ?? .created,
                 itemAmounts: itemAmounts,
-                transactionAmounts: nonItemizedTxAmounts
+                transactionAmounts: nonItemizedTxAmounts,
+                feeInstallmentAmounts: feeInstallmentAmounts
             )
 
             switch invoice.status ?? .created {
@@ -128,7 +134,8 @@ enum BillingSummaryCalculations {
         for invoice: Invoice,
         status: InvoiceStatus,
         itemAmounts: [String: Int],
-        transactionAmounts: [String: Int]
+        transactionAmounts: [String: Int],
+        feeInstallmentAmounts: [String: Int]
     ) -> Int {
         if let lines = invoice.lines, status == .paid {
             return InvoiceLineCalculations.netTotalCents(lines: lines)
@@ -141,6 +148,8 @@ enum BillingSummaryCalculations {
                     amount = line.sourceId.flatMap { itemAmounts[$0] } ?? line.amountCents
                 case .transaction:
                     amount = line.sourceId.flatMap { transactionAmounts[$0] } ?? line.amountCents
+                case .feeInstallment:
+                    amount = line.sourceId.flatMap { feeInstallmentAmounts[$0] } ?? line.amountCents
                 case .manual:
                     amount = line.amountCents
                 }

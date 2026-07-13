@@ -199,7 +199,8 @@ enum ReportAggregationCalculations {
     static func computeInvoiceReport(
         for invoice: Invoice,
         items: [Item],
-        transactions: [Transaction]
+        transactions: [Transaction],
+        feeInstallments: [FeeInstallment] = []
     ) -> InvoiceReportData {
         let itemMap = Dictionary(
             items.compactMap { item -> (String, Item)? in
@@ -215,13 +216,20 @@ enum ReportAggregationCalculations {
             },
             uniquingKeysWith: { first, _ in first }
         )
+        let feeMap = Dictionary(
+            feeInstallments.compactMap { installment -> (String, FeeInstallment)? in
+                guard let id = installment.id else { return nil }
+                return (id, installment)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
 
         if let lines = invoice.lines, !lines.isEmpty {
             var chargeLines: [InvoiceLineEntry] = []
             var creditLines: [InvoiceLineEntry] = []
             let useFrozenLines = (invoice.status ?? .created) == .paid
             for line in lines {
-                let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap, useFrozenLine: useFrozenLines)
+                let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap, feeMap: feeMap, useFrozenLine: useFrozenLines)
                 switch line.sign {
                 case .charge: chargeLines.append(entry)
                 case .credit: creditLines.append(entry)
@@ -279,6 +287,7 @@ enum ReportAggregationCalculations {
         from line: InvoiceLine,
         itemMap: [String: Item],
         txMap: [String: Transaction],
+        feeMap: [String: FeeInstallment],
         useFrozenLine: Bool
     ) -> InvoiceLineEntry {
         switch line.sourceType {
@@ -321,6 +330,26 @@ enum ReportAggregationCalculations {
             }
             return InvoiceLineEntry(
                 name: line.snapshotName ?? "Adjustment",
+                priceCents: line.amountCents,
+                isMissingPrice: false
+            )
+        case .feeInstallment:
+            if useFrozenLine {
+                return InvoiceLineEntry(
+                    name: line.snapshotName ?? "Fee Installment",
+                    priceCents: line.amountCents,
+                    isMissingPrice: false
+                )
+            }
+            if let sourceId = line.sourceId, let installment = feeMap[sourceId] {
+                return InvoiceLineEntry(
+                    name: installment.label.isEmpty ? (line.snapshotName ?? "Fee Installment") : installment.label,
+                    priceCents: installment.amountCents,
+                    isMissingPrice: false
+                )
+            }
+            return InvoiceLineEntry(
+                name: line.snapshotName ?? "Fee Installment",
                 priceCents: line.amountCents,
                 isMissingPrice: false
             )

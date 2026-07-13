@@ -18,6 +18,7 @@ struct CreateInvoiceModal: View {
     @State private var step = 1
     @State private var selectedItemIds: Set<String>
     @State private var selectedTxIds: Set<String>
+    @State private var selectedFeeInstallmentIds: Set<String>
     @State private var manualLines: [InvoiceLine]
     @State private var invoiceName: String
     @State private var notes: String
@@ -34,6 +35,9 @@ struct CreateInvoiceModal: View {
         self.editingInvoice = editingInvoice
         _selectedItemIds = State(initialValue: Set(editingInvoice?.itemIds ?? []))
         _selectedTxIds = State(initialValue: Set(editingInvoice?.transactionIds ?? []))
+        _selectedFeeInstallmentIds = State(initialValue: Set(editingInvoice?.lines?.compactMap { line in
+            line.sourceType == .feeInstallment ? line.sourceId : nil
+        } ?? []))
         _manualLines = State(initialValue: editingInvoice?.lines?.filter { $0.sourceType == .manual } ?? [])
         _invoiceName = State(initialValue: editingInvoice?.invoiceNumber ?? "")
         _notes = State(initialValue: editingInvoice?.notes ?? "")
@@ -83,6 +87,41 @@ struct CreateInvoiceModal: View {
         }
     }
 
+    private var visibleFeeCategoryIds: Set<String> {
+        Set(projectContext.budgetCategories.compactMap { category in
+            guard category.isFeeCategory, let id = category.id else { return nil }
+            return id
+        })
+    }
+
+    private var activeFeeInstallmentIds: Set<String> {
+        var ids: Set<String> = []
+        for invoice in accountContext.allInvoices {
+            guard invoice.projectId == projectId else { continue }
+            guard invoice.status != .canceled else { continue }
+            if invoice.id == editingInvoice?.id { continue }
+            for line in invoice.lines ?? [] where line.sourceType == .feeInstallment {
+                if let sourceId = line.sourceId { ids.insert(sourceId) }
+            }
+        }
+        return ids
+    }
+
+    private var billableFeeInstallments: [FeeInstallment] {
+        projectContext.feeInstallments
+            .filter { installment in
+                guard let id = installment.id else { return false }
+                guard visibleFeeCategoryIds.contains(installment.budgetCategoryId) else { return false }
+                return !activeFeeInstallmentIds.contains(id)
+            }
+            .sorted { lhs, rhs in
+                if (lhs.sortOrder ?? 0) != (rhs.sortOrder ?? 0) {
+                    return (lhs.sortOrder ?? 0) < (rhs.sortOrder ?? 0)
+                }
+                return lhs.label.localizedCaseInsensitiveCompare(rhs.label) == .orderedAscending
+            }
+    }
+
     /// Charges among filtered transactions — owed-to-company direction.
     private var filteredCharges: [Transaction] {
         filteredTransactions.filter { InvoiceLineCalculations.sign(for: $0) == .charge }
@@ -111,6 +150,14 @@ struct CreateInvoiceModal: View {
         }
     }
 
+    private var filteredFeeInstallments: [FeeInstallment] {
+        guard !trimmedSearch.isEmpty else { return billableFeeInstallments }
+        return billableFeeInstallments.filter { installment in
+            installment.label.localizedCaseInsensitiveContains(trimmedSearch)
+                || (categoryName(forCategoryId: installment.budgetCategoryId)?.localizedCaseInsensitiveContains(trimmedSearch) ?? false)
+        }
+    }
+
     /// Signed net total. Selected items are always charges; selected transactions
     /// contribute with the sign returned by InvoiceLineCalculations.sign(for:).
     private var totalCents: Int {
@@ -129,12 +176,17 @@ struct CreateInvoiceModal: View {
                 lines.append(line)
             }
         }
+        for installment in billableFeeInstallments where selectedFeeInstallmentIds.contains(installment.id ?? "") {
+            if let line = InvoiceLineCalculations.makeLine(feeInstallment: installment) {
+                lines.append(line)
+            }
+        }
         lines.append(contentsOf: manualLines)
         return InvoiceLineCalculations.netTotalCents(lines: lines)
     }
 
     private var hasSelection: Bool {
-        !selectedItemIds.isEmpty || !selectedTxIds.isEmpty || !manualLines.isEmpty
+        !selectedItemIds.isEmpty || !selectedTxIds.isEmpty || !selectedFeeInstallmentIds.isEmpty || !manualLines.isEmpty
     }
 
     private var categoryOptions: [(String, String)] {
@@ -216,16 +268,31 @@ struct CreateInvoiceModal: View {
 
             newChargeEditor
 
-            if billableItems.isEmpty && billableTransactions.isEmpty && manualLines.isEmpty {
-                Text("Nothing to bill — every item and project cost in this project has already been invoiced or paid.")
+            if billableItems.isEmpty && billableTransactions.isEmpty && billableFeeInstallments.isEmpty && manualLines.isEmpty {
+                Text("Nothing to bill — every fee installment, item, and project cost in this project has already been invoiced or paid.")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
                     .padding(.vertical, Spacing.md)
-            } else if filteredItems.isEmpty && filteredTransactions.isEmpty && !trimmedSearch.isEmpty {
+            } else if filteredItems.isEmpty && filteredTransactions.isEmpty && filteredFeeInstallments.isEmpty && !trimmedSearch.isEmpty {
                 Text("No matches for “\(trimmedSearch)”.")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
                     .padding(.vertical, Spacing.md)
+            }
+
+            if !filteredFeeInstallments.isEmpty {
+                Text("Fees")
+                    .sectionLabelStyle()
+                ForEach(filteredFeeInstallments, id: \.id) { installment in
+                    selectionRow(
+                        isSelected: selectedFeeInstallmentIds.contains(installment.id ?? ""),
+                        title: installment.label.isEmpty ? "Fee installment" : installment.label,
+                        subtitle: categoryName(forCategoryId: installment.budgetCategoryId),
+                        cents: installment.amountCents,
+                        needsReview: false,
+                        onToggle: { toggle(feeInstallmentId: installment.id ?? "") }
+                    )
+                }
             }
 
             if !filteredItems.isEmpty {
@@ -401,7 +468,7 @@ struct CreateInvoiceModal: View {
             FormField(label: "Invoice Name (optional)", text: $invoiceName, placeholder: "Phase 1 — Furnishings")
             FormField(label: "Notes (optional)", text: $notes, placeholder: "")
 
-            Text("\(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) project cost\(selectedTxIds.count == 1 ? "" : "s") · \(manualLines.count) charge\(manualLines.count == 1 ? "" : "s")")
+            Text("\(selectedFeeInstallmentIds.count) fee\(selectedFeeInstallmentIds.count == 1 ? "" : "s") · \(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) project cost\(selectedTxIds.count == 1 ? "" : "s") · \(manualLines.count) charge\(manualLines.count == 1 ? "" : "s")")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
         }
@@ -422,6 +489,14 @@ struct CreateInvoiceModal: View {
             selectedTxIds.remove(txId)
         } else {
             selectedTxIds.insert(txId)
+        }
+    }
+
+    private func toggle(feeInstallmentId: String) {
+        if selectedFeeInstallmentIds.contains(feeInstallmentId) {
+            selectedFeeInstallmentIds.remove(feeInstallmentId)
+        } else {
+            selectedFeeInstallmentIds.insert(feeInstallmentId)
         }
     }
 
@@ -464,10 +539,11 @@ struct CreateInvoiceModal: View {
         }?.id
     }
 
-    private func draftLines(itemIds: [String], txIds: [String]) -> [InvoiceLine] {
+    private func draftLines(itemIds: [String], txIds: [String], feeInstallmentIds: [String]) -> [InvoiceLine] {
         var lines: [InvoiceLine] = []
         let itemIdSet = Set(itemIds)
         let txIdSet = Set(txIds)
+        let feeIdSet = Set(feeInstallmentIds)
         for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
             guard var line = InvoiceLineCalculations.makeLine(
                 item: item,
@@ -484,6 +560,14 @@ struct CreateInvoiceModal: View {
             guard var line = InvoiceLineCalculations.makeLine(transaction: tx),
                   let sourceId = tx.id else { continue }
             if let existing = existingLineId(sourceType: .transaction, sourceId: sourceId) {
+                line.id = existing
+            }
+            lines.append(line)
+        }
+        for installment in projectContext.feeInstallments where installment.id.map({ feeIdSet.contains($0) }) ?? false {
+            guard var line = InvoiceLineCalculations.makeLine(feeInstallment: installment),
+                  let sourceId = installment.id else { continue }
+            if let existing = existingLineId(sourceType: .feeInstallment, sourceId: sourceId) {
                 line.id = existing
             }
             lines.append(line)
@@ -515,7 +599,11 @@ struct CreateInvoiceModal: View {
         let acctId = accountId
         let projId = projectId
         let editingId = editingInvoice?.id
-        let lines = draftLines(itemIds: itemIds, txIds: txIds)
+        let feeInstallmentIds = projectContext.feeInstallments.compactMap { installment -> String? in
+            guard let id = installment.id, selectedFeeInstallmentIds.contains(id) else { return nil }
+            return id
+        }
+        let lines = draftLines(itemIds: itemIds, txIds: txIds, feeInstallmentIds: feeInstallmentIds)
         guard lines.allSatisfy({ $0.budgetCategoryId?.isEmpty == false }) else {
             errorMessage = "Every invoice line needs a budget category."
             isSaving = false

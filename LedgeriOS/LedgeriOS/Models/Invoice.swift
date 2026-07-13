@@ -9,7 +9,7 @@ enum InvoiceLineSign: Int, Codable {
 
 /// Source of an invoice line.
 enum InvoiceLineSourceType: String, Codable, CaseInsensitiveStringEnum {
-    case item, transaction, manual
+    case item, transaction, feeInstallment, manual
 }
 
 /// A single signed line on an invoice.
@@ -19,7 +19,7 @@ struct InvoiceLine: Codable, Hashable {
     /// deterministic one.
     var id: String
     var sourceType: InvoiceLineSourceType
-    /// Item or transaction id for sourced lines. Nil for manual New Charge lines.
+    /// Item, transaction, or fee installment id for sourced lines. Nil for manual New Charge lines.
     var sourceId: String?
     var amountCents: Int
     var sign: InvoiceLineSign

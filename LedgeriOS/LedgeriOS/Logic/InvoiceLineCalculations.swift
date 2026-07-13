@@ -272,6 +272,18 @@ enum InvoiceLineCalculations {
         )
     }
 
+    static func makeLine(feeInstallment installment: FeeInstallment) -> InvoiceLine? {
+        guard let id = installment.id else { return nil }
+        return InvoiceLine(
+            sourceType: .feeInstallment,
+            sourceId: id,
+            amountCents: installment.amountCents,
+            sign: .charge,
+            budgetCategoryId: installment.budgetCategoryId,
+            snapshotName: installment.label
+        )
+    }
+
     // MARK: - Billable membership
 
     /// The three disjoint buckets for a project's billable activity, plus the
@@ -439,6 +451,8 @@ enum InvoiceLineCalculations {
                     amount = line.sourceId.flatMap { txId in
                         transactions.first { $0.id == txId }?.amountCents
                     } ?? line.amountCents
+                case .feeInstallment:
+                    amount = line.amountCents
                 case .manual:
                     amount = line.amountCents
                 }

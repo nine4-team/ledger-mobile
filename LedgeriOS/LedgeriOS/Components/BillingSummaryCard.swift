@@ -13,6 +13,7 @@ struct BillingSummaryCard: View {
             items: projectContext.items,
             transactions: projectContext.transactions,
             invoices: accountContext.allInvoices,
+            feeInstallments: projectContext.feeInstallments,
             budgetCategories: categoryLookup
         )
     }
@@ -100,7 +101,7 @@ private enum BillingSummaryDefinition: Identifiable {
         case .totalSpent:
             "Project activity and cost basis: item purchase prices plus non-itemized project transactions. This is not the amount currently owed."
         case .invoiced:
-            "Invoices that have been sent to the client or already collected, including manual New Charge lines. Draft invoices do not count here."
+            "Invoices that have been sent to the client or already collected. Created invoices do not count here."
         case .collected:
             "Money received from the client, tracked by transactions linked to invoices as settlement."
         case .outstanding:

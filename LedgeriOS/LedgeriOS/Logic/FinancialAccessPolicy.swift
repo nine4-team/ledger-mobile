@@ -77,7 +77,7 @@ struct FinancialAccessPolicy: Equatable {
                     guard let categoryId = transaction.budgetCategoryId else { return false }
                     feeCategoryIds.insert(categoryId)
                 }
-            case .manual:
+            case .feeInstallment, .manual:
                 if line.sign == .charge {
                     sawCompanyRevenue = true
                     guard let categoryId = line.budgetCategoryId else { return false }

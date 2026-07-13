@@ -73,7 +73,8 @@ private struct BillingSubTab: View {
                                 InvoiceRow(
                                     invoice: invoice,
                                     items: projectContext.items,
-                                    transactions: projectContext.transactions
+                                    transactions: projectContext.transactions,
+                                    feeInstallments: projectContext.feeInstallments
                                 )
                             }
                             .buttonStyle(.plain)
@@ -291,6 +292,7 @@ private struct InvoiceRow: View {
     let invoice: Invoice
     let items: [Item]
     let transactions: [Transaction]
+    let feeInstallments: [FeeInstallment]
 
     private var status: InvoiceStatus { invoice.status ?? .created }
 
@@ -313,8 +315,22 @@ private struct InvoiceRow: View {
             for tx in transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
                 if let line = InvoiceLineCalculations.makeLine(transaction: tx) { lines.append(line) }
             }
-            for line in invoice.lines ?? [] where line.sourceType == .manual {
-                lines.append(line)
+            for line in invoice.lines ?? [] where line.sourceType == .feeInstallment || line.sourceType == .manual {
+                if line.sourceType == .feeInstallment,
+                   let sourceId = line.sourceId,
+                   let installment = feeInstallments.first(where: { $0.id == sourceId }) {
+                    lines.append(InvoiceLine(
+                        id: line.id,
+                        sourceType: .feeInstallment,
+                        sourceId: sourceId,
+                        amountCents: installment.amountCents,
+                        sign: .charge,
+                        budgetCategoryId: installment.budgetCategoryId,
+                        snapshotName: installment.label
+                    ))
+                } else {
+                    lines.append(line)
+                }
             }
             return InvoiceLineCalculations.netTotalCents(lines: lines)
         }
