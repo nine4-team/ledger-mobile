@@ -6,6 +6,15 @@ import Foundation
 ///
 /// See `docs/specs/billing-invoicing.md` for the rules.
 enum InvoiceLineCalculations {
+    enum ItemBillingBasis: Equatable {
+        case projectPrice
+        case purchasePrice
+    }
+
+    enum ItemInvoiceability: Equatable {
+        case billable(ItemBillingBasis)
+        case notBillable
+    }
 
     struct ReturnedPaidItemCreditContext: Hashable {
         var itemId: String
@@ -139,7 +148,74 @@ enum InvoiceLineCalculations {
         }
     }
 
-    /// Amount to bill for an item — project price if set, otherwise purchase price.
+    static func invoiceability(
+        for item: Item,
+        projectId: String,
+        transactions: [Transaction],
+        lineageEdges: [LineageEdge] = []
+    ) -> ItemInvoiceability {
+        guard item.status != .returned else { return .notBillable }
+        guard item.projectId == projectId else { return .notBillable }
+
+        let transactionById = Dictionary(uniqueKeysWithValues: transactions.compactMap { tx -> (String, Transaction)? in
+            guard let id = tx.id else { return nil }
+            return (id, tx)
+        })
+
+        if let transactionId = item.transactionId,
+           let tx = transactionById[transactionId],
+           tx.projectId == projectId {
+            if tx.status == .canceled { return .notBillable }
+            if tx.transactionType == .purchase,
+               tx.source?.hasSuffix(" Inventory") == true {
+                return .billable(.projectPrice)
+            }
+            if tx.reimbursementType == "owed-to-company",
+               !tx.isInventoryMovement {
+                return .billable(.purchasePrice)
+            }
+            return .notBillable
+        }
+
+        if lineageEdges.contains(where: { edge in
+            edge.itemId == item.id &&
+                edge.movementKind == "sold" &&
+                edge.toProjectId == projectId
+        }) {
+            return .billable(.projectPrice)
+        }
+
+        if (item.currentSource ?? "").hasSuffix(" Inventory") {
+            return .billable(.projectPrice)
+        }
+
+        return .notBillable
+    }
+
+    static func amountCents(
+        for item: Item,
+        projectId: String,
+        transactions: [Transaction],
+        lineageEdges: [LineageEdge] = []
+    ) -> Int? {
+        switch invoiceability(
+            for: item,
+            projectId: projectId,
+            transactions: transactions,
+            lineageEdges: lineageEdges
+        ) {
+        case .billable(.projectPrice):
+            return item.projectPriceCents ?? 0
+        case .billable(.purchasePrice):
+            return item.purchasePriceCents ?? 0
+        case .notBillable:
+            return nil
+        }
+    }
+
+    /// Legacy amount fallback. New candidate code should call the overload that
+    /// receives project transactions so it can choose project price vs purchase
+    /// price from the item's billing basis.
     static func amountCents(for item: Item) -> Int {
         if let p = item.projectPriceCents, p > 0 { return p }
         return item.purchasePriceCents ?? 0
@@ -153,6 +229,29 @@ enum InvoiceLineCalculations {
             sourceId: id,
             amountCents: amountCents(for: item),
             sign: sign(for: item),
+            budgetCategoryId: item.budgetCategoryId,
+            snapshotName: item.displayName.isEmpty ? nil : item.displayName
+        )
+    }
+
+    static func makeLine(
+        item: Item,
+        projectId: String,
+        transactions: [Transaction],
+        lineageEdges: [LineageEdge] = []
+    ) -> InvoiceLine? {
+        guard let id = item.id else { return nil }
+        guard let amount = amountCents(
+            for: item,
+            projectId: projectId,
+            transactions: transactions,
+            lineageEdges: lineageEdges
+        ) else { return nil }
+        return InvoiceLine(
+            sourceType: .item,
+            sourceId: id,
+            amountCents: amount,
+            sign: .charge,
             budgetCategoryId: item.budgetCategoryId,
             snapshotName: item.displayName.isEmpty ? nil : item.displayName
         )
@@ -219,6 +318,7 @@ enum InvoiceLineCalculations {
         transactions: [Transaction],
         invoices: [Invoice],
         budgetCategories: [String: BudgetCategory] = [:],
+        lineageEdges: [LineageEdge] = [],
         excludingInvoiceId: String? = nil
     ) -> BillableMembership {
         var draftItems: Set<String> = []
@@ -257,8 +357,12 @@ enum InvoiceLineCalculations {
         var toInvoiceItems: Set<String> = []
         for item in items {
             guard let id = item.id else { continue }
-            guard item.projectId == projectId else { continue }
-            guard item.status != .returned else { continue }
+            guard invoiceability(
+                for: item,
+                projectId: projectId,
+                transactions: transactions,
+                lineageEdges: lineageEdges
+            ) != .notBillable else { continue }
             guard !onAnyItems.contains(id) else { continue }
             toInvoiceItems.insert(id)
         }
@@ -340,7 +444,11 @@ enum InvoiceLineCalculations {
         )
         for item in items {
             guard let id = item.id, membership.toInvoiceItemIds.contains(id) else { continue }
-            toBusiness += amountCents(for: item)
+            toBusiness += amountCents(
+                for: item,
+                projectId: projectId,
+                transactions: transactions
+            ) ?? 0
         }
         for tx in transactions {
             guard let id = tx.id, membership.toInvoiceTransactionIds.contains(id) else { continue }
@@ -351,7 +459,7 @@ enum InvoiceLineCalculations {
             }
         }
 
-        for tx in transactions where tx.projectId == projectId && tx.settlementInvoiceId != nil {
+        for tx in transactions where tx.projectId == projectId && BillingSummaryCalculations.isActiveSettlement(tx) {
             toBusiness -= tx.amountCents ?? 0
         }
 

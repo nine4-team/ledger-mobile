@@ -26,6 +26,39 @@ protocol ProjectBudgetCategoriesServiceProtocol: Sendable {
     func deleteProjectBudgetCategory(accountId: String, projectId: String, categoryId: String) async throws
 }
 
+// MARK: - FeeInstallmentsService
+
+protocol FeeInstallmentsServiceProtocol: Sendable {
+    func subscribeToFeeInstallments(accountId: String, projectId: String, onChange: @escaping ([FeeInstallment]) -> Void) -> ListenerRegistration
+
+    func createFeeInstallment(
+        accountId: String,
+        projectId: String,
+        budgetCategoryId: String,
+        label: String,
+        amountCents: Int,
+        sortOrder: Int?,
+        projectBudgetCategory: ProjectBudgetCategory?,
+        existingInstallments: [FeeInstallment],
+        userId: String?
+    ) async throws -> String
+
+    func updateFeeInstallment(
+        accountId: String,
+        projectId: String,
+        installmentId: String,
+        budgetCategoryId: String,
+        label: String,
+        amountCents: Int,
+        sortOrder: Int?,
+        projectBudgetCategory: ProjectBudgetCategory?,
+        existingInstallments: [FeeInstallment],
+        userId: String?
+    ) async throws
+
+    func deleteFeeInstallment(accountId: String, projectId: String, installmentId: String) async throws
+}
+
 // MARK: - AccountMembersService
 
 protocol AccountMembersServiceProtocol: Sendable {

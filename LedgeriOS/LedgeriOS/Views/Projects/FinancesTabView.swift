@@ -303,7 +303,13 @@ private struct InvoiceRow: View {
             let txIdSet = Set(invoice.transactionIds ?? [])
             var lines: [InvoiceLine] = []
             for item in items where item.id.map({ itemIdSet.contains($0) }) ?? false {
-                if let line = InvoiceLineCalculations.makeLine(item: item) { lines.append(line) }
+                if let line = InvoiceLineCalculations.makeLine(
+                    item: item,
+                    projectId: invoice.projectId ?? "",
+                    transactions: transactions
+                ) {
+                    lines.append(line)
+                }
             }
             for tx in transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
                 if let line = InvoiceLineCalculations.makeLine(transaction: tx) { lines.append(line) }

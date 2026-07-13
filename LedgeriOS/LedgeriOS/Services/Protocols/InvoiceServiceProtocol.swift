@@ -67,6 +67,16 @@ protocol InvoiceServiceProtocol: Sendable {
         userId: String?
     ) async throws -> [String]
 
+    /// Correct a mistaken collected/paid marking. Generated settlement
+    /// transactions stay in history but are canceled, the invoice returns to
+    /// sent, and an invoice event records the correction.
+    func voidInvoicePayment(
+        invoice: Invoice,
+        accountId: String,
+        settlementTransactionIds: [String],
+        userId: String?
+    ) async throws
+
     /// Status-only transition. Updates `invoice.status = .voided` and stamps `dateVoided`.
     /// Does not cascade — voided invoices' members return to the unbilled pool
     /// automatically via the derived billable-membership query.

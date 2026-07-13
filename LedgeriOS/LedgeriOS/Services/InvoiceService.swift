@@ -18,6 +18,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         case invoiceLineMissingCategory(lineId: String)
         case noCollectibleLines
         case nonPositiveCollection
+        case noSettlementTransactions
     }
 
     private let makeBatch: @Sendable () -> any BatchWriting
@@ -256,6 +257,58 @@ struct InvoiceService: InvoiceServiceProtocol {
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
         try await batch.commit()
         return transactionIds
+    }
+
+    // MARK: - Void Payment (correction — cancel generated settlement transactions)
+
+    func voidInvoicePayment(
+        invoice: Invoice,
+        accountId: String,
+        settlementTransactionIds: [String],
+        userId: String?
+    ) async throws {
+        guard let invoiceId = invoice.id else { throw InvoiceServiceError.invoiceMissingId }
+        guard !settlementTransactionIds.isEmpty else { throw InvoiceServiceError.noSettlementTransactions }
+
+        let batch = makeBatch()
+        let now = FieldValue.serverTimestamp()
+
+        var transactionFields: [String: Any] = [
+            "status": TransactionStatus.canceled.rawValue,
+            "updatedAt": now,
+        ]
+        if let userId { transactionFields["updatedBy"] = userId }
+
+        for transactionId in settlementTransactionIds {
+            batch.updateData(
+                transactionFields,
+                forDocumentAt: "accounts/\(accountId)/transactions/\(transactionId)"
+            )
+        }
+
+        var invoiceFields: [String: Any] = [
+            "status": InvoiceStatus.sent.rawValue,
+            "datePaid": FieldValue.delete(),
+            "updatedAt": now,
+        ]
+        if let userId { invoiceFields["updatedBy"] = userId }
+        batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
+
+        var eventFields: [String: Any] = [
+            "accountId": accountId,
+            "invoiceId": invoiceId,
+            "kind": "paymentCanceled",
+            "fromStatus": InvoiceStatus.paid.rawValue,
+            "toStatus": InvoiceStatus.sent.rawValue,
+            "settlementTransactionIds": settlementTransactionIds,
+            "source": "app",
+            "createdAt": now,
+        ]
+        if let projectId = invoice.projectId { eventFields["projectId"] = projectId }
+        if let userId { eventFields["createdBy"] = userId }
+        batch.setDataAutoId(eventFields, inCollection: "accounts/\(accountId)/invoiceEvents")
+
+        try await batch.commit()
     }
 
     // MARK: - Void (status only — members return to pool via derived query)

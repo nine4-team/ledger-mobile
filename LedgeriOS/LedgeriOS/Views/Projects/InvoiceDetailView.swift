@@ -202,7 +202,11 @@ struct InvoiceDetailView: View {
         let txIdSet = Set(liveInvoice.transactionIds ?? [])
         var lines: [InvoiceLine] = []
         for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
-            if let line = InvoiceLineCalculations.makeLine(item: item) {
+            if let line = InvoiceLineCalculations.makeLine(
+                item: item,
+                projectId: liveInvoice.projectId ?? "",
+                transactions: projectContext.transactions
+            ) {
                 lines.append(line)
             }
         }

@@ -25,6 +25,7 @@ private final class ListenerCounter: @unchecked Sendable {
     var spaceSubscriptions = 0
     var budgetCategorySubscriptions = 0
     var projectBudgetCategorySubscriptions = 0
+    var feeInstallmentSubscriptions = 0
     var noteSubscriptions = 0
     var removeCalls = 0
 }
@@ -174,6 +175,43 @@ private struct LifecycleProjectBudgetCategoriesService: ProjectBudgetCategoriesS
     func deleteProjectBudgetCategory(accountId: String, projectId: String, categoryId: String) async throws {}
 }
 
+private struct LifecycleFeeInstallmentsService: FeeInstallmentsServiceProtocol {
+    let counter: ListenerCounter
+
+    func subscribeToFeeInstallments(accountId: String, projectId: String, onChange: @escaping ([FeeInstallment]) -> Void) -> ListenerRegistration {
+        counter.feeInstallmentSubscriptions += 1
+        onChange([])
+        return CountingListenerRegistration { counter.removeCalls += 1 }
+    }
+
+    func createFeeInstallment(
+        accountId: String,
+        projectId: String,
+        budgetCategoryId: String,
+        label: String,
+        amountCents: Int,
+        sortOrder: Int?,
+        projectBudgetCategory: ProjectBudgetCategory?,
+        existingInstallments: [FeeInstallment],
+        userId: String?
+    ) async throws -> String { "fee-installment" }
+
+    func updateFeeInstallment(
+        accountId: String,
+        projectId: String,
+        installmentId: String,
+        budgetCategoryId: String,
+        label: String,
+        amountCents: Int,
+        sortOrder: Int?,
+        projectBudgetCategory: ProjectBudgetCategory?,
+        existingInstallments: [FeeInstallment],
+        userId: String?
+    ) async throws {}
+
+    func deleteFeeInstallment(accountId: String, projectId: String, installmentId: String) async throws {}
+}
+
 private struct LifecycleProjectNotesService: ProjectNotesServiceProtocol {
     let counter: ListenerCounter
 
@@ -210,6 +248,7 @@ private func makeProjectContext(counter: ListenerCounter) -> ProjectContext {
         spacesService: LifecycleSpacesService(counter: counter),
         budgetCategoriesService: LifecycleBudgetCategoriesService(counter: counter),
         projectBudgetCategoriesService: LifecycleProjectBudgetCategoriesService(counter: counter),
+        feeInstallmentsService: LifecycleFeeInstallmentsService(counter: counter),
         projectNotesService: LifecycleProjectNotesService(counter: counter)
     )
 }
@@ -276,6 +315,7 @@ struct LoadingLifecycleTests {
         #expect(counter.spaceSubscriptions == 1)
         #expect(counter.budgetCategorySubscriptions == 1)
         #expect(counter.projectBudgetCategorySubscriptions == 1)
+        #expect(counter.feeInstallmentSubscriptions == 1)
         #expect(counter.noteSubscriptions == 1)
         #expect(counter.removeCalls == 0)
         #expect(context.items.count == 1)
@@ -298,8 +338,9 @@ struct LoadingLifecycleTests {
         #expect(counter.spaceSubscriptions == 2)
         #expect(counter.budgetCategorySubscriptions == 2)
         #expect(counter.projectBudgetCategorySubscriptions == 2)
+        #expect(counter.feeInstallmentSubscriptions == 2)
         #expect(counter.noteSubscriptions == 2)
-        #expect(counter.removeCalls == 8)
+        #expect(counter.removeCalls == 9)
         #expect(context.currentProjectId == "project-2")
         #expect(context.items.isEmpty)
     }
@@ -321,6 +362,7 @@ struct LoadingLifecycleTests {
         #expect(first.items.count == 1)
         #expect(counter.projectDetailSubscriptions == 2)
         #expect(counter.projectBudgetCategorySubscriptions == 2)
+        #expect(counter.feeInstallmentSubscriptions == 2)
         #expect(counter.removeCalls == 0)
     }
 

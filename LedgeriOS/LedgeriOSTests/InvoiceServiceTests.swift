@@ -236,6 +236,81 @@ struct InvoiceServiceTests {
         }
     }
 
+    // MARK: - voidInvoicePayment
+
+    @Test("voidInvoicePayment — cancels settlement transactions, restores sent, and writes event")
+    func voidInvoicePaymentCancelsSettlementsAndRestoresSent() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var invoice = Invoice()
+        invoice.id = invoiceId
+        invoice.projectId = "proj1"
+        invoice.status = .paid
+
+        try await service.voidInvoicePayment(
+            invoice: invoice,
+            accountId: acct,
+            settlementTransactionIds: ["tx-a", "tx-b"],
+            userId: "user1"
+        )
+
+        #expect(batch.commitCalled)
+        #expect(batch.updates.count == 3)
+
+        let firstTx = batch.updates[0]
+        #expect(firstTx.path == "accounts/\(acct)/transactions/tx-a")
+        #expect(firstTx.fields["status"] as? String == "canceled")
+        #expect(firstTx.fields["updatedBy"] as? String == "user1")
+
+        let secondTx = batch.updates[1]
+        #expect(secondTx.path == "accounts/\(acct)/transactions/tx-b")
+        #expect(secondTx.fields["status"] as? String == "canceled")
+
+        let invoiceUpdate = batch.updates[2]
+        #expect(invoiceUpdate.path == invoicePath)
+        #expect(invoiceUpdate.fields["status"] as? String == "sent")
+        #expect(invoiceUpdate.fields["datePaid"] != nil)
+        #expect(invoiceUpdate.fields["updatedBy"] as? String == "user1")
+
+        #expect(batch.autoIdSets.count == 1)
+        let event = batch.autoIdSets[0]
+        #expect(event.collectionPath == "accounts/\(acct)/invoiceEvents")
+        #expect(event.fields["accountId"] as? String == acct)
+        #expect(event.fields["projectId"] as? String == "proj1")
+        #expect(event.fields["invoiceId"] as? String == invoiceId)
+        #expect(event.fields["kind"] as? String == "paymentCanceled")
+        #expect(event.fields["fromStatus"] as? String == "paid")
+        #expect(event.fields["toStatus"] as? String == "sent")
+        #expect(event.fields["settlementTransactionIds"] as? [String] == ["tx-a", "tx-b"])
+        #expect(event.fields["source"] as? String == "app")
+        #expect(event.fields["createdBy"] as? String == "user1")
+        #expect(event.fields["createdAt"] != nil)
+    }
+
+    @Test("voidInvoicePayment — requires settlement transaction ids")
+    func voidInvoicePaymentRequiresSettlementIds() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var invoice = Invoice()
+        invoice.id = invoiceId
+
+        do {
+            try await service.voidInvoicePayment(
+                invoice: invoice,
+                accountId: acct,
+                settlementTransactionIds: [],
+                userId: "user1"
+            )
+            Issue.record("Expected voidInvoicePayment to reject an empty settlement id list")
+        } catch InvoiceService.InvoiceServiceError.noSettlementTransactions {
+            #expect(batch.updates.isEmpty)
+            #expect(batch.autoIdSets.isEmpty)
+            #expect(!batch.commitCalled)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
     @Test("appendReturnedPaidItemCreditDrafts — writes ordinary draft invoice with manual credit line")
     func appendReturnedPaidItemCreditDraftsWritesDraftInvoice() async throws {
         let batch = RecordingBatch()

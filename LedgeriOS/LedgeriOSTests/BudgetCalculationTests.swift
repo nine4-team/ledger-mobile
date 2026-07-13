@@ -273,3 +273,141 @@ struct BudgetCalculationTests {
         #expect(result.categories.count == 2)
     }
 }
+
+@Suite("Fee Installment Tests")
+struct FeeInstallmentTests {
+    private let acct = "acc1"
+    private let projectId = "proj1"
+
+    private func makeProjectBudgetCategory(totalCents: Int?) -> ProjectBudgetCategory {
+        var pbc = ProjectBudgetCategory()
+        pbc.id = "fee-design"
+        pbc.budgetCents = totalCents
+        return pbc
+    }
+
+    private func makeInstallment(id: String, amountCents: Int, categoryId: String = "fee-design") -> FeeInstallment {
+        var installment = FeeInstallment(
+            accountId: acct,
+            projectId: projectId,
+            budgetCategoryId: categoryId,
+            label: id,
+            amountCents: amountCents
+        )
+        installment.id = id
+        return installment
+    }
+
+    @Test("Fee installment totals are capped by project fee total")
+    func installmentTotalsAreCappedByProjectFeeTotal() {
+        let existing = [
+            makeInstallment(id: "one", amountCents: 40_000),
+            makeInstallment(id: "other-category", amountCents: 90_000, categoryId: "fee-other"),
+        ]
+
+        #expect(FeeInstallmentCalculations.invoicedCents(
+            budgetCategoryId: "fee-design",
+            installments: existing
+        ) == 40_000)
+        #expect(FeeInstallmentCalculations.toInvoiceCents(
+            totalCents: 100_000,
+            budgetCategoryId: "fee-design",
+            installments: existing
+        ) == 60_000)
+        #expect(FeeInstallmentCalculations.canSave(
+            amountCents: 60_000,
+            totalCents: 100_000,
+            budgetCategoryId: "fee-design",
+            installments: existing
+        ))
+        #expect(!FeeInstallmentCalculations.canSave(
+            amountCents: 60_001,
+            totalCents: 100_000,
+            budgetCategoryId: "fee-design",
+            installments: existing
+        ))
+    }
+
+    @Test("Fee installment update excludes current installment from cap")
+    func updateExcludesCurrentInstallmentFromCap() {
+        let existing = [
+            makeInstallment(id: "one", amountCents: 40_000),
+            makeInstallment(id: "two", amountCents: 20_000),
+        ]
+
+        #expect(FeeInstallmentCalculations.canSave(
+            amountCents: 60_000,
+            totalCents: 100_000,
+            budgetCategoryId: "fee-design",
+            installments: existing,
+            excluding: "two"
+        ))
+        #expect(!FeeInstallmentCalculations.canSave(
+            amountCents: 60_001,
+            totalCents: 100_000,
+            budgetCategoryId: "fee-design",
+            installments: existing,
+            excluding: "two"
+        ))
+    }
+
+    @Test("FeeInstallmentsService create writes project-scoped installment")
+    func createWritesProjectScopedInstallment() async throws {
+        let batch = RecordingBatch()
+        let service = FeeInstallmentsService(makeBatch: { batch })
+
+        let id = try await service.createFeeInstallment(
+            accountId: acct,
+            projectId: projectId,
+            budgetCategoryId: "fee-design",
+            label: "Design Fee 1",
+            amountCents: 50_000,
+            sortOrder: 1,
+            projectBudgetCategory: makeProjectBudgetCategory(totalCents: 100_000),
+            existingInstallments: [],
+            userId: "user1"
+        )
+
+        #expect(!id.isEmpty)
+        #expect(batch.commitCalled)
+        #expect(batch.sets.count == 1)
+        let set = batch.sets[0]
+        #expect(set.path == "accounts/\(acct)/projects/\(projectId)/feeInstallments/\(id)")
+        #expect(set.fields["accountId"] as? String == acct)
+        #expect(set.fields["projectId"] as? String == projectId)
+        #expect(set.fields["budgetCategoryId"] as? String == "fee-design")
+        #expect(set.fields["label"] as? String == "Design Fee 1")
+        #expect(set.fields["amountCents"] as? Int == 50_000)
+        #expect(set.fields["sortOrder"] as? Int == 1)
+        #expect(set.fields["createdBy"] as? String == "user1")
+        #expect(set.fields["updatedBy"] as? String == "user1")
+        #expect(set.fields["createdAt"] != nil)
+        #expect(set.fields["updatedAt"] != nil)
+    }
+
+    @Test("FeeInstallmentsService blocks amounts over project fee total")
+    func createBlocksAmountOverProjectFeeTotal() async throws {
+        let batch = RecordingBatch()
+        let service = FeeInstallmentsService(makeBatch: { batch })
+
+        do {
+            _ = try await service.createFeeInstallment(
+                accountId: acct,
+                projectId: projectId,
+                budgetCategoryId: "fee-design",
+                label: "Too much",
+                amountCents: 70_001,
+                sortOrder: nil,
+                projectBudgetCategory: makeProjectBudgetCategory(totalCents: 100_000),
+                existingInstallments: [makeInstallment(id: "one", amountCents: 30_000)],
+                userId: "user1"
+            )
+            Issue.record("Expected createFeeInstallment to reject an amount over the fee total")
+        } catch FeeInstallmentsService.FeeInstallmentsServiceError.amountExceedsFeeTotal {
+            #expect(batch.sets.isEmpty)
+            #expect(!batch.commitCalled)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+}

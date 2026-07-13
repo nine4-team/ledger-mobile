@@ -12,6 +12,7 @@ final class ProjectContext {
     var spaces: [Space] = []
     var budgetCategories: [BudgetCategory] = []
     var projectBudgetCategories: [ProjectBudgetCategory] = []
+    var feeInstallments: [FeeInstallment] = []
     var budgetProgress: BudgetProgress?
     var projectPreferences: ProjectPreferences?
     var notes: [ProjectNote] = []
@@ -29,6 +30,7 @@ final class ProjectContext {
     private let spacesService: SpacesServiceProtocol
     private let budgetCategoriesService: BudgetCategoriesServiceProtocol
     private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol
+    private let feeInstallmentsService: FeeInstallmentsServiceProtocol
     private let budgetProgressService: BudgetProgressService
     private let projectPreferencesService: ProjectPreferencesService
     private let projectNotesService: ProjectNotesServiceProtocol
@@ -41,6 +43,7 @@ final class ProjectContext {
         spacesService: SpacesServiceProtocol,
         budgetCategoriesService: BudgetCategoriesServiceProtocol,
         projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol,
+        feeInstallmentsService: FeeInstallmentsServiceProtocol = FeeInstallmentsService(),
         budgetProgressService: BudgetProgressService = BudgetProgressService(),
         projectPreferencesService: ProjectPreferencesService = ProjectPreferencesService(),
         projectNotesService: ProjectNotesServiceProtocol = ProjectNotesService()
@@ -52,6 +55,7 @@ final class ProjectContext {
         self.spacesService = spacesService
         self.budgetCategoriesService = budgetCategoriesService
         self.projectBudgetCategoriesService = projectBudgetCategoriesService
+        self.feeInstallmentsService = feeInstallmentsService
         self.budgetProgressService = budgetProgressService
         self.projectPreferencesService = projectPreferencesService
         self.projectNotesService = projectNotesService
@@ -150,7 +154,19 @@ final class ProjectContext {
             }
         )
 
-        // 8. Project preferences (pinned categories)
+        // 8. Fee installments
+        listeners.append(
+            feeInstallmentsService.subscribeToFeeInstallments(
+                accountId: accountId,
+                projectId: projectId
+            ) { [weak self] installments in
+                Task { @MainActor in
+                    self?.feeInstallments = installments
+                }
+            }
+        )
+
+        // 9. Project preferences (pinned categories)
         if let userId {
             listeners.append(
                 projectPreferencesService.subscribeToProjectPreferences(
@@ -163,7 +179,7 @@ final class ProjectContext {
             )
         }
 
-        // 9. Notes scoped to project
+        // 10. Notes scoped to project
         listeners.append(
             projectNotesService.subscribeToProjectNotes(
                 accountId: accountId,
@@ -250,6 +266,7 @@ final class ProjectContext {
         spaces = []
         budgetCategories = []
         projectBudgetCategories = []
+        feeInstallments = []
         budgetProgress = nil
         projectPreferences = nil
         notes = []

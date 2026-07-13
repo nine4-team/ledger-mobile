@@ -187,6 +187,107 @@ struct BillingSummaryCalculationTests {
         #expect(membership.toInvoiceTransactionIds.contains("t-service"))
     }
 
+    @Test("Item invoiceability uses current transaction shape for pricing")
+    func itemInvoiceabilityUsesCurrentTransactionShape() {
+        let projectId = "p1"
+        var soldItem = makeItem(id: "sold", projectId: projectId, purchasePriceCents: 1_000, projectPriceCents: 1_500)
+        soldItem.transactionId = "tx-inventory"
+        soldItem.currentSource = "Business Inventory"
+
+        var reimbursableItem = makeItem(id: "reimbursable", projectId: projectId, purchasePriceCents: 2_000, projectPriceCents: 2_500)
+        reimbursableItem.transactionId = "tx-vendor"
+        reimbursableItem.currentSource = "Vendor"
+
+        var clientPaidItem = makeItem(id: "client-paid", projectId: projectId, purchasePriceCents: 3_000, projectPriceCents: 3_500)
+        clientPaidItem.transactionId = "tx-client"
+        clientPaidItem.currentSource = "Vendor"
+
+        var inventoryTx = makeTransaction(
+            id: "tx-inventory",
+            projectId: projectId,
+            amountCents: 1_000,
+            itemIds: ["sold"],
+            transactionType: .purchase
+        )
+        inventoryTx.source = "Business Inventory"
+        var vendorTx = makeTransaction(
+            id: "tx-vendor",
+            projectId: projectId,
+            amountCents: 2_000,
+            itemIds: ["reimbursable"],
+            reimbursementType: "owed-to-company",
+            transactionType: .purchase
+        )
+        vendorTx.source = "Vendor"
+        var clientTx = makeTransaction(
+            id: "tx-client",
+            projectId: projectId,
+            amountCents: 3_000,
+            itemIds: ["client-paid"],
+            transactionType: .purchase
+        )
+        clientTx.source = "Vendor"
+
+        let transactions = [inventoryTx, vendorTx, clientTx]
+
+        #expect(InvoiceLineCalculations.invoiceability(
+            for: soldItem,
+            projectId: projectId,
+            transactions: transactions
+        ) == .billable(.projectPrice))
+        #expect(InvoiceLineCalculations.amountCents(
+            for: soldItem,
+            projectId: projectId,
+            transactions: transactions
+        ) == 1_500)
+        #expect(InvoiceLineCalculations.invoiceability(
+            for: reimbursableItem,
+            projectId: projectId,
+            transactions: transactions
+        ) == .billable(.purchasePrice))
+        #expect(InvoiceLineCalculations.amountCents(
+            for: reimbursableItem,
+            projectId: projectId,
+            transactions: transactions
+        ) == 2_000)
+        #expect(InvoiceLineCalculations.invoiceability(
+            for: clientPaidItem,
+            projectId: projectId,
+            transactions: transactions
+        ) == .notBillable)
+
+        let membership = InvoiceLineCalculations.billableMembership(
+            projectId: projectId,
+            items: [soldItem, reimbursableItem, clientPaidItem],
+            transactions: transactions,
+            invoices: []
+        )
+        #expect(membership.toInvoiceItemIds == ["sold", "reimbursable"])
+    }
+
+    @Test("Item invoiceability uses sold lineage as fallback")
+    func itemInvoiceabilityUsesSoldLineageFallback() {
+        let projectId = "p1"
+        let item = makeItem(id: "legacy-sold", projectId: projectId, purchasePriceCents: 1_000, projectPriceCents: 1_400)
+        var edge = LineageEdge()
+        edge.itemId = "legacy-sold"
+        edge.movementKind = "sold"
+        edge.toProjectId = projectId
+
+        #expect(InvoiceLineCalculations.invoiceability(
+            for: item,
+            projectId: projectId,
+            transactions: [],
+            lineageEdges: [edge]
+        ) == .billable(.projectPrice))
+        #expect(InvoiceLineCalculations.amountCents(
+            for: item,
+            projectId: projectId,
+            transactions: [],
+            lineageEdges: [edge]
+        ) == 1_400)
+    }
+
     @Test("Manual invoice lines count as demand and settlement transactions count as collected")
     func manualLineDemandAndSettlementCollection() {
         let projectId = "p1"
@@ -236,6 +337,123 @@ struct BillingSummaryCalculationTests {
         #expect(paidSummary.invoicedCents == 123)
         #expect(paidSummary.collectedCents == 123)
         #expect(paidSummary.outstandingCents == 0)
+    }
+
+    @Test("Canceled settlement transactions do not count as collected")
+    func canceledSettlementDoesNotCountAsCollected() {
+        let projectId = "p1"
+        let line = InvoiceLine(
+            id: "line-manual",
+            sourceType: .manual,
+            amountCents: 123,
+            sign: .charge,
+            snapshotName: "Design Fee"
+        )
+        let paidInvoice = makeInvoice(
+            id: "inv-paid",
+            projectId: projectId,
+            status: .paid,
+            lines: [line]
+        )
+        var activeSettlement = makeTransaction(
+            id: "settlement-active",
+            projectId: projectId,
+            amountCents: 123,
+            itemIds: nil
+        )
+        activeSettlement.settlementInvoiceId = "inv-paid"
+        var canceledSettlement = makeTransaction(
+            id: "settlement-canceled",
+            projectId: projectId,
+            amountCents: 999,
+            itemIds: nil
+        )
+        canceledSettlement.settlementInvoiceId = "inv-paid"
+        canceledSettlement.status = .canceled
+
+        let summary = BillingSummaryCalculations.summarize(
+            projectId: projectId,
+            items: [],
+            transactions: [activeSettlement, canceledSettlement],
+            invoices: [paidInvoice]
+        )
+
+        #expect(summary.invoicedCents == 123)
+        #expect(summary.collectedCents == 123)
+        #expect(summary.outstandingCents == 0)
+    }
+
+    @Test("Canceled settlement transactions do not reduce sent invoice outstanding")
+    func canceledSettlementDoesNotReduceOutstanding() {
+        let projectId = "p1"
+        let line = InvoiceLine(
+            id: "line-manual",
+            sourceType: .manual,
+            amountCents: 123,
+            sign: .charge,
+            snapshotName: "Design Fee"
+        )
+        let sentInvoice = makeInvoice(
+            id: "inv-sent",
+            projectId: projectId,
+            status: .sent,
+            lines: [line]
+        )
+        var canceledSettlement = makeTransaction(
+            id: "settlement-canceled",
+            projectId: projectId,
+            amountCents: 123,
+            itemIds: nil
+        )
+        canceledSettlement.settlementInvoiceId = "inv-sent"
+        canceledSettlement.status = .canceled
+
+        let summary = BillingSummaryCalculations.summarize(
+            projectId: projectId,
+            items: [],
+            transactions: [canceledSettlement],
+            invoices: [sentInvoice]
+        )
+
+        #expect(summary.invoicedCents == 123)
+        #expect(summary.collectedCents == 0)
+        #expect(summary.outstandingCents == 123)
+    }
+
+    @Test("Canceled settlement transactions do not reduce payable balance")
+    func canceledSettlementDoesNotReducePayableBalance() {
+        let projectId = "p1"
+        let line = InvoiceLine(
+            id: "line-manual",
+            sourceType: .manual,
+            amountCents: 500,
+            sign: .charge,
+            snapshotName: "Design Fee"
+        )
+        let sentInvoice = makeInvoice(
+            id: "inv-sent",
+            projectId: projectId,
+            status: .sent,
+            lines: [line]
+        )
+        var canceledSettlement = makeTransaction(
+            id: "settlement",
+            projectId: projectId,
+            amountCents: 500,
+            itemIds: nil
+        )
+        canceledSettlement.settlementInvoiceId = "inv-sent"
+        canceledSettlement.status = .canceled
+
+        let balance = InvoiceLineCalculations.payableBalance(
+            projectId: projectId,
+            items: [],
+            transactions: [canceledSettlement],
+            invoices: [sentInvoice]
+        )
+
+        #expect(balance.toBusinessCents == 500)
+        #expect(balance.toClientCents == 0)
     }
 
     @Test("Voided invoice membership doesn't count")

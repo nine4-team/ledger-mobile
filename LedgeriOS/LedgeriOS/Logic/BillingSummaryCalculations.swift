@@ -51,7 +51,7 @@ enum BillingSummaryCalculations {
         })
 
         let settlementByInvoiceId = Dictionary(grouping: scopedTransactions.compactMap { tx -> (String, Int)? in
-            guard let invoiceId = tx.settlementInvoiceId else { return nil }
+            guard isActiveSettlement(tx), let invoiceId = tx.settlementInvoiceId else { return nil }
             return (invoiceId, tx.amountCents ?? 0)
         }, by: { $0.0 })
             .mapValues { entries in entries.reduce(0) { $0 + $1.1 } }
@@ -98,6 +98,10 @@ enum BillingSummaryCalculations {
             collectedCents: collected,
             outstandingCents: outstanding
         )
+    }
+
+    static func isActiveSettlement(_ tx: Transaction) -> Bool {
+        tx.settlementInvoiceId != nil && tx.status != .canceled
     }
 
     /// A transaction is treated as a directly-billable line when its category

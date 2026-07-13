@@ -116,7 +116,11 @@ struct CreateInvoiceModal: View {
     private var totalCents: Int {
         var lines: [InvoiceLine] = []
         for item in billableItems where selectedItemIds.contains(item.id ?? "") {
-            if let line = InvoiceLineCalculations.makeLine(item: item) {
+            if let line = InvoiceLineCalculations.makeLine(
+                item: item,
+                projectId: projectId,
+                transactions: projectContext.transactions
+            ) {
                 lines.append(line)
             }
         }
@@ -465,7 +469,11 @@ struct CreateInvoiceModal: View {
         let itemIdSet = Set(itemIds)
         let txIdSet = Set(txIds)
         for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
-            guard var line = InvoiceLineCalculations.makeLine(item: item),
+            guard var line = InvoiceLineCalculations.makeLine(
+                item: item,
+                projectId: projectId,
+                transactions: projectContext.transactions
+            ),
                   let sourceId = item.id else { continue }
             if let existing = existingLineId(sourceType: .item, sourceId: sourceId) {
                 line.id = existing
