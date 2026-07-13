@@ -28,17 +28,14 @@ struct BillingSummaryCard: View {
     }
 
     var body: some View {
-        Card {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Billing")
-                    .sectionLabelStyle()
-
-                row(.totalSpent, cents: summary.totalSpentCents, color: BrandColors.textPrimary)
-                row(.invoiced, cents: summary.invoicedCents, color: BrandColors.primary)
-                row(.collected, cents: summary.collectedCents, color: StatusColors.metText)
-                Divider()
-                row(.outstanding, cents: summary.outstandingCents, color: BrandColors.textPrimary, emphasized: true)
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            row(.totalSpent, cents: summary.totalSpentCents, color: BrandColors.textPrimary)
+            BillingSummaryDivider()
+            row(.invoiced, cents: summary.invoicedCents, color: BrandColors.primary)
+            BillingSummaryDivider()
+            row(.collected, cents: summary.collectedCents, color: StatusColors.metText)
+            BillingSummaryDivider()
+            row(.outstanding, cents: summary.outstandingCents, color: BrandColors.textPrimary, emphasized: true)
         }
         .alert(
             selectedDefinition?.title ?? "",
@@ -76,6 +73,15 @@ struct BillingSummaryCard: View {
                 .foregroundStyle(color)
                 .monospacedDigit()
         }
+        .padding(.vertical, Spacing.sm)
+    }
+}
+
+private struct BillingSummaryDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(BrandColors.borderSecondary)
+            .frame(height: Dimensions.borderWidth)
     }
 }
 

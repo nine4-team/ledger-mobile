@@ -33,6 +33,9 @@ private struct BillingSubTab: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(ProjectContext.self) private var projectContext
     @State private var showingCreateInvoice = false
+    @State private var overviewExpanded = false
+    @State private var receivablesExpanded = false
+    @State private var invoicesExpanded = false
 
     private var projectInvoices: [Invoice] {
         guard let projectId = projectContext.currentProjectId else { return [] }
@@ -43,49 +46,26 @@ private struct BillingSubTab: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                BillingSummaryCard()
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                CollapsibleSection(
+                    title: "Overview",
+                    isExpanded: $overviewExpanded,
+                    badge: "Metrics"
+                ) {
+                    BillingSummaryCard()
+                        .padding(.top, Spacing.xs)
+                }
 
                 CandidateReceivablesSection(
+                    isExpanded: $receivablesExpanded,
                     onCreateInvoice: { showingCreateInvoice = true }
                 )
 
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    HStack {
-                        Text("Invoices").sectionLabelStyle()
-                        Spacer()
-                        Button {
-                            showingCreateInvoice = true
-                        } label: {
-                            Label("Create Invoice", systemImage: "plus.circle.fill")
-                                .font(Typography.body.weight(.semibold))
-                                .foregroundStyle(BrandColors.primary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    if projectInvoices.isEmpty {
-                        Card {
-                            Text("No invoices yet. Tap Create Invoice to bill the client for approved items.")
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    } else {
-                        ForEach(projectInvoices, id: \.id) { invoice in
-                            NavigationLink(value: invoice) {
-                                InvoiceRow(
-                                    invoice: invoice,
-                                    items: projectContext.items,
-                                    transactions: projectContext.transactions,
-                                    feeInstallments: projectContext.feeInstallments
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-
+                InvoiceListSection(
+                    invoices: projectInvoices,
+                    isExpanded: $invoicesExpanded,
+                    onCreateInvoice: { showingCreateInvoice = true }
+                )
             }
             .padding(Spacing.screenPadding)
             .frame(maxWidth: Dimensions.contentMaxWidth)
@@ -175,6 +155,7 @@ private struct CandidateReceivablesSection: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AuthManager.self) private var authManager
 
+    @Binding var isExpanded: Bool
     var onCreateInvoice: () -> Void
 
     @State private var searchText = ""
@@ -304,52 +285,48 @@ private struct CandidateReceivablesSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack {
-                Text("Candidate Receivables").sectionLabelStyle()
-                Spacer()
-                Button(action: onCreateInvoice) {
-                    Label("Create Invoice", systemImage: "plus.circle.fill")
-                        .font(Typography.body.weight(.semibold))
-                        .foregroundStyle(BrandColors.primary)
-                }
-                .buttonStyle(.plain)
-            }
+        CollapsibleSection(
+            title: "Receivables",
+            isExpanded: $isExpanded,
+            badge: summaryLabel,
+            onAdd: onCreateInvoice
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                BillingReceivablesToolbar(
+                    searchText: $searchText,
+                    filtersAreActive: filtersAreActive,
+                    onFilter: { showingFilters = true }
+                )
 
-            HStack(spacing: Spacing.sm) {
-                SearchField(text: $searchText, placeholder: "Search receivables...")
-                Button { showingFilters = true } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                        .font(Typography.h3)
-                        .foregroundStyle(filtersAreActive ? BrandColors.primary : BrandColors.textSecondary)
-                        .frame(width: 44, height: 44)
-                        .background(BrandColors.surface, in: Circle())
-                        .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Filter receivables")
-            }
-
-            Text(summaryLabel)
-                .font(Typography.caption)
-                .foregroundStyle(BrandColors.textSecondary)
-
-            if hasVisibleRows {
-                feeGroupList
-                sourceRows
-            } else {
-                Card {
-                    Text("No candidate receivables match the current filters.")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
+                if hasVisibleRows {
+                    receivableContent
+                } else {
+                    BillingEmptyRow("No candidate receivables match the current filters.")
                 }
             }
+            .padding(.top, Spacing.xs)
         }
         .adaptivePresentation(isPresented: $showingFilters, style: .selectionMenu) {
             ActionMenuSheet(title: "Receivable Filters", items: filterMenuItems, closeOnItemPress: false)
         }
         .sheet(item: $editingFeeCategory) { group in
             FeeInstallmentFormSheet(group: group)
+        }
+    }
+
+    @ViewBuilder
+    private var receivableContent: some View {
+        if !visibleFeeGroups.isEmpty {
+            BillingSubsectionLabel("Fees")
+            feeGroupList
+        }
+        if !visibleItemRows.isEmpty {
+            BillingSubsectionLabel("Items")
+            itemRows
+        }
+        if !visibleTransactionRows.isEmpty {
+            BillingSubsectionLabel("Expenses")
+            transactionRows
         }
     }
 
@@ -372,25 +349,25 @@ private struct CandidateReceivablesSection: View {
     }
 
     @ViewBuilder
-    private var sourceRows: some View {
-        if sourceFilter == .all || sourceFilter == .items {
-            ForEach(visibleItemRows) { row in
-                if let item = row.item {
-                    NavigationLink(value: item) {
-                        CandidateRow(row: row)
-                    }
-                    .buttonStyle(.plain)
+    private var itemRows: some View {
+        ForEach(visibleItemRows) { row in
+            if let item = row.item {
+                NavigationLink(value: item) {
+                    CandidateRow(row: row)
                 }
+                .buttonStyle(.plain)
             }
         }
-        if sourceFilter == .all || sourceFilter == .expenses {
-            ForEach(visibleTransactionRows) { row in
-                if let transaction = row.transaction {
-                    NavigationLink(value: transaction) {
-                        CandidateRow(row: row)
-                    }
-                    .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var transactionRows: some View {
+        ForEach(visibleTransactionRows) { row in
+            if let transaction = row.transaction {
+                NavigationLink(value: transaction) {
+                    CandidateRow(row: row)
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -401,7 +378,7 @@ private struct CandidateReceivablesSection: View {
 
     private var summaryLabel: String {
         let count = visibleFeeGroups.reduce(0) { $0 + $1.rows.count } + visibleItemRows.count + visibleTransactionRows.count
-        return "\(availabilityFilter.label) · \(sourceFilter.label) · \(count) row\(count == 1 ? "" : "s")"
+        return "\(count)"
     }
 
     private var filterMenuItems: [ActionMenuItem] {
@@ -425,7 +402,7 @@ private struct CandidateReceivablesSection: View {
     }
 
     private func shouldDefaultExpand(_ display: FeeGroupDisplay) -> Bool {
-        sourceFilter == .fees || display.toInvoiceCents > 0 || display.rows.contains { $0.state == .available }
+        false
     }
 
     private func appendItemRows(ids: Set<String>, state: CandidateMembershipState, into rows: inout [CandidateSourceRow]) {
@@ -542,11 +519,80 @@ private struct CandidateSourceRow: Identifiable {
     }
 }
 
+private struct BillingSubsectionLabel: View {
+    let title: String
+
+    init(_ title: String) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+            .font(Typography.caption.weight(.semibold))
+            .foregroundStyle(BrandColors.textSecondary)
+            .textCase(.uppercase)
+            .padding(.top, Spacing.sm)
+    }
+}
+
+private struct BillingReceivablesToolbar: View {
+    @Binding var searchText: String
+    let filtersAreActive: Bool
+    var onFilter: () -> Void
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            SearchField(text: $searchText, placeholder: "Search receivables...")
+
+            Button(action: onFilter) {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .foregroundStyle(filtersAreActive ? BrandColors.primary : BrandColors.textSecondary)
+            }
+            .buttonStyle(CircleBarButtonStyle())
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .accessibilityLabel("Filter receivables")
+        }
+    }
+}
+
+private struct BillingEmptyRow: View {
+    let message: String
+
+    init(_ message: String) {
+        self.message = message
+    }
+
+    var body: some View {
+        Text(message)
+            .font(Typography.small)
+            .foregroundStyle(BrandColors.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, Spacing.md)
+    }
+}
+
+private struct BillingRowSurface<Content: View>: View {
+    var padding: CGFloat = Spacing.cardPadding
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(padding)
+            Rectangle()
+                .fill(BrandColors.borderSecondary)
+                .frame(height: Dimensions.borderWidth)
+        }
+    }
+}
+
 private struct CandidateRow: View {
     let row: CandidateSourceRow
 
     var body: some View {
-        Card {
+        BillingRowSurface {
             HStack(alignment: .center, spacing: Spacing.md) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: Spacing.sm) {
@@ -614,7 +660,7 @@ private struct FeeGroupCard: View {
     var onAddInstallment: () -> Void
 
     var body: some View {
-        Card(padding: 0) {
+        BillingRowSurface(padding: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 Button {
                     withAnimation { isExpanded.toggle() }
@@ -626,7 +672,9 @@ private struct FeeGroupCard: View {
                                 .foregroundStyle(BrandColors.textPrimary)
                                 .lineLimit(2)
                             Spacer()
-                            Badge(text: "\(display.rows.count)", color: BrandColors.primary)
+                            if !display.rows.isEmpty {
+                                Badge(text: "\(display.rows.count)", color: BrandColors.primary)
+                            }
                             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(BrandColors.textTertiary)
@@ -848,6 +896,42 @@ private struct FeeInstallmentFormSheet: View {
 
 // MARK: - Invoice Row
 
+private struct InvoiceListSection: View {
+    let invoices: [Invoice]
+    @Binding var isExpanded: Bool
+    var onCreateInvoice: () -> Void
+
+    @Environment(ProjectContext.self) private var projectContext
+
+    var body: some View {
+        CollapsibleSection(
+            title: "Invoices",
+            isExpanded: $isExpanded,
+            badge: "\(invoices.count)",
+            onAdd: onCreateInvoice
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                if invoices.isEmpty {
+                    BillingEmptyRow("No invoices yet. Add receivables to create the first invoice.")
+                } else {
+                    ForEach(invoices, id: \.id) { invoice in
+                        NavigationLink(value: invoice) {
+                            InvoiceRow(
+                                invoice: invoice,
+                                items: projectContext.items,
+                                transactions: projectContext.transactions,
+                                feeInstallments: projectContext.feeInstallments
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.top, Spacing.xs)
+        }
+    }
+}
+
 private struct InvoiceRow: View {
     let invoice: Invoice
     let items: [Item]
@@ -907,7 +991,7 @@ private struct InvoiceRow: View {
     }
 
     var body: some View {
-        Card {
+        BillingRowSurface {
             HStack(alignment: .center, spacing: Spacing.md) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: Spacing.sm) {
