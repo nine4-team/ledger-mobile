@@ -2,18 +2,18 @@ import FirebaseFirestore
 
 /// Sign of a signed invoice line. `+1` = charge (adds to total), `-1` = credit (subtracts).
 /// Stored as an Int so Firestore round-trips cleanly and math stays simple.
-enum InvoiceLineSign: Int, Codable {
+enum InvoiceLineSign: Int, Codable, Sendable {
     case charge = 1
     case credit = -1
 }
 
 /// Source of an invoice line.
-enum InvoiceLineSourceType: String, Codable, CaseInsensitiveStringEnum {
+enum InvoiceLineSourceType: String, Codable, CaseInsensitiveStringEnum, Sendable {
     case item, transaction, feeInstallment, manual
 }
 
 /// A single signed line on an invoice.
-struct InvoiceLine: Codable, Hashable {
+struct InvoiceLine: Codable, Hashable, Sendable {
     /// Stable line identifier used for line-level settlement. Legacy lines that
     /// predate this field decode with a generated id until the backfill writes a
     /// deterministic one.
@@ -84,7 +84,7 @@ struct InvoiceLine: Codable, Hashable {
 ///
 /// Legacy v1 invoices have `lines == nil` and `totalCents` as a pure charge sum;
 /// reader code should treat a missing `lines` as all-charge.
-struct Invoice: Codable, Identifiable, Hashable {
+struct Invoice: Codable, Identifiable, Hashable, @unchecked Sendable {
     @DocumentID var id: String?
     var accountId: String?
     var projectId: String?

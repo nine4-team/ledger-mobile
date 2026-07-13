@@ -573,19 +573,21 @@ private struct BillingEmptyRow: View {
 
 private struct BillingRowSurface<Content: View>: View {
     var padding: CGFloat = Spacing.md
+    var isMuted = false
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         content()
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(padding)
-            .background(BrandColors.surface)
+            .opacity(isMuted ? 0.58 : 1)
+            .background((isMuted ? BrandColors.surface.opacity(0.62) : BrandColors.surface))
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.cardRadius)
                     .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
             )
-            .shadow(color: .black.opacity(0.035), radius: 4, x: 0, y: 1)
+            .shadow(color: .black.opacity(isMuted ? 0.015 : 0.035), radius: isMuted ? 2 : 4, x: 0, y: 1)
     }
 }
 
@@ -885,12 +887,58 @@ private struct FeeInstallmentFormSheet: View {
 
 // MARK: - Invoice Row
 
+private enum InvoicePipelineFilter: String, CaseIterable {
+    case all, created, sent, paid, canceled
+
+    var label: String {
+        switch self {
+        case .all: "All"
+        case .created: "Created"
+        case .sent: "Sent"
+        case .paid: "Paid"
+        case .canceled: "Canceled"
+        }
+    }
+
+    var status: InvoiceStatus? {
+        switch self {
+        case .all: nil
+        case .created: .created
+        case .sent: .sent
+        case .paid: .paid
+        case .canceled: .canceled
+        }
+    }
+
+    var segmentOption: SegmentOption<InvoicePipelineFilter> {
+        SegmentOption(id: self, label: label)
+    }
+}
+
 private struct InvoiceListSection: View {
     let invoices: [Invoice]
     @Binding var isExpanded: Bool
     var onCreateInvoice: () -> Void
 
+    @Environment(AccountContext.self) private var accountContext
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(AuthManager.self) private var authManager
+
+    @State private var selectedStatus: InvoicePipelineFilter = .all
+    @State private var workingInvoiceIds: Set<String> = []
+    @State private var errorMessage: String?
+
+    private var visibleInvoices: [Invoice] {
+        guard let status = selectedStatus.status else { return invoices }
+        return invoices.filter { ($0.status ?? .created) == status }
+    }
+
+    private var emptyMessage: String {
+        guard !invoices.isEmpty else {
+            return "No invoices yet. Add receivables to create the first invoice."
+        }
+        return "No \(selectedStatus.label.lowercased()) invoices."
+    }
 
     var body: some View {
         CollapsibleSection(
@@ -900,24 +948,132 @@ private struct InvoiceListSection: View {
             onAdd: onCreateInvoice
         ) {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
-                if invoices.isEmpty {
-                    BillingEmptyRow("No invoices yet. Add receivables to create the first invoice.")
+                SegmentedControl(
+                    selection: $selectedStatus,
+                    options: InvoicePipelineFilter.allCases.map(\.segmentOption)
+                )
+
+                if visibleInvoices.isEmpty {
+                    BillingEmptyRow(emptyMessage)
                 } else {
-                    ForEach(invoices, id: \.id) { invoice in
-                        NavigationLink(value: invoice) {
-                            InvoiceRow(
-                                invoice: invoice,
-                                items: projectContext.items,
-                                transactions: projectContext.transactions,
-                                feeInstallments: projectContext.feeInstallments
-                            )
-                        }
-                        .buttonStyle(.plain)
+                    ForEach(visibleInvoices, id: \.id) { invoice in
+                        InvoiceRow(
+                            invoice: invoice,
+                            items: projectContext.items,
+                            transactions: projectContext.transactions,
+                            feeInstallments: projectContext.feeInstallments,
+                            isWorking: invoice.id.map { workingInvoiceIds.contains($0) } ?? false,
+                            onTogglePaid: { togglePaid(invoice) }
+                        )
                     }
                 }
             }
             .padding(.top, Spacing.xs)
         }
+        .alert("Invoice update failed", isPresented: .init(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private func togglePaid(_ invoice: Invoice) {
+        guard let invoiceId = invoice.id,
+              let accountId = accountContext.currentAccountId
+        else { return }
+
+        let status = invoice.status ?? .created
+        guard status != .canceled else { return }
+
+        workingInvoiceIds.insert(invoiceId)
+        let userId = authManager.currentUser?.uid
+
+        Task {
+            do {
+                if status == .paid {
+                    let settlementIds = projectContext.transactions.compactMap { tx -> String? in
+                        guard tx.settlementInvoiceId == invoiceId,
+                              tx.status != .canceled,
+                              let txId = tx.id
+                        else { return nil }
+                        return txId
+                    }
+                    try await InvoiceService().voidInvoicePayment(
+                        invoice: invoice,
+                        accountId: accountId,
+                        settlementTransactionIds: settlementIds,
+                        userId: userId
+                    )
+                } else {
+                    let liveLines = materializedLiveLines(for: invoice)
+                    var invoiceForCollection = invoice
+                    invoiceForCollection.lines = liveLines
+                    invoiceForCollection.totalCents = InvoiceLineCalculations.netTotalCents(lines: liveLines)
+                    _ = try await InvoiceService().markCollected(
+                        invoice: invoiceForCollection,
+                        accountId: accountId,
+                        projectId: invoice.projectId ?? projectContext.currentProjectId ?? "",
+                        amountCents: max(invoiceForCollection.totalCents ?? 0, 0),
+                        source: invoice.invoiceNumber?.isEmpty == false ? "Collected \(invoice.invoiceNumber!)" : "Collected invoice",
+                        settlementInvoiceLineIds: liveLines.map(\.id),
+                        userId: userId
+                    )
+                }
+                await MainActor.run {
+                    workingInvoiceIds.remove(invoiceId)
+                }
+            } catch {
+                await MainActor.run {
+                    workingInvoiceIds.remove(invoiceId)
+                    errorMessage = "Could not update invoice collection status."
+                }
+            }
+        }
+    }
+
+    private func materializedLiveLines(for invoice: Invoice) -> [InvoiceLine] {
+        let itemIdSet = Set(invoice.itemIds ?? [])
+        let txIdSet = Set(invoice.transactionIds ?? [])
+        var lines: [InvoiceLine] = []
+
+        for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
+            if let line = InvoiceLineCalculations.makeLine(
+                item: item,
+                projectId: invoice.projectId ?? "",
+                transactions: projectContext.transactions
+            ) {
+                lines.append(line)
+            }
+        }
+
+        for tx in projectContext.transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
+            if let line = InvoiceLineCalculations.makeLine(transaction: tx) {
+                lines.append(line)
+            }
+        }
+
+        for line in invoice.lines ?? [] {
+            if line.sourceType == .feeInstallment,
+               let sourceId = line.sourceId,
+               let installment = projectContext.feeInstallments.first(where: { $0.id == sourceId }) {
+                lines.append(InvoiceLine(
+                    id: line.id,
+                    sourceType: .feeInstallment,
+                    sourceId: sourceId,
+                    amountCents: installment.amountCents,
+                    sign: .charge,
+                    budgetCategoryId: installment.budgetCategoryId,
+                    snapshotName: installment.label
+                ))
+            } else if line.sourceType == .manual {
+                lines.append(line)
+            }
+        }
+
+        return lines
     }
 }
 
@@ -926,8 +1082,13 @@ private struct InvoiceRow: View {
     let items: [Item]
     let transactions: [Transaction]
     let feeInstallments: [FeeInstallment]
+    let isWorking: Bool
+    let onTogglePaid: () -> Void
 
     private var status: InvoiceStatus { invoice.status ?? .created }
+    private var isPaid: Bool { status == .paid }
+    private var isCanceled: Bool { status == .canceled }
+    private var canTogglePaid: Bool { !isCanceled && !isWorking && (isPaid || displayedTotalCents > 0) }
 
     /// Created and sent invoices stay live. Paid invoices use the final
     /// `totalCents` snapshot written at collection.
@@ -980,34 +1141,60 @@ private struct InvoiceRow: View {
     }
 
     var body: some View {
-        BillingRowSurface {
+        BillingRowSurface(isMuted: isPaid || isCanceled) {
             HStack(alignment: .center, spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: Spacing.sm) {
-                        Text(invoice.invoiceNumber ?? "Invoice")
-                            .font(Typography.body.weight(.semibold))
-                            .foregroundStyle(BrandColors.textPrimary)
-                            .lineLimit(1)
-                        Text(status.displayLabel)
-                            .font(Typography.caption.weight(.semibold))
-                            .padding(.horizontal, Spacing.sm)
-                            .padding(.vertical, 2)
-                            .background(statusColor.opacity(0.10), in: Capsule())
-                            .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
-                            .foregroundStyle(statusColor)
-                    }
-                    if let date = invoice.dateIssued {
-                        Text(date.formatted(date: .abbreviated, time: .omitted))
-                            .font(Typography.caption)
-                            .foregroundStyle(BrandColors.textSecondary)
+                Button(action: onTogglePaid) {
+                    if isWorking {
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(width: 28, height: 28)
+                    } else {
+                        Image(systemName: isPaid ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(isPaid ? StatusColors.metText : BrandColors.textTertiary.opacity(canTogglePaid ? 1 : 0.45))
+                            .frame(width: 28, height: 28)
                     }
                 }
-                Spacer()
-                Text(CurrencyFormatting.formatCents(displayedTotalCents))
-                    .font(Typography.small.weight(.semibold))
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .monospacedDigit()
+                .buttonStyle(.plain)
+                .disabled(!canTogglePaid)
+                .accessibilityLabel(isPaid ? "Mark invoice unpaid" : "Mark invoice paid")
+                .accessibilityHint(canTogglePaid ? "" : "Invoice total must be greater than zero.")
+
+                NavigationLink(value: invoice) {
+                    invoiceSummary
+                }
+                .buttonStyle(.plain)
             }
+        }
+    }
+
+    private var invoiceSummary: some View {
+        HStack(alignment: .center, spacing: Spacing.md) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: Spacing.sm) {
+                    Text(invoice.invoiceNumber ?? "Invoice")
+                        .font(Typography.body.weight(.semibold))
+                        .foregroundStyle(BrandColors.textPrimary)
+                        .lineLimit(1)
+                    Text(status.displayLabel)
+                        .font(Typography.caption.weight(.semibold))
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, 2)
+                        .background(statusColor.opacity(0.10), in: Capsule())
+                        .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
+                        .foregroundStyle(statusColor)
+                }
+                if let date = invoice.datePaid ?? invoice.dateSent ?? invoice.dateIssued {
+                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+            Spacer()
+            Text(CurrencyFormatting.formatCents(displayedTotalCents))
+                .font(Typography.small.weight(.semibold))
+                .foregroundStyle(BrandColors.textPrimary)
+                .monospacedDigit()
         }
     }
 }
