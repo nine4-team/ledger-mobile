@@ -146,7 +146,11 @@ struct NewTransactionView: View {
     /// pre-taxonomy flow: business-paid itemized categories go through business
     /// inventory first. Plain purchases/services do not.
     private var routeThroughInventory: Bool {
-        isItemizedCategory && purchasedBy == "design-business"
+        TransactionFormValidation.shouldRouteThroughInventory(
+            type: transactionType,
+            isItemizedCategory: isItemizedCategory,
+            purchasedBy: purchasedBy
+        )
     }
 
     /// Itemized behavior is still owned by budget category metadata.

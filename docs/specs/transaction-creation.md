@@ -63,6 +63,8 @@ The post-create item-entry / sell-from-inventory path is offered only when all
 of these are true:
 
 ```text
+type == purchase
+AND
 selected budget category is itemized/items
 AND purchasedBy == design-business
 AND actual item rows exist / are being created

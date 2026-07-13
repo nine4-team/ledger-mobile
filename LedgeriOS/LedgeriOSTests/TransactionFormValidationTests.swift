@@ -130,4 +130,33 @@ struct TransactionFormValidationTests {
     func notReadyNilType() {
         #expect(!TransactionFormValidation.isTransactionReadyToSubmit(type: nil))
     }
+
+    // MARK: - shouldRouteThroughInventory
+
+    @Test("Business-paid itemized purchase routes through inventory")
+    func businessPaidItemizedPurchaseRoutesThroughInventory() {
+        #expect(TransactionFormValidation.shouldRouteThroughInventory(
+            type: .purchase,
+            isItemizedCategory: true,
+            purchasedBy: "design-business"
+        ))
+    }
+
+    @Test("Itemized return does not route through inventory")
+    func itemizedReturnDoesNotRouteThroughInventory() {
+        #expect(!TransactionFormValidation.shouldRouteThroughInventory(
+            type: .return,
+            isItemizedCategory: true,
+            purchasedBy: "design-business"
+        ))
+    }
+
+    @Test("Client-paid itemized purchase does not route through inventory")
+    func clientPaidItemizedPurchaseDoesNotRouteThroughInventory() {
+        #expect(!TransactionFormValidation.shouldRouteThroughInventory(
+            type: .purchase,
+            isItemizedCategory: true,
+            purchasedBy: "client-card"
+        ))
+    }
 }
