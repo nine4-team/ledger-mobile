@@ -509,7 +509,7 @@ Embedded within BudgetCategory documents.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
-| categoryType | string, nullable | Canonical budget category behavior. Values: `"general"`, `"itemized"`, `"fee"`. Historical `"standard"` and `"expense"` decode as `"general"` but must not be written by new code. |
+| categoryType | string | Canonical budget category behavior. Values: `"general"`, `"itemized"`, `"fee"`. |
 | excludeFromOverallBudget | boolean, nullable | When true, this category's spend is not included in the project's overall budget totals |
 
 **Category behavior:**
@@ -517,9 +517,7 @@ Embedded within BudgetCategory documents.
 - `categoryType = "general"`: non-itemized project cost category. Transactions are still stored as `type = "purchase"` in the target taxonomy.
 - `categoryType = "fee"`: fee/revenue category. Invoice lines can use these categories; collection writes `paymentToBusiness` transactions.
 
-`supportedTypes` may still exist for compatibility. App and agent behavior must
-prefer `metadata.categoryType`; use `supportedTypes` only as fallback when
-`categoryType` is missing.
+Budget category behavior is stored only in `metadata.categoryType`.
 
 ### ProjectBudgetSummary
 

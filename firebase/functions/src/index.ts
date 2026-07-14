@@ -640,7 +640,7 @@ type CreateProjectResponse = {
   projectId: string;
 };
 
-type BudgetCategoryType = 'standard' | 'general' | 'itemized' | 'fee';
+type BudgetCategoryType = 'general' | 'itemized' | 'fee';
 
 type BudgetCategorySeed = {
   id: string;
@@ -1111,18 +1111,9 @@ function normalizeCategoryType(value: string | null): 'general' | 'itemized' | '
   switch (value?.trim().toLowerCase()) {
     case 'fee': return 'fee';
     case 'itemized': return 'itemized';
-    case 'standard':
-    case 'expense':
     case 'general': return 'general';
     default: return null;
   }
-}
-
-function deriveCategoryTypeFromSupportedTypes(supportedTypes: string[]): 'general' | 'itemized' | 'fee' {
-  const normalized = new Set(supportedTypes.map((v) => v.trim().toLowerCase()).filter(Boolean));
-  if (normalized.size === 1 && normalized.has('fee')) return 'fee';
-  if (normalized.size === 2 && normalized.has('purchase') && normalized.has('return')) return 'itemized';
-  return 'general';
 }
 
 function resolveCategoryTypeFromCategoryData(data: DocumentData | undefined | null): 'general' | 'itemized' | 'fee' {
@@ -1130,39 +1121,9 @@ function resolveCategoryTypeFromCategoryData(data: DocumentData | undefined | nu
     data?.metadata && typeof data.metadata === 'object'
       ? (data.metadata as Record<string, unknown>)
       : {};
-  const categoryType = normalizeCategoryType(
+  return normalizeCategoryType(
     typeof metadata.categoryType === 'string' ? metadata.categoryType : null
-  );
-  if (categoryType) return categoryType;
-
-  const explicitSupported = Array.isArray(data?.supportedTypes)
-    ? (data.supportedTypes as unknown[])
-        .filter((v): v is string => typeof v === 'string')
-        .map((v) => v.trim())
-        .filter(Boolean)
-    : [];
-  return deriveCategoryTypeFromSupportedTypes(explicitSupported);
-}
-
-/**
- * Derive compatibility supportedTypes from canonical category behavior.
- * `metadata.categoryType` wins over dirty `supportedTypes`.
- */
-function deriveSupportedTypesFromCategoryType(categoryType: 'general' | 'itemized' | 'fee'): string[] {
-  switch (categoryType) {
-    case 'fee': return ['fee'];
-    case 'itemized': return ['purchase', 'return'];
-    case 'general': return ['expense'];
-  }
-}
-
-function resolveSupportedTypesFromCategoryData(data: DocumentData | undefined | null): string[] {
-  return deriveSupportedTypesFromCategoryType(resolveCategoryTypeFromCategoryData(data));
-}
-
-function isItemsCategorySupportedTypes(supportedTypes: string[]): boolean {
-  const normalized = new Set(supportedTypes.map((v) => v.trim().toLowerCase()));
-  return normalized.size === 2 && normalized.has('purchase') && normalized.has('return');
+  ) ?? 'general';
 }
 
 async function transactionUsesItemsCategory(
@@ -1181,16 +1142,14 @@ async function transactionUsesItemsCategory(
     .get();
   if (!categorySnap.exists) return false;
 
-  return isItemsCategorySupportedTypes(resolveSupportedTypesFromCategoryData(categorySnap.data()));
+  return resolveCategoryTypeFromCategoryData(categorySnap.data()) === 'itemized';
 }
 
 type BudgetSummaryCategory = {
   budgetCents: number;
   spentCents: number;
   name: string;
-  /** @deprecated Retained for Phase 2/3 clients. Phase 4 removes this. */
-  categoryType: string | null;
-  supportedTypes: string[];
+  categoryType: 'general' | 'itemized' | 'fee';
   excludeFromOverallBudget: boolean;
   isArchived: boolean;
 };
@@ -1220,8 +1179,7 @@ async function recalculateProjectBudgetSummary(
     string,
     {
       name: string;
-      categoryType: string | null;
-      supportedTypes: string[];
+      categoryType: 'general' | 'itemized' | 'fee';
       excludeFromOverallBudget: boolean;
       isArchived: boolean;
     }
@@ -1233,11 +1191,9 @@ async function recalculateProjectBudgetSummary(
         ? (data.metadata as Record<string, unknown>)
         : {};
     const categoryType = resolveCategoryTypeFromCategoryData(data);
-    const supportedTypes = deriveSupportedTypesFromCategoryType(categoryType);
     budgetCategories[doc.id] = {
       name: typeof data.name === 'string' ? data.name : '',
       categoryType,
-      supportedTypes,
       excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
       isArchived: data.isArchived === true,
     };
@@ -1316,7 +1272,6 @@ async function recalculateProjectBudgetSummary(
       spentCents,
       name: catMeta?.name ?? '',
       categoryType: catMeta?.categoryType ?? 'general',
-      supportedTypes: catMeta?.supportedTypes ?? ['expense'],
       excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
       isArchived: catMeta?.isArchived ?? false,
     };
@@ -1721,19 +1676,11 @@ export const onAccountBudgetCategoryWritten = onDocumentWritten(
           ? (after.metadata as Record<string, unknown>)
           : {};
 
-      // Relevant fields for budget-summary denormalization. `supportedTypes` is
-      // included so the denormalized summary stays in sync with category shape.
-      // `categoryType` stays listed until Phase 4 clears the field; after that
-      // this line becomes dead.
-      const beforeSupported = JSON.stringify(before.supportedTypes ?? null);
-      const afterSupported = JSON.stringify(after.supportedTypes ?? null);
-
       const relevantFieldsChanged =
         before.name !== after.name ||
         before.isArchived !== after.isArchived ||
         beforeMeta.categoryType !== afterMeta.categoryType ||
-        beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget ||
-        beforeSupported !== afterSupported;
+        beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget;
 
       if (!relevantFieldsChanged) return;
     }

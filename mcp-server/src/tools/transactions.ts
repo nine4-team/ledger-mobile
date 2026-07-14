@@ -19,7 +19,7 @@ import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
-import { resolveSupportedTypes } from "../util/budget.js";
+import { resolveCategoryType } from "../util/budget.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -37,13 +37,11 @@ async function getBudgetCategory(db: Firestore, budgetCategoryId: string) {
 }
 
 function isItemizedCategory(category: BudgetCategory): boolean {
-  const supported = new Set(resolveSupportedTypes(category));
-  return supported.size === 2 && supported.has("purchase") && supported.has("return");
+  return resolveCategoryType(category) === "itemized";
 }
 
 function isFeeCategory(category: BudgetCategory): boolean {
-  const supported = new Set(resolveSupportedTypes(category));
-  return supported.size === 1 && supported.has("fee");
+  return resolveCategoryType(category) === "fee";
 }
 
 /**
@@ -325,7 +323,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type for normal writes: Purchase, Return, or paymentToBusiness. Purchase covers goods/services; itemization is owned by budget category. paymentToBusiness records a client payment and requires a feeCategory budget category. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory. Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'. Fee, Expense, and To Inventory are legacy read-only values."),
+      type: z.string().default("Purchase").describe("Transaction type for normal writes: Purchase, Return, or paymentToBusiness. Purchase covers goods/services; itemization is owned by budget category. paymentToBusiness records a client payment and requires a fee category. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory. Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'. Fee, Expense, and To Inventory are legacy read-only values."),
       source: z.string().optional().describe("Vendor/source name for purchases/returns. Omit for paymentToBusiness client payments."),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Optional prose describing what the transaction is (e.g. 'Home Depot receipt — drywall + paint for guest bath'). Free-form, no required format."),
@@ -372,7 +370,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (!categoryIsFee) {
           return validation(
             "Client payments require a fee/revenue budget category.",
-            "Choose a categoryKind == feeCategory category such as Design Fee."
+            "Choose a categoryType == fee category such as Design Fee."
           );
         }
         if (

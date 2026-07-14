@@ -23,11 +23,11 @@ struct BillingSummaryCalculationTests {
         return inv
     }
 
-    private func makeCategory(id: String, supportedTypes: [TransactionType]) -> BudgetCategory {
+    private func makeCategory(id: String, categoryType: BudgetCategoryType) -> BudgetCategory {
         var category = BudgetCategory()
         category.id = id
         category.name = id
-        category.supportedTypes = supportedTypes
+        category.metadata = BudgetCategoryMetadata(categoryType: categoryType, excludeFromOverallBudget: false)
         return category
     }
 
@@ -98,7 +98,7 @@ struct BillingSummaryCalculationTests {
             items: [],
             transactions: [tx],
             invoices: [inv],
-            budgetCategories: ["items": makeCategory(id: "items", supportedTypes: [.purchase, .return])]
+            budgetCategories: ["items": makeCategory(id: "items", categoryType: .itemized)]
         )
         #expect(summary.totalSpentCents == 0)
         #expect(summary.collectedCents == 0)
@@ -118,12 +118,12 @@ struct BillingSummaryCalculationTests {
             items: [],
             transactions: [tx],
             invoices: [],
-            budgetCategories: ["items": makeCategory(id: "items", supportedTypes: [.purchase, .return])]
+            budgetCategories: ["items": makeCategory(id: "items", categoryType: .itemized)]
         )
         #expect(summary.totalSpentCents == 0)
         #expect(BillingSummaryCalculations.isNonItemized(
             tx,
-            budgetCategories: ["items": makeCategory(id: "items", supportedTypes: [.purchase, .return])]
+            budgetCategories: ["items": makeCategory(id: "items", categoryType: .itemized)]
         ) == false)
     }
 
@@ -142,12 +142,12 @@ struct BillingSummaryCalculationTests {
             items: [],
             transactions: [tx],
             invoices: [],
-            budgetCategories: ["services": makeCategory(id: "services", supportedTypes: [.expense])]
+            budgetCategories: ["services": makeCategory(id: "services", categoryType: .general)]
         )
         #expect(summary.totalSpentCents == 12_345)
         #expect(BillingSummaryCalculations.isNonItemized(
             tx,
-            budgetCategories: ["services": makeCategory(id: "services", supportedTypes: [.expense])]
+            budgetCategories: ["services": makeCategory(id: "services", categoryType: .general)]
         ) == true)
     }
 
@@ -178,8 +178,8 @@ struct BillingSummaryCalculationTests {
             transactions: [itemized, service],
             invoices: [],
             budgetCategories: [
-                "items": makeCategory(id: "items", supportedTypes: [.purchase, .return]),
-                "services": makeCategory(id: "services", supportedTypes: [.expense]),
+                "items": makeCategory(id: "items", categoryType: .itemized),
+                "services": makeCategory(id: "services", categoryType: .general),
             ]
         )
 

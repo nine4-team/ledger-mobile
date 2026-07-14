@@ -75,6 +75,7 @@ struct ModelCodableTests {
         protoItem.captureContext = .project
         protoItem.status = .open
         protoItem.sourceHint = .businessPurchase
+        protoItem.quantity = 1
         protoItem.notes = "Blue fish with tag"
         protoItem.photos = [
             AttachmentRef(url: "offline://upload-1", isUploading: true),
@@ -93,6 +94,7 @@ struct ModelCodableTests {
         #expect(dict["captureContext"] as? String == "project")
         #expect(dict["status"] as? String == "open")
         #expect(dict["sourceHint"] as? String == "business_purchase")
+        #expect(dict["quantity"] as? Int == 1)
         #expect(dict["notes"] as? String == "Blue fish with tag")
 
         let photos = dict["photos"] as? [[String: Any]]
@@ -287,24 +289,21 @@ struct ModelCodableTests {
         #expect(meta?["excludeFromOverallBudget"] as? Bool == false)
     }
 
-    @Test("BudgetCategory categoryType wins over conflicting supportedTypes")
-    func budgetCategoryTypeWinsOverSupportedTypes() {
+    @Test("BudgetCategory categoryType resolves itemized behavior")
+    func budgetCategoryTypeResolvesItemizedBehavior() {
         var cat = BudgetCategory()
-        cat.metadata = BudgetCategoryMetadata(categoryType: .general, excludeFromOverallBudget: false)
-        cat.supportedTypes = [.purchase, .return]
-
-        #expect(cat.resolvedCategoryType == .general)
-        #expect(cat.isItemsCategory == false)
-        #expect(cat.resolvedSupportedTypes == [.expense])
-    }
-
-    @Test("BudgetCategory falls back to supportedTypes when categoryType is missing")
-    func budgetCategoryFallsBackToSupportedTypes() {
-        var cat = BudgetCategory()
-        cat.supportedTypes = [.purchase, .return]
+        cat.metadata = BudgetCategoryMetadata(categoryType: .itemized, excludeFromOverallBudget: false)
 
         #expect(cat.resolvedCategoryType == .itemized)
         #expect(cat.isItemsCategory)
+    }
+
+    @Test("BudgetCategory defaults to general when categoryType is missing")
+    func budgetCategoryDefaultsToGeneralWhenCategoryTypeMissing() {
+        var cat = BudgetCategory()
+
+        #expect(cat.resolvedCategoryType == .general)
+        #expect(cat.isItemsCategory == false)
     }
 
     // MARK: - AttachmentRef (JSON round-trip — no Firebase wrappers)

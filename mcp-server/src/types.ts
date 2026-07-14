@@ -24,9 +24,8 @@ export interface BudgetSummaryCategory {
   budgetCents?: number;
   spentCents?: number;
   name?: string;
-  /** @deprecated Phase 4 stops writing this; use `supportedTypes` instead. */
+  /** Canonical budget category behavior: general, itemized, or fee. */
   categoryType?: string;
-  supportedTypes?: string[];
   isArchived: boolean;
   excludeFromOverallBudget?: boolean;
 }
@@ -249,12 +248,6 @@ export interface BudgetCategory {
   isArchived: boolean;
   order?: number;
   metadata?: BudgetCategoryMetadata;
-  /**
-   * Compatibility field from an abandoned taxonomy migration. Canonical category
-   * behavior is metadata.categoryType; readers may use supportedTypes only as a
-   * fallback when categoryType is missing.
-   */
-  supportedTypes?: string[];
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
 }

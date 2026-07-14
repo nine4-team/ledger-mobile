@@ -32,9 +32,6 @@ struct BudgetSummaryCategory: Codable, Hashable {
     var name: String?
     /// Canonical category behavior denormalized from the source category.
     var categoryType: String?
-    /// Compatibility shape retained for summaries written during the taxonomy
-    /// migration. `categoryType` wins when both fields are present.
-    var supportedTypes: [String]?
     var isArchived: Bool?
     var excludeFromOverallBudget: Bool?
 
@@ -42,20 +39,7 @@ struct BudgetSummaryCategory: Codable, Hashable {
         switch categoryType?.lowercased() {
         case "fee": return .fee
         case "itemized": return .itemized
-        case "standard", "general", "expense": return .general
-        default:
-            let decoded = Set((supportedTypes ?? []).compactMap { TransactionType(rawValue: $0.lowercased()) })
-            if decoded == [.fee] { return .fee }
-            if decoded == [.purchase, .return] { return .itemized }
-            return .general
-        }
-    }
-
-    var resolvedSupportedTypes: [TransactionType] {
-        switch resolvedCategoryType {
-        case .fee: return [.fee]
-        case .itemized: return [.purchase, .return]
-        case .general, .expense: return [.expense]
+        default: return .general
         }
     }
 }

@@ -28,13 +28,12 @@ struct CategoryFormModal: View {
             }
         }
 
-        /// Best-effort initialization from an existing category. Canonical
-        /// metadata wins, with supportedTypes fallback handled by the model.
+        /// Best-effort initialization from an existing category.
         init(from category: BudgetCategory) {
             switch category.resolvedCategoryType {
             case .fee: self = .fee
             case .itemized: self = .itemized
-            case .general, .expense: self = .general
+            case .general: self = .general
             }
         }
     }

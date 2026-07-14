@@ -79,7 +79,9 @@ Rules:
 - Completeness checks must only enforce item rows/subtotal-tax audit for
   `metadata.categoryType == "itemized"`.
 - `metadata.itemizationEnabled` is legacy import data only.
-- `supportedTypes` is compatibility/migration data only.
+- `supportedTypes` is temporary compatibility/migration data only. The product
+  direction is to update production data into the canonical shape, then remove
+  compatibility code instead of keeping patchwork legacy paths indefinitely.
 
 ## Superseded Model
 
@@ -93,7 +95,8 @@ supportedTypes: ["fee"]
 
 Those values can be used temporarily as read fallback for dirty data, but they
 must not be exposed to users as category type semantics and must not be the
-primary write target.
+primary write target. They should be deleted or ignored after the production
+data migration verifies every active category has `metadata.categoryType`.
 
 Mixed shapes are invalid as a normal product path:
 
@@ -129,13 +132,13 @@ From the Q2 audit and current product intent:
 | Category | Target `metadata.categoryType` |
 | --- | --- |
 | Furnishings | `itemized` |
-| Additional Requests | `general` unless explicitly split into item categories |
+| Additional Requests | `itemized` unless explicitly split/reviewed |
 | Kitchen | `general` |
 | Install Services | `general` |
-| Install Supplies | `general` unless product explicitly decides supplies require item rows |
+| Install Supplies | `general` |
 | Fuel | `general` |
 | Storage & Receiving | `general` |
-| Games and Entertainment | `general` unless explicitly item tracked |
+| Games and Entertainment | `itemized` unless explicitly reviewed otherwise |
 | Design Fee | `fee` |
 
 Important: Do not infer itemized status from whether historical transactions have
@@ -146,8 +149,10 @@ This table intentionally contradicts older `scripts/overrides/1584-categories.js
 mixed-category overrides. Those overrides came from the `supportedTypes` migration
 era and must be re-reviewed under the canonical category-type model.
 
-For Kitchen, Install, and Additional Requests, migration must choose one reviewed
-action per category:
+For Kitchen, Install, Additional Requests, Games and Entertainment, and Install
+Supplies, migration uses the reviewed target table above unless the dry run
+finds category-specific evidence that needs human review. If review is needed,
+choose one action per category:
 
 - Set the whole category to `general`.
 - Set the whole category to `itemized`.
@@ -246,8 +251,8 @@ Tasks:
 - Update category:
   - write `metadata.categoryType`
   - write `metadata.excludeFromOverallBudget`
-  - optionally delete or leave `supportedTypes` untouched until the migration
-    phase, but do not use it as the primary write.
+  - do not write `supportedTypes`; delete it when the migration/deployed-reader
+    sequence allows, and never use it as the primary write.
 - If editing category type is allowed for categories with existing transactions,
   show a warning because it changes itemization/revenue semantics.
 
@@ -272,6 +277,8 @@ Tasks:
 - Ensure non-itemized categories are complete when required transaction-level
   fields are present; they must not require item rows or subtotal/tax audit.
 - Remove seeding normalization that writes `standard`; write `general`.
+- Remove `supportedTypes` from denormalized summary shapes once deployed readers
+  no longer need it.
 - Define the final budget-summary category shape, then update both the live
   trigger and backfill script consistently. Summaries currently have mixed
   `categoryType`/`supportedTypes` behavior across trigger, backfill, and Swift
@@ -388,9 +395,9 @@ Tasks:
 
 - Back up category documents targeted by the migration.
 - Write `metadata.categoryType` to every account-level category.
-- Decide one of:
-  - leave `supportedTypes` in place as inert compatibility data, or
-  - delete `supportedTypes` after all deployed readers ignore it.
+- Delete `supportedTypes` from active category documents after all deployed
+  readers ignore it. If deletion must be delayed for release sequencing, record
+  the exact delayed-removal reason and treat the field as inert legacy data.
 - Recompute `isComplete` for transactions linked to changed categories.
 - Recompute budget summaries where category metadata is denormalized.
 
@@ -412,11 +419,13 @@ Prerequisites:
 - Firebase Functions deployed with canonical reads.
 - MCP deployed with canonical reads/writes.
 - Production categories have valid `metadata.categoryType`.
+- Production migration has removed or explicitly quarantined `supportedTypes`.
 
 Tasks:
 
 - Remove fallback from `supportedTypes` in app behavior code.
-- Remove or quarantine `supportedTypes` from data model if no longer needed.
+- Remove `supportedTypes` from the app/server/MCP data model unless a specific
+  debug/export use is explicitly approved.
 - Remove stale docs that present `supportedTypes` as the product model.
 - Keep migration notes documenting the historical field.
 
@@ -501,11 +510,18 @@ Do not rollback unrelated user data or unrelated transaction edits.
 
 ## Open Decisions
 
-1. Do we delete `supportedTypes` after cleanup, or leave it as inert legacy data?
-2. Should `metadata.categoryType` use `general` only, or keep accepting legacy
+1. Should `metadata.categoryType` use `general` only, or keep accepting legacy
    `standard` as decode-only alias?
-3. Should Install Supplies be `general` or `itemized` by product policy?
-4. Should Additional Requests be split into separate general/itemized categories
+2. Should Additional Requests be split into separate general/itemized categories
    before the canonical migration?
-5. Do project-level category copies need `metadata.categoryType`, or should all
+3. Do project-level category copies need `metadata.categoryType`, or should all
    itemization reads resolve through account-level category presets?
+
+## Linked Cleanup Audits
+
+- `docs/plans/category-type-legacy-code-removal-audit.md` tracks the code paths
+  that still mention or depend on legacy taxonomy fields and should be removed
+  after the data migration.
+- `docs/plans/category-type-data-migration-audit.md` tracks the database fields,
+  category decisions, dry-run outputs, and production data updates needed before
+  compatibility code can be deleted.

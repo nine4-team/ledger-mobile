@@ -35,37 +35,35 @@ Do not write those values.
 
 Itemization belongs to the budget category, not `Transaction.type`.
 
-Use `metadata.categoryType` for behavior. `categoryKind` is display convenience
-derived from that canonical field:
+Use `metadata.categoryType` for behavior:
 
-| categoryType | categoryKind | Meaning |
-| --- | --- | --- |
-| `itemized` | `items` | Item-backed categories. Can have item rows, subtotal/tax audit, and inventory routing. |
-| `general` | `projectCost` | Non-itemized project costs such as install services, install supplies, fuel, delivery, receiving, storage, or labor. Transactions are still `type = purchase`. |
-| `fee` | `feeCategory` | Company revenue/payment categories used by invoices and payment visibility. |
-| missing/unknown | `unknown` | Migration/debug state. Do not create new categories in this state. |
+| categoryType | Meaning |
+| --- | --- |
+| `itemized` | Item-backed categories. Can have item rows, subtotal/tax audit, and inventory routing. |
+| `general` | Non-itemized project costs such as install services, install supplies, fuel, delivery, receiving, storage, or labor. Transactions are still `type = purchase`. |
+| `fee` | Company revenue/payment categories used by invoices and payment visibility. |
+| missing/unknown | Migration/debug state. Do not create new categories in this state. |
 
-The raw values in `supportedTypes` are compatibility markers only. They are not
-approved new transaction types and must not override `metadata.categoryType`.
+Category behavior is `metadata.categoryType`.
 
 ## Creation Rules
 
 For a non-itemized service/cost purchase, create:
 
 - `type = purchase`
-- `budgetCategoryId` pointing to a `categoryKind = projectCost` category
+- `budgetCategoryId` pointing to a `categoryType = general` category
 - no item rows
 
 For an itemized purchase, create:
 
 - `type = purchase`
-- `budgetCategoryId` pointing to a `categoryKind = items` category
+- `budgetCategoryId` pointing to a `categoryType = itemized` category
 - item rows when actual items exist
 
 The sell-from-inventory path is valid only when all are true:
 
 ```text
-categoryKind == items
+categoryType == itemized
 AND purchasedBy == design-business
 AND actual item rows exist / are being created
 ```
@@ -76,7 +74,7 @@ a transaction until money actually moves. Once money moves, either mark the
 invoice collected or create a Client Payment transaction:
 
 - `type = paymentToBusiness`
-- `budgetCategoryId` pointing to a `categoryKind = feeCategory` category
+- `budgetCategoryId` pointing to a `categoryType = fee` category
 - no source/vendor
 - no item rows, subtotal, tax, discount, purchaser, or reimbursement fields
 
@@ -87,8 +85,7 @@ synthetic credit transactions.
 
 - Call `server_info` and `describe_schema` once per session.
 - Use `transactionTypeForCreate` for normal creation choices.
-- Use `categoryKind` for itemization/routing choices.
-- Treat `supportedTypes` and `categoryType` as storage/debug fields.
+- Use `metadata.categoryType` for itemization/routing choices.
 - `create_transaction_with_items` is for itemized categories only.
 - `create_transaction` is for non-itemized purchases/returns or itemized vendor
   return shells when the inventory tool expects an existing return transaction.

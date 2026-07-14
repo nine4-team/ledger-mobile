@@ -74,9 +74,6 @@ export type InventorySaleDirection = (typeof inventorySaleDirections)[number];
 export const categoryTypes = ["general", "itemized", "fee"] as const;
 export type CategoryType = (typeof categoryTypes)[number];
 
-export const categoryKinds = ["items", "projectCost", "feeCategory", "unknown"] as const;
-export type CategoryKind = (typeof categoryKinds)[number];
-
 /** Describes an enum for introspection output. */
 export interface EnumSpec {
   name: string;
@@ -90,7 +87,7 @@ export const ENUMS: EnumSpec[] = [
     values: writableTransactionTypes,
     description:
       "Allowed type values for normal create_transaction writes. Purchase covers goods/services; " +
-      "Return covers refunds/item returns; paymentToBusiness covers manually recorded client payments and requires a feeCategory budget category.",
+      "Return covers refunds/item returns; paymentToBusiness covers manually recorded client payments and requires a fee category.",
   },
   {
     name: "transactionType",
@@ -158,11 +155,5 @@ export const ENUMS: EnumSpec[] = [
     values: categoryTypes,
     description:
       "Canonical budget category behavior. general means non-itemized project cost, itemized means item rows/audit/inventory routing, and fee means company revenue/payment category.",
-  },
-  {
-    name: "categoryKind",
-    values: categoryKinds,
-    description:
-      "Display convenience derived from metadata.categoryType. items categories can contain item rows; projectCost categories are non-itemized purchases; feeCategory categories are company revenue/payment categories.",
   },
 ];

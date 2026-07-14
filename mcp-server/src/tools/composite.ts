@@ -14,7 +14,7 @@ import { notFound, validation } from "../util/errors.js";
 import { tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
-import { resolveSupportedTypes } from "../util/budget.js";
+import { resolveCategoryType } from "../util/budget.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -28,8 +28,7 @@ async function getBudgetCategory(db: Firestore, budgetCategoryId: string) {
 }
 
 function isItemizedCategory(category: BudgetCategory): boolean {
-  const supported = new Set(resolveSupportedTypes(category));
-  return supported.size === 2 && supported.has("purchase") && supported.has("return");
+  return resolveCategoryType(category) === "itemized";
 }
 
 /**

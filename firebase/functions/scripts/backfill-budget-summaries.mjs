@@ -56,42 +56,15 @@ function normalizeCategoryType(value) {
   switch (typeof value === 'string' ? value.trim().toLowerCase() : null) {
     case 'fee': return 'fee';
     case 'itemized': return 'itemized';
-    case 'standard':
-    case 'expense':
     case 'general': return 'general';
     default: return null;
   }
 }
 
-function deriveCategoryTypeFromSupportedTypes(supportedTypes) {
-  const normalized = new Set(
-    (Array.isArray(supportedTypes) ? supportedTypes : [])
-      .filter((v) => typeof v === 'string')
-      .map((v) => v.trim().toLowerCase())
-      .filter(Boolean)
-  );
-  if (normalized.size === 1 && normalized.has('fee')) return 'fee';
-  if (normalized.size === 2 && normalized.has('purchase') && normalized.has('return')) return 'itemized';
-  return 'general';
-}
-
-// Mirrors resolveCategoryTypeFromCategoryData in firebase/functions/src/index.ts:
-// metadata.categoryType is canonical; supportedTypes is a fallback for dirty
-// migration data. Keep the two in sync so the backfill and the live function
-// classify legacy categories identically.
+// Mirrors resolveCategoryTypeFromCategoryData in firebase/functions/src/index.ts.
 function resolveCategoryTypeFromCategoryData(data) {
   const metadata = data?.metadata && typeof data.metadata === 'object' ? data.metadata : {};
-  const categoryType = normalizeCategoryType(metadata.categoryType);
-  if (categoryType) return categoryType;
-  return deriveCategoryTypeFromSupportedTypes(data?.supportedTypes);
-}
-
-function supportedTypesForCategoryType(categoryType) {
-  switch (categoryType) {
-    case 'fee': return ['fee'];
-    case 'itemized': return ['purchase', 'return'];
-    default: return ['expense'];
-  }
+  return normalizeCategoryType(metadata.categoryType) ?? 'general';
 }
 
 async function recalculateProjectBudgetSummary(accountId, projectId) {
@@ -107,7 +80,6 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
     budgetCategories[doc.id] = {
       name: typeof data.name === 'string' ? data.name : '',
       categoryType,
-      supportedTypes: supportedTypesForCategoryType(categoryType),
       excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
       isArchived: data.isArchived === true,
     };
@@ -170,7 +142,6 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
       spentCents,
       name: catMeta?.name ?? '',
       categoryType: catMeta?.categoryType ?? 'general',
-      supportedTypes: catMeta?.supportedTypes ?? ['expense'],
       excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
       isArchived: catMeta?.isArchived ?? false,
     };

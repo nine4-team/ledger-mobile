@@ -1,0 +1,506 @@
+[
+  {
+    "accountId": "10fef89a-13dc-4532-83dc-819d02111cec",
+    "categoryId": "1767dc61-6a43-4f81-ba77-153f2baafe3e",
+    "path": "accounts/10fef89a-13dc-4532-83dc-819d02111cec/presets/default/budgetCategories/1767dc61-6a43-4f81-ba77-153f2baafe3e",
+    "data": {
+      "id": "1767dc61-6a43-4f81-ba77-153f2baafe3e",
+      "accountId": "10fef89a-13dc-4532-83dc-819d02111cec",
+      "projectId": null,
+      "name": "Install",
+      "slug": "install",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "is_default": true,
+          "sourceCategoryId": "1767dc61-6a43-4f81-ba77-153f2baafe3e"
+        }
+      },
+      "createdAt": "2026-01-04T20:04:03.298Z",
+      "updatedAt": "2026-01-04T20:04:03.298Z",
+      "createdBy": "2da62dae-54b0-42c9-bf89-68481830fc8e",
+      "updatedBy": null
+    }
+  },
+  {
+    "accountId": "10fef89a-13dc-4532-83dc-819d02111cec",
+    "categoryId": "d476936a-4def-4bbd-9ca5-aaeca075705d",
+    "path": "accounts/10fef89a-13dc-4532-83dc-819d02111cec/presets/default/budgetCategories/d476936a-4def-4bbd-9ca5-aaeca075705d",
+    "data": {
+      "id": "d476936a-4def-4bbd-9ca5-aaeca075705d",
+      "accountId": "10fef89a-13dc-4532-83dc-819d02111cec",
+      "projectId": null,
+      "name": "Storage & Receiving",
+      "slug": "storage-receiving",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "is_default": true,
+          "sourceCategoryId": "d476936a-4def-4bbd-9ca5-aaeca075705d"
+        }
+      },
+      "createdAt": "2026-01-04T20:04:03.298Z",
+      "updatedAt": "2026-01-04T20:04:03.298Z",
+      "createdBy": "2da62dae-54b0-42c9-bf89-68481830fc8e",
+      "updatedBy": null
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "13e0b1c8-f9ce-4aca-a392-0bafead0656a",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/13e0b1c8-f9ce-4aca-a392-0bafead0656a",
+    "data": {
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "name": "Install Supplies",
+      "slug": "install-supplies",
+      "metadata": {
+        "categoryType": null,
+        "excludeFromOverallBudget": false
+      },
+      "supportedTypes": [
+        "purchase",
+        "return"
+      ],
+      "isArchived": false,
+      "createdAt": "2026-06-29T23:07:03.505Z",
+      "updatedAt": "2026-06-29T23:07:03.505Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "1aa4b56b-2ff2-4377-b5fa-f7b8650ca9c0",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/1aa4b56b-2ff2-4377-b5fa-f7b8650ca9c0",
+    "data": {
+      "id": "1aa4b56b-2ff2-4377-b5fa-f7b8650ca9c0",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Additional Requests",
+      "slug": "additional-requests",
+      "isArchived": false,
+      "order": null,
+      "createdAt": "2026-01-21T07:41:35.384Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "metadata": {
+        "legacy": {
+          "sourceCategoryId": "1aa4b56b-2ff2-4377-b5fa-f7b8650ca9c0"
+        },
+        "categoryType": null
+      },
+      "supportedTypes": [
+        "purchase",
+        "return"
+      ],
+      "updatedAt": "2026-06-29T23:23:40.404Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "359df887-409c-4dd7-a4b8-e09d007cd8ab",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/359df887-409c-4dd7-a4b8-e09d007cd8ab",
+    "data": {
+      "id": "359df887-409c-4dd7-a4b8-e09d007cd8ab",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Games and Entertainment",
+      "slug": "property-management",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "sourceCategoryId": "359df887-409c-4dd7-a4b8-e09d007cd8ab"
+        }
+      },
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "supportedTypes": [
+        "expense"
+      ],
+      "updatedAt": "2026-04-21T00:18:10.766Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "9ccb3137-8704-441d-a92d-6a1f520864a0",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/9ccb3137-8704-441d-a92d-6a1f520864a0",
+    "data": {
+      "id": "9ccb3137-8704-441d-a92d-6a1f520864a0",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Storage & Receiving",
+      "slug": "storage-receiving",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "itemizationEnabled": false,
+          "sourceCategoryId": "9ccb3137-8704-441d-a92d-6a1f520864a0"
+        }
+      },
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "supportedTypes": [
+        "expense"
+      ],
+      "updatedAt": "2026-04-21T00:18:10.766Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "b0df89f8-7610-4f10-8651-0358330e95e2",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/b0df89f8-7610-4f10-8651-0358330e95e2",
+    "data": {
+      "id": "b0df89f8-7610-4f10-8651-0358330e95e2",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Design Fee",
+      "slug": "design-fee",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "categoryType": "fee",
+        "legacy": {
+          "itemizationEnabled": false,
+          "sourceCategoryId": "b0df89f8-7610-4f10-8651-0358330e95e2"
+        }
+      },
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "supportedTypes": [
+        "fee"
+      ],
+      "updatedAt": "2026-04-21T00:18:10.766Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "c7aab919-08c3-4407-a6ba-7c20d9e7f6ea",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/c7aab919-08c3-4407-a6ba-7c20d9e7f6ea",
+    "data": {
+      "id": "c7aab919-08c3-4407-a6ba-7c20d9e7f6ea",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Kitchen",
+      "slug": "kitchen",
+      "isArchived": false,
+      "order": null,
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "metadata": {
+        "legacy": {
+          "sourceCategoryId": "c7aab919-08c3-4407-a6ba-7c20d9e7f6ea"
+        },
+        "categoryType": null,
+        "correctionReason": "Kitchen rows are non-itemized project costs; Deni's Kitchens transactions have no item rows.",
+        "correctedAt": "2026-07-02T20:32:58.675Z"
+      },
+      "supportedTypes": [
+        "expense"
+      ],
+      "updatedAt": "2026-07-02T20:32:58.675Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/da556858-1df8-40be-b10c-b15710d7cc9a",
+    "data": {
+      "id": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Furnishings",
+      "slug": "furnishings",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "categoryType": "itemized",
+        "legacy": {
+          "sourceCategoryId": "da556858-1df8-40be-b10c-b15710d7cc9a"
+        }
+      },
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "supportedTypes": [
+        "purchase",
+        "return"
+      ],
+      "updatedAt": "2026-04-21T00:18:10.766Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "e1552137-250f-4b87-8303-c31e61b75420",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/e1552137-250f-4b87-8303-c31e61b75420",
+    "data": {
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "name": "Install Services",
+      "slug": "install-services",
+      "metadata": {
+        "categoryType": null,
+        "excludeFromOverallBudget": false
+      },
+      "supportedTypes": [
+        "expense"
+      ],
+      "isArchived": false,
+      "createdAt": "2026-06-29T23:07:03.714Z",
+      "updatedAt": "2026-06-29T23:07:03.714Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "e1a7af0c-407a-4fd0-9c21-573b90374b53",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/e1a7af0c-407a-4fd0-9c21-573b90374b53",
+    "data": {
+      "id": "e1a7af0c-407a-4fd0-9c21-573b90374b53",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Install",
+      "slug": "install",
+      "isArchived": false,
+      "order": null,
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "metadata": {
+        "legacy": {
+          "itemizationEnabled": false,
+          "sourceCategoryId": "e1a7af0c-407a-4fd0-9c21-573b90374b53"
+        },
+        "categoryType": null
+      },
+      "supportedTypes": [
+        "expense"
+      ],
+      "updatedAt": "2026-06-29T23:23:40.765Z"
+    }
+  },
+  {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "categoryId": "fb9858a6-072a-4073-b7d6-b2e7167993f3",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories/fb9858a6-072a-4073-b7d6-b2e7167993f3",
+    "data": {
+      "id": "fb9858a6-072a-4073-b7d6-b2e7167993f3",
+      "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+      "projectId": null,
+      "name": "Fuel",
+      "slug": "fuel",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "itemizationEnabled": false,
+          "sourceCategoryId": "fb9858a6-072a-4073-b7d6-b2e7167993f3"
+        }
+      },
+      "createdAt": "2025-11-12T00:38:04.366Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null,
+      "supportedTypes": [
+        "expense"
+      ],
+      "updatedAt": "2026-04-21T00:18:10.766Z"
+    }
+  },
+  {
+    "accountId": "2d612868-852e-4a80-9d02-9d10383898d4",
+    "categoryId": "25a6904c-0b19-4650-bc0e-7f4a24d322c0",
+    "path": "accounts/2d612868-852e-4a80-9d02-9d10383898d4/presets/default/budgetCategories/25a6904c-0b19-4650-bc0e-7f4a24d322c0",
+    "data": {
+      "id": "25a6904c-0b19-4650-bc0e-7f4a24d322c0",
+      "accountId": "2d612868-852e-4a80-9d02-9d10383898d4",
+      "projectId": null,
+      "name": "Storage & Receiving",
+      "slug": "storage-receiving",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "is_default": true,
+          "remediated_at": "2026-01-04 21:37:19.951121+00",
+          "itemizationEnabled": false,
+          "sourceCategoryId": "25a6904c-0b19-4650-bc0e-7f4a24d322c0"
+        }
+      },
+      "createdAt": "2026-01-04T21:37:19.951Z",
+      "updatedAt": "2026-01-24T04:15:54.396Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null
+    }
+  },
+  {
+    "accountId": "2d612868-852e-4a80-9d02-9d10383898d4",
+    "categoryId": "c630c2fe-bcc0-4e3c-be97-11bed3f67ff8",
+    "path": "accounts/2d612868-852e-4a80-9d02-9d10383898d4/presets/default/budgetCategories/c630c2fe-bcc0-4e3c-be97-11bed3f67ff8",
+    "data": {
+      "id": "c630c2fe-bcc0-4e3c-be97-11bed3f67ff8",
+      "accountId": "2d612868-852e-4a80-9d02-9d10383898d4",
+      "projectId": null,
+      "name": "Install",
+      "slug": "install",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "is_default": true,
+          "remediated_at": "2026-01-04 21:37:19.951121+00",
+          "itemizationEnabled": false,
+          "sourceCategoryId": "c630c2fe-bcc0-4e3c-be97-11bed3f67ff8"
+        }
+      },
+      "createdAt": "2026-01-04T21:37:19.951Z",
+      "updatedAt": "2026-01-23T17:24:28.830Z",
+      "createdBy": "1cffc489-b9b4-4535-a7ba-65253a037984",
+      "updatedBy": null
+    }
+  },
+  {
+    "accountId": "bb0bf594-d31a-45b9-b56c-fb4722f74f54",
+    "categoryId": "1e0fb655-567d-4c4f-87b8-b89262b083e4",
+    "path": "accounts/bb0bf594-d31a-45b9-b56c-fb4722f74f54/presets/default/budgetCategories/1e0fb655-567d-4c4f-87b8-b89262b083e4",
+    "data": {
+      "id": "1e0fb655-567d-4c4f-87b8-b89262b083e4",
+      "accountId": "bb0bf594-d31a-45b9-b56c-fb4722f74f54",
+      "projectId": null,
+      "name": "Install",
+      "slug": "install",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "is_default": true,
+          "sourceCategoryId": "1e0fb655-567d-4c4f-87b8-b89262b083e4"
+        }
+      },
+      "createdAt": "2026-01-04T20:04:03.298Z",
+      "updatedAt": "2026-01-04T20:04:03.298Z",
+      "createdBy": "unknown-user",
+      "updatedBy": null
+    }
+  },
+  {
+    "accountId": "bb0bf594-d31a-45b9-b56c-fb4722f74f54",
+    "categoryId": "be7804aa-85a0-4907-97be-71f50698d5b0",
+    "path": "accounts/bb0bf594-d31a-45b9-b56c-fb4722f74f54/presets/default/budgetCategories/be7804aa-85a0-4907-97be-71f50698d5b0",
+    "data": {
+      "id": "be7804aa-85a0-4907-97be-71f50698d5b0",
+      "accountId": "bb0bf594-d31a-45b9-b56c-fb4722f74f54",
+      "projectId": null,
+      "name": "Storage & Receiving",
+      "slug": "storage-receiving",
+      "isArchived": false,
+      "order": null,
+      "metadata": {
+        "legacy": {
+          "is_default": true,
+          "sourceCategoryId": "be7804aa-85a0-4907-97be-71f50698d5b0"
+        }
+      },
+      "createdAt": "2026-01-04T20:04:03.298Z",
+      "updatedAt": "2026-01-04T20:04:03.298Z",
+      "createdBy": "unknown-user",
+      "updatedBy": null
+    }
+  },
+  {
+    "accountId": "vUcrIZfFV0QaFaFMO84a",
+    "categoryId": "VyKVgeavLQhaKng7Ohwc",
+    "path": "accounts/vUcrIZfFV0QaFaFMO84a/presets/default/budgetCategories/VyKVgeavLQhaKng7Ohwc",
+    "data": {
+      "accountId": "vUcrIZfFV0QaFaFMO84a",
+      "metadata": {
+        "excludeFromOverallBudget": false
+      },
+      "name": "The",
+      "order": 4,
+      "slug": "the",
+      "supportedTypes": [
+        "fee"
+      ],
+      "updatedAt": "2026-06-30T00:56:01.023Z"
+    }
+  },
+  {
+    "accountId": "vUcrIZfFV0QaFaFMO84a",
+    "categoryId": "seed_design_fee",
+    "path": "accounts/vUcrIZfFV0QaFaFMO84a/presets/default/budgetCategories/seed_design_fee",
+    "data": {
+      "id": "seed_design_fee",
+      "accountId": "vUcrIZfFV0QaFaFMO84a",
+      "projectId": null,
+      "name": "Design Fee",
+      "slug": "design-fee",
+      "isArchived": false,
+      "order": 2,
+      "deletedAt": null,
+      "createdBy": "MiYbqNgEB2gsCdd3XKTmB1zgKga2",
+      "updatedBy": "MiYbqNgEB2gsCdd3XKTmB1zgKga2",
+      "createdAt": "2026-06-21T17:28:01.684Z",
+      "metadata": {
+        "categoryType": "fee",
+        "excludeFromOverallBudget": false
+      },
+      "supportedTypes": [
+        "fee"
+      ],
+      "updatedAt": "2026-07-12T04:25:05.141Z"
+    }
+  },
+  {
+    "accountId": "vUcrIZfFV0QaFaFMO84a",
+    "categoryId": "seed_install",
+    "path": "accounts/vUcrIZfFV0QaFaFMO84a/presets/default/budgetCategories/seed_install",
+    "data": {
+      "id": "seed_install",
+      "accountId": "vUcrIZfFV0QaFaFMO84a",
+      "projectId": null,
+      "name": "Install",
+      "slug": "install",
+      "isArchived": false,
+      "order": 1,
+      "metadata": {
+        "categoryType": "standard",
+        "excludeFromOverallBudget": false
+      },
+      "deletedAt": null,
+      "createdBy": "MiYbqNgEB2gsCdd3XKTmB1zgKga2",
+      "updatedBy": "MiYbqNgEB2gsCdd3XKTmB1zgKga2",
+      "createdAt": "2026-06-21T17:28:01.684Z",
+      "updatedAt": "2026-06-30T00:56:00.853Z"
+    }
+  },
+  {
+    "accountId": "vUcrIZfFV0QaFaFMO84a",
+    "categoryId": "seed_storage_receiving",
+    "path": "accounts/vUcrIZfFV0QaFaFMO84a/presets/default/budgetCategories/seed_storage_receiving",
+    "data": {
+      "id": "seed_storage_receiving",
+      "accountId": "vUcrIZfFV0QaFaFMO84a",
+      "projectId": null,
+      "name": "Storage & Receiving",
+      "isArchived": false,
+      "order": 3,
+      "metadata": {
+        "categoryType": "standard",
+        "excludeFromOverallBudget": false
+      },
+      "deletedAt": null,
+      "createdBy": "MiYbqNgEB2gsCdd3XKTmB1zgKga2",
+      "updatedBy": "MiYbqNgEB2gsCdd3XKTmB1zgKga2",
+      "createdAt": "2026-06-21T17:28:01.684Z",
+      "supportedTypes": [
+        "purchase",
+        "return"
+      ],
+      "slug": "storage-&-receiving",
+      "updatedAt": "2026-06-30T00:56:00.969Z"
+    }
+  }
+]

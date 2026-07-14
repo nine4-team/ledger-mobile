@@ -10,12 +10,11 @@ struct BudgetCategory: Codable, Identifiable, Hashable {
     var isArchived: Bool?
     var order: Int?
     var metadata: BudgetCategoryMetadata?
-    var supportedTypes: [TransactionType]?
     var createdAt: Date?
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, projectId, name, slug, isArchived, order, metadata, supportedTypes
+        case id, accountId, projectId, name, slug, isArchived, order, metadata
     }
 }
 
@@ -33,36 +32,19 @@ extension BudgetCategory {
         BudgetCategoryKind(categoryType: resolvedCategoryType)
     }
 
-    /// Canonical category behavior. `metadata.categoryType` is the product model;
-    /// `supportedTypes` is only a compatibility fallback for dirty migration data.
+    /// Canonical category behavior.
     var resolvedCategoryType: BudgetCategoryType {
         switch metadata?.categoryType {
         case .fee: return .fee
         case .itemized: return .itemized
-        case .general, .expense: return .general
-        case nil:
-            let explicit = Set(supportedTypes ?? [])
-            if explicit == [.fee] { return .fee }
-            if explicit == [.purchase, .return] { return .itemized }
-            return .general
-        }
-    }
-
-    /// Compatibility shape for old readers. Behavior must be decided from
-    /// `resolvedCategoryType`, not by letting raw `supportedTypes` override it.
-    var resolvedSupportedTypes: [TransactionType] {
-        switch resolvedCategoryType {
-        case .fee: return [.fee]
-        case .itemized: return [.purchase, .return]
-        case .general, .expense: return [.expense]
+        case .general, nil: return .general
         }
     }
 }
 
 // MARK: - BudgetCategoryKind
 
-/// App-facing category behavior. This hides legacy storage literals like
-/// `supportedTypes == [.expense]` behind names that match the product model.
+/// App-facing category behavior.
 enum BudgetCategoryKind: String, Codable, Hashable {
     case items
     case projectCost
@@ -75,29 +57,16 @@ enum BudgetCategoryKind: String, Codable, Hashable {
             self = .feeCategory
         case .itemized:
             self = .items
-        case .general, .expense:
+        case .general:
             self = .projectCost
-        }
-    }
-
-    init(supportedTypes: [TransactionType]) {
-        let set = Set(supportedTypes)
-        if set == [.fee] {
-            self = .feeCategory
-        } else if set == [.expense] {
-            self = .projectCost
-        } else if set == [.purchase, .return] {
-            self = .items
-        } else {
-            self = .unknown
         }
     }
 
     var displayLabel: String {
         switch self {
-        case .items: return "Items"
-        case .projectCost: return "Project Cost"
-        case .feeCategory: return "Fee Category"
+        case .items: return "Itemized"
+        case .projectCost: return "General"
+        case .feeCategory: return "Fee"
         case .unknown: return "General"
         }
     }
@@ -133,14 +102,6 @@ enum CategoryDisplay {
 
     static func pillColor(for category: BudgetCategory) -> Color {
         pillColor(for: category.categoryKind)
-    }
-
-    static func pillLabel(for supportedTypes: [TransactionType]) -> String {
-        BudgetCategoryKind(supportedTypes: supportedTypes).displayLabel
-    }
-
-    static func pillColor(for supportedTypes: [TransactionType]) -> Color {
-        pillColor(for: BudgetCategoryKind(supportedTypes: supportedTypes))
     }
 
     private static func pillColor(for kind: BudgetCategoryKind) -> Color {

@@ -251,7 +251,6 @@ enum BudgetTabCalculations {
         return sorted.compactMap { category -> BudgetCategoryRowData? in
             guard let id = category.id else { return nil }
             let catType = category.resolvedCategoryType
-            let supported = category.resolvedSupportedTypes
             let isFee = category.isFeeCategory
             let exclude = category.metadata?.excludeFromOverallBudget ?? false
             let budget = budgetById[id] ?? 0
@@ -263,7 +262,6 @@ enum BudgetTabCalculations {
                 budgetCents: budget,
                 spentCents: spent,
                 categoryType: catType,
-                supportedTypes: supported,
                 excludeFromOverallBudget: exclude
             )
 

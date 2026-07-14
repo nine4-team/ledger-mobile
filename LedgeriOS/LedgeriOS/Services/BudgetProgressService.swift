@@ -46,7 +46,6 @@ struct BudgetProgressService {
                 budgetCents: budget,
                 spentCents: spent,
                 categoryType: catType,
-                supportedTypes: category.resolvedSupportedTypes,
                 excludeFromOverallBudget: exclude,
                 isEnabled: enabledCategoryIds.contains(id)
             ))

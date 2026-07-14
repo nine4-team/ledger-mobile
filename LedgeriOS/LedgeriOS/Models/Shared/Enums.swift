@@ -30,8 +30,7 @@ extension CaseInsensitiveStringEnum {
 // MARK: - Enums
 
 enum BudgetCategoryType: String, Codable, CaseInsensitiveStringEnum {
-    case general, itemized, fee, expense
-    static let legacyAliases = ["standard": "general"]
+    case general, itemized, fee
 }
 
 enum MemberRole: String, Codable {

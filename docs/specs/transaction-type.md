@@ -43,9 +43,7 @@ AND actual items exist / are being created
 
 Every transaction must have `budgetCategoryId`.
 
-During migration, readers must derive category behavior from
-`metadata.categoryType` first. `supportedTypes` is compatibility fallback only
-when `metadata.categoryType` is missing.
+Readers derive category behavior from `metadata.categoryType`.
 
 - `metadata.categoryType = "itemized"`: item-backed purchases and returns.
 - `metadata.categoryType = "general"`: non-itemized project cost purchases
@@ -54,9 +52,8 @@ when `metadata.categoryType` is missing.
   collection and manual Client Payment entry create categorized
   `paymentToBusiness` transactions using fee/revenue categories.
 
-Mixed budget categories with `supportedTypes = ["purchase", "return",
-"expense"]` are not an approved product concept. They are migration-era data
-only and must not be created by new UI or MCP writes.
+Mixed budget category behavior is not an approved product concept and must not
+be created by new UI or MCP writes.
 
 ## Invoice Collection
 
@@ -67,7 +64,7 @@ When an invoice is marked collected, the system groups settled invoice lines by
 
 Users may also record a Client Payment directly from New Transaction when money
 has actually moved outside the invoice collection workflow. This writes
-`type = paymentToBusiness`, requires a `categoryKind = feeCategory` budget
+`type = paymentToBusiness`, requires a `categoryType = fee` budget
 category, omits vendor/source, and must not include item, subtotal, tax,
 discount, purchaser, or reimbursement fields.
 

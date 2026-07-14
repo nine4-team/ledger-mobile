@@ -88,7 +88,7 @@ struct FinancialAccessPolicyTests {
         var category = BudgetCategory()
         category.id = id
         category.name = name
-        category.supportedTypes = [.fee]
+        category.metadata = BudgetCategoryMetadata(categoryType: .fee, excludeFromOverallBudget: false)
         return category
     }
 

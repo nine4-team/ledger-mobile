@@ -1,0 +1,53 @@
+[
+  {
+    "transactionId": "12f20735-a18d-43f4-bc55-54f3fd9765be",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/transactions/12f20735-a18d-43f4-bc55-54f3fd9765be",
+    "projectId": null,
+    "source": "Lowe’s",
+    "categoryId": "13e0b1c8-f9ce-4aca-a392-0bafead0656a",
+    "type": "purchase",
+    "oldResolvedCategoryType": "itemized",
+    "newCategoryType": "general",
+    "oldIsComplete": false,
+    "proposedIsComplete": true,
+    "itemIdsCount": 0,
+    "amountCents": 28330,
+    "subtotalCents": null,
+    "taxRatePct": 7.1,
+    "reason": "general/fee category does not require item rows"
+  },
+  {
+    "transactionId": "DKJjy44hKyJnVdBOHUBw",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/transactions/DKJjy44hKyJnVdBOHUBw",
+    "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+    "source": "ACE Hardware",
+    "categoryId": "13e0b1c8-f9ce-4aca-a392-0bafead0656a",
+    "type": "purchase",
+    "oldResolvedCategoryType": "itemized",
+    "newCategoryType": "general",
+    "oldIsComplete": false,
+    "proposedIsComplete": true,
+    "itemIdsCount": 0,
+    "amountCents": 2170,
+    "subtotalCents": 2043,
+    "taxRatePct": 6.216348507097406,
+    "reason": "general/fee category does not require item rows"
+  },
+  {
+    "transactionId": "z0Ie6FwUuF7Q4AHHuyqA",
+    "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/transactions/z0Ie6FwUuF7Q4AHHuyqA",
+    "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+    "source": "Home Depot",
+    "categoryId": "13e0b1c8-f9ce-4aca-a392-0bafead0656a",
+    "type": "purchase",
+    "oldResolvedCategoryType": "itemized",
+    "newCategoryType": "general",
+    "oldIsComplete": true,
+    "proposedIsComplete": true,
+    "itemIdsCount": 4,
+    "amountCents": 4471,
+    "subtotalCents": 4188,
+    "taxRatePct": 6.76,
+    "reason": "general/fee category does not require item rows"
+  }
+]

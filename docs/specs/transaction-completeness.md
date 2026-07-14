@@ -23,7 +23,7 @@ The app shows a **"Needs Review" badge** when `isComplete === false`.
 
 `isComplete = true` when **any** of:
 1. **Canonical/system transaction** — `isCanonicalInventorySale === true` or `isCanonicalInventory === true`
-2. **Non-itemized category** — the budget category is not an itemized category. `metadata.categoryType` is canonical: `"general"`, `"standard"` (legacy alias), `"expense"` (legacy alias), `"fee"`, missing, or unknown are non-itemized. `supportedTypes = ["purchase", "return"]` is only an itemized fallback when `metadata.categoryType` is missing.
+2. **Non-itemized category** — the budget category is not an itemized category. `metadata.categoryType` is canonical: `"general"`, `"itemized"`, or `"fee"`. Only `"itemized"` categories use item/audit completeness.
 3. **All conditions met** for an itemized category:
    - Tax data present — `subtotalCents` is set (not null/undefined) **or** `taxRatePct` is set (not null/undefined, including `0`)
    - Has items — `itemIds` is non-empty **or** lineage edges with `movementKind` "returned", "sold", or "soldToInventory" exist for this transaction
@@ -109,7 +109,7 @@ When `purchasePriceCents` changes on an item, queries for parent transactions vi
 
 ### 3. Budget Category Shape Change (`onAccountBudgetCategoryWritten`)
 
-When relevant fields on an account-level budget category change, including `supportedTypes` or legacy `metadata.categoryType`, the function queries transactions with that `budgetCategoryId` and recomputes `isComplete` using the same `computeIsComplete` source of truth.
+When relevant fields on an account-level budget category change, including `metadata.categoryType`, the function queries transactions with that `budgetCategoryId` and recomputes `isComplete` using the same `computeIsComplete` source of truth.
 
 This handles both directions:
 - **To non-itemized/project-cost/fee:** existing transactions become `isComplete = true, audit = null`
