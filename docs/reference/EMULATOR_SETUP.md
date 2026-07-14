@@ -1,8 +1,10 @@
 # Firebase Emulator Setup & Usage
 
-This guide covers the Firebase Emulator Suite for app/offline experiments, data persistence, seed data, and test users.
+This guide covers the Firebase Emulator Suite for explicit app/offline experiments, data persistence, seed data, and test users. It is not the default way to run the iOS app in the simulator.
 
 > **Do not use this as the default MCP validation path.** Ledger MCP local development should run against real Firestore with a Firebase Admin service-account key, matching the deployed MCP server. The emulator-backed MCP Vitest harness is legacy coverage for specific inventory movement tests and is not the recommended way to verify normal MCP tool changes.
+>
+> **Do not use this for ordinary simulator QA.** Manual iOS simulator testing should run the production-backed `LedgeriOS` scheme unless the user explicitly asks for emulator-backed testing.
 
 ## 🚀 Quick Start
 

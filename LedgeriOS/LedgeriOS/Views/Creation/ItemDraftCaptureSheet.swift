@@ -235,7 +235,7 @@ struct ItemDraftCaptureSheet: View {
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
             protoItem.sku = extraction.selectedSku
-            protoItem.quantity = quantity > 1 ? quantity : nil
+            protoItem.quantity = quantity
             protoItem.extracted = extraction.protoExtraction
             protoItem.createdBy = authManager.currentUser?.uid
             protoItem.updatedBy = authManager.currentUser?.uid

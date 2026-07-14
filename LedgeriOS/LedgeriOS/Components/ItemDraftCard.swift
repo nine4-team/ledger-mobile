@@ -42,6 +42,10 @@ struct ItemDraftCard: View {
         return name.isEmpty ? nil : name
     }
 
+    private var displayQuantity: Int {
+        max(protoItem.quantity ?? 1, 1)
+    }
+
     var body: some View {
         Card(padding: Spacing.sm) {
             HStack(alignment: .center, spacing: Spacing.sm) {
@@ -170,11 +174,18 @@ struct ItemDraftCard: View {
                     .lineLimit(1)
             }
 
-            if let sku = protoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines), !sku.isEmpty {
-                FindableText("SKU: \(sku)")
+            HStack(spacing: Spacing.sm) {
+                FindableText("Qty: \(displayQuantity)")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
                     .lineLimit(1)
+
+                if let sku = protoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines), !sku.isEmpty {
+                    FindableText("SKU: \(sku)")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .lineLimit(1)
+                }
             }
         }
     }

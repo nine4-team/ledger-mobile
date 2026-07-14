@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /**
- * dev-native.mjs — One-command native dev workflow.
+ * dev-native.mjs — Emulator-only native integration workflow.
  *
  * Usage: node scripts/dev-native.mjs
  *
- * Full native dev workflow:
+ * Do not use this for ordinary simulator QA. It intentionally starts Firebase
+ * emulators and launches the `LedgeriOS (Emulator)` scheme. Manual simulator
+ * validation should use the production-backed `LedgeriOS` scheme unless the
+ * caller explicitly asks for emulator-backed testing.
+ *
+ * Emulator-backed integration workflow:
  * 1. Starts Firebase emulators with persistence
  * 2. Waits for Auth + Firestore to be ready
  * 3. Seeds Firestore, Storage, and creates the auth user

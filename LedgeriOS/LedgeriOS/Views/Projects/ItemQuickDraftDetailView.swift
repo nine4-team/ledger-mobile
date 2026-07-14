@@ -20,6 +20,7 @@ struct ItemQuickDraftDetailView: View {
     @State private var toastMessage: String?
     @State private var toastTask: Task<Void, Never>?
     @State private var skuDraft: String
+    @State private var quantityDraft: Int
 
     private let protoItemsService = ProtoItemsService()
 
@@ -28,6 +29,7 @@ struct ItemQuickDraftDetailView: View {
         self._liveProtoItem = State(initialValue: protoItem)
         self._nameDraft = State(initialValue: protoItem.name ?? "")
         self._skuDraft = State(initialValue: protoItem.sku ?? "")
+        self._quantityDraft = State(initialValue: max(protoItem.quantity ?? 1, 1))
     }
 
     private var photos: [AttachmentRef] {
@@ -40,6 +42,17 @@ struct ItemQuickDraftDetailView: View {
 
     private var skuHasChanges: Bool {
         skuDraft.trimmingCharacters(in: .whitespacesAndNewlines) != (liveProtoItem.sku ?? "")
+    }
+
+    private var quantityHasChanges: Bool {
+        quantityDraft != max(liveProtoItem.quantity ?? 1, 1)
+    }
+
+    private var quantityBinding: Binding<Int> {
+        Binding(
+            get: { quantityDraft },
+            set: { quantityDraft = min(max($0, 1), 9999) }
+        )
     }
 
     var body: some View {
@@ -156,6 +169,66 @@ struct ItemQuickDraftDetailView: View {
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.primary)
             }
+            quantitySection
+        }
+    }
+
+    private var quantitySection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Quantity")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            HStack(spacing: 0) {
+                TextField("1", value: quantityBinding, format: .number)
+                    .font(Typography.input)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .platformKeyboardType(.numberPad)
+                    .multilineTextAlignment(.leading)
+                    .padding(.leading, Spacing.sm)
+                    .frame(width: 96, alignment: .leading)
+
+                Spacer()
+
+                VStack(spacing: 0) {
+                    Button {
+                        if quantityDraft < 9999 { quantityDraft += 1 }
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(BrandColors.textPrimary)
+                            .frame(width: 36, height: 22)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        if quantityDraft > 1 { quantityDraft -= 1 }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(quantityDraft > 1 ? BrandColors.textPrimary : BrandColors.textDisabled)
+                            .frame(width: 36, height: 22)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(quantityDraft <= 1)
+                }
+            }
+            .frame(height: 44)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
+
+            if quantityHasChanges {
+                Button("Save Quantity") {
+                    Task { await saveQuantity() }
+                }
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.primary)
+            }
         }
     }
 
@@ -236,6 +309,9 @@ struct ItemQuickDraftDetailView: View {
             if !skuHasChanges {
                 skuDraft = item.sku ?? ""
             }
+            if !quantityHasChanges {
+                quantityDraft = max(item.quantity ?? 1, 1)
+            }
         }
     }
 
@@ -266,6 +342,20 @@ struct ItemQuickDraftDetailView: View {
             )
         } catch {
             errorMessage = "Failed to update SKU."
+        }
+    }
+
+    private func saveQuantity() async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = liveProtoItem.id else { return }
+        do {
+            try await protoItemsService.updateProtoItem(
+                accountId: accountId,
+                protoItemId: protoItemId,
+                fields: ["quantity": max(quantityDraft, 1)]
+            )
+        } catch {
+            errorMessage = "Failed to update quantity."
         }
     }
 

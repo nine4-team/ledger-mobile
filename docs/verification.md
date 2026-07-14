@@ -2,6 +2,8 @@
 
 Use the smallest profile that proves the change. State the profile before running Xcode tests, Firebase emulators, or any full suite.
 
+Manual simulator QA defaults to the production-backed app. Do not start Firebase emulators or use the `LedgeriOS (Emulator)` scheme for ordinary simulator validation unless the user explicitly asks for emulator-backed testing or the task is a tagged integration-test run.
+
 ## taxonomy-model
 
 Use for category taxonomy, transaction model decoding, summary-shape, MCP schema, and Cloud Functions resolver changes that do not require live Firebase behavior.
@@ -34,7 +36,7 @@ IOS_DESTINATION='platform=iOS Simulator,name=iPhone 17,OS=26.5' ./scripts/verify
 
 ## firestore-integration
 
-Use only when the changed behavior depends on Firebase Auth, Firestore rules, Storage, emulator seed data, snapshot listeners, or service calls that cannot be proven with pure model/unit tests.
+Use only for explicitly emulator-backed integration tests, such as tests that exercise Firestore rules, Storage emulator behavior, seeded emulator data, or Functions emulator triggers. Do not use this profile for manual simulator QA of normal app behavior; use the production-backed `LedgeriOS` scheme instead.
 
 Required preflight:
 

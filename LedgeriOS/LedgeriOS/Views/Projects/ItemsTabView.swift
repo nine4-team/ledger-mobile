@@ -188,6 +188,7 @@ struct ItemsTabView: View {
                 initialName: protoItem.name,
                 initialSku: protoItem.sku,
                 initialSkuCandidates: protoItem.extracted?.skuCandidates ?? [],
+                initialQuantity: protoItem.quantity,
                 initialImageRefs: protoItem.photos ?? [],
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
