@@ -9,25 +9,66 @@ import UIKit
 #endif
 
 enum ItemTagExtractionService {
-    static func extract(from imageDatas: [Data]) async -> ItemTagExtractionResult {
-        await Task.detached(priority: .userInitiated) {
-            var barcodePayloads: [String] = []
-            var textObservations: [ItemTagTextObservation] = []
+    enum ImageProfile: Hashable { case phonePhoto, longReceiptPhoto, cleanScan, pdfRender, tightCrop }
+    enum EngineRoute: Hashable { case visionPrimary, tesseractPrimary }
 
-            for data in imageDatas {
-                let imageResult = extract(from: data)
-                barcodePayloads.append(contentsOf: imageResult.barcodePayloads)
-                textObservations.append(contentsOf: imageResult.textObservations)
+    static func engineRoute(for profile: ImageProfile) -> EngineRoute {
+        switch profile {
+        case .phonePhoto, .longReceiptPhoto: .visionPrimary
+        case .cleanScan, .pdfRender, .tightCrop: .tesseractPrimary
+        }
+    }
+
+    static func extract(from imageDatas: [Data], vendorHint: String? = nil, profile: ImageProfile = .phonePhoto) async -> ItemTagExtractionResult {
+        await Task.detached(priority: .userInitiated) {
+            let route = engineRoute(for: profile)
+            var barcodeObservations: [ItemTagBarcodeObservation] = []
+            var textObservations: [ItemTagTextObservation] = []
+            var fullImagePayloads: [(data: Data, sourceImage: String, focusRegions: [CGRect])] = []
+            var engineEvents: [String] = []
+            if route == .tesseractPrimary {
+                engineEvents.append("tesseract-unavailable-in-capture-target:vision-fallback")
             }
 
-            return ItemTagExtraction.extract(
-                barcodePayloads: barcodePayloads,
-                textObservations: textObservations
+            for (index, data) in imageDatas.enumerated() {
+                let sourceImage = "image-\(index + 1)"
+                let imageResult = extractFullImage(from: data, sourceImage: sourceImage)
+                barcodeObservations.append(contentsOf: imageResult.barcodePayloads.map { ItemTagBarcodeObservation(payload: $0, sourceEngine: .vision, sourceImage: sourceImage) })
+                textObservations.append(contentsOf: imageResult.textObservations)
+                fullImagePayloads.append((data, sourceImage, imageResult.focusRegions))
+            }
+
+            var initial = ItemTagExtraction.extract(
+                barcodePayloads: [],
+                barcodeObservations: barcodeObservations,
+                textObservations: textObservations,
+                vendorHint: vendorHint
             )
+            initial.engineEvents = engineEvents
+            guard initial.retryRecommended else { return initial }
+
+            var retryObservations: [ItemTagTextObservation] = []
+            for payload in fullImagePayloads {
+                retryObservations.append(contentsOf: recognizeFocusedRegions(
+                    payload.focusRegions,
+                    data: payload.data,
+                    sourceImage: payload.sourceImage
+                ))
+            }
+            engineEvents.append("tag-focused-retry:\(retryObservations.isEmpty ? "no-text" : "completed")")
+            var retried = ItemTagExtraction.extract(
+                barcodePayloads: [],
+                barcodeObservations: barcodeObservations,
+                textObservations: textObservations + retryObservations,
+                vendorHint: vendorHint,
+                retryPerformed: true
+            )
+            retried.engineEvents = engineEvents
+            return retried
         }.value
     }
 
-    private static func extract(from data: Data) -> ImageExtractionPayload {
+    private static func extractFullImage(from data: Data, sourceImage: String) -> ImageExtractionPayload {
         #if canImport(Vision)
         let barcodeRequest = VNDetectBarcodesRequest()
         let textRequest = VNRecognizeTextRequest()
@@ -41,26 +82,33 @@ enum ItemTagExtractionService {
         let textRecognitionObservations = textRequest.results ?? []
 
         let barcodePayloads = barcodeObservations.compactMap(\.payloadStringValue)
-        var textObservations = textObservations(from: textRecognitionObservations)
-        for region in barcodeTextRegions(from: barcodeObservations) {
-            textObservations.append(contentsOf: recognizeText(in: region, data: data))
-        }
+        let textObservations = textObservations(from: textRecognitionObservations, sourceImage: sourceImage)
+        let focusRegions = barcodeTextRegions(from: barcodeObservations) + tagTextRegions(from: textRecognitionObservations)
+        return ImageExtractionPayload(barcodePayloads: barcodePayloads, textObservations: textObservations, focusRegions: focusRegions)
+        #else
+        return ImageExtractionPayload(barcodePayloads: [], textObservations: [], focusRegions: [])
+        #endif
+    }
+
+    private static func recognizeFocusedRegions(_ regions: [CGRect], data: Data, sourceImage: String) -> [ItemTagTextObservation] {
+        #if canImport(Vision)
+        var observations = regions.flatMap { recognizeText(in: $0, data: data, sourceImage: sourceImage) }
         #if canImport(UIKit)
         if let image = normalizedImage(from: data) {
-            for region in barcodeTextRegions(from: barcodeObservations) {
+            for region in regions {
                 guard let crop = croppedUpscaledImage(from: image, region: region) else { continue }
-                textObservations.append(contentsOf: recognizeText(in: crop))
+                observations.append(contentsOf: recognizeText(in: crop, sourceImage: sourceImage))
             }
         }
         #endif
-        return ImageExtractionPayload(barcodePayloads: barcodePayloads, textObservations: textObservations)
+        return observations
         #else
-        return ImageExtractionPayload(barcodePayloads: [], textObservations: [])
+        return []
         #endif
     }
 
     #if canImport(Vision)
-    private static func recognizeText(in region: CGRect, data: Data) -> [ItemTagTextObservation] {
+    private static func recognizeText(in region: CGRect, data: Data, sourceImage: String) -> [ItemTagTextObservation] {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false
@@ -72,10 +120,10 @@ enum ItemTagExtractionService {
         } catch {
             return []
         }
-        return textObservations(from: request.results ?? [])
+        return textObservations(from: request.results ?? [], sourceImage: sourceImage)
     }
 
-    private static func recognizeText(in image: CGImage) -> [ItemTagTextObservation] {
+    private static func recognizeText(in image: CGImage, sourceImage: String) -> [ItemTagTextObservation] {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false
@@ -86,15 +134,17 @@ enum ItemTagExtractionService {
         } catch {
             return []
         }
-        return textObservations(from: request.results ?? [])
+        return textObservations(from: request.results ?? [], sourceImage: sourceImage)
     }
 
-    private static func textObservations(from observations: [VNRecognizedTextObservation]) -> [ItemTagTextObservation] {
+    private static func textObservations(from observations: [VNRecognizedTextObservation], sourceImage: String) -> [ItemTagTextObservation] {
         observations.compactMap { observation in
             guard let candidate = observation.topCandidates(1).first else { return nil }
             return ItemTagTextObservation(
                 text: candidate.string,
-                confidence: Double(candidate.confidence)
+                confidence: Double(candidate.confidence),
+                sourceEngine: .vision,
+                sourceImage: sourceImage
             )
         }
     }
@@ -103,6 +153,23 @@ enum ItemTagExtractionService {
         observations.map { observation in
             expandedRegion(around: observation.boundingBox)
         }
+    }
+
+    private static func tagTextRegions(from observations: [VNRecognizedTextObservation]) -> [CGRect] {
+        observations.compactMap { observation in
+            guard let text = observation.topCandidates(1).first?.string,
+                  text.range(of: #"(?i)\b(DEPT|STYLE|STVLE|STYIE|TYPE|CAT|FLS|COMPARE AT|OUR PRICE)\b|[$S]?\d+[.]\d{2}\b"#, options: .regularExpression) != nil
+            else { return nil }
+            return expandedTagRegion(around: observation.boundingBox)
+        }
+    }
+
+    private static func expandedTagRegion(around box: CGRect) -> CGRect {
+        let minX = max(0, box.minX - max(box.width * 1.5, 0.18))
+        let minY = max(0, box.minY - max(box.height * 5, 0.16))
+        let maxX = min(1, box.maxX + max(box.width * 1.5, 0.18))
+        let maxY = min(1, box.maxY + max(box.height * 5, 0.16))
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 
     private static func expandedRegion(around box: CGRect) -> CGRect {
@@ -167,4 +234,5 @@ enum ItemTagExtractionService {
 private struct ImageExtractionPayload {
     var barcodePayloads: [String]
     var textObservations: [ItemTagTextObservation]
+    var focusRegions: [CGRect]
 }

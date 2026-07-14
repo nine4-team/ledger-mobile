@@ -33,6 +33,22 @@ struct ProtoItemExtraction: Codable, Hashable, Sendable {
     var skuCandidates: [String]?
     var confidence: Double?
     var extractedAt: Date?
+    var rawTextByEngine: [String: String]? = nil
+    var skuEvidence: [ProtoItemSkuEvidence]? = nil
+    var rejectedSkuEvidence: [ProtoItemSkuEvidence]? = nil
+    var reviewFlags: [String]? = nil
+    var engineEvents: [String]? = nil
+}
+
+struct ProtoItemSkuEvidence: Codable, Hashable, Sendable {
+    var value: String
+    var sourceEngine: String
+    var sourceImage: String
+    var extractionMethod: String
+    var confidence: Double
+    var department: String?
+    var priceCents: Int?
+    var rejectionReason: String?
 }
 
 /// Photo-first capture object for "this will become an item later".

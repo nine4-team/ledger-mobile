@@ -107,6 +107,29 @@ struct ModelCodableTests {
         #expect(extracted?["skuCandidates"] as? [String] == ["12345"])
     }
 
+    @Test("ProtoItem extraction encodes structured SKU provenance")
+    func protoItemExtractionProvenanceEncoding() throws {
+        var protoItem = ProtoItem()
+        protoItem.extracted = ProtoItemExtraction(
+            rawText: "STYLE 220251",
+            skuCandidates: ["220251"],
+            confidence: 0.99,
+            extractedAt: Date(timeIntervalSince1970: 100),
+            rawTextByEngine: ["vision": "STYLE 220251"],
+            skuEvidence: [ProtoItemSkuEvidence(value: "220251", sourceEngine: "vision", sourceImage: "02.jpg", extractionMethod: "barcodeDerived", confidence: 0.99, department: "35", priceCents: 3999, rejectionReason: nil)],
+            rejectedSkuEvidence: [],
+            reviewFlags: [],
+            engineEvents: ["tag-focused-retry:completed"]
+        )
+
+        let dict = try encodeToDict(protoItem)
+        let extracted = dict["extracted"] as? [String: Any]
+        let evidence = (extracted?["skuEvidence"] as? [[String: Any]])?.first
+        #expect(evidence?["sourceImage"] as? String == "02.jpg")
+        #expect(evidence?["department"] as? String == "35")
+        #expect(extracted?["rawTextByEngine"] as? [String: String] == ["vision": "STYLE 220251"])
+    }
+
     // MARK: - Transaction
 
     @Test("Transaction encodes all fields correctly")
