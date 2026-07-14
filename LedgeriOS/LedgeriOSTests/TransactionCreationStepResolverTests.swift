@@ -3,6 +3,41 @@ import Testing
 
 @Suite("Transaction Creation Step Resolver Tests")
 struct TransactionCreationStepResolverTests {
+    @Test("Inventory is available as a transaction destination")
+    func inventoryIsAvailableAsDestination() {
+        var project = Project()
+        project.id = "project-123"
+        project.name = "Vegas Project"
+
+        let options = TransactionDestinationResolver.options(projects: [project])
+
+        #expect(options.map(\.id) == [.inventory, .project("project-123")])
+        #expect(options.map(\.label) == ["Inventory", "Vegas Project"])
+    }
+
+    @Test("Archived projects are excluded from transaction destinations")
+    func archivedProjectsAreExcludedFromDestinations() {
+        var project = Project()
+        project.id = "archived-project"
+        project.name = "Archived Project"
+        project.isArchived = true
+
+        let options = TransactionDestinationResolver.options(projects: [project])
+
+        #expect(options.map(\.id) == [.inventory])
+    }
+
+    @Test("Inventory source aliases can be excluded for inventory-bound transactions")
+    func inventorySourceAliasesCanBeExcluded() {
+        let options = VendorDefaultsService.displayVendorOptions(
+            fixedOptions: ["Assiist Biz Inventory"],
+            vendors: ["Homegoods", "Inventory", "Amazon"],
+            excluding: ["Inventory", "Assiist Biz Inventory"]
+        )
+
+        #expect(options == ["Homegoods", "Amazon"])
+    }
+
     @Test("Project-scoped purchase skips project selection")
     func projectPurchaseSkipsDestinationSelection() {
         let steps = TransactionCreationStepResolver.orderedSteps(

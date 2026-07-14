@@ -14,6 +14,19 @@ enum TransactionDestination: Hashable {
     case inventory
 }
 
+enum TransactionDestinationResolver {
+    static func options(projects: [Project]) -> [InlineOption<TransactionDestination>] {
+        let projectOptions = projects
+            .filter { $0.isArchived != true }
+            .compactMap { project -> InlineOption<TransactionDestination>? in
+                guard let id = project.id else { return nil }
+                return InlineOption(id: .project(id), label: project.name)
+            }
+
+        return [InlineOption(id: .inventory, label: "Inventory")] + projectOptions
+    }
+}
+
 /// Logical screens the New Transaction sheet can show. Ordering is defined by
 /// `NewTransactionView.orderedSteps` based on the current branch.
 /// How the user is supplying tax info on an itemized transaction.
@@ -139,7 +152,13 @@ struct NewTransactionView: View {
     }
 
     private var fixedSourceOptions: [String] {
-        [inventorySourceLabel]
+        destinationProjectId == nil ? [] : [inventorySourceLabel]
+    }
+
+    /// An inventory-bound transaction must name the outside vendor it came
+    /// from, not inventory itself (which would imply Inventory → Inventory).
+    private var excludedSourceOptions: Set<String> {
+        destinationProjectId == nil ? ["Inventory", inventorySourceLabel] : []
     }
 
     /// Inventory routing is a category + purchaser decision, matching the
@@ -290,6 +309,7 @@ struct NewTransactionView: View {
             VendorPickerModal(
                 selectedValue: vendor.isEmpty ? source : vendor,
                 fixedOptions: fixedSourceOptions,
+                excludedOptions: excludedSourceOptions,
                 onSelect: { newValue in
                     if currentStep == .vendor || !vendor.isEmpty {
                         vendor = newValue
@@ -359,19 +379,16 @@ struct NewTransactionView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Step: Destination (project picker)
+    // MARK: - Step: Destination
 
     private var stepDestination: some View {
         MultiStepFormSheet(
             title: "New Transaction",
-            description: "Which project?",
+            description: "Where should this transaction go?",
 
             currentStep: currentStepIndex,
             totalSteps: totalSteps,
-            primaryAction: FormSheetAction(
-                title: "Next",
-                isDisabled: !destinationIsProject
-            ) { advance() },
+            primaryAction: FormSheetAction(title: "Next") { advance() },
             secondaryAction: FormSheetAction(title: "Back") { goBack() }
         ) {
             InlineOptionPicker(selection: $selectedDestination, options: destinationOptions)
@@ -379,17 +396,7 @@ struct NewTransactionView: View {
     }
 
     private var destinationOptions: [InlineOption<TransactionDestination>] {
-        accountContext.allProjects
-            .filter { $0.isArchived != true }
-            .compactMap { proj -> InlineOption<TransactionDestination>? in
-                guard let id = proj.id else { return nil }
-                return InlineOption(id: TransactionDestination.project(id), label: proj.name)
-            }
-    }
-
-    private var destinationIsProject: Bool {
-        if case .project = selectedDestination { return true }
-        return false
+        TransactionDestinationResolver.options(projects: accountContext.allProjects)
     }
 
     // MARK: - Step: Budget Category
@@ -459,7 +466,8 @@ struct NewTransactionView: View {
                     otherText: $otherVendorText,
                     saveOtherAsPreset: $saveOtherVendorAsPreset,
                     otherFocused: $otherVendorFocused,
-                    fixedOptions: fixedSourceOptions
+                    fixedOptions: fixedSourceOptions,
+                    excludedOptions: excludedSourceOptions
                 )
             }
         }
@@ -532,14 +540,16 @@ struct NewTransactionView: View {
                             value: $vendor,
                             label: "Source / Vendor",
                             showPicker: $showVendorPicker,
-                            fixedOptions: fixedSourceOptions
+                            fixedOptions: fixedSourceOptions,
+                            excludedOptions: excludedSourceOptions
                         )
                     } else {
                         VendorPickerField(
                             value: $source,
                             label: "Source / Vendor",
                             showPicker: $showVendorPicker,
-                            fixedOptions: fixedSourceOptions
+                            fixedOptions: fixedSourceOptions,
+                            excludedOptions: excludedSourceOptions
                         )
                     }
                 }

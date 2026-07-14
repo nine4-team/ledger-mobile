@@ -14,6 +14,7 @@ struct VendorPickerField: View {
     var label: String = "Source"
     @Binding var showPicker: Bool
     var fixedOptions: [String] = []
+    var excludedOptions: Set<String> = []
 
     @Environment(AccountContext.self) private var accountContext
 
@@ -24,13 +25,11 @@ struct VendorPickerField: View {
 
     /// Filtered vendor list (no empty strings, deduplicated).
     private var displayVendors: [String] {
-        var seen = Set<String>()
-        return (fixedOptions + vendors).filter { v in
-            let trimmed = v.trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
-            seen.insert(trimmed)
-            return true
-        }
+        VendorDefaultsService.displayVendorOptions(
+            fixedOptions: fixedOptions,
+            vendors: vendors,
+            excluding: excludedOptions
+        )
     }
 
     var body: some View {
@@ -96,6 +95,7 @@ struct VendorPickerField: View {
 struct VendorPickerModal: View {
     let selectedValue: String
     var fixedOptions: [String] = []
+    var excludedOptions: Set<String> = []
     let onSelect: (String) -> Void
 
     @Environment(AccountContext.self) private var accountContext
@@ -109,9 +109,15 @@ struct VendorPickerModal: View {
 
     private let service = VendorDefaultsService()
 
-    init(selectedValue: String, fixedOptions: [String] = [], onSelect: @escaping (String) -> Void) {
+    init(
+        selectedValue: String,
+        fixedOptions: [String] = [],
+        excludedOptions: Set<String> = [],
+        onSelect: @escaping (String) -> Void
+    ) {
         self.selectedValue = selectedValue
         self.fixedOptions = fixedOptions
+        self.excludedOptions = excludedOptions
         self.onSelect = onSelect
         // Other mode will be resolved once vendors load
         _otherMode = State(initialValue: false)
@@ -120,13 +126,11 @@ struct VendorPickerModal: View {
 
     /// Filtered vendor list (no empty strings, deduplicated).
     private var displayVendors: [String] {
-        var seen = Set<String>()
-        return (fixedOptions + vendors).filter { v in
-            let trimmed = v.trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
-            seen.insert(trimmed)
-            return true
-        }
+        VendorDefaultsService.displayVendorOptions(
+            fixedOptions: fixedOptions,
+            vendors: vendors,
+            excluding: excludedOptions
+        )
     }
 
     var body: some View {
@@ -251,6 +255,7 @@ struct InlineVendorPicker: View {
     @Binding var saveOtherAsPreset: Bool
     var otherFocused: FocusState<Bool>.Binding
     var fixedOptions: [String] = []
+    var excludedOptions: Set<String> = []
 
     @Environment(AccountContext.self) private var accountContext
 
@@ -260,13 +265,11 @@ struct InlineVendorPicker: View {
     private let service = VendorDefaultsService()
 
     private var displayVendors: [String] {
-        var seen = Set<String>()
-        return (fixedOptions + vendors).filter { v in
-            let trimmed = VendorDefaultsService.cleanedVendorName(v)
-            guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
-            seen.insert(trimmed)
-            return true
-        }
+        VendorDefaultsService.displayVendorOptions(
+            fixedOptions: fixedOptions,
+            vendors: vendors,
+            excluding: excludedOptions
+        )
     }
 
     private var cleanedOtherText: String {

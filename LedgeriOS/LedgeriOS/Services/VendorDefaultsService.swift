@@ -60,4 +60,24 @@ struct VendorDefaultsService: VendorDefaultsServiceProtocol {
     static func normalizedVendorName(_ name: String) -> String {
         cleanedVendorName(name).lowercased()
     }
+
+    /// Builds the source picker list while allowing a flow to hide choices
+    /// that would be invalid in its current context.
+    static func displayVendorOptions(
+        fixedOptions: [String],
+        vendors: [String],
+        excluding excludedOptions: Set<String> = []
+    ) -> [String] {
+        let excluded = Set(excludedOptions.map(normalizedVendorName))
+        var seen = Set<String>()
+
+        return (fixedOptions + vendors).filter { vendor in
+            let normalized = normalizedVendorName(vendor)
+            guard !normalized.isEmpty,
+                  !excluded.contains(normalized),
+                  !seen.contains(normalized) else { return false }
+            seen.insert(normalized)
+            return true
+        }
+    }
 }
