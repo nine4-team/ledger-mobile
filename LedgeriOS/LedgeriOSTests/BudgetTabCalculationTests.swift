@@ -68,6 +68,41 @@ struct BudgetTabCalculationTests {
         return pbc
     }
 
+    // MARK: - ProjectBudgetCategoryResolver
+
+    @Test("Resolver returns account category definitions enabled by project rows")
+    func resolverReturnsEnabledAccountCategories() {
+        let categories = [
+            makeBudgetCategory(id: "furnishings", name: "Furnishings"),
+            makeBudgetCategory(id: "appliances", name: "Appliances"),
+            makeBudgetCategory(id: "labor", name: "Labor")
+        ]
+        let rows = [
+            makeProjectBudgetCategory(id: "furnishings"),
+            makeProjectBudgetCategory(id: "labor")
+        ]
+
+        let result = ProjectBudgetCategoryResolver.resolve(
+            projectBudgetCategoryRows: rows,
+            accountBudgetCategories: categories
+        )
+
+        #expect(result.map(\.name) == ["Furnishings", "Labor"])
+    }
+
+    @Test("Resolver does not use account categories without a matching project row")
+    func resolverRequiresProjectRow() {
+        let result = ProjectBudgetCategoryResolver.resolve(
+            projectBudgetCategoryRows: [makeProjectBudgetCategory(id: "furnishings")],
+            accountBudgetCategories: [
+                makeBudgetCategory(id: "furnishings", name: "Furnishings"),
+                makeBudgetCategory(id: "not-enabled", name: "Not Enabled")
+            ]
+        )
+
+        #expect(result.map(\.id) == ["furnishings"])
+    }
+
     // MARK: - enabledCategories (CategoryProgress-based)
 
     @Test("Keeps enabled categories regardless of budget or spend")

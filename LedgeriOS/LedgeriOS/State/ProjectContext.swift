@@ -277,11 +277,10 @@ final class ProjectContext {
 
     /// Budget categories enabled for this project (have a ProjectBudgetCategory document).
     var enabledBudgetCategories: [BudgetCategory] {
-        let enabledIds = Set(projectBudgetCategories.compactMap(\.id))
-        return budgetCategories.filter { cat in
-            guard let id = cat.id else { return false }
-            return enabledIds.contains(id)
-        }
+        ProjectBudgetCategoryResolver.resolve(
+            projectBudgetCategoryRows: projectBudgetCategories,
+            accountBudgetCategories: budgetCategories
+        )
     }
 
     private func recomputeBudgetProgress() {

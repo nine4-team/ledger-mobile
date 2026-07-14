@@ -75,7 +75,7 @@ struct TransactionDetailView: View {
     // Enabled budget categories for THIS transaction's project, loaded on demand
     // when the ambient project context isn't the transaction's project (the
     // detail screen is reachable from Inventory, Search, and Review).
-    @State private var transactionProjectBudgetCategories: [ProjectBudgetCategory] = []
+    @State private var transactionProjectBudgetCategoryRows: [ProjectBudgetCategory] = []
     @State private var budgetCategoriesListener: ListenerRegistration?
 
     // MARK: - Computed
@@ -96,32 +96,38 @@ struct TransactionDetailView: View {
         currentTransaction.projectId ?? projectContext.currentProjectId
     }
 
-    /// Budget categories the user may assign to this transaction: the ones
-    /// enabled in the transaction's own project. Reuses the ambient project
-    /// context when it matches; otherwise uses the on-demand loaded set. A
-    /// business-inventory transaction (no project) has no project scope, so it
-    /// falls back to the account-wide list.
-    private var editableBudgetCategories: [BudgetCategory] {
-        guard let projectId = currentTransaction.projectId else {
+    /// Raw project budget rows for the transaction's project. Detail can be
+    /// opened outside that project, so fall back to the on-demand subscription.
+    private var projectBudgetCategoryRows: [ProjectBudgetCategory] {
+        guard let projectId = currentTransaction.projectId else { return [] }
+        if projectContext.currentProjectId == projectId {
+            return projectContext.projectBudgetCategories
+        }
+        return transactionProjectBudgetCategoryRows
+    }
+
+    /// Display/edit-ready budget categories enabled for this transaction's
+    /// project. Project rows define scope; account categories provide name/type.
+    private var projectBudgetCategories: [BudgetCategory] {
+        guard currentTransaction.projectId != nil else {
             return accountContext.allBudgetCategories
         }
-        if projectContext.currentProjectId == projectId {
-            return projectContext.enabledBudgetCategories
-        }
-        let enabledIds = Set(transactionProjectBudgetCategories.compactMap(\.id))
-        return accountContext.allBudgetCategories.filter { enabledIds.contains($0.id ?? "") }
+        return ProjectBudgetCategoryResolver.resolve(
+            projectBudgetCategoryRows: projectBudgetCategoryRows,
+            accountBudgetCategories: accountContext.allBudgetCategories
+        )
     }
 
     private func subscribeProjectCategoriesIfNeeded() {
         budgetCategoriesListener?.remove()
         budgetCategoriesListener = nil
-        transactionProjectBudgetCategories = []
+        transactionProjectBudgetCategoryRows = []
         guard let accountId = accountContext.currentAccountId,
               let projectId = currentTransaction.projectId,
               projectId != projectContext.currentProjectId else { return }
         budgetCategoriesListener = ProjectBudgetCategoriesService()
             .subscribeToProjectBudgetCategories(accountId: accountId, projectId: projectId) { pbc in
-                transactionProjectBudgetCategories = pbc
+                transactionProjectBudgetCategoryRows = pbc
             }
     }
 
@@ -182,7 +188,7 @@ struct TransactionDetailView: View {
 
     private var categoryLookup: [String: BudgetCategory] {
         Dictionary(
-            uniqueKeysWithValues: projectContext.budgetCategories.compactMap { cat in
+            uniqueKeysWithValues: projectBudgetCategories.compactMap { cat in
                 guard let id = cat.id else { return nil }
                 return (id, cat)
             }
@@ -348,7 +354,7 @@ struct TransactionDetailView: View {
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditTransactionDetailsModal(
                 transaction: currentTransaction,
-                budgetCategories: editableBudgetCategories,
+                budgetCategories: projectBudgetCategories,
                 onSave: { fields in
                     updateTransaction(fields: fields)
                 }

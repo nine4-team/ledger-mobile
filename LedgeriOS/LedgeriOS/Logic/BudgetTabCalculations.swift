@@ -11,6 +11,19 @@ struct BudgetCategoryRowData: Identifiable {
     let remainingLabel: String
 }
 
+enum ProjectBudgetCategoryResolver {
+    static func resolve(
+        projectBudgetCategoryRows: [ProjectBudgetCategory],
+        accountBudgetCategories: [BudgetCategory]
+    ) -> [BudgetCategory] {
+        let enabledIds = Set(projectBudgetCategoryRows.compactMap(\.id))
+        return accountBudgetCategories.filter { category in
+            guard let id = category.id else { return false }
+            return enabledIds.contains(id)
+        }
+    }
+}
+
 /// Pure functions for filtering, sorting, and labeling budget categories
 /// in the Budget tab. Testable without SwiftUI.
 enum BudgetTabCalculations {
