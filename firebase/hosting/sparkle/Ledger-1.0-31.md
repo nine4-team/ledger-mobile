@@ -1,0 +1,1 @@
+- Fixed an issue where opening a photo from item quick draft details could show the first photo instead of the selected photo.
