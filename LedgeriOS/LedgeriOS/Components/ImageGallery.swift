@@ -26,6 +26,21 @@ struct ImageGallery: View {
     private let zoomStep: CGFloat = 0.5
     private let dismissThreshold: CGFloat = 300
 
+    init(
+        images: [AttachmentRef],
+        initialIndex: Int = 0,
+        isPresented: Binding<Bool>,
+        onPinImage: ((AttachmentRef) -> Void)? = nil,
+        onSaveImage: ((AttachmentRef) async throws -> Void)? = ImageSaveHelper.saveToDevice
+    ) {
+        self.images = images
+        self.initialIndex = initialIndex
+        self._isPresented = isPresented
+        self.onPinImage = onPinImage
+        self.onSaveImage = onSaveImage
+        self._currentIndex = State(initialValue: Self.clampedIndex(initialIndex, total: images.count))
+    }
+
     private var dismissProgress: CGFloat {
         MediaGalleryCalculations.dismissProgress(translation: dismissOffset, threshold: dismissThreshold)
     }
@@ -72,9 +87,17 @@ struct ImageGallery: View {
         .gesture(dismissGesture)
         #endif
         .onAppear {
-            currentIndex = initialIndex
+            currentIndex = Self.clampedIndex(initialIndex, total: images.count)
             currentZoom = 1.0
             resetHideTimer()
+        }
+        .onChange(of: initialIndex) { _, newValue in
+            currentIndex = Self.clampedIndex(newValue, total: images.count)
+            currentZoom = 1.0
+        }
+        .onChange(of: images.count) { _, newValue in
+            currentIndex = Self.clampedIndex(currentIndex, total: newValue)
+            currentZoom = 1.0
         }
         .onDisappear {
             hideControlsTask?.cancel()
@@ -109,6 +132,11 @@ struct ImageGallery: View {
             currentZoom = 1.0
             resetHideTimer()
         }
+    }
+
+    private static func clampedIndex(_ index: Int, total: Int) -> Int {
+        guard total > 0 else { return 0 }
+        return min(max(index, 0), total - 1)
     }
 
     // MARK: - Swipe-to-Dismiss
