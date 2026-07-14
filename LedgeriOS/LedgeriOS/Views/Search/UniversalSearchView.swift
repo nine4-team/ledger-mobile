@@ -346,7 +346,7 @@ struct UniversalSearchView: View {
             } else {
                 ForEach(searchResults.spaces) { space in
                     if let spaceId = space.id {
-                        NavigationLink(value: SpaceRoute(id: spaceId, projectId: space.projectId)) {
+                        NavigationLink(value: SpaceRoute(id: spaceId, projectId: space.projectId, initialSpace: space)) {
                             SpaceCard(
                                 space: space,
                                 itemCount: itemCount(for: space)

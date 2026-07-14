@@ -3,6 +3,15 @@ import SwiftUI
 
 struct SpaceDetailView: View {
     let space: Space
+    /// Navigation scope is immutable route context. Do not infer it from a
+    /// listener-updated document; a transient/legacy missing `projectId`
+    /// would incorrectly switch a project space to inventory data.
+    let projectId: String?
+
+    init(space: Space, projectId: String? = nil) {
+        self.space = space
+        self.projectId = projectId ?? space.projectId
+    }
 
     @Environment(ProjectContext.self) private var projectContext
     @Environment(InventoryContext.self) private var inventoryContext
@@ -41,7 +50,7 @@ struct SpaceDetailView: View {
     }
 
     private var isInventorySpace: Bool {
-        liveSpace.projectId == nil
+        projectId == nil
     }
 
     private var activeItems: [Item] {
@@ -133,7 +142,7 @@ struct SpaceDetailView: View {
         .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(
                 context: .space(liveSpace),
-                projectId: liveSpace.projectId,
+                projectId: projectId,
                 onDismiss: { showAddExistingItems = false }
             )
         }

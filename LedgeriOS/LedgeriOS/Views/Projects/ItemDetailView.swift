@@ -250,16 +250,14 @@ struct ItemDetailView: View {
             TransactionDetailView(transaction: transaction)
         }
         .navigationDestination(item: $navigationSpace) { route in
-            if let space = NavigationRouteResolution.space(
+            if let space = route.initialSpace ?? NavigationRouteResolution.space(
                 id: route.id,
                 projectSpaces: route.projectId == nil ? inventoryContext.spaces : projectContext.spaces,
                 accountSpaces: accountContext.allSpaces
             ) {
-                SpaceDetailView(space: space)
+                SpaceDetailView(space: space, projectId: route.projectId)
             } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(BrandColors.background)
+                ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
             }
         }
         .onAppear {
@@ -341,7 +339,7 @@ struct ItemDetailView: View {
                 if let space = linkedSpace {
                     Button {
                         if let spaceId = space.id {
-                            navigationSpace = SpaceRoute(id: spaceId, projectId: space.projectId)
+                            navigationSpace = SpaceRoute(id: spaceId, projectId: space.projectId, initialSpace: space)
                         }
                     } label: {
                         FindableText(space.name)

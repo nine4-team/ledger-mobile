@@ -27,10 +27,21 @@ struct ProjectRoute: Hashable {
 struct ItemRoute: Hashable {
     let id: String
     let projectId: String?
+    let initialItem: Item?
 
-    init(id: String, projectId: String? = nil) {
+    init(id: String, projectId: String? = nil, initialItem: Item? = nil) {
         self.id = id
         self.projectId = projectId
+        self.initialItem = initialItem
+    }
+
+    static func == (lhs: ItemRoute, rhs: ItemRoute) -> Bool {
+        lhs.id == rhs.id && lhs.projectId == rhs.projectId
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(projectId)
     }
 }
 
@@ -39,9 +50,20 @@ struct ItemRoute: Hashable {
 struct SpaceRoute: Hashable, Identifiable {
     let id: String
     let projectId: String?
+    let initialSpace: Space?
 
-    init(id: String, projectId: String? = nil) {
+    init(id: String, projectId: String? = nil, initialSpace: Space? = nil) {
         self.id = id
         self.projectId = projectId
+        self.initialSpace = initialSpace
+    }
+
+    static func == (lhs: SpaceRoute, rhs: SpaceRoute) -> Bool {
+        lhs.id == rhs.id && lhs.projectId == rhs.projectId
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(projectId)
     }
 }

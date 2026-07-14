@@ -79,6 +79,14 @@ struct NavigationRouteResolutionTests {
         #expect(resolved?.name == "Project Copy")
     }
 
+    @Test("Item route identity ignores its display snapshot")
+    func itemRouteIdentityIgnoresSnapshot() {
+        let first = ItemRoute(id: "1", projectId: "p", initialItem: item(id: "1", name: "Before"))
+        let second = ItemRoute(id: "1", projectId: "p", initialItem: item(id: "1", name: "After"))
+        #expect(first == second)
+        #expect(Set([first, second]).count == 1)
+    }
+
     // MARK: - Space resolution
 
     @Test("Resolves space from project spaces first")
@@ -105,5 +113,14 @@ struct NavigationRouteResolutionTests {
         let accountSpaces = [space(id: "s1", name: "Account Copy")]
         let resolved = NavigationRouteResolution.space(id: "s1", projectSpaces: projectSpaces, accountSpaces: accountSpaces)
         #expect(resolved?.name == "Project Copy")
+    }
+
+
+    @Test("Space route identity ignores its display snapshot")
+    func spaceRouteIdentityIgnoresSnapshot() {
+        let first = SpaceRoute(id: "s1", projectId: "p", initialSpace: space(id: "s1", name: "Before"))
+        let second = SpaceRoute(id: "s1", projectId: "p", initialSpace: space(id: "s1", name: "After"))
+        #expect(first == second)
+        #expect(Set([first, second]).count == 1)
     }
 }

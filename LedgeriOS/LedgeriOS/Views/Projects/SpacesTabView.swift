@@ -62,7 +62,7 @@ struct SpacesTabView: View {
                 ) {
                     ForEach(filteredSpaces) { space in
                         if let spaceId = space.id {
-                            NavigationLink(value: SpaceRoute(id: spaceId, projectId: projectContext.currentProjectId)) {
+                            NavigationLink(value: SpaceRoute(id: spaceId, projectId: projectContext.currentProjectId, initialSpace: space)) {
                                 SpaceCard(
                                     space: space,
                                     itemCount: itemCount(for: space)

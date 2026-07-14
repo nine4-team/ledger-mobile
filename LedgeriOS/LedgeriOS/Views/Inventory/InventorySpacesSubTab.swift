@@ -58,7 +58,7 @@ struct InventorySpacesSubTab: View {
                 ) {
                     ForEach(filteredSpaces) { space in
                         if let spaceId = space.id {
-                            NavigationLink(value: SpaceRoute(id: spaceId, projectId: nil)) {
+                            NavigationLink(value: SpaceRoute(id: spaceId, projectId: nil, initialSpace: space)) {
                                 SpaceCard(
                                     space: space,
                                     itemCount: itemCount(for: space)

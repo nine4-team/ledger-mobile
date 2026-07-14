@@ -25,7 +25,6 @@ struct ItemsTabView: View {
     @State private var showNewItemDraft = false
     @State private var showAddItemMenu = false
     @State private var selectedProtoItem: ProtoItem?
-    @State private var selectedItemRoute: ItemRoute?
     @State private var protoItemPendingDelete: ProtoItem?
     @State private var protoItemPendingConvert: ProtoItem?
     @State private var protoItemPendingMerge: ProtoItem?
@@ -209,13 +208,6 @@ struct ItemsTabView: View {
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
         }
-        .navigationDestination(item: $selectedItemRoute) { route in
-            ItemDetailView(
-                itemId: route.id,
-                projectId: route.projectId,
-                initialItem: projectContext.items.first { $0.id == route.id }
-            )
-        }
         .confirmationDialog(
             "Delete Item Quick Draft?",
             isPresented: Binding(
@@ -277,10 +269,7 @@ struct ItemsTabView: View {
     private var itemsSection: some View {
         if expandedSections.contains("items") {
             SharedItemsList(
-                mode: .embedded(items: projectContext.items, onItemPress: { itemId in
-                    guard selectedItemIds.isEmpty else { return }
-                    selectedItemRoute = ItemRoute(id: itemId, projectId: projectContext.currentProjectId)
-                }),
+                mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
                 getMenuItems: { singleItemMenuItems(for: $0) },
                 emptyMessage: "No items in this project",
                 onAdd: { showAddItemMenu = true },
@@ -288,7 +277,7 @@ struct ItemsTabView: View {
                 selectedIds: $selectedItemIds,
                 useNavigationLinks: true,
                 itemRoute: { item in
-                    item.id.map { ItemRoute(id: $0, projectId: projectContext.currentProjectId) }
+                    item.id.map { ItemRoute(id: $0, projectId: projectContext.currentProjectId, initialItem: item) }
                 },
                 emptyIcon: "cube.box",
                 filterScope: .project,

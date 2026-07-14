@@ -58,20 +58,20 @@ struct ProjectDetailView: View {
             ItemDetailView(
                 itemId: route.id,
                 projectId: route.projectId,
-                initialItem: projectContext.items.first { $0.id == route.id }
+                initialItem: route.initialItem ?? projectContext.items.first { $0.id == route.id }
             )
+            .environment(projectContext)
         }
         .navigationDestination(for: SpaceRoute.self) { route in
-            if let space = NavigationRouteResolution.space(
+            if let space = route.initialSpace ?? NavigationRouteResolution.space(
                 id: route.id,
                 projectSpaces: projectContext.spaces,
                 accountSpaces: accountContext.allSpaces
             ) {
-                SpaceDetailView(space: space)
+                SpaceDetailView(space: space, projectId: route.projectId)
+                    .environment(projectContext)
             } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(BrandColors.background)
+                ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
             }
         }
         // TODO(stable-id-navigation): FinancesTabView still pushes `Item` values.
