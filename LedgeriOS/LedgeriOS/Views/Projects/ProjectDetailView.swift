@@ -27,7 +27,9 @@ struct ProjectDetailView: View {
                 TabBarItem(id: "transactions", label: "Transactions"),
                 TabBarItem(id: "spaces", label: "Spaces"),
                 TabBarItem(id: "notes", label: "Notes"),
-                TabBarItem(id: "finances", label: "Finances"),
+                TabBarItem(id: "budget", label: "Budget"),
+                TabBarItem(id: "billing", label: "Billing"),
+                TabBarItem(id: "reports", label: "Reports"),
             ])
             .frame(maxWidth: Dimensions.contentMaxWidth)
             .frame(maxWidth: .infinity)
@@ -44,8 +46,12 @@ struct ProjectDetailView: View {
                     SpacesTabView()
                 case "notes":
                     NotesTabView()
-                case "finances":
-                    FinancesTabView()
+                case "budget":
+                    BudgetTabView()
+                case "billing":
+                    BillingTabView()
+                case "reports":
+                    AccountingTabView()
                 default:
                     ItemsTabView()
                 }
