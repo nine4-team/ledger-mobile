@@ -15,7 +15,7 @@ struct CategoryPickerList: View {
 
     private var visibleCategories: [BudgetCategory] {
         categories
-            .filter { $0.isArchived != true }
+            .filter { $0.isArchived != true && !$0.isSystemCategory }
             .sorted { ($0.order ?? 999) < ($1.order ?? 999) }
     }
 

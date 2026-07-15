@@ -173,6 +173,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    match /accounts/{accountId}/projects/{projectId}/feeInstallments/{installmentId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
     match /accounts/{accountId}/projects/{projectId}/notes/{noteId} {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
@@ -211,6 +215,13 @@ service cloud.firestore {
 
     match /accounts/{accountId}/invoices/{invoiceId} {
       allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Payment-correction events are an immutable audit trail.
+    match /accounts/{accountId}/invoiceEvents/{eventId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId);
+      allow update, delete: if false;
     }
 
     // Lineage edges are append-only and server-produced (request-doc handlers / server triggers).

@@ -117,21 +117,21 @@ const ENTITIES: Record<string, EntitySchema> = {
     name: "invoice",
     description:
       "A project-scoped demand for money. It is separate from transactions, which record money movement. " +
-      "Invoice lines can reference existing items, existing transactions, or manual New Charge demands.",
+      "Invoice lines can reference existing items, existing transactions, fee installments, or invoice-only manual adjustments.",
     requiredOnCreate: ["projectId", "lines"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID." },
       { name: "projectId", type: "string", description: "Project being billed." },
-      { name: "status", type: "enum(invoiceStatus)", description: "draft, sent, paid, or voided." },
-      { name: "lines", type: "InvoiceLine[]", description: "Authoritative demand lines. sourceType is item, transaction, or manual (New Charge)." },
-      { name: "lines[].budgetCategoryId", type: "string", description: "Required budget category represented by each invoice line. Manual New Charge lines must provide this explicitly." },
+      { name: "status", type: "enum(invoiceStatus)", description: "created, sent, paid, or canceled. Legacy reads may contain draft/voided." },
+      { name: "lines", type: "InvoiceLine[]", description: "Authoritative demand lines. sourceType is item, transaction, feeInstallment, or manual." },
+      { name: "lines[].budgetCategoryId", type: "string", description: "Required settlement category represented by each invoice line. Source-backed lines derive it from their source; manual lines use hidden Other Client Charges & Credits automatically." },
       { name: "itemIds", type: "string[]", description: "Membership index derived from item lines." },
       { name: "transactionIds", type: "string[]", description: "Membership index derived from transaction lines." },
       { name: "totalCents", type: "number?", description: "Frozen net total once sent. Drafts may recompute from lines." },
     ],
     enums: ["invoiceStatus"],
     notes: [
-      "Manual invoice lines are UI-labeled New Charge and do not create transactions by themselves.",
+      "FeeInstallment is the canonical source for future/planned fee demand. Manual invoice lines are invoice-only charges or credits; they do not create transactions until collection.",
       "Marking an invoice collected creates one categorized paymentToBusiness transaction per budget category represented by the settled lines. Returned paid item credits are invoice credit lines, not synthetic transactions.",
       "Existing transaction-backed invoice lines remain supported for ad-hoc invoices.",
     ],

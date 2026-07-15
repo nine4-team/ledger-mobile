@@ -6,7 +6,7 @@ struct BudgetProgressService {
         categories: [BudgetCategory],
         projectBudgetCategories: [ProjectBudgetCategory]
     ) -> BudgetProgress {
-        let activeCategories = categories.filter { $0.isArchived != true }
+        let activeCategories = categories.filter { $0.isArchived != true && !$0.isSystemCategory }
 
         // Build a lookup: categoryId → budget cents
         var budgetByCategoryId: [String: Int] = [:]

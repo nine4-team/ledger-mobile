@@ -129,6 +129,7 @@ struct NewItemView: View {
                 guard let id = category.id else { return false }
                 return enabledIds.contains(id)
                     && category.isArchived != true
+                    && !category.isSystemCategory
                     && category.isItemsCategory
             }
             .sorted { ($0.order ?? 999) < ($1.order ?? 999) }

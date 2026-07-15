@@ -131,28 +131,29 @@ Collection is recorded by ordinary transactions linked with
 |-------|------|-------------|
 | id | string | Document ID |
 | projectId | string | FK to Project |
-| status | string | `"draft"`, `"sent"`, `"paid"`, or `"voided"` |
+| status | string | `"created"`, `"sent"`, `"paid"`, or `"canceled"`. Legacy reads may contain `"draft"`/`"voided"` and should map them to `"created"`/`"canceled"` |
 | itemIds | array of string | Membership index derived from `lines` where `sourceType == "item"` |
 | transactionIds | array of string | Membership index derived from `lines` where `sourceType == "transaction"` |
-| lines | array of InvoiceLine | Authoritative demand lines. Drafts may include manual New Charge lines. |
+| lines | array of InvoiceLine | Authoritative demand lines. Created invoices may include item, transaction, fee-installment, or invoice-only manual adjustment lines. |
 | totalCents | number, nullable | Frozen net total once sent/collected; sum of signed line amounts |
 | invoiceNumber | string, nullable | Human-readable label |
 | notes | string, nullable | |
 | dateIssued | timestamp, nullable | |
 | dateSent | timestamp, nullable | |
 | datePaid | timestamp, nullable | Compatibility lifecycle marker; settlement transactions are the auditable collection record |
-| dateVoided | timestamp, nullable | |
+| dateCanceled | timestamp, nullable | |
+| dateVoided | timestamp, nullable | Legacy alias for canceled invoices |
 
 `InvoiceLine` fields:
 
 | Field | Type | Constraints |
 |-------|------|-------------|
 | id | string | Stable line identifier. Backfilled historical lines use deterministic IDs. |
-| sourceType | string | `"item"`, `"transaction"`, or `"manual"` |
-| sourceId | string, nullable | Item/transaction ID for sourced lines; omitted for manual New Charge lines |
+| sourceType | string | `"item"`, `"transaction"`, `"feeInstallment"`, or `"manual"` |
+| sourceId | string, nullable | Item/transaction/fee-installment ID for sourced lines; omitted for manual lines |
 | amountCents | number | Positive magnitude |
 | sign | number | `1` charge, `-1` credit |
-| budgetCategoryId | string, nullable | Required on new lines. Manual New Charge lines must provide it explicitly; sourced item/transaction lines resolve it from their source record. |
+| budgetCategoryId | string, nullable | Required on new lines. Fee-installment/item/transaction lines resolve it from their source record; new manual adjustments use the reserved `system-other-client-charges-and-credits` category automatically. |
 | snapshotName | string, nullable | Frozen display label |
 | settlementTransactionIds | array of string, nullable | Optional convenience reverse lookup; transaction settlement fields are source of truth |
 
@@ -170,7 +171,7 @@ Persisted shape:
 - `budgetCategoryId`: copied from the original paid invoice line
 - `snapshotName`: human-readable returned-item credit label
 
-The enclosing invoice is an ordinary draft invoice with `itemIds: []` and
+The enclosing invoice is an ordinary created invoice with `itemIds: []` and
 `transactionIds: []`. This prevents the returned item from being claimed again
 as a normal invoice item.
 
@@ -181,7 +182,7 @@ returnCredit:{paidInvoiceId}:{paidInvoiceLineId}:{itemId}
 ```
 
 Implementations may encode or hash that tuple for storage. The deterministic ID
-is the dedupe key across non-voided invoices. Do not add separate persisted
+is the dedupe key across non-canceled invoices. Do not add separate persisted
 fields such as `creditReason`, `creditedItemId`, `paidInvoiceId`, or
 `paidInvoiceLineId` unless a future workflow needs more than deterministic
 dedupe and human-readable invoice notes.
@@ -344,6 +345,7 @@ A reusable budget category template defined at the account level. These are the 
 | name | string | Required. Defaults to empty string |
 | slug | string, nullable | URL-safe identifier |
 | isArchived | boolean, nullable | Archived categories are hidden from new allocations but preserved for historical data |
+| isSystem | boolean, nullable | System-owned category. Hidden from category pickers, budget allocation, and category management. `system-other-client-charges-and-credits` is provisioned automatically for invoice-only manual adjustments. |
 | order | number, nullable | Display order hint |
 | metadata | BudgetCategoryMetadata, nullable | See embedded type below |
 | createdAt | timestamp | |

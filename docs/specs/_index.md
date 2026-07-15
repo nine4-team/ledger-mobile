@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-06-29
+Last updated: 2026-07-15
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -24,7 +24,7 @@ Last updated: 2026-06-29
 - [shipped] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. Two-field source split: `item.source` (original vendor, immutable) + `item.currentSource` (immediate source, mutable). Reports and search cards read `currentSource`. All items backfilled 2026-04-11.
 
 ### Billing & Invoicing
-- [modify] [Billing & Invoicing](billing-invoicing.md) — **Active canonical spec.** Transactions record money movement; invoices demand money; invoice lines can source from items, existing transactions, or manual New Charge lines. Collection is tracked by linking real money-movement transactions back to invoices. Returned paid items create ordinary draft invoice credit lines, not synthetic credit transactions.
+- [modify] [Billing & Invoicing](billing-invoicing.md) — **Active canonical spec.** Transactions record money movement; invoices demand money; invoice lines can source from items, existing transactions, fee installments, or invoice-only manual adjustments. Manual adjustments use the hidden `Other Client Charges & Credits` settlement category. Collection is tracked by linking real money-movement transactions back to invoices. Returned paid items create ordinary created-invoice credit lines, not synthetic credit transactions.
 - [superseded] [Billing & Invoicing v2](billing-invoicing-v2.md) — **Historical implementation spec.** Shipped 2026-04-21; superseded as the active product spec by `billing-invoicing.md` on 2026-05-26.
 
 ### Lists & Layout
@@ -36,7 +36,7 @@ Last updated: 2026-06-29
 - [new] [Field Tooltips](ui/tooltips.md) — Info tooltips on non-obvious fields across the app. `(i)` icon next to labels, bottom sheet with plain-language explanation. Centralized content registry.
 
 ### Project Charges & Fees
-- [superseded] [Project Charges](project-charges.md) — Historical proposal for a standalone charge entity. Active behavior is now covered by manual New Charge invoice lines in `billing-invoicing.md`.
+- [superseded] [Project Charges](project-charges.md) — Historical proposal for a standalone charge entity. Active behavior is now covered by fee installments and invoice lines in `billing-invoicing.md`.
 
 ### Reporting
 - [new] [Project Closeout Report](project-closeout-report.md) — Client-facing end-of-project report showing furnishings breakdown with savings, total project cost, and outstanding payments

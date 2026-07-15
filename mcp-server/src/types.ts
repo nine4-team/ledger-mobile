@@ -103,7 +103,7 @@ export interface Discount {
   amountCents: number;
 }
 
-export type InvoiceLineSourceType = "item" | "transaction" | "manual";
+export type InvoiceLineSourceType = "item" | "transaction" | "feeInstallment" | "manual";
 export type InvoiceLineSign = 1 | -1;
 
 export interface InvoiceLine {
@@ -117,11 +117,25 @@ export interface InvoiceLine {
   settlementTransactionIds?: string[];
 }
 
+export interface FeeInstallment {
+  id: string;
+  accountId?: string;
+  projectId?: string;
+  budgetCategoryId: string;
+  label: string;
+  amountCents: number;
+  sortOrder?: number;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt?: FirebaseFirestore.Timestamp;
+  updatedAt?: FirebaseFirestore.Timestamp;
+}
+
 export interface Invoice {
   id: string;
   accountId?: string;
   projectId?: string;
-  status?: "draft" | "sent" | "paid" | "voided";
+  status?: "created" | "sent" | "paid" | "canceled";
   itemIds?: string[];
   transactionIds?: string[];
   lines?: InvoiceLine[];

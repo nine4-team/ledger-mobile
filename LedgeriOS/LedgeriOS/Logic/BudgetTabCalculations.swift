@@ -211,7 +211,7 @@ enum BudgetTabCalculations {
         )
 
         return categories.filter { category in
-            guard category.isArchived != true, let id = category.id else { return false }
+            guard category.isArchived != true, !category.isSystemCategory, let id = category.id else { return false }
             let budget = budgetById[id] ?? 0
             let spent = computeSpend(for: id, transactions: transactions)
             return budget > 0 || spent != 0

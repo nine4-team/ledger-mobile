@@ -8,13 +8,16 @@ struct BudgetCategory: Codable, Identifiable, Hashable {
     var name: String = ""
     var slug: String?
     var isArchived: Bool?
+    /// System-owned categories support accounting invariants but are not
+    /// available in normal budget/category selection flows.
+    var isSystem: Bool?
     var order: Int?
     var metadata: BudgetCategoryMetadata?
     var createdAt: Date?
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, projectId, name, slug, isArchived, order, metadata
+        case id, accountId, projectId, name, slug, isArchived, isSystem, order, metadata
     }
 }
 
@@ -28,6 +31,8 @@ extension BudgetCategory {
     /// A project cost category stores transaction-level purchases without item rows.
     var isProjectCostCategory: Bool { categoryKind == .projectCost }
 
+    var isSystemCategory: Bool { isSystem == true }
+
     var categoryKind: BudgetCategoryKind {
         BudgetCategoryKind(categoryType: resolvedCategoryType)
     }
@@ -39,6 +44,25 @@ extension BudgetCategory {
         case .itemized: return .itemized
         case .general, nil: return .general
         }
+    }
+}
+
+enum SystemBudgetCategory {
+    static let otherClientChargesAndCreditsId = "system-other-client-charges-and-credits"
+    static let otherClientChargesAndCreditsName = "Other Client Charges & Credits"
+
+    static func fields(accountId: String) -> [String: Any] {
+        [
+            "accountId": accountId,
+            "name": otherClientChargesAndCreditsName,
+            "slug": "other-client-charges-and-credits",
+            "isSystem": true,
+            "metadata": [
+                "categoryType": BudgetCategoryType.general.rawValue,
+                "excludeFromOverallBudget": true,
+            ],
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
     }
 }
 

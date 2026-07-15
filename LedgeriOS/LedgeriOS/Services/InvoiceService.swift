@@ -93,6 +93,7 @@ struct InvoiceService: InvoiceServiceProtocol {
             invoiceFields["updatedBy"] = userId
         }
 
+        Self.ensureSystemCategory(for: lines ?? [], accountId: accountId, batch: batch)
         batch.setData(invoiceFields, forDocumentAt: invoicePath, merge: false)
         try await batch.commit()
         return invoiceId
@@ -132,6 +133,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         invoiceFields["notes"] = (notes?.isEmpty == false) ? notes! : FieldValue.delete()
         if let userId { invoiceFields["updatedBy"] = userId }
 
+        Self.ensureSystemCategory(for: lines ?? [], accountId: accountId, batch: batch)
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
         try await batch.commit()
     }
@@ -147,6 +149,8 @@ struct InvoiceService: InvoiceServiceProtocol {
     ) async throws {
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
+
+        Self.ensureSystemCategory(for: lines, accountId: accountId, batch: batch)
 
         let (itemIds, transactionIds) = Self.membership(from: lines)
 
@@ -204,6 +208,7 @@ struct InvoiceService: InvoiceServiceProtocol {
             selectedLineIds?.contains(line.id) ?? true
         }
         guard !lines.isEmpty else { throw InvoiceServiceError.noCollectibleLines }
+        let settlesWholeInvoice = lines.count == invoiceLines.count
         let selectedTotal = lines.reduce(0) { $0 + $1.signedAmountCents }
         guard selectedTotal > 0 else { throw InvoiceServiceError.nonPositiveCollection }
 
@@ -217,6 +222,8 @@ struct InvoiceService: InvoiceServiceProtocol {
 
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
+
+        Self.ensureSystemCategory(for: lines, accountId: accountId, batch: batch)
 
         var transactionIds: [String] = []
         for (categoryId, categoryLines) in grouped.sorted(by: { $0.key < $1.key }) {
@@ -247,14 +254,26 @@ struct InvoiceService: InvoiceServiceProtocol {
         guard !transactionIds.isEmpty else { throw InvoiceServiceError.noCollectibleLines }
 
         var invoiceFields: [String: Any] = [
-            "status": InvoiceStatus.paid.rawValue,
-            "datePaid": now,
-            "lines": lines.map(Self.encodeLine),
-            "totalCents": selectedTotal,
-            "itemIds": Self.membership(from: lines).itemIds,
-            "transactionIds": Self.membership(from: lines).transactionIds,
+            "status": settlesWholeInvoice ? InvoiceStatus.paid.rawValue : InvoiceStatus.sent.rawValue,
+            "lines": invoiceLines.map { line in
+                guard lines.contains(where: { $0.id == line.id }) else { return Self.encodeLine(line) }
+                return Self.encodeLine(InvoiceLine(
+                    id: line.id,
+                    sourceType: line.sourceType,
+                    sourceId: line.sourceId,
+                    amountCents: line.amountCents,
+                    sign: line.sign,
+                    budgetCategoryId: line.budgetCategoryId,
+                    snapshotName: line.snapshotName,
+                    settlementTransactionIds: transactionIds
+                ))
+            },
+            "totalCents": settlesWholeInvoice ? selectedTotal : (invoice.totalCents ?? invoiceLines.reduce(0) { $0 + $1.signedAmountCents }),
+            "itemIds": Self.membership(from: invoiceLines).itemIds,
+            "transactionIds": Self.membership(from: invoiceLines).transactionIds,
             "updatedAt": now,
         ]
+        if settlesWholeInvoice { invoiceFields["datePaid"] = now }
         if let userId { invoiceFields["updatedBy"] = userId }
 
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
@@ -402,6 +421,21 @@ struct InvoiceService: InvoiceServiceProtocol {
             }
         }
         return (itemIds, txIds)
+    }
+
+    private static func ensureSystemCategory(
+        for lines: [InvoiceLine],
+        accountId: String,
+        batch: any BatchWriting
+    ) {
+        guard lines.contains(where: { $0.budgetCategoryId == SystemBudgetCategory.otherClientChargesAndCreditsId }) else {
+            return
+        }
+        batch.setData(
+            SystemBudgetCategory.fields(accountId: accountId),
+            forDocumentAt: "accounts/\(accountId)/presets/default/budgetCategories/\(SystemBudgetCategory.otherClientChargesAndCreditsId)",
+            merge: true
+        )
     }
 
     /// Encode an InvoiceLine as a plain `[String: Any]` for Firestore's untyped batch writer.

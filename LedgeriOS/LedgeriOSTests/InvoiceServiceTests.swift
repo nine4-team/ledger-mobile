@@ -46,6 +46,40 @@ struct InvoiceServiceTests {
         #expect(fields["createdBy"] as? String == "user1")
     }
 
+    @Test("createInvoice — provisions the hidden category for a manual charge")
+    func createInvoiceProvisionsSystemCategoryForManualCharge() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let line = InvoiceLine(
+            sourceType: .manual,
+            amountCents: 25_000,
+            sign: .charge,
+            budgetCategoryId: SystemBudgetCategory.otherClientChargesAndCreditsId,
+            snapshotName: "Additional project work"
+        )
+
+        _ = try await service.createInvoice(
+            accountId: acct,
+            projectId: "proj1",
+            itemIds: [],
+            transactionIds: [],
+            lines: [line],
+            invoiceNumber: nil,
+            notes: nil,
+            userId: "user1"
+        )
+
+        let categoryPath = "accounts/\(acct)/presets/default/budgetCategories/\(SystemBudgetCategory.otherClientChargesAndCreditsId)"
+        let categorySet = try #require(batch.sets.first { $0.path == categoryPath })
+        #expect(categorySet.merge)
+        #expect(categorySet.fields["name"] as? String == "Other Client Charges & Credits")
+        #expect(categorySet.fields["isSystem"] as? Bool == true)
+
+        let invoiceSet = try #require(batch.sets.first { $0.path != categoryPath })
+        let encodedLines = try #require(invoiceSet.fields["lines"] as? [[String: Any]])
+        #expect(encodedLines.first?["budgetCategoryId"] as? String == SystemBudgetCategory.otherClientChargesAndCreditsId)
+    }
+
     // MARK: - updateSelections
 
     @Test("updateSelections — clears stale lines/totalCents on edited created invoices")
@@ -204,6 +238,39 @@ struct InvoiceServiceTests {
         #expect(update.fields["status"] as? String == "paid")
         #expect(update.fields["updatedBy"] as? String == "user1")
         #expect(update.fields["datePaid"] != nil)
+    }
+
+    @Test("markCollected — partial collection retains all lines and leaves the invoice sent")
+    func markCollectedPartiallyRetainsInvoice() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var invoice = Invoice()
+        invoice.id = invoiceId
+        invoice.status = .sent
+        invoice.lines = [
+            InvoiceLine(id: "line1", sourceType: .manual, amountCents: 20_000, sign: .charge, budgetCategoryId: "cat-a", snapshotName: "First charge"),
+            InvoiceLine(id: "line2", sourceType: .manual, amountCents: 8_000, sign: .charge, budgetCategoryId: "cat-b", snapshotName: "Second charge"),
+        ]
+
+        let transactionIds = try await service.markCollected(
+            invoice: invoice,
+            accountId: acct,
+            projectId: "proj1",
+            amountCents: 20_000,
+            source: "Partial payment",
+            settlementInvoiceLineIds: ["line1"],
+            userId: "user1"
+        )
+
+        #expect(transactionIds.count == 1)
+        let update = try #require(batch.updates.first)
+        #expect(update.fields["status"] as? String == "sent")
+        #expect(update.fields["datePaid"] == nil)
+        #expect(update.fields["totalCents"] as? Int == 28_000)
+        let lines = try #require(update.fields["lines"] as? [[String: Any]])
+        #expect(lines.count == 2)
+        #expect(lines[0]["settlementTransactionIds"] as? [String] == transactionIds)
+        #expect(lines[1]["settlementTransactionIds"] == nil)
     }
 
     @Test("markCollected — blocks credit-only invoice from paymentToBusiness")

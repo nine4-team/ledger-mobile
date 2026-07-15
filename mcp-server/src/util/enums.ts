@@ -52,7 +52,7 @@ export const quickDraftSourceHints = [
 ] as const;
 export type QuickDraftSourceHint = (typeof quickDraftSourceHints)[number];
 
-export const invoiceStatuses = ["draft", "sent", "paid", "voided"] as const;
+export const invoiceStatuses = ["created", "sent", "paid", "canceled"] as const;
 export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
 export const movementKinds = ["sold", "soldToInventory", "returned", "transferred"] as const;
@@ -87,7 +87,8 @@ export const ENUMS: EnumSpec[] = [
     values: writableTransactionTypes,
     description:
       "Allowed type values for normal create_transaction writes. Purchase covers goods/services; " +
-      "Return covers refunds/item returns; paymentToBusiness covers manually recorded client payments and requires a fee category.",
+      "Return covers refunds/item returns; paymentToBusiness covers manually recorded client payments and requires a fee category. " +
+      "Invoice settlement may also create paymentToBusiness rows for the categories represented by collected invoice lines.",
   },
   {
     name: "transactionType",
@@ -136,7 +137,7 @@ export const ENUMS: EnumSpec[] = [
   {
     name: "invoiceStatus",
     values: invoiceStatuses,
-    description: "Invoice demand lifecycle. Paid means collected/settled; transactions record the actual money movement.",
+    description: "Invoice demand lifecycle. Legacy reads may contain draft (created) or voided (canceled). Paid means collected/settled; transactions record the actual money movement.",
   },
   {
     name: "movementKind",

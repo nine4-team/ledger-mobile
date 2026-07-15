@@ -1,6 +1,6 @@
 # Billing & Invoicing
 Status: active redesign
-Last updated: 2026-06-29
+Last updated: 2026-07-15
 Implementation plan: [../plans/billing-invoicing-canonical-implementation.md](../plans/billing-invoicing-canonical-implementation.md)
 
 ## Summary
@@ -17,13 +17,16 @@ Ledger supports two invoice workflows:
 1. **Ad-hoc invoices** built from existing project records: items,
    non-itemized project costs, credits, and other transactions where money
    already moved.
-2. **Manual charge invoices** built from new invoice lines that are not backed by
-   prior transactions, such as design fees, retainers, storage fees, or project
-   management fees.
+2. **Fee invoices** built from `FeeInstallment` source records for future or
+   planned fees, such as design fees, retainers, storage fees, kitchen fees, or
+   project management fees.
+3. **Manual adjustments** entered directly on an invoice when no item,
+   transaction, or planned-fee source exists.
 
 The app must not create a transaction for money that has not moved. If the team
-needs to request money before collection, use an invoice line. When collection
-happens, create or link a transaction and connect it to the invoice as settlement
+needs to request money before collection, create a source record and invoice it.
+For fees, that source record is `FeeInstallment`. When collection happens,
+create or link a transaction and connect it to the invoice as settlement
 evidence.
 
 ## Core Model
@@ -62,19 +65,22 @@ collection or settlement evidence and must not re-enter the To Invoice pool.
 ### Invoices
 
 An invoice is a project-scoped demand for money. It may include lines based on
-existing records and lines typed directly into the invoice.
+existing source records and invoice-only manual adjustment lines.
 
 Lifecycle:
 
-- `draft` — editable planned demand. The invoice can be used to stage design-fee
-  breakdowns before sending.
-- `sent` — issued demand. Lines and totals are frozen as the demand the client
-  received.
+- `created` — editable planned demand. The invoice can stage fee installments,
+  items, and reimbursable costs before sending.
+- `sent` — issued demand. Created and sent invoices stay live until collection;
+  paid invoices use the paid-boundary snapshot.
 - `paid` — settled demand. This status should be supported by linked settlement
   transactions, either created through the Mark Collected flow or linked after
   the fact.
-- `voided` — withdrawn demand. Its existing item/transaction sources return to
-  the billable pool unless they are claimed by another non-voided invoice.
+- `canceled` — withdrawn demand. Its existing sources return to the billable
+  pool unless they are claimed by another non-canceled invoice.
+
+Legacy reads may contain `draft` or `voided`; read them as `created` and
+`canceled` respectively.
 
 Invoices do not mutate the source records they reference. Paid/collected state is
 derived from invoice status and settlement linkage, not stored on items or source
@@ -89,6 +95,7 @@ invoice can include charges and credits.
 enum InvoiceLineSourceType {
     case item
     case transaction
+    case feeInstallment
     case manual
 }
 
@@ -106,9 +113,11 @@ struct InvoiceLine {
 
 `id` is needed so settlement transactions can optionally target specific lines.
 `sourceId` is nil for manual lines.
-`budgetCategoryId` is required for manual New Charge lines and should be
-resolved for item/transaction-sourced lines from the source record. Invoice
-settlement uses this category to create categorized payment transactions.
+`budgetCategoryId` is required for every line. It should be resolved from the
+source record for item, transaction, and fee-installment lines. Manual lines use
+the reserved system category `Other Client Charges & Credits`; users never pick
+this category. Invoice settlement uses the resolved category to create
+categorized payment transactions.
 
 Line ID policy:
 
@@ -125,27 +134,34 @@ Source meanings:
 - `item` — demand is based on a project item.
 - `transaction` — demand or credit is based on money that already moved, such as
   a non-itemized project cost or client-paid credit.
-- `manual` — demand is entered directly on the invoice, not backed by an item or
-  prior transaction.
+- `feeInstallment` — demand is based on a planned/future fee source record such
+  as a design fee, kitchen fee, retainer, storage fee, or project management
+  fee.
+- `manual` — invoice-only charge or credit not backed by a normal source record.
+  Manual adjustments have a description, positive magnitude, and sign; normal
+  manual adjustments use the reserved `Other Client Charges & Credits` category.
 - `manual` with `sign == credit` may also represent a system-generated credit
   demand that should not claim a source item or transaction as normal invoice
   membership, such as a paid item returned to inventory.
 
-The UI should label the action for adding a manual line as **New Charge**.
-Examples: "Design Fee 1 of 3", "Retainer", "Project Management Fee", "Storage
-Fee", "Adjustment".
+The UI should let users create fee installments inline from invoicing so a
+single kitchen fee or design-fee installment does not feel like a separate chore.
+The app writes the `FeeInstallment` first, then adds a `feeInstallment` invoice
+line that references it.
 
-Manual New Charge lines must require the user to pick a budget category. Do not
-silently default the category.
+The manual-adjustment form asks for only description and amount. It routes the
+line to `Other Client Charges & Credits` automatically; that system category is
+not selectable in normal category, budget, item, or transaction workflows.
 
 ## Billable Pool
 
 The To Invoice pool includes existing billable sources that are not already
-claimed by a non-voided invoice:
+claimed by a non-canceled invoice:
 
 - Project items that are not returned.
 - Eligible non-itemized project transactions where money already moved and the
   transaction is not canceled.
+- Fee installments for planned/future fees.
 
 Existing transactions are billable only when their shape represents money that
 should be demanded or credited on an invoice. Settlement transactions are never
@@ -155,9 +171,9 @@ billable.
 `paymentToBusiness` transaction created when the client pays the business is
 settlement evidence, not a planned receivable.
 
-Manual New Charge lines are not discovered from the pool because they do not
-exist until the user adds them to a draft invoice. They are invoice demand lines,
-not project-level source records.
+Manual lines are not discovered from the pool because they do not represent the
+normal source-record model. Fee installments are discovered from the pool because
+they are the project-level source records for planned fees.
 
 ## Invoice Workflows
 
@@ -180,7 +196,7 @@ Invoice:
 When the client pays, Ledger creates or links a transaction for the actual money
 received and sets `settlementInvoiceId` to the invoice.
 
-### Manual Charge Invoice
+### Fee Invoice
 
 Used when no money has moved yet and the team needs to demand a design fee,
 retainer, service fee, or other planned amount.
@@ -188,29 +204,46 @@ retainer, service fee, or other planned amount.
 Example:
 
 ```text
-Draft invoice:
-- New Charge: Design Fee 1 of 3       $2,500
-- New Charge: Design Fee 2 of 3       $2,500
-- New Charge: Design Fee 3 of 3       $2,500
+FeeInstallments:
+- Design Fee 1 of 3       $2,500
+- Design Fee 2 of 3       $2,500
+- Design Fee 3 of 3       $2,500
+
+Created invoice:
+- Design Fee 1 of 3       sourceType: feeInstallment
+- Design Fee 2 of 3       sourceType: feeInstallment
+- Design Fee 3 of 3       sourceType: feeInstallment
 ```
 
-Those lines may live on a draft invoice before it is sent. They are invoice
-lines, not transactions.
+Those installments may exist before they are invoiced. They are not
+transactions. The invoice lines link to them.
 
 When the client pays, Ledger creates or links categorized `paymentToBusiness`
 transaction(s) for the payment event and links those transaction(s) to the
 invoice or specific invoice lines.
 
+### Manual Adjustment
+
+Used for an invoice-only amount that is not an item, an existing project cost,
+or part of a planned fee schedule. The user enters a description and amount;
+the line is stored as `sourceType: manual` and creates no transaction until the
+invoice is collected.
+
+Manual charges and credits settle through the reserved system category **Other
+Client Charges & Credits**. This preserves the invariant that every settlement
+transaction has a category without misclassifying the adjustment as a normal
+fee or project-budget category.
+
 ### Mixed Invoice
 
-One invoice can combine existing records and manual charges.
+One invoice can combine existing records and fee installments.
 
 Example:
 
 ```text
 Invoice:
 - Existing expense transaction: delivery reimbursement       $300
-- New Charge: Design Fee 1 of 3                            $2,500
+- Fee installment: Design Fee 1 of 3                       $2,500
 
 Client pays $2,800:
 - Create categorized `paymentToBusiness` settlement transaction(s).
@@ -231,7 +264,8 @@ Ledger should support collecting at invoice or line granularity:
 - **Whole invoice collected** — create or link categorized `paymentToBusiness`
   transaction(s) for the collected amount and set `settlementInvoiceId`.
 - **Selected lines collected** — create or link categorized `paymentToBusiness`
-  transaction(s) and set `settlementInvoiceLineIds` to the settled lines.
+  transaction(s), set `settlementInvoiceLineIds` to the settled lines, and keep
+  the invoice `sent` until every line has been settled.
 
 Collection should follow real payment events and budget-category attribution. If
 one check/ACH/card payment settles multiple lines in one budget category, create
@@ -242,6 +276,11 @@ settled lines.
 Every settlement transaction must have a `budgetCategoryId`. If a selected line
 cannot resolve a budget category, the app should block collection until the line
 or source record is categorized.
+
+For a normal manual adjustment, the category is always the reserved system
+category **Other Client Charges & Credits**. A returned paid-item credit is an
+exception: it retains the original paid line's category because it reverses that
+known prior demand.
 
 Collection must not create `paymentToBusiness` transactions for a net-negative
 selection or invoice. `paymentToBusiness` means money came in from the client to
@@ -257,14 +296,19 @@ The UI should use **Mark Collected** for actions that create or link settlement
 transactions. The raw invoice status value `paid` may remain for lifecycle
 compatibility.
 
+Collection must not settle the same invoice line twice. If a selected line
+already has an active settlement transaction, the app/tool should block
+collection until the mistaken payment is canceled or the user selects only
+unsettled lines.
+
 ## Derived States and Reporting
 
 Invoices track demand lifecycle:
 
-- Draft: planned but not issued.
+- Created: planned but not issued.
 - Sent: demanded and outstanding unless fully settled.
 - Paid: settled.
-- Voided: withdrawn.
+- Canceled: withdrawn.
 
 Transactions track money movement.
 
@@ -273,8 +317,8 @@ Reports and billing summaries should distinguish:
 - **Demanded / invoiced** — invoice lines on sent or paid invoices.
 - **Outstanding** — sent invoice demand minus linked settlement transactions.
 - **Collected** — transactions linked to invoices as settlement.
-- **Unbilled** — eligible items and transactions not on a non-voided invoice,
-  plus manual charges not yet sent if represented in draft invoices.
+- **Unbilled** — eligible items, transactions, and fee installments not on a
+  non-canceled invoice.
 
 Until settlement linkage is implemented, paid invoice status may remain a
 compatibility signal for collected state. The target model is auditable
@@ -294,7 +338,7 @@ demand / a credit line. Do not create an `expense`, `purchase`, or other
 synthetic transaction for that credit. If money later moves back to the client,
 that refund/payment is a separate money-movement transaction.
 
-Returned paid item credits are created as ordinary draft invoices containing
+Returned paid item credits are created as ordinary created invoices containing
 only manual credit lines:
 
 - `itemIds = []`
@@ -307,7 +351,7 @@ only manual credit lines:
 - `snapshotName` set to a human-readable returned-item credit label
 
 The system must not mutate the original paid invoice. The original paid invoice
-is a frozen historical demand. The draft credit invoice is a new demand artifact
+is a frozen historical demand. The created credit invoice is a new demand artifact
 that the user can review, send, void, or otherwise handle through the existing
 invoice workflow.
 
@@ -317,7 +361,7 @@ The credit line's deterministic ID encodes or hashes:
 returnCredit:{paidInvoiceId}:{paidInvoiceLineId}:{itemId}
 ```
 
-That ID prevents duplicate returned-paid-item credits across all non-voided
+That ID prevents duplicate returned-paid-item credits across all non-canceled
 invoices. Human-readable explanation belongs in the credit line label and invoice
 notes; the data model does not add separate returned-item credit metadata fields
 unless a future workflow needs them.
@@ -329,26 +373,34 @@ transactions for future money.
 
 Needed capabilities:
 
-- Create draft invoices.
+- Create fee installments for planned/future fee demand.
+- Create created invoices.
 - Add existing item and transaction lines.
-- Add manual New Charge lines.
-- Build draft invoice lines from a contract.
+- Add fee-installment lines.
+- Add manual adjustment lines without asking the user to choose a budget
+  category.
+- Build fee installments and created invoice lines from a contract.
 - Mark an invoice or selected lines collected.
 - Create or link settlement transactions.
 - List invoice settlement state and outstanding balances.
 
-Contract ingestion should create or update project fields and categorized draft
-invoice manual lines for fee schedules. It should not create transactions until
-payment is actually collected.
+Contract ingestion should create or update project fields and categorized
+`FeeInstallment` records for fee schedules, optionally adding those installments
+to a created invoice. It should not create transactions until payment is
+actually collected.
 
 ## Implementation Notes
 
-- Existing `InvoiceLineSourceType` should expand from `item | transaction` to
-  `item | transaction | manual`.
+- Existing `InvoiceLineSourceType` should support
+  `item | transaction | feeInstallment | manual`.
 - Invoice lines need stable IDs for line-level settlement.
-- Draft invoices can continue to render live previews for item and transaction
-  lines. Manual lines store their amount and label on the draft line itself.
-- Sent invoices freeze line names, signs, and amounts.
+- Created invoices can continue to render live previews for item, transaction,
+  and fee-installment lines. Manual lines store their amount and label on the
+  line itself.
+- The system provisions **Other Client Charges & Credits** on first use as a
+  hidden, excluded-from-budget category. Its stable ID is
+  `system-other-client-charges-and-credits`.
+- Paid invoices freeze line names, signs, and amounts.
 - Transactions with settlement linkage must be excluded from billable membership,
   budget demand calculations, and invoice pickers.
 - The previous `billingStatus` model on items/transactions remains retired.
@@ -364,5 +416,6 @@ This spec replaces the earlier v1/v2 split:
 - The shipped v2 redesign moved paid-state onto invoices and introduced signed
   lines.
 - The current target model keeps signed invoice lines but clarifies that
-  transactions are money movement records and invoices are demands. Manual New
-  Charge lines cover design fees and other demands that exist before money moves.
+  transactions are money movement records and invoices are demands.
+  FeeInstallment source records cover design fees and other planned fee demand
+  that exists before money moves.

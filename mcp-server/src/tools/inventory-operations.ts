@@ -110,7 +110,7 @@ async function returnedPaidItemCreditContexts(
 
   const existingCreditLineIds = new Set<string>();
   for (const invoice of allInvoices) {
-    if (invoice.status === "voided") continue;
+    if (invoice.status === "canceled") continue;
     for (const line of invoice.lines ?? []) {
       if (line.id?.startsWith("returnCredit:")) existingCreditLineIds.add(line.id);
     }
@@ -188,7 +188,7 @@ function appendReturnedPaidItemCreditDrafts(
     batch.set(invoiceRef, {
       accountId: accountPath().split("/")[1],
       projectId,
-      status: "draft",
+      status: "created",
       itemIds: [],
       transactionIds: [],
       lines,

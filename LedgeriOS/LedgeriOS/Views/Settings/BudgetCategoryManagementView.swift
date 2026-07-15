@@ -14,12 +14,12 @@ struct BudgetCategoryManagementView: View {
 
     private var activeCategories: [BudgetCategory] {
         categories
-            .filter { $0.isArchived != true }
+            .filter { $0.isArchived != true && !$0.isSystemCategory }
             .sorted { ($0.order ?? Int.max) < ($1.order ?? Int.max) }
     }
 
     private var archivedCategories: [BudgetCategory] {
-        categories.filter { $0.isArchived == true }
+        categories.filter { $0.isArchived == true && !$0.isSystemCategory }
     }
 
     var body: some View {

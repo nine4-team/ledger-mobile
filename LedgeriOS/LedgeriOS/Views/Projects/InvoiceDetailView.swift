@@ -216,18 +216,22 @@ struct InvoiceDetailView: View {
                 lines.append(line)
             }
         }
-        for line in liveInvoice.lines ?? [] where line.sourceType == .feeInstallment {
-            var resolvedLine = line
-            if let sourceId = line.sourceId,
-               let installment = projectContext.feeInstallments.first(where: { $0.id == sourceId }) {
-                resolvedLine.amountCents = installment.amountCents
-                resolvedLine.snapshotName = installment.label
-                resolvedLine.budgetCategoryId = installment.budgetCategoryId
-            }
-            lines.append(resolvedLine)
-        }
         for line in liveInvoice.lines ?? [] where line.sourceType == .feeInstallment || line.sourceType == .manual {
-            lines.append(line)
+            if line.sourceType == .feeInstallment,
+               let sourceId = line.sourceId,
+               let installment = projectContext.feeInstallments.first(where: { $0.id == sourceId }) {
+                lines.append(InvoiceLine(
+                    id: line.id,
+                    sourceType: .feeInstallment,
+                    sourceId: sourceId,
+                    amountCents: installment.amountCents,
+                    sign: .charge,
+                    budgetCategoryId: installment.budgetCategoryId,
+                    snapshotName: installment.label
+                ))
+            } else {
+                lines.append(line)
+            }
         }
         let total = InvoiceLineCalculations.netTotalCents(lines: lines)
 
@@ -294,8 +298,22 @@ struct InvoiceDetailView: View {
                 lines.append(line)
             }
         }
-        for line in liveInvoice.lines ?? [] where line.sourceType == .manual {
-            lines.append(line)
+        for line in liveInvoice.lines ?? [] where line.sourceType == .feeInstallment || line.sourceType == .manual {
+            if line.sourceType == .feeInstallment,
+               let sourceId = line.sourceId,
+               let installment = projectContext.feeInstallments.first(where: { $0.id == sourceId }) {
+                lines.append(InvoiceLine(
+                    id: line.id,
+                    sourceType: .feeInstallment,
+                    sourceId: sourceId,
+                    amountCents: installment.amountCents,
+                    sign: .charge,
+                    budgetCategoryId: installment.budgetCategoryId,
+                    snapshotName: installment.label
+                ))
+            } else {
+                lines.append(line)
+            }
         }
         return lines
     }

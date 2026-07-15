@@ -80,7 +80,7 @@ struct EditProjectModal: View {
 
     private var activeBudgetCategories: [BudgetCategory] {
         accountContext.allBudgetCategories
-            .filter { $0.isArchived != true }
+            .filter { $0.isArchived != true && !$0.isSystemCategory }
             .sorted { ($0.order ?? 0) < ($1.order ?? 0) }
     }
 

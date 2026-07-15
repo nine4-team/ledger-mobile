@@ -229,7 +229,7 @@ struct NewTransactionView: View {
         return accountContext.allBudgetCategories
             .filter { cat in
                 guard let id = cat.id, enabledCategoryIds.contains(id) else { return false }
-                return cat.isArchived != true
+                return cat.isArchived != true && !cat.isSystemCategory
             }
             .sorted { ($0.order ?? 999) < ($1.order ?? 999) }
     }
