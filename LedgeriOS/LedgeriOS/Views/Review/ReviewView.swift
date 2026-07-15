@@ -89,9 +89,6 @@ struct ReviewView: View {
         .navigationDestination(item: $selectedTransaction) { transaction in
             TransactionDetailView(transaction: transaction)
         }
-        .navigationDestination(for: Item.self) { item in
-            ItemDetailView(item: item)
-        }
         .background(BrandColors.background)
         .onChange(of: activeProjects.map { $0.id ?? "" }) { _, _ in
             let validIds = Set(tabItems.map(\.id))

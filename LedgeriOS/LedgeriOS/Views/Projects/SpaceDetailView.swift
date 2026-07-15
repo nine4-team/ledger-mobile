@@ -38,6 +38,8 @@ struct SpaceDetailView: View {
     // Items picker
     @State private var showAddExistingItems = false
     @State private var itemActions = ItemActionsController()
+    @State private var selectedItemId: String?
+    @State private var showItemDetail = false
 
     // Live document subscription
     @State private var liveSpaceData: Space?
@@ -159,6 +161,18 @@ struct SpaceDetailView: View {
             transactions: activeTransactions,
             accountId: accountContext.currentAccountId
         )
+        .navigationDestination(isPresented: $showItemDetail) {
+            if let selectedItemId,
+               let item = activeItems.first(where: { $0.id == selectedItemId }) {
+                ItemDetailView(
+                    itemId: selectedItemId,
+                    projectId: projectId,
+                    initialItem: item
+                )
+            } else {
+                ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
+            }
+        }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
@@ -258,11 +272,13 @@ struct SpaceDetailView: View {
     @ViewBuilder
     private var itemsContent: some View {
         SharedItemsList(
-            mode: .embedded(items: spaceItems, onItemPress: { _ in }),
+            mode: .embedded(items: spaceItems, onItemPress: { itemId in
+                selectedItemId = itemId
+                showItemDetail = true
+            }),
             getMenuItems: { spaceItemMenuItems(for: $0) },
             emptyMessage: "No items in this space",
             onAdd: { showAddExistingItems = true },
-            useNavigationLinks: true,
             filterScope: .spaceDetail,
             inline: true
         )

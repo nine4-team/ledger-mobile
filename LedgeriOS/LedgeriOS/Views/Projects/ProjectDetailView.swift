@@ -46,42 +46,10 @@ struct ProjectDetailView: View {
                     NotesTabView()
                 case "finances":
                     FinancesTabView()
-                        .navigationDestination(for: Invoice.self) { invoice in
-                            InvoiceDetailView(invoice: invoice)
-                        }
                 default:
                     ItemsTabView()
                 }
             }
-        }
-        .navigationDestination(for: ItemRoute.self) { route in
-            ItemDetailView(
-                itemId: route.id,
-                projectId: route.projectId,
-                initialItem: route.initialItem ?? projectContext.items.first { $0.id == route.id }
-            )
-            .environment(projectContext)
-        }
-        .navigationDestination(for: SpaceRoute.self) { route in
-            if let space = route.initialSpace ?? NavigationRouteResolution.space(
-                id: route.id,
-                projectSpaces: projectContext.spaces,
-                accountSpaces: accountContext.allSpaces
-            ) {
-                SpaceDetailView(space: space, projectId: route.projectId)
-                    .environment(projectContext)
-            } else {
-                ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
-            }
-        }
-        // TODO(stable-id-navigation): FinancesTabView still pushes `Item` values.
-        // Remove this destination once the finance/invoice routes are migrated in
-        // a follow-up milestone.
-        .navigationDestination(for: Item.self) { item in
-            ItemDetailView(item: item)
-        }
-        .navigationDestination(for: Transaction.self) { transaction in
-            TransactionDetailView(transaction: transaction)
         }
         .navBarTitleDisplayMode(.inline)
         #if os(macOS)

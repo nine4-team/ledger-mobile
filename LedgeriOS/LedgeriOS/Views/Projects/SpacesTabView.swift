@@ -5,6 +5,8 @@ struct SpacesTabView: View {
 
     @State private var searchText = ""
     @State private var showNewSpace = false
+    @State private var selectedSpaceId: String?
+    @State private var showSpaceDetail = false
 
     // MARK: - Computed
 
@@ -28,6 +30,15 @@ struct SpacesTabView: View {
                     searchPlaceholder: "Search spaces...",
                     onAdd: { showNewSpace = true }
                 )
+            }
+            .navigationDestination(isPresented: $showSpaceDetail) {
+                if let selectedSpaceId,
+                   let space = projectContext.spaces.first(where: { $0.id == selectedSpaceId }) {
+                    SpaceDetailView(space: space, projectId: projectContext.currentProjectId)
+                        .environment(projectContext)
+                } else {
+                    ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
+                }
             }
         .adaptivePresentation(isPresented: $showNewSpace, style: .form) {
             if let projectId = projectContext.currentProjectId {
@@ -62,7 +73,10 @@ struct SpacesTabView: View {
                 ) {
                     ForEach(filteredSpaces) { space in
                         if let spaceId = space.id {
-                            NavigationLink(value: SpaceRoute(id: spaceId, projectId: projectContext.currentProjectId, initialSpace: space)) {
+                            Button {
+                                selectedSpaceId = spaceId
+                                showSpaceDetail = true
+                            } label: {
                                 SpaceCard(
                                     space: space,
                                     itemCount: itemCount(for: space)

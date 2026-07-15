@@ -170,6 +170,10 @@ private struct CandidateReceivablesSection: View {
     @State private var showingFilters = false
     @State private var editingFeeCategory: FeeCategoryContext?
     @State private var expandedFeeGroups: Set<String> = []
+    @State private var selectedItemId: String?
+    @State private var showItemDetail = false
+    @State private var selectedTransactionId: String?
+    @State private var showTransactionDetail = false
 
     private var projectId: String? { projectContext.currentProjectId }
 
@@ -322,6 +326,26 @@ private struct CandidateReceivablesSection: View {
         .sheet(item: $editingFeeCategory) { group in
             FeeInstallmentFormSheet(group: group)
         }
+        .navigationDestination(isPresented: $showItemDetail) {
+            if let selectedItemId,
+               let item = projectContext.items.first(where: { $0.id == selectedItemId }) {
+                ItemDetailView(
+                    itemId: selectedItemId,
+                    projectId: projectId,
+                    initialItem: item
+                )
+            } else {
+                ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
+            }
+        }
+        .navigationDestination(isPresented: $showTransactionDetail) {
+            if let selectedTransactionId,
+               let transaction = projectContext.transactions.first(where: { $0.id == selectedTransactionId }) {
+                TransactionDetailView(transaction: transaction)
+            } else {
+                ContentUnavailableView("Transaction Unavailable", systemImage: "receipt")
+            }
+        }
     }
 
     @ViewBuilder
@@ -359,7 +383,10 @@ private struct CandidateReceivablesSection: View {
     private var itemRows: some View {
         ForEach(visibleItemRows) { row in
             if let item = row.item {
-                NavigationLink(value: item) {
+                Button {
+                    selectedItemId = item.id
+                    showItemDetail = item.id != nil
+                } label: {
                     CandidateRow(row: row)
                 }
                 .buttonStyle(.plain)
@@ -371,7 +398,10 @@ private struct CandidateReceivablesSection: View {
     private var transactionRows: some View {
         ForEach(visibleTransactionRows) { row in
             if let transaction = row.transaction {
-                NavigationLink(value: transaction) {
+                Button {
+                    selectedTransactionId = transaction.id
+                    showTransactionDetail = transaction.id != nil
+                } label: {
                     CandidateRow(row: row)
                 }
                 .buttonStyle(.plain)
@@ -927,6 +957,8 @@ private struct InvoiceListSection: View {
     @State private var selectedStatus: InvoicePipelineFilter = .all
     @State private var workingInvoiceIds: Set<String> = []
     @State private var errorMessage: String?
+    @State private var selectedInvoiceId: String?
+    @State private var showInvoiceDetail = false
 
     private var visibleInvoices: [Invoice] {
         guard let status = selectedStatus.status else { return invoices }
@@ -963,6 +995,10 @@ private struct InvoiceListSection: View {
                             transactions: projectContext.transactions,
                             feeInstallments: projectContext.feeInstallments,
                             isWorking: invoice.id.map { workingInvoiceIds.contains($0) } ?? false,
+                            onOpen: {
+                                selectedInvoiceId = invoice.id
+                                showInvoiceDetail = invoice.id != nil
+                            },
                             onSelectStatus: { changeStatus(of: invoice, to: $0) }
                         )
                     }
@@ -977,6 +1013,14 @@ private struct InvoiceListSection: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
+        }
+        .navigationDestination(isPresented: $showInvoiceDetail) {
+            if let selectedInvoiceId,
+               let invoice = invoices.first(where: { $0.id == selectedInvoiceId }) {
+                InvoiceDetailView(invoice: invoice)
+            } else {
+                ContentUnavailableView("Invoice Unavailable", systemImage: "doc.text")
+            }
         }
     }
 
@@ -1106,6 +1150,7 @@ private struct InvoiceRow: View {
     let transactions: [Transaction]
     let feeInstallments: [FeeInstallment]
     let isWorking: Bool
+    let onOpen: () -> Void
     let onSelectStatus: (InvoiceStatus) -> Void
 
     private var status: InvoiceStatus { invoice.status ?? .created }
@@ -1174,7 +1219,7 @@ private struct InvoiceRow: View {
     var body: some View {
         BillingRowSurface(isMuted: isPaid || isCanceled) {
             HStack(alignment: .center, spacing: Spacing.md) {
-                NavigationLink(value: invoice) {
+                Button(action: onOpen) {
                     invoiceSummary
                 }
                 .buttonStyle(.plain)

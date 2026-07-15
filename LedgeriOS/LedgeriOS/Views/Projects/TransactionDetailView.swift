@@ -950,7 +950,6 @@ struct TransactionDetailView: View {
                 onAdd: { showAddItemMenu = true },
                 getBulkMenuItems: { bulkActionMenuItems },
                 selectedIds: $selectedItemIds,
-                useNavigationLinks: false,
                 filterScope: .project,
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader)

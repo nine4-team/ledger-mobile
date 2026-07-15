@@ -38,23 +38,6 @@ struct InventoryView: View {
                 }
             }
         }
-        .navigationDestination(for: Item.self) { item in
-            ItemDetailView(item: item)
-        }
-        .navigationDestination(for: Transaction.self) { transaction in
-            TransactionDetailView(transaction: transaction)
-        }
-        .navigationDestination(for: SpaceRoute.self) { route in
-            if let space = route.initialSpace ?? NavigationRouteResolution.space(
-                id: route.id,
-                projectSpaces: inventoryContext.spaces,
-                accountSpaces: accountContext.allSpaces
-            ) {
-                SpaceDetailView(space: space, projectId: route.projectId)
-            } else {
-                ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
-            }
-        }
         .navigationTitle("Inventory")
         .navBarTitleDisplayMode(.inline)
         .toolbar {

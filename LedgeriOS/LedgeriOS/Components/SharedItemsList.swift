@@ -12,10 +12,6 @@ struct SharedItemsList: View {
     var onAdd: (() -> Void)?
     var getBulkMenuItems: (() -> [ActionMenuItem])?
     var selectedIds: Binding<Set<String>>?
-    var useNavigationLinks: Bool = false
-    /// When set, item cards navigate via a stable `ItemRoute` value instead of
-    /// the mutable `Item` model. Returning nil skips the link for that item.
-    var itemRoute: ((Item) -> ItemRoute?)?
     var emptyIcon: String = "tray"
     var filterScope: ItemFilterScope?
     var inline: Bool = false
@@ -480,25 +476,17 @@ struct SharedItemsList: View {
                                     get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
                                     set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
                                 )
-                                let card = ItemCard(
+                                ItemCard(
                                     item: item,
                                     priceLabel: displayPrice(for: item),
                                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
                                     indexLabel: "\(index + 1)/\(group.items.count)",
                                     statusOverride: item.status?.displayLabel,
                                     isSelected: selectionBinding,
-                                    onPress: useNavigationLinks && resolvedSelectedIds.wrappedValue.isEmpty ? nil : { handleItemPress(item) },
+                                    onPress: { handleItemPress(item) },
                                     menuItems: getMenuItems?(item) ?? [],
                                     warningMessage: getWarning?(item)
                                 )
-
-                                if useNavigationLinks && resolvedSelectedIds.wrappedValue.isEmpty {
-                                    itemNavigationLink(for: item) {
-                                        card
-                                    }
-                                } else {
-                                    card
-                                }
                             }
                         }
                     }
@@ -528,27 +516,6 @@ struct SharedItemsList: View {
         }
     }
 
-    /// Wraps a card in a NavigationLink using a stable `ItemRoute` when an
-    /// `itemRoute` builder is provided, falling back to the mutable `Item`
-    /// value for call sites not yet migrated to stable routes.
-    @ViewBuilder
-    private func itemNavigationLink<Label: View>(
-        for item: Item,
-        @ViewBuilder label: () -> Label
-    ) -> some View {
-        if let route = itemRoute?(item) {
-            NavigationLink(value: route) {
-                label()
-            }
-            .buttonStyle(.plain)
-        } else {
-            NavigationLink(value: item) {
-                label()
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
     @ViewBuilder
     private func singleItemCard(for item: Item) -> some View {
         // Issue 5: Skip items with nil IDs entirely
@@ -559,20 +526,6 @@ struct SharedItemsList: View {
 
             if isPicker {
                 pickerItemCard(for: item, itemId: itemId, isItemSelected: ids.contains(itemId))
-            } else if useNavigationLinks && ids.isEmpty {
-                itemNavigationLink(for: item) {
-                    ItemCard(
-                        item: item,
-                        priceLabel: displayPrice(for: item),
-                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                        isSelected: Binding(
-                            get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
-                            set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
-                        ),
-                        menuItems: menuItems,
-                        warningMessage: warning
-                    )
-                }
             } else {
                 ItemCard(
                     item: item,
@@ -746,34 +699,23 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private func groupedCardExpandedContent(for group: ItemGroup) -> some View {
-        let ids = resolvedSelectedIds.wrappedValue
         ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
             if let itemId = item.id {
                 let selectionBinding = Binding(
                     get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
                     set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
                 )
-                let card = ItemCard(
+                ItemCard(
                     item: item,
                     priceLabel: displayPrice(for: item),
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     indexLabel: "\(index + 1)/\(group.items.count)",
                     statusOverride: item.status?.displayLabel,
                     isSelected: selectionBinding,
-                    onPress: !ids.isEmpty || !useNavigationLinks
-                        ? { handleItemPress(item) }
-                        : nil,
+                    onPress: { handleItemPress(item) },
                     menuItems: getMenuItems?(item) ?? [],
                     warningMessage: getWarning?(item)
                 )
-
-                if useNavigationLinks && ids.isEmpty {
-                    itemNavigationLink(for: item) {
-                        card
-                    }
-                } else {
-                    card
-                }
             }
         }
     }

@@ -7,6 +7,8 @@ struct InventoryItemsSubTab: View {
     @State private var selectedItemIds: Set<String> = []
     @State private var itemActions = ItemActionsController()
     @State private var selectedProtoItem: ProtoItem?
+    @State private var selectedItemId: String?
+    @State private var showItemDetail = false
 
     // Bulk action modals
     @State private var showBulkStatusPicker = false
@@ -30,13 +32,15 @@ struct InventoryItemsSubTab: View {
 
     var body: some View {
         SharedItemsList(
-            mode: .embedded(items: inventoryContext.items, onItemPress: { _ in }),
+            mode: .embedded(items: inventoryContext.items, onItemPress: { itemId in
+                selectedItemId = itemId
+                showItemDetail = true
+            }),
             getMenuItems: { singleItemMenuItems(for: $0) },
             emptyMessage: "No inventory items yet",
             onAdd: { showNewItem = true },
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
-            useNavigationLinks: true,
             emptyIcon: "shippingbox",
             filterScope: .inventory,
             protoItems: inventoryContext.protoItems,
@@ -51,6 +55,14 @@ struct InventoryItemsSubTab: View {
         )
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
+        }
+        .navigationDestination(isPresented: $showItemDetail) {
+            if let selectedItemId,
+               let item = inventoryContext.items.first(where: { $0.id == selectedItemId }) {
+                ItemDetailView(itemId: selectedItemId, projectId: nil, initialItem: item)
+            } else {
+                ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
+            }
         }
         .itemActionSheets(
             itemActions,

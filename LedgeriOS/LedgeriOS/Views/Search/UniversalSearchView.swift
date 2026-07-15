@@ -21,6 +21,9 @@ struct UniversalSearchView: View {
     @State private var showItemMoveToProject = false
     @State private var showItemDeleteConfirmation = false
     @State private var selectedProtoItem: ProtoItem?
+    @State private var selectedItemId: String?
+    @State private var selectedItemProjectId: String?
+    @State private var showItemDetail = false
 
     @State private var itemActions = ItemActionsController()
 
@@ -29,6 +32,11 @@ struct UniversalSearchView: View {
     @State private var showTransactionBulkActions = false
     @State private var showTransactionDeleteConfirmation = false
     @State private var navigationTransaction: Transaction?
+
+    // Space navigation
+    @State private var selectedSpaceId: String?
+    @State private var selectedSpaceProjectId: String?
+    @State private var showSpaceDetail = false
 
     // Single-transaction actions
     @State private var actionTargetTransactionId: String?
@@ -69,6 +77,26 @@ struct UniversalSearchView: View {
             .navBarTitleDisplayMode(.inline)
             .transactionSearchDestination(item: $navigationTransaction)
             .protoItemSearchDestination(item: $selectedProtoItem)
+            .navigationDestination(isPresented: $showItemDetail) {
+                if let selectedItemId,
+                   let item = accountContext.allItems.first(where: { $0.id == selectedItemId }) {
+                    ItemDetailView(
+                        itemId: selectedItemId,
+                        projectId: selectedItemProjectId,
+                        initialItem: item
+                    )
+                } else {
+                    ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
+                }
+            }
+            .navigationDestination(isPresented: $showSpaceDetail) {
+                if let selectedSpaceId,
+                   let space = accountContext.allSpaces.first(where: { $0.id == selectedSpaceId }) {
+                    SpaceDetailView(space: space, projectId: selectedSpaceProjectId)
+                } else {
+                    ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
+                }
+            }
             .universalSearchSelectionBar(
                 selectedItemIds: $selectedItemIds,
                 selectedTransactionIds: $selectedTransactionIds,
@@ -289,7 +317,13 @@ struct UniversalSearchView: View {
                     )
 
                     if selectedItemIds.isEmpty {
-                        NavigationLink(value: item) { card }
+                        Button {
+                            selectedItemId = itemId
+                            selectedItemProjectId = item.projectId
+                            showItemDetail = true
+                        } label: {
+                            card
+                        }
                             .buttonStyle(.plain)
                     } else {
                         card
@@ -346,7 +380,11 @@ struct UniversalSearchView: View {
             } else {
                 ForEach(searchResults.spaces) { space in
                     if let spaceId = space.id {
-                        NavigationLink(value: SpaceRoute(id: spaceId, projectId: space.projectId, initialSpace: space)) {
+                        Button {
+                            selectedSpaceId = spaceId
+                            selectedSpaceProjectId = space.projectId
+                            showSpaceDetail = true
+                        } label: {
                             SpaceCard(
                                 space: space,
                                 itemCount: itemCount(for: space)

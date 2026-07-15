@@ -31,6 +31,8 @@ struct ItemsTabView: View {
     @State private var protoItemToast: (id: String, message: String)?
     @State private var protoItemToastTask: Task<Void, Never>?
     @State private var menuPendingAction: (() -> Void)?
+    @State private var selectedItemId: String?
+    @State private var showItemDetail = false
 
     // MARK: - Computed
 
@@ -208,6 +210,19 @@ struct ItemsTabView: View {
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
         }
+        .navigationDestination(isPresented: $showItemDetail) {
+            if let selectedItemId,
+               let item = projectContext.items.first(where: { $0.id == selectedItemId }) {
+                ItemDetailView(
+                    itemId: selectedItemId,
+                    projectId: projectContext.currentProjectId,
+                    initialItem: item
+                )
+                .environment(projectContext)
+            } else {
+                ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
+            }
+        }
         .confirmationDialog(
             "Delete Item Quick Draft?",
             isPresented: Binding(
@@ -269,16 +284,15 @@ struct ItemsTabView: View {
     private var itemsSection: some View {
         if expandedSections.contains("items") {
             SharedItemsList(
-                mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
+                mode: .embedded(items: projectContext.items, onItemPress: { itemId in
+                    selectedItemId = itemId
+                    showItemDetail = true
+                }),
                 getMenuItems: { singleItemMenuItems(for: $0) },
                 emptyMessage: "No items in this project",
                 onAdd: { showAddItemMenu = true },
                 getBulkMenuItems: { bulkActionMenuItems },
                 selectedIds: $selectedItemIds,
-                useNavigationLinks: true,
-                itemRoute: { item in
-                    item.id.map { ItemRoute(id: $0, projectId: projectContext.currentProjectId, initialItem: item) }
-                },
                 emptyIcon: "cube.box",
                 filterScope: .project,
                 inline: true,

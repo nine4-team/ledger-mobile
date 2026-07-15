@@ -63,15 +63,6 @@ struct MainTabView: View {
                     ReviewView()
                 case .search:
                     UniversalSearchView()
-                        .navigationDestination(for: Item.self) { item in
-                            ItemDetailView(item: item)
-                        }
-                        .navigationDestination(for: Transaction.self) { transaction in
-                            TransactionDetailView(transaction: transaction)
-                        }
-                        .navigationDestination(for: SpaceRoute.self) { route in
-                            SpaceSearchDetailView(route: route)
-                        }
                 case .settings:
                     SettingsView()
                 }
@@ -147,15 +138,6 @@ struct MainTabView: View {
             Tab("Search", systemImage: "magnifyingglass", value: .search) {
                 NavigationStack {
                     UniversalSearchView()
-                        .navigationDestination(for: Item.self) { item in
-                            ItemDetailView(item: item)
-                        }
-                        .navigationDestination(for: Transaction.self) { transaction in
-                            TransactionDetailView(transaction: transaction)
-                        }
-                        .navigationDestination(for: SpaceRoute.self) { route in
-                            SpaceSearchDetailView(route: route)
-                        }
                 }
             }
 

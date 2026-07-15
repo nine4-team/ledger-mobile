@@ -48,7 +48,9 @@ struct ItemDetailView: View {
     @State private var lineageTransactions: [String: Transaction] = [:]
     @State private var lineageLoadTask: Task<Void, Never>?
     @State private var navigationTransaction: Transaction?
-    @State private var navigationSpace: SpaceRoute?
+    @State private var selectedSpaceId: String?
+    @State private var selectedSpaceProjectId: String?
+    @State private var showSpaceDetail = false
 
     // Modal presentation
     @State private var showActionMenu = false
@@ -249,13 +251,14 @@ struct ItemDetailView: View {
         .navigationDestination(item: $navigationTransaction) { transaction in
             TransactionDetailView(transaction: transaction)
         }
-        .navigationDestination(item: $navigationSpace) { route in
-            if let space = route.initialSpace ?? NavigationRouteResolution.space(
-                id: route.id,
-                projectSpaces: route.projectId == nil ? inventoryContext.spaces : projectContext.spaces,
+        .navigationDestination(isPresented: $showSpaceDetail) {
+            if let selectedSpaceId,
+               let space = NavigationRouteResolution.space(
+                id: selectedSpaceId,
+                projectSpaces: selectedSpaceProjectId == nil ? inventoryContext.spaces : projectContext.spaces,
                 accountSpaces: accountContext.allSpaces
             ) {
-                SpaceDetailView(space: space, projectId: route.projectId)
+                SpaceDetailView(space: space, projectId: selectedSpaceProjectId)
             } else {
                 ContentUnavailableView("Space Unavailable", systemImage: "square.grid.2x2")
             }
@@ -339,7 +342,9 @@ struct ItemDetailView: View {
                 if let space = linkedSpace {
                     Button {
                         if let spaceId = space.id {
-                            navigationSpace = SpaceRoute(id: spaceId, projectId: space.projectId, initialSpace: space)
+                            selectedSpaceId = spaceId
+                            selectedSpaceProjectId = space.projectId
+                            showSpaceDetail = true
                         }
                     } label: {
                         FindableText(space.name)

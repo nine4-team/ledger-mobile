@@ -177,38 +177,40 @@ Key invariants:
 
 ### Navigation
 
-One `NavigationStack` per tab. Use `NavigationLink(value:)` with `.navigationDestination(for:)` — not the deprecated label-based `NavigationLink`.
+Use one `NavigationStack` per tab. Root app destinations with tiny immutable values (`ProjectRoute`, `AppDestination`, `ReportType`) may use `NavigationLink(value:)` with `.navigationDestination(for:)`.
 
-**Do not pass mutable Firestore models as navigation values.** A `Project`, `Item`, `Transaction`, or `Space` struct changes on every listener reconciliation, optimistic write, or thumbnail update. Using the whole model as a `NavigationLink(value:)` payload couples navigation identity to ordinary data changes, which makes the destination churn (spinners, list rebuilds, delayed menus).
+**Nested Firestore entity navigation must not mutate SwiftUI's typed navigation path.** On macOS, pushing `ItemRoute`, `SpaceRoute`, or a full model from a nested project/inventory/search screen can trap `ProjectDetailView` in an `AttributeGraph` layout/reconciliation loop and beachball before the destination renders. A stable `Hashable` ID does not prevent that failure.
 
-Instead:
+For items, spaces, transactions, and invoices:
 
-- Route with small `Hashable` route structs/enums that hold **stable IDs** and minimal immutable context (see `Models/NavigationRoutes.swift` — `ProjectRoute`, `ItemRoute`).
-- Register the destination for the **route type**, not the model.
-- Resolve the current model inside the destination from `AccountContext`, `ProjectContext`, `InventoryContext`, or a focused listener (see `Logic/NavigationRouteResolution.swift`). Pass an optional initial snapshot for immediate first paint — as display fallback, never as route identity.
+- The immediate owning view stores the selected entity ID and a presentation boolean in `@State`.
+- A plain `Button` sets the ID, then sets the boolean.
+- Present with `.navigationDestination(isPresented:)` on that owning view.
+- Resolve the current model inside the destination from `AccountContext`, `ProjectContext`, `InventoryContext`, or a focused listener (see `Logic/NavigationRouteResolution.swift`).
 - Keep existing content visible while a focused listener refreshes; render a non-loading unavailable state for deleted records.
-- Whole-model navigation is allowed only for static, non-persisted, non-mutating values (e.g. `AppDestination.inventory`, `ReportType`).
+- Do not add `.navigationDestination(for: Item.self)`, `.navigationDestination(for: SpaceRoute.self)`, or equivalent nested entity path registrations.
 
 ```swift
-NavigationStack {
-    List(items) { item in
-        if let itemId = item.id {
-            NavigationLink(value: ItemRoute(id: itemId, projectId: projectId)) {
-                ItemRow(item: item)
-            }
-        }
-    }
-    .navigationDestination(for: ItemRoute.self) { route in
-        ItemDetailView(
-            itemId: route.id,
-            projectId: route.projectId,
-            initialItem: projectContext.items.first { $0.id == route.id }
-        )
+@State private var selectedItemId: String?
+@State private var showItemDetail = false
+
+Button {
+    selectedItemId = item.id
+    showItemDetail = item.id != nil
+} label: {
+    ItemRow(item: item)
+}
+.navigationDestination(isPresented: $showItemDetail) {
+    if let selectedItemId,
+       let item = projectContext.items.first(where: { $0.id == selectedItemId }) {
+        ItemDetailView(itemId: selectedItemId, projectId: projectId, initialItem: item)
+    } else {
+        ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
     }
 }
 ```
 
-> Migration status: project and project-item routes use stable IDs. Inventory, search, review, transaction, space, and invoice routes still pass mutable models (`.navigationDestination(for: Item.self)` etc.) and are being migrated in follow-up milestones — see `docs/plans/stable-id-navigation-remediation-plan.md`.
+> Migration status: nested item, transaction, space, and invoice links use local selected-ID presentation. Typed value navigation remains only for immutable root/report/project identifiers.
 
 ### App Entry Point
 
