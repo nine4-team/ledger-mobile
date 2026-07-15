@@ -59,8 +59,8 @@ struct SpaceCard: View {
                     Text("")
                         .font(Typography.caption)
                 }
-
             }
+            .frame(minHeight: 72, alignment: .topLeading)
         }
         .findEntity(id: space.id)
         .findMatchHighlight()

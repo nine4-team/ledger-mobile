@@ -259,7 +259,7 @@ struct UniversalSearchView: View {
 
             ScrollView {
                 LazyVGrid(
-                    columns: Dimensions.listColumns,
+                    columns: resultColumns,
                     alignment: .leading,
                     spacing: Spacing.cardListGap
                 ) {
@@ -283,6 +283,13 @@ struct UniversalSearchView: View {
     }
 
     // MARK: - Tab Content
+
+    private var resultColumns: [GridItem] {
+        if selectedTab == "spaces" {
+            return [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)]
+        }
+        return Dimensions.listColumns
+    }
 
     private var itemsTab: some View {
         Group {

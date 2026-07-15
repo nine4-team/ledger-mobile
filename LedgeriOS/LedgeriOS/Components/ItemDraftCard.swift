@@ -51,6 +51,8 @@ struct ItemDraftCard: View {
             HStack(alignment: .center, spacing: Spacing.sm) {
                 Button(action: onOpen) {
                     photoStrip
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .buttonStyle(.plain)
