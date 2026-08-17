@@ -1,6 +1,6 @@
 # Proto Item Capture Implementation Plan
 Status: in progress
-Last updated: 2026-05-18
+Last updated: 2026-08-17
 
 ## Goal
 
@@ -52,14 +52,14 @@ Entry points:
 
 - [x] Project detail: capture item for current project.
 - Inventory: capture item for inventory, optional intended project.
-- Transaction detail: capture item with `candidateTransactionId`.
+- Transaction detail: capture item with authoritative `transactionId`.
 
 Capture UI:
 
 - Add object photo.
 - Add tag/SKU/price photo.
 - Add more photos if needed.
-- Optional quick source hint: client purchase, business purchase, from inventory.
+- Optional quick source hint: client purchase, business purchase, from inventory. Project capture exposes **From Inventory** during initial creation.
 - [x] Save and immediately reset for the next item quick draft.
 
 Acceptance:
@@ -123,9 +123,12 @@ Implement manual conversion first.
 
 ### Convert From Inventory
 
-- If the draft is marked From Inventory, route through existing inventory-to-project operations.
-- Require destination project and budget category before committing sale.
-- Mark proto item converted once the resulting item/project sale is created.
+- Use `transactionId` as the single authoritative transaction association. Do not fall back to `candidateTransactionId`.
+- If the selected transaction belongs to the draft's project, use the normal direct project conversion path.
+- If the selected transaction is business-inventory scoped, validate destination project, category, purchase price, and project price before writing.
+- In one atomic operation, create the item under the inventory acquisition transaction, create the canonical Purchase-from-inventory transaction, move the item to the draft's project/category, write lineage, and mark the draft converted.
+- If the draft is marked From Inventory but has no selected transaction, keep it open until the user selects an inventory transaction.
+- Reject a selected transaction from a different project or a project transaction that conflicts with the From Inventory marker.
 
 Acceptance:
 
@@ -147,6 +150,7 @@ Candidates:
 Acceptance:
 
 - Suggestions are optional and human-confirmed.
+- Transaction suggestions remain transient; confirmation writes the authoritative `transactionId`.
 - Low-confidence matches remain open.
 - No automated suggestion creates budget impact without confirmation.
 

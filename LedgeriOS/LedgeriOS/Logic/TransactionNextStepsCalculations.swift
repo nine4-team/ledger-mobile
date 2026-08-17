@@ -92,3 +92,56 @@ enum TransactionNextStepsCalculations {
         !steps.isEmpty && steps.allSatisfy(\.completed)
     }
 }
+
+enum InventoryPurchaseIntentState: Equatable {
+    case waitingForItems
+    case readyToSell
+    case partiallyCompleted
+    case missingProjectPrices
+    case missingOrInvalidCategory
+    case projectUnavailable
+
+    var label: String {
+        switch self {
+        case .waitingForItems: "Waiting for items"
+        case .readyToSell: "Ready to sell"
+        case .partiallyCompleted: "Partially completed"
+        case .missingProjectPrices: "Missing project prices"
+        case .missingOrInvalidCategory: "Missing or invalid category"
+        case .projectUnavailable: "Project unavailable"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .waitingForItems: "clock"
+        case .readyToSell: "arrow.right.circle"
+        case .partiallyCompleted: "circle.lefthalf.filled"
+        case .missingProjectPrices: "dollarsign.circle"
+        case .missingOrInvalidCategory: "folder.badge.questionmark"
+        case .projectUnavailable: "exclamationmark.triangle"
+        }
+    }
+}
+
+enum InventoryPurchaseIntentCalculations {
+    static func state(
+        transaction: Transaction,
+        activeItems: [Item],
+        projectExists: Bool,
+        categoryExists: Bool
+    ) -> InventoryPurchaseIntentState {
+        if !projectExists { return .projectUnavailable }
+        if transaction.intendedBudgetCategoryId == nil || !categoryExists {
+            return .missingOrInvalidCategory
+        }
+        if activeItems.isEmpty { return .waitingForItems }
+        if activeItems.contains(where: { ($0.projectPriceCents ?? 0) <= 0 }) {
+            return .missingProjectPrices
+        }
+        if (transaction.audit?.soldItemsCount ?? 0) > 0 {
+            return .partiallyCompleted
+        }
+        return .readyToSell
+    }
+}

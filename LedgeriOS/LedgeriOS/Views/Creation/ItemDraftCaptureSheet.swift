@@ -14,6 +14,7 @@ struct ItemDraftCaptureSheet: View {
 
     @State private var name = ""
     @State private var quantity = 1
+    @State private var isFromInventory = false
     @State private var imageItems: [PhotosPickerItem] = []
     @State private var imageDatas: [Data] = []
     @State private var showImageSourceMenu = false
@@ -53,8 +54,28 @@ struct ItemDraftCaptureSheet: View {
             VStack(spacing: Spacing.md) {
                 FormField(label: "Name", text: $name, placeholder: "Optional")
                 quantitySection
+                if projectId != nil && transactionId == nil {
+                    fromInventorySection
+                }
                 photosSection
             }
+        }
+    }
+
+    private var fromInventorySection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Source")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+            InlineOptionPicker(selection: $isFromInventory, options: [
+                InlineOption(id: false, label: "Project purchase"),
+                InlineOption(id: true, label: "From inventory"),
+            ])
+            Text(isFromInventory
+                 ? "This item will need an inventory transaction before it can be converted."
+                 : "This item will be linked directly to a transaction in this project.")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
         }
     }
 
@@ -232,6 +253,7 @@ struct ItemDraftCaptureSheet: View {
                 ? (projectId == nil ? .inventory : .project)
                 : .transaction
             protoItem.status = .open
+            protoItem.sourceHint = isFromInventory ? .fromInventory : .unknown
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
             if case let .populate(sku) = ItemTagSkuMutationPolicy.decide(existingSku: nil, extraction: extraction) {
@@ -247,6 +269,7 @@ struct ItemDraftCaptureSheet: View {
 
             name = ""
             quantity = 1
+            isFromInventory = false
             imageDatas = []
             showImageSourceMenu = true
             mediaUploadQueue.processQueue()

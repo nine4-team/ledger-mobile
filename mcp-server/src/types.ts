@@ -75,6 +75,10 @@ export interface Transaction {
     totalItemCount?: number;
   } | null;
   purchasedBy?: string;
+  purchaseHandling?: "inventory_resale" | "project_reimbursement";
+  intendedProjectId?: string;
+  intendedBudgetCategoryId?: string;
+  inventoryIntentResolvedAt?: FirebaseFirestore.Timestamp;
   reimbursementType?: string;
   receiptEmailed?: boolean;
   paymentMethod?: string;
@@ -218,6 +222,7 @@ export interface ProtoItem {
   quantity?: number;
   notes?: string;
   extracted?: ProtoItemExtraction;
+  /** @deprecated Legacy suggestion metadata. Never use as a confirmed association. */
   candidateTransactionId?: string;
   candidateItemId?: string;
   convertedItemId?: string;

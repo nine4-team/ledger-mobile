@@ -62,6 +62,14 @@ enum InventorySaleDirection: String, Codable {
     case projectToBusiness = "project_to_business"
 }
 
+/// Why the design business paid for a purchase. This is intentionally
+/// independent from `purchasedBy`: payer identity does not determine whether
+/// the purchase belongs in inventory or directly in a project.
+enum PurchaseHandling: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
+    case inventoryResale = "inventory_resale"
+    case projectReimbursement = "project_reimbursement"
+}
+
 enum ItemStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     case toPurchase = "to purchase"
     case purchased

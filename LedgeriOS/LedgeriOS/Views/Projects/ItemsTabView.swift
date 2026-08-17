@@ -191,6 +191,8 @@ struct ItemsTabView: View {
                 initialSkuCandidates: protoItem.extracted?.skuCandidates ?? [],
                 initialQuantity: protoItem.quantity,
                 initialImageRefs: protoItem.photos ?? [],
+                convertingProtoItemId: protoItem.id,
+                initialSourceHint: protoItem.sourceHint,
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
                         Task { await convertProtoItem(protoItem, itemId: itemId) }

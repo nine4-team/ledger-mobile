@@ -99,6 +99,8 @@ struct ItemQuickDraftDetailView: View {
                 initialSkuCandidates: liveProtoItem.extracted?.skuCandidates ?? [],
                 initialQuantity: liveProtoItem.quantity,
                 initialImageRefs: photos,
+                convertingProtoItemId: liveProtoItem.id,
+                initialSourceHint: liveProtoItem.sourceHint,
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
                         Task { await markConverted(itemId: itemId) }

@@ -145,7 +145,8 @@ struct InventoryOperationsService {
         accountId: String,
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        resolveInventoryIntentTransactionId: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -232,6 +233,19 @@ struct InventoryOperationsService {
             var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
             if let userId { catFields["updatedBy"] = userId }
             batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(budgetCategoryId)", merge: true)
+        }
+
+
+        if let resolveInventoryIntentTransactionId {
+            var resolutionFields: [String: Any] = [
+                "inventoryIntentResolvedAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let userId { resolutionFields["updatedBy"] = userId }
+            batch.updateData(
+                resolutionFields,
+                forDocumentAt: "\(txPath)/\(resolveInventoryIntentTransactionId)"
+            )
         }
 
         try await batch.commit()

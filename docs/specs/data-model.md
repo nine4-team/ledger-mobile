@@ -84,6 +84,10 @@ transactions link back to invoices with `settlementInvoiceId`.
 | isComplete | boolean, nullable | Auto-computed by Cloud Function. `true` = complete, `false` = needs review (shows badge). See `docs/specs/transaction-completeness.md` |
 | audit | TransactionAudit, nullable | Stored completeness audit data. Contains `resolvedSubtotalCents`, `itemsSumCents`, `varianceCents`, `variancePercent`. Null for non-itemized categories. See `docs/specs/transaction-completeness.md` |
 | purchasedBy | string, nullable | Who made the purchase |
+| purchaseHandling | string, nullable | Explicit business-paid purchase intent: `inventory_resale` or `project_reimbursement` |
+| intendedProjectId | string, nullable | Planned destination for an inventory resale acquisition. The acquisition itself remains inventory-scoped. |
+| intendedBudgetCategoryId | string, nullable | Planned destination category for an inventory resale acquisition. Revalidate before sale. |
+| inventoryIntentResolvedAt | timestamp, nullable | Explicit disposition-resolution marker for a planned inventory purchase. Separate from accounting `isComplete`. |
 | reimbursementType | string, nullable | |
 | hasEmailReceipt | boolean, nullable | **Firestore field name is `receiptEmailed`** |
 | receiptImages | array of AttachmentRef, nullable | Receipt photo attachments |
@@ -263,12 +267,12 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 | accountId | string | FK to Account |
 | projectId | string, nullable | FK to Project. Project context for the capture. Null means inventory/unassigned. |
 | intendedProjectId | string, nullable | FK to Project. Destination hint for inventory captures intended for a project. |
-| candidateTransactionId | string, nullable | FK to Transaction. Possible matching transaction; not authoritative. |
+| transactionId | string, nullable | FK to Transaction. The single authoritative transaction the eventual item should initially join. Null until a transaction is selected. |
 | candidateItemId | string, nullable | FK to Item. Possible matching item; not authoritative until converted. |
 | convertedItemId | string, nullable | FK to Item. Set when status becomes `"converted"`. |
 | name | string, nullable | Optional quick capture label. Not a finalized item name until conversion. |
 | status | string | One of: `"open"`, `"in_review"`, `"converted"`. Defaults to `"open"`. |
-| sourceHint | string, nullable | Conversion hint. One of: `"unknown"`, `"client_purchase"`, `"business_purchase"`, `"from_inventory"`. `from_inventory` may be set by the card-level **From Inventory** control on project-scoped drafts. |
+| sourceHint | string, nullable | Conversion hint. One of: `"unknown"`, `"client_purchase"`, `"business_purchase"`, `"from_inventory"`. `from_inventory` may be set during initial project capture or from the project-scoped draft card/detail control. |
 | images | array of AttachmentRef | Object, tag, SKU, price, packaging, or supporting photos. At least one image is required for normal capture. |
 | notes | string, nullable | Reviewer/conversion notes. Not collected in the initial photo capture flow. |
 | extractedText | string, nullable | OCR text from images. Optional; may be added by later automation. |
@@ -280,9 +284,11 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 | updatedAt | timestamp | |
 | convertedAt | timestamp, nullable | |
 
-**Validation:** A proto item requires at least one image in the normal capture UX. The capture flow may collect an optional quick name/label. Metadata such as source, notes, SKU, vendor, category, and price is collected during conversion, when the draft becomes or merges into a real item. The **From Inventory** hint is allowed at the card/detail level because it records capture intent only; it does not create item, budget, transaction, sale, or lineage effects.
+**Validation:** A proto item requires at least one image in the normal capture UX. The capture flow may collect an optional quick name/label. Metadata such as source, notes, SKU, vendor, category, and price is collected during conversion, when the draft becomes or merges into a real item. The **From Inventory** hint is allowed during initial project capture and at the card/detail level because it records capture intent only; it does not create item, budget, transaction, sale, or lineage effects.
 
-**Conversion:** A proto item is converted by creating a new item, merging with an existing item, or routing through the inventory-to-project flow when marked **From Inventory**. Conversion sets `status: "converted"` and `convertedItemId` when an item exists. Unwanted drafts are deleted.
+**Transaction association:** `transactionId` is authoritative. Suggested transaction matches remain transient until a human confirms one and writes this field. The legacy `candidateTransactionId` field is deprecated and must not be used as an automatic fallback during promotion.
+
+**Conversion:** A proto item is converted by creating a new item, merging with an existing item, or routing through the inventory-to-project flow. A project-scoped draft linked to a project transaction converts directly into that transaction. A project-scoped draft linked to an inventory transaction is converted atomically by creating the item under the acquisition transaction and immediately executing the canonical sale into the draft's project; the final item points at the new project Purchase and lineage preserves the acquisition. Conversion sets `status: "converted"` and `convertedItemId` when an item exists. Unwanted drafts are deleted.
 
 **Invariant:** unconverted proto items are never queried as items and never included in item, budget, invoice, transaction completeness, or report calculations.
 
@@ -588,7 +594,7 @@ Embedded within Checklist.
 | ProtoItem | may convert to | Item | 0:1 | `protoItem.convertedItemId` | Set only after the capture is converted into or merged with a real item |
 | ProtoItem | may reference | Project | 0:1 | `protoItem.projectId` | Capture context. Null means inventory/unassigned |
 | ProtoItem | may hint destination | Project | 0:1 | `protoItem.intendedProjectId` | Optional destination hint for inventory captures |
-| ProtoItem | may reference | Transaction | 0:1 | `protoItem.candidateTransactionId` | Candidate match only; not authoritative until conversion creates or updates real item/transaction links |
+| ProtoItem | will initially join | Transaction | 0:1 | `protoItem.transactionId` | Single authoritative association. Transaction scope determines direct-project conversion versus atomic inventory-create-and-sell conversion. |
 | ProtoItem | may reference | Item | 0:1 | `protoItem.candidateItemId` | Candidate merge target only; not authoritative until conversion |
 | Transaction | belongs to | Project | N:1 | `transaction.projectId` | Null is valid for business-inventory-scoped transactions |
 | Transaction | belongs to | BudgetCategory | N:1 | `transaction.budgetCategoryId` | Links transaction spend to a budget category for rollup calculations |

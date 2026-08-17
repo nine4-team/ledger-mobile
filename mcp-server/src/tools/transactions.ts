@@ -110,6 +110,10 @@ function formatTransaction(tx: Transaction & { id: string }) {
     isComplete: tx.isComplete ?? null,
     status: tx.status ?? "",
     purchasedBy: tx.purchasedBy ?? "",
+    purchaseHandling: tx.purchaseHandling ?? null,
+    intendedProjectId: tx.intendedProjectId ?? null,
+    intendedBudgetCategoryId: tx.intendedBudgetCategoryId ?? null,
+    inventoryIntentResolvedAt: tx.inventoryIntentResolvedAt ?? null,
     reimbursementType: tx.reimbursementType ?? "",
     receiptEmailed: tx.receiptEmailed ?? null,
     ingestionSource: tx.ingestionSource ?? null,
@@ -128,6 +132,8 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
       type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, paymentToBusiness; legacy reads may include Fee, Expense, or To Inventory)."),
       purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
+      purchaseHandling: z.enum(["inventory_resale", "project_reimbursement"]).optional().describe("Filter by explicit business-paid purchase handling."),
+      intendedProjectId: z.string().optional().describe("Filter inventory resale acquisitions by intended destination project."),
       source: z.string().optional().describe("Filter by source/vendor name"),
       isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Filter by reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
@@ -139,7 +145,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       fields: z.array(z.string()).optional().describe("Optional explicit field list. Overrides mode."),
       responseLimit: ResponseLimitArg,
     },
-    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset, mode, fields, responseLimit }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, purchaseHandling, intendedProjectId, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset, mode, fields, responseLimit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -158,6 +164,14 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
 
       if (purchasedBy) {
         query = query.where("purchasedBy", "==", purchasedBy);
+      }
+
+      if (purchaseHandling) {
+        query = query.where("purchaseHandling", "==", purchaseHandling);
+      }
+
+      if (intendedProjectId) {
+        query = query.where("intendedProjectId", "==", intendedProjectId);
       }
 
       if (source) {

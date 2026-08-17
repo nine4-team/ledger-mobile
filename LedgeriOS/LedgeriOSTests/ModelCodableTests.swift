@@ -146,6 +146,10 @@ struct ModelCodableTests {
         tx.discount = Discount(amountCents: 500)
         tx.isCanonicalInventory = false
         tx.inventorySaleDirection = .businessToProject
+        tx.purchaseHandling = .inventoryResale
+        tx.intendedProjectId = "proj2"
+        tx.intendedBudgetCategoryId = "cat2"
+        tx.inventoryIntentResolvedAt = Date(timeIntervalSince1970: 3_000)
         tx.settlementInvoiceId = "inv1"
         tx.settlementInvoiceLineIds = ["line1", "line2"]
 
@@ -162,6 +166,10 @@ struct ModelCodableTests {
         let discount = dict["discount"] as? [String: Any]
         #expect(discount?["amountCents"] as? Int == 500)
         #expect(dict["inventorySaleDirection"] as? String == "business_to_project")
+        #expect(dict["purchaseHandling"] as? String == "inventory_resale")
+        #expect(dict["intendedProjectId"] as? String == "proj2")
+        #expect(dict["intendedBudgetCategoryId"] as? String == "cat2")
+        #expect(dict["inventoryIntentResolvedAt"] != nil)
         #expect(dict["settlementInvoiceId"] as? String == "inv1")
         #expect(dict["settlementInvoiceLineIds"] as? [String] == ["line1", "line2"])
     }

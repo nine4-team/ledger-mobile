@@ -38,6 +38,7 @@ enum TaxMode: Hashable { case none, rate, subtotal }
 enum TransactionCreationStep: Hashable {
     case typeSelection        // Purchase / Return / Client Payment
     case whoPaid              // Client / Design Business (Purchase)
+    case purchaseHandling     // Inventory resale / covered project purchase
     case destination          // Project picker (not auto-inventory routing)
     case budgetCategory       // pick a BudgetCategory
     case vendor               // vendor/source picker
@@ -49,12 +50,16 @@ enum TransactionCreationStepResolver {
         type: TransactionType?,
         context: TransactionCreationContext,
         destinationProjectId: String?,
+        purchasedBy: String? = nil,
         skipVendor: Bool = false
     ) -> [TransactionCreationStep] {
         guard let type else { return [.typeSelection] }
 
         var steps: [TransactionCreationStep] = [.typeSelection]
-        if type == .purchase { steps.append(.whoPaid) }
+        if type == .purchase {
+            steps.append(.whoPaid)
+            if purchasedBy == "design-business" { steps.append(.purchaseHandling) }
+        }
         if shouldSelectDestination(for: context) { steps.append(.destination) }
         if destinationProjectId != nil { steps.append(.budgetCategory) }
         if !skipVendor { steps.append(.vendor) }
@@ -97,6 +102,7 @@ struct NewTransactionView: View {
     @State private var transactionDate: Date? = nil
     @State private var amount = ""
     @State private var purchasedBy = "design-business"
+    @State private var purchaseHandling: PurchaseHandling?
     @State private var needsReimbursement = false
     @State private var notes = ""
     @State private var selectedCategoryId: String?
@@ -152,23 +158,22 @@ struct NewTransactionView: View {
     }
 
     private var fixedSourceOptions: [String] {
-        destinationProjectId == nil ? [] : [inventorySourceLabel]
+        actualTransactionProjectId == nil ? [] : [inventorySourceLabel]
     }
 
     /// An inventory-bound transaction must name the outside vendor it came
     /// from, not inventory itself (which would imply Inventory → Inventory).
     private var excludedSourceOptions: Set<String> {
-        destinationProjectId == nil ? ["Inventory", inventorySourceLabel] : []
+        actualTransactionProjectId == nil ? ["Inventory", inventorySourceLabel] : []
     }
 
-    /// Inventory routing is a category + purchaser decision, matching the
-    /// pre-taxonomy flow: business-paid itemized categories go through business
-    /// inventory first. Plain purchases/services do not.
+    /// Inventory routing is an explicit business-intent decision. `purchasedBy`
+    /// identifies the payer but cannot safely infer this choice.
     private var routeThroughInventory: Bool {
         TransactionFormValidation.shouldRouteThroughInventory(
             type: transactionType,
-            isItemizedCategory: isItemizedCategory,
-            purchasedBy: purchasedBy
+            purchasedBy: purchasedBy,
+            purchaseHandling: purchaseHandling
         )
     }
 
@@ -180,7 +185,9 @@ struct NewTransactionView: View {
 
     private var skipVendor: Bool { transactionType == .paymentToBusiness }
 
-    private var showsReimbursementToggle: Bool { transactionType == .purchase }
+    private var showsReimbursementToggle: Bool {
+        transactionType == .purchase && purchasedBy != "design-business"
+    }
 
     private var showsSourceVendorField: Bool { transactionType != .paymentToBusiness }
 
@@ -191,12 +198,19 @@ struct NewTransactionView: View {
         return nil
     }
 
+    /// The project stored on the transaction itself. A resale acquisition may
+    /// have an intended project while remaining inventory-scoped.
+    private var actualTransactionProjectId: String? {
+        routeThroughInventory ? nil : destinationProjectId
+    }
+
     /// The ordered list of steps for the current branch.
     private var orderedSteps: [TransactionCreationStep] {
         TransactionCreationStepResolver.orderedSteps(
             type: transactionType,
             context: context,
             destinationProjectId: destinationProjectId,
+            purchasedBy: purchasedBy,
             skipVendor: skipVendor
         )
     }
@@ -273,12 +287,13 @@ struct NewTransactionView: View {
                 ItemEntryFlowView(
                     transactionId: txId,
                     budgetCategoryId: selectedCategoryId,
-                    originProjectId: entryProjectId
+                    originProjectId: destinationProjectId
                 )
             } else {
                 switch currentStep {
                 case .typeSelection: stepTypeSelection
                 case .whoPaid: stepWhoPaid
+                case .purchaseHandling: stepPurchaseHandling
                 case .destination: stepDestination
                 case .budgetCategory: stepBudgetCategory
                 case .vendor: stepVendor
@@ -344,6 +359,7 @@ struct NewTransactionView: View {
         Button {
             transactionType = type
             selectedCategoryId = nil
+            purchaseHandling = nil
             advance()
         } label: {
             optionCardLabel(label, icon: icon)
@@ -372,9 +388,84 @@ struct NewTransactionView: View {
     private func whoPaidCard(_ label: String, icon: String, value: String) -> some View {
         Button {
             purchasedBy = value
+            purchaseHandling = nil
+            needsReimbursement = false
             advance()
         } label: {
             optionCardLabel(label, icon: icon)
+        }
+        .buttonStyle(.plain)
+    }
+
+
+    // MARK: - Step: Purchase Handling
+
+    private var stepPurchaseHandling: some View {
+        MultiStepFormSheet(
+            title: "New Transaction",
+            description: "What is the business paying for?",
+            currentStep: currentStepIndex,
+            totalSteps: totalSteps,
+            primaryAction: FormSheetAction(title: "Back") { goBack() }
+        ) {
+            VStack(spacing: Spacing.md) {
+                purchaseHandlingCard(
+                    "Buy for resale",
+                    description: "Add it to business inventory. Items can be sold to a project now or later.",
+                    icon: "shippingbox",
+                    value: .inventoryResale
+                )
+                purchaseHandlingCard(
+                    "Cover a project purchase",
+                    description: "Keep it in this project and mark it payable to the business.",
+                    icon: "building.2.crop.circle",
+                    value: .projectReimbursement
+                )
+            }
+        }
+    }
+
+    private func purchaseHandlingCard(
+        _ label: String,
+        description: String,
+        icon: String,
+        value: PurchaseHandling
+    ) -> some View {
+        Button {
+            purchaseHandling = value
+            needsReimbursement = value == .projectReimbursement
+            if value == .projectReimbursement, case .inventory = context {
+                selectedDestination = .inventory
+                selectedCategoryId = nil
+            }
+            advance()
+        } label: {
+            HStack(alignment: .top, spacing: Spacing.md) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .frame(width: 40, height: 40)
+                    .foregroundStyle(BrandColors.primary)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text(label)
+                        .font(Typography.body)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Text(description)
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .padding(.top, Spacing.xs)
+            }
+            .padding(Spacing.md)
+            .contentShape(Rectangle())
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -388,7 +479,10 @@ struct NewTransactionView: View {
 
             currentStep: currentStepIndex,
             totalSteps: totalSteps,
-            primaryAction: FormSheetAction(title: "Next") { advance() },
+            primaryAction: FormSheetAction(
+                title: "Next",
+                isDisabled: purchaseHandling == .projectReimbursement && destinationProjectId == nil
+            ) { advance() },
             secondaryAction: FormSheetAction(title: "Back") { goBack() }
         ) {
             InlineOptionPicker(selection: $selectedDestination, options: destinationOptions)
@@ -396,7 +490,18 @@ struct NewTransactionView: View {
     }
 
     private var destinationOptions: [InlineOption<TransactionDestination>] {
-        TransactionDestinationResolver.options(projects: accountContext.allProjects)
+        let options = TransactionDestinationResolver.options(projects: accountContext.allProjects)
+        if purchaseHandling == .projectReimbursement {
+            return options.filter { $0.id != .inventory }
+        }
+        if purchaseHandling == .inventoryResale {
+            return options.map { option in
+                option.id == .inventory
+                    ? InlineOption(id: .inventory, label: "I don't know yet")
+                    : option
+            }
+        }
+        return options
     }
 
     // MARK: - Step: Budget Category
@@ -424,6 +529,7 @@ struct NewTransactionView: View {
         guard let type = transactionType else { return [] }
         let filtered = destinationCategories.filter {
             category($0, accepts: type)
+                && (purchaseHandling != .inventoryResale || $0.isItemsCategory)
         }
         return filtered.map { InlineOption(id: $0.id, label: $0.name) }
     }
@@ -483,15 +589,14 @@ struct NewTransactionView: View {
         }
     }
 
-    /// Surfaces the category-based inventory routing rule once the selected
-    /// category proves this is an itemized, business-paid purchase.
+    /// Confirms the explicit resale routing decision.
     @ViewBuilder
     private var inventoryRoutingNote: some View {
         if routeThroughInventory {
             let projectName = originProject?.name
             let suffix = projectName.map { " You'll be offered to sell items to \($0) after." }
                 ?? " You'll be offered to sell items to a project after."
-            let prefix = "This itemized business purchase will be recorded in inventory first."
+            let prefix = "This resale purchase will be recorded in inventory first."
             HStack(alignment: .top, spacing: Spacing.sm) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(BrandColors.primary)
@@ -511,8 +616,7 @@ struct NewTransactionView: View {
     }
 
     /// The project the user was inside when they opened the form, if any.
-    /// Used only for display messaging — the actual routing is decided by the
-    /// selected category and purchaser.
+    /// Used only for display messaging.
     private var originProject: Project? {
         guard let id = entryProjectId else { return nil }
         return accountContext.allProjects.first { $0.id == id }
@@ -824,7 +928,7 @@ struct NewTransactionView: View {
         dateFormatter.formatOptions = [.withFullDate]
 
         var transaction = Transaction()
-        transaction.projectId = destinationProjectId
+        transaction.projectId = actualTransactionProjectId
         transaction.transactionType = transactionType
         let trimmedSource = effectiveSource.trimmingCharacters(in: .whitespacesAndNewlines)
         transaction.source = trimmedSource.isEmpty || transactionType == .paymentToBusiness ? nil : trimmedSource
@@ -833,6 +937,8 @@ struct NewTransactionView: View {
         }
         transaction.amountCents = parseCents(amount)
         transaction.purchasedBy = transactionType == .purchase ? purchasedBy : nil
+        transaction.purchaseHandling = transactionType == .purchase && purchasedBy == "design-business"
+            ? purchaseHandling : nil
         transaction.reimbursementType = resolvedReimbursementType
         transaction.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -842,6 +948,8 @@ struct NewTransactionView: View {
         }
 
         transaction.budgetCategoryId = routeThroughInventory ? nil : selectedCategoryId
+        transaction.intendedProjectId = routeThroughInventory ? destinationProjectId : nil
+        transaction.intendedBudgetCategoryId = routeThroughInventory ? selectedCategoryId : nil
         if isItemizedCategory {
             let amountCents = transaction.amountCents ?? 0
             switch taxMode {
@@ -863,10 +971,6 @@ struct NewTransactionView: View {
                     : 0
             }
         }
-        if routeThroughInventory {
-            transaction.projectId = nil
-        }
-
         do {
             let txId: String
             if let pendingTransactionId {
@@ -914,6 +1018,11 @@ struct NewTransactionView: View {
     /// - Everything else → nil. Returns, Sales, payment collection, toggle-off all
     ///   leave this empty.
     private var resolvedReimbursementType: String? {
+        if transactionType == .purchase,
+           purchasedBy == "design-business",
+           purchaseHandling == .projectReimbursement {
+            return "owed-to-company"
+        }
         guard showsReimbursementToggle, needsReimbursement else { return nil }
         return purchasedBy == "design-business" ? "owed-to-company" : "owed-to-client"
     }

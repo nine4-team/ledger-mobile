@@ -1,5 +1,22 @@
 import SwiftUI
 
+enum ItemEntryFlowFooterStrategy: Equatable {
+    case dismiss
+    case continueToDestination
+    case addAllToOriginProject
+    case keepInInventory
+}
+
+enum ItemEntryFlowFooterResolver {
+    static func addItems(itemCount: Int) -> ItemEntryFlowFooterStrategy {
+        itemCount == 0 ? .dismiss : .continueToDestination
+    }
+
+    static func sellPrompt(originProjectId: String?) -> ItemEntryFlowFooterStrategy {
+        originProjectId == nil ? .keepInInventory : .addAllToOriginProject
+    }
+}
+
 /// Post-transaction flow for itemized categories.
 /// After creating an inventory transaction, guides the user through:
 /// 1. Adding items to the transaction
@@ -53,6 +70,11 @@ struct ItemEntryFlowView: View {
         }
     }
 
+    private func sellAllToOriginProject() {
+        selectedItemIds = Set(transactionItems.compactMap(\.id))
+        proceedToSellTarget()
+    }
+
     var body: some View {
         Group {
             switch currentStep {
@@ -86,20 +108,18 @@ struct ItemEntryFlowView: View {
     // MARK: - Step 1: Add Items
 
     private var addItemsStep: some View {
-        FormSheet(
+        let footerStrategy = ItemEntryFlowFooterResolver.addItems(itemCount: transactionItems.count)
+        return FormSheet(
             title: "Add Items",
             description: "Add items to this transaction. Items will be created in inventory.",
             primaryAction: FormSheetAction(
-                title: transactionItems.isEmpty ? "Done" : "Next"
+                title: footerStrategy == .dismiss ? "Done" : "Next"
             ) {
-                if transactionItems.isEmpty {
+                if footerStrategy == .dismiss {
                     dismiss()
                 } else {
                     currentStep = .sellPrompt
                 }
-            },
-            secondaryAction: FormSheetAction(title: "Done") {
-                dismiss()
             }
         ) {
             VStack(spacing: Spacing.md) {
@@ -137,15 +157,24 @@ struct ItemEntryFlowView: View {
     // MARK: - Step 2: Sell Prompt
 
     private var sellPromptStep: some View {
-        FormSheet(
+        let footerStrategy = ItemEntryFlowFooterResolver.sellPrompt(originProjectId: originProjectId)
+        return FormSheet(
             title: "Sell to Project?",
             description: "Items are in inventory. Would you like to sell them to a project now?",
-            primaryAction: FormSheetAction(title: "Keep in Inventory") {
-                dismiss()
+            primaryAction: FormSheetAction(
+                title: footerStrategy == .addAllToOriginProject
+                    ? "Add All to \(originProject?.name ?? "Project")"
+                    : "Keep in Inventory"
+            ) {
+                if footerStrategy == .addAllToOriginProject {
+                    sellAllToOriginProject()
+                } else {
+                    dismiss()
+                }
             },
-            secondaryAction: FormSheetAction(title: "Back") {
-                currentStep = .addItems
-            }
+            secondaryAction: footerStrategy == .addAllToOriginProject
+                ? FormSheetAction(title: "Keep in Inventory") { dismiss() }
+                : FormSheetAction(title: "Back") { currentStep = .addItems }
         ) {
             VStack(spacing: Spacing.md) {
                 if let error = errorMessage {
@@ -162,13 +191,15 @@ struct ItemEntryFlowView: View {
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 } else {
-                    sellOptionCard(
-                        originProject.map { "Sell All to \($0.name)" } ?? "Sell All to a Project",
-                        icon: "arrow.right.circle",
-                        description: "\(itemCount) \(itemNoun) will be sold"
-                    ) {
-                        selectedItemIds = Set(transactionItems.compactMap(\.id))
-                        proceedToSellTarget()
+                    if originProject == nil {
+                        sellOptionCard(
+                            "Sell All to a Project",
+                            icon: "arrow.right.circle",
+                            description: "\(itemCount) \(itemNoun) will be sold"
+                        ) {
+                            selectedItemIds = Set(transactionItems.compactMap(\.id))
+                            proceedToSellTarget()
+                        }
                     }
 
                     if originProject != nil {
@@ -340,7 +371,10 @@ struct ItemEntryFlowView: View {
                     budgetCategoryId: budgetCategoryId ?? "uncategorized",
                     accountId: accountId,
                     inventoryLabel: inventoryLabel,
-                    userId: authManager.currentUser?.uid
+                    userId: authManager.currentUser?.uid,
+                    resolveInventoryIntentTransactionId: itemsToSell.count == transactionItems.count
+                        ? transactionId
+                        : nil
                 )
                 await MainActor.run {
                     dismiss()

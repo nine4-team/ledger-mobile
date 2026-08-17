@@ -1,5 +1,14 @@
 import SwiftUI
 
+private struct InventoryPurchaseIntentRow: Identifiable {
+    let transaction: Transaction
+    let projectName: String
+    let categoryName: String?
+    let state: InventoryPurchaseIntentState
+
+    var id: String { transaction.id ?? UUID().uuidString }
+}
+
 struct InventoryTransactionsSubTab: View {
     @Environment(InventoryContext.self) private var inventoryContext
     @Environment(AccountContext.self) private var accountContext
@@ -35,9 +44,46 @@ struct InventoryTransactionsSubTab: View {
 
     private var transactionRows: [TransactionListRow] {
         TransactionFilterSortCalculations.groupedRows(
-            for: processedTransactions,
+            for: processedTransactions.filter { transaction in
+                guard let id = transaction.id else { return true }
+                return !plannedPurchaseIntentIds.contains(id)
+            },
             scope: .inventory
         )
+    }
+
+    private var plannedPurchaseIntentIds: Set<String> {
+        Set(plannedPurchaseIntents.map(\.id))
+    }
+
+    private var plannedPurchaseIntents: [InventoryPurchaseIntentRow] {
+        processedTransactions.compactMap { transaction in
+            guard transaction.purchaseHandling == .inventoryResale,
+                  transaction.inventoryIntentResolvedAt == nil,
+                  let intendedProjectId = transaction.intendedProjectId else { return nil }
+
+            let project = accountContext.allProjects.first { $0.id == intendedProjectId }
+            let category = transaction.intendedBudgetCategoryId.flatMap { categoryId in
+                accountContext.allBudgetCategories.first { $0.id == categoryId }
+            }
+            let activeItems = (transaction.itemIds ?? []).compactMap { itemId in
+                inventoryContext.items.first { $0.id == itemId }
+            }
+
+            let state = InventoryPurchaseIntentCalculations.state(
+                transaction: transaction,
+                activeItems: activeItems,
+                projectExists: project != nil,
+                categoryExists: category != nil
+            )
+
+            return InventoryPurchaseIntentRow(
+                transaction: transaction,
+                projectName: project?.name ?? "Unavailable project",
+                categoryName: category?.name,
+                state: state
+            )
+        }
     }
 
     private var uniqueSources: [String] {
@@ -186,17 +232,84 @@ struct InventoryTransactionsSubTab: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                LazyVGrid(
-                    columns: Dimensions.listColumns,
-                    alignment: .leading,
-                    spacing: Spacing.cardListGap
-                ) {
-                    ForEach(transactionRows) { row in
-                        transactionRow(row)
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    if !plannedPurchaseIntents.isEmpty {
+                        plannedForProjectsSection
+                    }
+
+                    if !transactionRows.isEmpty {
+                        LazyVGrid(
+                            columns: Dimensions.listColumns,
+                            alignment: .leading,
+                            spacing: Spacing.cardListGap
+                        ) {
+                            ForEach(transactionRows) { row in
+                                transactionRow(row)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.bottom, Spacing.sm)
+            }
+        }
+    }
+
+    private var plannedForProjectsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Planned for Projects")
+                    .font(Typography.h3)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Text("\(plannedPurchaseIntents.count)")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+
+            Text("Inventory purchases that still need items entered, priced, or sold to their intended project.")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            LazyVGrid(
+                columns: Dimensions.listColumns,
+                alignment: .leading,
+                spacing: Spacing.cardListGap
+            ) {
+                ForEach(plannedPurchaseIntents) { intent in
+                    Button {
+                        navigationTransaction = intent.transaction
+                    } label: {
+                        Card(accent: true) {
+                            VStack(alignment: .leading, spacing: Spacing.sm) {
+                                HStack {
+                                    Text(intent.projectName)
+                                        .font(Typography.body.weight(.semibold))
+                                        .foregroundStyle(BrandColors.textPrimary)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                }
+                                if let source = intent.transaction.source, !source.isEmpty {
+                                    Text(source)
+                                        .font(Typography.small)
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                }
+                                if let categoryName = intent.categoryName {
+                                    Text(categoryName)
+                                        .font(Typography.small)
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                }
+                                Label(intent.state.label, systemImage: intent.state.icon)
+                                    .font(Typography.small.weight(.semibold))
+                                    .foregroundStyle(intent.state == .readyToSell
+                                                     ? BrandColors.primary
+                                                     : BrandColors.textSecondary)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }

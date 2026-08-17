@@ -28,7 +28,7 @@ Proto item capture makes this tab a cross-workflow cleanup work queue: captured 
 ### Adding
 - **Project-grouped list layout** on the Needs Review tab with visual dividers between project sections
 - **Inventory / Unassigned section** — items that are in inventory (not yet sold to a project) or that have no project association get their own section, visually distinct from the project groups. This makes it immediately obvious which items are floating and may need to be assigned.
-- **Proto item sections** — unconverted Item Quick Drafts are shown alongside incomplete items/transactions, grouped by project, intended project, inventory/unassigned, or candidate transaction. These rows point to the same drafts users can also find under the relevant Items surface.
+- **Proto item sections** — unconverted Item Quick Drafts are shown alongside incomplete items/transactions, grouped by project, intended project, inventory/unassigned, or authoritative linked transaction. These rows point to the same drafts users can also find under the relevant Items surface.
 - **Proto item conversion actions** — convert to item, merge with existing item, convert from inventory, or delete.
 - **Breadcrumb navigation** on the item detail view showing Client > Project > Category, with each level tappable
 - **Assign-to-project action (TBD)** — for items in the unassigned/inventory section, a way to assign them to a project directly from the Needs Review tab without navigating away. [Details need further discussion — see Open Questions]

@@ -9,6 +9,7 @@ import { registerLineageTools } from "./tools/lineage.js";
 import { registerAnalyticsTools } from "./tools/analytics.js";
 import { registerAccountTools } from "./tools/accounts.js";
 import { registerInventoryOperationTools } from "./tools/inventory-operations.js";
+import { registerPurchaseIntentTools } from "./tools/purchase-intents.js";
 import { registerResources } from "./resources/index.js";
 import { registerBulkGetterTools } from "./tools/bulk-getters.js";
 import { registerSchemaTools } from "./tools/schema.js";
@@ -59,6 +60,7 @@ export function createLedgerServer(db: Firestore): McpServer {
   registerAnalyticsTools(server, db);
   registerAccountTools(server, db);
   registerInventoryOperationTools(server, db);
+  registerPurchaseIntentTools(server, db);
   registerBulkGetterTools(server, db);
   registerSchemaTools(server, db);
   registerServerInfoTools(server, db);

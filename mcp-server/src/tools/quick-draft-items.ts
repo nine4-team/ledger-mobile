@@ -21,6 +21,7 @@ import {
   quickDraftSourceHints,
 } from "../util/enums.js";
 import { checkTransactionLinkageOnCreate } from "./items.js";
+import { resolveInventoryLabel } from "../util/inventory.js";
 
 const QuickDraftStatus = z.enum(quickDraftItemStatuses);
 const QuickDraftCaptureContext = z.enum(quickDraftCaptureContexts);
@@ -115,6 +116,165 @@ function mergeAttachments(existing: AttachmentRef[], incoming: AttachmentRef[]):
   return merged;
 }
 
+async function validateDraftTransactionLink(
+  db: Firestore,
+  projectId: string | null,
+  transactionId?: string
+): Promise<{ message: string; nextAction: string } | null> {
+  if (!transactionId) return null;
+  const transaction = await getDoc<Transaction>(db, "transactions", transactionId);
+  if (!transaction) {
+    return {
+      message: `Transaction ${transactionId} does not exist.`,
+      nextAction: "Choose a transaction returned by list_transactions.",
+    };
+  }
+  if (transaction.projectId && transaction.projectId !== projectId) {
+    return {
+      message: `Transaction ${transactionId} belongs to project ${transaction.projectId}, not ${projectId ?? "inventory"}.`,
+      nextAction: "Choose a transaction in the draft project, or an inventory acquisition Purchase.",
+    };
+  }
+  if (projectId && !transaction.projectId) {
+    if (transaction.type?.toLowerCase() !== "purchase") {
+      return {
+        message: `Inventory transaction ${transactionId} is not a Purchase acquisition.`,
+        nextAction: "Choose the vendor Purchase that acquired the inventory item.",
+      };
+    }
+    if (transaction.intendedProjectId && transaction.intendedProjectId !== projectId) {
+      return {
+        message: `Inventory transaction ${transactionId} is intended for project ${transaction.intendedProjectId}, not ${projectId}.`,
+        nextAction: "Choose the intended project or update the acquisition intent first.",
+      };
+    }
+  }
+  return null;
+}
+
+async function promoteInventoryDraftToProject(
+  db: Firestore,
+  args: {
+    quickDraftItemId: string;
+    name?: string;
+    projectId: string;
+    transactionId: string;
+    budgetCategoryId: string;
+    spaceId?: string;
+    status: string;
+    source?: string;
+    sku?: string;
+    quantity?: number;
+    purchasePriceCents?: number;
+    projectPriceCents: number;
+    marketValueCents?: number;
+    taxRatePct?: number;
+    notes?: string;
+  },
+  draft: ProtoItem & { id: string },
+  acquisition: Transaction & { id: string }
+) {
+  const categorySnap = await accountCollection(db, "projects")
+    .doc(args.projectId)
+    .collection("budgetCategories")
+    .doc(args.budgetCategoryId)
+    .get();
+  if (!categorySnap.exists) {
+    return validation(
+      `Budget category ${args.budgetCategoryId} is not enabled in project ${args.projectId}.`,
+      "Pick a category from get_project_budget_categories before promoting the draft."
+    );
+  }
+
+  const now = new Date();
+  const uid = getUid();
+  const inventoryLabel = await resolveInventoryLabel(db);
+  const itemRef = accountCollection(db, "items").doc();
+  const purchaseRef = accountCollection(db, "transactions").doc();
+  const rate = args.taxRatePct ?? acquisition.taxRatePct ?? 0;
+  const subtotalCents = args.projectPriceCents;
+  const amountCents = rate > 0
+    ? Math.round(subtotalCents * (1 + rate / 100))
+    : subtotalCents;
+  const sku = cleanString(args.sku) ?? cleanString(draft.sku);
+  const notes = args.notes !== undefined ? args.notes : draft.notes;
+
+  const itemData: Record<string, unknown> = {
+    accountId: getAccountId(),
+    name: cleanString(args.name) ?? cleanString(draft.name) ?? sku ?? "Untitled item",
+    projectId: args.projectId,
+    budgetCategoryId: args.budgetCategoryId,
+    transactionId: purchaseRef.id,
+    status: args.status,
+    quantity: args.quantity ?? draft.quantity ?? 1,
+    images: draft.photos ?? [],
+    source: args.source ?? acquisition.source ?? inventoryLabel,
+    currentSource: inventoryLabel,
+    projectPriceCents: args.projectPriceCents,
+    taxRatePct: rate,
+    createdBy: uid,
+    updatedBy: uid,
+    createdAt: now,
+    updatedAt: now,
+  };
+  if (args.spaceId) itemData.spaceId = args.spaceId;
+  if (sku) itemData.sku = sku;
+  if (notes) itemData.notes = notes;
+  if (args.purchasePriceCents !== undefined) itemData.purchasePriceCents = args.purchasePriceCents;
+  if (args.marketValueCents !== undefined) itemData.marketValueCents = args.marketValueCents;
+
+  const batch = db.batch();
+  batch.set(itemRef, itemData);
+  batch.set(purchaseRef, {
+    type: "Purchase",
+    source: inventoryLabel,
+    projectId: args.projectId,
+    budgetCategoryId: args.budgetCategoryId,
+    amountCents,
+    subtotalCents,
+    itemIds: [itemRef.id],
+    isComplete: true,
+    createdAt: now,
+    updatedAt: now,
+    createdBy: uid,
+  });
+  batch.update(accountCollection(db, "transactions").doc(args.transactionId), {
+    itemIds: FieldValue.arrayRemove(itemRef.id),
+    inventoryIntentResolvedAt: now,
+    updatedAt: now,
+  });
+  batch.set(accountCollection(db, "lineageEdges").doc(), {
+    accountId: getAccountId(),
+    itemId: itemRef.id,
+    fromTransactionId: args.transactionId,
+    toTransactionId: purchaseRef.id,
+    fromProjectId: null,
+    toProjectId: args.projectId,
+    movementKind: "sold",
+    source: "mcp",
+    createdAt: now,
+    createdBy: uid,
+  });
+  batch.update(accountCollection(db, "protoItems").doc(args.quickDraftItemId), {
+    status: "converted",
+    convertedItemId: itemRef.id,
+    convertedAt: now,
+    convertedBy: uid,
+    updatedAt: now,
+    updatedBy: uid,
+  });
+  await batch.commit();
+
+  return asToolResponse({
+    quickDraftItemId: args.quickDraftItemId,
+    itemId: itemRef.id,
+    acquisitionTransactionId: args.transactionId,
+    projectPurchaseTransactionId: purchaseRef.id,
+    routedThroughInventory: true,
+    status: "converted",
+  });
+}
+
 export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── list_quick_draft_items ────────────────────────────────────────────────
   server.tool(
@@ -204,6 +364,31 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
     })
   );
 
+  server.tool(
+    "audit_legacy_quick_draft_transaction_candidates",
+    "[read-only] Audit legacy candidateTransactionId metadata. Candidates are never treated as confirmed; use update_quick_draft_item(transactionId: ...) only after human confirmation.",
+    {
+      activeOnly: z.boolean().default(true),
+      limit: z.coerce.number().int().positive().max(500).default(100),
+    },
+    withTelemetry("audit_legacy_quick_draft_transaction_candidates", async ({ activeOnly, limit }) => {
+      const drafts = await queryDocs<ProtoItem>(accountCollection(db, "protoItems").limit(500));
+      const candidates = drafts
+        .filter((draft) => Boolean(draft.candidateTransactionId))
+        .filter((draft) => !activeOnly || draft.status === "open" || draft.status === "in_review" || draft.status == null)
+        .slice(0, limit)
+        .map((draft) => ({
+          quickDraftItemId: draft.id,
+          projectId: draft.projectId ?? null,
+          sourceHint: draft.sourceHint ?? "unknown",
+          authoritativeTransactionId: draft.transactionId ?? null,
+          legacyCandidateTransactionId: draft.candidateTransactionId,
+          conflict: Boolean(draft.transactionId && draft.transactionId !== draft.candidateTransactionId),
+        }));
+      return asToolResponse(candidates);
+    })
+  );
+
   // ── create_quick_draft_item ──────────────────────────────────────────────
   server.tool(
     "create_quick_draft_item",
@@ -221,13 +406,16 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       quantity: z.coerce.number().int().positive().default(1).describe("Quantity."),
       notes: z.string().optional().describe("Draft notes."),
       extracted: ExtractionInput,
-      candidateTransactionId: z.string().optional().describe("Suggested transaction match."),
       candidateItemId: z.string().optional().describe("Suggested existing item match."),
     },
     withTelemetry("create_quick_draft_item", async (args) => {
       const now = new Date();
       const uid = getUid();
       const projectId = args.projectId ?? null;
+      const linkageError = await validateDraftTransactionLink(db, projectId, args.transactionId);
+      if (linkageError) {
+        return validation(linkageError.message, linkageError.nextAction);
+      }
       const data: Record<string, unknown> = {
         accountId: getAccountId(),
         projectId,
@@ -242,7 +430,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         createdAt: now,
         updatedAt: now,
       };
-      for (const key of ["transactionId", "name", "sku", "notes", "extracted", "candidateTransactionId", "candidateItemId"] as const) {
+      for (const key of ["transactionId", "name", "sku", "notes", "extracted", "candidateItemId"] as const) {
         const value = args[key];
         if (value !== undefined) data[key] = value;
       }
@@ -259,7 +447,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       quickDraftItemId: z.string().describe("Quick draft item ID."),
       projectId: z.string().nullable().optional().describe("Project ID. Pass null to clear."),
       intendedProjectId: z.string().nullable().optional().describe("Intended project ID. Pass null to clear."),
-      transactionId: z.string().nullable().optional().describe("Linked transaction ID. Pass null to clear."),
+      transactionId: z.string().nullable().optional().describe("Authoritative transaction the eventual item should initially join. Pass null to clear."),
       name: z.string().nullable().optional().describe("Draft name. Pass null to clear."),
       captureContext: QuickDraftCaptureContext.optional(),
       status: QuickDraftStatus.optional(),
@@ -269,12 +457,26 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       quantity: z.coerce.number().int().positive().optional(),
       notes: z.string().nullable().optional().describe("Notes. Pass null to clear."),
       extracted: ExtractionInput,
-      candidateTransactionId: z.string().nullable().optional().describe("Candidate transaction. Pass null to clear."),
       candidateItemId: z.string().nullable().optional().describe("Candidate item. Pass null to clear."),
     },
     withTelemetry("update_quick_draft_item", async ({ quickDraftItemId, ...fields }) => {
       const existing = await getDoc<ProtoItem>(db, "protoItems", quickDraftItemId);
       if (!existing) return notFound("Quick draft item", quickDraftItemId, "list_quick_draft_items");
+
+      const effectiveProjectId = fields.projectId === undefined
+        ? (existing.projectId ?? null)
+        : fields.projectId;
+      const effectiveTransactionId = fields.transactionId === undefined
+        ? existing.transactionId
+        : (fields.transactionId ?? undefined);
+      const linkageError = await validateDraftTransactionLink(
+        db,
+        effectiveProjectId,
+        effectiveTransactionId
+      );
+      if (linkageError) {
+        return validation(linkageError.message, linkageError.nextAction);
+      }
 
       const updates: Record<string, unknown> = {
         updatedAt: new Date(),
@@ -326,7 +528,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       quickDraftItemId: z.string().describe("Quick draft item ID."),
       name: z.string().optional().describe("Override item name. Defaults to draft name, SKU, or 'Untitled item'."),
       projectId: z.string().nullable().optional().describe("Override project ID. Omit to use draft projectId. Pass null for inventory."),
-      transactionId: z.string().nullable().optional().describe("Override transaction ID. Omit to use draft transactionId/candidateTransactionId. Pass null to clear."),
+      transactionId: z.string().nullable().optional().describe("Override the authoritative transaction ID. Omit to use draft.transactionId. Pass null to clear."),
       budgetCategoryId: z.string().nullable().optional().describe("Budget category. Auto-inherited from transaction when possible. Must be absent/null for inventory."),
       spaceId: z.string().optional().describe("Optional destination space."),
       status: z.string().default("purchased").describe("Real item status."),
@@ -389,18 +591,75 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       const resolvedTransactionId =
         args.transactionId !== undefined
           ? (args.transactionId ?? undefined)
-          : (draft.transactionId ?? draft.candidateTransactionId);
+          : draft.transactionId;
+
+      let resolvedTransaction: (Transaction & { id: string }) | null = null;
+      if (resolvedTransactionId) {
+        resolvedTransaction = await getDoc<Transaction>(db, "transactions", resolvedTransactionId);
+        if (!resolvedTransaction) {
+          return notFound("Transaction", resolvedTransactionId, "list_transactions");
+        }
+      }
+
+      if (resolvedProjectId && resolvedTransaction?.projectId && resolvedTransaction.projectId !== resolvedProjectId) {
+        return validation(
+          `Transaction ${resolvedTransactionId} belongs to project ${resolvedTransaction.projectId}, not ${resolvedProjectId}.`,
+          "Choose a transaction in the draft's project, or an inventory acquisition transaction."
+        );
+      }
+      if (!resolvedProjectId && resolvedTransaction?.projectId) {
+        return validation(
+          `Transaction ${resolvedTransactionId} is project-scoped and cannot be attached to an inventory item.`,
+          "Clear transactionId or promote the draft into the transaction's project."
+        );
+      }
 
       let resolvedTaxRate = args.taxRatePct;
       let resolvedBudgetCategoryId = args.budgetCategoryId ?? undefined;
-      if ((resolvedTaxRate === undefined || resolvedBudgetCategoryId === undefined) && resolvedTransactionId) {
-        const tx = await getDoc<Transaction>(db, "transactions", resolvedTransactionId);
-        if (resolvedTaxRate === undefined && tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
-        if (resolvedBudgetCategoryId === undefined && tx?.budgetCategoryId) {
-          resolvedBudgetCategoryId = tx.budgetCategoryId;
+      if (resolvedTransaction) {
+        if (resolvedTaxRate === undefined && resolvedTransaction.taxRatePct != null) resolvedTaxRate = resolvedTransaction.taxRatePct;
+        if (resolvedBudgetCategoryId === undefined && resolvedTransaction.budgetCategoryId) {
+          resolvedBudgetCategoryId = resolvedTransaction.budgetCategoryId;
         }
       }
       if (!resolvedProjectId) resolvedBudgetCategoryId = undefined;
+
+      if (resolvedProjectId && resolvedTransaction && !resolvedTransaction.projectId) {
+        if (resolvedTransaction.type?.toLowerCase() !== "purchase") {
+          return validation(
+            `Inventory transaction ${resolvedTransactionId} is not a Purchase acquisition.`,
+            "Select the vendor Purchase that acquired the inventory item."
+          );
+        }
+        if (resolvedTransaction.intendedProjectId
+          && resolvedTransaction.intendedProjectId !== resolvedProjectId) {
+          return validation(
+            `Inventory transaction ${resolvedTransactionId} is intended for project ${resolvedTransaction.intendedProjectId}, not ${resolvedProjectId}.`,
+            "Choose the intended project or update the acquisition intent before promoting the draft."
+          );
+        }
+        const saleCategoryId = args.budgetCategoryId
+          ?? resolvedTransaction.intendedBudgetCategoryId;
+        if (!saleCategoryId) {
+          return validation(
+            "A project budget category is required to sell this draft from inventory.",
+            "Pass budgetCategoryId or set intendedBudgetCategoryId on the acquisition transaction."
+          );
+        }
+        if (args.projectPriceCents == null || args.projectPriceCents <= 0) {
+          return validation(
+            "projectPriceCents must be greater than zero for an inventory-to-project sale.",
+            "Set the client-facing project price before promoting the draft."
+          );
+        }
+        return promoteInventoryDraftToProject(db, {
+          ...args,
+          projectId: resolvedProjectId,
+          transactionId: resolvedTransactionId!,
+          budgetCategoryId: saleCategoryId,
+          projectPriceCents: args.projectPriceCents,
+        }, draft, resolvedTransaction);
+      }
 
       if (!resolvedProjectId && resolvedBudgetCategoryId) {
         return validation(

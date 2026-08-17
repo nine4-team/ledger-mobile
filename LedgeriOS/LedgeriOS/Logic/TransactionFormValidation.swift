@@ -52,16 +52,15 @@ enum TransactionFormValidation {
         type != nil
     }
 
-    /// Business-paid itemized purchases are first recorded in inventory, then
-    /// optionally sold into the project. Returns and other transaction types
-    /// must remain in the selected destination scope.
+    /// Only an explicit resale decision routes a business-paid purchase through
+    /// inventory. Payer and category alone are not sufficient evidence.
     static func shouldRouteThroughInventory(
         type: TransactionType?,
-        isItemizedCategory: Bool,
-        purchasedBy: String
+        purchasedBy: String,
+        purchaseHandling: PurchaseHandling?
     ) -> Bool {
         type == .purchase
-            && isItemizedCategory
             && purchasedBy == "design-business"
+            && purchaseHandling == .inventoryResale
     }
 }

@@ -70,6 +70,8 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     var quantity: Int?
     var notes: String?
     var extracted: ProtoItemExtraction?
+    /// Legacy suggestion metadata. Read-only for migration/audit; new flows
+    /// write confirmed associations to `transactionId` instead.
     var candidateTransactionId: String?
     var candidateItemId: String?
     var convertedItemId: String?

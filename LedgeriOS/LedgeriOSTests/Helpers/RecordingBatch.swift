@@ -29,6 +29,7 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
     private(set) var autoIdSets: [AutoIdSetOperation] = []
     private(set) var deletes: [DeleteOperation] = []
     private(set) var commitCalled = false
+    var commitError: Error?
 
     /// Paths that should report as already-existing from `documentExists`.
     /// Tests can preload this to simulate canonical sale docs that already exist.
@@ -56,6 +57,7 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
 
     func commit() async throws {
         commitCalled = true
+        if let commitError { throw commitError }
     }
 
     func commit(onError: @escaping @Sendable (Error) -> Void) {

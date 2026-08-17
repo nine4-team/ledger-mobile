@@ -15,6 +15,7 @@ Platform-agnostic design specs documenting business rules, entity relationships,
 | [lineage-tracking.md](lineage-tracking.md) | The four edge types, creation rules, and audit trail queries |
 | [return-and-sale-tracking.md](return-and-sale-tracking.md) | Return flow, disposition lifecycle, and incomplete return detection |
 | [transaction-audit.md](transaction-audit.md) | Completeness calculation, variance analysis, and missing price tracking |
+| [vendor-credits.md](vendor-credits.md) | Vendor cancellation credits and other vendor-issued purchase offsets; distinct from physical returns |
 | [spaces.md](spaces.md) | Organization, scoping, templates, and checklists |
 | [reassign-vs-sell.md](reassign-vs-sell.md) | Correct/Move (no financial impact) vs Sell (scope change with budget impact) vs Return (vendor or inventory). UI menu labels and visibility rules. |
 | [reports.md](reports.md) | Invoice, client summary, and property management report generation |

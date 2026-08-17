@@ -1,5 +1,13 @@
 # Ledger Specs — Changelog
 
+## 2026-08-17
+- **Started purchase-handling implementation.** Added explicit iOS purchase routing, durable intended project/category fields, no-markup reimbursement pricing, initial From Inventory quick-draft capture, atomic app/MCP inventory-linked promotion, the Business Inventory Planned for Projects queue, and MCP intent/correction/audit tools.
+- **Specified explicit handling for business-paid purchases.** The New Transaction flow distinguishes inventory resale from a project purchase temporarily covered by the design business instead of inferring intent from purchaser or category.
+- **Added durable inventory destination intent.** Resale purchases may carry one intended project and category while retaining inventory `projectId`/`budgetCategoryId` invariants; project-scoped entry supplies the current project, while unscoped entry may remain general inventory.
+- **Defined inventory follow-up and grouping.** Planned-for-project purchases surface waiting, ready, partial, blocked, and unavailable states. One acquisition transaction has at most one intended project/category; mixed destinations are corrected rather than supported.
+- **Specified direct reimbursement and MCP cleanup behavior.** Covered project purchases remain in-project with `owed-to-company` and no-markup item pricing. MCP tooling must distinguish real inventory movements from atomic corrections and provide dry-run audits for ambiguous legacy data.
+- **Normalized quick-draft transaction association.** `ProtoItem.transactionId` is the single authoritative transaction the eventual item should initially join; `candidateTransactionId` is deprecated. Project drafts linked to inventory transactions convert through one atomic inventory-create-and-sell operation, with the final project Purchase and lineage preserving the acquisition.
+
 ## 2026-06-29
 - **Clarified returned paid item credits.** Returning an item that was already charged on a paid invoice creates invoice credit demand, not a synthetic transaction. The active model writes an ordinary draft invoice with manual credit lines, copies amount/category from the original paid invoice line, and dedupes by deterministic line ID.
 - **Rejected extra credit schema for now.** No new invoice purpose, credit reason enum, credited item field, source invoice field, or source invoice line field is added for this workflow. Deterministic line identity plus invoice notes cover the current need.

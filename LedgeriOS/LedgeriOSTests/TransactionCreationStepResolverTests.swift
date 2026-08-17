@@ -55,6 +55,99 @@ struct TransactionCreationStepResolverTests {
         ])
     }
 
+    @Test("Business-paid purchase asks how the purchase should be handled")
+    func businessPurchaseIncludesHandlingDecision() {
+        let steps = TransactionCreationStepResolver.orderedSteps(
+            type: .purchase,
+            context: .project("project-123"),
+            destinationProjectId: "project-123",
+            purchasedBy: "design-business"
+        )
+
+        #expect(steps == [
+            .typeSelection,
+            .whoPaid,
+            .purchaseHandling,
+            .budgetCategory,
+            .vendor,
+            .details,
+        ])
+    }
+
+    @Test("Client-paid purchase does not ask for business purchase handling")
+    func clientPurchaseSkipsHandlingDecision() {
+        let steps = TransactionCreationStepResolver.orderedSteps(
+            type: .purchase,
+            context: .project("project-123"),
+            destinationProjectId: "project-123",
+            purchasedBy: "client-card"
+        )
+
+        #expect(!steps.contains(.purchaseHandling))
+    }
+
+    @Test("Only explicit resale handling routes through inventory")
+    func explicitHandlingControlsInventoryRouting() {
+        #expect(TransactionFormValidation.shouldRouteThroughInventory(
+            type: .purchase,
+            purchasedBy: "design-business",
+            purchaseHandling: .inventoryResale
+        ))
+        #expect(!TransactionFormValidation.shouldRouteThroughInventory(
+            type: .purchase,
+            purchasedBy: "design-business",
+            purchaseHandling: .projectReimbursement
+        ))
+        #expect(!TransactionFormValidation.shouldRouteThroughInventory(
+            type: .purchase,
+            purchasedBy: "client-card",
+            purchaseHandling: .inventoryResale
+        ))
+    }
+
+    @Test("Planned inventory purchase waits when no items have been entered")
+    func plannedPurchaseWaitsForItems() {
+        var transaction = Transaction()
+        transaction.intendedBudgetCategoryId = "furnishings"
+
+        #expect(InventoryPurchaseIntentCalculations.state(
+            transaction: transaction,
+            activeItems: [],
+            projectExists: true,
+            categoryExists: true
+        ) == .waitingForItems)
+    }
+
+    @Test("Planned inventory purchase requires a client-facing price")
+    func plannedPurchaseRequiresProjectPrice() {
+        var transaction = Transaction()
+        transaction.intendedBudgetCategoryId = "furnishings"
+        var item = Item()
+        item.purchasePriceCents = 10_000
+
+        #expect(InventoryPurchaseIntentCalculations.state(
+            transaction: transaction,
+            activeItems: [item],
+            projectExists: true,
+            categoryExists: true
+        ) == .missingProjectPrices)
+    }
+
+    @Test("Planned inventory purchase is ready after destination and pricing validation")
+    func plannedPurchaseIsReadyToSell() {
+        var transaction = Transaction()
+        transaction.intendedBudgetCategoryId = "furnishings"
+        var item = Item()
+        item.projectPriceCents = 15_000
+
+        #expect(InventoryPurchaseIntentCalculations.state(
+            transaction: transaction,
+            activeItems: [item],
+            projectExists: true,
+            categoryExists: true
+        ) == .readyToSell)
+    }
+
     @Test("Inventory purchase includes project selection")
     func inventoryPurchaseIncludesDestinationSelection() {
         let steps = TransactionCreationStepResolver.orderedSteps(
@@ -102,5 +195,20 @@ struct TransactionCreationStepResolverTests {
             .budgetCategory,
             .details,
         ])
+    }
+
+    @Test("Added items must continue to the inventory destination decision")
+    func addedItemsCannotExitBeforeDestinationDecision() {
+        #expect(ItemEntryFlowFooterResolver.addItems(itemCount: 2) == .continueToDestination)
+    }
+
+    @Test("Project-origin item entry defaults to adding all items to that project")
+    func projectOriginDefaultsToProject() {
+        #expect(ItemEntryFlowFooterResolver.sellPrompt(originProjectId: "project-123") == .addAllToOriginProject)
+    }
+
+    @Test("Inventory-origin item entry can keep items in inventory")
+    func inventoryOriginDefaultsToInventory() {
+        #expect(ItemEntryFlowFooterResolver.sellPrompt(originProjectId: nil) == .keepInInventory)
     }
 }

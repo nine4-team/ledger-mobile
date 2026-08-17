@@ -317,6 +317,59 @@ struct SellToProjectExecutionTests {
         #expect(purchase["isCanonicalInventorySale"] == nil)
         #expect(purchase["inventorySaleDirection"] == nil)
     }
+
+    @Test("resolving a planned acquisition is committed in the sale batch")
+    func resolvesInventoryIntentInSaleBatch() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "i1", projectId: nil, purchasePriceCents: 1000,
+            transactionId: "acquisitionTx", projectPriceCents: 1200
+        )
+
+        try await service.sellToProject(
+            items: [item], destinationProjectId: dstProj,
+            budgetCategoryId: catId, accountId: acct, userId: "user1",
+            resolveInventoryIntentTransactionId: "acquisitionTx"
+        )
+
+        let acquisitionUpdates = batch.updatesForPath(
+            "accounts/\(acct)/transactions/acquisitionTx"
+        )
+        #expect(acquisitionUpdates.count == 2)
+        let resolution = acquisitionUpdates.first {
+            $0.fields["inventoryIntentResolvedAt"] != nil
+        }
+        #expect(resolution != nil)
+        #expect(resolution?.fields["updatedBy"] as? String == "user1")
+        #expect(batch.commitCalled)
+    }
+
+    @Test("sale batch failure propagates without a separate intent-resolution write")
+    func intentResolutionCommitFailurePropagates() async {
+        enum ExpectedFailure: Error { case commit }
+
+        let batch = RecordingBatch()
+        batch.commitError = ExpectedFailure.commit
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "i1", projectId: nil, purchasePriceCents: 1000,
+            transactionId: "acquisitionTx", projectPriceCents: 1200
+        )
+
+        await #expect(throws: ExpectedFailure.self) {
+            try await service.sellToProject(
+                items: [item], destinationProjectId: dstProj,
+                budgetCategoryId: catId, accountId: acct,
+                resolveInventoryIntentTransactionId: "acquisitionTx"
+            )
+        }
+
+        #expect(batch.commitCalled)
+        #expect(batch.updatesForPath(
+            "accounts/\(acct)/transactions/acquisitionTx"
+        ).contains { $0.fields["inventoryIntentResolvedAt"] != nil })
+    }
 }
 
 // MARK: - returnToInventory (I3)

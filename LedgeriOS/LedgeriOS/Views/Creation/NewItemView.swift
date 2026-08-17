@@ -19,6 +19,8 @@ struct NewItemView: View {
     @State private var selectedProject: Project?
     private let initialImageRefs: [AttachmentRef]
     private let initialSkuCandidates: [String]
+    private let convertingProtoItemId: String?
+    private let initialSourceHint: ProtoItemSourceHint?
     private let onCreated: (([String]) -> Void)?
 
     init(
@@ -29,6 +31,8 @@ struct NewItemView: View {
         initialSkuCandidates: [String] = [],
         initialQuantity: Int? = nil,
         initialImageRefs: [AttachmentRef] = [],
+        convertingProtoItemId: String? = nil,
+        initialSourceHint: ProtoItemSourceHint? = nil,
         onCreated: (([String]) -> Void)? = nil
     ) {
         self._resolvedContext = State(initialValue: context)
@@ -38,11 +42,14 @@ struct NewItemView: View {
         self._quantity = State(initialValue: min(max(initialQuantity ?? 1, 1), 9999))
         self.initialSkuCandidates = initialSkuCandidates
         self.initialImageRefs = initialImageRefs
+        self.convertingProtoItemId = convertingProtoItemId
+        self.initialSourceHint = initialSourceHint
         self.onCreated = onCreated
     }
 
     @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
     @Environment(MediaService.self) private var mediaService
     @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(\.dismiss) private var dismiss
@@ -71,7 +78,10 @@ struct NewItemView: View {
 
     // Scoped transaction subscription
     @State private var scopedTransactions: [Transaction] = []
+    @State private var loadedSelectedTransaction: Transaction?
     @State private var transactionListener: ListenerRegistration?
+    @State private var enabledProjectCategoryIds: Set<String> = []
+    @State private var projectCategoryListener: ListenerRegistration?
 
     // Pickers
     @State private var showDestinationPicker = false
@@ -81,6 +91,7 @@ struct NewItemView: View {
     @State private var showVendorPicker = false
     @State private var showInventorySaleCategoryPicker = false
     @State private var isCreating = false
+    @State private var submissionError: String?
 
     // Image source
     @State private var showImageSourceMenu = false
@@ -90,6 +101,7 @@ struct NewItemView: View {
 
     private let itemsService = ItemsService()
     private let transactionsService = TransactionsService()
+    private let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
 
     private var isValid: Bool {
         guard resolvedContext != nil,
@@ -99,8 +111,22 @@ struct NewItemView: View {
         if projectId != nil {
             switch projectTransactionMode {
             case .existing:
-                if selectedTransactionId == nil { return false }
+                guard let selectedTransaction else { return false }
+                if selectedTransaction.projectId != nil,
+                   selectedTransaction.projectId != projectId { return false }
+                if initialSourceHint == .fromInventory,
+                   selectedTransaction.projectId != nil { return false }
+                if selectedTransaction.projectId == nil {
+                    guard convertingProtoItemId != nil,
+                          selectedTransaction.transactionType == .purchase,
+                          selectedInventorySaleCategoryId != nil,
+                          (parseCents(projectPrice) ?? 0) > 0 else { return false }
+                    if let intendedProjectId = selectedTransaction.intendedProjectId,
+                       intendedProjectId != projectId { return false }
+                }
             case .createViaInventory:
+                if convertingProtoItemId != nil,
+                   initialSourceHint == .fromInventory { return false }
                 if selectedInventorySaleCategoryId == nil { return false }
             }
         }
@@ -120,10 +146,28 @@ struct NewItemView: View {
 
     private var selectedTransaction: Transaction? {
         scopedTransactions.first { $0.id == selectedTransactionId }
+            ?? (loadedSelectedTransaction?.id == selectedTransactionId ? loadedSelectedTransaction : nil)
+    }
+
+    private var selectedTransactionIsInventoryAcquisition: Bool {
+        guard projectId != nil, let selectedTransaction else { return false }
+        return selectedTransaction.projectId == nil
+    }
+
+    private var transactionPickerTransactions: [Transaction] {
+        if initialSourceHint == .fromInventory {
+            return scopedTransactions.filter {
+                $0.projectId == nil
+                    && $0.transactionType == .purchase
+                    && ($0.intendedProjectId == nil || $0.intendedProjectId == projectId)
+            }
+        }
+        return scopedTransactions.filter { $0.projectId == projectId }
     }
 
     private var enabledPurchaseCategories: [BudgetCategory] {
-        let enabledIds = Set(projectContext?.projectBudgetCategories.compactMap(\.id) ?? [])
+        let contextIds = Set(projectContext?.projectBudgetCategories.compactMap(\.id) ?? [])
+        let enabledIds = enabledProjectCategoryIds.isEmpty ? contextIds : enabledProjectCategoryIds
         return accountContext.allBudgetCategories
             .filter { category in
                 guard let id = category.id else { return false }
@@ -202,11 +246,14 @@ struct NewItemView: View {
         }
         .adaptivePresentation(isPresented: $showTransactionPicker, style: .picker) {
             TransactionPickerModal(
-                transactions: scopedTransactions,
+                transactions: transactionPickerTransactions,
                 selectedId: selectedTransactionId,
                 onSelect: { tx in
                     projectTransactionMode = .existing
                     selectedTransactionId = tx.id
+                    if tx.projectId == nil, let intendedCategoryId = tx.intendedBudgetCategoryId {
+                        selectedInventorySaleCategoryId = intendedCategoryId
+                    }
                 }
             )
         }
@@ -224,13 +271,21 @@ struct NewItemView: View {
         }
         .task {
             startTransactionSubscription()
+            startProjectCategorySubscription()
+            await loadSelectedTransactionIfNeeded()
+        }
+        .task(id: selectedTransactionId) {
+            await loadSelectedTransactionIfNeeded()
         }
         .onChange(of: resolvedContext) { _, _ in
             startTransactionSubscription()
+            startProjectCategorySubscription()
         }
         .onDisappear {
             transactionListener?.remove()
             transactionListener = nil
+            projectCategoryListener?.remove()
+            projectCategoryListener = nil
         }
         .onAppear {
             if case .project(_, let spaceId) = resolvedContext {
@@ -340,7 +395,8 @@ struct NewItemView: View {
             },
             secondaryAction: FormSheetAction(title: "Back") {
                 currentStep = 1
-            }
+            },
+            error: submissionError
         ) {
             VStack(spacing: Spacing.md) {
                 Text("Step 2 of 2")
@@ -355,10 +411,27 @@ struct NewItemView: View {
                             .foregroundStyle(BrandColors.textSecondary)
 
                         if projectId != nil {
-                            Text("Choose how this item gets attached to the project: link it to an existing transaction, or create it through inventory so Ledger creates an inventory sale transaction automatically.")
+                            Text(convertingProtoItemId != nil && initialSourceHint == .fromInventory
+                                ? "Select the business inventory purchase that acquired this item. Ledger will create the project Purchase and sale lineage together."
+                                : "Choose how this item gets attached to the project: link it to an existing transaction, or create it through inventory so Ledger creates an inventory sale transaction automatically.")
                                 .font(Typography.caption)
                                 .foregroundStyle(BrandColors.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        if selectedTransactionIsInventoryAcquisition {
+                            Text("This inventory acquisition will be converted through a new Purchase in this project.")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.textSecondary)
+                            Button { showInventorySaleCategoryPicker = true } label: {
+                                pickerButton(label: "Category: \(inventorySaleCategoryLabel)")
+                            }
+                            .buttonStyle(.plain)
+                        } else if initialSourceHint == .fromInventory,
+                                  selectedTransaction?.projectId != nil {
+                            Text("This draft is marked From Inventory. Select its inventory acquisition transaction or remove the marker before converting.")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.destructive)
                         }
 
                         Button { showTransactionPicker = true } label: {
@@ -369,7 +442,8 @@ struct NewItemView: View {
                         }
                         .buttonStyle(.plain)
 
-                        if projectId != nil {
+                        if projectId != nil,
+                           !(convertingProtoItemId != nil && initialSourceHint == .fromInventory) {
                             Button {
                                 projectTransactionMode = .createViaInventory
                                 selectedTransactionId = nil
@@ -661,7 +735,8 @@ struct NewItemView: View {
 
         let scope: ListScope
         switch context {
-        case .project(let id, _): scope = .project(id)
+        case .project(let id, _):
+            scope = initialSourceHint == .fromInventory ? .all : .project(id)
         case .inventory: scope = .inventory
         }
 
@@ -672,6 +747,50 @@ struct NewItemView: View {
             Task { @MainActor in
                 self.scopedTransactions = transactions
             }
+        }
+    }
+
+    private func startProjectCategorySubscription() {
+        projectCategoryListener?.remove()
+        projectCategoryListener = nil
+
+        guard let accountId = accountContext.currentAccountId,
+              let projectId else {
+            enabledProjectCategoryIds = []
+            return
+        }
+
+        enabledProjectCategoryIds = Set(projectContext?.projectBudgetCategories.compactMap(\.id) ?? [])
+        projectCategoryListener = projectBudgetCategoriesService.subscribeToProjectBudgetCategories(
+            accountId: accountId,
+            projectId: projectId
+        ) { categories in
+            Task { @MainActor in
+                self.enabledProjectCategoryIds = Set(categories.compactMap(\.id))
+            }
+        }
+    }
+
+    @MainActor
+    private func loadSelectedTransactionIfNeeded() async {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = selectedTransactionId else {
+            loadedSelectedTransaction = nil
+            return
+        }
+        do {
+            loadedSelectedTransaction = try await transactionsService.getTransaction(
+                accountId: accountId,
+                transactionId: transactionId
+            )
+            if let tx = loadedSelectedTransaction,
+               tx.projectId == nil,
+               selectedInventorySaleCategoryId == nil {
+                selectedInventorySaleCategoryId = tx.intendedBudgetCategoryId
+            }
+        } catch {
+            loadedSelectedTransaction = nil
+            submissionError = "Couldn't load the linked transaction."
         }
     }
 
@@ -695,6 +814,11 @@ struct NewItemView: View {
         item.status = status
         item.purchasePriceCents = parseCents(purchasePrice)
         item.projectPriceCents = parseCents(projectPrice)
+        if projectId != nil,
+           item.projectPriceCents == nil,
+           selectedTransaction?.purchaseHandling == .projectReimbursement {
+            item.projectPriceCents = item.purchasePriceCents
+        }
         item.marketValueCents = parseCents(marketValue)
         item.transactionId = selectedTransactionId
         item.images = initialImageRefs.isEmpty ? nil : initialImageRefs
@@ -708,6 +832,21 @@ struct NewItemView: View {
             createProjectItemViaInventory(
                 accountId: accountId,
                 destinationProjectId: destinationProjectId,
+                item: item
+            )
+            return
+        }
+
+
+        if let acquisition = selectedTransaction,
+           acquisition.projectId == nil,
+           let destinationProjectId = projectId,
+           let protoItemId = convertingProtoItemId {
+            createProjectDraftFromInventory(
+                accountId: accountId,
+                destinationProjectId: destinationProjectId,
+                protoItemId: protoItemId,
+                acquisition: acquisition,
                 item: item
             )
             return
@@ -740,6 +879,142 @@ struct NewItemView: View {
         } catch {
             // Offline-first: should not fail
             isCreating = false
+            submissionError = "Couldn't create the item."
+        }
+    }
+
+    /// Converts a project quick draft linked to an inventory acquisition in one
+    /// Firestore batch. The item never exists in a stranded intermediate state:
+    /// acquisition lineage, project Purchase, final item scope, and converted
+    /// draft status commit together.
+    private func createProjectDraftFromInventory(
+        accountId: String,
+        destinationProjectId: String,
+        protoItemId: String,
+        acquisition: Transaction,
+        item: Item
+    ) {
+        guard let acquisitionId = acquisition.id,
+              let categoryId = selectedInventorySaleCategoryId,
+              let projectPriceCents = item.projectPriceCents,
+              projectPriceCents > 0 else {
+            submissionError = "Choose a project category and enter a project price."
+            return
+        }
+        if let intendedProjectId = acquisition.intendedProjectId,
+           intendedProjectId != destinationProjectId {
+            submissionError = "This acquisition is intended for a different project."
+            return
+        }
+
+        isCreating = true
+        submissionError = nil
+        Task {
+            do {
+                let db = Firestore.firestore()
+                let projectCategoryRef = db.document(
+                    "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories/\(categoryId)"
+                )
+                guard try await projectCategoryRef.getDocument().exists else {
+                    await MainActor.run {
+                        isCreating = false
+                        submissionError = "That category is no longer enabled for this project."
+                    }
+                    return
+                }
+
+                let batch = db.batch()
+                let txRef = db.collection("accounts/\(accountId)/transactions").document()
+                let itemRefs = (0..<quantity).map { _ in
+                    db.collection("accounts/\(accountId)/items").document()
+                }
+                let itemIds = itemRefs.map(\.documentID)
+                let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+                let rate = item.taxRatePct ?? acquisition.taxRatePct ?? 0
+                let subtotalCents = projectPriceCents * itemIds.count
+                let amountCents = rate > 0
+                    ? Int((Double(subtotalCents) * (1 + rate / 100)).rounded())
+                    : subtotalCents
+
+                batch.setData([
+                    "type": TransactionType.purchase.rawValue,
+                    "source": inventoryLabel,
+                    "projectId": destinationProjectId,
+                    "budgetCategoryId": categoryId,
+                    "amountCents": amountCents,
+                    "subtotalCents": subtotalCents,
+                    "itemIds": itemIds,
+                    "isComplete": true,
+                    "createdAt": FieldValue.serverTimestamp(),
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ], forDocument: txRef)
+
+                for itemRef in itemRefs {
+                    var copy = item
+                    copy.id = itemRef.documentID
+                    copy.accountId = accountId
+                    copy.projectId = destinationProjectId
+                    copy.budgetCategoryId = categoryId
+                    copy.transactionId = txRef.documentID
+                    copy.currentSource = inventoryLabel
+                    copy.source = copy.source ?? acquisition.source
+                    copy.taxRatePct = rate
+
+                    var fields = try Firestore.Encoder().encode(copy)
+                    fields["accountId"] = accountId
+                    fields["projectId"] = destinationProjectId
+                    fields["budgetCategoryId"] = categoryId
+                    fields["transactionId"] = txRef.documentID
+                    fields["currentSource"] = inventoryLabel
+                    fields["updatedAt"] = FieldValue.serverTimestamp()
+                    batch.setData(fields, forDocument: itemRef)
+
+                    batch.setData([
+                        "accountId": accountId,
+                        "itemId": itemRef.documentID,
+                        "fromTransactionId": acquisitionId,
+                        "toTransactionId": txRef.documentID,
+                        "fromProjectId": NSNull(),
+                        "toProjectId": destinationProjectId,
+                        "movementKind": "sold",
+                        "source": "app",
+                        "createdAt": FieldValue.serverTimestamp(),
+                    ], forDocument: db.collection("accounts/\(accountId)/lineageEdges").document())
+                }
+
+                batch.updateData([
+                    "itemIds": FieldValue.arrayRemove(itemIds),
+                    "inventoryIntentResolvedAt": FieldValue.serverTimestamp(),
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ], forDocument: db.document("accounts/\(accountId)/transactions/\(acquisitionId)"))
+
+                var draftFields: [String: Any] = [
+                    "status": ProtoItemStatus.converted.rawValue,
+                    "convertedItemId": itemIds[0],
+                    "convertedAt": FieldValue.serverTimestamp(),
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ]
+                if let userId = authManager.currentUser?.uid {
+                    draftFields["convertedBy"] = userId
+                    draftFields["updatedBy"] = userId
+                }
+                batch.updateData(
+                    draftFields,
+                    forDocument: db.document("accounts/\(accountId)/protoItems/\(protoItemId)")
+                )
+
+                try await batch.commit()
+                await MainActor.run {
+                    onCreated?(itemIds)
+                    dismiss()
+                    enqueueImages(for: itemIds, accountId: accountId)
+                }
+            } catch {
+                await MainActor.run {
+                    isCreating = false
+                    submissionError = "Couldn't convert the draft from inventory. No records were changed."
+                }
+            }
         }
     }
 

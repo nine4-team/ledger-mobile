@@ -46,7 +46,7 @@ At review time, ask what the business needs.
 
 This means capture should not require price, vendor, tax, budget category, SKU, transaction, project price, or final item details. It should prioritize repeated capture speed: optional quick name, photo, tag photo, save, next.
 
-The add flow is photo-first with only one optional text field: a quick name/label. When the user taps add for an Item Quick Draft, the app shows the lightweight draft form and lets the user add photos from camera or photo library. The user must be able to select multiple photos from the library and take multiple camera photos before returning to the form. Source, notes, SKU, vendor, category, price, and other item metadata are collected later during conversion, when the draft is converted into or merged with a real `Item`.
+The add flow is photo-first with one optional text field: a quick name/label. Project-scoped capture may also expose the lightweight **From Inventory** affordance because it records routing intent without requiring conversion metadata. When the user taps add for an Item Quick Draft, the app shows the lightweight draft form and lets the user add photos from camera or photo library. The user must be able to select multiple photos from the library and take multiple camera photos before returning to the form. Source, notes, SKU, vendor, category, price, and other item metadata are collected later during conversion, when the draft is converted into or merged with a real `Item`.
 
 ## Entry Points
 
@@ -81,7 +81,7 @@ This handles: "We bought this, but it will probably go to Sandra later."
 
 Transaction-scoped capture is allowed but should not be the primary flow. If a proto item is captured from a transaction detail screen:
 
-- `candidateTransactionId` is set.
+- `transactionId` is set to that transaction as the authoritative association.
 - `projectId` may be inherited from the transaction if present.
 - The proto item still remains separate from real items until converted.
 
@@ -183,7 +183,7 @@ Only `open` and `in_review` proto items appear in active review queues.
 
 ### Conversion Metadata
 
-Source, destination, SKU, vendor, category, price, notes, and candidate matches are conversion metadata. They are collected when an Item Quick Draft is turned into a real item, merged with an item, or routed through the inventory-to-project flow. They should not be requested in the initial photo capture flow.
+Source, destination, SKU, vendor, category, price, notes, and suggested matches are conversion metadata. They are collected when an Item Quick Draft is turned into a real item, merged with an item, or routed through the inventory-to-project flow. Except for the lightweight **From Inventory** hint, they should not be required in the initial photo capture flow.
 
 Conversion hints should be simple and reversible:
 
@@ -191,11 +191,13 @@ Conversion hints should be simple and reversible:
 |---|---|
 | `projectId` | Project the capture is currently associated with. Null means inventory/unassigned. |
 | `intendedProjectId` | Destination project hint for an inventory capture. |
+| `transactionId` | The single authoritative transaction the eventual item should initially join. Null means no transaction has been selected yet. |
 | `sourceHint` | One of `unknown`, `client_purchase`, `business_purchase`, `from_inventory`. `from_inventory` may be set by the card-level **From Inventory** control. |
-| `candidateTransactionId` | Possible matching transaction. Not authoritative. |
 | `candidateItemId` | Possible matching item. Not authoritative until converted. |
 
-Hints never create budget or transaction effects by themselves.
+`transactionId` is not a suggestion field. Capturing from Transaction Detail sets it immediately. A transaction suggested later by Ledger remains transient until a human accepts it; acceptance writes `transactionId`. `candidateTransactionId` is deprecated and must not be used as a promotion fallback.
+
+Hints and transaction association never create budget or transaction effects by themselves.
 
 ## Conversion
 
@@ -207,6 +209,13 @@ The proto item's photos and context are used to create a new `Item`.
 
 If the proto item is project-scoped, conversion must choose or create a valid project transaction/category before the item becomes budget-impacting. If the proto item is inventory-scoped, the new item is created in inventory with `projectId == null` and `budgetCategoryId == null`.
 
+For a project-scoped quick draft with `transactionId`, conversion resolves the referenced transaction before writing:
+
+- If `transaction.projectId == protoItem.projectId`, create the item directly in that project and link it to the selected project transaction.
+- If `transaction.projectId == null`, use the atomic inventory-transaction-to-project-sale path defined below.
+- If the transaction belongs to another project, block conversion until the association is corrected.
+- If `transactionId` is null, the draft remains unconverted until the user selects or creates the transaction it should join.
+
 The convert flow reuses the normal item creation flow seeded with the draft's quick name and photos. After the item is created, the proto item is marked `converted` with `convertedItemId`.
 
 ### Merge with Existing Item
@@ -217,12 +226,26 @@ This is the preferred flow when receipt/email parsing has already created skelet
 
 ### Convert From Inventory To Project
 
-If a project-scoped proto item is marked **From Inventory**, conversion should route through the existing inventory-to-project mechanism:
+For a project-scoped proto item whose authoritative `transactionId` points to a business-inventory transaction, conversion must route through the existing inventory-to-project mechanism. The transaction scope, not a second transaction field, determines the route.
 
-1. reviewer selects the matching inventory item or creates one
-2. reviewer selects the destination project/category if not already known
-3. app creates the normal per-batch Purchase-from-inventory transaction
-4. proto item is marked converted and linked to the resulting item
+Before writing, validate that:
+
+- the referenced transaction exists, belongs to the same account, and has `projectId == null`;
+- the draft has a destination `projectId`;
+- the intended/destination budget category belongs to and is enabled for that project; and
+- the item has the purchase price, project price, and other fields required by the canonical sale operation.
+
+Once validation succeeds, perform one atomic operation:
+
+1. create the real item in business inventory under the referenced acquisition transaction with `projectId == null`, `budgetCategoryId == null`, and `transactionId` equal to the acquisition transaction ID;
+2. create the canonical per-batch Purchase-from-inventory transaction in the draft's project using `projectPriceCents`;
+3. move the item into the draft's project/category and replace its `transactionId` with the new project Purchase ID;
+4. remove the item from the acquisition transaction's active `itemIds` membership and preserve the acquisition through a sold lineage edge; and
+5. mark the proto item converted and set `convertedItemId` to the final item.
+
+Do not create the inventory item first and attempt the sale in a later non-atomic step. Missing price, category, project, or transaction data must leave the quick draft unconverted rather than stranding a partially converted item in inventory.
+
+The **From Inventory** marker remains useful before a transaction is selected: it tells review that an inventory transaction must be chosen. Once `transactionId` is set, the referenced transaction's scope is authoritative. A project transaction combined with `sourceHint == from_inventory` is a conflict that must be resolved before conversion.
 
 ### Delete Draft
 
@@ -274,14 +297,13 @@ This protects existing invariants:
 
 ## Relationship To Transactions
 
-Proto items may point at candidate transactions, but transactions do not own proto items as embedded children. The transaction is financial evidence; the proto item is physical evidence. Review connects them.
+Proto items may point at one authoritative transaction through `transactionId`, but transactions do not own proto items as embedded children. The transaction is financial evidence; the proto item is physical evidence. Review connects them.
 
-If a proto item converts into a transaction-created item, the resulting `Item` follows normal transaction membership rules.
+If a proto item converts into a transaction-created item, the resulting `Item` follows normal transaction membership rules. For project drafts linked to inventory transactions, the acquisition transaction is the initial association and the canonical sale replaces the final item's `transactionId`; lineage preserves the original acquisition relationship.
 
 ## Open Questions
 
 - Should proto item images be stored using the same attachment uploader and storage path as item images, or under a separate `protoItems` path?
 - Should a proto item support multiple quantities, or should repeated physical objects be captured as separate proto items?
-- Should **From Inventory** be a persistent visible control on every project-scoped quick draft card, or only appear behind the card action menu?
 - What is the exact UX for selecting an existing skeletal item during merge?
 - Should OCR run immediately after capture on-device, or only when the reviewer opens the queue?

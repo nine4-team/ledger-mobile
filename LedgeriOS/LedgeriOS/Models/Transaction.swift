@@ -43,10 +43,14 @@ struct Transaction: Codable, Identifiable, Hashable {
     var itemIds: [String]?
     var status: TransactionStatus?
     var purchasedBy: String?
+    var purchaseHandling: PurchaseHandling?
     var reimbursementType: String?
     var notes: String?
     var transactionType: TransactionType?
     var budgetCategoryId: String?
+    var intendedProjectId: String?
+    var intendedBudgetCategoryId: String?
+    var inventoryIntentResolvedAt: Date?
     var paymentMethod: String?
     var hasEmailReceipt: Bool?
     var receiptImages: [AttachmentRef]?
@@ -69,8 +73,9 @@ struct Transaction: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, projectId, transactionDate, amountCents, source,
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
-             itemIds, status, purchasedBy, reimbursementType, notes,
-             budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
+             itemIds, status, purchasedBy, purchaseHandling, reimbursementType, notes,
+             budgetCategoryId, intendedProjectId, intendedBudgetCategoryId, inventoryIntentResolvedAt,
+             paymentMethod, receiptImages, otherImages, transactionImages,
              isComplete, audit, taxRatePct, subtotalCents, discount,
              ingestionSource, ingestionStatus, ingestionMeta, triggerEvent,
              settlementInvoiceId, settlementInvoiceLineIds,
