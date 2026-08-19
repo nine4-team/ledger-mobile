@@ -11,6 +11,7 @@ import { asToolResponse } from "../util/projections.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { getUid } from "../context.js";
 import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventory.js";
+import { isReturnTransactionType } from "../util/enums.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MCP-side implementation of the per-batch inventory movement spec at
@@ -639,7 +640,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         if (returnTransactionId) {
           existingReturnTx = await getDoc<Transaction>(db, "transactions", returnTransactionId);
           if (!existingReturnTx) return notFound("Return transaction", returnTransactionId);
-          if (existingReturnTx.type !== "Return") {
+          if (!isReturnTransactionType(existingReturnTx.type)) {
             return validation(
               `Transaction ${returnTransactionId} is type '${existingReturnTx.type}', not 'Return'.`,
               "Pass an existing Return transaction, or omit returnTransactionId to create a new one (only valid for returnTo: 'inventory')."

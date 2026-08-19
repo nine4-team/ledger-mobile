@@ -293,6 +293,110 @@ describe("sell_items_from_inventory_to_project", () => {
 // M6 — return_items with returnTo: "inventory"
 // ─────────────────────────────────────────────────────────────────────────────
 describe("return_items", () => {
+  test("vendor return accepts lowercase type and preserves the recorded refund", async () => {
+    await seedProject(db, {
+      id: "proj_hal",
+      budgetCategories: [{ id: "cat_arcade" }],
+    });
+    await seedTransaction(db, {
+      id: "purchase_wayfair",
+      type: "Purchase",
+      source: "Wayfair",
+      projectId: "proj_hal",
+      budgetCategoryId: "cat_arcade",
+      amountCents: 157236,
+      itemIds: ["atari", "nba_jam", "pac_man"],
+    });
+    await seedTransaction(db, {
+      id: "return_wayfair",
+      type: "return",
+      source: "Wayfair",
+      projectId: "proj_hal",
+      budgetCategoryId: "cat_arcade",
+      amountCents: 149268,
+      itemIds: [],
+    });
+    await db.doc(`accounts/${TEST_ACCOUNT_ID}/transactions/return_wayfair`).update({
+      subtotalCents: 145000,
+      taxRatePct: 3.25,
+      paymentMethod: "Original card",
+    });
+
+    const itemFixtures = [
+      { id: "atari", name: "Atari Star Wars", purchasePriceCents: 50000 },
+      { id: "nba_jam", name: "NBA Jam", purchasePriceCents: 52000 },
+      { id: "pac_man", name: "Pac-Man Legacy", purchasePriceCents: 55236 },
+    ];
+    for (const item of itemFixtures) {
+      await seedItem(db, {
+        ...item,
+        projectId: "proj_hal",
+        budgetCategoryId: "cat_arcade",
+        transactionId: "purchase_wayfair",
+        source: "Wayfair",
+      });
+    }
+
+    const args = {
+      itemIds: itemFixtures.map((item) => item.id),
+      returnTo: "vendor",
+      returnTransactionId: "return_wayfair",
+    };
+
+    const preview = await callTool("return_items", { ...args, dryRun: true });
+    expect(isError(preview)).toBe(false);
+    expect(
+      await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/return_wayfair`)
+    ).toMatchObject({ amountCents: 149268, itemIds: [] });
+
+    const result = await callTool("return_items", { ...args, dryRun: false });
+    expect(isError(result)).toBe(false);
+
+    const returnTx = await getDocData(
+      db,
+      `accounts/${TEST_ACCOUNT_ID}/transactions/return_wayfair`
+    );
+    expect(returnTx).toMatchObject({
+      type: "return",
+      source: "Wayfair",
+      projectId: "proj_hal",
+      budgetCategoryId: "cat_arcade",
+      amountCents: 149268,
+      subtotalCents: 145000,
+      taxRatePct: 3.25,
+      paymentMethod: "Original card",
+    });
+    expect(returnTx?.itemIds).toEqual(["atari", "nba_jam", "pac_man"]);
+
+    const purchaseTx = await getDocData(
+      db,
+      `accounts/${TEST_ACCOUNT_ID}/transactions/purchase_wayfair`
+    );
+    expect(purchaseTx).toMatchObject({ amountCents: 157236, itemIds: [] });
+
+    for (const item of itemFixtures) {
+      const stored = await getDocData(
+        db,
+        `accounts/${TEST_ACCOUNT_ID}/items/${item.id}`
+      );
+      expect(stored).toMatchObject({
+        status: "returned",
+        transactionId: "return_wayfair",
+        projectId: "proj_hal",
+        budgetCategoryId: "cat_arcade",
+        purchasePriceCents: item.purchasePriceCents,
+      });
+    }
+
+    const edges = await listLineageEdges(db);
+    expect(edges).toHaveLength(3);
+    expect(edges.every((edge) =>
+      edge.data.fromTransactionId === "purchase_wayfair" &&
+      edge.data.toTransactionId === "return_wayfair" &&
+      edge.data.movementKind === "returned"
+    )).toBe(true);
+  });
+
   test("M6: returnTo 'inventory' creates Return tx, wipes item category, sets projectId null", async () => {
     await seedProject(db, {
       id: "proj_source",

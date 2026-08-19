@@ -20,6 +20,7 @@ import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 import { resolveCategoryType } from "../util/budget.js";
+import { normalizeTransactionType } from "../util/enums.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -66,10 +67,11 @@ function checkInventoryMovementImmutability(
   updates: Record<string, unknown>
 ) {
   if (existing.isCanonicalInventorySale === true) return null; // legacy exempt
+  const normalizedType = normalizeTransactionType(existing.type);
   const isFrozenMovement =
-    existing.type === "Sale" ||
-    existing.type === "Return" ||
-    (existing.type === "Purchase" &&
+    normalizedType === "sale" ||
+    normalizedType === "return" ||
+    (normalizedType === "purchase" &&
       (isInventorySource(existing.source, DEFAULT_INVENTORY_LABEL) ||
         (typeof existing.source === "string" && existing.source.trim().endsWith(" Inventory"))));
   if (!isFrozenMovement) return null;

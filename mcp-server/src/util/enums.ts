@@ -26,6 +26,54 @@ export type TransactionType = (typeof transactionTypes)[number];
 
 export const legacyTransactionTypes = ["Fee", "Expense", "To Inventory"] as const;
 
+/**
+ * Canonical transaction-type values used for behavioral read decisions.
+ *
+ * Firestore contains both title-case values written by inventory operations
+ * and lowercase values written by the app. Normalize casing at read time, but
+ * do not trim or rewrite the stored value: whitespace-padded values are invalid
+ * until every client decoder supports them consistently.
+ */
+export type NormalizedTransactionType =
+  | "purchase"
+  | "return"
+  | "sale"
+  | "paymentToBusiness"
+  | "fee"
+  | "expense"
+  | "to inventory";
+
+export function normalizeTransactionType(
+  value: unknown
+): NormalizedTransactionType | null {
+  if (typeof value !== "string") return null;
+
+  switch (value.toLowerCase()) {
+    case "purchase":
+      return "purchase";
+    case "return":
+      return "return";
+    case "sale":
+      return "sale";
+    case "paymenttobusiness":
+    case "payment_to_business":
+    case "payment-to-business":
+      return "paymentToBusiness";
+    case "fee":
+      return "fee";
+    case "expense":
+      return "expense";
+    case "to inventory":
+      return "to inventory";
+    default:
+      return null;
+  }
+}
+
+export function isReturnTransactionType(value: unknown): boolean {
+  return normalizeTransactionType(value) === "return";
+}
+
 export const transactionStatuses = ["canceled"] as const;
 export type TransactionStatus = (typeof transactionStatuses)[number];
 
