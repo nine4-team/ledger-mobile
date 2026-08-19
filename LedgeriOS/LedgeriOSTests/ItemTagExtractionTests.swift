@@ -28,10 +28,46 @@ struct ItemTagExtractionTests {
         #expect(result.selectedSku == nil)
         #expect(result.skuCandidates.contains("400293670643000799"))
         #expect(result.skuCandidates.contains("400293670643"))
+        #expect(result.retryRecommended)
     }
 
-    @Test("Barcode item prefix is a chip but not an auto-fill")
-    func barcodeItemPrefixIsChipOnly() {
+    @Test("Ross barcode derives the printed SKU when store and price agree")
+    func rossBarcodeDerivesCorroboratedSku() {
+        let result = ItemTagExtraction.extract(
+            barcodeObservations: [ItemTagBarcodeObservation(payload: "400293464655001699", sourceEngine: .vision, sourceImage: "tag.jpg")],
+            textObservations: [observation("ROSS  HOME DECOR  PRICE $16.99")]
+        )
+
+        #expect(result.selectedSku == "400293464655")
+        #expect(result.candidates.first?.extractionMethod == .barcodeDerived)
+        #expect(result.candidates.first?.priceCents == 1699)
+        #expect(!result.retryRecommended)
+    }
+
+    @Test("Ross barcode is not decoded without visible price corroboration")
+    func rossBarcodeRequiresPriceCorroboration() {
+        let result = ItemTagExtraction.extract(
+            barcodePayloads: ["400297050281002199"],
+            textObservations: [observation("ROSS GREENERY")]
+        )
+
+        #expect(result.selectedSku == nil)
+        #expect(result.skuCandidates.contains("400297050281"))
+        #expect(result.retryRecommended)
+    }
+
+    @Test("Ross-shaped payload is not decoded on an unrelated label")
+    func rossBarcodeRequiresVendorEvidence() {
+        let result = ItemTagExtraction.extract(
+            barcodePayloads: ["400293464655001699"],
+            textObservations: [observation("PRICE $16.99")]
+        )
+
+        #expect(result.selectedSku == nil)
+    }
+
+    @Test("Ross barcode prefix becomes SKU when store and price agree")
+    func rossBarcodePrefixCanAutoSelect() {
         let result = ItemTagExtraction.extract(
             barcodePayloads: ["400297925640000999"],
             textObservations: [
@@ -39,7 +75,7 @@ struct ItemTagExtractionTests {
             ]
         )
 
-        #expect(result.selectedSku == nil)
+        #expect(result.selectedSku == "400297925640")
         #expect(result.skuCandidates.contains("400297925640"))
     }
 
@@ -116,6 +152,69 @@ struct ItemTagExtractionTests {
 
         #expect(result.selectedSku == "ABC-123")
         #expect(result.rawText == "SKU: ABC-123")
+    }
+
+    @Test("Extracts style number without knowing the retailer")
+    func extractsRetailerIndependentStyleNumber() {
+        let result = ItemTagExtraction.extract(
+            textObservations: [
+                ItemTagTextObservation(text: "STYLE NUMBER 84721-IV", confidence: 0.94),
+            ]
+        )
+
+        #expect(result.selectedSku == "84721-IV")
+    }
+
+    @Test("DPCI is handled as a generic labeled identifier")
+    func extractsDPCI() {
+        let result = ItemTagExtraction.extract(textObservations: [
+            observation("DPCI# 234-07-8282"),
+        ])
+
+        #expect(result.selectedSku == "234-07-8282")
+    }
+
+    @Test("Compacted TJX style field is normalized")
+    func extractsCompactedTJXStyle() {
+        let result = ItemTagExtraction.extract(textObservations: [
+            observation("D33 S382747 C0133 T6 FLI 0526 OUR PRICE $49.99"),
+        ], vendorHint: "HomeGoods")
+
+        #expect(result.selectedSku == "382747")
+    }
+
+    @Test("TJX style outranks a manufacturer SKU on the same item")
+    func retailerStyleOutranksManufacturerSku() {
+        let result = ItemTagExtraction.extract(textObservations: [
+            observation("SKU# 2247"),
+            observation("DEPT 33 STYLE 408503 CAT 10 OUR PRICE $29.99"),
+        ], vendorHint: "HomeGoods")
+
+        #expect(result.selectedSku == "408503")
+        #expect(!result.reviewFlags.contains("ambiguous-strong-candidates"))
+    }
+
+    @Test("Ross printed SKU is usable when barcode decoding fails")
+    func rossPrintedSkuWithPriceCorroboration() {
+        let result = ItemTagExtraction.extract(
+            textObservations: [observation("ROSS GREENERY 400214673791 $7.99")]
+        )
+
+        #expect(result.selectedSku == "400214673791")
+        #expect(result.candidates.first?.priceCents == 799)
+    }
+
+    @Test("Unlabeled identifier-like text requests a focused OCR retry")
+    func genericIdentifierRequestsRetry() {
+        let result = ItemTagExtraction.extract(
+            textObservations: [
+                ItemTagTextObservation(text: "collection 84721-IV", confidence: 0.72),
+            ]
+        )
+
+        #expect(result.selectedSku == nil)
+        #expect(result.skuCandidates.contains("84721-IV"))
+        #expect(result.retryRecommended)
     }
 
     @Test("Extracts SKU from next line after label")
@@ -206,6 +305,17 @@ struct ItemTagExtractionTests {
         )
         #expect(result.selectedSku == nil)
         #expect(!result.skuCandidates.contains("220251"))
+    }
+
+    @Test("TJX barcode can derive style from retailer vocabulary and matching price")
+    func tjxBarcodeUsesPriceWhenDepartmentOCRFails() {
+        let result = ItemTagExtraction.extract(
+            barcodePayloads: ["33408503002499"],
+            textObservations: [observation("HOMEGOODS OUR PRICE $24.99")],
+            vendorHint: "HomeGoods"
+        )
+
+        #expect(result.selectedSku == "408503")
     }
 
     @Test("Corrupted STYLE label yields its value, never the label")

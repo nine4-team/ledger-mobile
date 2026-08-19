@@ -2,6 +2,7 @@ import Foundation
 
 #if canImport(Vision)
 import Vision
+import ImageIO
 #endif
 
 #if canImport(UIKit)
@@ -49,13 +50,17 @@ enum ItemTagExtractionService {
 
             var retryObservations: [ItemTagTextObservation] = []
             for payload in fullImagePayloads {
-                retryObservations.append(contentsOf: recognizeFocusedRegions(
+                let focused = recognizeFocusedRegions(
                     payload.focusRegions,
                     data: payload.data,
                     sourceImage: payload.sourceImage
-                ))
+                )
+                retryObservations.append(contentsOf: focused.textObservations)
+                barcodeObservations.append(contentsOf: focused.barcodePayloads.map {
+                    ItemTagBarcodeObservation(payload: $0, sourceEngine: .vision, sourceImage: payload.sourceImage)
+                })
             }
-            engineEvents.append("tag-focused-retry:\(retryObservations.isEmpty ? "no-text" : "completed")")
+            engineEvents.append("tag-focused-orientation-retry:\(retryObservations.isEmpty ? "no-text" : "completed")")
             var retried = ItemTagExtraction.extract(
                 barcodePayloads: [],
                 barcodeObservations: barcodeObservations,
@@ -71,9 +76,7 @@ enum ItemTagExtractionService {
     private static func extractFullImage(from data: Data, sourceImage: String) -> ImageExtractionPayload {
         #if canImport(Vision)
         let barcodeRequest = VNDetectBarcodesRequest()
-        let textRequest = VNRecognizeTextRequest()
-        textRequest.recognitionLevel = .accurate
-        textRequest.usesLanguageCorrection = false
+        let textRequest = configuredTextRequest()
 
         let handler = VNImageRequestHandler(data: data, options: [:])
         try? handler.perform([barcodeRequest, textRequest])
@@ -83,35 +86,42 @@ enum ItemTagExtractionService {
 
         let barcodePayloads = barcodeObservations.compactMap(\.payloadStringValue)
         let textObservations = textObservations(from: textRecognitionObservations, sourceImage: sourceImage)
-        let focusRegions = barcodeTextRegions(from: barcodeObservations) + tagTextRegions(from: textRecognitionObservations)
+        let focusRegions = barcodeTextRegions(from: barcodeObservations) + potentialLabelRegions(from: textRecognitionObservations)
         return ImageExtractionPayload(barcodePayloads: barcodePayloads, textObservations: textObservations, focusRegions: focusRegions)
         #else
         return ImageExtractionPayload(barcodePayloads: [], textObservations: [], focusRegions: [])
         #endif
     }
 
-    private static func recognizeFocusedRegions(_ regions: [CGRect], data: Data, sourceImage: String) -> [ItemTagTextObservation] {
+    private static func recognizeFocusedRegions(_ regions: [CGRect], data: Data, sourceImage: String) -> ImageExtractionPayload {
         #if canImport(Vision)
-        var observations = regions.flatMap { recognizeText(in: $0, data: data, sourceImage: sourceImage) }
         #if canImport(UIKit)
+        var observations: [ItemTagTextObservation] = []
+        var barcodePayloads: [String] = []
         if let image = normalizedImage(from: data) {
             for region in regions {
                 guard let crop = croppedUpscaledImage(from: image, region: region) else { continue }
-                observations.append(contentsOf: recognizeText(in: crop, sourceImage: sourceImage))
+                let result = recognizeImage(crop, sourceImage: sourceImage)
+                observations.append(contentsOf: result.textObservations)
+                barcodePayloads.append(contentsOf: result.barcodePayloads)
             }
         }
-        #endif
-        return observations
+        return ImageExtractionPayload(barcodePayloads: barcodePayloads, textObservations: observations, focusRegions: [])
         #else
-        return []
+        return ImageExtractionPayload(
+            barcodePayloads: [],
+            textObservations: regions.flatMap { recognizeText(in: $0, data: data, sourceImage: sourceImage) },
+            focusRegions: []
+        )
+        #endif
+        #else
+        return ImageExtractionPayload(barcodePayloads: [], textObservations: [], focusRegions: [])
         #endif
     }
 
     #if canImport(Vision)
     private static func recognizeText(in region: CGRect, data: Data, sourceImage: String) -> [ItemTagTextObservation] {
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = false
+        let request = configuredTextRequest()
         request.regionOfInterest = region
 
         let handler = VNImageRequestHandler(data: data, options: [:])
@@ -123,18 +133,20 @@ enum ItemTagExtractionService {
         return textObservations(from: request.results ?? [], sourceImage: sourceImage)
     }
 
-    private static func recognizeText(in image: CGImage, sourceImage: String) -> [ItemTagTextObservation] {
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = false
-
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            return []
+    private static func recognizeImage(_ image: CGImage, sourceImage: String) -> ImageExtractionPayload {
+        var observations: [ItemTagTextObservation] = []
+        var barcodePayloads: [String] = []
+        for orientation in [CGImagePropertyOrientation.up, .down, .left, .right] {
+            let request = configuredTextRequest()
+            let barcodeRequest = VNDetectBarcodesRequest()
+            let textHandler = VNImageRequestHandler(cgImage: image, orientation: orientation, options: [:])
+            guard (try? textHandler.perform([request])) != nil else { continue }
+            observations.append(contentsOf: textObservations(from: request.results ?? [], sourceImage: sourceImage))
+            let barcodeHandler = VNImageRequestHandler(cgImage: image, orientation: orientation, options: [:])
+            try? barcodeHandler.perform([barcodeRequest])
+            barcodePayloads.append(contentsOf: (barcodeRequest.results ?? []).compactMap(\.payloadStringValue))
         }
-        return textObservations(from: request.results ?? [], sourceImage: sourceImage)
+        return ImageExtractionPayload(barcodePayloads: barcodePayloads, textObservations: observations, focusRegions: [])
     }
 
     private static func textObservations(from observations: [VNRecognizedTextObservation], sourceImage: String) -> [ItemTagTextObservation] {
@@ -155,13 +167,35 @@ enum ItemTagExtractionService {
         }
     }
 
-    private static func tagTextRegions(from observations: [VNRecognizedTextObservation]) -> [CGRect] {
-        observations.compactMap { observation in
+    private static func potentialLabelRegions(from observations: [VNRecognizedTextObservation]) -> [CGRect] {
+        Array(observations.compactMap { observation in
             guard let text = observation.topCandidates(1).first?.string,
-                  text.range(of: #"(?i)\b(DEPT|STYLE|STVLE|STYIE|TYPE|CAT|FLS|COMPARE AT|OUR PRICE)\b|[$S]?\d+[.]\d{2}\b"#, options: .regularExpression) != nil
+                  isPotentialLabelText(text)
             else { return nil }
             return expandedTagRegion(around: observation.boundingBox)
+        }.prefix(4))
+    }
+
+    private static func isPotentialLabelText(_ text: String) -> Bool {
+        if text.range(of: #"(?i)\b(SKU|STYLE|STVLE|STYIE|MODEL|ITEM|DPCI|UPC|EAN|BARCODE|NO|NUMBER|PRICE)\b"#, options: .regularExpression) != nil {
+            return true
         }
+        return text
+            .components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_/")).inverted)
+            .contains { token in
+                let value = token.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard value.count >= 4, value.contains(where: \.isNumber) else { return false }
+                return value.contains(where: \.isLetter) || (5...18).contains(value.count)
+            }
+    }
+
+    private static func configuredTextRequest() -> VNRecognizeTextRequest {
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = false
+        request.recognitionLanguages = ["en-US"]
+        request.customWords = ["SKU", "STYLE", "MODEL", "ITEM", "DPCI", "UPC", "EAN", "BARCODE"]
+        return request
     }
 
     private static func expandedTagRegion(around box: CGRect) -> CGRect {

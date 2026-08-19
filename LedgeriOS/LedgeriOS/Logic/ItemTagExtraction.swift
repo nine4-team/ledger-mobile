@@ -112,6 +112,7 @@ enum ItemTagExtraction {
         }
         let barcodes = Array(Set(cleanedBarcodeEvidence.map(\.payload)))
         let isTJX = isTJXVendor(vendorHint) || observations.contains { hasTJXTagVocabulary($0.text) }
+        let isRoss = isRossVendor(vendorHint) || observations.contains { hasRossTagVocabulary($0.text) }
         let fields = tjxFields(in: observations)
         var accepted: [ItemTagCandidate] = []
         var rejected: [ItemTagCandidate] = []
@@ -145,6 +146,15 @@ enum ItemTagExtraction {
         }
 
         if isTJX {
+            if let style = fields.style,
+               let provenance = observations.first(where: { observationContainsTJXStyle($0.text, style: style) }) {
+                accepted.append(ItemTagCandidate(
+                    value: style, sourceEngine: provenance.sourceEngine, sourceImage: provenance.sourceImage,
+                    extractionMethod: .labeledField, confidence: provenance.confidence,
+                    department: fields.department, priceCents: nil,
+                    rejectionReason: nil, score: 98
+                ))
+            }
             for barcode in barcodes {
                 guard let derived = deriveTJXStyle(barcode: barcode, fields: fields) else { continue }
                 let provenance = cleanedBarcodeEvidence.first { $0.payload == barcode }
@@ -154,6 +164,33 @@ enum ItemTagExtraction {
                     department: derived.department, priceCents: derived.priceCents,
                     rejectionReason: nil, score: 100
                 ))
+            }
+        }
+
+        if isRoss {
+            for barcode in barcodes {
+                guard let derived = deriveRossSku(barcode: barcode, prices: fields.prices) else { continue }
+                let provenance = cleanedBarcodeEvidence.first { $0.payload == barcode }
+                accepted.append(ItemTagCandidate(
+                    value: derived.sku, sourceEngine: provenance?.sourceEngine ?? .unknown, sourceImage: provenance?.sourceImage ?? "unknown",
+                    extractionMethod: .barcodeDerived, confidence: 0.99,
+                    department: nil, priceCents: derived.priceCents,
+                    rejectionReason: nil, score: 100
+                ))
+            }
+            // Vision frequently reads the human-readable number below a Ross
+            // barcode even when VNDetectBarcodesRequest cannot decode the bars.
+            // Require Ross vocabulary and a visible price before trusting it.
+            for observation in observations {
+                for token in tokens(in: observation.text)
+                    where token.count == 12 && token.hasPrefix("400") && token.allSatisfy(\.isNumber) && !fields.prices.isEmpty {
+                    accepted.append(ItemTagCandidate(
+                        value: token, sourceEngine: observation.sourceEngine, sourceImage: observation.sourceImage,
+                        extractionMethod: .labeledField, confidence: observation.confidence,
+                        department: nil, priceCents: fields.prices.first,
+                        rejectionReason: nil, score: 96
+                    ))
+                }
             }
         }
 
@@ -167,9 +204,19 @@ enum ItemTagExtraction {
         let credibleValues = Set(credibleByEngine.values.flatMap { $0.map(\.1) })
         if credibleByEngine.count > 1 && credibleValues.count > 1 { flags.append("cross-engine-disagreement") }
         let strong = ranked.filter { $0.score >= 85 && $0.rejectionReason == nil }
-        if strong.count > 1, Set(strong.map(\.value)).count > 1 { flags.append("ambiguous-strong-candidates") }
-        let tagSignal = observations.contains { hasTJXTagVocabulary($0.text) || containsPrice($0.text) }
-        let retryRecommended = !retryPerformed && tagSignal && !ranked.contains { $0.extractionMethod == .labeledField || $0.extractionMethod == .barcodeDerived }
+        if let topScore = strong.first?.score {
+            let competingTopValues = Set(strong.filter { topScore - $0.score < 8 }.map(\.value))
+            if competingTopValues.count > 1 { flags.append("ambiguous-strong-candidates") }
+        }
+        let tagSignal = !barcodes.isEmpty || observations.contains {
+            hasTJXTagVocabulary($0.text) || hasRossTagVocabulary($0.text) || containsSkuLabel($0.text) || containsPrice($0.text) || hasPotentialSkuToken($0.text)
+        }
+        let hasLabeledCandidate = ranked.contains { $0.extractionMethod == .labeledField }
+        let hasBarcodeDerivedCandidate = ranked.contains { $0.extractionMethod == .barcodeDerived }
+        let hasPreferredTagCandidate = isTJX
+            ? fields.style != nil || hasBarcodeDerivedCandidate
+            : (isRoss ? ranked.contains { $0.score >= 96 } : hasLabeledCandidate)
+        let retryRecommended = !retryPerformed && tagSignal && !hasPreferredTagCandidate
         if retryPerformed && ItemTagSkuSelectionPolicy.recommend(candidates: ranked, reviewFlags: flags) == nil { flags.append("tag-retry-exhausted-no-confident-sku") }
 
         return ItemTagExtractionResult(
@@ -211,18 +258,19 @@ enum ItemTagExtraction {
     }
 
     private static func labeledValue(in line: String) -> String? {
-        let pattern = #"(?i)\b(?:SKU|ST[YV][L1I]E|STYIE|STYLE|MODEL|ITEM(?:\s*(?:NO[.]?|#))?|UPC|EAN|BARCODE)\b\s*(?:NO[.]?|NUMBER|#|:|-)?\s*([A-Z0-9][A-Z0-9._/-]{2,31})"#
+        let pattern = #"(?i)\b(?:SKU|ST[YV][L1I]E|STYIE|STYLE|MODEL|ITEM(?:\s*(?:NO[.]?|#))?|DPCI|UPC|EAN|BARCODE)\b\s*(?:NO[.]?|NUMBER|#|:|-)?\s*([A-Z0-9][A-Z0-9._/-]{2,31})"#
         return regexCapture(pattern, in: line).flatMap(normalizeToken)
     }
 
     private static func containsSkuLabel(_ line: String) -> Bool {
-        line.range(of: #"(?i)\b(SKU|ST[YV][L1I]E|STYIE|STYLE|MODEL|ITEM|UPC|EAN|BARCODE)\b"#, options: .regularExpression) != nil
+        line.range(of: #"(?i)\b(SKU|ST[YV][L1I]E|STYIE|STYLE|MODEL|ITEM|DPCI|UPC|EAN|BARCODE)\b"#, options: .regularExpression) != nil
     }
 
     private static func tjxFields(in observations: [ItemTagTextObservation]) -> TJXFields {
         let text = observations.map(\.text).joined(separator: "\n")
         let dept = regexCapture(#"(?i)\bDEPT\s*[:#-]?\s*(\d{2})\b"#, in: text)
         let style = regexCapture(#"(?i)\b(?:ST[YV][L1I]E|STYIE|STYLE)\s*[:#-]?\s*(\d{6})\b"#, in: text)
+            ?? regexCapture(#"(?i)\bS(\d{6})\b"#, in: text)
         let prices = regexCaptures(#"(?:[$S]\s*)?(\d{1,4})[.]([0-9]{2})\b"#, in: text).compactMap { groups -> Int? in
             guard groups.count == 2, let dollars = Int(groups[0]), let cents = Int(groups[1]) else { return nil }
             return dollars * 100 + cents
@@ -234,14 +282,32 @@ enum ItemTagExtraction {
         guard barcode.count == 14, barcode.allSatisfy(\.isNumber) else { return nil }
         let department = String(barcode.prefix(2))
         let style = String(barcode.dropFirst(2).prefix(6))
-        guard fields.department == department else { return nil }
+        if let visibleDepartment = fields.department, visibleDepartment != department { return nil }
         if let visibleStyle = fields.style, visibleStyle != style { return nil }
         guard let suffix = Int(barcode.suffix(6)), fields.prices.contains(suffix) else { return nil }
         return (style, department, suffix)
     }
 
+    private static func deriveRossSku(barcode: String, prices: [Int]) -> (sku: String, priceCents: Int)? {
+        // Ross item labels use an 18-digit payload: the printed 12-digit SKU,
+        // followed by a six-digit, zero-padded price in cents.
+        guard barcode.count == 18, barcode.allSatisfy(\.isNumber), barcode.hasPrefix("400") else { return nil }
+        let sku = String(barcode.prefix(12))
+        guard let priceCents = Int(barcode.suffix(6)), prices.contains(priceCents) else { return nil }
+        return (sku, priceCents)
+    }
+
     private static func hasTJXTagVocabulary(_ text: String) -> Bool {
         text.range(of: #"(?i)\b(DEPT|STYLE|STVLE|STYIE|TYPE|CAT|FLS|COMPARE AT|OUR PRICE)\b"#, options: .regularExpression) != nil
+    }
+
+    private static func observationContainsTJXStyle(_ text: String, style: String) -> Bool {
+        regexCapture(#"(?i)\b(?:ST[YV][L1I]E|STYIE|STYLE)\s*[:#-]?\s*(\d{6})\b"#, in: text) == style
+            || regexCapture(#"(?i)\bS(\d{6})\b"#, in: text) == style
+    }
+
+    private static func hasRossTagVocabulary(_ text: String) -> Bool {
+        text.range(of: #"(?i)\bROSS\b"#, options: .regularExpression) != nil
     }
 
     private static func isTJXVendor(_ vendor: String?) -> Bool {
@@ -249,11 +315,22 @@ enum ItemTagExtraction {
         return ["HOMEGOODS", "HOME GOODS", "TJ MAXX", "TJX", "MARSHALLS"].contains { vendor.contains($0) }
     }
 
+    private static func isRossVendor(_ vendor: String?) -> Bool {
+        vendor?.range(of: #"(?i)\bROSS\b"#, options: .regularExpression) != nil
+    }
+
     private static func isVendorReceiptLine(_ line: String, vendorHint: String?) -> Bool {
         isTJXVendor(vendorHint) && line.range(of: #"\b\d{6}\b.*(?:[$S]?\d+[.]\d{2})\b"#, options: .regularExpression) != nil
     }
 
     private static func containsPrice(_ text: String) -> Bool { text.range(of: #"[$S]?\d+[.]\d{2}\b"#, options: .regularExpression) != nil }
+
+    private static func hasPotentialSkuToken(_ text: String) -> Bool {
+        tokens(in: text).contains { token in
+            guard token.count >= 4, token.contains(where: \.isNumber) else { return false }
+            return token.contains(where: \.isLetter) || (5...14).contains(token.count)
+        }
+    }
 
     private static func splitLines(_ observations: [ItemTagTextObservation]) -> [ItemTagTextObservation] {
         observations.flatMap { observation in observation.text.components(separatedBy: .newlines).map { ItemTagTextObservation(text: $0, confidence: observation.confidence, sourceEngine: observation.sourceEngine, sourceImage: observation.sourceImage) } }
@@ -319,7 +396,9 @@ enum ItemTagSkuSelectionPolicy {
               !reviewFlags.contains("ambiguous-strong-candidates")
         else { return nil }
         let strong = candidates.filter { $0.score >= 85 && $0.rejectionReason == nil }
-        return strong.count == 1 ? strong[0].value : nil
+        guard let top = strong.first else { return nil }
+        guard strong.dropFirst().allSatisfy({ top.score - $0.score >= 8 }) else { return nil }
+        return top.value
     }
 }
 
