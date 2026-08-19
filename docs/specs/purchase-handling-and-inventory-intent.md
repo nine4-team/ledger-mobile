@@ -2,9 +2,10 @@
 
 ## Status
 
-Active specification; implementation is complete pending runtime QA. This document
-records the agreed transaction-creation, inventory-intent, follow-up, pricing,
-correction, and MCP behavior discussed on 2026-08-17.
+Active shipped specification. Implementation and runtime QA were completed by
+2026-08-19. This document records the agreed transaction-creation,
+inventory-intent, follow-up, pricing, correction, and MCP behavior discussed on
+2026-08-17.
 
 Quick-draft transaction association is included below and uses one authoritative
 `transactionId`; transaction scope determines the conversion route.

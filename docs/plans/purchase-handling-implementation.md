@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress. Started 2026-08-17.
+Complete. Started 2026-08-17; runtime verification closed 2026-08-19.
 
 This tracker implements
 [Purchase Handling and Inventory Intent](../specs/purchase-handling-and-inventory-intent.md)
@@ -46,7 +46,7 @@ and the transaction-association portions of
   intent resolution, and batch-failure propagation.
 - [x] Verify MCP schemas and write paths with a clean TypeScript build.
 - [x] Run the complete non-emulator iOS unit profile and update this tracker.
-- [ ] Run a disposable real-Firestore MCP smoke test for the new mutating tools.
+- [x] Run a disposable real-Firestore MCP smoke test for the new mutating tools.
 - [x] Perform installed-app QA of both business-paid branches and both
   quick-draft conversion entry points through the production Sparkle build.
 
@@ -113,10 +113,16 @@ and the transaction-association portions of
   recorded sale lineage atomically, and removed the completed acquisition from
   Planned for Projects. The equivalent MCP promotion now also resolves the
   acquisition intent; its TypeScript build passed.
+- 2026-08-19: Completed the remaining disposable real-Firestore smoke through
+  the local Ledger MCP. Verified purchase-intent dry-run isolation and committed
+  updates, enriched waiting-state reads, authoritative quick-draft transaction
+  linkage, From Inventory promotion, acquisition-intent resolution, purchase and
+  project pricing, destination Purchase creation, and sold lineage. The harness
+  removed every transaction, draft, item, and lineage document it created.
 
-## Remaining Runtime QA
+## Runtime QA Complete
 
-The MCP package intentionally has no default local unit-test command; its README
-requires a disposable real-Firestore smoke for mutating tool changes. That smoke
-and manual simulator walkthroughs remain release checks and must not use existing
-production records as disposable fixtures.
+The MCP package intentionally has no default local unit-test command. Its required
+disposable real-Firestore smoke and the installed-app walkthrough are complete.
+Future mutating MCP changes must repeat the disposable smoke and must not use
+existing production records as fixtures.

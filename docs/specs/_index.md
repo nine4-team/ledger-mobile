@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-08-17
+Last updated: 2026-08-19
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -18,10 +18,10 @@ Last updated: 2026-08-17
 - [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 
 ### Transactions & Item Entry
-- [new] [Purchase Handling and Inventory Intent](purchase-handling-and-inventory-intent.md) — **Active planned spec.** Separates business-paid resale acquisitions from direct project reimbursements, persists intended project/category across delayed inventory sales, defines the inventory follow-up queue and one-destination invariant, and normalizes quick-draft transaction association and inventory conversion.
+- [shipped] [Purchase Handling and Inventory Intent](purchase-handling-and-inventory-intent.md) — Separates business-paid resale acquisitions from direct project reimbursements, persists intended project/category across delayed inventory sales, defines the inventory follow-up queue and one-destination invariant, and normalizes quick-draft transaction association and inventory conversion. Shipped and runtime-verified 2026-08-19.
 - [new] [Vendor Credits](vendor-credits.md) — **Proposed.** A vendor-issued negative transaction, beginning with cancellation credits for selected lines on a mixed purchase. Distinct from physical returns; legacy returns remain unchanged pending separately approved evidence-backed migration.
 - [shipped] [Agent Transaction Taxonomy Guide](agent-transaction-taxonomy-guide.md) — Canonical short guide for AI/MCP clients: normal writes use `purchase`/`return`, system workflows create `sale`/`paymentToBusiness`, legacy `fee`/`expense`/`to inventory` are read-compatible only, and `metadata.categoryType` owns itemization/routing.
-- [new] [Proto Item Capture](proto-item-capture.md) — **Active redesign.** Persistent photo-first item intake queue. Designers capture physical objects quickly; reviewers later create/merge items, match transactions, or sell from inventory.
+- [modify] [Proto Item Capture](proto-item-capture.md) — **Active partially shipped redesign.** Project capture, From Inventory marking, authoritative transaction selection, and atomic inventory-linked conversion are shipped. Broader inventory capture, review, merge, and automation work remains.
 - [modify] [Item & Expense Entry Flow](item-entry-flow.md) — Category-based routing remains the financial model, but physical item intake is being redesigned around proto item capture.
 - [shipped] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. Two-field source split: `item.source` (original vendor, immutable) + `item.currentSource` (immediate source, mutable). Reports and search cards read `currentSource`. All items backfilled 2026-04-11.
 

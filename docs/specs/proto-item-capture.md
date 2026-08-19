@@ -1,6 +1,7 @@
 # Proto Item Capture
-Status: new
-Last updated: 2026-05-21
+Status: in progress — project capture and authoritative inventory routing shipped;
+broader inventory capture, review, merge, and automation work remains
+Last updated: 2026-08-19
 
 User-facing name: **Item Quick Draft**. The code/data model uses `ProtoItem`; UI copy should use "Item Quick Draft" or "Item Quick Drafts".
 

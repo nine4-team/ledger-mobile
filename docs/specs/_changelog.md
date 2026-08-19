@@ -1,5 +1,9 @@
 # Ledger Specs — Changelog
 
+## 2026-08-19
+- **Marked purchase handling and inventory intent shipped.** Installed-app QA and a disposable real-Firestore MCP smoke now cover both business-paid branches, intended-project follow-up, authoritative quick-draft transaction linkage, atomic From Inventory promotion, pricing, intent resolution, destination Purchase creation, and lineage. All smoke fixtures were removed afterward.
+- **Clarified proto-item rollout status.** Project quick-draft capture and inventory-linked routing are shipped; broader inventory capture, account-wide review, merge, and automation work remains in progress.
+
 ## 2026-08-17
 - **Started purchase-handling implementation.** Added explicit iOS purchase routing, durable intended project/category fields, no-markup reimbursement pricing, initial From Inventory quick-draft capture, atomic app/MCP inventory-linked promotion, the Business Inventory Planned for Projects queue, and MCP intent/correction/audit tools.
 - **Specified explicit handling for business-paid purchases.** The New Transaction flow distinguishes inventory resale from a project purchase temporarily covered by the design business instead of inferring intent from purchaser or category.

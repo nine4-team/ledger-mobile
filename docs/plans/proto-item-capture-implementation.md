@@ -1,6 +1,11 @@
 # Proto Item Capture Implementation Plan
 Status: in progress
-Last updated: 2026-08-17
+Last updated: 2026-08-19
+
+The project-scoped capture, From Inventory marker, authoritative `transactionId`
+selection, and atomic inventory-linked conversion slice is shipped and
+runtime-verified. Inventory-scoped capture, account-wide review, merge UX, and
+automation-assist work below remains open.
 
 ## Goal
 
