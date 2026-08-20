@@ -3,7 +3,7 @@ import FirebaseFirestore
 
 // MARK: - Upload Metadata
 
-struct UploadMetadata: Codable {
+struct UploadMetadata: Codable, Identifiable {
     let id: String
     let accountId: String
     let entityType: String          // "items", "projects", "spaces"
@@ -16,6 +16,7 @@ struct UploadMetadata: Codable {
     var thumbnailStoragePathMd: String?
     let createdAt: Date
     var attemptCount: Int
+    var lastError: String?
 
     enum UpdateType: Codable {
         case setField(String)                                       // e.g. "mainImageUrl"
@@ -53,6 +54,7 @@ struct UploadMetadata: Codable {
         self.fileName = fileName
         self.createdAt = Date()
         self.attemptCount = 0
+        self.lastError = nil
     }
 }
 
@@ -66,6 +68,7 @@ struct UploadMetadata: Codable {
 final class MediaUploadQueue {
     private(set) var pendingCount: Int = 0
     private(set) var failedCount: Int = 0
+    private(set) var failedUploads: [UploadMetadata] = []
     private(set) var isProcessing: Bool = false
 
     private let mediaService: MediaService
@@ -126,10 +129,29 @@ final class MediaUploadQueue {
     func retryFailed() {
         for var entry in loadEntries(where: { $0.attemptCount >= maxAttempts }) {
             entry.attemptCount = 0
+            entry.lastError = nil
             saveMetadata(entry)
         }
         refreshCounts()
         processQueue()
+    }
+
+    func retryFailedUpload(id: String) {
+        guard var entry = loadEntries(where: { $0.id == id && $0.attemptCount >= maxAttempts }).first else { return }
+        entry.attemptCount = 0
+        entry.lastError = nil
+        saveMetadata(entry)
+        refreshCounts()
+        processQueue()
+    }
+
+    /// Removes a failed queue entry after the user has reviewed it.
+    /// The local source is removed from the queue; successfully uploaded files
+    /// are cleaned up automatically when a missing destination is detected.
+    func removeFailedUpload(id: String) {
+        guard let entry = loadEntries(where: { $0.id == id }).first else { return }
+        removeFiles(for: entry)
+        refreshCounts()
     }
 
     // MARK: - Local Image Access
@@ -160,24 +182,78 @@ final class MediaUploadQueue {
             return
         }
 
+        // A queued upload can outlive a draft/entity that was deleted. Treat
+        // that as a terminal orphan instead of retrying forever.
+        do {
+            guard try await destinationExists(for: metadata) else {
+                removeFiles(for: metadata)
+                return
+            }
+        } catch {
+            await recordFailure(error, for: metadata)
+            return
+        }
+
         var meta = metadata
         meta.attemptCount += 1
+        meta.lastError = nil
         saveMetadata(meta)
 
+        var uploadedOriginalURL: String?
+        var uploadedThumbnailURLs: (String?, String?) = (nil, nil)
         do {
             // Upload the full-size image
             let url = try await mediaService.uploadData(imageData, path: meta.storagePath, contentType: meta.contentType)
+            uploadedOriginalURL = url
 
             // Generate and upload thumbnails (failures don't block the primary upload)
             let thumbUrls = await uploadThumbnails(sourceData: imageData, metadata: meta)
+            uploadedThumbnailURLs = (thumbUrls.sm, thumbUrls.md)
 
             try await writeBackURL(url, thumbnailUrlSm: thumbUrls.sm, thumbnailUrlMd: thumbUrls.md, metadata: meta)
             removeFiles(for: meta)
         } catch {
-            print("[MediaUploadQueue] Failed \(meta.id) (attempt \(meta.attemptCount)): \(error.localizedDescription)")
+            // The entity may have been deleted after the preflight check. If
+            // so, remove the uploaded objects and terminate the queue entry.
+            if let exists = try? await destinationExists(for: meta), !exists {
+                await deleteUploadedObjects(
+                    originalURL: uploadedOriginalURL,
+                    thumbnailURLs: uploadedThumbnailURLs
+                )
+                removeFiles(for: meta)
+            } else {
+                meta.lastError = error.localizedDescription
+                saveMetadata(meta)
+                print("[MediaUploadQueue] Failed \(meta.id) (attempt \(meta.attemptCount)): \(error.localizedDescription)")
+            }
         }
 
         refreshCounts()
+    }
+
+    private func destinationExists(for metadata: UploadMetadata) async throws -> Bool {
+        let ref = Firestore.firestore()
+            .collection("accounts/\(metadata.accountId)/\(metadata.entityType)")
+            .document(metadata.entityId)
+        return try await ref.getDocument().exists
+    }
+
+    private func recordFailure(_ error: Error, for metadata: UploadMetadata) async {
+        var meta = metadata
+        meta.attemptCount += 1
+        meta.lastError = error.localizedDescription
+        saveMetadata(meta)
+        print("[MediaUploadQueue] Failed \(meta.id) (attempt \(meta.attemptCount)): \(error.localizedDescription)")
+        refreshCounts()
+    }
+
+    private func deleteUploadedObjects(
+        originalURL: String?,
+        thumbnailURLs: (String?, String?)
+    ) async {
+        for url in [originalURL, thumbnailURLs.0, thumbnailURLs.1].compactMap({ $0 }) {
+            try? await mediaService.deleteImage(url: url)
+        }
     }
 
     /// Generates sm and md thumbnails from source data and uploads them.
@@ -247,7 +323,8 @@ final class MediaUploadQueue {
     private func refreshCounts() {
         let entries = loadEntries(where: { _ in true })
         pendingCount = entries.filter { $0.attemptCount < maxAttempts }.count
-        failedCount = entries.filter { $0.attemptCount >= maxAttempts }.count
+        failedUploads = entries.filter { $0.attemptCount >= maxAttempts }
+        failedCount = failedUploads.count
     }
 
     private func removeFiles(for metadata: UploadMetadata) {

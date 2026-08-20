@@ -11,6 +11,7 @@ struct RootView: View {
     @Environment(InviteLinkRouter.self) private var inviteLinkRouter
 
     @State private var inviteErrorMessage: String?
+    @State private var isShowingFailedUploads = false
 
     var body: some View {
         Group {
@@ -46,10 +47,12 @@ struct RootView: View {
                             }
                             if mediaUploadQueue.failedCount > 0 {
                                 StatusBanner(
-                                    message: "\(mediaUploadQueue.failedCount) upload\(mediaUploadQueue.failedCount == 1 ? "" : "s") failed",
-                                    variant: .error
+                                    message: "\(mediaUploadQueue.failedCount) upload\(mediaUploadQueue.failedCount == 1 ? "" : "s") failed. Review to retry or remove.",
+                                    variant: .error,
+                                    actions: {
+                                        Button("Review") { isShowingFailedUploads = true }
+                                    }
                                 )
-                                .onTapGesture { mediaUploadQueue.retryFailed() }
                             } else if mediaUploadQueue.isProcessing, mediaUploadQueue.pendingCount > 0 {
                                 StatusBanner(
                                     message: "Uploading \(mediaUploadQueue.pendingCount) image\(mediaUploadQueue.pendingCount == 1 ? "" : "s")…",
@@ -75,6 +78,10 @@ struct RootView: View {
         } message: {
             Text(inviteErrorMessage ?? "")
         }
+        .sheet(isPresented: $isShowingFailedUploads) {
+            FailedUploadsView()
+                .environment(mediaUploadQueue)
+        }
         .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
             if !isAuthenticated {
                 accountContext.deactivate()
@@ -87,6 +94,75 @@ struct RootView: View {
                 projectContext.deactivate()
                 inventoryContext.deactivate()
             }
+        }
+    }
+}
+
+private struct FailedUploadsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(MediaUploadQueue.self) private var uploadQueue
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if uploadQueue.failedUploads.isEmpty {
+                    ContentUnavailableView(
+                        "No Failed Uploads",
+                        systemImage: "checkmark.circle",
+                        description: Text("The failed upload queue is clear.")
+                    )
+                } else {
+                    List(uploadQueue.failedUploads) { upload in
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            Text(upload.fileName ?? "Attachment")
+                                .font(Typography.h3)
+
+                            Text("\(displayName(for: upload.entityType)) • \(upload.createdAt.formatted(date: .abbreviated, time: .shortened))")
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.textSecondary)
+
+                            if let error = upload.lastError, !error.isEmpty {
+                                Text(error)
+                                    .font(Typography.small)
+                                    .foregroundStyle(StatusColors.missedText)
+                            }
+
+                            HStack(spacing: Spacing.md) {
+                                Button("Retry") {
+                                    uploadQueue.retryFailedUpload(id: upload.id)
+                                }
+                                .buttonStyle(.borderedProminent)
+
+                                Button("Remove", role: .destructive) {
+                                    uploadQueue.removeFailedUpload(id: upload.id)
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                        }
+                        .padding(.vertical, Spacing.xs)
+                    }
+                }
+            }
+            .navigationTitle("Failed Uploads")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 480, minHeight: 320)
+        #endif
+    }
+
+    private func displayName(for entityType: String) -> String {
+        switch entityType {
+        case "protoItems": "Item draft"
+        case "items": "Item"
+        case "projects": "Project"
+        case "spaces": "Space"
+        case "transactions": "Transaction"
+        default: entityType
         }
     }
 }

@@ -32,6 +32,55 @@ private final class MockStorageUploader: StorageUploading, @unchecked Sendable {
 @MainActor
 struct MediaServiceTests {
 
+    @Test("Upload metadata remains compatible with queue entries created before error details")
+    func uploadMetadataLegacyDecoding() throws {
+        let metadata = UploadMetadata(
+            accountId: "account",
+            entityType: "protoItems",
+            entityId: "draft",
+            storagePath: "accounts/account/protoItems/draft/photo.jpg",
+            updateType: .appendToArray(field: "photos", kind: "image", isPrimary: true),
+            fileName: "photo.jpg"
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let encoded = try encoder.encode(metadata)
+        var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "lastError")
+
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(UploadMetadata.self, from: legacyData)
+
+        #expect(decoded.id == metadata.id)
+        #expect(decoded.lastError == nil)
+    }
+
+    @Test("Upload metadata persists actionable failure details")
+    func uploadMetadataPersistsFailureDetails() throws {
+        var metadata = UploadMetadata(
+            accountId: "account",
+            entityType: "items",
+            entityId: "item",
+            storagePath: "accounts/account/items/item/photo.jpg",
+            updateType: .setField("mainImageUrl"),
+            fileName: "photo.jpg"
+        )
+        metadata.attemptCount = 10
+        metadata.lastError = "The destination no longer exists."
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(metadata)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(UploadMetadata.self, from: data)
+
+        #expect(decoded.attemptCount == 10)
+        #expect(decoded.lastError == "The destination no longer exists.")
+    }
+
     // MARK: - uploadPath
 
     @Test("uploadPath formats path correctly for all entity types")
