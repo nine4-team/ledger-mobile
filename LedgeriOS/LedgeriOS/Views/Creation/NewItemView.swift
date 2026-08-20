@@ -27,6 +27,7 @@ struct NewItemView: View {
         context: ItemCreationContext? = nil,
         initialTransactionId: String? = nil,
         initialName: String? = nil,
+        initialNotes: String? = nil,
         initialSku: String? = nil,
         initialSkuCandidates: [String] = [],
         initialQuantity: Int? = nil,
@@ -38,6 +39,7 @@ struct NewItemView: View {
         self._resolvedContext = State(initialValue: context)
         self._selectedTransactionId = State(initialValue: initialTransactionId)
         self._name = State(initialValue: initialName ?? "")
+        self._notes = State(initialValue: initialNotes ?? "")
         self._sku = State(initialValue: initialSku ?? "")
         self._quantity = State(initialValue: min(max(initialQuantity ?? 1, 1), 9999))
         self.initialSkuCandidates = initialSkuCandidates

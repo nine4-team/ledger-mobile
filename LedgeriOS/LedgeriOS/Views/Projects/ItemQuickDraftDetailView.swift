@@ -13,6 +13,7 @@ struct ItemQuickDraftDetailView: View {
     @State private var liveProtoItem: ProtoItem
     @State private var listener: ListenerRegistration?
     @State private var nameDraft: String
+    @State private var notesDraft: String
     @State private var showConvertToItem = false
     @State private var showMergeWithExistingItem = false
     @State private var showDeleteConfirmation = false
@@ -28,6 +29,7 @@ struct ItemQuickDraftDetailView: View {
         self.protoItem = protoItem
         self._liveProtoItem = State(initialValue: protoItem)
         self._nameDraft = State(initialValue: protoItem.name ?? "")
+        self._notesDraft = State(initialValue: protoItem.notes ?? "")
         self._skuDraft = State(initialValue: protoItem.sku ?? "")
         self._quantityDraft = State(initialValue: max(protoItem.quantity ?? 1, 1))
     }
@@ -42,6 +44,10 @@ struct ItemQuickDraftDetailView: View {
 
     private var skuHasChanges: Bool {
         skuDraft.trimmingCharacters(in: .whitespacesAndNewlines) != (liveProtoItem.sku ?? "")
+    }
+
+    private var notesHasChanges: Bool {
+        notesDraft.trimmingCharacters(in: .whitespacesAndNewlines) != (liveProtoItem.notes ?? "")
     }
 
     private var quantityHasChanges: Bool {
@@ -95,6 +101,7 @@ struct ItemQuickDraftDetailView: View {
                 context: conversionContext,
                 initialTransactionId: liveProtoItem.transactionId,
                 initialName: liveProtoItem.name,
+                initialNotes: liveProtoItem.notes,
                 initialSku: liveProtoItem.sku,
                 initialSkuCandidates: liveProtoItem.extracted?.skuCandidates ?? [],
                 initialQuantity: liveProtoItem.quantity,
@@ -132,6 +139,14 @@ struct ItemQuickDraftDetailView: View {
             if nameHasChanges {
                 Button("Save Name") {
                     Task { await saveName() }
+                }
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.primary)
+            }
+            FormField(label: "Notes", text: $notesDraft, placeholder: "Optional notes", axis: .vertical)
+            if notesHasChanges {
+                Button("Save Notes") {
+                    Task { await saveNotes() }
                 }
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.primary)
@@ -308,6 +323,9 @@ struct ItemQuickDraftDetailView: View {
             if !nameHasChanges {
                 nameDraft = item.name ?? ""
             }
+            if !notesHasChanges {
+                notesDraft = item.notes ?? ""
+            }
             if !skuHasChanges {
                 skuDraft = item.sku ?? ""
             }
@@ -344,6 +362,21 @@ struct ItemQuickDraftDetailView: View {
             )
         } catch {
             errorMessage = "Failed to update SKU."
+        }
+    }
+
+    private func saveNotes() async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = liveProtoItem.id else { return }
+        let trimmed = notesDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            try await protoItemsService.updateProtoItem(
+                accountId: accountId,
+                protoItemId: protoItemId,
+                fields: ["notes": trimmed.isEmpty ? FieldValue.delete() : trimmed]
+            )
+        } catch {
+            errorMessage = "Failed to update notes."
         }
     }
 
@@ -467,6 +500,11 @@ struct ItemQuickDraftDetailView: View {
                let draftSku = liveProtoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines),
                !draftSku.isEmpty {
                 fields["sku"] = draftSku
+            }
+            if let draftNotes = liveProtoItem.notes?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !draftNotes.isEmpty {
+                let existingNotes = item.notes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                fields["notes"] = existingNotes.isEmpty ? draftNotes : "\(existingNotes)\n\n\(draftNotes)"
             }
             try await ItemsService().updateItem(
                 accountId: accountId,

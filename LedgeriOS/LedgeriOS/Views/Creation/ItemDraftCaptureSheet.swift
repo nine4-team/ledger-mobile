@@ -13,6 +13,7 @@ struct ItemDraftCaptureSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
+    @State private var notes = ""
     @State private var quantity = 1
     @State private var isFromInventory = false
     @State private var imageItems: [PhotosPickerItem] = []
@@ -34,7 +35,7 @@ struct ItemDraftCaptureSheet: View {
     }
 
     private var canSave: Bool {
-        !imageDatas.isEmpty && !isSaving
+        (!imageDatas.isEmpty || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) && !isSaving
     }
 
     var body: some View {
@@ -53,6 +54,7 @@ struct ItemDraftCaptureSheet: View {
         ) {
             VStack(spacing: Spacing.md) {
                 FormField(label: "Name", text: $name, placeholder: "Optional")
+                FormField(label: "Notes", text: $notes, placeholder: "Optional notes", axis: .vertical)
                 quantitySection
                 if projectId != nil && transactionId == nil {
                     fromInventorySection
@@ -237,13 +239,16 @@ struct ItemDraftCaptureSheet: View {
     private func saveAndReset() async {
         guard let accountId = accountContext.currentAccountId else { return }
         let capturedImageDatas = imageDatas
-        guard !capturedImageDatas.isEmpty else { return }
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !capturedImageDatas.isEmpty || !trimmedNotes.isEmpty else { return }
 
         isSaving = true
         errorMessage = nil
 
         do {
-            let extraction = await ItemTagExtractionService.extract(from: capturedImageDatas)
+            let extraction = capturedImageDatas.isEmpty
+                ? nil
+                : await ItemTagExtractionService.extract(from: capturedImageDatas)
             let protoItemId = protoItemsService.newProtoItemId(accountId: accountId)
             var protoItem = ProtoItem()
             protoItem.accountId = accountId
@@ -256,11 +261,13 @@ struct ItemDraftCaptureSheet: View {
             protoItem.sourceHint = isFromInventory ? .fromInventory : .unknown
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
-            if case let .populate(sku) = ItemTagSkuMutationPolicy.decide(existingSku: nil, extraction: extraction) {
+            protoItem.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+            if let extraction,
+               case let .populate(sku) = ItemTagSkuMutationPolicy.decide(existingSku: nil, extraction: extraction) {
                 protoItem.sku = sku
             }
             protoItem.quantity = quantity
-            protoItem.extracted = extraction.protoExtraction
+            protoItem.extracted = extraction?.protoExtraction
             protoItem.createdBy = authManager.currentUser?.uid
             protoItem.updatedBy = authManager.currentUser?.uid
 
@@ -268,6 +275,7 @@ struct ItemDraftCaptureSheet: View {
             enqueuePhotos(capturedImageDatas, accountId: accountId, protoItemId: protoItemId)
 
             name = ""
+            notes = ""
             quantity = 1
             isFromInventory = false
             imageDatas = []

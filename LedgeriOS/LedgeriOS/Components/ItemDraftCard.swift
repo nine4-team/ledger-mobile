@@ -176,6 +176,13 @@ struct ItemDraftCard: View {
                     .lineLimit(1)
             }
 
+            if let notes = protoItem.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
+                FindableText(notes)
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(2)
+            }
+
             HStack(spacing: Spacing.sm) {
                 FindableText("Qty: \(displayQuantity)")
                     .font(Typography.caption)
