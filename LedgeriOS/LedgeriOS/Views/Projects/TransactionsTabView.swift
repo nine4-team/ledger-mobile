@@ -16,7 +16,9 @@ struct TransactionsTabView: View {
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
     @State private var exportedFileURL: URL?
-    @State private var navigationTransaction: Transaction?
+    @State private var selectedTransactionId: String?
+    @State private var initialTransaction: Transaction?
+    @State private var showTransactionDetail = false
     @State private var expandedInventoryGroups: Set<String> = []
 
     // Bulk actions
@@ -130,12 +132,20 @@ struct TransactionsTabView: View {
             if let projectId = projectContext.currentProjectId {
                 NewTransactionView(
                     context: .project(projectId),
-                    onCreated: { navigationTransaction = $0 }
+                    onCreated: { openTransaction($0) }
                 )
             }
         }
-        .navigationDestination(item: $navigationTransaction) { tx in
-            TransactionDetailView(transaction: tx)
+        .navigationDestination(isPresented: $showTransactionDetail) {
+            if let selectedTransactionId {
+                TransactionDetailContainer(
+                    transactionId: selectedTransactionId,
+                    projectId: initialTransaction?.projectId ?? projectContext.currentProjectId,
+                    initialTransaction: initialTransaction
+                )
+            } else {
+                ContentUnavailableView("Transaction Unavailable", systemImage: "doc.text")
+            }
         }
 
 
@@ -297,7 +307,7 @@ struct TransactionsTabView: View {
             ),
             menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : [],
             onPress: selectedIds.isEmpty ? {
-                navigationTransaction = transaction
+                openTransaction(transaction)
             } : nil
         )
     }
@@ -327,6 +337,13 @@ struct TransactionsTabView: View {
     }
 
     // MARK: - Actions
+
+    private func openTransaction(_ transaction: Transaction) {
+        guard let id = transaction.id else { return }
+        selectedTransactionId = id
+        initialTransaction = transaction
+        showTransactionDetail = true
+    }
 
     private func toggleSelection(_ txId: String) {
         if selectedIds.contains(txId) {

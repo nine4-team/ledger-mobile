@@ -47,7 +47,9 @@ struct ItemDetailView: View {
     @State private var lineageEdges: [LineageEdge] = []
     @State private var lineageTransactions: [String: Transaction] = [:]
     @State private var lineageLoadTask: Task<Void, Never>?
-    @State private var navigationTransaction: Transaction?
+    @State private var selectedTransactionId: String?
+    @State private var initialTransaction: Transaction?
+    @State private var showTransactionDetail = false
     @State private var selectedSpaceId: String?
     @State private var selectedSpaceProjectId: String?
     @State private var showSpaceDetail = false
@@ -248,8 +250,16 @@ struct ItemDetailView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .navigationDestination(item: $navigationTransaction) { transaction in
-            TransactionDetailView(transaction: transaction)
+        .navigationDestination(isPresented: $showTransactionDetail) {
+            if let selectedTransactionId {
+                TransactionDetailContainer(
+                    transactionId: selectedTransactionId,
+                    projectId: initialTransaction?.projectId,
+                    initialTransaction: initialTransaction
+                )
+            } else {
+                ContentUnavailableView("Transaction Unavailable", systemImage: "doc.text")
+            }
         }
         .navigationDestination(isPresented: $showSpaceDetail) {
             if let selectedSpaceId,
@@ -313,7 +323,7 @@ struct ItemDetailView: View {
                 case .linked:
                     if let tx = linkedTransaction {
                         Button {
-                            navigationTransaction = tx
+                            openTransaction(tx)
                         } label: {
                             FindableText(linkedTransactionLabel)
                                 .font(Typography.small)
@@ -664,7 +674,7 @@ struct ItemDetailView: View {
                                     .foregroundStyle(BrandColors.textTertiary)
                             }
                             Button {
-                                navigationTransaction = transaction
+                                openTransaction(transaction)
                             } label: {
                                 Text(lineageTransactionLabel(transaction))
                                     .font(Typography.caption.weight(.medium))
@@ -919,6 +929,13 @@ struct ItemDetailView: View {
 
     private func clearItemField(_ fieldName: String) {
         updateItem(fields: [fieldName: NSNull()])
+    }
+
+    private func openTransaction(_ transaction: Transaction) {
+        guard let id = transaction.id else { return }
+        selectedTransactionId = id
+        initialTransaction = transaction
+        showTransactionDetail = true
     }
 
     private func updateItem(fields: [String: Any]) {

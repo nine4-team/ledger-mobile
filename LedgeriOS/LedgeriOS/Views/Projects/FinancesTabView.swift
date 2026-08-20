@@ -144,6 +144,7 @@ private struct CandidateReceivablesSection: View {
     @State private var selectedItemId: String?
     @State private var showItemDetail = false
     @State private var selectedTransactionId: String?
+    @State private var initialTransaction: Transaction?
     @State private var showTransactionDetail = false
 
     private var projectId: String? { projectContext.currentProjectId }
@@ -310,9 +311,12 @@ private struct CandidateReceivablesSection: View {
             }
         }
         .navigationDestination(isPresented: $showTransactionDetail) {
-            if let selectedTransactionId,
-               let transaction = projectContext.transactions.first(where: { $0.id == selectedTransactionId }) {
-                TransactionDetailView(transaction: transaction)
+            if let selectedTransactionId {
+                TransactionDetailContainer(
+                    transactionId: selectedTransactionId,
+                    projectId: initialTransaction?.projectId ?? projectId,
+                    initialTransaction: initialTransaction
+                )
             } else {
                 ContentUnavailableView("Transaction Unavailable", systemImage: "receipt")
             }
@@ -371,6 +375,7 @@ private struct CandidateReceivablesSection: View {
             if let transaction = row.transaction {
                 Button {
                     selectedTransactionId = transaction.id
+                    initialTransaction = transaction
                     showTransactionDetail = transaction.id != nil
                 } label: {
                     CandidateRow(row: row)

@@ -1,12 +1,164 @@
 import SwiftUI
 import FirebaseFirestore
 
+enum TransactionDetailScope: Hashable {
+    case project(String)
+    case inventory
+
+    init(projectId: String?) {
+        if let projectId {
+            self = .project(projectId)
+        } else {
+            self = .inventory
+        }
+    }
+
+    var projectId: String? {
+        guard case .project(let projectId) = self else { return nil }
+        return projectId
+    }
+}
+
+enum TransactionDetailResolution {
+    /// Resolves canonical transaction membership in `itemIds` order. Scoped
+    /// collection data wins over first-paint and exceptional fallback copies.
+    static func linkedItems(
+        itemIds: [String]?,
+        scopedItems: [Item],
+        initialItems: [Item],
+        externalItems: [Item],
+        pendingItems: [Item]
+    ) -> [Item] {
+        guard let itemIds, !itemIds.isEmpty else { return [] }
+
+        var byId: [String: Item] = [:]
+        for source in [pendingItems, externalItems, initialItems, scopedItems] {
+            for item in source {
+                guard let id = item.id else { continue }
+                byId[id] = item
+            }
+        }
+
+        var seen = Set<String>()
+        return itemIds.compactMap { id in
+            guard seen.insert(id).inserted else { return nil }
+            return byId[id]
+        }
+    }
+}
+
+/// Establishes the collection scope required by transaction detail.
+///
+/// Project-origin navigation reuses its already-active ProjectContext. Search,
+/// Review, and other cross-project entry points get an isolated context for the
+/// transaction's project. Inventory transactions use the session InventoryContext.
+struct TransactionDetailContainer: View {
+    let transactionId: String
+    let scope: TransactionDetailScope
+    let initialTransaction: Transaction?
+
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
+    @Environment(ProjectContext.self) private var ambientProjectContext
+    @State private var scopedProjectContext: ProjectContext
+
+    init(
+        transactionId: String,
+        projectId: String?,
+        initialTransaction: Transaction? = nil
+    ) {
+        self.transactionId = transactionId
+        self.scope = TransactionDetailScope(projectId: projectId)
+        self.initialTransaction = initialTransaction
+
+        _scopedProjectContext = State(initialValue: ProjectContext(
+            projectService: ProjectService(),
+            transactionsService: TransactionsService(),
+            itemsService: ItemsService(),
+            protoItemsService: ProtoItemsService(),
+            spacesService: SpacesService(),
+            budgetCategoriesService: BudgetCategoriesService(),
+            projectBudgetCategoriesService: ProjectBudgetCategoriesService()
+        ))
+    }
+
+    var body: some View {
+        switch scope {
+        case .inventory:
+            detail
+        case .project(let projectId):
+            if ambientProjectContext.currentProjectId == projectId {
+                detail
+            } else {
+                detail
+                    .environment(scopedProjectContext)
+                    .task(id: activationKey(projectId: projectId)) {
+                        guard let accountId = accountContext.currentAccountId else { return }
+                        scopedProjectContext.activate(
+                            accountId: accountId,
+                            projectId: projectId,
+                            userId: authManager.currentUser?.uid,
+                            member: accountContext.member
+                        )
+                    }
+                    .onChange(of: accountContext.member) { _, member in
+                        scopedProjectContext.updateFinancialAccess(member: member)
+                    }
+            }
+        }
+    }
+
+    private var detail: some View {
+        TransactionDetailView(
+            transactionId: transactionId,
+            scope: scope,
+            initialTransaction: initialTransaction,
+            initialItems: initialLinkedItems
+        )
+    }
+
+    /// AccountContext is already live for Search/Review. These are first-paint
+    /// snapshots only; the working collection remains ProjectContext or
+    /// InventoryContext.
+    private var initialLinkedItems: [Item] {
+        guard let itemIds = initialTransaction?.itemIds, !itemIds.isEmpty else { return [] }
+        let ids = Set(itemIds)
+        return accountContext.allItems.filter { ids.contains($0.id ?? "") }
+    }
+
+    private func activationKey(projectId: String) -> String {
+        [
+            accountContext.currentAccountId ?? "",
+            projectId,
+            authManager.currentUser?.uid ?? "",
+        ].joined(separator: "|")
+    }
+}
+
 /// Full transaction detail screen with hero card, Next Steps, 8 collapsible sections,
 /// and delete action.
 struct TransactionDetailView: View {
-    let transaction: Transaction
+    let transactionId: String
+    let scope: TransactionDetailScope
+    let initialTransaction: Transaction
+    let initialItems: [Item]
+
+    init(
+        transactionId: String,
+        scope: TransactionDetailScope,
+        initialTransaction: Transaction? = nil,
+        initialItems: [Item] = []
+    ) {
+        self.transactionId = transactionId
+        self.scope = scope
+        var fallback = initialTransaction ?? Transaction()
+        fallback.id = transactionId
+        self.initialTransaction = fallback
+        self.initialItems = initialItems
+    }
 
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(InventoryContext.self) private var inventoryContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
     @Environment(MediaService.self) private var mediaService
@@ -28,7 +180,9 @@ struct TransactionDetailView: View {
     @State private var showCreateNewItem = false
     @State private var showCreateItemDraft = false
     @State private var selectedProtoItem: ProtoItem?
-    @State private var navigationItem: Item?
+    @State private var selectedNavigationItemId: String?
+    @State private var initialNavigationItem: Item?
+    @State private var showItemDetail = false
     @State private var selectedItemIds: Set<String> = []
     @State private var itemActions = ItemActionsController()
     @State private var protoItemPendingDelete: ProtoItem?
@@ -80,8 +234,52 @@ struct TransactionDetailView: View {
 
     // MARK: - Computed
 
+    private var scopedItems: [Item] {
+        switch scope {
+        case .project:
+            return projectContext.items
+        case .inventory:
+            return inventoryContext.items
+        }
+    }
+
+    private var scopedTransactions: [Transaction] {
+        switch scope {
+        case .project:
+            return projectContext.transactions
+        case .inventory:
+            return inventoryContext.transactions
+        }
+    }
+
+    private var scopedSpaces: [Space] {
+        switch scope {
+        case .project:
+            return projectContext.spaces
+        case .inventory:
+            return inventoryContext.spaces
+        }
+    }
+
+    private var scopedProject: Project? {
+        guard let projectId = scope.projectId else { return nil }
+        if projectContext.project?.id == projectId {
+            return projectContext.project
+        }
+        return accountContext.allProjects.first { $0.id == projectId }
+    }
+
+    private var itemScope: ItemScope {
+        switch scope {
+        case .project: return .project
+        case .inventory: return .inventory
+        }
+    }
+
     private var currentTransaction: Transaction {
-        var tx = liveTransaction ?? projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+        var tx = liveTransaction
+            ?? scopedTransactions.first(where: { $0.id == transactionId })
+            ?? initialTransaction
         let pendingIds = pendingCreatedItems.compactMap(\.id)
         if !pendingIds.isEmpty {
             var ids = tx.itemIds ?? []
@@ -93,7 +291,7 @@ struct TransactionDetailView: View {
     }
 
     private var transactionProjectId: String? {
-        currentTransaction.projectId ?? projectContext.currentProjectId
+        currentTransaction.projectId ?? scope.projectId
     }
 
     /// Raw project budget rows for the transaction's project. Detail can be
@@ -132,20 +330,13 @@ struct TransactionDetailView: View {
     }
 
     private var transactionItems: [Item] {
-        guard let ids = currentTransaction.itemIds, !ids.isEmpty else { return [] }
-        let idSet = Set(ids)
-        let fromContext = projectContext.items.filter { idSet.contains($0.id ?? "") }
-        let contextIds = Set(fromContext.compactMap(\.id))
-        let external = resolvedExternalItems.filter {
-            guard let id = $0.id else { return false }
-            return idSet.contains(id) && !contextIds.contains(id)
-        }
-        let resolvedIds = contextIds.union(external.compactMap(\.id))
-        let pending = pendingCreatedItems.filter {
-            guard let id = $0.id else { return false }
-            return idSet.contains(id) && !resolvedIds.contains(id)
-        }
-        return fromContext + external + pending
+        TransactionDetailResolution.linkedItems(
+            itemIds: currentTransaction.itemIds,
+            scopedItems: scopedItems,
+            initialItems: initialItems,
+            externalItems: resolvedExternalItems,
+            pendingItems: pendingCreatedItems
+        )
     }
 
     private var activeItems: [Item] {
@@ -259,7 +450,7 @@ struct TransactionDetailView: View {
                 }
             }
         }
-        .findEntity(id: transaction.id)
+        .findEntity(id: transactionId)
         .background(BrandColors.background)
         .safeAreaInset(edge: .bottom) {
             if !selectedItemIds.isEmpty {
@@ -274,16 +465,23 @@ struct TransactionDetailView: View {
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
         }
-        .navigationDestination(item: $navigationItem) { item in
-            ItemDetailView(item: item)
+        .navigationDestination(isPresented: $showItemDetail) {
+            if let selectedNavigationItemId {
+                ItemDetailView(
+                    itemId: selectedNavigationItemId,
+                    projectId: initialNavigationItem?.projectId,
+                    initialItem: initialNavigationItem
+                )
+            } else {
+                ContentUnavailableView("Item Unavailable", systemImage: "cube.box")
+            }
         }
-        .task(id: transaction.id) {
+        .task(id: transactionId) {
             await loadLineageItems()
             await loadExternalItems()
         }
         .onAppear {
-            guard let accountId = accountContext.currentAccountId,
-                  let transactionId = transaction.id else { return }
+            guard let accountId = accountContext.currentAccountId else { return }
             transactionListener?.remove()
             transactionListener = TransactionsService()
                 .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { tx in
@@ -344,8 +542,8 @@ struct TransactionDetailView: View {
         }
         .itemActionSheets(
             itemActions,
-            spaces: projectContext.spaces,
-            transactions: projectContext.transactions,
+            spaces: scopedSpaces,
+            transactions: scopedTransactions,
             accountId: accountContext.currentAccountId,
             onActionComplete: { selectedItemIds.removeAll() }
         )
@@ -440,7 +638,7 @@ struct TransactionDetailView: View {
         .adaptivePresentation(isPresented: $showCreateItemDraft, style: .form) {
             ItemDraftCaptureSheet(
                 projectId: transactionProjectId,
-                projectName: projectContext.project?.name,
+                projectName: scopedProject?.name,
                 transactionId: currentTransaction.id,
                 transactionName: TransactionDisplayCalculations.displayName(for: currentTransaction)
             )
@@ -464,7 +662,7 @@ struct TransactionDetailView: View {
         .adaptivePresentation(item: $protoItemPendingMerge, style: .fullSheet) { protoItem in
             ItemQuickDraftMergePicker(
                 protoItem: protoItem,
-                items: dedupeItems(projectContext.items + accountContext.allItems),
+                items: dedupeItems(scopedItems + accountContext.allItems),
                 onMerge: { item in
                     Task { await mergeProtoItem(protoItem, into: item) }
                 }
@@ -489,7 +687,7 @@ struct TransactionDetailView: View {
         .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(
                 context: .transaction(currentTransaction),
-                projectId: projectContext.project?.id,
+                projectId: transactionProjectId,
                 onDismiss: { showAddExistingItems = false }
             )
         }
@@ -498,14 +696,14 @@ struct TransactionDetailView: View {
         }
         .adaptivePresentation(isPresented: $showBulkSetSpace, style: .picker) {
             SetSpaceModal(
-                spaces: projectContext.spaces,
+                spaces: scopedSpaces,
                 currentSpaceId: nil,
                 onSelect: { space in setSpaceForSelected(spaceId: space?.id) }
             )
         }
         .adaptivePresentation(isPresented: $showBulkTransactionPicker, style: .picker) {
             TransactionPickerModal(
-                transactions: projectContext.transactions,
+                transactions: scopedTransactions,
                 selectedId: currentTransaction.id,
                 onSelect: { tx in
                     if let txId = tx.id { setTransactionForSelected(transactionId: txId) }
@@ -948,7 +1146,9 @@ struct TransactionDetailView: View {
         if expandedSections.contains("items") {
             SharedItemsList(
                 mode: .embedded(items: activeItems, onItemPress: { itemId in
-                    navigationItem = activeItems.first { $0.id == itemId }
+                    if let item = activeItems.first(where: { $0.id == itemId }) {
+                        openItem(item)
+                    }
                 }),
                 getMenuItems: { singleItemMenuItems(for: $0) },
                 emptyMessage: "No items yet",
@@ -1068,7 +1268,7 @@ struct TransactionDetailView: View {
                                 priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
                                 indexLabel: "\(index + 1)/\(group.count)",
                                 statusOverride: statusOverride,
-                                onPress: { navigationItem = item }
+                                onPress: { openItem(item) }
                             )
                         }
                     }
@@ -1077,7 +1277,7 @@ struct TransactionDetailView: View {
                         item: item,
                         priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
                         statusOverride: statusOverride,
-                        onPress: { navigationItem = item }
+                        onPress: { openItem(item) }
                     )
                 }
             }
@@ -1160,7 +1360,7 @@ struct TransactionDetailView: View {
     private var bulkActionMenuItems: [ActionMenuItem] {
         ItemMenuBuilder.buildBulkMenu(
             context: .transaction,
-            scope: .project,
+            scope: itemScope,
             callbacks: BulkItemMenuCallbacks(
                 onStatusChange: { _ in showBulkStatusPicker = true },
                 onSetTransaction: { showBulkTransactionPicker = true },
@@ -1181,8 +1381,7 @@ struct TransactionDetailView: View {
     // MARK: - Lineage
 
     private func loadLineageItems() async {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
 
         do {
             let edges = try await LineageEdgesService()
@@ -1214,7 +1413,7 @@ struct TransactionDetailView: View {
                 $0.value.movementKind == "sold" || $0.value.movementKind == "soldToInventory"
             }.keys)
 
-            var returnedResolved = projectContext.items.filter { returnedIds.contains($0.id ?? "") }
+            var returnedResolved = scopedItems.filter { returnedIds.contains($0.id ?? "") }
             let foundReturnedIds = Set(returnedResolved.compactMap(\.id))
             let missingReturnedIds = returnedIds.subtracting(foundReturnedIds)
             if !missingReturnedIds.isEmpty {
@@ -1227,7 +1426,7 @@ struct TransactionDetailView: View {
             }
 
             // Sold items may have left the project — try context first, then fetch missing
-            var soldResolved = projectContext.items.filter { soldIds.contains($0.id ?? "") }
+            var soldResolved = scopedItems.filter { soldIds.contains($0.id ?? "") }
             let foundSoldIds = Set(soldResolved.compactMap(\.id))
             let missingSoldIds = soldIds.subtracting(foundSoldIds)
             if !missingSoldIds.isEmpty {
@@ -1246,12 +1445,15 @@ struct TransactionDetailView: View {
         }
     }
 
-    /// Fetch items not in project context (e.g. inventory items in project_to_business canonical sales).
+    /// Canonical inventory movements can legitimately link items outside the
+    /// transaction's collection scope. Only those transactions use focused
+    /// fallback reads; an unloaded context must never turn into N item reads.
     private func loadExternalItems() async {
         guard let accountId = accountContext.currentAccountId,
+              currentTransaction.isCanonicalInventorySale == true,
               let ids = currentTransaction.itemIds, !ids.isEmpty else { return }
         let idSet = Set(ids)
-        let contextIds = Set(projectContext.items.compactMap(\.id).filter { idSet.contains($0) })
+        let contextIds = Set(scopedItems.compactMap(\.id).filter { idSet.contains($0) })
         let missingIds = idSet.subtracting(contextIds)
         guard !missingIds.isEmpty else { return }
 
@@ -1266,6 +1468,13 @@ struct TransactionDetailView: View {
     }
 
     // MARK: - Helpers
+
+    private func openItem(_ item: Item) {
+        guard let id = item.id else { return }
+        selectedNavigationItemId = id
+        initialNavigationItem = item
+        showItemDetail = true
+    }
 
     private func sectionBinding(_ key: String) -> Binding<Bool> {
         Binding(
@@ -1320,8 +1529,7 @@ struct TransactionDetailView: View {
     // MARK: - Image Management (Receipts)
 
     private func uploadReceiptImage(_ upload: AttachmentUpload) async throws {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
         let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
@@ -1349,8 +1557,7 @@ struct TransactionDetailView: View {
     }
 
     private func uploadReceiptPDF(_ data: Data, fileName: String) async throws {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
         let storageFileName = "\(UUID().uuidString).pdf"
         let path = mediaService.uploadPath(
             accountId: accountId,
@@ -1393,8 +1600,7 @@ struct TransactionDetailView: View {
     // MARK: - Image Management (Other Images)
 
     private func uploadOtherImage(_ upload: AttachmentUpload) async throws {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
         let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
@@ -1540,8 +1746,7 @@ struct TransactionDetailView: View {
     }
 
     private func updateTransaction(fields: [String: Any]) {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else {
+        guard let accountId = accountContext.currentAccountId else {
             print("⚠️ updateTransaction skipped — missing accountId or transactionId")
             return
         }
@@ -1558,8 +1763,7 @@ struct TransactionDetailView: View {
 
 
     private func deleteTransaction() {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
         Task {
             try? await TransactionsService()
                 .deleteTransaction(accountId: accountId, transactionId: transactionId)
@@ -1569,8 +1773,7 @@ struct TransactionDetailView: View {
 
     private func createItemsFromImageGroups(_ groups: [ImageGroup]) {
         guard let accountId = accountContext.currentAccountId,
-              let projectId = transactionProjectId,
-              let transactionId = transaction.id else { return }
+              let projectId = transactionProjectId else { return }
 
         let items = groups.map { group -> Item in
             var images = group.images

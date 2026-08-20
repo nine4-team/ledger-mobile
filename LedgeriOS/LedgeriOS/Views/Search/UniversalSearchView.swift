@@ -31,7 +31,9 @@ struct UniversalSearchView: View {
     @State private var selectedTransactionIds: Set<String> = []
     @State private var showTransactionBulkActions = false
     @State private var showTransactionDeleteConfirmation = false
-    @State private var navigationTransaction: Transaction?
+    @State private var selectedTransactionId: String?
+    @State private var initialTransaction: Transaction?
+    @State private var showTransactionDetail = false
 
     // Space navigation
     @State private var selectedSpaceId: String?
@@ -75,7 +77,17 @@ struct UniversalSearchView: View {
         searchContent
             .navigationTitle("Search")
             .navBarTitleDisplayMode(.inline)
-            .transactionSearchDestination(item: $navigationTransaction)
+            .navigationDestination(isPresented: $showTransactionDetail) {
+                if let selectedTransactionId {
+                    TransactionDetailContainer(
+                        transactionId: selectedTransactionId,
+                        projectId: initialTransaction?.projectId,
+                        initialTransaction: initialTransaction
+                    )
+                } else {
+                    ContentUnavailableView("Transaction Unavailable", systemImage: "doc.text")
+                }
+            }
             .protoItemSearchDestination(item: $selectedProtoItem)
             .navigationDestination(isPresented: $showItemDetail) {
                 if let selectedItemId,
@@ -365,7 +377,7 @@ struct UniversalSearchView: View {
                         isSelected: isSelected,
                         menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : [],
                         onPress: selectedTransactionIds.isEmpty ? {
-                            navigationTransaction = transaction
+                            openTransaction(transaction)
                         } : nil
                     )
 
@@ -543,6 +555,13 @@ struct UniversalSearchView: View {
 
     // MARK: - Transaction Actions
 
+    private func openTransaction(_ transaction: Transaction) {
+        guard let id = transaction.id else { return }
+        selectedTransactionId = id
+        initialTransaction = transaction
+        showTransactionDetail = true
+    }
+
     private func deleteSingleTransaction() {
         guard let accountId = accountContext.currentAccountId,
               let txId = actionTargetTransactionId else { return }
@@ -647,16 +666,6 @@ private struct ProtoItemSearchDestinationModifier: ViewModifier {
     }
 }
 
-private struct TransactionSearchDestinationModifier: ViewModifier {
-    @Binding var item: Transaction?
-
-    func body(content: Content) -> some View {
-        content.navigationDestination(item: $item) { transaction in
-            TransactionDetailView(transaction: transaction)
-        }
-    }
-}
-
 private struct UniversalSearchSelectionBarModifier: ViewModifier {
     @Binding var selectedItemIds: Set<String>
     @Binding var selectedTransactionIds: Set<String>
@@ -756,10 +765,6 @@ private struct UniversalSearchBackgroundModifier<PresentationHost: View>: ViewMo
 }
 
 private extension View {
-    func transactionSearchDestination(item: Binding<Transaction?>) -> some View {
-        modifier(TransactionSearchDestinationModifier(item: item))
-    }
-
     func protoItemSearchDestination(item: Binding<ProtoItem?>) -> some View {
         modifier(ProtoItemSearchDestinationModifier(item: item))
     }

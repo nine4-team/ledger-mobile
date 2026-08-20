@@ -20,6 +20,35 @@ struct NavigationRouteResolutionTests {
         return i
     }
 
+    @Test("Transaction detail resolves every canonical item from its scope")
+    func transactionDetailResolvesCanonicalScopedItems() {
+        let itemIds = (1...23).map { "item-\($0)" }
+        let scopedItems = itemIds.reversed().map { item(id: $0) } + [item(id: "unrelated")]
+
+        let resolved = TransactionDetailResolution.linkedItems(
+            itemIds: itemIds,
+            scopedItems: scopedItems,
+            initialItems: [],
+            externalItems: [],
+            pendingItems: []
+        )
+
+        #expect(resolved.compactMap(\.id) == itemIds)
+    }
+
+    @Test("Transaction detail prefers scoped data over seed snapshots")
+    func transactionDetailPrefersScopedData() {
+        let resolved = TransactionDetailResolution.linkedItems(
+            itemIds: ["item-1"],
+            scopedItems: [item(id: "item-1", name: "Scoped")],
+            initialItems: [item(id: "item-1", name: "Seed")],
+            externalItems: [],
+            pendingItems: []
+        )
+
+        #expect(resolved.first?.name == "Scoped")
+    }
+
     private func space(id: String, name: String = "") -> Space {
         var s = Space()
         s.id = id

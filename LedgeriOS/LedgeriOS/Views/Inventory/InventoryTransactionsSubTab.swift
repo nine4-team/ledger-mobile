@@ -21,7 +21,9 @@ struct InventoryTransactionsSubTab: View {
     @State private var showNewTransaction = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
-    @State private var navigationTransaction: Transaction?
+    @State private var selectedTransactionId: String?
+    @State private var initialTransaction: Transaction?
+    @State private var showTransactionDetail = false
     @State private var expandedInventoryGroups: Set<String> = []
 
     // Single-transaction actions
@@ -158,11 +160,19 @@ struct InventoryTransactionsSubTab: View {
             let _ = print("🟢 [TxSubTab] NewTransactionView sheet body evaluated")
             NewTransactionView(
                 context: .inventory,
-                onCreated: { navigationTransaction = $0 }
+                onCreated: { openTransaction($0) }
             )
         }
-        .navigationDestination(item: $navigationTransaction) { tx in
-            TransactionDetailView(transaction: tx)
+        .navigationDestination(isPresented: $showTransactionDetail) {
+            if let selectedTransactionId {
+                TransactionDetailContainer(
+                    transactionId: selectedTransactionId,
+                    projectId: nil,
+                    initialTransaction: initialTransaction
+                )
+            } else {
+                ContentUnavailableView("Transaction Unavailable", systemImage: "doc.text")
+            }
         }
         .background(SortMenu(
             isPresented: $showSortMenu,
@@ -278,7 +288,7 @@ struct InventoryTransactionsSubTab: View {
             ) {
                 ForEach(plannedPurchaseIntents) { intent in
                     Button {
-                        navigationTransaction = intent.transaction
+                        openTransaction(intent.transaction)
                     } label: {
                         Card(accent: true) {
                             VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -367,7 +377,7 @@ struct InventoryTransactionsSubTab: View {
             ),
             menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : [],
             onPress: selectedIds.isEmpty ? {
-                navigationTransaction = transaction
+                openTransaction(transaction)
             } : nil
         )
     }
@@ -397,6 +407,13 @@ struct InventoryTransactionsSubTab: View {
     }
 
     // MARK: - Actions
+
+    private func openTransaction(_ transaction: Transaction) {
+        guard let id = transaction.id else { return }
+        selectedTransactionId = id
+        initialTransaction = transaction
+        showTransactionDetail = true
+    }
 
     private func toggleSelection(_ txId: String) {
         if selectedIds.contains(txId) {

@@ -5,7 +5,9 @@ struct ReviewView: View {
     @State private var selectedBucketId: String = "unassigned"
     @State private var searchText = ""
     @State private var activeSort: TransactionSortOption = .dateDesc
-    @State private var selectedTransaction: Transaction?
+    @State private var selectedTransactionId: String?
+    @State private var initialTransaction: Transaction?
+    @State private var showTransactionDetail = false
     @Environment(FindStateManager.self) private var findState
 
     private static let unassignedId = "unassigned"
@@ -86,8 +88,16 @@ struct ReviewView: View {
         }
         .navigationTitle("Review")
         .navBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $selectedTransaction) { transaction in
-            TransactionDetailView(transaction: transaction)
+        .navigationDestination(isPresented: $showTransactionDetail) {
+            if let selectedTransactionId {
+                TransactionDetailContainer(
+                    transactionId: selectedTransactionId,
+                    projectId: initialTransaction?.projectId,
+                    initialTransaction: initialTransaction
+                )
+            } else {
+                ContentUnavailableView("Transaction Unavailable", systemImage: "doc.text")
+            }
         }
         .background(BrandColors.background)
         .onChange(of: activeProjects.map { $0.id ?? "" }) { _, _ in
@@ -155,7 +165,7 @@ struct ReviewView: View {
                                     projects: accountContext.allProjects
                                 ),
                                 onPress: {
-                                    selectedTransaction = transaction
+                                    openTransaction(transaction)
                                 }
                             )
                             .id(transaction.id ?? "")
@@ -169,6 +179,13 @@ struct ReviewView: View {
                 }
             }
         }
+    }
+
+    private func openTransaction(_ transaction: Transaction) {
+        guard let id = transaction.id else { return }
+        selectedTransactionId = id
+        initialTransaction = transaction
+        showTransactionDetail = true
     }
 }
 
