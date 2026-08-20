@@ -13,7 +13,7 @@ import {
 import { notFound, validation } from "../util/errors.js";
 import { tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
-import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
+import { isInventorySource, resolveInventoryLabel, usesProjectPriceForAudit } from "../util/inventory.js";
 import { resolveCategoryType } from "../util/budget.js";
 
 const DiscountInput = z.object({
@@ -51,7 +51,10 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         ? await getDocs<Item>(db, "items", itemIds)
         : { found: [] as (Item & { id: string })[] };
 
-      const itemsSumCents = items.reduce((sum, i) => sum + (i.purchasePriceCents ?? 0), 0);
+      const usesProjectPrice = usesProjectPriceForAudit(tx);
+      const priceField = usesProjectPrice ? "projectPriceCents" : "purchasePriceCents";
+      const priceLabel = usesProjectPrice ? "project price" : "purchase price";
+      const itemsSumCents = items.reduce((sum, i) => sum + (i[priceField] ?? 0), 0);
       const subtotalCents = tx.subtotalCents ?? null;
       const discountCents = tx.discount?.amountCents ?? 0;
       const discountedItemsSumCents = Math.max(0, itemsSumCents - discountCents);
@@ -62,7 +65,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           ? Math.round((Math.abs(varianceCents!) / subtotalCents) * 10000) / 100
           : null;
 
-      const itemsMissingPrice = items.filter((i) => i.purchasePriceCents == null);
+      const itemsMissingPrice = items.filter((i) => (i[priceField] ?? 0) <= 0);
       const itemsMissingTax = items.filter((i) => i.taxRatePct == null);
       const itemsMissingName = items.filter((i) => !i.name && !i.description);
 
@@ -84,8 +87,8 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       }
       if (itemsMissingPrice.length > 0) {
         suggestions.push({
-          action: `Set purchasePriceCents on ${itemsMissingPrice.length} item(s)`,
-          detail: `Missing price on: ${itemsMissingPrice.map((i) => i.id).join(", ")}`,
+          action: `Set ${priceField} on ${itemsMissingPrice.length} item(s)`,
+          detail: `Missing ${priceLabel} on: ${itemsMissingPrice.map((i) => i.id).join(", ")}`,
           tool: "bulk_update_items_by_id",
         });
       }
@@ -282,7 +285,12 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         if (transaction.projectId && !routeInventorySource) itemData.projectId = transaction.projectId;
         if (transaction.projectId && routeInventorySource) itemData.projectId = transaction.projectId;
         if (item.purchasePriceCents !== undefined) itemData.purchasePriceCents = item.purchasePriceCents;
-        if (item.projectPriceCents !== undefined) itemData.projectPriceCents = item.projectPriceCents;
+        if ((item.projectPriceCents ?? 0) > 0) itemData.projectPriceCents = item.projectPriceCents;
+        else if (routeInventorySource && (item.purchasePriceCents ?? 0) > 0) {
+          itemData.projectPriceCents = item.purchasePriceCents;
+        } else if (item.projectPriceCents !== undefined) {
+          itemData.projectPriceCents = item.projectPriceCents;
+        }
         const itemSource = item.source;
         if (itemSource) {
           itemData.source = itemSource;

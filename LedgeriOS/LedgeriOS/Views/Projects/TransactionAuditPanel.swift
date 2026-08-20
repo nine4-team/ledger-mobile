@@ -7,6 +7,7 @@ import SwiftUI
 struct TransactionAuditPanel: View {
     let audit: TransactionAudit
     let hasExplicitSubtotal: Bool
+    let usesProjectPrice: Bool
     let itemsMissingPrice: [Item]
     let itemsCount: Int
 
@@ -100,7 +101,7 @@ struct TransactionAuditPanel: View {
 
             let missingCount = itemsMissingPrice.count
             if missingCount > 0 {
-                Text("\(missingCount) items missing purchase price")
+                Text("\(missingCount) items missing \(usesProjectPrice ? "project" : "purchase") price")
                     .font(Typography.caption)
                     .foregroundStyle(StatusColors.inProgressText)
             }
@@ -120,7 +121,7 @@ struct TransactionAuditPanel: View {
             CardDivider()
                 .padding(.vertical, Spacing.sm)
 
-            Text("Missing Purchase Price")
+            Text(usesProjectPrice ? "Missing Project Price" : "Missing Purchase Price")
                 .font(Typography.small.weight(.medium))
                 .foregroundStyle(BrandColors.textPrimary)
 

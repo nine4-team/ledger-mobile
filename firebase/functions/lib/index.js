@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
 const firestore_2 = require("firebase-functions/v2/firestore");
+const transactionAuditPricing_1 = require("./transactionAuditPricing");
 admin.initializeApp();
 exports.createWithQuota = (0, https_1.onCall)(async (request) => {
     const uid = request.auth?.uid;
@@ -1041,7 +1042,10 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
     if (resolvedSubtotalCents === null || resolvedSubtotalCents <= 0) {
         return { isComplete: false, audit: null };
     }
-    // 6. Fetch linked items and sum purchasePriceCents
+    // 6. Fetch linked items and sum the transaction's canonical item price.
+    // Inventory → project Purchases use projectPriceCents; vendor Purchases and
+    // Returns use purchasePriceCents.
+    const priceBasis = (0, transactionAuditPricing_1.auditPriceBasis)(txData);
     // Firestore 'in' queries max 30 items per batch
     let linkedItemsSumCents = 0;
     const BATCH_SIZE = 30;
@@ -1053,7 +1057,7 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
             .get();
         for (const doc of snapshot.docs) {
             const data = doc.data() ?? {};
-            linkedItemsSumCents += typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+            linkedItemsSumCents += (0, transactionAuditPricing_1.auditItemPriceCents)(priceBasis, data);
         }
     }
     // 6b. Fetch lineage items and sum by movementKind
@@ -1071,7 +1075,7 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
                 .get();
             for (const doc of snapshot.docs) {
                 const data = doc.data() ?? {};
-                const priceCents = typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+                const priceCents = (0, transactionAuditPricing_1.auditItemPriceCents)(priceBasis, data);
                 const edgeInfo = lineageItemMap.get(doc.id);
                 if (edgeInfo?.movementKind === 'returned') {
                     returnedItemsSumCents += priceCents;

@@ -215,6 +215,11 @@ struct TransactionDetailView: View {
         currentTransaction.audit
     }
 
+    private var auditUsesProjectPrice: Bool {
+        currentTransaction.transactionType == .purchase
+            && currentTransaction.isInventoryMovement
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -1124,7 +1129,13 @@ struct TransactionDetailView: View {
                 TransactionAuditPanel(
                     audit: audit,
                     hasExplicitSubtotal: (currentTransaction.subtotalCents ?? 0) > 0,
-                    itemsMissingPrice: transactionItems.filter { ($0.purchasePriceCents ?? 0) == 0 },
+                    usesProjectPrice: auditUsesProjectPrice,
+                    itemsMissingPrice: transactionItems.filter { item in
+                        if auditUsesProjectPrice {
+                            return (item.projectPriceCents ?? 0) <= 0
+                        }
+                        return (item.purchasePriceCents ?? 0) <= 0
+                    },
                     itemsCount: transactionItems.count + returnedItems.count + soldItems.count
                 )
                 .padding(.top, Spacing.xs)

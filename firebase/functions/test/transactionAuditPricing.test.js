@@ -1,0 +1,59 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+
+const {
+  auditItemPriceCents,
+  auditPriceBasis,
+} = require('../lib/transactionAuditPricing.js');
+
+test('inventory-sourced project Purchase uses project prices', () => {
+  const basis = auditPriceBasis({
+    type: 'Purchase',
+    projectId: 'project-1',
+    source: '1584 Design Inventory',
+  });
+
+  assert.equal(basis, 'project');
+  assert.equal(auditItemPriceCents(basis, {
+    purchasePriceCents: 37698,
+    projectPriceCents: 47123,
+  }), 47123);
+});
+
+test('ordinary vendor Purchase remains purchase-price based', () => {
+  const basis = auditPriceBasis({
+    type: 'Purchase',
+    projectId: 'project-1',
+    source: 'Wayfair',
+  });
+
+  assert.equal(basis, 'purchase');
+  assert.equal(auditItemPriceCents(basis, {
+    purchasePriceCents: 37698,
+    projectPriceCents: 47123,
+  }), 37698);
+});
+
+test('Returns remain purchase-price based, including inventory returns', () => {
+  const basis = auditPriceBasis({
+    type: 'Return',
+    projectId: 'project-1',
+    source: '1584 Design Inventory',
+  });
+
+  assert.equal(basis, 'purchase');
+});
+
+test('inventory-scope Purchases do not use project prices', () => {
+  const basis = auditPriceBasis({
+    type: 'Purchase',
+    source: 'Business Inventory',
+  });
+
+  assert.equal(basis, 'purchase');
+});
+
+test('missing canonical price contributes zero instead of crossing price bases', () => {
+  assert.equal(auditItemPriceCents('project', { purchasePriceCents: 10000 }), 0);
+  assert.equal(auditItemPriceCents('purchase', { projectPriceCents: 12000 }), 0);
+});

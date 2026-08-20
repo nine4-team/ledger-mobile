@@ -87,10 +87,10 @@ The Cloud Function writes a nested `audit` object alongside `isComplete`:
 | `discountCents` | integer (cents) | Transaction-level discount applied before comparing item totals. Uses `discount.amountCents` when present |
 | `varianceCents` | integer (cents) | `(itemsSumCents - discountCents) - resolvedSubtotalCents` |
 | `variancePercent` | decimal | `(varianceCents / resolvedSubtotalCents) × 100` |
-| `linkedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items currently in `itemIds` |
-| `returnedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"returned"` lineage edges |
+| `linkedItemsSumCents` | integer (cents) | Sum of the transaction's canonical item price for items currently in `itemIds` |
+| `returnedItemsSumCents` | integer (cents) | Sum of the transaction's canonical item price for items that left via `"returned"` lineage edges |
 | `returnedItemsCount` | integer | Count of items that left via `"returned"` lineage edges |
-| `soldItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"sold"` lineage edges |
+| `soldItemsSumCents` | integer (cents) | Sum of the transaction's canonical item price for items that left via `"sold"` lineage edges |
 | `soldItemsCount` | integer | Count of items that left via `"sold"` lineage edges |
 
 ## Cloud Function Triggers
@@ -105,7 +105,9 @@ Fires on every transaction create, update, or delete. Computes `isComplete` + `a
 
 ### 2. Item Price Change
 
-When `purchasePriceCents` changes on an item, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold", "soldToInventory"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction.
+For ordinary vendor Purchases and Returns, the canonical audit price is `purchasePriceCents`. For project-destination Purchases whose source is the business inventory label, it is `projectPriceCents`. Linked and lineage items always inherit the price basis of the transaction being audited.
+
+When an applicable item price changes, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold", "soldToInventory"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction. Frozen inventory movement transactions are intentionally skipped because their amounts are historical snapshots.
 
 ### 3. Budget Category Shape Change (`onAccountBudgetCategoryWritten`)
 

@@ -8,6 +8,7 @@ import {
 } from 'firebase-admin/firestore';
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { auditItemPriceCents, auditPriceBasis } from './transactionAuditPricing';
 
 admin.initializeApp();
 
@@ -1421,7 +1422,10 @@ async function computeIsComplete(
     return { isComplete: false, audit: null };
   }
 
-  // 6. Fetch linked items and sum purchasePriceCents
+  // 6. Fetch linked items and sum the transaction's canonical item price.
+  // Inventory → project Purchases use projectPriceCents; vendor Purchases and
+  // Returns use purchasePriceCents.
+  const priceBasis = auditPriceBasis(txData);
   // Firestore 'in' queries max 30 items per batch
   let linkedItemsSumCents = 0;
   const BATCH_SIZE = 30;
@@ -1433,7 +1437,7 @@ async function computeIsComplete(
       .get();
     for (const doc of snapshot.docs) {
       const data = doc.data() ?? {};
-      linkedItemsSumCents += typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+      linkedItemsSumCents += auditItemPriceCents(priceBasis, data);
     }
   }
 
@@ -1453,7 +1457,7 @@ async function computeIsComplete(
         .get();
       for (const doc of snapshot.docs) {
         const data = doc.data() ?? {};
-        const priceCents = typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+        const priceCents = auditItemPriceCents(priceBasis, data);
         const edgeInfo = lineageItemMap.get(doc.id);
         if (edgeInfo?.movementKind === 'returned') {
           returnedItemsSumCents += priceCents;

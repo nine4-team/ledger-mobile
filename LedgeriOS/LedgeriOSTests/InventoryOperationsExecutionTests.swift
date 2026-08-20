@@ -180,13 +180,13 @@ struct SellToProjectExecutionTests {
         #expect(batch.updates.isEmpty)
     }
 
-    // I6: sellToProject with item missing projectPriceCents
-    @Test("item missing projectPriceCents contributes 0 to amount, still in itemIds")
+    // I6: sellToProject initializes a missing project price from purchase price
+    @Test("item missing projectPriceCents uses and persists purchasePriceCents")
     func missingProjectPriceCents() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         let items = [
-            makeItem(id: "i1", projectId: nil, purchasePriceCents: nil, projectPriceCents: nil),
+            makeItem(id: "i1", projectId: nil, purchasePriceCents: 5000, projectPriceCents: nil),
             makeItem(id: "i2", projectId: nil, purchasePriceCents: 5000, projectPriceCents: 6000),
         ]
 
@@ -196,9 +196,11 @@ struct SellToProjectExecutionTests {
         )
 
         let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }!.fields
-        // i1 contributes 0, i2 contributes 6000
-        #expect(purchase["amountCents"] as? Int == 6000)
-        #expect(purchase["subtotalCents"] as? Int == 6000)
+        #expect(purchase["amountCents"] as? Int == 11000)
+        #expect(purchase["subtotalCents"] as? Int == 11000)
+
+        let item1Updates = batch.updatesForPath("accounts/\(acct)/items/i1")
+        #expect(item1Updates[0].fields["projectPriceCents"] as? Int == 5000)
 
         // Both items still in itemIds
         let itemIds = purchase["itemIds"] as? [String] ?? []
@@ -272,8 +274,8 @@ struct SellToProjectExecutionTests {
         #expect(catSets[0].fields["updatedBy"] as? String == "user1")
     }
 
-    @Test("projectPriceCents missing — not backfilled from purchasePriceCents")
-    func projectPriceNotBackfilledFromPurchasePrice() async throws {
+    @Test("projectPriceCents missing — initialized from purchasePriceCents")
+    func projectPriceBackfilledFromPurchasePrice() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         let item = makeItem(id: "i1", projectId: nil, purchasePriceCents: 5000, projectPriceCents: nil)
@@ -284,7 +286,7 @@ struct SellToProjectExecutionTests {
         )
 
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
-        #expect(itemUpdates[0].fields["projectPriceCents"] == nil)
+        #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 5000)
     }
 
     @Test("projectPriceCents written when provided")
@@ -532,7 +534,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
             makeItem(id: "i1", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 2000, transactionId: "oldTx",
                      projectPriceCents: 2500, source: "Wayfair", currentSource: "Business Inventory"),
             makeItem(id: "i2", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 3000, transactionId: "oldTx",
-                     projectPriceCents: 3500, source: "Wayfair", currentSource: "Business Inventory"),
+                     projectPriceCents: nil, source: "Wayfair", currentSource: "Business Inventory"),
         ]
 
         try await service.sellItemsFromProjectToProject(
@@ -554,8 +556,8 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let purchase = purchaseSets[0].fields
         #expect(purchase["projectId"] as? String == "dstProj")
         #expect(purchase["budgetCategoryId"] as? String == "cat1")
-        #expect(purchase["amountCents"] as? Int == 6000)
-        #expect(purchase["subtotalCents"] as? Int == 6000)
+        #expect(purchase["amountCents"] as? Int == 5500)
+        #expect(purchase["subtotalCents"] as? Int == 5500)
 
         for itemId in ["i1", "i2"] {
             let updates = batch.updatesForPath("accounts/\(acct)/items/\(itemId)")
@@ -564,6 +566,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
             #expect(f["projectId"] as? String == "dstProj")
             #expect(f["budgetCategoryId"] as? String == "cat1")
             #expect(f["status"] as? String == "purchased")
+            #expect(f["projectPriceCents"] as? Int == (itemId == "i1" ? 2500 : 3000))
         }
 
         let edges = batch.lineageEdges(accountId: acct)
@@ -872,16 +875,16 @@ struct ComputeBatchTotalsTests {
         #expect(amountCents == 3600)
     }
 
-    @Test("missing projectPriceCents contributes 0")
-    func missingProjectPriceContributesZero() {
+    @Test("missing projectPriceCents falls back to purchasePriceCents")
+    func missingProjectPriceUsesPurchasePrice() {
         let items = [
             makeItem(id: "i1", purchasePriceCents: 5000, projectPriceCents: nil),
         ]
 
         let (subtotalCents, amountCents) = InventoryOperationsService.computeBatchTotals(items)
 
-        #expect(subtotalCents == 0)
-        #expect(amountCents == 0)
+        #expect(subtotalCents == 5000)
+        #expect(amountCents == 5000)
     }
 
     @Test("both prices nil — contributes 0")

@@ -23,14 +23,14 @@ struct InventoryOperationsServiceTests {
 
     // MARK: - computeBatchTotals
 
-    @Test("computeBatchTotals — subtotalCents sums projectPriceCents only")
-    func subtotalProjectPriceOnly() {
+    @Test("computeBatchTotals — missing project price uses purchase price")
+    func subtotalUsesPurchasePriceFallback() {
         let items = [
             makeItem(id: "i1", purchasePriceCents: 5000, projectPriceCents: 7000),
             makeItem(id: "i2", purchasePriceCents: 3000, projectPriceCents: nil),
         ]
         let (subtotalCents, _) = InventoryOperationsService.computeBatchTotals(items)
-        #expect(subtotalCents == 7000)
+        #expect(subtotalCents == 10000)
     }
 
     @Test("computeBatchTotals — amountCents applies tax when taxRatePct > 0")

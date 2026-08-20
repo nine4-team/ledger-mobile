@@ -199,7 +199,8 @@ struct InventoryOperationsService {
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let projectPrice = item.projectPriceCents {
+            let projectPrice = Self.projectPriceForMovement(item)
+            if projectPrice > 0 {
                 itemUpdate["projectPriceCents"] = projectPrice
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
@@ -816,7 +817,8 @@ struct InventoryOperationsService {
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let projectPrice = item.projectPriceCents {
+            let projectPrice = Self.projectPriceForMovement(item)
+            if projectPrice > 0 {
                 itemUpdate["projectPriceCents"] = projectPrice
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
@@ -1025,14 +1027,15 @@ struct InventoryOperationsService {
     /// Frozen project-price snapshot for a batch of items.
     /// Matches mcp-server/src/tools/inventory-operations.ts `computeProjectPriceTotals`.
     ///
-    /// - `subtotalCents`: sum of (projectPriceCents ?? 0)
+    /// Missing project prices are initialized from a positive purchase price.
+    /// - `subtotalCents`: sum of resolved project prices
     /// - `amountCents`: sum of per-item price-with-tax. If taxRatePct > 0,
     ///   each item contributes round(price * (1 + taxRatePct / 100)). Otherwise, price.
     static func computeBatchTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
         var subtotalCents = 0
         var amountCents = 0
         for item in items {
-            let price = item.projectPriceCents ?? 0
+            let price = projectPriceForMovement(item)
             let rate = item.taxRatePct ?? 0
             subtotalCents += price
             if rate > 0 {
@@ -1042,6 +1045,16 @@ struct InventoryOperationsService {
             }
         }
         return (subtotalCents, amountCents)
+    }
+
+    static func projectPriceForMovement(_ item: Item) -> Int {
+        if let projectPrice = item.projectPriceCents, projectPrice > 0 {
+            return projectPrice
+        }
+        if let purchasePrice = item.purchasePriceCents, purchasePrice > 0 {
+            return purchasePrice
+        }
+        return 0
     }
 
     /// Frozen purchase-price snapshot for standalone project→inventory moves.

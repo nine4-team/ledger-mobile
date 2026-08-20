@@ -18,3 +18,16 @@ export function isInventorySource(source: string | undefined, inventoryLabel: st
   const trimmed = (source ?? "").trim();
   return trimmed === inventoryLabel || trimmed === DEFAULT_INVENTORY_LABEL;
 }
+
+type TransactionPriceContext = {
+  type?: string;
+  source?: string;
+  projectId?: string;
+};
+
+/** Historical branded inventory labels are recognized by the reserved suffix. */
+export function usesProjectPriceForAudit(transaction: TransactionPriceContext): boolean {
+  return transaction.type?.trim().toLowerCase() === "purchase" &&
+    !!transaction.projectId?.trim() &&
+    !!transaction.source?.trim().endsWith(" Inventory");
+}

@@ -896,11 +896,11 @@ struct NewItemView: View {
         acquisition: Transaction,
         item: Item
     ) {
+        let projectPriceCents = InventoryOperationsService.projectPriceForMovement(item)
         guard let acquisitionId = acquisition.id,
               let categoryId = selectedInventorySaleCategoryId,
-              let projectPriceCents = item.projectPriceCents,
               projectPriceCents > 0 else {
-            submissionError = "Choose a project category and enter a project price."
+            submissionError = "Choose a project category and enter a project or purchase price."
             return
         }
         if let intendedProjectId = acquisition.intendedProjectId,
@@ -961,6 +961,7 @@ struct NewItemView: View {
                     copy.currentSource = inventoryLabel
                     copy.source = copy.source ?? acquisition.source
                     copy.taxRatePct = rate
+                    copy.projectPriceCents = projectPriceCents
 
                     var fields = try Firestore.Encoder().encode(copy)
                     fields["accountId"] = accountId
@@ -1035,9 +1036,8 @@ struct NewItemView: View {
                 }
                 let itemIds = itemRefs.map(\.documentID)
                 let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
-                let amountCents = itemIds.reduce(0) { total, _ in
-                    total + (item.projectPriceCents ?? item.purchasePriceCents ?? 0)
-                }
+                let resolvedProjectPrice = InventoryOperationsService.projectPriceForMovement(item)
+                let amountCents = itemIds.reduce(0) { total, _ in total + resolvedProjectPrice }
                 let today = todayDateString()
 
                 batch.setData([
@@ -1062,9 +1062,7 @@ struct NewItemView: View {
                     copy.transactionId = purchaseId
                     copy.currentSource = inventoryLabel
                     copy.accountId = accountId
-                    if copy.projectPriceCents == nil {
-                        copy.projectPriceCents = copy.purchasePriceCents
-                    }
+                    copy.projectPriceCents = resolvedProjectPrice > 0 ? resolvedProjectPrice : nil
 
                     var itemFields = try Firestore.Encoder().encode(copy)
                     itemFields["accountId"] = accountId

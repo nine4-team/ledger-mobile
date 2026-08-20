@@ -88,15 +88,16 @@ When a user purchases items from business inventory into a project:
 - Item count must be 1..100.
 - Destination project must exist.
 - Budget category must exist as a `ProjectBudgetCategory` in the destination project. If not, prompt to enable.
-- Every item must have a positive `projectPriceCents`. If any selected item is missing a project price, the UI asks the user what to sell it for and saves the answer before committing. Non-interactive callers reject the operation and instruct the caller to set `projectPriceCents`.
+- Every item must resolve to a positive project price. Existing positive `projectPriceCents` values are preserved. When it is missing or zero and `purchasePriceCents` is positive, Ledger initializes `projectPriceCents` to the purchase price in the same atomic movement. If neither price is available, the UI asks the user what to sell it for and non-interactive callers reject the operation.
 
 ### 3. Compute the snapshot amount
 
 ```
-amountCents = sum(item.projectPriceCents ?? 0) for item in items
+resolvedProjectPrice(item) = positive projectPriceCents, otherwise positive purchasePriceCents
+amountCents = sum(resolvedProjectPrice(item)) for item in items
 ```
 
-Inventory → project movements use the project-price basis because this is the amount charged to the destination project/client. If any item lacks a project price, the UI asks the user what they want to sell it for and writes that value to `projectPriceCents` before committing the movement.
+Inventory → project movements use the project-price basis because this is the amount charged to the destination project/client. A missing project price is initialized from the purchase price when available; otherwise the UI asks the user what they want to sell it for. The resolved value is written to `projectPriceCents` before or atomically with the movement.
 
 ### 4. Build the Firestore batch
 
@@ -171,7 +172,7 @@ The formula above is the project-price basis used by inventory → project and t
 
 After creation, `amountCents` does not change, even if an item's prices are later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
 
-If a project-price movement is initiated for an item without `projectPriceCents`, the UI must collect that price from the user and persist it on the item before writing the movement. Non-interactive tools reject the call and instruct the caller to set `projectPriceCents` first.
+If a project-price movement is initiated without `projectPriceCents`, Ledger first copies a positive `purchasePriceCents`. If neither price is positive, the UI must collect a price and non-interactive tools reject the call. The resolved price is persisted as `projectPriceCents`.
 
 ## Sign Convention
 

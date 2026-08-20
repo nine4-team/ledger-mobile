@@ -108,7 +108,7 @@ All hops commit atomically when the user invokes **Sell** with a project destina
 
 If any item lacks a project price for the destination hop, the UI asks what it should sell for and saves that value before the atomic move is committed.
 
-Non-interactive inventory tools must reject project-price movements with missing `projectPriceCents` instead of silently using purchase price or writing a zero-amount destination Purchase.
+For project-price movements, a missing or zero `projectPriceCents` is initialized from a positive `purchasePriceCents` and persisted on the item. Non-interactive inventory tools reject the movement only when neither price is positive; they must never write a zero-amount destination Purchase.
 
 ## Display
 

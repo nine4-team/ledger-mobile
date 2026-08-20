@@ -344,7 +344,9 @@ struct SellToProjectModal: View {
     }
 
     private var missingProjectPriceItems: [Item] {
-        items.filter { ($0.projectPriceCents ?? 0) <= 0 }
+        items.filter {
+            ($0.projectPriceCents ?? 0) <= 0 && ($0.purchasePriceCents ?? 0) <= 0
+        }
     }
 
     private func prepareProjectPricePrompts() {
@@ -370,6 +372,10 @@ struct SellToProjectModal: View {
         var result = items
         for index in result.indices {
             guard (result[index].projectPriceCents ?? 0) <= 0 else { continue }
+            if let purchasePrice = result[index].purchasePriceCents, purchasePrice > 0 {
+                result[index].projectPriceCents = purchasePrice
+                continue
+            }
             guard let id = result[index].id,
                   let cents = Self.parseCents(projectPriceTexts[id]),
                   cents > 0 else {

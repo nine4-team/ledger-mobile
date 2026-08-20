@@ -38,6 +38,12 @@ import { isReturnTransactionType } from "../util/enums.js";
 const MAX_BATCH_ITEMS = 100;
 const INVENTORY_LABEL = DEFAULT_INVENTORY_LABEL;
 
+function projectPriceForMovement(item: Item): number {
+  if ((item.projectPriceCents ?? 0) > 0) return item.projectPriceCents!;
+  if ((item.purchasePriceCents ?? 0) > 0) return item.purchasePriceCents!;
+  return 0;
+}
+
 /**
  * Resolve a frozen project-price snapshot for a batch of items. Used for
  * inventory→project destination purchases.
@@ -51,7 +57,7 @@ function computeProjectPriceTotals(items: (Item & { id: string })[]): {
   let amountCents = 0;
   const missingTax: string[] = [];
   for (const item of items) {
-    const price = item.projectPriceCents ?? 0;
+    const price = projectPriceForMovement(item);
     const rate = item.taxRatePct ?? 0;
     subtotalCents += price;
     amountCents += rate > 0 ? Math.round(price * (1 + rate / 100)) : price;
@@ -205,22 +211,20 @@ function appendReturnedPaidItemCreditDrafts(
 }
 
 /**
- * Return the ids of items that lack a usable `projectPriceCents`. Inventory
- * → project destination purchases use the client-facing project price;
- * silently falling back to `purchasePriceCents` (cost) would mis-state the
- * destination project's budget.
+ * Return the ids of items that have neither a usable project price nor a
+ * purchase price that can initialize it.
  */
 function missingProjectPrice(items: (Item & { id: string })[]): string[] {
   return items
-    .filter((i) => i.projectPriceCents == null || i.projectPriceCents === 0)
+    .filter((i) => projectPriceForMovement(i) <= 0)
     .map((i) => i.id);
 }
 
 function missingProjectPriceError(ids: string[]) {
   return validation(
-    `${ids.length} item(s) have no projectPriceCents (the client-charged price): ${ids.join(", ")}.`,
-    "This movement must use projectPriceCents, not purchasePriceCents (cost). " +
-      "Set projectPriceCents on each listed item via update_item before retrying."
+    `${ids.length} item(s) have neither a project price nor a purchase price: ${ids.join(", ")}.`,
+    "Set projectPriceCents or purchasePriceCents on each listed item before retrying. " +
+      "When only purchasePriceCents is present, Ledger initializes projectPriceCents to that value."
   );
 }
 
@@ -360,8 +364,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "category per batch. Accounting fields (amountCents, budgetCategoryId, projectId, type, " +
       "source) are frozen at creation; itemIds tracks active membership. Cap: 100 items per call.\n\n" +
       "PRICING: amountCents/subtotalCents are derived from each item's projectPriceCents (the " +
-      "client-charged price) — NOT purchasePriceCents (cost). Every item must have a non-null, " +
-      "non-zero projectPriceCents; the call fails with the offending IDs otherwise.",
+      "client-charged price). When projectPriceCents is missing or zero and purchasePriceCents is " +
+      "positive, Ledger copies the purchase price into projectPriceCents atomically. The call fails " +
+      "only when neither price is available.",
     {
       itemIds: z
         .array(z.string())
@@ -441,6 +446,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                   budgetCategoryId,
                   status: "purchased",
                   currentSource: inventoryLabel,
+                  projectPriceCents: projectPriceForMovement(i),
                 },
               })),
               lineageEdges: items.length,
@@ -956,6 +962,7 @@ async function commitSellToProject(
       transactionId: purchaseRef.id,
       spaceId: null,
       currentSource: totals.inventoryLabel,
+      projectPriceCents: projectPriceForMovement(item),
       updatedAt: now,
       updatedBy: uid,
     });
@@ -1378,6 +1385,7 @@ async function commitSellItemsFromProjectToProject(
       transactionId: destPurchaseRef.id,
       spaceId: null,
       currentSource: totals.inventoryLabel,
+      projectPriceCents: projectPriceForMovement(item),
       updatedAt: now,
       updatedBy: uid,
     });

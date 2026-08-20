@@ -646,10 +646,13 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
             "Pass budgetCategoryId or set intendedBudgetCategoryId on the acquisition transaction."
           );
         }
-        if (args.projectPriceCents == null || args.projectPriceCents <= 0) {
+        const projectPriceCents = (args.projectPriceCents ?? 0) > 0
+          ? args.projectPriceCents!
+          : (args.purchasePriceCents ?? 0);
+        if (projectPriceCents <= 0) {
           return validation(
-            "projectPriceCents must be greater than zero for an inventory-to-project sale.",
-            "Set the client-facing project price before promoting the draft."
+            "A project price or purchase price must be greater than zero for an inventory-to-project sale.",
+            "Set projectPriceCents, or set purchasePriceCents so Ledger can initialize the project price."
           );
         }
         return promoteInventoryDraftToProject(db, {
@@ -657,7 +660,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
           projectId: resolvedProjectId,
           transactionId: resolvedTransactionId!,
           budgetCategoryId: saleCategoryId,
-          projectPriceCents: args.projectPriceCents,
+          projectPriceCents,
         }, draft, resolvedTransaction);
       }
 
