@@ -10,12 +10,20 @@ struct SpacesService: SpacesServiceProtocol {
     }
 
     func createSpace(accountId: String, space: Space) throws -> String {
-        let id = try repo(accountId: accountId).create(space)
+        var normalized = space
+        if let images = space.images {
+            normalized.images = AttachmentPrimaryPolicy.normalized(images)
+        }
+        let id = try repo(accountId: accountId).create(normalized)
         return id
     }
 
     func updateSpace(accountId: String, spaceId: String, fields: [String: Any]) async throws {
-        try await repo(accountId: accountId).update(id: spaceId, fields: fields)
+        let normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
+            fields,
+            attachmentFieldNames: ["images"]
+        )
+        try await repo(accountId: accountId).update(id: spaceId, fields: normalizedFields)
     }
 
     func deleteSpace(accountId: String, spaceId: String) async throws {

@@ -10,7 +10,8 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func createTransaction(accountId: String, transaction: Transaction) throws -> String {
-        try repo(accountId: accountId).create(transaction, additionalFields: extraFields(for: transaction))
+        let normalized = normalizedAttachments(in: transaction)
+        return try repo(accountId: accountId).create(normalized, additionalFields: extraFields(for: normalized))
     }
 
     /// Pre-allocate a transaction ID without writing. Lets callers (e.g. the
@@ -21,7 +22,8 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func createTransaction(accountId: String, id: String, transaction: Transaction) throws {
-        try repo(accountId: accountId).create(id: id, transaction, additionalFields: extraFields(for: transaction))
+        let normalized = normalizedAttachments(in: transaction)
+        try repo(accountId: accountId).create(id: id, normalized, additionalFields: extraFields(for: normalized))
     }
 
     /// Inventory transactions need an explicit `projectId: null` so the inventory
@@ -44,7 +46,25 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func updateTransaction(accountId: String, transactionId: String, fields: [String: Any]) async throws {
-        try await repo(accountId: accountId).update(id: transactionId, fields: fields)
+        let normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
+            fields,
+            attachmentFieldNames: ["receiptImages", "otherImages", "transactionImages"]
+        )
+        try await repo(accountId: accountId).update(id: transactionId, fields: normalizedFields)
+    }
+
+    private func normalizedAttachments(in transaction: Transaction) -> Transaction {
+        var normalized = transaction
+        if let attachments = transaction.receiptImages {
+            normalized.receiptImages = AttachmentPrimaryPolicy.normalized(attachments)
+        }
+        if let attachments = transaction.otherImages {
+            normalized.otherImages = AttachmentPrimaryPolicy.normalized(attachments)
+        }
+        if let attachments = transaction.transactionImages {
+            normalized.transactionImages = AttachmentPrimaryPolicy.normalized(attachments)
+        }
+        return normalized
     }
 
     func deleteTransaction(accountId: String, transactionId: String) async throws {

@@ -16,7 +16,7 @@ struct ItemsService: ItemsServiceProtocol {
     }
 
     func createItem(accountId: String, item: Item) throws -> String {
-        let id = try repo(accountId: accountId).create(item)
+        let id = try repo(accountId: accountId).create(AttachmentPrimaryPolicy.normalized(item))
         return id
     }
 
@@ -38,7 +38,7 @@ struct ItemsService: ItemsServiceProtocol {
         let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
 
         for (itemId, sourceItem) in zip(itemIds, items) {
-            var item = sourceItem
+            var item = AttachmentPrimaryPolicy.normalized(sourceItem)
             item.id = itemId
             item.accountId = accountId
             item.transactionId = transactionId
@@ -64,7 +64,11 @@ struct ItemsService: ItemsServiceProtocol {
     }
 
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {
-        try await repo(accountId: accountId).update(id: itemId, fields: fields)
+        let normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
+            fields,
+            attachmentFieldNames: ["images"]
+        )
+        try await repo(accountId: accountId).update(id: itemId, fields: normalizedFields)
     }
 
     func deleteItem(accountId: String, item: Item) async throws {

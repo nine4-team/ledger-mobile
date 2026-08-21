@@ -299,7 +299,20 @@ final class MediaUploadQueue {
             entry["contentType"] = metadata.contentType
             if let smUrl = thumbnailUrlSm { entry["thumbnailUrlSm"] = smUrl }
             if let mdUrl = thumbnailUrlMd { entry["thumbnailUrlMd"] = mdUrl }
-            try await docRef.updateData([field: FieldValue.arrayUnion([entry])])
+            nonisolated(unsafe) let transactionEntry = entry
+            nonisolated(unsafe) let updateBlock: (FirebaseFirestore.Transaction, NSErrorPointer) -> Any? = { transaction, errorPointer in
+                do {
+                    let snapshot = try transaction.getDocument(docRef)
+                    let existing = snapshot.data()?[field] as? [[String: Any]] ?? []
+                    let normalized = AttachmentPrimaryPolicy.normalizedDictionaries(existing + [transactionEntry])
+                    transaction.updateData([field: normalized], forDocument: docRef)
+                    return nil
+                } catch {
+                    errorPointer?.pointee = error as NSError
+                    return nil
+                }
+            }
+            _ = try await db.runTransaction(updateBlock)
         }
     }
 

@@ -5,6 +5,51 @@ import Testing
 @Suite("Media Gallery Calculation Tests")
 struct MediaGalleryCalculationTests {
 
+    // MARK: - AttachmentPrimaryPolicy
+
+    @Test("Primary normalization selects the first attachment when none are marked")
+    func primaryNormalizationSelectsFirst() {
+        let normalized = AttachmentPrimaryPolicy.normalized([
+            AttachmentRef(url: "first"),
+            AttachmentRef(url: "second"),
+        ])
+
+        #expect(normalized.map(\.isPrimary) == [true, false])
+    }
+
+    @Test("Primary normalization clears duplicate primary flags")
+    func primaryNormalizationClearsDuplicates() {
+        let normalized = AttachmentPrimaryPolicy.normalized([
+            AttachmentRef(url: "first", isPrimary: true),
+            AttachmentRef(url: "second", isPrimary: true),
+            AttachmentRef(url: "third"),
+        ])
+
+        #expect(normalized.map(\.isPrimary) == [true, false, false])
+    }
+
+    @Test("Primary normalization preserves the selected primary")
+    func primaryNormalizationPreservesSelection() {
+        let normalized = AttachmentPrimaryPolicy.normalized([
+            AttachmentRef(url: "first", isPrimary: false),
+            AttachmentRef(url: "second", isPrimary: true),
+        ])
+
+        #expect(normalized.map(\.isPrimary) == [false, true])
+    }
+
+    @Test("Firestore dictionary normalization preserves attachment metadata")
+    func firestorePrimaryNormalizationPreservesMetadata() {
+        let normalized = AttachmentPrimaryPolicy.normalizedDictionaries([
+            ["url": "first", "isPrimary": true, "futureField": "keep-me"],
+            ["url": "second", "isPrimary": true],
+        ])
+
+        #expect(normalized[0]["isPrimary"] as? Bool == true)
+        #expect(normalized[1]["isPrimary"] as? Bool == false)
+        #expect(normalized[0]["futureField"] as? String == "keep-me")
+    }
+
     // MARK: - canAddAttachment
 
     @Test("Can add when under limit")
@@ -113,6 +158,45 @@ struct MediaGalleryCalculationTests {
     @Test("Options button hidden when no actions available")
     func optionsButtonHiddenNoActions() {
         #expect(!MediaGalleryCalculations.shouldShowOptionsButton(hasSetPrimary: false, hasRemove: false))
+    }
+
+    // MARK: - shouldOfferSetPrimary
+
+    @Test("Set primary is offered for a non-primary attachment")
+    func setPrimaryOfferedForNonPrimary() {
+        let primary = AttachmentRef(url: "primary", isPrimary: true)
+        let candidate = AttachmentRef(url: "candidate")
+
+        #expect(MediaGalleryCalculations.shouldOfferSetPrimary(
+            for: candidate,
+            in: [primary, candidate]
+        ))
+    }
+
+    @Test("Set primary is hidden for the sole primary attachment")
+    func setPrimaryHiddenForSolePrimary() {
+        let primary = AttachmentRef(url: "primary", isPrimary: true)
+        let other = AttachmentRef(url: "other")
+
+        #expect(!MediaGalleryCalculations.shouldOfferSetPrimary(
+            for: primary,
+            in: [primary, other]
+        ))
+    }
+
+    @Test("Set primary is offered when duplicate primaries need repair")
+    func setPrimaryOfferedForDuplicatePrimary() {
+        let first = AttachmentRef(url: "first", isPrimary: true)
+        let second = AttachmentRef(url: "second", isPrimary: true)
+
+        #expect(MediaGalleryCalculations.shouldOfferSetPrimary(
+            for: first,
+            in: [first, second]
+        ))
+        #expect(MediaGalleryCalculations.shouldOfferSetPrimary(
+            for: second,
+            in: [first, second]
+        ))
     }
 
     // MARK: - imageCounterLabel

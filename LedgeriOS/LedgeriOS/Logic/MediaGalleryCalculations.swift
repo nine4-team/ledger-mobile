@@ -32,6 +32,17 @@ enum MediaGalleryCalculations {
         hasSetPrimary || hasRemove
     }
 
+    /// Offers the primary-selection action when the attachment is not primary or
+    /// when malformed data marks more than one attachment as primary. In the
+    /// duplicate case, selecting either attachment repairs the collection by
+    /// allowing the caller to make that attachment the sole primary.
+    static func shouldOfferSetPrimary(
+        for attachment: AttachmentRef,
+        in attachments: [AttachmentRef]
+    ) -> Bool {
+        attachment.isPrimary != true || attachments.filter { $0.isPrimary == true }.count != 1
+    }
+
     // MARK: - Lightbox Calculations
 
     /// Formatted image counter label, e.g. "1 of 5".

@@ -17,11 +17,20 @@ struct ProtoItemsService: ProtoItemsServiceProtocol {
     }
 
     func createProtoItem(accountId: String, protoItem: ProtoItem) throws -> String {
-        try repo(accountId: accountId).create(protoItem, additionalFields: extraFields(for: protoItem, accountId: accountId))
+        let normalized = normalizedPhotos(in: protoItem)
+        return try repo(accountId: accountId).create(
+            normalized,
+            additionalFields: extraFields(for: normalized, accountId: accountId)
+        )
     }
 
     func createProtoItem(accountId: String, id: String, protoItem: ProtoItem) throws {
-        try repo(accountId: accountId).create(id: id, protoItem, additionalFields: extraFields(for: protoItem, accountId: accountId))
+        let normalized = normalizedPhotos(in: protoItem)
+        try repo(accountId: accountId).create(
+            id: id,
+            normalized,
+            additionalFields: extraFields(for: normalized, accountId: accountId)
+        )
     }
 
     private func extraFields(for protoItem: ProtoItem, accountId: String) -> [String: Any] {
@@ -51,9 +60,20 @@ struct ProtoItemsService: ProtoItemsServiceProtocol {
     }
 
     func updateProtoItem(accountId: String, protoItemId: String, fields: [String: Any]) async throws {
-        var updateFields = fields
+        var updateFields = AttachmentPrimaryPolicy.normalizedFields(
+            fields,
+            attachmentFieldNames: [Self.photosField]
+        )
         updateFields["updatedAt"] = FieldValue.serverTimestamp()
         try await repo(accountId: accountId).update(id: protoItemId, fields: updateFields)
+    }
+
+    private func normalizedPhotos(in protoItem: ProtoItem) -> ProtoItem {
+        var normalized = protoItem
+        if let photos = protoItem.photos {
+            normalized.photos = AttachmentPrimaryPolicy.normalized(photos)
+        }
+        return normalized
     }
 
     func deleteProtoItem(accountId: String, protoItemId: String) async throws {

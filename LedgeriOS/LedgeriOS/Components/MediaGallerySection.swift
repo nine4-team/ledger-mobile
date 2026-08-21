@@ -544,7 +544,6 @@ struct MediaGallerySection: View {
     // MARK: - Attachment Menu
 
     private func attachmentMenu(for attachment: AttachmentRef) -> some View {
-        let isPrimary = attachment.isPrimary ?? false
         var items: [ActionMenuItem] = []
 
         // Open in viewer
@@ -570,7 +569,8 @@ struct MediaGallerySection: View {
             ))
         }
 
-        if !isPrimary, onSetPrimary != nil {
+        if onSetPrimary != nil,
+           MediaGalleryCalculations.shouldOfferSetPrimary(for: attachment, in: attachments) {
             items.append(ActionMenuItem(
                 id: "set-primary",
                 label: "Set as Primary",
