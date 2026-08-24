@@ -78,6 +78,13 @@ struct ActionMenuSheet: View {
             .scrollContentBackground(.hidden)
         }
         .background(BrandColors.surface)
+        .onAppear {
+            PerformanceDiagnostics.shared.event(
+                "ActionMenuAppeared",
+                kind: "shared-action-menu",
+                count: items.count
+            )
+        }
     }
 
     // MARK: - Menu Item Row

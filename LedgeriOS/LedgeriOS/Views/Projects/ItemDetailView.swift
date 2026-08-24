@@ -41,12 +41,16 @@ struct ItemDetailView: View {
     /// Set true only when the focused listener reports the document is gone.
     @State private var itemMissing = false
     @State private var itemListener: ListenerRegistration?
+    @State private var itemListenerTracked = false
     @State private var liveTransactionData: Transaction?
     @State private var transactionListener: ListenerRegistration?
+    @State private var transactionListenerTracked = false
     @State private var transactionLookupCompleted = false
     @State private var lineageEdges: [LineageEdge] = []
     @State private var lineageTransactions: [String: Transaction] = [:]
     @State private var lineageLoadTask: Task<Void, Never>?
+    @State private var lineageTaskTracked = false
+    @State private var lineageGeneration = UUID()
     @State private var selectedTransactionId: String?
     @State private var initialTransaction: Transaction?
     @State private var showTransactionDetail = false
@@ -275,6 +279,8 @@ struct ItemDetailView: View {
         }
         .onAppear {
             NavLifecycleLog.log("ItemDetailView.onAppear itemId=\(itemId)")
+            PerformanceDiagnostics.shared.setScenario("item-detail")
+            PerformanceDiagnostics.shared.event("DetailAppeared", kind: "item")
             startItemListener()
             startTransactionListener(for: normalizedTransactionId)
             loadItemLineage()
@@ -288,12 +294,11 @@ struct ItemDetailView: View {
         }
         .onDisappear {
             NavLifecycleLog.log("ItemDetailView.onDisappear itemId=\(itemId)")
-            itemListener?.remove()
-            itemListener = nil
-            transactionListener?.remove()
-            transactionListener = nil
-            lineageLoadTask?.cancel()
-            lineageLoadTask = nil
+            PerformanceDiagnostics.shared.event("DetailDisappeared", kind: "item")
+            PerformanceDiagnostics.shared.setScenario("project-items")
+            stopItemListener()
+            stopTransactionListener()
+            stopLineageTask()
         }
     }
 
@@ -843,12 +848,14 @@ struct ItemDetailView: View {
     // MARK: - Actions
 
     private func startItemListener() {
+        stopItemListener()
         guard let accountId = accountContext.currentAccountId,
               !itemId.isEmpty else { return }
         NavLifecycleLog.log("ItemDetailView.startItemListener itemId=\(itemId)")
-        itemListener?.remove()
+        PerformanceDiagnostics.shared.event("FocusedListenerStarted", kind: "item")
         itemListener = ItemsService()
             .subscribeToItem(accountId: accountId, itemId: itemId) { updatedItem in
+                PerformanceDiagnostics.shared.event("FocusedListenerValue", kind: "item")
                 if let updatedItem {
                     self.liveItemData = updatedItem
                     self.itemMissing = false
@@ -859,26 +866,31 @@ struct ItemDetailView: View {
                     self.itemMissing = true
                 }
             }
+        itemListenerTracked = true
+        PerformanceDiagnostics.shared.adjustCounter("focused-item-listeners", delta: 1)
     }
 
     private func startTransactionListener(for transactionId: String?) {
-        transactionListener?.remove()
-        transactionListener = nil
+        stopTransactionListener()
         liveTransactionData = nil
         transactionLookupCompleted = transactionId == nil
 
         guard let accountId = accountContext.currentAccountId,
               let transactionId else { return }
 
+        PerformanceDiagnostics.shared.event("FocusedListenerStarted", kind: "transaction")
         transactionListener = TransactionsService()
             .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { transaction in
+                PerformanceDiagnostics.shared.event("FocusedListenerValue", kind: "transaction")
                 self.liveTransactionData = transaction
                 self.transactionLookupCompleted = true
             }
+        transactionListenerTracked = true
+        PerformanceDiagnostics.shared.adjustCounter("focused-transaction-listeners", delta: 1)
     }
 
     private func loadItemLineage() {
-        lineageLoadTask?.cancel()
+        stopLineageTask()
         guard let accountId = accountContext.currentAccountId,
               let itemId = liveItem.id else {
             lineageEdges = []
@@ -886,6 +898,11 @@ struct ItemDetailView: View {
             return
         }
 
+        let generation = UUID()
+        lineageGeneration = generation
+        lineageTaskTracked = true
+        PerformanceDiagnostics.shared.adjustCounter("lineage-tasks", delta: 1)
+        let startedAt = DispatchTime.now().uptimeNanoseconds
         lineageLoadTask = Task {
             do {
                 let edges = try await LineageEdgesService().edges(forItem: itemId, accountId: accountId)
@@ -916,15 +933,75 @@ struct ItemDetailView: View {
                 await MainActor.run {
                     lineageEdges = edges
                     lineageTransactions = resolved
+                    finishLineageTask(
+                        generation: generation,
+                        startedAt: startedAt,
+                        count: edges.count,
+                        value: resolved.count
+                    )
                 }
             } catch {
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     lineageEdges = []
                     lineageTransactions = [:]
+                    finishLineageTask(
+                        generation: generation,
+                        startedAt: startedAt,
+                        count: 0,
+                        value: -1
+                    )
                 }
             }
         }
+    }
+
+    private func stopItemListener() {
+        itemListener?.remove()
+        itemListener = nil
+        guard itemListenerTracked else { return }
+        itemListenerTracked = false
+        PerformanceDiagnostics.shared.adjustCounter("focused-item-listeners", delta: -1)
+    }
+
+    private func stopTransactionListener() {
+        transactionListener?.remove()
+        transactionListener = nil
+        guard transactionListenerTracked else { return }
+        transactionListenerTracked = false
+        PerformanceDiagnostics.shared.adjustCounter("focused-transaction-listeners", delta: -1)
+    }
+
+    private func stopLineageTask() {
+        lineageLoadTask?.cancel()
+        lineageLoadTask = nil
+        lineageGeneration = UUID()
+        guard lineageTaskTracked else { return }
+        lineageTaskTracked = false
+        PerformanceDiagnostics.shared.adjustCounter("lineage-tasks", delta: -1)
+        PerformanceDiagnostics.shared.event("LineageLoadCancelled", kind: "item-detail")
+    }
+
+    private func finishLineageTask(
+        generation: UUID,
+        startedAt: UInt64,
+        count: Int,
+        value: Int
+    ) {
+        guard lineageGeneration == generation else { return }
+        lineageLoadTask = nil
+        if lineageTaskTracked {
+            lineageTaskTracked = false
+            PerformanceDiagnostics.shared.adjustCounter("lineage-tasks", delta: -1)
+        }
+        let elapsed = Double(DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000
+        PerformanceDiagnostics.shared.duration(
+            "LineageLoad",
+            kind: "item-detail",
+            milliseconds: elapsed,
+            count: count,
+            value: value
+        )
     }
 
     private func clearItemField(_ fieldName: String) {

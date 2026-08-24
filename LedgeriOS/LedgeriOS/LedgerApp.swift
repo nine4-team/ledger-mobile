@@ -23,6 +23,7 @@ struct LedgerApp: App {
 
     init() {
         FirebaseApp.configure()
+        PerformanceDiagnostics.shared.start()
 
         // Disk cache for images — FirebaseImage uses URLSession.shared which respects this.
         // L1 = ImageCache (NSCache, in-session). L2 = URLCache (disk, survives restarts).

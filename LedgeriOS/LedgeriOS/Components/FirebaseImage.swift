@@ -50,6 +50,8 @@ struct FirebaseImage<Placeholder: View>: View {
             }
         }
         .task(id: loadKey) {
+            PerformanceDiagnostics.shared.adjustCounter("active-image-requests", delta: 1)
+            defer { PerformanceDiagnostics.shared.adjustCounter("active-image-requests", delta: -1) }
             await resolveAndLoadWithFallback(for: loadKey)
         }
     }
@@ -79,15 +81,20 @@ struct FirebaseImage<Placeholder: View>: View {
             }
 
         guard !urls.isEmpty else {
+            PerformanceDiagnostics.shared.event("ImageRequestSkipped", kind: "missing-url")
             loadFailed = true
             return
         }
 
-        for url in urls {
+        for (index, url) in urls.enumerated() {
             guard !Task.isCancelled, loadKey == requestedKey else { return }
             if await resolveAndLoadWithTimeout(url, requestedKey: requestedKey) {
                 return
             }
+            PerformanceDiagnostics.shared.event(
+                "ImageAttemptFailed",
+                kind: index == 0 && urls.count > 1 ? "thumbnail" : "primary"
+            )
         }
 
         if !Task.isCancelled, loadKey == requestedKey {
@@ -115,17 +122,24 @@ struct FirebaseImage<Placeholder: View>: View {
     private func resolveAndLoad(requestedUrl: String, requestedKey: LoadKey) async -> Bool {
         // Synchronous cache check — before any await, so no placeholder frame is rendered
         if let cached = ImageCache.image(for: requestedUrl) {
+            PerformanceDiagnostics.shared.event("ImageCache", kind: "hit")
             loadedImage = cached
             return true
         }
+        PerformanceDiagnostics.shared.event("ImageCache", kind: "miss")
 
         // Resolve URL (gs:// needs async resolution, https:// is immediate)
+        let resolveInterval = PerformanceDiagnostics.shared.beginInterval(
+            "ImageURLResolve",
+            kind: requestedUrl.hasPrefix("gs://") ? "storage" : "http"
+        )
         let url: URL?
         if requestedUrl.hasPrefix("http://") || requestedUrl.hasPrefix("https://") {
             url = URL(string: requestedUrl)
         } else {
             url = await StorageURLResolver.resolve(requestedUrl)
         }
+        PerformanceDiagnostics.shared.endInterval(resolveInterval, value: url == nil ? 0 : 1)
 
         guard !Task.isCancelled, loadKey == requestedKey else { return false }
 
@@ -137,7 +151,15 @@ struct FirebaseImage<Placeholder: View>: View {
         do {
             var request = URLRequest(url: url)
             request.timeoutInterval = 15
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let downloadInterval = PerformanceDiagnostics.shared.beginInterval("ImageDownload", kind: "network")
+            let (data, response): (Data, URLResponse)
+            do {
+                (data, response) = try await URLSession.shared.data(for: request)
+            } catch {
+                PerformanceDiagnostics.shared.endInterval(downloadInterval, value: -1)
+                throw error
+            }
+            PerformanceDiagnostics.shared.endInterval(downloadInterval, value: data.count / 1024)
             guard !Task.isCancelled else { return false }
             guard loadKey == requestedKey else { return false }
 
@@ -145,9 +167,25 @@ struct FirebaseImage<Placeholder: View>: View {
                 return false
             }
 
+            let decodeStartedAt = DispatchTime.now().uptimeNanoseconds
             guard let image = PlatformImage(data: data) else {
+                let elapsed = Double(DispatchTime.now().uptimeNanoseconds - decodeStartedAt) / 1_000_000
+                PerformanceDiagnostics.shared.duration(
+                    "ImageDecode",
+                    kind: "failed",
+                    milliseconds: elapsed,
+                    value: data.count / 1024
+                )
                 return false
             }
+            let decodeElapsed = Double(DispatchTime.now().uptimeNanoseconds - decodeStartedAt) / 1_000_000
+            PerformanceDiagnostics.shared.duration(
+                "ImageDecode",
+                kind: "success",
+                milliseconds: decodeElapsed,
+                count: image.estimatedDecodedByteCount / 1_048_576,
+                value: data.count / 1024
+            )
             ImageCache.store(image, for: requestedUrl, cost: data.count)
             loadedImage = image
             return true

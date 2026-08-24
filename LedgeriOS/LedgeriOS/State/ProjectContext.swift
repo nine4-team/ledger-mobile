@@ -69,12 +69,14 @@ final class ProjectContext {
            activeUserId == userId,
            !listeners.isEmpty {
             NavLifecycleLog.log("ProjectContext.activate early-return (same project=\(projectId))")
+            PerformanceDiagnostics.shared.event("ContextActivationEarlyReturn", kind: "project", count: listeners.count)
             updateFinancialAccess(member: member)
             return
         }
 
         let isNewProject = currentProjectId != projectId || activeAccountId != accountId
         NavLifecycleLog.log("ProjectContext.activate restart project=\(projectId) isNewProject=\(isNewProject)")
+        PerformanceDiagnostics.shared.event("ContextActivationStart", kind: "project", count: listeners.count)
         stopListeners()
         if isNewProject {
             clearData()
@@ -87,23 +89,39 @@ final class ProjectContext {
         // 1. Project detail
         listeners.append(
             projectService.subscribeToProject(accountId: accountId, projectId: projectId) { [weak self] project in
-                Task { @MainActor in self?.project = project }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "project.detail", receivedAt: receivedAt, count: project == nil ? 0 : 1) {
+                        self.project = project
+                    }
+                }
             }
         )
 
         // 2. Projects list (for sibling navigation)
         listeners.append(
             projectService.subscribeToProjects(accountId: accountId) { [weak self] projects in
-                Task { @MainActor in self?.projects = projects }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "project.projects", receivedAt: receivedAt, count: projects.count) {
+                        self.projects = projects
+                    }
+                }
             }
         )
 
         // 3. Transactions scoped to project
         listeners.append(
             transactionsService.subscribeToTransactions(accountId: accountId, scope: .project(projectId)) { [weak self] transactions in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.rawTransactions = transactions
-                    self?.applyFinancialAccess()
+                    guard let self else { return }
+                    self.publish(kind: "project.transactions", receivedAt: receivedAt, count: transactions.count) {
+                        self.rawTransactions = transactions
+                        self.applyFinancialAccess()
+                    }
                 }
             }
         )
@@ -111,7 +129,13 @@ final class ProjectContext {
         // 4. Items scoped to project
         listeners.append(
             itemsService.subscribeToItems(accountId: accountId, scope: .project(projectId)) { [weak self] items in
-                Task { @MainActor in self?.items = items }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "project.items", receivedAt: receivedAt, count: items.count) {
+                        self.items = items
+                    }
+                }
             }
         )
 
@@ -119,7 +143,13 @@ final class ProjectContext {
         if let protoItemsService {
             listeners.append(
                 protoItemsService.subscribeToProtoItems(accountId: accountId, scope: .project(projectId)) { [weak self] protoItems in
-                    Task { @MainActor in self?.protoItems = protoItems }
+                    let receivedAt = DispatchTime.now().uptimeNanoseconds
+                    Task { @MainActor in
+                        guard let self else { return }
+                        self.publish(kind: "project.proto-items", receivedAt: receivedAt, count: protoItems.count) {
+                            self.protoItems = protoItems
+                        }
+                    }
                 }
             )
         }
@@ -127,16 +157,26 @@ final class ProjectContext {
         // 6. Spaces scoped to project
         listeners.append(
             spacesService.subscribeToSpaces(accountId: accountId, scope: .project(projectId)) { [weak self] spaces in
-                Task { @MainActor in self?.spaces = spaces }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "project.spaces", receivedAt: receivedAt, count: spaces.count) {
+                        self.spaces = spaces
+                    }
+                }
             }
         )
 
         // 6. Budget categories (account-level presets)
         listeners.append(
             budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.rawBudgetCategories = categories
-                    self?.applyFinancialAccess()
+                    guard let self else { return }
+                    self.publish(kind: "project.categories", receivedAt: receivedAt, count: categories.count) {
+                        self.rawBudgetCategories = categories
+                        self.applyFinancialAccess()
+                    }
                 }
             }
         )
@@ -147,9 +187,13 @@ final class ProjectContext {
                 accountId: accountId,
                 projectId: projectId
             ) { [weak self] pbc in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.projectBudgetCategories = pbc
-                    self?.recomputeBudgetProgress()
+                    guard let self else { return }
+                    self.publish(kind: "project.budget-categories", receivedAt: receivedAt, count: pbc.count) {
+                        self.projectBudgetCategories = pbc
+                        self.recomputeBudgetProgress()
+                    }
                 }
             }
         )
@@ -160,8 +204,12 @@ final class ProjectContext {
                 accountId: accountId,
                 projectId: projectId
             ) { [weak self] installments in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.feeInstallments = installments
+                    guard let self else { return }
+                    self.publish(kind: "project.fee-installments", receivedAt: receivedAt, count: installments.count) {
+                        self.feeInstallments = installments
+                    }
                 }
             }
         )
@@ -174,7 +222,13 @@ final class ProjectContext {
                     userId: userId,
                     projectId: projectId
                 ) { [weak self] prefs in
-                    Task { @MainActor in self?.projectPreferences = prefs }
+                    let receivedAt = DispatchTime.now().uptimeNanoseconds
+                    Task { @MainActor in
+                        guard let self else { return }
+                        self.publish(kind: "project.preferences", receivedAt: receivedAt, count: prefs == nil ? 0 : 1) {
+                            self.projectPreferences = prefs
+                        }
+                    }
                 }
             )
         }
@@ -185,11 +239,16 @@ final class ProjectContext {
                 accountId: accountId,
                 projectId: projectId
             ) { [weak self] notes in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.notes = notes
+                    guard let self else { return }
+                    self.publish(kind: "project.notes", receivedAt: receivedAt, count: notes.count) {
+                        self.notes = notes
+                    }
                 }
             }
         )
+        PerformanceDiagnostics.shared.event("ContextActivationComplete", kind: "project", count: listeners.count)
     }
 
     func deleteProject(accountId: String, projectId: String) async throws {
@@ -241,6 +300,7 @@ final class ProjectContext {
         }
         listeners.forEach { $0.remove() }
         listeners.removeAll()
+        PerformanceDiagnostics.shared.event("ContextListenersStopped", kind: "project")
     }
 
     func deactivate() {
@@ -284,17 +344,45 @@ final class ProjectContext {
     }
 
     private func recomputeBudgetProgress() {
+        let interval = PerformanceDiagnostics.shared.beginInterval(
+            "BudgetProgress",
+            kind: "project",
+            count: transactions.count + budgetCategories.count + projectBudgetCategories.count
+        )
         budgetProgress = budgetProgressService.buildBudgetProgress(
             transactions: transactions,
             categories: budgetCategories,
             projectBudgetCategories: projectBudgetCategories
         )
+        PerformanceDiagnostics.shared.endInterval(interval)
     }
 
     private func applyFinancialAccess() {
+        let interval = PerformanceDiagnostics.shared.beginInterval(
+            "FinancialAccess",
+            kind: "project",
+            count: rawTransactions.count + rawBudgetCategories.count
+        )
         let policy = FinancialAccessPolicy(member: financialAccessMember)
         budgetCategories = policy.visibleCategories(rawBudgetCategories)
         transactions = policy.visibleTransactions(rawTransactions, categories: rawBudgetCategories)
         recomputeBudgetProgress()
+        PerformanceDiagnostics.shared.endInterval(
+            interval,
+            value: transactions.count + budgetCategories.count
+        )
+    }
+
+    private func publish(kind: String, receivedAt: UInt64, count: Int, update: () -> Void) {
+        let queueDelayMilliseconds = Double(DispatchTime.now().uptimeNanoseconds - receivedAt) / 1_000_000
+        PerformanceDiagnostics.shared.duration(
+            "MainActorDelivery",
+            kind: kind,
+            milliseconds: queueDelayMilliseconds,
+            count: count
+        )
+        let interval = PerformanceDiagnostics.shared.beginInterval("ContextPublish", kind: kind, count: count)
+        update()
+        PerformanceDiagnostics.shared.endInterval(interval)
     }
 }

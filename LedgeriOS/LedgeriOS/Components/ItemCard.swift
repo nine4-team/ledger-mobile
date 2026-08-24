@@ -33,7 +33,9 @@ struct ItemCard: View {
 
     private var resolvedInvoiceStatus: InvoiceStatus? {
         guard let id = item.id else { return nil }
-        return firstNonCanceledInvoiceStatus(forItemId: id, in: accountContext.allInvoices)
+        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "invoice-status") {
+            firstNonCanceledInvoiceStatus(forItemId: id, in: accountContext.allInvoices)
+        }
     }
 
     private var badges: [CardBadge] {
@@ -48,7 +50,9 @@ struct ItemCard: View {
 
     private var resolvedSpaceName: String? {
         guard let spaceId = item.spaceId else { return nil }
-        return accountContext.allSpaces.first(where: { $0.id == spaceId })?.name
+        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "space-name") {
+            accountContext.allSpaces.first(where: { $0.id == spaceId })?.name
+        }
     }
 
     private var metadata: [String] {

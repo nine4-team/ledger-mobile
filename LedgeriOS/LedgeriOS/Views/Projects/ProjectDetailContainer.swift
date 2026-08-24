@@ -54,6 +54,13 @@ struct ProjectDetailContainer: View {
     var body: some View {
         content
             .environment(projectContext)
+            .onAppear {
+                PerformanceDiagnostics.shared.setScenario("project-detail")
+                PerformanceDiagnostics.shared.event("DetailAppeared", kind: "project")
+            }
+            .onDisappear {
+                PerformanceDiagnostics.shared.event("DetailDisappeared", kind: "project")
+            }
             .task(id: activationKey) {
                 activateProjectContext()
             }

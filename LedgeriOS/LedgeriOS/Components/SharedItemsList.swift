@@ -59,12 +59,14 @@ struct SharedItemsList: View {
     }
 
     private var processedItems: [Item] {
-        ListFilterSortCalculations.applyAllMultiFilters(
-            items,
-            filters: activeFilters,
-            sort: activeSort,
-            search: resolvedSearchText.wrappedValue
-        )
+        PerformanceDiagnostics.shared.measureAggregate("ListDerivation", kind: "filter-sort-search") {
+            ListFilterSortCalculations.applyAllMultiFilters(
+                items,
+                filters: activeFilters,
+                sort: activeSort,
+                search: resolvedSearchText.wrappedValue
+            )
+        }
     }
 
     private var processedProtoItems: [ProtoItem] {
@@ -87,7 +89,9 @@ struct SharedItemsList: View {
     }
 
     private var groups: [ItemGroup] {
-        ListFilterSortCalculations.groupItems(processedItems)
+        PerformanceDiagnostics.shared.measureAggregate("ListDerivation", kind: "grouping") {
+            ListFilterSortCalculations.groupItems(processedItems)
+        }
     }
 
     private var showGrouped: Bool {
@@ -103,13 +107,15 @@ struct SharedItemsList: View {
     }
 
     private var selectedTotalCents: Int? {
-        let ids = resolvedSelectedIds.wrappedValue
-        let pairs = processedItems.compactMap { item -> (id: String, cents: Int)? in
-            guard let id = item.id, let cents = item.normalizedProjectPriceCents else { return nil }
-            return (id: id, cents: cents)
+        PerformanceDiagnostics.shared.measureAggregate("ListDerivation", kind: "selection-total") {
+            let ids = resolvedSelectedIds.wrappedValue
+            let pairs = processedItems.compactMap { item -> (id: String, cents: Int)? in
+                guard let id = item.id, let cents = item.normalizedProjectPriceCents else { return nil }
+                return (id: id, cents: cents)
+            }
+            let total = SelectionCalculations.totalCentsForSelected(selectedIds: ids, items: pairs)
+            return total > 0 ? total : nil
         }
-        let total = SelectionCalculations.totalCentsForSelected(selectedIds: ids, items: pairs)
-        return total > 0 ? total : nil
     }
 
     private var isPicker: Bool {
@@ -175,6 +181,9 @@ struct SharedItemsList: View {
         .task {
             await setupData()
         }
+        .onAppear {
+            PerformanceDiagnostics.shared.event("ListAppeared", kind: diagnosticMode, count: items.count)
+        }
         .onChange(of: embeddedSourceItems) { _, newItems in
             if !newItems.isEmpty || !isStandalone {
                 items = newItems
@@ -186,6 +195,7 @@ struct SharedItemsList: View {
             }
         }
         .onDisappear {
+            PerformanceDiagnostics.shared.event("ListDisappeared", kind: diagnosticMode, count: items.count)
             listener?.remove()
             listener = nil
         }
@@ -680,21 +690,23 @@ struct SharedItemsList: View {
     }
 
     private func groupedSpaceName(for group: ItemGroup) -> String? {
-        let names = Set(group.items.compactMap { item -> String? in
-            guard
-                let spaceId = item.spaceId,
-                let name = accountContext.allSpaces.first(where: { $0.id == spaceId })?.name,
-                !name.isEmpty
-            else {
-                return nil
-            }
-            return name
-        })
+        PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "grouped-space") {
+            let names = Set(group.items.compactMap { item -> String? in
+                guard
+                    let spaceId = item.spaceId,
+                    let name = accountContext.allSpaces.first(where: { $0.id == spaceId })?.name,
+                    !name.isEmpty
+                else {
+                    return nil
+                }
+                return name
+            })
 
-        if names.count > 1 {
-            return "Multiple spaces"
+            if names.count > 1 {
+                return "Multiple spaces"
+            }
+            return names.first
         }
-        return names.first
     }
 
     @ViewBuilder
@@ -731,7 +743,14 @@ struct SharedItemsList: View {
                 selectedCount: resolvedSelectedIds.wrappedValue.count,
                 totalCount: processedItems.count,
                 totalCents: selectedTotalCents,
-                onBulkActions: { showBulkActionMenu = true },
+                onBulkActions: {
+                    PerformanceDiagnostics.shared.event(
+                        "BulkActionMenuTriggered",
+                        kind: diagnosticMode,
+                        count: resolvedSelectedIds.wrappedValue.count
+                    )
+                    showBulkActionMenu = true
+                },
                 onClear: { resolvedSelectedIds.wrappedValue.removeAll() }
             )
         }
@@ -764,6 +783,12 @@ struct SharedItemsList: View {
     // MARK: - Data Setup
 
     private func setupData() async {
+        let interval = PerformanceDiagnostics.shared.beginInterval(
+            "ListSetup",
+            kind: diagnosticMode,
+            count: embeddedSourceItems.count + (pickerItems?.count ?? 0)
+        )
+        defer { PerformanceDiagnostics.shared.endInterval(interval, value: items.count) }
         switch mode {
         case .standalone(let scope):
             await setupStandaloneListener(scope: scope)
@@ -842,11 +867,21 @@ struct SharedItemsList: View {
 
     private func categoryName(for categoryId: String?) -> String? {
         guard let categoryId else { return nil }
-        return accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
+        return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "category") {
+            accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
+        }
     }
 
     private func displayPrice(for item: Item) -> String? {
         item.normalizedProjectPriceCents.map(CurrencyFormatting.formatCentsWithDecimals)
+    }
+
+    private var diagnosticMode: String {
+        switch mode {
+        case .standalone: "items.standalone"
+        case .embedded: "items.embedded"
+        case .picker: "items.picker"
+        }
     }
 
 }

@@ -122,8 +122,11 @@ final class AccountContext {
 
     func activate(accountId: String, userId: String) {
         if currentAccountId == accountId, activeUserId == userId, !listeners.isEmpty {
+            PerformanceDiagnostics.shared.event("ContextActivationEarlyReturn", kind: "account", count: listeners.count)
             return
         }
+
+        PerformanceDiagnostics.shared.event("ContextActivationStart", kind: "account", count: listeners.count)
 
         // Stop listeners and clear data without touching currentAccountId/discoveredAccounts
         // to avoid triggering a RootView re-render back to AccountGateView.
@@ -146,16 +149,24 @@ final class AccountContext {
         activeUserId = userId
 
         let accountListener = accountsService.subscribeToAccount(accountId: accountId) { [weak self] account in
+            let receivedAt = DispatchTime.now().uptimeNanoseconds
             Task { @MainActor in
-                self?.account = account
+                guard let self else { return }
+                self.publish(kind: "account.account", receivedAt: receivedAt, count: account == nil ? 0 : 1) {
+                    self.account = account
+                }
             }
         }
         listeners.append(accountListener)
 
         let memberListener = membersService.subscribeToMember(accountId: accountId, userId: userId) { [weak self] member in
+            let receivedAt = DispatchTime.now().uptimeNanoseconds
             Task { @MainActor in
-                self?.member = member
-                self?.applyFinancialAccess()
+                guard let self else { return }
+                self.publish(kind: "account.member", receivedAt: receivedAt, count: member == nil ? 0 : 1) {
+                    self.member = member
+                    self.applyFinancialAccess()
+                }
             }
         }
         listeners.append(memberListener)
@@ -163,23 +174,39 @@ final class AccountContext {
         // Cross-project subscriptions for universal search
         if let itemsService {
             let itemsListener = itemsService.subscribeToItems(accountId: accountId, scope: .all) { [weak self] items in
-                Task { @MainActor in self?.allItems = items }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "account.items", receivedAt: receivedAt, count: items.count) {
+                        self.allItems = items
+                    }
+                }
             }
             listeners.append(itemsListener)
         }
 
         if let protoItemsService {
             let protoItemsListener = protoItemsService.subscribeToProtoItems(accountId: accountId, scope: .all) { [weak self] protoItems in
-                Task { @MainActor in self?.allProtoItems = protoItems }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "account.proto-items", receivedAt: receivedAt, count: protoItems.count) {
+                        self.allProtoItems = protoItems
+                    }
+                }
             }
             listeners.append(protoItemsListener)
         }
 
         if let transactionsService {
             let txListener = transactionsService.subscribeToTransactions(accountId: accountId, scope: .all) { [weak self] transactions in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.rawAllTransactions = transactions
-                    self?.applyFinancialAccess()
+                    guard let self else { return }
+                    self.publish(kind: "account.transactions", receivedAt: receivedAt, count: transactions.count) {
+                        self.rawAllTransactions = transactions
+                        self.applyFinancialAccess()
+                    }
                 }
             }
             listeners.append(txListener)
@@ -187,16 +214,26 @@ final class AccountContext {
 
         if let spacesService {
             let spacesListener = spacesService.subscribeToSpaces(accountId: accountId, scope: .all) { [weak self] spaces in
-                Task { @MainActor in self?.allSpaces = spaces }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "account.spaces", receivedAt: receivedAt, count: spaces.count) {
+                        self.allSpaces = spaces
+                    }
+                }
             }
             listeners.append(spacesListener)
         }
 
         if let budgetCategoriesService {
             let categoriesListener = budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.rawAllBudgetCategories = categories
-                    self?.applyFinancialAccess()
+                    guard let self else { return }
+                    self.publish(kind: "account.categories", receivedAt: receivedAt, count: categories.count) {
+                        self.rawAllBudgetCategories = categories
+                        self.applyFinancialAccess()
+                    }
                 }
             }
             listeners.append(categoriesListener)
@@ -204,23 +241,35 @@ final class AccountContext {
 
         if let projectService {
             let projectsListener = projectService.subscribeToProjects(accountId: accountId) { [weak self] projects in
-                Task { @MainActor in self?.allProjects = projects }
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.publish(kind: "account.projects", receivedAt: receivedAt, count: projects.count) {
+                        self.allProjects = projects
+                    }
+                }
             }
             listeners.append(projectsListener)
         }
 
         if let invoicesService {
             let invoicesListener = invoicesService.subscribeToInvoices(accountId: accountId) { [weak self] invoices in
+                let receivedAt = DispatchTime.now().uptimeNanoseconds
                 Task { @MainActor in
-                    self?.rawAllInvoices = invoices
-                    self?.applyFinancialAccess()
+                    guard let self else { return }
+                    self.publish(kind: "account.invoices", receivedAt: receivedAt, count: invoices.count) {
+                        self.rawAllInvoices = invoices
+                        self.applyFinancialAccess()
+                    }
                 }
             }
             listeners.append(invoicesListener)
         }
+        PerformanceDiagnostics.shared.event("ContextActivationComplete", kind: "account", count: listeners.count)
     }
 
     func deactivate() {
+        PerformanceDiagnostics.shared.event("ContextDeactivated", kind: "account", count: listeners.count)
         listeners.forEach { $0.remove() }
         listeners.removeAll()
         lastSelectedAccountId = nil
@@ -242,6 +291,11 @@ final class AccountContext {
     }
 
     private func applyFinancialAccess() {
+        let interval = PerformanceDiagnostics.shared.beginInterval(
+            "FinancialAccess",
+            kind: "account",
+            count: rawAllTransactions.count + rawAllBudgetCategories.count + rawAllInvoices.count
+        )
         let policy = FinancialAccessPolicy(member: member)
         allBudgetCategories = policy.visibleCategories(rawAllBudgetCategories)
         allTransactions = policy.visibleTransactions(rawAllTransactions, categories: rawAllBudgetCategories)
@@ -250,5 +304,22 @@ final class AccountContext {
             transactions: rawAllTransactions,
             categories: rawAllBudgetCategories
         )
+        PerformanceDiagnostics.shared.endInterval(
+            interval,
+            value: allTransactions.count + allBudgetCategories.count + allInvoices.count
+        )
+    }
+
+    private func publish(kind: String, receivedAt: UInt64, count: Int, update: () -> Void) {
+        let queueDelayMilliseconds = Double(DispatchTime.now().uptimeNanoseconds - receivedAt) / 1_000_000
+        PerformanceDiagnostics.shared.duration(
+            "MainActorDelivery",
+            kind: kind,
+            milliseconds: queueDelayMilliseconds,
+            count: count
+        )
+        let interval = PerformanceDiagnostics.shared.beginInterval("ContextPublish", kind: kind, count: count)
+        update()
+        PerformanceDiagnostics.shared.endInterval(interval)
     }
 }

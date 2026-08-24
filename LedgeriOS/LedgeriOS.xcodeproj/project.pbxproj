@@ -228,6 +228,8 @@
 		C9089C190BD5E36392779FD2 /* SpaceTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563E6B9581893C9611B421B /* SpaceTemplate.swift */; };
 		C9B27504A15F99084A8EB1AD /* StatusPickerModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFCFD123A4DAA2E966201935 /* StatusPickerModal.swift */; };
 		CA767B23D389B539E5600C4D /* NavLifecycleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA6ED6EBE081D181248F3DEC /* NavLifecycleLog.swift */; };
+		C0D3A6010000000000000001 /* PerformanceDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A6020000000000000001 /* PerformanceDiagnostics.swift */; };
+		C0D3A6010000000000000002 /* PerformanceDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A6020000000000000002 /* PerformanceDiagnosticsTests.swift */; };
 		CC01B00100000000000C0001 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01F00100000000000C0001 /* CameraCapture.swift */; };
 		CD7A164FABC536432CB432E1 /* DraftItemsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA74C8175BF6BF8D7C5B2D81 /* DraftItemsList.swift */; };
 		CDCF267F298296A2AAB6C652 /* AccountMembersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFD7C48C59A953E37ACAF5D /* AccountMembersService.swift */; };
@@ -609,6 +611,8 @@
 		C75E44234C0CE7E9AE18BADA /* LedgeriOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LedgeriOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C89F38C225B3ABEBCDDF68A0 /* BulkSaleResolutionCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BulkSaleResolutionCalculations.swift; sourceTree = "<group>"; };
 		CA6ED6EBE081D181248F3DEC /* NavLifecycleLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NavLifecycleLog.swift; sourceTree = "<group>"; };
+		C0D3A6020000000000000001 /* PerformanceDiagnostics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PerformanceDiagnostics.swift; sourceTree = "<group>"; };
+		C0D3A6020000000000000002 /* PerformanceDiagnosticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PerformanceDiagnosticsTests.swift; sourceTree = "<group>"; };
 		CAC6CAA659769069DED37219 /* FirestoreRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirestoreRepository.swift; sourceTree = "<group>"; };
 		CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsServiceTests.swift; sourceTree = "<group>"; };
 		CB6ABADE720F40838B737A0E /* PropertyManagementReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportView.swift; sourceTree = "<group>"; };
@@ -895,6 +899,7 @@
 				049F6C9A5256A2B0805DBF29 /* AddExistingItemsCalculations.swift */,
 				117F38150BFD4567A82878E1 /* NavigationRouteResolution.swift */,
 				CA6ED6EBE081D181248F3DEC /* NavLifecycleLog.swift */,
+				C0D3A6020000000000000001 /* PerformanceDiagnostics.swift */,
 			);
 			path = Logic;
 			sourceTree = "<group>";
@@ -1015,6 +1020,7 @@
 		79C14EF1AAD96575EAC6E631 /* LedgeriOSTests */ = {
 			isa = PBXGroup;
 			children = (
+				C0D3A6020000000000000002 /* PerformanceDiagnosticsTests.swift */,
 				BL00000000000000000F0014 /* BillingSummaryCalculationTests.swift */,
 				BL00000000000000000F0015 /* InvoiceReportAggregationTests.swift */,
 				BE243B592ABD484D8B319501 /* ReportAggregationCalculationTests.swift */,
@@ -1805,6 +1811,7 @@
 				DB4F34A90B98CE7FF44A09F7 /* NavigationRoutes.swift in Sources */,
 				8F1F2FAC7AC01B515D428971 /* NavigationRouteResolution.swift in Sources */,
 				CA767B23D389B539E5600C4D /* NavLifecycleLog.swift in Sources */,
+				C0D3A6010000000000000001 /* PerformanceDiagnostics.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1812,6 +1819,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0D3A6010000000000000002 /* PerformanceDiagnosticsTests.swift in Sources */,
 				EDB7E04308BF46559EA19425 /* ReportAggregationCalculationTests.swift in Sources */,
 				BL00000000000000000B0014 /* BillingSummaryCalculationTests.swift in Sources */,
 				BL00000000000000000B0015 /* InvoiceReportAggregationTests.swift in Sources */,
@@ -2019,7 +2027,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2058,7 +2066,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (

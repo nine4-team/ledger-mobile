@@ -18,6 +18,17 @@ extension PlatformImage {
         return png.base64EncodedString()
         #endif
     }
+
+    var estimatedDecodedByteCount: Int {
+        #if canImport(UIKit)
+        guard let cgImage else { return 0 }
+        return cgImage.bytesPerRow * cgImage.height
+        #elseif canImport(AppKit)
+        return representations
+            .map { max(0, $0.pixelsWide) * max(0, $0.pixelsHigh) * 4 }
+            .max() ?? 0
+        #endif
+    }
 }
 
 /// Shared in-memory image cache backed by NSCache.
@@ -38,6 +49,13 @@ enum ImageCache {
 
     /// Store an image with its data byte count as cost.
     static func store(_ image: PlatformImage, for key: String, cost: Int) {
+        let decodedCost = image.estimatedDecodedByteCount
         cache.setObject(image, forKey: key as NSString, cost: cost)
+        PerformanceDiagnostics.shared.event(
+            "ImageCached",
+            kind: "decoded-megabytes",
+            count: 1,
+            value: decodedCost / 1_048_576
+        )
     }
 }

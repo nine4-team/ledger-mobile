@@ -89,6 +89,14 @@ struct ItemsTabView: View {
                 onClear: { selectedItemIds.removeAll() }
             )
         }
+        .onAppear {
+            PerformanceDiagnostics.shared.setScenario("project-items")
+            PerformanceDiagnostics.shared.event(
+                "ListAppeared",
+                kind: "project-items",
+                count: projectContext.items.count
+            )
+        }
         .itemActionSheets(
             itemActions,
             spaces: projectContext.spaces,
@@ -529,7 +537,14 @@ private struct ItemsTabBulkSelectionControls: View {
                 BulkSelectionBar(
                     selectedCount: selectedCount,
                     totalCents: totalCents,
-                    onBulkActions: { showBulkActionMenu = true },
+                    onBulkActions: {
+                        PerformanceDiagnostics.shared.event(
+                            "ActionMenuRequested",
+                            kind: "project-items.bulk",
+                            count: selectedCount
+                        )
+                        showBulkActionMenu = true
+                    },
                     onClear: onClear
                 )
             }

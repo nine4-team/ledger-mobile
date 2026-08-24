@@ -88,7 +88,8 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     // MARK: - Subscribe (real-time, cache-first)
 
     func subscribe(onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
-        collectionRef.addSnapshotListener { [collectionPath] snapshot, error in
+        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: diagnosticKind)
+        return collectionRef.addSnapshotListener { [collectionPath] snapshot, error in
             if let error {
                 print("[FirestoreRepo] \(collectionPath) snapshot error: \(error)")
             }
@@ -96,16 +97,35 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                 print("[FirestoreRepo] \(collectionPath) snapshot nil")
                 return
             }
+            let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
+                "FirestoreDecode",
+                kind: Self.diagnosticKind(for: collectionPath),
+                count: docs.count
+            )
             let items = docs.compactMap { doc in Self.decodeDocument(doc) }
+            PerformanceDiagnostics.shared.endInterval(
+                decodeInterval,
+                value: snapshot?.documentChanges.count ?? 0
+            )
             if items.count != docs.count {
                 print("[FirestoreRepo] \(collectionPath) decode dropped \(docs.count - items.count)/\(docs.count) docs")
             }
+            let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
+                "FirestoreCallback",
+                kind: Self.diagnosticKind(for: collectionPath),
+                count: items.count
+            )
             onChange(items)
+            PerformanceDiagnostics.shared.endInterval(
+                callbackInterval,
+                value: Self.snapshotFlags(snapshot)
+            )
         }
     }
 
     func subscribe(where field: String, isEqualTo value: Any, onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
-        collectionRef
+        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: "\(diagnosticKind).query")
+        return collectionRef
             .whereField(field, isEqualTo: value)
             .addSnapshotListener { [collectionPath] snapshot, error in
                 if let error {
@@ -115,21 +135,47 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                     print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) snapshot nil")
                     return
                 }
+                let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
+                    "FirestoreDecode",
+                    kind: "\(Self.diagnosticKind(for: collectionPath)).query",
+                    count: docs.count
+                )
                 let items = docs.compactMap { doc in Self.decodeDocument(doc) }
+                PerformanceDiagnostics.shared.endInterval(
+                    decodeInterval,
+                    value: snapshot?.documentChanges.count ?? 0
+                )
                 if items.count != docs.count {
                     print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) decode dropped \(docs.count - items.count)/\(docs.count) docs")
                 }
+                let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
+                    "FirestoreCallback",
+                    kind: "\(Self.diagnosticKind(for: collectionPath)).query",
+                    count: items.count
+                )
                 onChange(items)
+                PerformanceDiagnostics.shared.endInterval(
+                    callbackInterval,
+                    value: Self.snapshotFlags(snapshot)
+                )
             }
     }
 
     func subscribe(id: String, onChange: @escaping (T?) -> Void) -> ListenerRegistration {
-        collectionRef.document(id).addSnapshotListener { snapshot, error in
+        let kind = "\(diagnosticKind).document"
+        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: kind)
+        return collectionRef.document(id).addSnapshotListener { snapshot, error in
             guard let snapshot, snapshot.exists else {
                 onChange(nil)
                 return
             }
+            let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
+                "FirestoreDecodeDocument",
+                kind: kind,
+                count: 1
+            )
             let item = Self.decodeDocument(snapshot)
+            PerformanceDiagnostics.shared.endInterval(decodeInterval, value: item == nil ? 0 : 1)
             onChange(item)
         }
     }
@@ -137,6 +183,22 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     // MARK: - Decode helper
 
     private nonisolated static var logger: Logger { Logger(subsystem: "apps.nine4.ledger", category: "FirestoreRepository") }
+
+    private var diagnosticKind: String {
+        Self.diagnosticKind(for: collectionPath)
+    }
+
+    private nonisolated static func diagnosticKind(for collectionPath: String) -> String {
+        collectionPath.split(separator: "/").last.map(String.init) ?? "unknown"
+    }
+
+    private nonisolated static func snapshotFlags(_ snapshot: QuerySnapshot?) -> Int {
+        guard let snapshot else { return 0 }
+        var flags = 0
+        if snapshot.metadata.isFromCache { flags |= 1 }
+        if snapshot.metadata.hasPendingWrites { flags |= 2 }
+        return flags
+    }
 
     private static func decodeDocument(_ doc: DocumentSnapshot) -> T? {
         do {
