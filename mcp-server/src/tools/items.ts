@@ -218,6 +218,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       spaceId: z.string().optional().describe("Filter by space ID"),
       budgetCategoryId: z.string().optional().describe("Filter by budget category"),
       status: z.string().optional().describe("Filter by status (to purchase, purchased, to return, returned)"),
+      source: z.string().optional().describe("Filter by exact source/vendor name (case-sensitive)"),
       bookmarked: z.boolean().optional().describe("Filter by bookmark status"),
       hasTransaction: z.boolean().optional().describe("Filter by transaction linkage: true = only items with a transactionId, false = only items with NO transactionId"),
       hasImages: z.boolean().optional().describe("Filter by image presence: true = only items with at least one image, false = only items with NO images. Use false to find items still needing photos."),
@@ -228,7 +229,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
       responseLimit: ResponseLimitArg,
     },
-    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, hasImages, limit, offset, fetchAll, mode, fields, responseLimit }) => {
+    async ({ projectId, spaceId, budgetCategoryId, status, source, bookmarked, hasTransaction, hasImages, limit, offset, fetchAll, mode, fields, responseLimit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (projectId === "inventory") {
@@ -240,6 +241,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (spaceId) query = query.where("spaceId", "==", spaceId);
       if (budgetCategoryId) query = query.where("budgetCategoryId", "==", budgetCategoryId);
       if (status) query = query.where("status", "==", status);
+      if (source) query = query.where("source", "==", source);
       if (bookmarked !== undefined) query = query.where("bookmark", "==", bookmarked);
 
       // Firestore can't query "field absent" or array length, so we filter client-side
