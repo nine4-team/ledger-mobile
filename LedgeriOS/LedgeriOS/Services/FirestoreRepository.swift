@@ -1,9 +1,106 @@
 import FirebaseFirestore
 import os.log
 
+private struct FirestoreUncheckedSendable<Value>: @unchecked Sendable {
+    let value: Value
+}
+
+final class FirestoreListenerGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var active = true
+
+    var isActive: Bool {
+        lock.withLock { active }
+    }
+
+    func cancel() {
+        lock.withLock { active = false }
+    }
+}
+
+private final class FirestoreDecodedListenerRegistration: NSObject, ListenerRegistration, @unchecked Sendable {
+    private let lock = NSLock()
+    private let gate: FirestoreListenerGate
+    private var registration: ListenerRegistration?
+
+    init(registration: ListenerRegistration, gate: FirestoreListenerGate) {
+        self.registration = registration
+        self.gate = gate
+    }
+
+    func remove() {
+        gate.cancel()
+        let registration = lock.withLock {
+            defer { self.registration = nil }
+            return self.registration
+        }
+        registration?.remove()
+    }
+}
+
+final class FirestoreSnapshotDecodeQueue: @unchecked Sendable {
+    private let queue = DispatchQueue(
+        label: "apps.nine4.ledger.firestore-snapshot-decode",
+        qos: .userInitiated
+    )
+    private let specificKey = DispatchSpecificKey<UInt8>()
+
+    init() {
+        queue.setSpecific(key: specificKey, value: 1)
+    }
+
+    func async(_ work: @escaping () -> Void) {
+        let work = FirestoreUncheckedSendable(value: work)
+        queue.async {
+            work.value()
+        }
+    }
+
+    var isCurrent: Bool {
+        DispatchQueue.getSpecific(key: specificKey) != nil
+    }
+}
+
+private final class FirestoreDocumentDecoder<Value: Codable>: @unchecked Sendable {
+    private static var logger: Logger {
+        Logger(subsystem: "apps.nine4.ledger", category: "FirestoreRepository")
+    }
+
+    func decode(_ document: DocumentSnapshot) -> Value? {
+        do {
+            return try document.data(as: Value.self)
+        } catch let decodingError as DecodingError {
+            let detail: String
+            switch decodingError {
+            case .typeMismatch(let type, let context):
+                detail = "typeMismatch(\(type)) at \(context.codingPath.map(\.stringValue).joined(separator: ".")) — \(context.debugDescription)"
+            case .valueNotFound(let type, let context):
+                detail = "valueNotFound(\(type)) at \(context.codingPath.map(\.stringValue).joined(separator: ".")) — \(context.debugDescription)"
+            case .keyNotFound(let key, let context):
+                detail = "keyNotFound(\(key.stringValue)) at \(context.codingPath.map(\.stringValue).joined(separator: ".")) — \(context.debugDescription)"
+            case .dataCorrupted(let context):
+                detail = "dataCorrupted at \(context.codingPath.map(\.stringValue).joined(separator: ".")) — \(context.debugDescription)"
+            @unknown default:
+                detail = "\(decodingError)"
+            }
+            Self.logger.error("Failed to decode \(String(describing: Value.self)) from doc \(document.documentID): \(detail)")
+            return nil
+        } catch {
+            Self.logger.error("Failed to decode \(String(describing: Value.self)) from doc \(document.documentID): \(error)")
+            return nil
+        }
+    }
+
+    func decodeAll(_ documents: [QueryDocumentSnapshot]) -> [Value] {
+        documents.compactMap { decode($0) }
+    }
+}
+
 final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     private let collectionPath: String
     private let db = Firestore.firestore()
+    private let documentDecoder = FirestoreDocumentDecoder<T>()
+    private let snapshotDecodeQueue = FirestoreSnapshotDecodeQueue()
 
     init(path: String) {
         self.collectionPath = path
@@ -23,14 +120,14 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
 
     func list() async throws -> [T] {
         let snapshot = try await collectionRef.getDocuments()
-        return snapshot.documents.compactMap { doc in Self.decodeDocument(doc) }
+        return snapshot.documents.compactMap { documentDecoder.decode($0) }
     }
 
     func list(where field: String, isEqualTo value: Any) async throws -> [T] {
         let snapshot = try await collectionRef
             .whereField(field, isEqualTo: value)
             .getDocuments()
-        return snapshot.documents.compactMap { doc in Self.decodeDocument(doc) }
+        return snapshot.documents.compactMap { documentDecoder.decode($0) }
     }
 
     // MARK: - Write (fire-and-forget for offline-first)
@@ -88,8 +185,14 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     // MARK: - Subscribe (real-time, cache-first)
 
     func subscribe(onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
-        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: diagnosticKind)
-        return collectionRef.addSnapshotListener { [collectionPath] snapshot, error in
+        let kind = diagnosticKind
+        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: kind)
+        let callback = FirestoreUncheckedSendable(value: onChange)
+        let documentDecoder = documentDecoder
+        let decodeQueue = snapshotDecodeQueue
+        let gate = FirestoreListenerGate()
+        let registration = collectionRef.addSnapshotListener { [collectionPath] snapshot, error in
+            guard gate.isActive else { return }
             if let error {
                 print("[FirestoreRepo] \(collectionPath) snapshot error: \(error)")
             }
@@ -97,37 +200,51 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                 print("[FirestoreRepo] \(collectionPath) snapshot nil")
                 return
             }
-            let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
-                "FirestoreDecode",
-                kind: Self.diagnosticKind(for: collectionPath),
-                count: docs.count
-            )
-            let items = docs.compactMap { doc in Self.decodeDocument(doc) }
-            PerformanceDiagnostics.shared.endInterval(
-                decodeInterval,
-                value: snapshot?.documentChanges.count ?? 0
-            )
-            if items.count != docs.count {
-                print("[FirestoreRepo] \(collectionPath) decode dropped \(docs.count - items.count)/\(docs.count) docs")
+            let documents = FirestoreUncheckedSendable(value: docs)
+            let changeCount = snapshot?.documentChanges.count ?? 0
+            let snapshotFlags = Self.snapshotFlags(snapshot)
+            decodeQueue.async {
+                guard gate.isActive else { return }
+                let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
+                    "FirestoreDecode",
+                    kind: kind,
+                    count: documents.value.count
+                )
+                let items = documentDecoder.decodeAll(documents.value)
+                PerformanceDiagnostics.shared.endInterval(decodeInterval, value: changeCount)
+                if items.count != documents.value.count {
+                    print("[FirestoreRepo] \(collectionPath) decode dropped \(documents.value.count - items.count)/\(documents.value.count) docs")
+                }
+                let decodedItems = FirestoreUncheckedSendable(value: items)
+                DispatchQueue.main.async {
+                    guard gate.isActive else { return }
+                    let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
+                        "FirestoreCallback",
+                        kind: kind,
+                        count: decodedItems.value.count
+                    )
+                    callback.value(decodedItems.value)
+                    PerformanceDiagnostics.shared.endInterval(
+                        callbackInterval,
+                        value: snapshotFlags
+                    )
+                }
             }
-            let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
-                "FirestoreCallback",
-                kind: Self.diagnosticKind(for: collectionPath),
-                count: items.count
-            )
-            onChange(items)
-            PerformanceDiagnostics.shared.endInterval(
-                callbackInterval,
-                value: Self.snapshotFlags(snapshot)
-            )
         }
+        return FirestoreDecodedListenerRegistration(registration: registration, gate: gate)
     }
 
     func subscribe(where field: String, isEqualTo value: Any, onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
-        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: "\(diagnosticKind).query")
-        return collectionRef
+        let kind = "\(diagnosticKind).query"
+        PerformanceDiagnostics.shared.event("ListenerRegistered", kind: kind)
+        let callback = FirestoreUncheckedSendable(value: onChange)
+        let documentDecoder = documentDecoder
+        let decodeQueue = snapshotDecodeQueue
+        let gate = FirestoreListenerGate()
+        let registration = collectionRef
             .whereField(field, isEqualTo: value)
             .addSnapshotListener { [collectionPath] snapshot, error in
+                guard gate.isActive else { return }
                 if let error {
                     print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) snapshot error: \(error)")
                 }
@@ -135,35 +252,44 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                     print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) snapshot nil")
                     return
                 }
-                let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
-                    "FirestoreDecode",
-                    kind: "\(Self.diagnosticKind(for: collectionPath)).query",
-                    count: docs.count
-                )
-                let items = docs.compactMap { doc in Self.decodeDocument(doc) }
-                PerformanceDiagnostics.shared.endInterval(
-                    decodeInterval,
-                    value: snapshot?.documentChanges.count ?? 0
-                )
-                if items.count != docs.count {
-                    print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) decode dropped \(docs.count - items.count)/\(docs.count) docs")
+                let documents = FirestoreUncheckedSendable(value: docs)
+                let changeCount = snapshot?.documentChanges.count ?? 0
+                let snapshotFlags = Self.snapshotFlags(snapshot)
+                decodeQueue.async {
+                    guard gate.isActive else { return }
+                    let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
+                        "FirestoreDecode",
+                        kind: kind,
+                        count: documents.value.count
+                    )
+                    let items = documentDecoder.decodeAll(documents.value)
+                    PerformanceDiagnostics.shared.endInterval(decodeInterval, value: changeCount)
+                    if items.count != documents.value.count {
+                        print("[FirestoreRepo] \(collectionPath) WHERE \(field) decode dropped \(documents.value.count - items.count)/\(documents.value.count) docs")
+                    }
+                    let decodedItems = FirestoreUncheckedSendable(value: items)
+                    DispatchQueue.main.async {
+                        guard gate.isActive else { return }
+                        let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
+                            "FirestoreCallback",
+                            kind: kind,
+                            count: decodedItems.value.count
+                        )
+                        callback.value(decodedItems.value)
+                        PerformanceDiagnostics.shared.endInterval(
+                            callbackInterval,
+                            value: snapshotFlags
+                        )
+                    }
                 }
-                let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
-                    "FirestoreCallback",
-                    kind: "\(Self.diagnosticKind(for: collectionPath)).query",
-                    count: items.count
-                )
-                onChange(items)
-                PerformanceDiagnostics.shared.endInterval(
-                    callbackInterval,
-                    value: Self.snapshotFlags(snapshot)
-                )
             }
+        return FirestoreDecodedListenerRegistration(registration: registration, gate: gate)
     }
 
     func subscribe(id: String, onChange: @escaping (T?) -> Void) -> ListenerRegistration {
         let kind = "\(diagnosticKind).document"
         PerformanceDiagnostics.shared.event("ListenerRegistered", kind: kind)
+        let documentDecoder = documentDecoder
         return collectionRef.document(id).addSnapshotListener { snapshot, error in
             guard let snapshot, snapshot.exists else {
                 onChange(nil)
@@ -174,15 +300,13 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                 kind: kind,
                 count: 1
             )
-            let item = Self.decodeDocument(snapshot)
+            let item = documentDecoder.decode(snapshot)
             PerformanceDiagnostics.shared.endInterval(decodeInterval, value: item == nil ? 0 : 1)
             onChange(item)
         }
     }
 
     // MARK: - Decode helper
-
-    private nonisolated static var logger: Logger { Logger(subsystem: "apps.nine4.ledger", category: "FirestoreRepository") }
 
     private var diagnosticKind: String {
         Self.diagnosticKind(for: collectionPath)
@@ -200,28 +324,4 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
         return flags
     }
 
-    private static func decodeDocument(_ doc: DocumentSnapshot) -> T? {
-        do {
-            return try doc.data(as: T.self)
-        } catch let decodingError as DecodingError {
-            let detail: String
-            switch decodingError {
-            case .typeMismatch(let type, let ctx):
-                detail = "typeMismatch(\(type)) at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
-            case .valueNotFound(let type, let ctx):
-                detail = "valueNotFound(\(type)) at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
-            case .keyNotFound(let key, let ctx):
-                detail = "keyNotFound(\(key.stringValue)) at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
-            case .dataCorrupted(let ctx):
-                detail = "dataCorrupted at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
-            @unknown default:
-                detail = "\(decodingError)"
-            }
-            logger.error("Failed to decode \(String(describing: T.self)) from doc \(doc.documentID): \(detail)")
-            return nil
-        } catch {
-            logger.error("Failed to decode \(String(describing: T.self)) from doc \(doc.documentID): \(error)")
-            return nil
-        }
-    }
 }

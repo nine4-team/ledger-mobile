@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseFirestore
 import ImageIO
 import Testing
 @testable import LedgeriOS
@@ -181,6 +182,51 @@ struct PerformanceDiagnosticsTests {
         #expect(preparedImage.image.estimatedDecodedByteCount > 0)
     }
 
+    @Test("Firestore snapshot decode queue runs away from the main thread")
+    func firestoreSnapshotDecodeQueueAffinity() async {
+        let queue = FirestoreSnapshotDecodeQueue()
+        let result = await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: (queue.isCurrent, Thread.isMainThread))
+            }
+        }
+
+        #expect(result.0)
+        #expect(!result.1)
+    }
+
+    @Test("Firestore listener gate suppresses queued work after cancellation")
+    func firestoreListenerGateCancellation() {
+        let gate = FirestoreListenerGate()
+
+        #expect(gate.isActive)
+        gate.cancel()
+        #expect(!gate.isActive)
+    }
+
+    @Test("Synthetic 668-item Firestore Codable decode cost profile")
+    func syntheticFirestoreDecodeCostProfile() throws {
+        let collection = Firestore.firestore().collection("__performance_benchmark_items")
+        let encodedItems = try makeBrowsingItems(count: 668).enumerated().map { index, item in
+            (
+                data: try Firestore.Encoder().encode(item),
+                reference: collection.document("item-\(index)")
+            )
+        }
+        let decode = benchmark(iterations: 25) {
+            let decoder = Firestore.Decoder()
+            return encodedItems.compactMap {
+                try? decoder.decode(Item.self, from: $0.data, in: $0.reference)
+            }.count
+        }
+
+        #expect(decode.result == 668)
+        print(
+            "FIRESTORE_DECODE_BENCHMARK items=668 " +
+            "decode_ms=\(formatMilliseconds(decode.millisecondsPerIteration))"
+        )
+    }
+
     @Test("Synthetic account financial publication cost profile")
     func syntheticFinancialPublicationCostProfile() {
         let categories = makeFinancialCategories(count: 100)
@@ -294,9 +340,9 @@ private func makeFinancialCategories(count: Int) -> [BudgetCategory] {
     }
 }
 
-private func makeFinancialTransactions(count: Int, categoryCount: Int) -> [Transaction] {
+private func makeFinancialTransactions(count: Int, categoryCount: Int) -> [LedgeriOS.Transaction] {
     (0..<count).map { index in
-        var transaction = Transaction()
+        var transaction = LedgeriOS.Transaction()
         transaction.id = "transaction-\(index)"
         transaction.transactionType = .purchase
         transaction.budgetCategoryId = "category-\(index % categoryCount)"
@@ -305,7 +351,7 @@ private func makeFinancialTransactions(count: Int, categoryCount: Int) -> [Trans
     }
 }
 
-private func makeFinancialInvoices(count: Int, transactions: [Transaction]) -> [Invoice] {
+private func makeFinancialInvoices(count: Int, transactions: [LedgeriOS.Transaction]) -> [Invoice] {
     (0..<count).map { invoiceIndex in
         var invoice = Invoice()
         invoice.id = "financial-invoice-\(invoiceIndex)"

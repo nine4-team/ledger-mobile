@@ -8,8 +8,10 @@ device capture remains pending.
 Offline remediations completed after the diagnostic baseline include listener
 teardown, removal of duplicate project/category subscriptions, indexed card
 metadata, indexed financial publication, decoded-memory cache accounting, and
-off-main image preparation. These remediation changes are tracked in the run
-summary; the non-goals below describe the original instrumentation phase.
+off-main image preparation. Firestore collection/query snapshot decoding also
+now runs on private serial repository queues before ordered main-queue
+publication. These remediation changes are tracked in the run summary; the
+non-goals below describe the original instrumentation phase.
 
 This plan covers the measurement phase for Ledger's browsing freezes, crashes,
 and navigation latency on iOS and macOS. It deliberately separates diagnosis
@@ -102,9 +104,12 @@ The first implementation pass should begin from these verified facts:
 - `AccountContext` and `ProjectContext` therefore intentionally have overlapping
   coverage while a project is open. The cost and invalidation impact have not
   been measured.
-- `FirestoreRepository` decodes every document in each delivered query snapshot
-  before invoking the context callback. It currently logs decoding failures but
-  not snapshot timing, callback queue delay, or document-change size.
+- `FirestoreRepository` originally decoded every document on Firebase's default
+  main callback queue before invoking the context callback. Collection/query
+  decoding now runs on a private serial queue per repository and publishes the
+  completed array back on main. A representative 668-item Codable pass measured
+  10.326 ms in Debug. Listener scope, freshness, and publication ordering are
+  unchanged.
 - Context callbacks enqueue `Task { @MainActor ... }`. Main-actor delivery delay
   is not currently measured.
 - `SharedItemsList` recomputes filtered items, groups, visible IDs, and selection

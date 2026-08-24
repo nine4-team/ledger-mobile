@@ -16,7 +16,7 @@ not valid evidence for ranking architectural remediations.
 - The diagnostics foundation and focused instrumentation compile in the iOS
   and macOS application targets.
 - The focused diagnostics and lifecycle suites passed after the final changes:
-  17 tests in 2 suites, with 0 failures.
+  24 tests in 2 suites, with 0 failures.
 - Main-thread heartbeat delay, process-memory trends, listener and task counts,
   context publication time, list derivation time, card lookup time, image
   decoding, and warm-cache navigation remain valid measurements under degraded
@@ -123,6 +123,27 @@ view. The original resolution and URLs are unchanged. The user-visible tradeoff
 is limited to earlier RAM eviction under pressure; an evicted image can be
 reloaded from the existing URL disk cache.
 
+### 6. Firestore snapshot decoding on the main queue
+
+The bundled Firebase SDK documents that Firestore completion and event handlers
+use the main queue by default. `FirestoreRepository` then decoded every document
+in collection and query snapshots synchronously inside that callback before a
+context could publish the result. A representative local benchmark measured a
+668-item Firestore Codable pass at 10.326 ms in Debug.
+
+That isolated cost cannot explain a multi-minute stall. It is nevertheless
+confirmed main-thread work that can compound when account-wide and
+project-scoped listeners deliver overlapping snapshots or trigger broad view
+invalidation. Collection and query snapshot decoding now runs on a private
+serial queue per repository. The serial queue preserves snapshot arrival order,
+and completed arrays are still delivered on the main queue exactly as before.
+
+Listener scope, cache/server behavior, and update freshness are unchanged. A
+publication is delayed only by the same decode work that previously blocked the
+main queue, plus the next main-queue turn. Firebase's global callback queue was
+not changed because several direct subscribers outside the repository mutate UI
+state under the existing main-queue assumption.
+
 ## Ranked Readout
 
 1. **Leaked project listeners:** confirmed architectural defect and plausible
@@ -132,18 +153,21 @@ reloaded from the existing URL disk cache.
    Fixed on the shared item-card/list path with synchronous freshness tests.
 3. **Main-actor financial publication:** a confirmed half-second synthetic
    callback path for limited-access accounts, reduced to approximately 3 ms.
-4. **Remaining account/project listener overlap:** item, transaction,
+4. **Main-queue Firestore snapshot decoding:** confirmed architecture risk.
+   A 668-item decode measured 10.326 ms in isolation and now runs on a serial
+   background queue while preserving ordered main-queue publication.
+5. **Remaining account/project listener overlap:** item, transaction,
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
    project subsets from account data.
-5. **Image decode and memory pressure:** confirmed architectural risk. Decoded
+6. **Image decode and memory pressure:** confirmed architectural risk. Decoded
    memory is now bounded correctly and display preparation no longer runs on
    the main actor. Cold image-download timing remains unranked because the
    network measurements are invalid in this run.
-6. **List filtering, grouping, and selection totals:** measured too small to be
+7. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-7. **Unbatched bulk writes:** remains a write-completion and callback-storm
+8. **Unbatched bulk writes:** remains a write-completion and callback-storm
    issue, but does not explain slow browsing before a bulk operation begins.
 
 ## Evidence Unavailable
@@ -164,6 +188,8 @@ freshness. Cleanup occurs only after a project context is destroyed; lookup
 indexes are rebuilt synchronously from each published source-array value.
 Image cache eviction now reflects decoded memory rather than compressed payload
 size, and image preparation moved off the main actor without resizing images.
+Firestore collection/query decoding now occurs on a private serial queue, with
+the same live snapshots published on the main queue in arrival order.
 
 ## Verification
 
@@ -173,6 +199,9 @@ size, and image preparation moved off the main actor without resizing images.
   publication optimization: 25 tests passed.
 - Latest focused performance suite, including image cache/decode coverage: 11
   tests passed on the iOS simulator.
+- Latest combined performance and lifecycle run, including Firestore queue,
+  cancellation, and 668-item decode coverage: 24 tests passed on the iOS
+  simulator.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.
