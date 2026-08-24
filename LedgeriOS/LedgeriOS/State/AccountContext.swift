@@ -5,6 +5,34 @@ struct DiscoveredAccount: Identifiable {
     let name: String
 }
 
+enum AccountLookupIndex {
+    static func spaceNames(_ spaces: [Space]) -> [String: String] {
+        Dictionary(uniqueKeysWithValues: spaces.compactMap { space in
+            space.id.map { ($0, space.name) }
+        })
+    }
+
+    static func categoryNames(_ categories: [BudgetCategory]) -> [String: String] {
+        Dictionary(uniqueKeysWithValues: categories.compactMap { category in
+            category.id.map { ($0, category.name) }
+        })
+    }
+
+    static func invoiceStatusesByItemId(_ invoices: [Invoice]) -> [String: InvoiceStatus] {
+        var result: [String: InvoiceStatus] = [:]
+        for invoice in invoices where invoice.status != .canceled {
+            let status = invoice.status ?? .created
+            for itemId in invoice.itemIds ?? [] {
+                let existing = result[itemId]
+                if status == .paid || existing == nil || (existing == .created && status == .sent) {
+                    result[itemId] = status
+                }
+            }
+        }
+        return result
+    }
+}
+
 @MainActor
 @Observable
 final class AccountContext {
@@ -19,10 +47,20 @@ final class AccountContext {
     var allItems: [Item] = []
     var allProtoItems: [ProtoItem] = []
     var allTransactions: [Transaction] = []
-    var allSpaces: [Space] = []
-    var allBudgetCategories: [BudgetCategory] = []
+    var allSpaces: [Space] = [] {
+        didSet { spaceNameById = AccountLookupIndex.spaceNames(allSpaces) }
+    }
+    var allBudgetCategories: [BudgetCategory] = [] {
+        didSet { budgetCategoryNameById = AccountLookupIndex.categoryNames(allBudgetCategories) }
+    }
     var allProjects: [Project] = []
-    var allInvoices: [Invoice] = []
+    var allInvoices: [Invoice] = [] {
+        didSet { invoiceStatusByItemId = AccountLookupIndex.invoiceStatusesByItemId(allInvoices) }
+    }
+
+    private var spaceNameById: [String: String] = [:]
+    private var budgetCategoryNameById: [String: String] = [:]
+    private var invoiceStatusByItemId: [String: InvoiceStatus] = [:]
 
     private var rawAllTransactions: [Transaction] = []
     private var rawAllBudgetCategories: [BudgetCategory] = []
@@ -40,6 +78,18 @@ final class AccountContext {
     private let invoicesService: InvoiceServiceProtocol?
 
     private static let lastAccountKey = "lastSelectedAccountId"
+
+    func spaceName(for id: String) -> String? {
+        spaceNameById[id]
+    }
+
+    func budgetCategoryName(for id: String) -> String? {
+        budgetCategoryNameById[id]
+    }
+
+    func invoiceStatus(forItemId id: String) -> InvoiceStatus? {
+        invoiceStatusByItemId[id]
+    }
 
     var lastSelectedAccountId: String? {
         get { UserDefaults.standard.string(forKey: Self.lastAccountKey) }

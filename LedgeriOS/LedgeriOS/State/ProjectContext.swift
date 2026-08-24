@@ -1,5 +1,13 @@
 import FirebaseFirestore
 
+private final class ProjectListenerBag {
+    var registrations: [ListenerRegistration] = []
+
+    deinit {
+        registrations.forEach { $0.remove() }
+    }
+}
+
 @MainActor
 @Observable
 final class ProjectContext {
@@ -22,7 +30,11 @@ final class ProjectContext {
     private var rawBudgetCategories: [BudgetCategory] = []
     private var activeAccountId: String?
     private var activeUserId: String?
-    private var listeners: [ListenerRegistration] = []
+    private let listenerBag = ProjectListenerBag()
+    private var listeners: [ListenerRegistration] {
+        get { listenerBag.registrations }
+        set { listenerBag.registrations = newValue }
+    }
     private let projectService: ProjectServiceProtocol
     private let transactionsService: TransactionsServiceProtocol
     private let itemsService: ItemsServiceProtocol

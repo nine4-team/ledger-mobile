@@ -101,13 +101,9 @@ struct PerformanceDiagnosticsTests {
             browsingLinearLookupChecksum(items: items, spaces: spaces, categories: categories, invoices: invoices)
         }
 
-        let spaceById = Dictionary(uniqueKeysWithValues: spaces.compactMap { space in
-            space.id.map { ($0, space.name) }
-        })
-        let categoryById = Dictionary(uniqueKeysWithValues: categories.compactMap { category in
-            category.id.map { ($0, category.name) }
-        })
-        let invoiceStatusByItemId = browsingInvoiceStatusIndex(invoices: invoices)
+        let spaceById = AccountLookupIndex.spaceNames(spaces)
+        let categoryById = AccountLookupIndex.categoryNames(categories)
+        let invoiceStatusByItemId = AccountLookupIndex.invoiceStatusesByItemId(invoices)
         let indexedLookups = benchmark(iterations: 25) {
             browsingIndexedLookupChecksum(
                 items: items,
@@ -132,6 +128,33 @@ struct PerformanceDiagnosticsTests {
             "indexed_card_lookups_ms=\(formatMilliseconds(indexedLookups.millisecondsPerIteration)) " +
             "lookup_speedup=\(String(format: "%.1f", linearLookups.millisecondsPerIteration / max(indexedLookups.millisecondsPerIteration, 0.000_001)))x"
         )
+    }
+
+    @Test("Account indexes preserve names and invoice status priority")
+    func accountLookupIndexes() {
+        let spaces = makeBrowsingSpaces(count: 2)
+        let categories = makeBrowsingCategories(count: 2)
+        var created = Invoice()
+        created.status = .created
+        created.itemIds = ["item-1", "item-created"]
+        var paid = Invoice()
+        paid.status = .paid
+        paid.itemIds = ["item-1"]
+        var sent = Invoice()
+        sent.status = .sent
+        sent.itemIds = ["item-1", "item-sent"]
+        var canceled = Invoice()
+        canceled.status = .canceled
+        canceled.itemIds = ["item-canceled"]
+
+        #expect(AccountLookupIndex.spaceNames(spaces)["space-1"] == "Space 1")
+        #expect(AccountLookupIndex.categoryNames(categories)["category-1"] == "Category 1")
+
+        let statuses = AccountLookupIndex.invoiceStatusesByItemId([created, paid, sent, canceled])
+        #expect(statuses["item-1"] == .paid)
+        #expect(statuses["item-created"] == .created)
+        #expect(statuses["item-sent"] == .sent)
+        #expect(statuses["item-canceled"] == nil)
     }
 }
 
@@ -220,20 +243,6 @@ private func browsingIndexedLookupChecksum(
             checksum += browsingInvoiceStatusWeight(status)
         }
     }
-}
-
-private func browsingInvoiceStatusIndex(invoices: [Invoice]) -> [String: InvoiceStatus] {
-    var result: [String: InvoiceStatus] = [:]
-    for invoice in invoices where invoice.status != .canceled {
-        let status = invoice.status ?? .created
-        for itemId in invoice.itemIds ?? [] {
-            let existing = result[itemId]
-            if status == .paid || existing == nil || (existing == .created && status == .sent) {
-                result[itemId] = status
-            }
-        }
-    }
-    return result
 }
 
 private func browsingInvoiceStatusWeight(_ status: InvoiceStatus) -> Int {

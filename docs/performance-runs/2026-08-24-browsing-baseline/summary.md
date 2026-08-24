@@ -1,0 +1,132 @@
+# Browsing Performance Baseline: Network-Limited Run
+
+Date: 2026-08-24
+
+## Run Classification
+
+This run is **network-limited**. The active internet connection was degraded,
+and both physical iPhones registered with Xcode were offline. Cold Firestore,
+Firebase Storage URL resolution, and image-download durations from this run are
+not valid evidence for ranking architectural remediations.
+
+## Evidence Available
+
+- No Ledger crash or hang reports were present in the local macOS Diagnostic
+  Reports directory.
+- The diagnostics foundation and focused instrumentation compile in the iOS
+  and macOS application targets.
+- The focused diagnostics and lifecycle suites passed after the final changes:
+  17 tests in 2 suites, with 0 failures.
+- Main-thread heartbeat delay, process-memory trends, listener and task counts,
+  context publication time, list derivation time, card lookup time, image
+  decoding, and warm-cache navigation remain valid measurements under degraded
+  internet.
+
+## Offline Findings and Changes
+
+### 1. Project listener lifecycle leak
+
+Each `ProjectContext` test configuration starts 9 Firestore listeners. The
+production project-detail configuration can start up to 11 because it also
+enables proto-item and user-preference subscriptions. Locally owned contexts in
+project detail and scoped transaction detail had no destruction cleanup.
+
+The Firebase SDK source bundled in DerivedData states that destroying a
+`ListenerRegistration` does not automatically stop listening. A regression
+test confirmed the application bug: after releasing an active
+`ProjectContext`, 0 of 9 listener registrations received `remove()`.
+
+A listener-ownership bag now removes every registration when the context is
+destroyed. The same regression test passes with 9 of 9 removals. This changes
+no visible navigation or live-data behavior while the owning context is alive;
+it only stops obsolete listeners after that context has been released.
+
+### 2. Repeated card metadata scans
+
+A deterministic Debug simulator benchmark modeled 668 items, 80 spaces, 40
+categories, and 80 invoices. The latest representative run measured:
+
+- filter/sort pipeline: 0.449 ms per evaluation;
+- grouping: 1.068 ms per evaluation;
+- 20-item selection total: 0.265 ms per evaluation;
+- linear space/category/invoice card lookups: 40.270 ms per 668-card pass;
+- indexed lookups: 0.258 ms per 668-card pass;
+- measured lookup improvement: 156.2x.
+
+The optimized simulator run measured 0.184 ms for filter/sort, 0.724 ms for
+grouping, 0.091 ms for selection, 6.341 ms for linear card lookups, and 0.126
+ms for indexed card lookups. The indexed path remained 50.2x faster after
+compiler optimization.
+
+The raw list, grouping, and selection calculations are therefore not credible
+explanations for a multi-second or multi-minute stall by themselves. Repeated
+linear card lookups can miss frame budgets and amplify broad SwiftUI
+invalidation, but also do not explain minutes in isolation.
+
+Account-level space names, category names, and per-item invoice status now use
+indexes rebuilt synchronously whenever their source arrays are replaced. Tests
+verify invoice-status priority and that replacing or clearing source arrays
+immediately replaces or clears the indexes, preventing stale derived data.
+
+## Ranked Readout
+
+1. **Leaked project listeners:** confirmed architectural defect and plausible
+   source of progressively worsening browsing pressure. Fixed and regression
+   tested.
+2. **Per-card linear metadata lookup churn:** measured frame-budget problem.
+   Fixed on the shared item-card/list path with synchronous freshness tests.
+3. **Broad account plus project listener publication:** still plausible, but
+   needs a stable Halrow trace to determine whether valid simultaneous
+   listeners trigger excessive main-thread invalidation.
+4. **Image download and decode pressure:** still plausible for Spaces and image
+   heavy browsing. Decode and request counters are instrumented, but cold
+   network measurements are invalid in this run.
+5. **List filtering, grouping, and selection totals:** measured too small to be
+   a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
+   number of reevaluations.
+6. **Unbatched bulk writes:** remains a write-completion and callback-storm
+   issue, but does not explain slow browsing before a bulk operation begins.
+
+## Evidence Unavailable
+
+- A classified iOS crash, watchdog termination, or jetsam report.
+- A physical-device Halrow reproduction trace.
+- Reliable cold-network Firestore, Storage, or image latency.
+- A network-sensitive remediation ranking for Firestore first-snapshot and
+  image-loading work.
+
+## Behavior Safeguards
+
+The diagnostics are disabled by default and do not change UI presentation,
+listener scope or freshness, Firestore writes, image-request concurrency, or
+the image cache's existing eviction cost.
+
+The listener cleanup and lookup indexes also preserve visible behavior and
+freshness. Cleanup occurs only after a project context is destroyed; lookup
+indexes are rebuilt synchronously from each published source-array value.
+
+## Verification
+
+- Performance diagnostics and loading lifecycle suites: 17 tests passed.
+- Optimized diagnostics benchmark suite: 8 tests passed.
+- Listener regression before fix: 0 of 9 registrations removed; test failed.
+- Listener regression after fix: 9 of 9 registrations removed; test passed.
+- macOS Debug scheme build: passed.
+- Full iOS target: 925 tests executed. The run was not green because 42
+  emulator integration tests could not authenticate and 3 unrelated
+  price-policy expectation tests fail independently. The focused changed-path
+  suites are green.
+
+## Next Valid Capture
+
+When a physical iPhone and a stable connection are available, enable
+`-LedgerPerformanceDiagnostics YES` and capture the same scenarios:
+
+1. Open Halrow and wait for its item list to settle.
+2. Select 20 items and open the bulk action menu.
+3. Open an item and navigate back ten times.
+4. Repeat the navigation once with warm caches.
+5. Record main-thread stalls, memory, active listeners and tasks, context
+   publications, list derivations, card lookups, image work, and Firestore
+   callback timing.
+6. Correlate any crash time with device analytics before choosing a fix.

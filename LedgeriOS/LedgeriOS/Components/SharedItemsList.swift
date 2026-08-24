@@ -694,7 +694,7 @@ struct SharedItemsList: View {
             let names = Set(group.items.compactMap { item -> String? in
                 guard
                     let spaceId = item.spaceId,
-                    let name = accountContext.allSpaces.first(where: { $0.id == spaceId })?.name,
+                    let name = accountContext.spaceName(for: spaceId),
                     !name.isEmpty
                 else {
                     return nil
@@ -868,7 +868,7 @@ struct SharedItemsList: View {
     private func categoryName(for categoryId: String?) -> String? {
         guard let categoryId else { return nil }
         return PerformanceDiagnostics.shared.measureAggregate("CardLookup", kind: "category") {
-            accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
+            accountContext.budgetCategoryName(for: categoryId)
         }
     }
 

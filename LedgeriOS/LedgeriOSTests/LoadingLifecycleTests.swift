@@ -92,6 +92,7 @@ private struct LifecycleItemsService: ItemsServiceProtocol {
     func createItemsForTransaction(
         accountId: String,
         transactionId: String,
+        budgetCategoryId: String,
         items: [Item],
         onCommitError: @escaping @Sendable ([String], Error) -> Void
     ) throws -> [Item] { [] }
@@ -264,6 +265,37 @@ private func makeInventoryContext(counter: ListenerCounter) -> InventoryContext 
 
 @Suite("Loading Lifecycle Tests", .serialized)
 struct LoadingLifecycleTests {
+    @Test("Account lookup indexes track published collection replacement")
+    @MainActor
+    func accountLookupIndexesStayFresh() {
+        let context = makeAccountContext(counter: ListenerCounter())
+        var space = Space()
+        space.id = "space-1"
+        space.name = "Living Room"
+        var category = BudgetCategory()
+        category.id = "category-1"
+        category.name = "Furniture"
+        var invoice = Invoice()
+        invoice.status = .sent
+        invoice.itemIds = ["item-1"]
+
+        context.allSpaces = [space]
+        context.allBudgetCategories = [category]
+        context.allInvoices = [invoice]
+
+        #expect(context.spaceName(for: "space-1") == "Living Room")
+        #expect(context.budgetCategoryName(for: "category-1") == "Furniture")
+        #expect(context.invoiceStatus(forItemId: "item-1") == .sent)
+
+        context.allSpaces = []
+        context.allBudgetCategories = []
+        context.allInvoices = []
+
+        #expect(context.spaceName(for: "space-1") == nil)
+        #expect(context.budgetCategoryName(for: "category-1") == nil)
+        #expect(context.invoiceStatus(forItemId: "item-1") == nil)
+    }
+
     @Test("AccountContext re-activating same account and user keeps existing listeners")
     @MainActor
     func accountActivationIsIdempotentForSameAccountAndUser() {
