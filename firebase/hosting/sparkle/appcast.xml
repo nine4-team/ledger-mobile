@@ -4,12 +4,12 @@
         <title>LedgeriOS</title>
         <item>
             <title>1.0</title>
-            <pubDate>Mon, 24 Aug 2026 09:40:49 -0700</pubDate>
-            <sparkle:version>47</sparkle:version>
+            <pubDate>Mon, 24 Aug 2026 11:00:20 -0700</pubDate>
+            <sparkle:version>48</sparkle:version>
             <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:releaseNotesLink>https://ledger-nine4.web.app/sparkle/Ledger-1.0-47.md</sparkle:releaseNotesLink>
-            <enclosure url="https://ledger-nine4.web.app/sparkle/Ledger-1.0-47.zip" length="20836502" type="application/octet-stream" sparkle:edSignature="40LR8acZcxXtek2uBo9c5cbrGMnO1zckYIrloLcKD8/EBfV+z3e1D20MDZDpf02FfrjwEo8qkTE4TVoggKKMCQ=="/>
+            <sparkle:releaseNotesLink>https://ledger-nine4.web.app/sparkle/Ledger-1.0-48.md</sparkle:releaseNotesLink>
+            <enclosure url="https://ledger-nine4.web.app/sparkle/Ledger-1.0-48.zip" length="20938167" type="application/octet-stream" sparkle:edSignature="Y4mUsYNDCjOikPcYsvA5uh0ePb4tZtS4z3tKUre6os2q3+vgQEiFXw9+rgi8N19Nk7YsUGYLg+0OahluygX6Dw=="/>
         </item>
     </channel>
 </rss>
