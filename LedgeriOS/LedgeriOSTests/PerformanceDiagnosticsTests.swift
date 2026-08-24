@@ -157,6 +157,21 @@ struct PerformanceDiagnosticsTests {
         #expect(statuses["item-canceled"] == nil)
     }
 
+    @Test("Image cache charges decoded memory instead of compressed payload size")
+    func imageCacheCostTracksMemoryFootprint() {
+        let compressedBytes = 180_000
+        let decodedBytes = 4_000 * 3_000 * 4
+
+        #expect(ImageCache.cacheCost(
+            decodedByteCount: decodedBytes,
+            compressedByteCount: compressedBytes
+        ) == decodedBytes)
+        #expect(ImageCache.cacheCost(
+            decodedByteCount: 0,
+            compressedByteCount: compressedBytes
+        ) == compressedBytes)
+    }
+
     @Test("Synthetic account financial publication cost profile")
     func syntheticFinancialPublicationCostProfile() {
         let categories = makeFinancialCategories(count: 100)

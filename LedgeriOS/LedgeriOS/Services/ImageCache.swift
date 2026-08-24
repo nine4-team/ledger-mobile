@@ -47,15 +47,25 @@ enum ImageCache {
         cache.object(forKey: key as NSString)
     }
 
-    /// Store an image with its data byte count as cost.
+    /// Store an image using its in-memory footprint as the cache cost.
+    /// Compressed thumbnails can be a tiny fraction of their decoded pixel buffers,
+    /// so charging only downloaded bytes defeats the cache's memory limit.
     static func store(_ image: PlatformImage, for key: String, cost: Int) {
         let decodedCost = image.estimatedDecodedByteCount
-        cache.setObject(image, forKey: key as NSString, cost: cost)
+        cache.setObject(
+            image,
+            forKey: key as NSString,
+            cost: cacheCost(decodedByteCount: decodedCost, compressedByteCount: cost)
+        )
         PerformanceDiagnostics.shared.event(
             "ImageCached",
             kind: "decoded-megabytes",
             count: 1,
             value: decodedCost / 1_048_576
         )
+    }
+
+    nonisolated static func cacheCost(decodedByteCount: Int, compressedByteCount: Int) -> Int {
+        max(decodedByteCount, compressedByteCount)
     }
 }
