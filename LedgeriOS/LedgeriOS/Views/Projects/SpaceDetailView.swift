@@ -38,8 +38,19 @@ struct SpaceDetailView: View {
     // Items picker
     @State private var showAddExistingItems = false
     @State private var itemActions = ItemActionsController()
+    @State private var selectedItemIds: Set<String> = []
     @State private var selectedItemId: String?
     @State private var showItemDetail = false
+
+    // Bulk action modals
+    @State private var showBulkActionMenu = false
+    @State private var showBulkStatusPicker = false
+    @State private var showBulkSetSpace = false
+    @State private var showBulkReturnToInventory = false
+    @State private var showBulkSellToProject = false
+    @State private var showBulkReassign = false
+    @State private var showBulkTransactionPicker = false
+    @State private var showBulkDeleteConfirmation = false
 
     // Live document subscription
     @State private var liveSpaceData: Space?
@@ -76,6 +87,28 @@ struct SpaceDetailView: View {
         return activeItems.filter { $0.spaceId == spaceId }
     }
 
+    private var selectedItems: [Item] {
+        activeItems.filter { item in
+            guard let id = item.id else { return false }
+            return selectedItemIds.contains(id)
+        }
+    }
+
+    private var selectedItemsCanReturnToInventory: Bool {
+        !selectedItems.isEmpty && selectedItems.allSatisfy {
+            InventoryOperationsService.cameFromInventory($0)
+        }
+    }
+
+    private var selectedTotalCents: Int? {
+        let pairs = selectedItems.compactMap { item -> (id: String, cents: Int)? in
+            guard let id = item.id, let cents = item.normalizedProjectPriceCents else { return nil }
+            return (id: id, cents: cents)
+        }
+        let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedItemIds, items: pairs)
+        return total > 0 ? total : nil
+    }
+
     private var canSaveAsTemplate: Bool {
         guard let member = accountContext.member else { return false }
         return SpaceDetailCalculations.canSaveAsTemplate(userRole: member.role?.rawValue ?? "")
@@ -96,6 +129,16 @@ struct SpaceDetailView: View {
             }
             .onReceive(findState.scrollToPublisher) { matchID in
                 withAnimation { proxy.scrollTo(matchID, anchor: .center) }
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if !selectedItemIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedItemIds.count,
+                    totalCents: selectedTotalCents,
+                    onBulkActions: { showBulkActionMenu = true },
+                    onClear: { selectedItemIds.removeAll() }
+                )
             }
         }
         .findEntity(id: space.id)
@@ -124,6 +167,16 @@ struct SpaceDetailView: View {
                 title: liveSpace.name.isEmpty ? "Space" : liveSpace.name,
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
+            )
+        }
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
+            ActionMenuSheet(
+                title: "\(selectedItemIds.count) selected",
+                items: bulkActionMenuItems + [
+                    ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
+                        selectedItemIds.removeAll()
+                    })
+                ]
             )
         }
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
@@ -161,6 +214,49 @@ struct SpaceDetailView: View {
             transactions: activeTransactions,
             accountId: accountContext.currentAccountId
         )
+        .adaptivePresentation(isPresented: $showBulkStatusPicker, style: .quickMenu) {
+            StatusPickerModal { status in updateStatusForSelected(status) }
+        }
+        .adaptivePresentation(isPresented: $showBulkSetSpace, style: .picker) {
+            SetSpaceModal(
+                spaces: activeSpaces,
+                currentSpaceId: liveSpace.id,
+                onSelect: { space in setSpaceForSelected(spaceId: space?.id) }
+            )
+        }
+        .adaptivePresentation(isPresented: $showBulkTransactionPicker, style: .picker) {
+            TransactionPickerModal(
+                transactions: activeTransactions,
+                selectedId: nil,
+                onSelect: { tx in
+                    if let txId = tx.id { setTransactionForSelected(transactionId: txId) }
+                }
+            )
+        }
+        .adaptivePresentation(isPresented: $showBulkReturnToInventory, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                MoveToInventoryModal(items: selectedItems, accountId: accountId) {
+                    selectedItemIds.removeAll()
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                SellItemsModal(items: selectedItems, accountId: accountId) {
+                    selectedItemIds.removeAll()
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkReassign, style: .form) {
+            ReassignToProjectModal(items: selectedItems) {
+                selectedItemIds.removeAll()
+            }
+        }
+        .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showBulkDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSelected() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
         .navigationDestination(isPresented: $showItemDetail) {
             if let selectedItemId,
                let item = activeItems.first(where: { $0.id == selectedItemId }) {
@@ -279,6 +375,8 @@ struct SpaceDetailView: View {
             getMenuItems: { spaceItemMenuItems(for: $0) },
             emptyMessage: "No items in this space",
             onAdd: { showAddExistingItems = true },
+            getBulkMenuItems: { bulkActionMenuItems },
+            selectedIds: $selectedItemIds,
             filterScope: .spaceDetail,
             inline: true
         )
@@ -286,12 +384,13 @@ struct SpaceDetailView: View {
     }
 
     private func spaceItemMenuItems(for item: Item) -> [ActionMenuItem] {
-        guard item.id != nil else { return [] }
+        guard let itemId = item.id else { return [] }
         return itemActions.buildMenu(
             for: item,
             scope: itemScope,
             menuContext: .space,
-            accountId: accountContext.currentAccountId
+            accountId: accountContext.currentAccountId,
+            onSelect: { selectedItemIds.insert(itemId) }
         )
     }
 
@@ -388,6 +487,27 @@ struct SpaceDetailView: View {
         return items
     }
 
+    private var bulkActionMenuItems: [ActionMenuItem] {
+        ItemMenuBuilder.buildBulkMenu(
+            context: .space,
+            scope: itemScope,
+            callbacks: BulkItemMenuCallbacks(
+                onStatusChange: { _ in showBulkStatusPicker = true },
+                onSetTransaction: { showBulkTransactionPicker = true },
+                onClearTransaction: { clearTransactionForSelected() },
+                onSetSpace: { showBulkSetSpace = true },
+                onClearSpace: { clearSpaceForSelected() },
+                onReturnToInventory: selectedItemsCanReturnToInventory && !isInventorySpace
+                    ? { showBulkReturnToInventory = true }
+                    : nil,
+                onSellToProject: { showBulkSellToProject = true },
+                onReassignToProject: { showBulkReassign = true },
+                onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
+                onDelete: { showBulkDeleteConfirmation = true }
+            )
+        )
+    }
+
     // MARK: - Actions
 
     private func startSpaceListener() {
@@ -398,6 +518,57 @@ struct SpaceDetailView: View {
             .subscribeToSpace(accountId: accountId, spaceId: spaceId) { updatedSpace in
                 self.liveSpaceData = updatedSpace
             }
+    }
+
+    private func updateStatusForSelected(_ status: ItemStatus) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status.rawValue]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func setSpaceForSelected(spaceId: String?) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        nonisolated(unsafe) let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearSpaceForSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": NSNull()]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func setTransactionForSelected(transactionId: String) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": transactionId]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearTransactionForSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
+        }
+        selectedItemIds.removeAll()
     }
 
     private func updateSpace(fields: [String: Any]) {
@@ -523,6 +694,14 @@ struct SpaceDetailView: View {
                 await MainActor.run { errorMessage = "Failed to delete space." }
             }
         }
+    }
+
+    private func deleteSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        let items = Array(selectedItems)
+        Task { try? await service.deleteItems(accountId: accountId, items: items) }
+        selectedItemIds.removeAll()
     }
 
 }
