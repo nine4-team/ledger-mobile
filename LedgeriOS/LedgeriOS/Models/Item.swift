@@ -65,6 +65,16 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
         name ?? description ?? ""
     }
 
+    /// Current client-facing price with the purchase-cost floor applied.
+    /// This is also used defensively for legacy documents that have not yet
+    /// been repaired in Firestore.
+    var normalizedProjectPriceCents: Int? {
+        ItemPricePolicy.normalizedProjectPriceCents(
+            purchasePriceCents: purchasePriceCents,
+            projectPriceCents: projectPriceCents
+        )
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, spaceId, name, description, notes, status,
              source, currentSource, sku,
@@ -72,5 +82,63 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
              purchasedBy, bookmark, budgetCategoryId, quantity,
              taxRatePct, taxAmountPurchasePriceCents, taxAmountProjectPriceCents,
              images, createdBy, updatedBy, createdAt, updatedAt
+    }
+}
+
+enum ItemPricePolicy {
+    static func normalizedProjectPriceCents(
+        purchasePriceCents: Int?,
+        projectPriceCents: Int?
+    ) -> Int? {
+        guard purchasePriceCents != nil || projectPriceCents != nil else { return nil }
+        return max(purchasePriceCents ?? 0, projectPriceCents ?? 0)
+    }
+
+    static func normalizedForPersistence(_ item: Item) -> Item {
+        var normalized = item
+        normalized.projectPriceCents = normalizedProjectPriceCents(
+            purchasePriceCents: item.purchasePriceCents,
+            projectPriceCents: item.projectPriceCents
+        )
+        return normalized
+    }
+
+    /// Applies the floor to the merged post-update state. This prevents a
+    /// partial update from bypassing the invariant by omitting the other price.
+    static func normalizedUpdateFields(
+        existing: Item,
+        fields: [String: Any]
+    ) -> [String: Any] {
+        var normalizedFields = fields
+        let purchasePrice = mergedPrice(
+            key: "purchasePriceCents",
+            existing: existing.purchasePriceCents,
+            fields: fields
+        )
+        let projectPrice = mergedPrice(
+            key: "projectPriceCents",
+            existing: existing.projectPriceCents,
+            fields: fields
+        )
+
+        if let normalizedProjectPrice = normalizedProjectPriceCents(
+            purchasePriceCents: purchasePrice,
+            projectPriceCents: projectPrice
+        ) {
+            normalizedFields["projectPriceCents"] = normalizedProjectPrice
+        }
+        return normalizedFields
+    }
+
+    private static func mergedPrice(
+        key: String,
+        existing: Int?,
+        fields: [String: Any]
+    ) -> Int? {
+        guard let incoming = fields[key] else { return existing }
+        if incoming is NSNull { return nil }
+        if let value = incoming as? Int { return value }
+        if let value = incoming as? NSNumber { return value.intValue }
+        return existing
     }
 }

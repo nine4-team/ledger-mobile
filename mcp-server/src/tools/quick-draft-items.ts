@@ -21,6 +21,11 @@ import {
   quickDraftSourceHints,
 } from "../util/enums.js";
 import { checkTransactionLinkageOnCreate } from "./items.js";
+import {
+  applyItemPriceFloorToCreate,
+  applyItemPriceFloorToUpdate,
+  normalizedProjectPriceCents,
+} from "../util/item-pricing.js";
 import { resolveInventoryLabel } from "../util/inventory.js";
 
 const QuickDraftStatus = z.enum(quickDraftItemStatuses);
@@ -221,6 +226,7 @@ async function promoteInventoryDraftToProject(
   if (sku) itemData.sku = sku;
   if (notes) itemData.notes = notes;
   if (args.purchasePriceCents !== undefined) itemData.purchasePriceCents = args.purchasePriceCents;
+  applyItemPriceFloorToCreate(itemData, args);
   if (args.marketValueCents !== undefined) itemData.marketValueCents = args.marketValueCents;
 
   const batch = db.batch();
@@ -567,6 +573,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         };
         const draftSku = cleanString(args.sku) ?? cleanString(draft.sku);
         if (!cleanString(existingItem.sku) && draftSku) updates.sku = draftSku;
+        applyItemPriceFloorToUpdate(existingItem, updates);
 
         const batch = db.batch();
         batch.update(accountCollection(db, "items").doc(args.mergeIntoItemId), updates);
@@ -646,9 +653,10 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
             "Pass budgetCategoryId or set intendedBudgetCategoryId on the acquisition transaction."
           );
         }
-        const projectPriceCents = (args.projectPriceCents ?? 0) > 0
-          ? args.projectPriceCents!
-          : (args.purchasePriceCents ?? 0);
+        const projectPriceCents = normalizedProjectPriceCents(
+          args.purchasePriceCents,
+          args.projectPriceCents
+        ) ?? 0;
         if (projectPriceCents <= 0) {
           return validation(
             "A project price or purchase price must be greater than zero for an inventory-to-project sale.",
@@ -700,7 +708,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       const notes = args.notes !== undefined ? args.notes : draft.notes;
       if (notes) itemData.notes = notes;
       if (args.purchasePriceCents !== undefined) itemData.purchasePriceCents = args.purchasePriceCents;
-      if (args.projectPriceCents !== undefined) itemData.projectPriceCents = args.projectPriceCents;
+      applyItemPriceFloorToCreate(itemData, args);
       if (args.marketValueCents !== undefined) itemData.marketValueCents = args.marketValueCents;
       if (resolvedTaxRate !== undefined) itemData.taxRatePct = resolvedTaxRate;
 

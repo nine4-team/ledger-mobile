@@ -15,6 +15,7 @@ import {
 } from "../util/projections.js";
 import { notFound, validation } from "../util/errors.js";
 import { withTelemetry } from "../util/telemetry.js";
+import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 
 const otherClientChargesAndCreditsId = "system-other-client-charges-and-credits";
 const otherClientChargesAndCreditsName = "Other Client Charges & Credits";
@@ -117,7 +118,7 @@ function lineForItem(item: Item & { id: string }): InvoiceLine {
     id: randomUUID(),
     sourceType: "item",
     sourceId: item.id,
-    amountCents: item.projectPriceCents && item.projectPriceCents > 0 ? item.projectPriceCents : item.purchasePriceCents ?? 0,
+    amountCents: effectiveProjectPriceCents(item),
     sign: 1,
     budgetCategoryId: item.budgetCategoryId,
     snapshotName: item.name ?? item.description,

@@ -163,11 +163,8 @@ enum ReportAggregationCalculations {
             } else {
                 // Flatten items as individual line entries
                 for item in linkedItems {
-                    let projectPrice = item.projectPriceCents ?? 0
-                    let priceCents = projectPrice > 0
-                        ? projectPrice
-                        : (item.purchasePriceCents ?? 0)
-                    let isMissing = projectPrice == 0
+                    let priceCents = item.normalizedProjectPriceCents ?? 0
+                    let isMissing = priceCents == 0
                     let entry = InvoiceLineEntry(
                         name: item.displayName.isEmpty ? "Unnamed Item" : item.displayName,
                         priceCents: priceCents,
@@ -249,9 +246,8 @@ enum ReportAggregationCalculations {
 
         for itemId in invoice.itemIds ?? [] {
             guard let item = itemMap[itemId] else { continue }
-            let projectPrice = item.projectPriceCents ?? 0
-            let priceCents = projectPrice > 0 ? projectPrice : (item.purchasePriceCents ?? 0)
-            let isMissing = projectPrice == 0
+            let priceCents = item.normalizedProjectPriceCents ?? 0
+            let isMissing = priceCents == 0
             let entry = InvoiceLineEntry(
                 name: item.displayName.isEmpty ? "Unnamed Item" : item.displayName,
                 priceCents: priceCents,
@@ -300,9 +296,8 @@ enum ReportAggregationCalculations {
                 )
             }
             if let sourceId = line.sourceId, let item = itemMap[sourceId] {
-                let projectPrice = item.projectPriceCents ?? 0
-                let priceCents = projectPrice > 0 ? projectPrice : (item.purchasePriceCents ?? 0)
-                let isMissing = projectPrice == 0
+                let priceCents = item.normalizedProjectPriceCents ?? 0
+                let isMissing = priceCents == 0
                 let name = item.displayName.isEmpty
                     ? (line.snapshotName ?? "Unnamed Item")
                     : item.displayName
@@ -366,7 +361,7 @@ enum ReportAggregationCalculations {
 
     /// Project price with fallback to purchase price for client-facing reports.
     static func clientPriceCents(for item: Item) -> Int {
-        item.projectPriceCents ?? item.purchasePriceCents ?? 0
+        item.normalizedProjectPriceCents ?? 0
     }
 
     static func computeClientSummary(
@@ -490,7 +485,7 @@ enum ReportAggregationCalculations {
 
     /// Market value with fallback to project price, then purchase price.
     static func propertyValueCents(for item: Item) -> Int {
-        item.marketValueCents ?? item.projectPriceCents ?? item.purchasePriceCents ?? 0
+        item.marketValueCents ?? item.normalizedProjectPriceCents ?? 0
     }
 
     static func computePropertyManagement(

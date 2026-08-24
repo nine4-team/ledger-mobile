@@ -99,3 +99,49 @@ struct InventoryOperationsServiceTests {
         #expect(today.contains("-"))
     }
 }
+
+@Suite("Item price floor")
+struct ItemPricePolicyTests {
+    @Test("Missing project price inherits purchase price")
+    func missingProjectPrice() {
+        #expect(ItemPricePolicy.normalizedProjectPriceCents(
+            purchasePriceCents: 12_500,
+            projectPriceCents: nil
+        ) == 12_500)
+    }
+
+    @Test("Project price below purchase price is raised")
+    func lowerProjectPrice() {
+        #expect(ItemPricePolicy.normalizedProjectPriceCents(
+            purchasePriceCents: 12_500,
+            projectPriceCents: 0
+        ) == 12_500)
+    }
+
+    @Test("Higher project price is preserved")
+    func higherProjectPrice() {
+        #expect(ItemPricePolicy.normalizedProjectPriceCents(
+            purchasePriceCents: 12_500,
+            projectPriceCents: 15_000
+        ) == 15_000)
+    }
+
+    @Test("Partial purchase-price update uses stored project price")
+    func mergedPartialUpdate() {
+        var item = Item()
+        item.purchasePriceCents = 12_500
+        item.projectPriceCents = 15_000
+
+        let raised = ItemPricePolicy.normalizedUpdateFields(
+            existing: item,
+            fields: ["purchasePriceCents": 17_500]
+        )
+        #expect(raised["projectPriceCents"] as? Int == 17_500)
+
+        let preserved = ItemPricePolicy.normalizedUpdateFields(
+            existing: item,
+            fields: ["purchasePriceCents": 10_000]
+        )
+        #expect(preserved["projectPriceCents"] as? Int == 15_000)
+    }
+}

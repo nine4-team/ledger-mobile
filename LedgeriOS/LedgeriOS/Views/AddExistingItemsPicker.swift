@@ -362,8 +362,8 @@ struct AddExistingItemsPicker: View {
             if let budgetCategoryId = liveTx.budgetCategoryId, item.budgetCategoryId == nil {
                 fields["budgetCategoryId"] = budgetCategoryId
             }
-            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
-                fields["projectPriceCents"] = purchasePrice
+            if let normalizedProjectPrice = item.normalizedProjectPriceCents {
+                fields["projectPriceCents"] = normalizedProjectPrice
             }
             batch.updateData(fields, forDocumentAt: "\(itemsPath)/\(itemId)")
 

@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -14,7 +14,7 @@ Last updated: 2026-08-19
 
 ### Sale Transactions & Inventory (Per-Batch Redesign)
 - [new] [Inventory Movement Transactions](sale-transactions.md) — **Active.** Per-batch inventory movement transactions: inventory → project writes a Purchase at project price; project → inventory writes an origin-aware Return or Sale-to-Inventory at purchase price; project → project uses purchase price for the source exit and project price for the destination Purchase. Accounting fields are frozen; `itemIds` tracks current active membership. Replaces the canonical-sale aggregator model.
-- [new] [Inventory as a Store](inventory-as-store.md) — **Active.** Conceptual model: business inventory is treated like any vendor/store. Items in inventory have `budgetCategoryId == null`. Project → inventory is origin-aware. Project-price movement prompts for missing `projectPriceCents`.
+- [new] [Inventory as a Store](inventory-as-store.md) — **Active.** Conceptual model: business inventory is treated like any vendor/store. Items in inventory have `budgetCategoryId == null`. Project → inventory is origin-aware. Every item write keeps project price at or above purchase cost; project-destination movements prompt only when neither price is positive.
 - [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 
 ### Transactions & Item Entry

@@ -9,8 +9,31 @@ import {
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { auditItemPriceCents, auditPriceBasis } from './transactionAuditPricing';
+import { needsProjectPriceRepair, normalizedProjectPriceCents } from './itemPricing';
 
 admin.initializeApp();
+
+/**
+ * Final server-side safety net for clients, imports, or admin writers that do
+ * not yet apply the canonical item price floor. The write is idempotent: the
+ * repair event immediately exits because the normalized value already matches.
+ */
+export const enforceItemProjectPriceFloor = onDocumentWritten(
+  'accounts/{accountId}/items/{itemId}',
+  async (event) => {
+    const after = event.data?.after;
+    if (!after?.exists) return;
+    const data = after.data() ?? {};
+    if (!needsProjectPriceRepair(data)) return;
+
+    const normalized = normalizedProjectPriceCents(data);
+    if (normalized == null) return;
+    await after.ref.update({
+      projectPriceCents: normalized,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+);
 
 /**
  * LineageEdge semantics (DO NOT REMOVE — this is a product correctness contract)

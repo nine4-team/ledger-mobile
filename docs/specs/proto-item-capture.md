@@ -234,7 +234,7 @@ Before writing, validate that:
 - the referenced transaction exists, belongs to the same account, and has `projectId == null`;
 - the draft has a destination `projectId`;
 - the intended/destination budget category belongs to and is enabled for that project; and
-- the item has the purchase price, project price, and other fields required by the canonical sale operation.
+- the item has the other fields required by the canonical sale operation and its project price can be normalized to a positive value at least as high as purchase price.
 
 Once validation succeeds, perform one atomic operation:
 
@@ -244,7 +244,7 @@ Once validation succeeds, perform one atomic operation:
 4. remove the item from the acquisition transaction's active `itemIds` membership and preserve the acquisition through a sold lineage edge; and
 5. mark the proto item converted and set `convertedItemId` to the final item.
 
-Do not create the inventory item first and attempt the sale in a later non-atomic step. Missing price, category, project, or transaction data must leave the quick draft unconverted rather than stranding a partially converted item in inventory.
+Do not create the inventory item first and attempt the sale in a later non-atomic step. Apply the canonical item price floor during promotion; only the absence of both positive prices is a missing-price error. Missing required price, category, project, or transaction data must leave the quick draft unconverted rather than stranding a partially converted item in inventory.
 
 The **From Inventory** marker remains useful before a transaction is selected: it tells review that an inventory transaction must be chosen. Once `transactionId` is set, the referenced transaction's scope is authoritative. A project transaction combined with `sourceHint == from_inventory` is a conflict that must be resolved before conversion.
 

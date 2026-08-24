@@ -12,6 +12,7 @@ import { withTelemetry } from "../util/telemetry.js";
 import { getUid } from "../context.js";
 import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventory.js";
 import { isReturnTransactionType } from "../util/enums.js";
+import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 import {
   validateDestinationSpaceAssignments,
   type DestinationSpaceAssignment,
@@ -54,9 +55,7 @@ const destinationSpaceAssignmentsSchema = z
   );
 
 function projectPriceForMovement(item: Item): number {
-  if ((item.projectPriceCents ?? 0) > 0) return item.projectPriceCents!;
-  if ((item.purchasePriceCents ?? 0) > 0) return item.purchasePriceCents!;
-  return 0;
+  return effectiveProjectPriceCents(item);
 }
 
 /**
@@ -381,9 +380,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "SPACE ASSIGNMENTS: destinationSpaceAssignments may restore selected per-item assignments " +
       "captured during correction. Every supplied space is validated against the destination project; " +
       "omitted items land unassigned.\n\n" +
-      "PRICING: amountCents/subtotalCents are derived from each item's projectPriceCents (the " +
-      "client-charged price). When projectPriceCents is missing or zero and purchasePriceCents is " +
-      "positive, Ledger copies the purchase price into projectPriceCents atomically. The call fails " +
+      "PRICING: amountCents/subtotalCents are derived from each item's normalized projectPriceCents " +
+      "(the client-charged price). Ledger raises projectPriceCents to purchasePriceCents whenever it " +
+      "is missing, zero, or lower, and persists that value atomically. The call fails " +
       "only when neither price is available.",
     {
       itemIds: z

@@ -206,14 +206,9 @@ enum ListFilterSortCalculations {
 
     // MARK: - Private Helpers
 
-    /// Checks if an item has a meaningful project price.
-    /// A price is meaningful if it's set and differs from the purchase price.
+    /// Checks whether the normalized project price is positive.
     private static func hasMeaningfulProjectPrice(_ item: Item) -> Bool {
-        guard let projectPrice = item.projectPriceCents else { return false }
-        if let purchasePrice = item.purchasePriceCents, projectPrice == purchasePrice {
-            return false
-        }
-        return true
+        (item.normalizedProjectPriceCents ?? 0) > 0
     }
 
     // MARK: - Labels
@@ -276,5 +271,5 @@ struct ItemGroup: Identifiable {
     let items: [Item]
 
     var count: Int { items.count }
-    var totalCents: Int { items.compactMap(\.projectPriceCents).reduce(0, +) }
+    var totalCents: Int { items.compactMap(\.normalizedProjectPriceCents).reduce(0, +) }
 }

@@ -146,7 +146,7 @@ struct ReportAggregationCalculationTests {
         #expect(result.chargeLines[0].isMissingPrice == false)
     }
 
-    @Test("Missing project price falls back to purchase price")
+    @Test("Legacy project prices normalize to the purchase-price floor")
     func missingProjectPriceFallback() {
         let transactions = [
             makeTransaction(id: "tx1", reimbursementType: "owed-to-company", itemIds: ["item1", "item2", "item3"]),
@@ -167,9 +167,9 @@ struct ReportAggregationCalculationTests {
         #expect(hasProject?.priceCents == 5000)
         #expect(hasProject?.isMissingPrice == false)
         #expect(noProject?.priceCents == 2000)
-        #expect(noProject?.isMissingPrice == true)
+        #expect(noProject?.isMissingPrice == false)
         #expect(zeroProject?.priceCents == 1500)
-        #expect(zeroProject?.isMissingPrice == true)
+        #expect(zeroProject?.isMissingPrice == false)
     }
 
     @Test("Transactions without reimbursement direction excluded from invoice")

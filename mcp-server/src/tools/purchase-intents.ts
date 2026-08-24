@@ -3,6 +3,7 @@ import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import type { BudgetCategory, Item, LineageEdge, Project, Transaction } from "../types.js";
 import { getUid } from "../context.js";
+import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 import { accountCollection, accountPath, getDoc, queryDocs } from "../util/query.js";
 import { asToolResponse } from "../util/projections.js";
 import { notFound, validation } from "../util/errors.js";
@@ -56,7 +57,7 @@ async function describeIntent(db: Firestore, tx: Transaction & { id: string }) {
   if (tx.inventoryIntentResolvedAt) actionState = "resolved";
   else if (!project) actionState = "project_unavailable";
   else if (!tx.intendedBudgetCategoryId || !categoryIsEnabled) actionState = "missing_or_invalid_category";
-  else if (activeItems.some((item) => (item.projectPriceCents ?? 0) <= 0)) actionState = "missing_project_prices";
+  else if (activeItems.some((item) => effectiveProjectPriceCents(item) <= 0)) actionState = "missing_project_prices";
   else if (activeItems.length > 0 && soldEdges.length > 0) actionState = "partially_completed";
   else if (activeItems.length > 0) actionState = "ready_to_sell";
   else if (soldEdges.length > 0) actionState = "partially_completed";
@@ -225,8 +226,9 @@ export function registerPurchaseIntentTools(server: McpServer, db: Firestore) {
           updatedAt: now,
           updatedBy: getUid(),
         };
-        if (item.projectPriceCents == null && item.purchasePriceCents != null) {
-          updates.projectPriceCents = item.purchasePriceCents;
+        const normalizedProjectPrice = effectiveProjectPriceCents(item);
+        if (normalizedProjectPrice > 0) {
+          updates.projectPriceCents = normalizedProjectPrice;
         }
         batch.update(accountCollection(db, "items").doc(item.id), updates);
       }

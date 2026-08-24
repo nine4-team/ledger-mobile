@@ -371,9 +371,9 @@ struct SellToProjectModal: View {
     private func itemsWithProjectPrices() -> [Item]? {
         var result = items
         for index in result.indices {
-            guard (result[index].projectPriceCents ?? 0) <= 0 else { continue }
-            if let purchasePrice = result[index].purchasePriceCents, purchasePrice > 0 {
-                result[index].projectPriceCents = purchasePrice
+            if let normalizedProjectPrice = result[index].normalizedProjectPriceCents,
+               normalizedProjectPrice > 0 {
+                result[index].projectPriceCents = normalizedProjectPrice
                 continue
             }
             guard let id = result[index].id,

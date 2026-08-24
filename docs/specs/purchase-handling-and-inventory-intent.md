@@ -99,16 +99,16 @@ directly to the project, such as when the client's payment method is unavailable
   choice.
 - Do not create an inventory acquisition or an inventory-to-project sale.
 
-For items on this path, when `projectPriceCents` is not explicitly provided, persist:
+For items on this path—and every other item write path—persist:
 
 ```text
-projectPriceCents = purchasePriceCents
+projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)
 ```
 
-This makes the no-markup reimbursement intent explicit in stored data instead of
-depending only on downstream display or invoice fallbacks. Inventory resale remains
-different: inventory-to-project movement requires a genuine client-facing project
-price and must not silently substitute purchase cost.
+This makes purchase cost the minimum client-facing project price while preserving
+any explicitly higher markup. Inventory resale uses the same invariant. A sale flow
+asks for a price only when neither field is positive; it never permits a project
+price below purchase cost.
 
 ### Cover A Project Purchase From An Unscoped Entry Point
 
@@ -160,8 +160,8 @@ Useful derived states include:
 - **Ready to sell** — inventory items remain and have enough information to move.
 - **Partially completed** — some items have moved to the intended destination and
   others remain.
-- **Missing project prices** — one or more items cannot be sold because the
-  client-facing price is absent.
+- **Missing sale prices** — one or more items cannot be sold because neither a
+  project price nor a purchase price can produce a positive normalized price.
 - **Missing or invalid category** — the intended category is absent, archived, or no
   longer enabled for the intended project.
 - **Project unavailable** — the intended project cannot be resolved.

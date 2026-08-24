@@ -816,11 +816,6 @@ struct NewItemView: View {
         item.status = status
         item.purchasePriceCents = parseCents(purchasePrice)
         item.projectPriceCents = parseCents(projectPrice)
-        if projectId != nil,
-           item.projectPriceCents == nil,
-           selectedTransaction?.purchaseHandling == .projectReimbursement {
-            item.projectPriceCents = item.purchasePriceCents
-        }
         item.marketValueCents = parseCents(marketValue)
         item.transactionId = selectedTransactionId
         item.images = initialImageRefs.isEmpty ? nil : initialImageRefs
@@ -828,6 +823,7 @@ struct NewItemView: View {
             item.budgetCategoryId = selectedTransaction?.budgetCategoryId
         }
         item.accountId = accountId
+        item = ItemPricePolicy.normalizedForPersistence(item)
 
         if case .project(let destinationProjectId, _) = resolvedContext,
            projectTransactionMode == .createViaInventory {

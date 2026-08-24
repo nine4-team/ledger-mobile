@@ -26,6 +26,26 @@ service cloud.firestore {
       return isAccountMember(accountId) && memberRole(accountId) in ['owner', 'admin'];
     }
 
+    function isValidOptionalItemPrice(data, field) {
+      return !(field in data) || data[field] == null ||
+        (data[field] is int && data[field] >= 0);
+    }
+
+    function hasValidItemPriceFloor(data) {
+      return isValidOptionalItemPrice(data, 'purchasePriceCents') &&
+        isValidOptionalItemPrice(data, 'projectPriceCents') &&
+        (
+          !('purchasePriceCents' in data) ||
+          data.purchasePriceCents == null ||
+          data.purchasePriceCents == 0 ||
+          (
+            'projectPriceCents' in data &&
+            data.projectPriceCents != null &&
+            data.projectPriceCents >= data.purchasePriceCents
+          )
+        );
+    }
+
     function isValidMemberAccessUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         'role',
@@ -158,7 +178,9 @@ service cloud.firestore {
     // NOTE: These permissions are intentionally broad for now (account-member access).
     // Tighten to Roles v2 category-scoped permissions per the security model/specs.
     match /accounts/{accountId}/items/{itemId} {
-      allow read, create, update, delete: if isAccountMember(accountId);
+      allow read, delete: if isAccountMember(accountId);
+      allow create, update: if isAccountMember(accountId) &&
+        hasValidItemPriceFloor(request.resource.data);
     }
 
     match /accounts/{accountId}/protoItems/{protoItemId} {

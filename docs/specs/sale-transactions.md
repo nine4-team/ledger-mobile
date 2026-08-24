@@ -88,16 +88,16 @@ When a user purchases items from business inventory into a project:
 - Item count must be 1..100.
 - Destination project must exist.
 - Budget category must exist as a `ProjectBudgetCategory` in the destination project. If not, prompt to enable.
-- Every item must resolve to a positive project price. Existing positive `projectPriceCents` values are preserved. When it is missing or zero and `purchasePriceCents` is positive, Ledger initializes `projectPriceCents` to the purchase price in the same atomic movement. If neither price is available, the UI asks the user what to sell it for and non-interactive callers reject the operation.
+- Every item must resolve to a positive project price. Ledger first applies the canonical item price floor, raising `projectPriceCents` to `purchasePriceCents` whenever it is missing, zero, or lower. An already higher project price is preserved. If neither price is positive, the UI asks the user what to sell it for and non-interactive callers reject the operation.
 
 ### 3. Compute the snapshot amount
 
 ```
-resolvedProjectPrice(item) = positive projectPriceCents, otherwise positive purchasePriceCents
+resolvedProjectPrice(item) = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)
 amountCents = sum(resolvedProjectPrice(item)) for item in items
 ```
 
-Inventory → project movements use the project-price basis because this is the amount charged to the destination project/client. A missing project price is initialized from the purchase price when available; otherwise the UI asks the user what they want to sell it for. The resolved value is written to `projectPriceCents` before or atomically with the movement.
+Inventory → project movements use the project-price basis because this is the amount charged to the destination project/client. A project price below purchase cost is raised to purchase cost; otherwise the higher project price is preserved. If neither price is positive, the UI asks the user what they want to sell it for. The resolved value is written to `projectPriceCents` before or atomically with the movement.
 
 ### 4. Build the Firestore batch
 
@@ -140,7 +140,7 @@ Moving items from one project to another is a **two-hop** operation in a single 
 
 The iOS UI presents this as a single "move to project" action. The service layer issues all hops in one atomic Firestore batch. Lineage edges link each hop.
 
-The destination category is collected from the user — items don't carry a category through the inventory hop. The destination project price must also be present before the batch commits. If any item lacks `projectPriceCents`, the UI asks what to sell it for and writes that value onto the item; MCP/tooling callers reject until the value is supplied.
+The destination category is collected from the user — items don't carry a category through the inventory hop. Before commit, every item's project price is normalized to at least its purchase price. The UI asks what to sell it for, and MCP/tooling callers reject, only when neither price is positive.
 
 ## Lineage Edges
 
@@ -165,14 +165,14 @@ The inventory movement transaction's `amountCents` is computed **once**, at crea
 | Project → project destination Purchase | Project price (`projectPriceCents`) |
 
 ```
-amountCents = sum(item.projectPriceCents ?? 0) for item in items
+amountCents = sum(max(item.projectPriceCents ?? 0, item.purchasePriceCents ?? 0)) for item in items
 ```
 
 The formula above is the project-price basis used by inventory → project and the destination Purchase in project → project movement. Project → business inventory exits use `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
 
 After creation, `amountCents` does not change, even if an item's prices are later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
 
-If a project-price movement is initiated without `projectPriceCents`, Ledger first copies a positive `purchasePriceCents`. If neither price is positive, the UI must collect a price and non-interactive tools reject the call. The resolved price is persisted as `projectPriceCents`.
+Before a project-price movement, Ledger persists `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`. If neither price is positive, the UI must collect a price and non-interactive tools reject the call.
 
 ## Sign Convention
 
@@ -244,7 +244,7 @@ Existing sale transactions written under the canonical-sale model remain in the 
 
 ## Edge Cases
 
-1. **Inventory → project item with no project price.** The movement does not proceed until the user provides a project price. The supplied value is persisted on `item.projectPriceCents` and used for the Purchase amount.
+1. **Inventory → project item with a missing or below-cost project price.** Ledger raises it to the positive purchase price automatically. The movement requires user input only when neither price is positive. The normalized value is persisted on `item.projectPriceCents` and used for the Purchase amount.
 2. **Project → inventory item with no purchase price.** Contributes $0 to the Return or Sale-to-Inventory amount. Still included in `itemIds`. Lineage edge still created.
 3. **Movement with 0 total amount.** Allowed for project → inventory moves when items have no recorded purchase price.
 4. **Category not enabled in destination.** Pre-flight validation rejects with a clear error. UI prompts user to enable or pick a different category.

@@ -340,8 +340,8 @@ struct SellToProjectExecutionTests {
         #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 5000)
     }
 
-    @Test("projectPriceCents written when provided")
-    func projectPriceWrittenWhenProvided() async throws {
+    @Test("projectPriceCents below purchase price is raised")
+    func projectPriceRaisedToPurchaseFloor() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         let item = makeItem(id: "i1", projectId: nil, purchasePriceCents: 5000, projectPriceCents: 3000)
@@ -352,7 +352,7 @@ struct SellToProjectExecutionTests {
         )
 
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
-        #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 3000)
+        #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 5000)
     }
 
     @Test("no isCanonicalInventorySale or inventorySaleDirection fields")

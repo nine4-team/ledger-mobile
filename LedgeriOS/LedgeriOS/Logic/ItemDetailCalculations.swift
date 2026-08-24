@@ -82,9 +82,9 @@ enum ItemDetailCalculations {
     }
 
     /// Returns the display price for an item.
-    /// Priority: projectPriceCents > purchasePriceCents > nil.
+    /// Applies the canonical purchase-cost floor defensively for legacy data.
     static func displayPrice(for item: Item) -> Int? {
-        item.projectPriceCents ?? item.purchasePriceCents
+        item.normalizedProjectPriceCents
     }
 
     /// Resolves a space name from a spaceId by looking up in the provided spaces array.

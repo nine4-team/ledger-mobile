@@ -51,7 +51,7 @@ struct ItemsTabView: View {
 
     private var selectedTotalCents: Int? {
         let pairs = projectContext.items.compactMap { item -> (id: String, cents: Int)? in
-            guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
+            guard let id = item.id, let cents = item.normalizedProjectPriceCents else { return nil }
             return (id: id, cents: cents)
         }
         let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedItemIds, items: pairs)

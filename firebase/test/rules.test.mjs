@@ -2,7 +2,7 @@
 //
 // Covers the R1-R5 matrix from docs/plans per-batch sale redesign:
 //   R1  Update amountCents on a Sale transaction                  → rejected
-//   R2  Update itemIds on a Sale transaction                      → rejected
+//   R2  Update itemIds on a Sale transaction                      → allowed
 //   R3  Update budgetCategoryId on a Sale transaction             → rejected
 //   R4  Update notes on a Sale transaction                        → allowed
 //   R5  Legacy isCanonicalInventorySale: true sale                → allowed (mutable)
@@ -127,6 +127,8 @@ const legacyRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${LEGACY_SALE
 const purchaseRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${PURCHASE_ID}`);
 const targetMemberRef = doc(authed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
 const employeeTargetMemberRef = doc(employeeAuthed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
+const validItemRef = doc(authed, `accounts/${ACCOUNT_ID}/items/item_price_valid`);
+const invalidItemRef = doc(authed, `accounts/${ACCOUNT_ID}/items/item_price_invalid`);
 
 console.log('\nRunning Firestore rules tests for Sale immutability:\n');
 
@@ -134,8 +136,8 @@ await run('R1: update amountCents on per-batch Sale → rejected', async () => {
   await assertFails(updateDoc(saleRef, { amountCents: 99999 }));
 });
 
-await run('R2: update itemIds on per-batch Sale → rejected', async () => {
-  await assertFails(updateDoc(saleRef, { itemIds: ['item1'] }));
+await run('R2: update itemIds on per-batch Sale → allowed', async () => {
+  await assertSucceeds(updateDoc(saleRef, { itemIds: ['item1'] }));
 });
 
 await run('R3: update budgetCategoryId on per-batch Sale → rejected', async () => {
@@ -192,6 +194,26 @@ await run('R13: owner updates unrelated membership field → rejected', async ()
     email: 'changed@example.com',
     updatedAt: new Date(),
   }));
+});
+
+await run('R14: item project price at purchase-cost floor → allowed', async () => {
+  await assertSucceeds(setDoc(validItemRef, {
+    name: 'Chair',
+    purchasePriceCents: 10000,
+    projectPriceCents: 10000,
+  }));
+});
+
+await run('R15: item project price below purchase cost → rejected', async () => {
+  await assertFails(setDoc(invalidItemRef, {
+    name: 'Chair',
+    purchasePriceCents: 10000,
+    projectPriceCents: 0,
+  }));
+});
+
+await run('R16: partial update cannot raise purchase above project price → rejected', async () => {
+  await assertFails(updateDoc(validItemRef, { purchasePriceCents: 12000 }));
 });
 
 await testEnv.cleanup();

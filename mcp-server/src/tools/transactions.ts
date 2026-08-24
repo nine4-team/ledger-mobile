@@ -21,6 +21,7 @@ import { withTelemetry } from "../util/telemetry.js";
 import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 import { resolveCategoryType } from "../util/budget.js";
 import { normalizeTransactionType } from "../util/enums.js";
+import { applyItemPriceFloorToUpdate, normalizedProjectPriceCents } from "../util/item-pricing.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -285,7 +286,10 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         name: i.name ?? i.description ?? "",
         status: i.status ?? "",
         purchasePrice: formatCents(i.purchasePriceCents),
-        projectPrice: formatCents(i.projectPriceCents),
+        projectPrice: formatCents(normalizedProjectPriceCents(
+          i.purchasePriceCents,
+          i.projectPriceCents
+        )),
         taxRatePct: i.taxRatePct ?? null,
       });
 
@@ -461,10 +465,13 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (itemIds?.length) {
         const batch = db.batch();
         for (const itemId of itemIds) {
-          batch.update(accountCollection(db, "items").doc(itemId), {
+          const item = await getDoc<Item>(db, "items", itemId);
+          if (!item) continue;
+          const updates = applyItemPriceFloorToUpdate(item, {
             transactionId: ref.id,
             updatedAt: new Date(),
           });
+          batch.update(accountCollection(db, "items").doc(itemId), updates);
         }
         await batch.commit();
       }

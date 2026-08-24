@@ -145,7 +145,7 @@ struct ListFilterSortCalculationTests {
 
     // MARK: - Filter: .noProjectPrice
 
-    @Test("No project price filter returns items without meaningful project price")
+    @Test("No project price filter returns only items without a normalized positive price")
     func noProjectPriceFilter() {
         let items = [
             makeItem(name: "No price"),
@@ -154,9 +154,8 @@ struct ListFilterSortCalculationTests {
             makeItem(name: "Price no purchase", projectPriceCents: 500),
         ]
         let result = ListFilterSortCalculations.applyFilter(items, filter: .noProjectPrice)
-        #expect(result.count == 2)
+        #expect(result.count == 1)
         #expect(result.map(\.name).contains("No price"))
-        #expect(result.map(\.name).contains("Same as purchase"))
     }
 
     // MARK: - Filter: .noImage

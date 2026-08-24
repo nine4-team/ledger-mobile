@@ -1066,8 +1066,8 @@ struct InventoryOperationsService {
             if item.budgetCategoryId == nil, let categoryId = destinationBudgetCategoryId {
                 itemUpdate["budgetCategoryId"] = categoryId
             }
-            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
-                itemUpdate["projectPriceCents"] = purchasePrice
+            if let normalizedProjectPrice = item.normalizedProjectPriceCents {
+                itemUpdate["projectPriceCents"] = normalizedProjectPrice
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
@@ -1130,13 +1130,7 @@ struct InventoryOperationsService {
     }
 
     static func projectPriceForMovement(_ item: Item) -> Int {
-        if let projectPrice = item.projectPriceCents, projectPrice > 0 {
-            return projectPrice
-        }
-        if let purchasePrice = item.purchasePriceCents, purchasePrice > 0 {
-            return purchasePrice
-        }
-        return 0
+        item.normalizedProjectPriceCents ?? 0
     }
 
     /// Frozen purchase-price snapshot for standalone project→inventory moves.

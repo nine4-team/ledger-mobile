@@ -12,6 +12,7 @@ import {
 } from "../util/projections.js";
 import { notFound, validation } from "../util/errors.js";
 import { tagNotesAsAi } from "../util/notes.js";
+import { applyItemPriceFloorToCreate, effectiveProjectPriceCents } from "../util/item-pricing.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { isInventorySource, resolveInventoryLabel, usesProjectPriceForAudit } from "../util/inventory.js";
 import { resolveCategoryType } from "../util/budget.js";
@@ -54,7 +55,12 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       const usesProjectPrice = usesProjectPriceForAudit(tx);
       const priceField = usesProjectPrice ? "projectPriceCents" : "purchasePriceCents";
       const priceLabel = usesProjectPrice ? "project price" : "purchase price";
-      const itemsSumCents = items.reduce((sum, i) => sum + (i[priceField] ?? 0), 0);
+      const itemsSumCents = items.reduce(
+        (sum, item) => sum + (usesProjectPrice
+          ? effectiveProjectPriceCents(item)
+          : (item.purchasePriceCents ?? 0)),
+        0
+      );
       const subtotalCents = tx.subtotalCents ?? null;
       const discountCents = tx.discount?.amountCents ?? 0;
       const discountedItemsSumCents = Math.max(0, itemsSumCents - discountCents);
@@ -65,7 +71,11 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           ? Math.round((Math.abs(varianceCents!) / subtotalCents) * 10000) / 100
           : null;
 
-      const itemsMissingPrice = items.filter((i) => (i[priceField] ?? 0) <= 0);
+      const itemsMissingPrice = items.filter((item) => (
+        usesProjectPrice
+          ? effectiveProjectPriceCents(item)
+          : (item.purchasePriceCents ?? 0)
+      ) <= 0);
       const itemsMissingTax = items.filter((i) => i.taxRatePct == null);
       const itemsMissingName = items.filter((i) => !i.name && !i.description);
 
@@ -285,12 +295,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         if (transaction.projectId && !routeInventorySource) itemData.projectId = transaction.projectId;
         if (transaction.projectId && routeInventorySource) itemData.projectId = transaction.projectId;
         if (item.purchasePriceCents !== undefined) itemData.purchasePriceCents = item.purchasePriceCents;
-        if ((item.projectPriceCents ?? 0) > 0) itemData.projectPriceCents = item.projectPriceCents;
-        else if (routeInventorySource && (item.purchasePriceCents ?? 0) > 0) {
-          itemData.projectPriceCents = item.purchasePriceCents;
-        } else if (item.projectPriceCents !== undefined) {
-          itemData.projectPriceCents = item.projectPriceCents;
-        }
+        applyItemPriceFloorToCreate(itemData, item);
         const itemSource = item.source;
         if (itemSource) {
           itemData.source = itemSource;

@@ -129,7 +129,7 @@ The system determines the operation automatically based on source and destinatio
 
 Cross-scope price basis follows movement direction:
 
-- Inventory → project uses `projectPriceCents`. If missing, the UI asks what to sell the item for and saves it before moving.
+- Inventory → project uses normalized `projectPriceCents`, automatically raising it to at least `purchasePriceCents`. The UI asks for a sale price only when neither price is positive.
 - Project → business inventory uses `purchasePriceCents`.
 - Project → project uses purchase price for the source exit and project price for the destination Purchase.
 
@@ -144,7 +144,7 @@ When a user selects items spanning multiple source scopes:
 
 Groups are processed independently. A failure in one group does not roll back other groups.
 
-If any cross-scope group includes an inventory → project hop and one or more items lack `projectPriceCents`, the user must resolve prices before that group is submitted. Background/tooling paths should reject with a missing-project-price error instead of falling back to purchase price.
+For every cross-scope group that includes an inventory → project hop, normalize `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` before submission. User input, or rejection in background/tooling paths, is required only when neither price is positive.
 
 ## Field Updates
 
@@ -159,7 +159,7 @@ This is a reassign. All writes are client-side (Tier 1: fire-and-forget).
 | Source `transaction.itemIds` | Remove item ID (arrayRemove) — only if item had a previous transactionId |
 | Destination `transaction.itemIds` | Add item ID (arrayUnion) |
 
-**What does NOT change:** `item.projectId`, `item.spaceId`, `item.status`, `item.purchasePriceCents`.
+**What does NOT change:** `item.projectId`, `item.spaceId`, `item.status`, `item.purchasePriceCents`. `item.projectPriceCents` changes only if the write boundary must raise it to preserve the canonical purchase-cost floor.
 
 **Lineage:** A `correction` edge is created client-side (see lineage-tracking.md).
 

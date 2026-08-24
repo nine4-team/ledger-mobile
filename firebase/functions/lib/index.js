@@ -1,12 +1,33 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInviteHttp = exports.acceptInvite = exports.previewInviteHttp = exports.createProject = exports.createAccountHttp = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = void 0;
+exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInviteHttp = exports.acceptInvite = exports.previewInviteHttp = exports.createProject = exports.createAccountHttp = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = exports.enforceItemProjectPriceFloor = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
 const firestore_2 = require("firebase-functions/v2/firestore");
 const transactionAuditPricing_1 = require("./transactionAuditPricing");
+const itemPricing_1 = require("./itemPricing");
 admin.initializeApp();
+/**
+ * Final server-side safety net for clients, imports, or admin writers that do
+ * not yet apply the canonical item price floor. The write is idempotent: the
+ * repair event immediately exits because the normalized value already matches.
+ */
+exports.enforceItemProjectPriceFloor = (0, firestore_2.onDocumentWritten)('accounts/{accountId}/items/{itemId}', async (event) => {
+    const after = event.data?.after;
+    if (!after?.exists)
+        return;
+    const data = after.data() ?? {};
+    if (!(0, itemPricing_1.needsProjectPriceRepair)(data))
+        return;
+    const normalized = (0, itemPricing_1.normalizedProjectPriceCents)(data);
+    if (normalized == null)
+        return;
+    await after.ref.update({
+        projectPriceCents: normalized,
+        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+    });
+});
 exports.createWithQuota = (0, https_1.onCall)(async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {

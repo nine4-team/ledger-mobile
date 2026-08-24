@@ -44,6 +44,28 @@ This keeps the `Item` entity reserved for physical products that are ready to pa
 | `createdAt` | timestamp | auto | Server timestamp |
 | `updatedAt` | timestamp | auto | Server timestamp |
 
+### Price Invariant
+
+Every persisted `Item` uses one canonical price floor:
+
+```text
+projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)
+```
+
+This invariant applies to project items and business-inventory items alike, on every create and update path—not only when an item is first created or sold. Consequently:
+
+- a missing or zero project price is initialized from a positive purchase price;
+- increasing the purchase price above the project price raises the project price to match;
+- decreasing the purchase price does not reduce an already higher project price;
+- an attempted project price below the purchase price is normalized up to the purchase price; and
+- a project price above the purchase price is preserved as the client-facing markup.
+
+The iOS and MCP item write boundaries must apply the same shared normalization before persisting a write. A server-side write guard is the final safety net for writers that bypass those boundaries. Import, bulk-create, copy, quick-draft promotion, and inventory-movement paths are not exceptions.
+
+For a partial update, normalization is computed from the merged post-update state. A write that changes only `purchasePriceCents` must compare it with the stored project price; a write that changes only `projectPriceCents` must compare it with the stored purchase price. Callers may omit an unchanged field, but they may not bypass the invariant by doing so.
+
+Readers should defensively use the same `max` rule while legacy documents are being repaired, so a stale zero or lower project price can never hide a positive purchase price. This rule governs current item state; frozen inventory-movement transaction amounts and sent invoice snapshots do not retroactively change when an item price changes.
+
 ### Display Name
 
 The canonical display name is `name ?? description ?? ""`. The `description` field is a legacy fallback — new items always use `name`.
@@ -80,7 +102,7 @@ Default status for new items: `purchased`.
 
 An item requires **either** a non-empty name **or** at least one image to be created. Both can be empty in combination — this is the only hard validation rule.
 
-Price fields must be zero or greater (negative values are invalid).
+Price fields must be zero or greater (negative values are invalid), and `projectPriceCents` must never be less than `purchasePriceCents` after normalization.
 
 ## Creation Flow
 
@@ -220,7 +242,7 @@ Items are displayed using the shared `SharedItemsList` component, which operates
 | Returned | `returned` | All |
 | No SKU | `no-sku` | All |
 | No Name | `no-name` | All |
-| No Project Price | `no-project-price` | All |
+| No Project Price | `no-project-price` | All; matches only when the normalized project price is not positive |
 | No Image | `no-image` | All |
 | No Transaction | `no-transaction` | All |
 
@@ -249,10 +271,7 @@ Each card displays:
 
 ### Price Display Priority
 
-The displayed price follows this priority:
-1. `projectPriceCents` (if different from purchase price)
-2. `purchasePriceCents`
-3. `projectPriceCents` (if no purchase price)
+Item cards display the normalized project price. During the legacy-data transition, readers compute `max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` defensively rather than allowing a stale zero or lower project price to win.
 
 ## Image Management
 

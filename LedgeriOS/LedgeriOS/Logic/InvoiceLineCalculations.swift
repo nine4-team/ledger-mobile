@@ -205,7 +205,7 @@ enum InvoiceLineCalculations {
             lineageEdges: lineageEdges
         ) {
         case .billable(.projectPrice):
-            return item.projectPriceCents ?? 0
+            return item.normalizedProjectPriceCents ?? 0
         case .billable(.purchasePrice):
             return item.purchasePriceCents ?? 0
         case .notBillable:
@@ -217,8 +217,7 @@ enum InvoiceLineCalculations {
     /// receives project transactions so it can choose project price vs purchase
     /// price from the item's billing basis.
     static func amountCents(for item: Item) -> Int {
-        if let p = item.projectPriceCents, p > 0 { return p }
-        return item.purchasePriceCents ?? 0
+        item.normalizedProjectPriceCents ?? 0
     }
 
     /// Build a signed InvoiceLine from an item. Always a charge.

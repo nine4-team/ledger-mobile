@@ -136,7 +136,7 @@ enum InventoryPurchaseIntentCalculations {
             return .missingOrInvalidCategory
         }
         if activeItems.isEmpty { return .waitingForItems }
-        if activeItems.contains(where: { ($0.projectPriceCents ?? 0) <= 0 }) {
+        if activeItems.contains(where: { ($0.normalizedProjectPriceCents ?? 0) <= 0 }) {
             return .missingProjectPrices
         }
         if (transaction.audit?.soldItemsCount ?? 0) > 0 {

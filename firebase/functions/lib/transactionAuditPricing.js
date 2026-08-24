@@ -18,9 +18,16 @@ function auditPriceBasis(txData) {
         : 'purchase';
 }
 function auditItemPriceCents(basis, itemData) {
-    const value = basis === 'project'
+    const purchasePrice = typeof itemData.purchasePriceCents === 'number' &&
+        Number.isFinite(itemData.purchasePriceCents)
+        ? itemData.purchasePriceCents
+        : 0;
+    if (basis === 'purchase')
+        return purchasePrice;
+    const projectPrice = typeof itemData.projectPriceCents === 'number' &&
+        Number.isFinite(itemData.projectPriceCents)
         ? itemData.projectPriceCents
-        : itemData.purchasePriceCents;
-    return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+        : 0;
+    return Math.max(purchasePrice, projectPrice);
 }
 //# sourceMappingURL=transactionAuditPricing.js.map

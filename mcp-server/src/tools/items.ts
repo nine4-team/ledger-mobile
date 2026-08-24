@@ -18,6 +18,11 @@ import {
 import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import {
+  applyItemPriceFloorToCreate,
+  applyItemPriceFloorToUpdate,
+  normalizedProjectPriceCents,
+} from "../util/item-pricing.js";
+import {
   detachedSpaceAssignment,
   validateItemSpaceTransition,
   type DetachedSpaceAssignment,
@@ -183,7 +188,10 @@ function formatItem(item: Item & { id: string }) {
     spaceId: item.spaceId ?? null,
     budgetCategoryId: item.budgetCategoryId ?? null,
     purchasePrice: formatCents(item.purchasePriceCents),
-    projectPrice: formatCents(item.projectPriceCents),
+    projectPrice: formatCents(normalizedProjectPriceCents(
+      item.purchasePriceCents,
+      item.projectPriceCents
+    )),
     marketValue: formatCents(item.marketValueCents),
     transactionId: item.transactionId ?? null,
     bookmark: item.bookmark ?? false,
@@ -357,7 +365,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       };
       if (projectId) data.projectId = projectId;
       if (purchasePriceCents !== undefined) data.purchasePriceCents = purchasePriceCents;
-      if (projectPriceCents !== undefined) data.projectPriceCents = projectPriceCents;
+      applyItemPriceFloorToCreate(data, { purchasePriceCents, projectPriceCents });
       if (source) data.source = source;
       if (sku) data.sku = sku;
       if (notes) data.notes = tagNotesAsAi(notes);
@@ -465,7 +473,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         };
         if (resolvedProjectId) data.projectId = resolvedProjectId;
         if (item.purchasePriceCents !== undefined) data.purchasePriceCents = item.purchasePriceCents;
-        if (item.projectPriceCents !== undefined) data.projectPriceCents = item.projectPriceCents;
+        applyItemPriceFloorToCreate(data, item);
         if (item.source) data.source = item.source;
         if (item.sku) data.sku = item.sku;
         if (item.notes) data.notes = tagNotesAsAi(item.notes);
@@ -584,6 +592,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if ("projectId" in updates && updates.projectId == null) {
         if (!("budgetCategoryId" in updates)) updates.budgetCategoryId = null;
       }
+      applyItemPriceFloorToUpdate(existing, updates);
 
       // Enforce the inventory invariant before writing.
       const invariantError = checkUpdateInvariant(existing, updates);
@@ -724,6 +733,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const violations: string[] = [];
       const newOrphans: string[] = [];
       const preExistingOrphans: string[] = [];
+      const preparedUpdates = new Map<string, Record<string, unknown>>();
       const spaceViolations: Array<{ id: string; message: string; guidance: string }> = [];
       const detachedSpaceAssignments: DetachedSpaceAssignment[] = [];
       const spaceCache: SpaceCache = new Map();
@@ -733,12 +743,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           budgetCategoryId?: string | null;
           transactionId?: string | null;
         };
-        if (checkUpdateInvariant(existing, updates)) violations.push(doc.id);
+        const itemUpdates = applyItemPriceFloorToUpdate(existing, { ...updates });
+        preparedUpdates.set(doc.id, itemUpdates);
+        if (checkUpdateInvariant(existing, itemUpdates)) violations.push(doc.id);
         const spaceIssue = await validateItemSpaceTransition(
           db,
           doc.id,
           existing,
-          updates,
+          itemUpdates,
           callerProvidedSpaceId,
           spaceCache
         );
@@ -749,12 +761,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
             db,
             doc.id,
             existing,
-            updates,
+            itemUpdates,
             spaceCache
           );
           if (detached) detachedSpaceAssignments.push(detached);
         }
-        const linkage = checkTransactionLinkageOnUpdate(existing, updates);
+        const linkage = checkTransactionLinkageOnUpdate(existing, itemUpdates);
         if (linkage.kind === "reject") newOrphans.push(doc.id);
         else if (linkage.kind === "warn") preExistingOrphans.push(doc.id);
       }
@@ -784,7 +796,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       let batchCount = 0;
 
       for (const doc of snapshot.docs) {
-        batch.update(doc.ref, updates);
+        batch.update(doc.ref, preparedUpdates.get(doc.id)!);
         batchCount++;
         if (batchCount === 500) {
           await batch.commit();
@@ -876,6 +888,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if ("projectId" in itemUpdates && itemUpdates.projectId == null) {
           if (!("budgetCategoryId" in itemUpdates)) itemUpdates.budgetCategoryId = null;
         }
+        applyItemPriceFloorToUpdate(existing, itemUpdates);
 
         const err = checkUpdateInvariant(existing, itemUpdates);
         if (err) {
@@ -1093,10 +1106,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       // 7. Append to Firestore array
       try {
-        await accountCollection(db, "items").doc(itemId).update({
+        const updates = applyItemPriceFloorToUpdate(item, {
           images: FieldValue.arrayUnion(entry),
           updatedAt: new Date(),
         });
+        await accountCollection(db, "items").doc(itemId).update(updates);
       } catch (err) {
         // Clean up uploaded files on Firestore failure
         await deleteFromStorage(url).catch(() => {});
@@ -1146,10 +1160,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         remaining = remaining.map((a, i) => i === 0 ? { ...a, isPrimary: true } : a);
       }
 
-      await accountCollection(db, "items").doc(itemId).update({
+      const updates = applyItemPriceFloorToUpdate(item, {
         images: remaining,
         updatedAt: new Date(),
       });
+      await accountCollection(db, "items").doc(itemId).update(updates);
 
       // Delete files from Storage (best-effort)
       const deleted: string[] = [];

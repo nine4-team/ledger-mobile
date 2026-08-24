@@ -511,7 +511,7 @@ struct ItemDetailView: View {
             DetailRow(label: "Source", value: liveItem.source ?? "—")
             DetailRow(label: "SKU", value: liveItem.sku ?? "—")
             DetailRow(label: "Purchase Price", value: liveItem.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
-            DetailRow(label: "Project Price", value: liveItem.projectPriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
+            DetailRow(label: "Project Price", value: liveItem.normalizedProjectPriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
             DetailRow(label: "Market Value", value: liveItem.marketValueCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
             if let date = liveItem.createdAt {
                 DetailRow(label: "Created", value: DateFormatter.shortDate.string(from: date), showDivider: false)

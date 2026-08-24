@@ -31,7 +31,7 @@ for each invoice line:
 overallTotal = sum of signedAmount
 ```
 
-**Display price:** `projectPriceCents` (always set at item creation — defaults to `purchasePriceCents` when not explicitly provided).
+**Display price:** the normalized `projectPriceCents`. Every item write maintains `projectPriceCents >= purchasePriceCents`; report readers defensively use `max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` for legacy records.
 For manual New Charge lines, use the line's stored `snapshotName` and `amountCents`.
 
 ### 2. Client Summary Report

@@ -408,7 +408,7 @@ Current implementation:
 
 - `Item.purchasePriceCents`: what was paid for the item
 - `Item.projectPriceCents`: what the project/client is charged for the item
-- current invoice line amount for items is `projectPriceCents` if positive, otherwise `purchasePriceCents`
+- item writes maintain `projectPriceCents >= purchasePriceCents`; invoice candidate readers defensively resolve `max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` for legacy data
 - inventory-to-project movement requires `projectPriceCents`
 - project-to-inventory exits use `purchasePriceCents`
 

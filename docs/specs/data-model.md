@@ -743,9 +743,9 @@ An entity with `projectId: null` belongs to **business inventory** -- the accoun
 
 When an item moves between scopes, its `projectId` and `budgetCategoryId` are updated together to preserve the invariant `(projectId == null) ↔ (budgetCategoryId == null)`:
 
-- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to a validated per-item destination assignment or null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at project price. If `projectPriceCents` is missing, the UI must ask the user what to sell the item for and persist that value before committing. See [sale-transactions.md](sale-transactions.md).
+- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to a validated per-item destination assignment or null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at normalized project price. Ledger raises project price to at least purchase price and asks the user only when neither price is positive. See [sale-transactions.md](sale-transactions.md).
 - **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
-- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses purchase price. The destination Purchase uses project price and requires `projectPriceCents`. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses purchase price. The destination Purchase uses project price after applying the canonical purchase-cost floor. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 - **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
 
 **The invariant is enforced on every write.** This replaces the legacy "items carry budgetCategoryId across scope moves" model. See [inventory-as-store.md](inventory-as-store.md) for the rationale.
@@ -774,15 +774,17 @@ Centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.
 ### Item price fields
 
 - `purchasePriceCents`: Non-negative. What was paid for the item.
-- `projectPriceCents`: Non-negative. What the project is charged for the item.
+- `projectPriceCents`: Non-negative. What the project is charged for the item. On every item create or update, persist `max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` so it is never below purchase cost.
 - `marketValueCents`: Non-negative. Estimated market value.
+
+The project-price floor is a domain invariant, not a form default. It applies across iOS, MCP, imports, bulk operations, quick-draft promotion, copies, and inventory movements. A higher existing project price is preserved when purchase price falls; it is raised when purchase price rises above it. Readers use the same `max` rule defensively for legacy documents. Frozen transaction amounts and sent invoice snapshots remain historical and are not recalculated.
 
 Inventory movement price basis:
 
 - Inventory → project Purchase amounts use `projectPriceCents`.
 - Project → business inventory Return and Sale-to-Inventory amounts use `purchasePriceCents`.
 - Project → project moves use purchase price for the source exit and project price for the destination Purchase.
-- User-facing sell-to-project flows must collect and save a missing `projectPriceCents` before the movement is written. Non-interactive tools reject project-price movements with missing project prices.
+- Sell-to-project flows normalize the project-price floor before computing the movement. They collect a price, or reject in non-interactive tools, only when neither price is positive; they must never create a zero-amount destination Purchase.
 
 ### Budget calculations
 

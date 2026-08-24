@@ -43,7 +43,7 @@ Ledger is an inventory and transaction management app for design teams. It exist
 
 ### Inventory Movement Source (Inventory → Project)
 - When items are sold from inventory to a project, a Purchase-from-inventory transaction is created in the project at `projectPriceCents`
-- If an item has no project price, the user is asked what to sell it for before the movement is committed, and that value is saved as `projectPriceCents`
+- Before movement, `projectPriceCents` is automatically raised to at least `purchasePriceCents`; the user is asked for a sale price only when neither price is positive
 - Project-to-project movement is a two-hop atomic flow: source project exits to business inventory at purchase price, then destination project buys from inventory at project price
 - Project-to-business-inventory movement uses purchase price
 - **Historical state:** The source field on legacy sale transactions was **blank** (empty string)

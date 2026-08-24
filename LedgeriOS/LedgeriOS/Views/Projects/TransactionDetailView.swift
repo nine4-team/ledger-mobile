@@ -361,7 +361,7 @@ struct TransactionDetailView: View {
 
     private var selectedTotalCents: Int? {
         let pairs = activeItems.compactMap { item -> (id: String, cents: Int)? in
-            guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
+            guard let id = item.id, let cents = item.normalizedProjectPriceCents else { return nil }
             return (id, cents)
         }
         let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedItemIds, items: pairs)
@@ -1332,7 +1332,7 @@ struct TransactionDetailView: View {
                     usesProjectPrice: auditUsesProjectPrice,
                     itemsMissingPrice: transactionItems.filter { item in
                         if auditUsesProjectPrice {
-                            return (item.projectPriceCents ?? 0) <= 0
+                            return (item.normalizedProjectPriceCents ?? 0) <= 0
                         }
                         return (item.purchasePriceCents ?? 0) <= 0
                     },

@@ -53,7 +53,11 @@ test('inventory-scope Purchases do not use project prices', () => {
   assert.equal(basis, 'purchase');
 });
 
-test('missing canonical price contributes zero instead of crossing price bases', () => {
-  assert.equal(auditItemPriceCents('project', { purchasePriceCents: 10000 }), 0);
+test('project basis defensively applies the purchase-cost floor', () => {
+  assert.equal(auditItemPriceCents('project', { purchasePriceCents: 10000 }), 10000);
+  assert.equal(auditItemPriceCents('project', {
+    purchasePriceCents: 10000,
+    projectPriceCents: 0,
+  }), 10000);
   assert.equal(auditItemPriceCents('purchase', { projectPriceCents: 12000 }), 0);
 });

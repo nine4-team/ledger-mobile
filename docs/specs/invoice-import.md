@@ -58,6 +58,7 @@ On confirmation, the system creates:
 2. **Items** for each line item:
    - `name` = parsed item description
    - `purchasePriceCents` = parsed unit price
+   - `projectPriceCents` = at least the parsed unit price, unless an explicitly higher project price is supplied
    - `quantity` = parsed quantity (if the item model supports it)
    - `source` = vendor name
 
@@ -97,7 +98,7 @@ Invoice import does NOT work offline because:
 1. **No line items extracted**: Show empty review screen with option to add items manually
 2. **Duplicate import**: No automatic detection -- user is responsible for not importing the same invoice twice
 3. **Very large invoices (100+ items)**: Parser should handle; review screen should be scrollable/searchable
-4. **Missing prices**: Line items without prices are imported with `purchasePriceCents` set to null
+4. **Missing prices**: Line items without prices are imported with `purchasePriceCents` set to null. If both price fields are absent, both remain zero/null-equivalent; otherwise the canonical item price floor still applies.
 5. **Tax already included in line prices**: User can toggle whether extracted prices include tax
 
 ## Design Decision: Why Server-Side Parsing?

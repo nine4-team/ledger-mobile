@@ -23,7 +23,7 @@ struct EditItemDetailsModal: View {
         _source = State(initialValue: item.source ?? "")
         _sku = State(initialValue: item.sku ?? "")
         _purchasePrice = State(initialValue: item.purchasePriceCents.map { Self.formatCents($0) } ?? "")
-        _projectPrice = State(initialValue: item.projectPriceCents.map { Self.formatCents($0) } ?? "")
+        _projectPrice = State(initialValue: item.normalizedProjectPriceCents.map { Self.formatCents($0) } ?? "")
         _marketValue = State(initialValue: item.marketValueCents.map { Self.formatCents($0) } ?? "")
     }
 

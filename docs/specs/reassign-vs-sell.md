@@ -58,7 +58,7 @@ Inventory-destination sale:
 
 - **Project → Business Inventory** is a Sale-to-Inventory only when the item originated in the project. The sale uses purchase price because the business is acquiring the item as inventory.
 
-Project-destination sales always charge the destination project at `projectPriceCents`. If any selected item lacks a project price, the UI asks what to sell it for and saves that value before writing the movement.
+Project-destination sales always charge the destination project at normalized `projectPriceCents`. Ledger first raises it to at least `purchasePriceCents`; the UI asks what to sell it for only when neither price is positive.
 
 ### What Changes
 
@@ -127,7 +127,7 @@ When the source is another project and the destination is a project, **Sell** de
 
 All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 
-Pricing follows the sale destination: project-to-project uses purchase price for Hop 1 and project price for Hop 2. Standalone project-to-business-inventory uses purchase price. Missing project prices must be collected before commit for project-destination sales.
+Pricing follows the sale destination: project-to-project uses purchase price for Hop 1 and normalized project price for Hop 2. Standalone project-to-business-inventory uses purchase price. Project-destination sales collect a price only when neither project nor purchase price is positive.
 
 ## Menu Visibility Rules
 
@@ -169,7 +169,7 @@ Under the per-batch model, **inventory items have no `budgetCategoryId`** (the i
 
 There is no per-item category override and no mixed-category batches. Users wanting mixed categories must sell in separate batches. See [sale-transactions.md](sale-transactions.md) D4a.
 
-The sell flow also requires a project price for every item. Existing `projectPriceCents` values are used as-is. Missing or zero project prices produce a price-entry step before confirmation; the entered values are persisted on the items and become the frozen amount snapshot for the destination Purchase.
+The sell flow also requires a positive project price for every item. Before confirmation, Ledger persists `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`, preserving higher markup and raising any lower value to cost. A price-entry step appears only when neither price is positive. The resulting values become the frozen amount snapshot for the destination Purchase.
 
 ## Design Decision: Why Separate Operations?
 

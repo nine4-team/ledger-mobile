@@ -105,7 +105,7 @@ struct SharedItemsList: View {
     private var selectedTotalCents: Int? {
         let ids = resolvedSelectedIds.wrappedValue
         let pairs = processedItems.compactMap { item -> (id: String, cents: Int)? in
-            guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
+            guard let id = item.id, let cents = item.normalizedProjectPriceCents else { return nil }
             return (id: id, cents: cents)
         }
         let total = SelectionCalculations.totalCentsForSelected(selectedIds: ids, items: pairs)
@@ -846,14 +846,7 @@ struct SharedItemsList: View {
     }
 
     private func displayPrice(for item: Item) -> String? {
-        if let price = item.projectPriceCents, price != item.purchasePriceCents {
-            return CurrencyFormatting.formatCentsWithDecimals(price)
-        } else if let price = item.purchasePriceCents {
-            return CurrencyFormatting.formatCentsWithDecimals(price)
-        } else if let price = item.projectPriceCents {
-            return CurrencyFormatting.formatCentsWithDecimals(price)
-        }
-        return nil
+        item.normalizedProjectPriceCents.map(CurrencyFormatting.formatCentsWithDecimals)
     }
 
 }

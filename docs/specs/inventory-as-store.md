@@ -20,7 +20,7 @@ Inventory items have no budget category; categories belong to projects. Items mo
 | Category at return-to-inventory time | Preserved on the item | **Wiped** from the item |
 | Sale transaction shape | Long-lived aggregator per `(project, direction, category)` | New per-batch transaction per user action |
 | Project → project move | Two hops, both as sales | Origin-aware project → inventory hop + new Purchase to destination |
-| Inventory → project price | Often fell back to purchase price | **Requires project price**; prompt user if missing |
+| Inventory → project price | Often fell back to purchase price at read time | **Persisted floor:** project price is automatically at least purchase price; prompt only if neither is positive |
 | Project → inventory price | Sale-direction behavior varied by path | **Uses purchase price** |
 
 ## The Core Invariant
@@ -88,7 +88,7 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 - **Triggered by:** the user selling items from inventory into a project.
 - **Requires a budget category.** The user picks one category for the whole batch. The category must be enabled in the destination project. If not enabled, prompt to enable or choose another.
 - **Creates a per-batch Purchase transaction.** See [sale-transactions.md](sale-transactions.md).
-- **Requires project prices.** If any selected item lacks `projectPriceCents`, the UI asks what the item should sell for and saves that value before creating the Purchase transaction.
+- **Normalizes project prices.** Before creating the Purchase transaction, Ledger raises each `projectPriceCents` to at least its `purchasePriceCents`. The UI asks what the item should sell for only when neither price is positive.
 - **Sets `budgetCategoryId`** on each item to the chosen category. The category is now part of the item's identity in the destination project.
 - **Sign convention:** budget impact is `+1 * amountCents` on the destination project.
 
@@ -106,9 +106,9 @@ All hops commit atomically when the user invokes **Sell** with a project destina
 
 **Price basis:** project → project uses purchase price for the source project exit and project price for the destination project Purchase.
 
-If any item lacks a project price for the destination hop, the UI asks what it should sell for and saves that value before the atomic move is committed.
+Before the destination hop, each project price is normalized to at least its purchase price. The UI asks what the item should sell for only when neither price is positive.
 
-For project-price movements, a missing or zero `projectPriceCents` is initialized from a positive `purchasePriceCents` and persisted on the item. Non-interactive inventory tools reject the movement only when neither price is positive; they must never write a zero-amount destination Purchase.
+For project-price movements, persist `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`. This raises missing, zero, or below-cost values while preserving a higher markup. Non-interactive inventory tools reject the movement only when neither price is positive; they must never write a zero-amount destination Purchase.
 
 ## Display
 

@@ -16,7 +16,8 @@ struct ItemsService: ItemsServiceProtocol {
     }
 
     func createItem(accountId: String, item: Item) throws -> String {
-        let id = try repo(accountId: accountId).create(AttachmentPrimaryPolicy.normalized(item))
+        let priceNormalized = ItemPricePolicy.normalizedForPersistence(item)
+        let id = try repo(accountId: accountId).create(AttachmentPrimaryPolicy.normalized(priceNormalized))
         return id
     }
 
@@ -38,7 +39,8 @@ struct ItemsService: ItemsServiceProtocol {
         let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
 
         for (itemId, sourceItem) in zip(itemIds, items) {
-            var item = AttachmentPrimaryPolicy.normalized(sourceItem)
+            let priceNormalized = ItemPricePolicy.normalizedForPersistence(sourceItem)
+            var item = AttachmentPrimaryPolicy.normalized(priceNormalized)
             item.id = itemId
             item.accountId = accountId
             item.transactionId = transactionId
@@ -64,11 +66,20 @@ struct ItemsService: ItemsServiceProtocol {
     }
 
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {
-        let normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
-            fields,
+        let itemRepo = repo(accountId: accountId)
+        guard let existing = try await itemRepo.get(id: itemId) else {
+            try await itemRepo.update(id: itemId, fields: fields)
+            return
+        }
+        let normalizedFields = ItemPricePolicy.normalizedUpdateFields(
+            existing: existing,
+            fields: fields
+        )
+        let attachmentNormalizedFields = AttachmentPrimaryPolicy.normalizedFields(
+            normalizedFields,
             attachmentFieldNames: ["images"]
         )
-        try await repo(accountId: accountId).update(id: itemId, fields: normalizedFields)
+        try await itemRepo.update(id: itemId, fields: attachmentNormalizedFields)
     }
 
     func deleteItem(accountId: String, item: Item) async throws {
