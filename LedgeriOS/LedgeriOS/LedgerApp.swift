@@ -48,6 +48,13 @@ struct LedgerApp: App {
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(
             clientID: FirebaseApp.app()!.options.clientID!
         )
+
+        #if os(macOS)
+        if !AppRuntime.isUnitTestHost {
+            _ = SparkleUpdateController.shared
+        }
+        #endif
+
         _authManager = State(initialValue: AuthManager())
 
         let accountsService = AccountsService()
