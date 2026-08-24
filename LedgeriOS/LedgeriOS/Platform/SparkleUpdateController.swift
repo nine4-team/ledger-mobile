@@ -14,6 +14,10 @@ final class SparkleUpdateController {
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
+
+        if updaterController.updater.automaticallyChecksForUpdates {
+            updaterController.updater.checkForUpdatesInBackground()
+        }
     }
 
     func checkForUpdates() {
