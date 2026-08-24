@@ -109,7 +109,7 @@ One batch, all-or-nothing:
    - `budgetCategoryId` = the chosen category
    - `transactionId` = the new purchase transaction ID
    - `status` = `"purchased"`
-   - `spaceId` = null
+   - `spaceId` = validated per-item destination assignment when supplied; otherwise null
    - `updatedAt` = serverTimestamp()
 3. **Auto-enable destination category** if not already enabled, by writing `accounts/{accountId}/projects/{destProjectId}/budgetCategories/{categoryId}` with `setData(merge: true)`. (Idempotent — preserves existing budget amounts.)
 4. **Create one `sold` lineage edge per item** at `accounts/{accountId}/lineageEdges/{auto-id}`:

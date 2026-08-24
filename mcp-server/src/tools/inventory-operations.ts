@@ -12,6 +12,10 @@ import { withTelemetry } from "../util/telemetry.js";
 import { getUid } from "../context.js";
 import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventory.js";
 import { isReturnTransactionType } from "../util/enums.js";
+import {
+  validateDestinationSpaceAssignments,
+  type DestinationSpaceAssignment,
+} from "../util/space-assignments.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MCP-side implementation of the per-batch inventory movement spec at
@@ -37,6 +41,17 @@ import { isReturnTransactionType } from "../util/enums.js";
 
 const MAX_BATCH_ITEMS = 100;
 const INVENTORY_LABEL = DEFAULT_INVENTORY_LABEL;
+
+const destinationSpaceAssignmentsSchema = z
+  .array(z.object({
+    itemId: z.string().describe("Item ID from this sale."),
+    spaceId: z.string().describe("Space ID in the destination project."),
+  }))
+  .max(MAX_BATCH_ITEMS)
+  .optional()
+  .describe(
+    "Optional per-item destination spaces. Each space must exist and belong to destinationProjectId. Items omitted here land unassigned."
+  );
 
 function projectPriceForMovement(item: Item): number {
   if ((item.projectPriceCents ?? 0) > 0) return item.projectPriceCents!;
@@ -363,6 +378,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "Ask the user to pick the category from get_project_budget_categories BEFORE calling — one " +
       "category per batch. Accounting fields (amountCents, budgetCategoryId, projectId, type, " +
       "source) are frozen at creation; itemIds tracks active membership. Cap: 100 items per call.\n\n" +
+      "SPACE ASSIGNMENTS: destinationSpaceAssignments may restore selected per-item assignments " +
+      "captured during correction. Every supplied space is validated against the destination project; " +
+      "omitted items land unassigned.\n\n" +
       "PRICING: amountCents/subtotalCents are derived from each item's projectPriceCents (the " +
       "client-charged price). When projectPriceCents is missing or zero and purchasePriceCents is " +
       "positive, Ledger copies the purchase price into projectPriceCents atomically. The call fails " +
@@ -379,6 +397,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         .describe(
           "Budget category in destinationProjectId — required, applies to the whole batch. Ask the user to pick from get_project_budget_categories."
         ),
+      destinationSpaceAssignments: destinationSpaceAssignmentsSchema,
       notes: z
         .string()
         .optional()
@@ -392,7 +411,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     },
     withTelemetry(
       "sell_items_from_inventory_to_project",
-      async ({ itemIds, destinationProjectId, budgetCategoryId, notes, dryRun }) => {
+      async ({ itemIds, destinationProjectId, budgetCategoryId, destinationSpaceAssignments, notes, dryRun }) => {
         const inventoryLabel = await resolveInventoryLabel(db);
 
         const items: (Item & { id: string })[] = [];
@@ -421,6 +440,16 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         );
         if (catError) return catError;
 
+        const resolvedSpaces = await validateDestinationSpaceAssignments(
+          db,
+          itemIds,
+          destinationProjectId,
+          destinationSpaceAssignments as DestinationSpaceAssignment[] | undefined
+        );
+        if (!resolvedSpaces.ok) {
+          return validation(resolvedSpaces.issue.message, resolvedSpaces.issue.guidance);
+        }
+
         const missingPrice = missingProjectPrice(items);
         if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
 
@@ -445,6 +474,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                   projectId: destinationProjectId,
                   budgetCategoryId,
                   status: "purchased",
+                  spaceId: resolvedSpaces.byItemId.get(i.id) ?? null,
                   currentSource: inventoryLabel,
                   projectPriceCents: projectPriceForMovement(i),
                 },
@@ -457,7 +487,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 : null,
           });
         }
-        return await commitSellToProject(db, items, destinationProjectId, budgetCategoryId, {
+        return await commitSellToProject(db, items, destinationProjectId, budgetCategoryId, resolvedSpaces.byItemId, {
           subtotalCents,
           amountCents,
           missingTax,
@@ -754,6 +784,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "All items must be in the same source project. Cap: 100 items per call. One destination category " +
       "applies to the whole batch — ask the user to pick from get_project_budget_categories before " +
       "calling. Source and destination must differ.\n\n" +
+      "SPACE ASSIGNMENTS: destinationSpaceAssignments may preserve selected per-item assignments. " +
+      "Every supplied space is validated against the destination project; omitted items land unassigned.\n\n" +
       "DO NOT use this as a shortcut for 'the item was entered on the wrong transaction but still belongs " +
       "to the same project' — that's a reassignment, use update_item to move the item to the correct " +
       "transaction within the same project.",
@@ -769,6 +801,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         .describe(
           "Budget category in the destination project — required, applies to the whole batch. Ask the user."
         ),
+      destinationSpaceAssignments: destinationSpaceAssignmentsSchema,
       notes: z
         .string()
         .optional()
@@ -783,6 +816,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         itemIds,
         destinationProjectId,
         destinationBudgetCategoryId,
+        destinationSpaceAssignments,
         notes,
         dryRun,
       }) => {
@@ -829,6 +863,16 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           destinationBudgetCategoryId
         );
         if (catError) return catError;
+
+        const resolvedSpaces = await validateDestinationSpaceAssignments(
+          db,
+          itemIds,
+          destinationProjectId,
+          destinationSpaceAssignments as DestinationSpaceAssignment[] | undefined
+        );
+        if (!resolvedSpaces.ok) {
+          return validation(resolvedSpaces.issue.message, resolvedSpaces.issue.guidance);
+        }
 
         const missingPrice = missingProjectPrice(items);
         if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
@@ -889,6 +933,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 to: {
                   projectId: destinationProjectId,
                   budgetCategoryId: destinationBudgetCategoryId,
+                  spaceId: resolvedSpaces.byItemId.get(i.id) ?? null,
                   currentSource: inventoryLabel,
                 },
               })),
@@ -908,6 +953,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           sourceProjectId,
           destinationProjectId,
           destinationBudgetCategoryId,
+          resolvedSpaces.byItemId,
           { subtotalCents, amountCents, missingTax, notes, inventoryLabel }
         );
       }
@@ -924,6 +970,7 @@ async function commitSellToProject(
   items: (Item & { id: string })[],
   destinationProjectId: string,
   budgetCategoryId: string,
+  destinationSpaceIdsByItem: Map<string, string>,
   totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string }
 ) {
   const frozen = await frozenSourceTxIds(db, items);
@@ -960,7 +1007,7 @@ async function commitSellToProject(
       budgetCategoryId,
       status: "purchased",
       transactionId: purchaseRef.id,
-      spaceId: null,
+      spaceId: destinationSpaceIdsByItem.get(item.id) ?? null,
       currentSource: totals.inventoryLabel,
       projectPriceCents: projectPriceForMovement(item),
       updatedAt: now,
@@ -986,19 +1033,26 @@ async function commitSellToProject(
   }
   await batch.commit();
 
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text:
-          `Purchased ${items.length} item(s) from inventory into project ${destinationProjectId}.\n` +
-          `New Purchase transaction: ${purchaseRef.id}\n` +
-          `amountCents: ${totals.amountCents} (${formatCents(totals.amountCents)})\n` +
-          `budgetCategoryId: ${budgetCategoryId}` +
-          missingTaxWarning(totals.missingTax, items.length),
-      },
-    ],
-  };
+  return asToolResponse({
+    message: `Purchased ${items.length} item(s) from inventory into project ${destinationProjectId}.`,
+    purchaseTransactionId: purchaseRef.id,
+    amountCents: totals.amountCents,
+    amount: formatCents(totals.amountCents),
+    budgetCategoryId,
+    finalItems: items.map((item) => ({
+      itemId: item.id,
+      projectId: destinationProjectId,
+      budgetCategoryId,
+      spaceId: destinationSpaceIdsByItem.get(item.id) ?? null,
+    })),
+    spaceAssignmentsApplied: destinationSpaceIdsByItem.size,
+    unassignedItemIds: items
+      .filter((item) => !destinationSpaceIdsByItem.has(item.id))
+      .map((item) => item.id),
+    warning: totals.missingTax.length > 0
+      ? missingTaxWarning(totals.missingTax, items.length).trim()
+      : null,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1302,6 +1356,7 @@ async function commitSellItemsFromProjectToProject(
   sourceProjectId: string,
   destinationProjectId: string,
   destinationBudgetCategoryId: string,
+  destinationSpaceIdsByItem: Map<string, string>,
   totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string }
 ) {
   const frozen = await frozenSourceTxIds(db, items);
@@ -1383,7 +1438,7 @@ async function commitSellItemsFromProjectToProject(
       budgetCategoryId: destinationBudgetCategoryId,
       status: "purchased",
       transactionId: destPurchaseRef.id,
-      spaceId: null,
+      spaceId: destinationSpaceIdsByItem.get(item.id) ?? null,
       currentSource: totals.inventoryLabel,
       projectPriceCents: projectPriceForMovement(item),
       updatedAt: now,
@@ -1434,19 +1489,27 @@ async function commitSellItemsFromProjectToProject(
   if (firstSaleTxIds.length > 0) legs.push(`Sale-to-Inventory (originated-in-project leg): ${firstSaleTxIds.join(", ")}`);
   legs.push(`Purchase-from-Inventory (destination): ${destPurchaseRef.id}`);
 
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text:
-          `Sold ${items.length} item(s) from ${sourceProjectId} to ${destinationProjectId}.\n` +
-          legs.join("\n") +
-          `\nDestination category: ${destinationBudgetCategoryId}\n` +
-          `amountCents (destination Purchase): ${totals.amountCents} (${formatCents(totals.amountCents)})` +
-          missingTaxWarning(totals.missingTax, items.length),
-      },
-    ],
-  };
+  return asToolResponse({
+    message: `Sold ${items.length} item(s) from ${sourceProjectId} to ${destinationProjectId}.`,
+    movementTransactions: legs,
+    purchaseTransactionId: destPurchaseRef.id,
+    destinationBudgetCategoryId,
+    amountCents: totals.amountCents,
+    amount: formatCents(totals.amountCents),
+    finalItems: items.map((item) => ({
+      itemId: item.id,
+      projectId: destinationProjectId,
+      budgetCategoryId: destinationBudgetCategoryId,
+      spaceId: destinationSpaceIdsByItem.get(item.id) ?? null,
+    })),
+    spaceAssignmentsApplied: destinationSpaceIdsByItem.size,
+    unassignedItemIds: items
+      .filter((item) => !destinationSpaceIdsByItem.has(item.id))
+      .map((item) => item.id),
+    warning: totals.missingTax.length > 0
+      ? missingTaxWarning(totals.missingTax, items.length).trim()
+      : null,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

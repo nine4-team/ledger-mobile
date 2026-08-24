@@ -143,6 +143,7 @@ export interface SeedItemOptions {
   status?: string;
   source?: string;
   currentSource?: string;
+  spaceId?: string | null;
 }
 
 export async function seedItem(db: Firestore, opts: SeedItemOptions): Promise<void> {
@@ -161,7 +162,22 @@ export async function seedItem(db: Firestore, opts: SeedItemOptions): Promise<vo
   if (opts.transactionId !== undefined) data.transactionId = opts.transactionId;
   if (opts.source !== undefined) data.source = opts.source;
   if (opts.currentSource !== undefined) data.currentSource = opts.currentSource;
+  if (opts.spaceId !== undefined) data.spaceId = opts.spaceId;
   await ref.set(data);
+}
+
+export async function seedSpace(
+  db: Firestore,
+  options: { id: string; projectId?: string | null; name?: string }
+): Promise<void> {
+  const data: Record<string, unknown> = {
+    name: options.name ?? options.id,
+    isArchived: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  if (options.projectId !== undefined) data.projectId = options.projectId;
+  await db.doc(`accounts/${TEST_ACCOUNT_ID}/spaces/${options.id}`).set(data);
 }
 
 export interface SeedTransactionOptions {

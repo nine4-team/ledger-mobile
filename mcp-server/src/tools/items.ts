@@ -17,6 +17,12 @@ import {
 } from "../util/projections.js";
 import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
+import {
+  detachedSpaceAssignment,
+  validateItemSpaceTransition,
+  type DetachedSpaceAssignment,
+  type SpaceCache,
+} from "../util/space-assignments.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inventory invariant helpers (per-batch inventory movement redesign).
@@ -522,7 +528,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "Inventory invariant: items in business inventory (projectId: null) must have " +
       "budgetCategoryId: null. Pass null explicitly to either field to clear it. Moving " +
       "an item from inventory into a project requires passing both projectId AND " +
-      "budgetCategoryId in the same update.\n\n" +
+      "budgetCategoryId in the same update. When projectId changes and the item already " +
+      "has a space, spaceId must be explicit: pass null to detach it or a space in the " +
+      "resulting scope. Detached assignments are returned for a later sale.\n\n" +
       "Transaction-linkage invariant: items in a project (projectId set) should have a " +
       "transactionId. Updates that would CREATE a new project-orphan (e.g. setting projectId " +
       "without transactionId on a non-orphan item) are rejected. Updates that touch an item " +
@@ -542,7 +550,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       notes: z.string().optional().describe("If provided, REPLACES the entire notes field. Pass the full new content. Use `aiAuditAppend` instead to add a one-line audit entry without touching user prose."),
       aiAuditAppend: z.string().optional().describe("A short one-line AI audit entry. Server appends with '[AI M/D/YYYY]' prefix; revises (not stacks) same-day entries. Mutually compatible with `notes` — if both passed, `notes` applied first, then `aiAuditAppend`."),
       projectId: z.string().nullable().optional().describe("Project ID — set to reassign item. Pass null to move into business inventory (budgetCategoryId is wiped automatically if needed)."),
-      spaceId: z.string().nullable().optional().describe("Space ID. Pass null to clear."),
+      spaceId: z.string().nullable().optional().describe("Space ID in the resulting item scope. Pass null to detach; detached assignments are returned in the result."),
       budgetCategoryId: z.string().nullable().optional().describe("Budget category ID. Pass null to clear (required when projectId is null)."),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
@@ -552,6 +560,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     async ({ itemId, ...fields }) => {
       const existing = await getDoc<Item>(db, "items", itemId);
       if (!existing) return notFound("Item", itemId);
+      const callerProvidedSpaceId = Object.prototype.hasOwnProperty.call(fields, "spaceId");
 
       // Merge notes: `notes` replaces outright; `aiAuditAppend` appends/revises
       // a tagged AI line below whatever notes ends up being after replacement.
@@ -570,10 +579,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
-      // If the caller is clearing projectId and didn't explicitly clear
-      // budgetCategoryId, wipe it as well so the invariant holds.
-      if ("projectId" in updates && updates.projectId == null && !("budgetCategoryId" in updates)) {
-        updates.budgetCategoryId = null;
+      // Inventory scope has no project category. Space handling is explicit
+      // whenever an existing assignment crosses scopes.
+      if ("projectId" in updates && updates.projectId == null) {
+        if (!("budgetCategoryId" in updates)) updates.budgetCategoryId = null;
       }
 
       // Enforce the inventory invariant before writing.
@@ -584,6 +593,20 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           "Items in business inventory have no budget category. Pass null, or set projectId."
         );
       }
+
+      const spaceCache: SpaceCache = new Map();
+      const spaceIssue = await validateItemSpaceTransition(
+        db,
+        itemId,
+        existing,
+        updates,
+        callerProvidedSpaceId,
+        spaceCache
+      );
+      if (spaceIssue) return validation(spaceIssue.message, spaceIssue.guidance);
+      const detachedSpaceAssignments = [
+        await detachedSpaceAssignment(db, itemId, existing, updates, spaceCache),
+      ].filter((assignment): assignment is DetachedSpaceAssignment => assignment !== null);
 
       const linkage = checkTransactionLinkageOnUpdate(existing, updates);
       if (linkage.kind === "reject") {
@@ -618,11 +641,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         await accountCollection(db, "items").doc(itemId).update(updates);
       }
 
-      const responseText =
-        linkage.kind === "warn"
-          ? `Updated item ${itemId}.\n⚠ ${linkage.message}`
-          : `Updated item ${itemId}`;
-      return { content: [{ type: "text", text: responseText }] };
+      return asToolResponse({
+        message: `Updated item ${itemId}.`,
+        itemId,
+        detachedSpaceAssignments,
+        warning: linkage.kind === "warn" ? linkage.message : null,
+      });
     }
   );
 
@@ -636,7 +660,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "real business event via sell_items_from_inventory_to_project.\n\n" +
       "For real business events (items actually changing hands, budgets actually shifting), use " +
       "sell_items_from_* / return_items instead.\n\n" +
-      "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
+      "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that. Scope changes with existing spaces require explicit spaceId handling; pass null to detach and receive a reusable assignment receipt.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
     {
       filter: z.object({
         projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
@@ -657,7 +681,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         sku: z.string().optional(),
         notes: z.string().optional(),
         projectId: z.string().nullable().optional().describe("Pass null to move matched items to inventory (budgetCategoryId is wiped automatically)."),
-        spaceId: z.string().nullable().optional(),
+        spaceId: z.string().nullable().optional().describe("Space in the resulting scope, or null to detach and return the prior assignment."),
         budgetCategoryId: z.string().nullable().optional().describe("Pass null to clear."),
         bookmark: z.boolean().optional(),
         quantity: z.coerce.number().optional(),
@@ -665,6 +689,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       }).describe("Fields to set on all matched items"),
     },
     async ({ filter, update }) => {
+      const callerProvidedSpaceId = Object.prototype.hasOwnProperty.call(update, "spaceId");
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (filter.projectId === "inventory") {
@@ -689,22 +714,46 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
-      // If the update clears projectId and didn't touch budgetCategoryId, wipe it.
-      if ("projectId" in updates && updates.projectId == null && !("budgetCategoryId" in updates)) {
-        updates.budgetCategoryId = null;
+      // Inventory scope has no project category. Existing scoped spaces must
+      // be handled explicitly when projectId changes.
+      if ("projectId" in updates && updates.projectId == null) {
+        if (!("budgetCategoryId" in updates)) updates.budgetCategoryId = null;
       }
 
       // Preflight: validate the invariant against every matched item.
       const violations: string[] = [];
       const newOrphans: string[] = [];
       const preExistingOrphans: string[] = [];
+      const spaceViolations: Array<{ id: string; message: string; guidance: string }> = [];
+      const detachedSpaceAssignments: DetachedSpaceAssignment[] = [];
+      const spaceCache: SpaceCache = new Map();
       for (const doc of snapshot.docs) {
-        const existing = doc.data() as {
+        const existing = doc.data() as Item & {
           projectId?: string | null;
           budgetCategoryId?: string | null;
           transactionId?: string | null;
         };
         if (checkUpdateInvariant(existing, updates)) violations.push(doc.id);
+        const spaceIssue = await validateItemSpaceTransition(
+          db,
+          doc.id,
+          existing,
+          updates,
+          callerProvidedSpaceId,
+          spaceCache
+        );
+        if (spaceIssue) {
+          spaceViolations.push({ id: doc.id, ...spaceIssue });
+        } else {
+          const detached = await detachedSpaceAssignment(
+            db,
+            doc.id,
+            existing,
+            updates,
+            spaceCache
+          );
+          if (detached) detachedSpaceAssignments.push(detached);
+        }
         const linkage = checkTransactionLinkageOnUpdate(existing, updates);
         if (linkage.kind === "reject") newOrphans.push(doc.id);
         else if (linkage.kind === "warn") preExistingOrphans.push(doc.id);
@@ -713,6 +762,13 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         return validation(
           `Bulk update would violate the inventory invariant on ${violations.length} item(s): ${violations.slice(0, 5).join(", ")}${violations.length > 5 ? "…" : ""}`,
           "Narrow the filter, or split the update so inventory items and project items are handled separately."
+        );
+      }
+      if (spaceViolations.length > 0) {
+        const first = spaceViolations[0];
+        return validation(
+          `Bulk update has ${spaceViolations.length} invalid or ambiguous space assignment(s). First: ${first.message}`,
+          first.guidance
         );
       }
       if (newOrphans.length > 0) {
@@ -744,11 +800,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       const warning =
         preExistingOrphans.length > 0
-          ? `\n⚠ ${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
-          : "";
-      return {
-        content: [{ type: "text", text: `Updated ${processed} items matching filter.${warning}` }],
-      };
+          ? `${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
+          : null;
+      return asToolResponse({
+        message: `Updated ${processed} items matching filter.`,
+        updatedCount: processed,
+        detachedSpaceAssignments,
+        warning,
+      });
     }
   );
 
@@ -761,7 +820,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "`projectId: null` on legacy orphan items to relocate them to inventory, then re-record the real " +
       "business event with sell_items_from_inventory_to_project. For real business events (items actually " +
       "changing hands, budgets actually shifting), use sell_items_from_* / return_items.\n\n" +
-      "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
+      "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that. Scope changes with existing spaces require explicit per-item spaceId handling; pass null to detach and receive a reusable assignment receipt.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
     {
       updates: z.array(z.object({
         id: z.string().describe("Item document ID"),
@@ -774,7 +833,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         sku: z.string().optional(),
         notes: z.string().optional(),
         projectId: z.string().nullable().optional().describe("Pass null to move to inventory."),
-        spaceId: z.string().nullable().optional(),
+        spaceId: z.string().nullable().optional().describe("Space in the resulting scope, or null to detach and return the prior assignment."),
         budgetCategoryId: z.string().nullable().optional().describe("Pass null to clear."),
         bookmark: z.boolean().optional(),
         quantity: z.coerce.number().optional(),
@@ -796,8 +855,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const notFoundIds: string[] = [];
       const violations: Array<{ id: string; error: string }> = [];
       const preExistingOrphans: string[] = [];
+      const detachedSpaceAssignments: DetachedSpaceAssignment[] = [];
+      const spaceCache: SpaceCache = new Map();
 
       for (const { id, ...fields } of updates) {
+        const callerProvidedSpaceId = Object.prototype.hasOwnProperty.call(fields, "spaceId");
         const existing = await getDoc<Item>(db, "items", id);
         if (!existing) {
           notFoundIds.push(id);
@@ -809,9 +871,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           if (value !== undefined) itemUpdates[key] = value;
         }
 
-        // Wipe category when clearing projectId.
-        if ("projectId" in itemUpdates && itemUpdates.projectId == null && !("budgetCategoryId" in itemUpdates)) {
-          itemUpdates.budgetCategoryId = null;
+        // Inventory scope has no project category. Existing scoped spaces must
+        // be handled explicitly when projectId changes.
+        if ("projectId" in itemUpdates && itemUpdates.projectId == null) {
+          if (!("budgetCategoryId" in itemUpdates)) itemUpdates.budgetCategoryId = null;
         }
 
         const err = checkUpdateInvariant(existing, itemUpdates);
@@ -819,6 +882,27 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           violations.push({ id, error: err });
           continue;
         }
+
+        const spaceIssue = await validateItemSpaceTransition(
+          db,
+          id,
+          existing,
+          itemUpdates,
+          callerProvidedSpaceId,
+          spaceCache
+        );
+        if (spaceIssue) {
+          violations.push({ id, error: `${spaceIssue.message} ${spaceIssue.guidance}` });
+          continue;
+        }
+        const detached = await detachedSpaceAssignment(
+          db,
+          id,
+          existing,
+          itemUpdates,
+          spaceCache
+        );
+        if (detached) detachedSpaceAssignments.push(detached);
 
         const linkage = checkTransactionLinkageOnUpdate(existing, itemUpdates);
         if (linkage.kind === "reject") {
@@ -834,8 +918,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         return notFound("Items", notFoundIds.join(", "), "get_items");
       }
       if (violations.length > 0) {
+        const first = violations[0];
         return validation(
-          `${violations.length} update(s) would violate an invariant: ${violations.slice(0, 3).map((v) => v.id).join(", ")}${violations.length > 3 ? "…" : ""}`,
+          `${violations.length} update(s) would violate an invariant. First (${first.id}): ${first.error}`,
           "Items in business inventory have no budget category. Project items must have a transactionId — do not fabricate one; relocate orphans to inventory instead."
         );
       }
@@ -861,9 +946,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       const warning =
         preExistingOrphans.length > 0
-          ? `\n⚠ ${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
-          : "";
-      return { content: [{ type: "text", text: `Updated ${processed} items.${warning}` }] };
+          ? `${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
+          : null;
+      return asToolResponse({
+        message: `Updated ${processed} items.`,
+        updatedCount: processed,
+        detachedSpaceAssignments,
+        warning,
+      });
     }
   );
 

@@ -743,12 +743,14 @@ An entity with `projectId: null` belongs to **business inventory** -- the accoun
 
 When an item moves between scopes, its `projectId` and `budgetCategoryId` are updated together to preserve the invariant `(projectId == null) ↔ (budgetCategoryId == null)`:
 
-- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at project price. If `projectPriceCents` is missing, the UI must ask the user what to sell the item for and persist that value before committing. See [sale-transactions.md](sale-transactions.md).
+- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to a validated per-item destination assignment or null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at project price. If `projectPriceCents` is missing, the UI must ask the user what to sell the item for and persist that value before committing. See [sale-transactions.md](sale-transactions.md).
 - **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
 - **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses purchase price. The destination Purchase uses project price and requires `projectPriceCents`. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 - **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
 
 **The invariant is enforced on every write.** This replaces the legacy "items carry budgetCategoryId across scope moves" model. See [inventory-as-store.md](inventory-as-store.md) for the rationale.
+
+**Space assignment across scope changes:** A non-null `item.spaceId` must reference a space in the item's resulting project/inventory scope. Scope-changing corrections must explicitly detach an existing incompatible assignment and return its prior item/space mapping. Destination-project sales may apply that mapping per item only after validating each space belongs to the destination project; omitted items land unassigned. Items remaining in inventory retain only inventory-scoped spaces. Dry-run output must show each item's exact final `spaceId`.
 
 ---
 

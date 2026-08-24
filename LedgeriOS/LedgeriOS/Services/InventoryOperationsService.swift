@@ -25,6 +25,19 @@ enum InventoryOperationError: Error {
     /// Source project egress needs the item's current project budget category
     /// so the source project budget can subtract from the right category.
     case missingSourceBudgetCategory
+
+    /// A destination assignment references an item outside the movement.
+    case invalidDestinationSpaceAssignment
+
+    /// A requested destination space does not exist.
+    case destinationSpaceNotFound
+
+    /// A requested destination space belongs to another project or inventory.
+    case destinationSpaceScopeMismatch
+}
+
+struct InventorySpaceScope: Sendable, Equatable {
+    let projectId: String?
 }
 
 // MARK: - Service
@@ -101,9 +114,20 @@ struct InventoryOperationsService {
     }
 
     private let makeBatch: @Sendable () -> any BatchWriting
+    private let loadSpaceScope: @Sendable (_ accountId: String, _ spaceId: String) async throws -> InventorySpaceScope?
 
-    init(makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() }) {
+    init(
+        makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() },
+        loadSpaceScope: @escaping @Sendable (_ accountId: String, _ spaceId: String) async throws -> InventorySpaceScope? = { accountId, spaceId in
+            let snapshot = try await Firestore.firestore()
+                .document("accounts/\(accountId)/spaces/\(spaceId)")
+                .getDocument()
+            guard snapshot.exists else { return nil }
+            return InventorySpaceScope(projectId: snapshot.data()?["projectId"] as? String)
+        }
+    ) {
         self.makeBatch = makeBatch
+        self.loadSpaceScope = loadSpaceScope
     }
 
     private static func requireItemIds(_ items: [Item]) throws -> [String] {
@@ -131,6 +155,43 @@ struct InventoryOperationsService {
         return order.map { ($0, groups[$0] ?? []) }
     }
 
+    private func validatedDestinationSpaceIds(
+        items: [Item],
+        destinationProjectId: String,
+        destinationSpaceIdsByItem: [String: String],
+        accountId: String
+    ) async throws -> [String: String] {
+        guard !destinationSpaceIdsByItem.isEmpty else { return [:] }
+        let itemIds = Set(try Self.requireItemIds(items))
+        guard Set(destinationSpaceIdsByItem.keys).isSubset(of: itemIds) else {
+            throw InventoryOperationError.invalidDestinationSpaceAssignment
+        }
+
+        var scopesBySpaceId: [String: InventorySpaceScope] = [:]
+        var normalized: [String: String] = [:]
+        for (itemId, spaceId) in destinationSpaceIdsByItem {
+            let trimmed = spaceId.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                throw InventoryOperationError.destinationSpaceNotFound
+            }
+            let scope: InventorySpaceScope
+            if let cached = scopesBySpaceId[trimmed] {
+                scope = cached
+            } else {
+                guard let loaded = try await loadSpaceScope(accountId, trimmed) else {
+                    throw InventoryOperationError.destinationSpaceNotFound
+                }
+                scopesBySpaceId[trimmed] = loaded
+                scope = loaded
+            }
+            guard scope.projectId == destinationProjectId else {
+                throw InventoryOperationError.destinationSpaceScopeMismatch
+            }
+            normalized[itemId] = trimmed
+        }
+        return normalized
+    }
+
     // MARK: - Sell to Project
 
     /// Purchases items from business inventory (or another project) into a destination project.
@@ -146,13 +207,20 @@ struct InventoryOperationsService {
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil,
-        resolveInventoryIntentTransactionId: String? = nil
+        resolveInventoryIntentTransactionId: String? = nil,
+        destinationSpaceIdsByItem: [String: String] = [:]
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
         let itemIds = try Self.requireItemIds(items)
+        let validatedSpaceIds = try await validatedDestinationSpaceIds(
+            items: items,
+            destinationProjectId: destinationProjectId,
+            destinationSpaceIdsByItem: destinationSpaceIdsByItem,
+            accountId: accountId
+        )
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -199,6 +267,9 @@ struct InventoryOperationsService {
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
+            if let destinationSpaceId = validatedSpaceIds[itemId] {
+                itemUpdate["spaceId"] = destinationSpaceId
+            }
             let projectPrice = Self.projectPriceForMovement(item)
             if projectPrice > 0 {
                 itemUpdate["projectPriceCents"] = projectPrice
@@ -697,7 +768,8 @@ struct InventoryOperationsService {
         accountId: String,
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        destinationSpaceIdsByItem: [String: String] = [:]
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -717,6 +789,13 @@ struct InventoryOperationsService {
         guard sourceProjectId != destinationProjectId else {
             throw InventoryOperationError.sameSourceAndDestination
         }
+
+        let validatedSpaceIds = try await validatedDestinationSpaceIds(
+            items: items,
+            destinationProjectId: destinationProjectId,
+            destinationSpaceIdsByItem: destinationSpaceIdsByItem,
+            accountId: accountId
+        )
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -817,6 +896,9 @@ struct InventoryOperationsService {
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
+            if let destinationSpaceId = validatedSpaceIds[itemId] {
+                itemUpdate["spaceId"] = destinationSpaceId
+            }
             let projectPrice = Self.projectPriceForMovement(item)
             if projectPrice > 0 {
                 itemUpdate["projectPriceCents"] = projectPrice

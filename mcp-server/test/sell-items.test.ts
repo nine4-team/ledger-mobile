@@ -19,6 +19,7 @@ import {
   makeCapturedServer,
   wipeAccount,
   seedProject,
+  seedSpace,
   seedItem,
   seedTransaction,
   withContext,
@@ -28,6 +29,7 @@ import {
 } from "./helpers.js";
 import { registerInventoryOperationTools } from "../src/tools/inventory-operations.js";
 import { registerTransactionTools } from "../src/tools/transactions.js";
+import { registerItemTools } from "../src/tools/items.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const GOLDEN_PATH = resolve(__dirname, "fixtures/sale-transaction.golden.json");
@@ -68,6 +70,8 @@ beforeAll(() => {
   registerInventoryOperationTools(server as any, db);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   registerTransactionTools(server as any, db);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  registerItemTools(server as any, db);
 });
 
 beforeEach(async () => {
@@ -166,6 +170,7 @@ describe("sell_items_from_inventory_to_project", () => {
       id: "proj_dest",
       budgetCategories: [{ id: "cat_furnishings" }],
     });
+    await seedSpace(db, { id: "space_living", projectId: "proj_dest" });
     await seedItem(db, {
       id: "item_1",
       purchasePriceCents: 10000,
@@ -179,6 +184,7 @@ describe("sell_items_from_inventory_to_project", () => {
       itemIds: ["item_1"],
       destinationProjectId: "proj_dest",
       budgetCategoryId: "cat_furnishings",
+      destinationSpaceAssignments: [{ itemId: "item_1", spaceId: "space_living" }],
       notes: "4/9 — M2 dryRun",
       dryRun: true,
     });
@@ -189,6 +195,7 @@ describe("sell_items_from_inventory_to_project", () => {
     expect(parsed.dryRun).toBe(true);
     expect(parsed.plan.purchaseTransaction.amountCents).toBe(12990);
     expect(parsed.plan.purchaseTransaction.projectId).toBe("proj_dest");
+    expect(parsed.plan.itemUpdates[0].set.spaceId).toBe("space_living");
 
     // Nothing committed
     const purchases = await listTransactionsOfType(db, "Purchase");
@@ -196,6 +203,82 @@ describe("sell_items_from_inventory_to_project", () => {
     const item1 = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item1?.projectId).toBeNull();
     expect(item1?.budgetCategoryId).toBeNull();
+  });
+
+  test("applies validated destination spaces and reports exact final assignments", async () => {
+    await seedProject(db, {
+      id: "proj_dest",
+      budgetCategories: [{ id: "cat_furnishings" }],
+    });
+    await seedSpace(db, { id: "space_living", projectId: "proj_dest" });
+    await seedItem(db, {
+      id: "item_assigned",
+      projectId: null,
+      budgetCategoryId: null,
+      purchasePriceCents: 1000,
+    });
+    await seedItem(db, {
+      id: "item_unassigned",
+      projectId: null,
+      budgetCategoryId: null,
+      purchasePriceCents: 2000,
+      spaceId: "legacy_inventory_space",
+    });
+
+    const result = await callTool("sell_items_from_inventory_to_project", {
+      itemIds: ["item_assigned", "item_unassigned"],
+      destinationProjectId: "proj_dest",
+      budgetCategoryId: "cat_furnishings",
+      destinationSpaceAssignments: [
+        { itemId: "item_assigned", spaceId: "space_living" },
+      ],
+      dryRun: false,
+    });
+
+    expect(isError(result)).toBe(false);
+    const assigned = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_assigned`);
+    const unassigned = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_unassigned`);
+    expect(assigned?.spaceId).toBe("space_living");
+    expect(unassigned?.spaceId).toBeNull();
+
+    const response = JSON.parse(getText(result));
+    expect(response.spaceAssignmentsApplied).toBe(1);
+    expect(response.unassignedItemIds).toEqual(["item_unassigned"]);
+    expect(response.finalItems).toContainEqual(expect.objectContaining({
+      itemId: "item_assigned",
+      spaceId: "space_living",
+    }));
+  });
+
+  test("rejects a destination space from another project without writing", async () => {
+    await seedProject(db, {
+      id: "proj_dest",
+      budgetCategories: [{ id: "cat_furnishings" }],
+    });
+    await seedProject(db, { id: "proj_other" });
+    await seedSpace(db, { id: "space_other", projectId: "proj_other" });
+    await seedItem(db, {
+      id: "item_1",
+      projectId: null,
+      budgetCategoryId: null,
+      purchasePriceCents: 1000,
+    });
+
+    const result = await callTool("sell_items_from_inventory_to_project", {
+      itemIds: ["item_1"],
+      destinationProjectId: "proj_dest",
+      budgetCategoryId: "cat_furnishings",
+      destinationSpaceAssignments: [
+        { itemId: "item_1", spaceId: "space_other" },
+      ],
+      dryRun: false,
+    });
+
+    expect(isError(result)).toBe(true);
+    expect(getText(result)).toContain("does not belong to project proj_dest");
+    expect(await listTransactionsOfType(db, "Purchase")).toHaveLength(0);
+    const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
+    expect(item?.projectId).toBeNull();
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -533,6 +616,97 @@ describe("sell_items_from_project_to_project", () => {
     expect(edges.length).toBe(2);
     const kinds = edges.map((e) => e.data.movementKind).sort();
     expect(kinds).toEqual(["sold", "soldToInventory"]);
+  });
+
+  test("applies a destination-project space on the atomic two-hop sale", async () => {
+    await seedProject(db, {
+      id: "proj_source",
+      budgetCategories: [{ id: "cat_source" }],
+    });
+    await seedProject(db, {
+      id: "proj_dest",
+      budgetCategories: [{ id: "cat_dest" }],
+    });
+    await seedSpace(db, { id: "space_dest", projectId: "proj_dest" });
+    await seedTransaction(db, {
+      id: "tx_source",
+      type: "Purchase",
+      source: "Vendor",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_source",
+      itemIds: ["item_1"],
+    });
+    await seedItem(db, {
+      id: "item_1",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_source",
+      transactionId: "tx_source",
+      purchasePriceCents: 1000,
+    });
+
+    const result = await callTool("sell_items_from_project_to_project", {
+      itemIds: ["item_1"],
+      destinationProjectId: "proj_dest",
+      destinationBudgetCategoryId: "cat_dest",
+      destinationSpaceAssignments: [
+        { itemId: "item_1", spaceId: "space_dest" },
+      ],
+      dryRun: false,
+    });
+
+    expect(isError(result)).toBe(false);
+    const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
+    expect(item?.projectId).toBe("proj_dest");
+    expect(item?.spaceId).toBe("space_dest");
+    expect(JSON.parse(getText(result)).finalItems).toContainEqual(expect.objectContaining({
+      itemId: "item_1",
+      spaceId: "space_dest",
+    }));
+  });
+});
+
+describe("item correction space handling", () => {
+  test("requires explicit detachment and returns the prior assignment receipt", async () => {
+    await seedProject(db, { id: "proj_source" });
+    await seedSpace(db, { id: "space_source", projectId: "proj_source" });
+    await seedTransaction(db, {
+      id: "tx_source",
+      type: "Purchase",
+      source: "Vendor",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_source",
+      itemIds: ["item_1"],
+    });
+    await seedItem(db, {
+      id: "item_1",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_source",
+      transactionId: "tx_source",
+      spaceId: "space_source",
+    });
+
+    const ambiguous = await callTool("bulk_update_items_by_id", {
+      updates: [{ id: "item_1", projectId: null }],
+    });
+    expect(isError(ambiguous)).toBe(true);
+    expect(getText(ambiguous)).toContain("spaceId space_source");
+
+    const corrected = await callTool("bulk_update_items_by_id", {
+      updates: [{ id: "item_1", projectId: null, spaceId: null }],
+    });
+    expect(isError(corrected)).toBe(false);
+    const response = JSON.parse(getText(corrected));
+    expect(response.detachedSpaceAssignments).toEqual([{
+      itemId: "item_1",
+      spaceId: "space_source",
+      spaceProjectId: "proj_source",
+      spaceFound: true,
+    }]);
+
+    const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
+    expect(item?.projectId).toBeNull();
+    expect(item?.budgetCategoryId).toBeNull();
+    expect(item?.spaceId).toBeNull();
   });
 });
 

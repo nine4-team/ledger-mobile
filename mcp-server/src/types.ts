@@ -237,7 +237,7 @@ export interface ProtoItem {
 export interface Space {
   id: string;
   accountId?: string;
-  projectId?: string;
+  projectId?: string | null;
   name: string;
   notes?: string;
   images?: AttachmentRef[];

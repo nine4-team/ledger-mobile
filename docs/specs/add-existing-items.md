@@ -173,7 +173,7 @@ This is a sell or return-to-inventory, depending on direction. Each is one Fires
 |-------|--------|
 | `item.projectId` | Set to destination project ID |
 | `item.transactionId` | Set to the new Purchase transaction ID |
-| `item.spaceId` | Cleared (null) — spaces are project-scoped |
+| `item.spaceId` | Validated per-item destination assignment when supplied; otherwise cleared (null) |
 | `item.budgetCategoryId` | Set to the chosen batch category |
 | `item.status` | Set to `"purchased"` |
 | Source `transaction.itemIds` | Remove item ID (if any prior transaction) |
@@ -205,7 +205,7 @@ Simple field update (Tier 1: fire-and-forget).
 
 **What does NOT change:** `item.transactionId`, `item.projectId`, `item.budgetCategoryId`.
 
-**Cross-scope note:** If an "outside" item is added to a space, the scope change (updating `projectId`) must happen first via the sell system. Then `spaceId` is set as a follow-up write after the scope change completes. These are two separate operations — the sell is atomic (Tier 2), the space assignment is fire-and-forget (Tier 1).
+**Cross-scope note:** The sell may apply a destination space atomically when that space is validated against the destination project. Without an assignment in the sell request, the item lands unassigned and `spaceId` can be set afterward as a Tier 1 write.
 
 ## Budget Category Resolution
 

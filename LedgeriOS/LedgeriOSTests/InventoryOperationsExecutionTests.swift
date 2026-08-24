@@ -257,6 +257,57 @@ struct SellToProjectExecutionTests {
         #expect(txUpdates.isEmpty)
     }
 
+    @Test("validated destination space is applied; omitted items remain unassigned")
+    func destinationSpaceAssignments() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(
+            makeBatch: { batch },
+            loadSpaceScope: { _, spaceId in
+                spaceId == "living" ? InventorySpaceScope(projectId: "dstProj") : nil
+            }
+        )
+        let items = [
+            makeItem(id: "i1", projectId: nil, purchasePriceCents: 1000),
+            makeItem(id: "i2", projectId: nil, purchasePriceCents: 1000, spaceId: "inventory-shelf"),
+        ]
+
+        try await service.sellToProject(
+            items: items,
+            destinationProjectId: dstProj,
+            budgetCategoryId: catId,
+            accountId: acct,
+            destinationSpaceIdsByItem: ["i1": "living"]
+        )
+
+        let assigned = batch.updatesForPath("accounts/\(acct)/items/i1").first?.fields
+        let unassigned = batch.updatesForPath("accounts/\(acct)/items/i2").first?.fields
+        #expect(assigned?["spaceId"] as? String == "living")
+        #expect(unassigned?["spaceId"] is NSNull)
+    }
+
+    @Test("wrong-project destination space rejects before creating writes")
+    func wrongProjectDestinationSpace() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(
+            makeBatch: { batch },
+            loadSpaceScope: { _, _ in InventorySpaceScope(projectId: "otherProj") }
+        )
+        let item = makeItem(id: "i1", projectId: nil, purchasePriceCents: 1000)
+
+        await #expect(throws: InventoryOperationError.self) {
+            try await service.sellToProject(
+                items: [item],
+                destinationProjectId: dstProj,
+                budgetCategoryId: catId,
+                accountId: acct,
+                destinationSpaceIdsByItem: ["i1": "other-space"]
+            )
+        }
+        #expect(batch.sets.isEmpty)
+        #expect(batch.updates.isEmpty)
+        #expect(!batch.commitCalled)
+    }
+
     @Test("auto-enable budget category at destination")
     func autoEnableBudgetCategory() async throws {
         let batch = RecordingBatch()
@@ -523,6 +574,37 @@ struct ReturnToInventoryExecutionTests {
 
 @Suite("InventoryOperationsService.sellItemsFromProjectToProject — per-batch")
 struct SellItemsFromProjectToProjectExecutionTests {
+
+    @Test("validated destination space is applied on the destination hop")
+    func destinationSpaceAssignment() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(
+            makeBatch: { batch },
+            loadSpaceScope: { _, spaceId in
+                spaceId == "destination-room" ? InventorySpaceScope(projectId: "dstProj") : nil
+            }
+        )
+        let item = makeItem(
+            id: "i1",
+            projectId: "srcProj",
+            budgetCategoryId: "cat_src",
+            purchasePriceCents: 1000,
+            transactionId: "oldTx",
+            source: "Vendor",
+            currentSource: "Vendor"
+        )
+
+        try await service.sellItemsFromProjectToProject(
+            items: [item],
+            destinationProjectId: "dstProj",
+            destinationCategoryId: "cat_dst",
+            accountId: acct,
+            destinationSpaceIdsByItem: ["i1": "destination-room"]
+        )
+
+        let update = batch.updatesForPath("accounts/\(acct)/items/i1").first?.fields
+        #expect(update?["spaceId"] as? String == "destination-room")
+    }
 
     // I4: sellItemsFromProjectToProject with from-inventory items — Return-leg first hop
     @Test("From-inventory items: 1 Return + 1 destination Purchase, lineage edges cross-linked")
