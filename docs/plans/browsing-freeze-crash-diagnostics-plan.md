@@ -10,8 +10,10 @@ teardown, removal of duplicate project/category subscriptions, indexed card
 metadata, indexed financial publication, decoded-memory cache accounting, and
 off-main image preparation. Firestore collection/query snapshot decoding also
 now runs on private serial repository queues before ordered main-queue
-publication. These remediation changes are tracked in the run summary; the
-non-goals below describe the original instrumentation phase.
+publication, and the projects list now uses AccountContext's existing live
+projects instead of opening a duplicate listener. These remediation changes are
+tracked in the run summary; the non-goals below describe the original
+instrumentation phase.
 
 This plan covers the measurement phase for Ledger's browsing freezes, crashes,
 and navigation latency on iOS and macOS. It deliberately separates diagnosis

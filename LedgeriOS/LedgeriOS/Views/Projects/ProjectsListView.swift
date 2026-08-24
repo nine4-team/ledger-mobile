@@ -5,21 +5,18 @@ struct ProjectsListView: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
     @State private var selectedTab = "active"
-    @State private var projects: [Project] = []
-    @State private var listener: ListenerRegistration?
     @State private var preferencesListener: ListenerRegistration?
     @State private var projectPreferences: [String: ProjectPreferences] = [:]
     @State private var showNewProject = false
     @Environment(FindStateManager.self) private var findState
     @Environment(InventoryContext.self) private var inventoryContext
 
-    private let projectService = ProjectService()
     private let preferencesService = ProjectPreferencesService()
 
     private var filteredProjects: [Project] {
         let showArchived = selectedTab == "archived"
         let filtered = ProjectListCalculations.filterByArchiveState(
-            projects: projects, showArchived: showArchived
+            projects: accountContext.allProjects, showArchived: showArchived
         )
         return ProjectListCalculations.sortByName(filtered)
     }
@@ -121,12 +118,6 @@ struct ProjectsListView: View {
     private func startListening() {
         stopListening()
         guard let accountId = accountContext.currentAccountId else { return }
-        listener = projectService.subscribeToProjects(accountId: accountId) { newProjects in
-            Task { @MainActor in
-                self.projects = newProjects
-            }
-        }
-
         if let userId = authManager.currentUser?.uid {
             preferencesListener = preferencesService.subscribeToAllProjectPreferences(
                 accountId: accountId,
@@ -140,8 +131,6 @@ struct ProjectsListView: View {
     }
 
     private func stopListening() {
-        listener?.remove()
-        listener = nil
         preferencesListener?.remove()
         preferencesListener = nil
     }

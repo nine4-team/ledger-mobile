@@ -144,6 +144,18 @@ main queue, plus the next main-queue turn. Firebase's global callback queue was
 not changed because several direct subscribers outside the repository mutate UI
 state under the existing main-queue assumption.
 
+### 7. Duplicate projects-list subscription
+
+`ProjectsListView` opened a second account-wide projects listener even though
+`AccountContext.allProjects` is already the live source used for project
+navigation and route resolution. The list now renders from that existing live
+array. Its per-user project-preferences listener remains local because
+AccountContext does not own that data.
+
+This removes one listener and one duplicate decode/publication path while the
+Projects screen is visible. Project card freshness, sorting, archive filtering,
+navigation, and preferences behavior are unchanged.
+
 ## Ranked Readout
 
 1. **Leaked project listeners:** confirmed architectural defect and plausible
@@ -160,14 +172,16 @@ state under the existing main-queue assumption.
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
    project subsets from account data.
-6. **Image decode and memory pressure:** confirmed architectural risk. Decoded
+6. **Duplicate projects-list subscription:** confirmed redundant listener.
+   Removed by rendering the list from AccountContext's existing live projects.
+7. **Image decode and memory pressure:** confirmed architectural risk. Decoded
    memory is now bounded correctly and display preparation no longer runs on
    the main actor. Cold image-download timing remains unranked because the
    network measurements are invalid in this run.
-7. **List filtering, grouping, and selection totals:** measured too small to be
+8. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-8. **Unbatched bulk writes:** remains a write-completion and callback-storm
+9. **Unbatched bulk writes:** remains a write-completion and callback-storm
    issue, but does not explain slow browsing before a bulk operation begins.
 
 ## Evidence Unavailable
