@@ -366,6 +366,23 @@ struct LoadingLifecycleTests {
         #expect(counter.removeCalls == 0)
     }
 
+    @Test("Destroying ProjectContext tears down every active listener")
+    @MainActor
+    func projectContextDestructionStopsListeners() {
+        let counter = ListenerCounter()
+        weak var releasedContext: ProjectContext?
+
+        do {
+            let context = makeProjectContext(counter: counter)
+            releasedContext = context
+            context.activate(accountId: "account-1", projectId: "project-1")
+            #expect(counter.removeCalls == 0)
+        }
+
+        #expect(releasedContext == nil)
+        #expect(counter.removeCalls == 9)
+    }
+
     @Test("InventoryContext re-activating same account keeps existing listeners")
     @MainActor
     func inventoryActivationIsIdempotentForSameAccount() {
