@@ -168,7 +168,7 @@ struct FirebaseImage<Placeholder: View>: View {
             }
 
             let decodeStartedAt = DispatchTime.now().uptimeNanoseconds
-            guard let image = PlatformImage(data: data) else {
+            guard let preparedImage = await PlatformImageDecoder.decode(data) else {
                 let elapsed = Double(DispatchTime.now().uptimeNanoseconds - decodeStartedAt) / 1_000_000
                 PerformanceDiagnostics.shared.duration(
                     "ImageDecode",
@@ -178,6 +178,7 @@ struct FirebaseImage<Placeholder: View>: View {
                 )
                 return false
             }
+            let image = preparedImage.image
             let decodeElapsed = Double(DispatchTime.now().uptimeNanoseconds - decodeStartedAt) / 1_000_000
             PerformanceDiagnostics.shared.duration(
                 "ImageDecode",

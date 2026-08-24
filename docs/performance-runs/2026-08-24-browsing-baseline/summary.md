@@ -107,6 +107,22 @@ after the change measured:
 All financial-access policy tests pass, including limited fee-category and
 invoice visibility behavior.
 
+### 5. Image memory and main-actor decode pressure
+
+`FirebaseImage` originally constructed `UIImage`/`NSImage` from downloaded data
+inside a SwiftUI task running on the main actor. It also charged the 50 MB
+`NSCache` with compressed download bytes even though a 4,000 by 3,000 RGBA image
+occupies roughly 48 MB after decoding. Highly compressed thumbnails and
+full-image fallbacks could therefore retain far more decoded memory than the
+declared cache limit while image preparation blocked UI work.
+
+The cache now charges the larger of compressed bytes and estimated decoded
+pixel bytes. Image construction and display preparation run in a cancellable
+detached task, then only the prepared platform image is published back to the
+view. The original resolution and URLs are unchanged. The user-visible tradeoff
+is limited to earlier RAM eviction under pressure; an evicted image can be
+reloaded from the existing URL disk cache.
+
 ## Ranked Readout
 
 1. **Leaked project listeners:** confirmed architectural defect and plausible
@@ -120,8 +136,9 @@ invoice visibility behavior.
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
    project subsets from account data.
-5. **Image download and decode pressure:** still plausible for Spaces and image
-   heavy browsing. Decode and request counters are instrumented, but cold
+5. **Image decode and memory pressure:** confirmed architectural risk. Decoded
+   memory is now bounded correctly and display preparation no longer runs on
+   the main actor. Cold image-download timing remains unranked because the
    network measurements are invalid in this run.
 6. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
@@ -140,12 +157,13 @@ invoice visibility behavior.
 ## Behavior Safeguards
 
 The diagnostics are disabled by default and do not change UI presentation,
-listener scope or freshness, Firestore writes, image-request concurrency, or
-the image cache's existing eviction cost.
+listener scope or freshness, Firestore writes, or image-request concurrency.
 
 The listener cleanup and lookup indexes also preserve visible behavior and
 freshness. Cleanup occurs only after a project context is destroyed; lookup
 indexes are rebuilt synchronously from each published source-array value.
+Image cache eviction now reflects decoded memory rather than compressed payload
+size, and image preparation moved off the main actor without resizing images.
 
 ## Verification
 
@@ -153,6 +171,8 @@ indexes are rebuilt synchronously from each published source-array value.
 - Optimized diagnostics benchmark suite: 8 tests passed.
 - Combined financial-policy, lifecycle, and performance suites after the
   publication optimization: 25 tests passed.
+- Latest focused performance suite, including image cache/decode coverage: 11
+  tests passed on the iOS simulator.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.

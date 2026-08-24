@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import Testing
 @testable import LedgeriOS
 
@@ -172,6 +173,14 @@ struct PerformanceDiagnosticsTests {
         ) == compressedBytes)
     }
 
+    @Test("Image decoder produces a display-ready image off the caller actor")
+    func imageDecoderProducesImage() async throws {
+        let imageData = makePerformanceTestImageData()
+
+        let preparedImage = try #require(await PlatformImageDecoder.decode(imageData))
+        #expect(preparedImage.image.estimatedDecodedByteCount > 0)
+    }
+
     @Test("Synthetic account financial publication cost profile")
     func syntheticFinancialPublicationCostProfile() {
         let categories = makeFinancialCategories(count: 100)
@@ -198,6 +207,32 @@ struct PerformanceDiagnosticsTests {
             "invoice_filter_ms=\(formatMilliseconds(visibleInvoices.millisecondsPerIteration))"
         )
     }
+}
+
+private func makePerformanceTestImageData() -> Data {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let context = CGContext(
+        data: nil,
+        width: 2,
+        height: 2,
+        bitsPerComponent: 8,
+        bytesPerRow: 8,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )!
+    context.setFillColor(CGColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
+
+    let data = NSMutableData()
+    let destination = CGImageDestinationCreateWithData(
+        data as CFMutableData,
+        "public.png" as CFString,
+        1,
+        nil
+    )!
+    CGImageDestinationAddImage(destination, context.makeImage()!, nil)
+    precondition(CGImageDestinationFinalize(destination))
+    return data as Data
 }
 
 private func makeBrowsingItems(count: Int) -> [Item] {

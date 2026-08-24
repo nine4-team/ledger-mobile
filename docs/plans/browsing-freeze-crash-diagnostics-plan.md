@@ -5,6 +5,12 @@
 Instrumentation and offline investigation completed; stable-network physical
 device capture remains pending.
 
+Offline remediations completed after the diagnostic baseline include listener
+teardown, removal of duplicate project/category subscriptions, indexed card
+metadata, indexed financial publication, decoded-memory cache accounting, and
+off-main image preparation. These remediation changes are tracked in the run
+summary; the non-goals below describe the original instrumentation phase.
+
 This plan covers the measurement phase for Ledger's browsing freezes, crashes,
 and navigation latency on iOS and macOS. It deliberately separates diagnosis
 from remediation so listener ownership, data freshness, and UI behavior are not
@@ -109,9 +115,10 @@ The first implementation pass should begin from these verified facts:
 - `ItemDetailView` owns focused item and transaction listeners plus an async
   lineage load task. It removes/cancels them on disappear, but repeated lifecycle
   counts and cancellation completion are not measured.
-- `ImageCache` declares a 50 MB cost limit but currently charges compressed image
-  byte count, not decoded pixel memory. The relationship between cache cost and
-  actual resident memory is unknown.
+- `ImageCache` originally charged compressed image bytes rather than decoded
+  pixel memory, and `FirebaseImage` prepared downloaded images on the main
+  actor. Both issues are now remediated; physical-device memory behavior still
+  needs capture.
 - `NavLifecycleLog` records a few debug lifecycle events, but it does not record
   intervals, memory, active counts, or correlations with a user-visible stall.
 - The repository does not currently integrate MetricKit diagnostics or Firebase
