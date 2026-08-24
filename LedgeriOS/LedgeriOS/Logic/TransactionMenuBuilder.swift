@@ -72,7 +72,8 @@ enum TransactionMenuBuilder {
 
         if !isCanonical && !isFrozenInventoryMovement {
             var correctSubactions: [ActionMenuSubitem] = []
-            if let onReassignToInventory = callbacks.onReassignToInventory {
+            if transaction.projectId != nil,
+               let onReassignToInventory = callbacks.onReassignToInventory {
                 correctSubactions.append(ActionMenuSubitem(
                     id: "reassign-to-inventory",
                     label: "Move to Inventory",

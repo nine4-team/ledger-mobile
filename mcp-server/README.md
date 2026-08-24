@@ -80,6 +80,7 @@ For write-path changes, run a disposable smoke against real Firestore using a se
 - `create_project`, `update_project`, `archive_project`
 - `create_transaction`, `update_transaction`, `cancel_transaction`
   - Note: `create_transaction` rejects `type: "Sale"` — use `sell_items_from_project_to_inventory` instead
+  - `update_transaction` accepts `projectId: null` to correct an ordinary transaction into business inventory; it clears `budgetCategoryId` and does not move linked items or create an inventory movement
 - `create_item`, `update_item`, `delete_item`
 - `create_space`, `update_space`
 - `update_project_budget_allocation`, `enable_category_for_project`

@@ -476,7 +476,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── update_transaction ─────────────────────────────────────────────────────
   server.tool(
     "update_transaction",
-    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
+    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. For a data correction that moves an ordinary transaction to business inventory, pass `projectId: null`; `budgetCategoryId` is cleared automatically. This corrects the original record in place and creates no Sale, Return, or Purchase movement. Correct linked items separately with the item correction tools, then use inventory movement tools only for subsequent real sales/returns. Generated inventory movement transactions retain their frozen accounting shape.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
@@ -488,10 +488,10 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       source: z.string().optional().describe("Vendor/source name"),
       notes: z.string().optional().describe("If provided, REPLACES the entire notes field. Pass the full new content. Use `aiAuditAppend` instead if you just want to add a one-line audit entry."),
       aiAuditAppend: z.string().optional().describe("A short one-line audit entry describing what you (AI) just did. Server appends it to the bottom of existing notes with an '[AI M/D/YYYY]' prefix and blank-line separator from user prose. If the last line is already an AI line from today, it is REPLACED rather than stacked. Mutually compatible with `notes` — if both are passed, `notes` is applied first, then `aiAuditAppend`."),
-      budgetCategoryId: z.string().optional().describe("Budget category ID"),
+      budgetCategoryId: z.string().nullable().optional().describe("Budget category ID. Pass null to clear it; inventory-scoped transactions must have no project category."),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       itemIds: z.array(z.string()).optional().describe("Item IDs linked to this transaction (replaces existing list)"),
-      projectId: z.string().optional().describe("Project ID — set to reassign transaction to a different project"),
+      projectId: z.string().nullable().optional().describe("Project ID. Pass null to correct an ordinary transaction into business inventory without creating a financial movement."),
       purchasedBy: z.string().optional().describe("Who made the purchase"),
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
@@ -524,6 +524,12 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       for (const [key, value] of Object.entries(fields)) {
         if (key === "notes" || key === "aiAuditAppend") continue;
         if (value !== undefined) updates[key] = value;
+      }
+
+      // Business inventory is an explicit null scope. The transaction scope
+      // correction intentionally does not cascade into items or intent fields.
+      if (updates.projectId === null) {
+        updates.budgetCategoryId = null;
       }
 
       // Server-side guard matching Firestore rules — reject writes to frozen

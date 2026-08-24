@@ -1,6 +1,15 @@
 import FirebaseFirestore
 
 struct TransactionsService: TransactionsServiceProtocol {
+    /// Payload for correcting an ordinary transaction into business inventory.
+    /// Linked items are separate records and are intentionally untouched.
+    static func moveToInventoryCorrectionFields() -> [String: Any] {
+        [
+            "projectId": NSNull(),
+            "budgetCategoryId": NSNull(),
+        ]
+    }
+
     private func repo(accountId: String) -> FirestoreRepository<Transaction> {
         FirestoreRepository<Transaction>(path: "accounts/\(accountId)/transactions")
     }

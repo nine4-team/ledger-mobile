@@ -1349,7 +1349,7 @@ struct TransactionDetailView: View {
         TransactionMenuBuilder.buildDetailMenu(
             transaction: currentTransaction,
             callbacks: SingleTransactionMenuCallbacks(
-                onReassignToInventory: { returnToInventory() },
+                onReassignToInventory: { correctTransactionToInventory() },
                 onReassignToProject: { showReassign = true },
                 onCopyID: currentTransaction.id.map { id in { Clipboard.copy(id) } },
                 onDelete: { showDeleteConfirmation = true }
@@ -1661,28 +1661,19 @@ struct TransactionDetailView: View {
 
     // MARK: - Actions
 
-    private func returnToInventory() {
-        guard let accountId = accountContext.currentAccountId else { return }
-        let items = transactionItems
-        guard !items.isEmpty else { return }
-        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
-        let split = InventoryOperationsService.splitByOrigin(items)
-        let returnedPaidItemCredits = InvoiceLineCalculations.returnedPaidItemCreditContexts(
-            for: split.returnItems,
-            invoices: accountContext.allInvoices
-        )
+    private func correctTransactionToInventory() {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = currentTransaction.id else { return }
         Task {
             do {
-                try await InventoryOperationsService().moveToInventory(
-                    items: items,
+                try await TransactionsService().updateTransaction(
                     accountId: accountId,
-                    inventoryLabel: inventoryLabel,
-                    userId: authManager.currentUser?.uid,
-                    returnedPaidItemCredits: returnedPaidItemCredits
+                    transactionId: transactionId,
+                    fields: TransactionsService.moveToInventoryCorrectionFields()
                 )
                 await MainActor.run { dismiss() }
             } catch {
-                print("🔴 moveToInventory failed: \(error)")
+                print("🔴 correctTransactionToInventory failed: \(error)")
             }
         }
     }

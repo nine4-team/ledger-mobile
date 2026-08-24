@@ -32,8 +32,8 @@ export interface BudgetSummaryCategory {
 
 export interface Transaction {
   id: string;
-  projectId?: string;
-  budgetCategoryId?: string;
+  projectId?: string | null;
+  budgetCategoryId?: string | null;
   amountCents?: number;
   subtotalCents?: number;
   taxRatePct?: number;

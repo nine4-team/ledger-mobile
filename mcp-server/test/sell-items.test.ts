@@ -540,6 +540,91 @@ describe("sell_items_from_project_to_project", () => {
 // M8 — update_transaction on a Sale's amountCents rejected (server-side defense)
 // ─────────────────────────────────────────────────────────────────────────────
 describe("update_transaction", () => {
+  test("schema accepts explicit null transaction scope", () => {
+    const schema = server.schemas.get("update_transaction");
+    const projectId = schema?.projectId as { safeParse(value: unknown): { success: boolean } };
+    const budgetCategoryId = schema?.budgetCategoryId as { safeParse(value: unknown): { success: boolean } };
+
+    expect(projectId.safeParse(null).success).toBe(true);
+    expect(budgetCategoryId.safeParse(null).success).toBe(true);
+  });
+
+  test("M7: ordinary Purchase can be corrected to inventory without a movement", async () => {
+    await seedItem(db, {
+      id: "item_1",
+      projectId: "proj_hal",
+      budgetCategoryId: "cat_furnishings",
+      transactionId: "purchase_misfiled",
+      purchasePriceCents: 10000,
+    });
+    await seedTransaction(db, {
+      id: "purchase_misfiled",
+      type: "Purchase",
+      source: "Vendor",
+      projectId: "proj_hal",
+      budgetCategoryId: "cat_furnishings",
+      amountCents: 10000,
+      itemIds: ["item_1"],
+      purchaseHandling: "project_reimbursement",
+      reimbursementType: "owed-to-company",
+    });
+
+    const result = await callTool("update_transaction", {
+      transactionId: "purchase_misfiled",
+      projectId: null,
+    });
+
+    expect(isError(result)).toBe(false);
+    const tx = await getDocData(
+      db,
+      `accounts/${TEST_ACCOUNT_ID}/transactions/purchase_misfiled`
+    );
+    expect(tx?.projectId).toBeNull();
+    expect(tx?.budgetCategoryId).toBeNull();
+    expect(tx?.purchaseHandling).toBe("project_reimbursement");
+    expect(tx?.reimbursementType).toBe("owed-to-company");
+    expect(tx?.itemIds).toEqual(["item_1"]);
+
+    const item = await getDocData(
+      db,
+      `accounts/${TEST_ACCOUNT_ID}/items/item_1`
+    );
+    expect(item?.projectId).toBe("proj_hal");
+    expect(item?.budgetCategoryId).toBe("cat_furnishings");
+    expect(item?.transactionId).toBe("purchase_misfiled");
+
+    const movementTransactions = [
+      ...(await listTransactionsOfType(db, "Sale")),
+      ...(await listTransactionsOfType(db, "Return")),
+    ];
+    expect(movementTransactions).toHaveLength(0);
+    const allTransactions = await db
+      .collection(`accounts/${TEST_ACCOUNT_ID}/transactions`)
+      .get();
+    expect(allTransactions.size).toBe(1);
+    expect(await listLineageEdges(db)).toHaveLength(0);
+  });
+
+  test("M7b: generated inventory Purchase cannot be corrected in place", async () => {
+    await seedTransaction(db, {
+      id: "inventory_purchase",
+      type: "Purchase",
+      source: "Business Inventory",
+      projectId: "proj_hal",
+      budgetCategoryId: "cat_furnishings",
+      amountCents: 10000,
+      itemIds: ["item_1"],
+    });
+
+    const result = await callTool("update_transaction", {
+      transactionId: "inventory_purchase",
+      projectId: null,
+    });
+
+    expect(isError(result)).toBe(true);
+    expect(getText(result).toLowerCase()).toMatch(/frozen|immutable/);
+  });
+
   test("M8: update_transaction on Sale amountCents rejected", async () => {
     // Create a per-batch Sale (no isCanonicalInventorySale marker).
     await seedProject(db, {

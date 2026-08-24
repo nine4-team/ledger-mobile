@@ -133,7 +133,7 @@ function lineForTransaction(tx: Transaction & { id: string }): InvoiceLine | nul
     sourceId: tx.id,
     amountCents: tx.amountCents ?? 0,
     sign,
-    budgetCategoryId: tx.budgetCategoryId,
+    budgetCategoryId: tx.budgetCategoryId ?? undefined,
     snapshotName: tx.source ?? tx.notes,
   };
 }
@@ -187,7 +187,7 @@ async function validateLines(db: Firestore, projectId: string, lines: InvoiceLin
       if (tx.projectId !== projectId) {
         return validation(`Transaction ${line.sourceId} is not on project ${projectId}.`, "Invoice lines must belong to the same project as the invoice.");
       }
-      line.budgetCategoryId = line.budgetCategoryId ?? tx.budgetCategoryId;
+      line.budgetCategoryId = line.budgetCategoryId ?? tx.budgetCategoryId ?? undefined;
       if (!line.budgetCategoryId) {
         return validation(`Transaction ${line.sourceId} is missing budgetCategoryId.`, "Repair the transaction category before invoicing it.");
       }

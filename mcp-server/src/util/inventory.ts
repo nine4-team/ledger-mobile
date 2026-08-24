@@ -22,7 +22,7 @@ export function isInventorySource(source: string | undefined, inventoryLabel: st
 type TransactionPriceContext = {
   type?: string;
   source?: string;
-  projectId?: string;
+  projectId?: string | null;
 };
 
 /** Historical branded inventory labels are recognized by the reserved suffix. */

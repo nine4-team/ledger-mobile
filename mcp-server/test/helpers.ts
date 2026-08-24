@@ -54,18 +54,22 @@ export interface CapturedServer {
   ) => void;
   resource?: (...args: unknown[]) => void;
   handlers: Map<string, (args: any) => Promise<any>>;
+  schemas: Map<string, Record<string, unknown>>;
 }
 
 export function makeCapturedServer(): CapturedServer {
   const handlers = new Map<string, (args: any) => Promise<any>>();
+  const schemas = new Map<string, Record<string, unknown>>();
   return {
-    tool(name, _desc, _schema, handler) {
+    tool(name, _desc, schema, handler) {
       handlers.set(name, handler);
+      schemas.set(name, schema);
     },
     resource() {
       /* no-op for tests */
     },
     handlers,
+    schemas,
   };
 }
 
@@ -171,6 +175,8 @@ export interface SeedTransactionOptions {
   isCanonicalInventorySale?: boolean;
   inventorySaleDirection?: string;
   status?: string;
+  purchaseHandling?: "inventory_resale" | "project_reimbursement";
+  reimbursementType?: string;
 }
 
 export async function seedTransaction(
@@ -195,6 +201,8 @@ export async function seedTransaction(
   if (opts.inventorySaleDirection !== undefined) {
     data.inventorySaleDirection = opts.inventorySaleDirection;
   }
+  if (opts.purchaseHandling !== undefined) data.purchaseHandling = opts.purchaseHandling;
+  if (opts.reimbursementType !== undefined) data.reimbursementType = opts.reimbursementType;
   await ref.set(data);
 }
 

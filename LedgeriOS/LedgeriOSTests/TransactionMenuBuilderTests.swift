@@ -26,7 +26,14 @@ struct TransactionMenuBuilderTests {
     private func normalTransaction() -> Transaction {
         var tx = Transaction()
         tx.id = "tx-1"
+        tx.projectId = "project-1"
         tx.isCanonicalInventorySale = false
+        return tx
+    }
+
+    private func inventoryTransaction() -> Transaction {
+        var tx = normalTransaction()
+        tx.projectId = nil
         return tx
     }
 
@@ -97,6 +104,25 @@ struct TransactionMenuBuilderTests {
         let subs = subIds(of: menu, parent: "correct-move")
         #expect(subs?.contains("reassign-to-inventory") == true)
         #expect(subs?.contains("reassign-to-project") == true)
+    }
+
+    @Test("Detail menu omits Move to Inventory when transaction is already inventory-scoped")
+    func detailMenuInventoryScope() {
+        let menu = TransactionMenuBuilder.buildDetailMenu(
+            transaction: inventoryTransaction(),
+            callbacks: allCallbacks()
+        )
+        let subs = subIds(of: menu, parent: "correct-move")
+        #expect(subs?.contains("reassign-to-inventory") == false)
+        #expect(subs?.contains("reassign-to-project") == true)
+    }
+
+    @Test("Move to Inventory correction payload changes only transaction scope")
+    func moveToInventoryCorrectionPayload() {
+        let fields = TransactionsService.moveToInventoryCorrectionFields()
+        #expect(Set(fields.keys) == Set(["projectId", "budgetCategoryId"]))
+        #expect(fields["projectId"] is NSNull)
+        #expect(fields["budgetCategoryId"] is NSNull)
     }
 
     @Test("Detail menu for canonical sale has only Delete")
