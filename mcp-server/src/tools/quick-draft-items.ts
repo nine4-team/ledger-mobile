@@ -27,6 +27,7 @@ import {
   normalizedProjectPriceCents,
 } from "../util/item-pricing.js";
 import { resolveInventoryLabel } from "../util/inventory.js";
+import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
 
 const QuickDraftStatus = z.enum(quickDraftItemStatuses);
 const QuickDraftCaptureContext = z.enum(quickDraftCaptureContexts);
@@ -115,10 +116,7 @@ function mergeAttachments(existing: AttachmentRef[], incoming: AttachmentRef[]):
     seen.add(ref.url);
     merged.push({ ...ref, isPrimary: merged.length === 0 ? (ref.isPrimary ?? true) : (ref.isPrimary ?? false) });
   }
-  if (merged.length > 0 && !merged.some((ref) => ref.isPrimary === true)) {
-    merged[0] = { ...merged[0], isPrimary: true };
-  }
-  return merged;
+  return normalizePrimaryAttachments(merged);
 }
 
 async function validateDraftTransactionLink(
@@ -212,7 +210,7 @@ async function promoteInventoryDraftToProject(
     transactionId: purchaseRef.id,
     status: args.status,
     quantity: args.quantity ?? draft.quantity ?? 1,
-    images: draft.photos ?? [],
+    images: normalizePrimaryAttachments(draft.photos ?? []),
     source: args.source ?? acquisition.source ?? inventoryLabel,
     currentSource: inventoryLabel,
     projectPriceCents: args.projectPriceCents,
@@ -561,7 +559,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
 
       const now = new Date();
       const uid = getUid();
-      const draftPhotos = draft.photos ?? [];
+      const draftPhotos = normalizePrimaryAttachments(draft.photos ?? []);
 
       if (args.mergeIntoItemId) {
         const existingItem = await getDoc<Item>(db, "items", args.mergeIntoItemId);

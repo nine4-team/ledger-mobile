@@ -12,11 +12,11 @@ import { withTelemetry } from "../util/telemetry.js";
 import { getUid } from "../context.js";
 import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventory.js";
 import { isReturnTransactionType } from "../util/enums.js";
-import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 import {
   validateDestinationSpaceAssignments,
   type DestinationSpaceAssignment,
 } from "../util/space-assignments.js";
+import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MCP-side implementation of the per-batch inventory movement spec at

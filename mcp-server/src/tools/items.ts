@@ -22,6 +22,7 @@ import {
   applyItemPriceFloorToUpdate,
   normalizedProjectPriceCents,
 } from "../util/item-pricing.js";
+import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
 import {
   detachedSpaceAssignment,
   validateItemSpaceTransition,
@@ -1096,7 +1097,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       // 6. Build AttachmentRef entry
       const isPrimary = !item.images?.length;
 
-      const entry: Record<string, unknown> = {
+      const entry: AttachmentRef = {
         url,
         kind,
         isPrimary,
@@ -1106,13 +1107,20 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (thumbnailUrlSm) entry.thumbnailUrlSm = thumbnailUrlSm;
       if (thumbnailUrlMd) entry.thumbnailUrlMd = thumbnailUrlMd;
 
-      // 7. Append to Firestore array
+      // 7. Append atomically and normalize the complete array so concurrent
+      // uploads can never leave more than one primary image.
       try {
-        const updates = applyItemPriceFloorToUpdate(item, {
-          images: FieldValue.arrayUnion(entry),
-          updatedAt: new Date(),
+        const itemRef = accountCollection(db, "items").doc(itemId);
+        await db.runTransaction(async (firestoreTransaction) => {
+          const snapshot = await firestoreTransaction.get(itemRef);
+          const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
+          const images = normalizePrimaryAttachments([...current, entry]);
+          const updates = applyItemPriceFloorToUpdate(item, {
+            images,
+            updatedAt: new Date(),
+          });
+          firestoreTransaction.update(itemRef, updates);
         });
-        await accountCollection(db, "items").doc(itemId).update(updates);
       } catch (err) {
         // Clean up uploaded files on Firestore failure
         await deleteFromStorage(url).catch(() => {});
@@ -1156,11 +1164,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         return { content: [{ type: "text", text: "No attachment with that URL found in images." }], isError: true };
       }
 
-      // Remove the entry and promote next image to primary if needed
-      let remaining = attachments!.filter((a) => a.url !== url);
-      if (entry.isPrimary && remaining.length > 0) {
-        remaining = remaining.map((a, i) => i === 0 ? { ...a, isPrimary: true } : a);
-      }
+      // Removing any attachment also repairs legacy duplicate/missing primary flags.
+      const remaining = normalizePrimaryAttachments(attachments!.filter((a) => a.url !== url));
 
       const updates = applyItemPriceFloorToUpdate(item, {
         images: remaining,

@@ -5,6 +5,8 @@ import type { Space, Item } from "../types.js";
 import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
 import { uploadToStorage, deleteFromStorage } from "../storage.js";
 import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
+import type { AttachmentRef } from "../types.js";
+import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
 
 export function registerSpaceTools(server: McpServer, db: Firestore) {
   // ── list_spaces ────────────────────────────────────────────────────────────
@@ -212,7 +214,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
 
       const isPrimary = !space.images?.length;
 
-      const entry: Record<string, unknown> = {
+      const entry: AttachmentRef = {
         url,
         kind,
         isPrimary,
@@ -223,9 +225,14 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
       if (thumbnailUrlMd) entry.thumbnailUrlMd = thumbnailUrlMd;
 
       try {
-        await accountCollection(db, "spaces").doc(spaceId).update({
-          images: FieldValue.arrayUnion(entry),
-          updatedAt: new Date(),
+        const spaceRef = accountCollection(db, "spaces").doc(spaceId);
+        await db.runTransaction(async (firestoreTransaction) => {
+          const snapshot = await firestoreTransaction.get(spaceRef);
+          const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
+          firestoreTransaction.update(spaceRef, {
+            images: normalizePrimaryAttachments([...current, entry]),
+            updatedAt: new Date(),
+          });
         });
       } catch (err) {
         await deleteFromStorage(url).catch(() => {});
@@ -269,10 +276,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
         return { content: [{ type: "text", text: "No attachment with that URL found in images." }], isError: true };
       }
 
-      let remaining = attachments!.filter((a) => a.url !== url);
-      if (entry.isPrimary && remaining.length > 0) {
-        remaining = remaining.map((a, i) => i === 0 ? { ...a, isPrimary: true } : a);
-      }
+      const remaining = normalizePrimaryAttachments(attachments!.filter((a) => a.url !== url));
 
       await accountCollection(db, "spaces").doc(spaceId).update({
         images: remaining,

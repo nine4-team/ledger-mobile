@@ -22,6 +22,7 @@ import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } fro
 import { resolveCategoryType } from "../util/budget.js";
 import { normalizeTransactionType } from "../util/enums.js";
 import { applyItemPriceFloorToUpdate, normalizedProjectPriceCents } from "../util/item-pricing.js";
+import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -738,7 +739,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       const existingArray = (tx as unknown as Record<string, unknown>)[fieldName] as AttachmentRef[] | undefined;
       const isPrimary = !existingArray?.length;
 
-      const entry: Record<string, unknown> = {
+      const entry: AttachmentRef = {
         url,
         kind,
         isPrimary,
@@ -748,11 +749,17 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (thumbnailUrlSm) entry.thumbnailUrlSm = thumbnailUrlSm;
       if (thumbnailUrlMd) entry.thumbnailUrlMd = thumbnailUrlMd;
 
-      // 7. Append to Firestore array
+      // 7. Append atomically and normalize the complete array so concurrent
+      // uploads can never leave more than one primary attachment.
       try {
-        await accountCollection(db, "transactions").doc(transactionId).update({
-          [fieldName]: FieldValue.arrayUnion(entry),
-          updatedAt: new Date(),
+        const transactionRef = accountCollection(db, "transactions").doc(transactionId);
+        await db.runTransaction(async (firestoreTransaction) => {
+          const snapshot = await firestoreTransaction.get(transactionRef);
+          const current = (snapshot.data()?.[fieldName] as AttachmentRef[] | undefined) ?? [];
+          firestoreTransaction.update(transactionRef, {
+            [fieldName]: normalizePrimaryAttachments([...current, entry]),
+            updatedAt: new Date(),
+          });
         });
       } catch (err) {
         // Clean up uploaded files on Firestore failure
