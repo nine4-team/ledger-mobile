@@ -12,14 +12,19 @@
 
 import admin from "firebase-admin";
 import { getStorage } from "firebase-admin/storage";
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import sharp from "sharp";
 
 const DEFAULT_PROJECT_ID = "ledger-nine4";
 const DEFAULT_BUCKET = "ledger-nine4.firebasestorage.app";
+const execFileAsync = promisify(execFile);
 const USAGE = `
 Usage:
   node ${path.relative(process.cwd(), fileURLToPath(import.meta.url))} --account <accountId> [options]
@@ -173,6 +178,39 @@ async function generateThumbnail(data, maxDimension) {
     .toBuffer();
 }
 
+async function convertWithSips(data) {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "space-thumb-"));
+  const inputPath = path.join(dir, "source");
+  const outputPath = path.join(dir, "source.jpg");
+
+  try {
+    await writeFile(inputPath, data);
+    await execFileAsync("sips", ["-s", "format", "jpeg", inputPath, "--out", outputPath]);
+    return await readFile(outputPath);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+async function generateThumbnailPair(data) {
+  try {
+    return await Promise.all([
+      generateThumbnail(data, 300),
+      generateThumbnail(data, 800),
+    ]);
+  } catch (error) {
+    if (!String(error.message).includes("heif") && !String(error.message).includes("bad seek")) {
+      throw error;
+    }
+
+    const jpegData = await convertWithSips(data);
+    return Promise.all([
+      generateThumbnail(jpegData, 300),
+      generateThumbnail(jpegData, 800),
+    ]);
+  }
+}
+
 async function uploadToStorage(bucket, storagePath, data) {
   const token = randomUUID();
   await bucket.file(storagePath).save(data, {
@@ -221,10 +259,13 @@ async function processAttachment({ accountId, attachment, bucket, commit, force,
   }
 
   const data = await downloadOriginal(bucket, attachment, originalPath);
-  const [sm, md] = await Promise.all([
-    !attachment.thumbnailUrlSm || force ? generateThumbnail(data, 300) : undefined,
-    !attachment.thumbnailUrlMd || force ? generateThumbnail(data, 800) : undefined,
-  ]);
+  const needsSm = !attachment.thumbnailUrlSm || force;
+  const needsMd = !attachment.thumbnailUrlMd || force;
+  const [generatedSm, generatedMd] = needsSm || needsMd
+    ? await generateThumbnailPair(data)
+    : [undefined, undefined];
+  const sm = needsSm ? generatedSm : undefined;
+  const md = needsMd ? generatedMd : undefined;
 
   if (sm) {
     nextAttachment.thumbnailUrlSm = await uploadToStorage(bucket, thumbnailPath(originalPath, "sm"), sm);
