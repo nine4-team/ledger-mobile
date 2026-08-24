@@ -14,6 +14,11 @@ struct FirebaseImage<Placeholder: View>: View {
     @State private var loadedImage: PlatformImage?
     @State private var loadFailed = false
 
+    private struct LoadKey: Equatable {
+        let urlString: String?
+        let thumbnailUrl: String?
+    }
+
     init(
         url urlString: String?,
         thumbnailUrl: String? = nil,
@@ -44,8 +49,8 @@ struct FirebaseImage<Placeholder: View>: View {
                 placeholder()
             }
         }
-        .task(id: effectiveUrl) {
-            await resolveAndLoadWithTimeout(for: effectiveUrl)
+        .task(id: loadKey) {
+            await resolveAndLoadWithFallback(for: loadKey)
         }
     }
 
@@ -54,59 +59,78 @@ struct FirebaseImage<Placeholder: View>: View {
             .foregroundStyle(BrandColors.textTertiary)
     }
 
-    /// The URL to actually load — prefers thumbnail when available.
-    private var effectiveUrl: String? {
-        if let thumbnailUrl, !thumbnailUrl.isEmpty { return thumbnailUrl }
-        return urlString
+    private var loadKey: LoadKey {
+        LoadKey(urlString: urlString, thumbnailUrl: thumbnailUrl)
     }
 
-    private func resolveAndLoadWithTimeout(for requestedUrl: String?) async {
-        let loader = Task {
-            await resolveAndLoad(requestedUrl: requestedUrl)
-        }
-
-        let watchdog = Task {
-            try? await Task.sleep(for: .seconds(15))
-            guard !Task.isCancelled else { return }
-            if effectiveUrl == requestedUrl, loadedImage == nil, !loadFailed {
-                loader.cancel()
-                loadFailed = true
-            }
-        }
-
-        await loader.value
-        watchdog.cancel()
-    }
-
-    private func resolveAndLoad(requestedUrl: String?) async {
-        // Reset state for new URL
+    private func resolveAndLoadWithFallback(for requestedKey: LoadKey) async {
         loadedImage = nil
         loadFailed = false
 
-        guard let effectiveUrl = requestedUrl, !effectiveUrl.isEmpty else {
+        let urls = [requestedKey.thumbnailUrl, requestedKey.urlString]
+            .compactMap { value -> String? in
+                guard let value, !value.isEmpty else { return nil }
+                return value
+            }
+            .reduce(into: [String]()) { uniqueUrls, value in
+                if !uniqueUrls.contains(value) {
+                    uniqueUrls.append(value)
+                }
+            }
+
+        guard !urls.isEmpty else {
             loadFailed = true
             return
         }
 
+        for url in urls {
+            guard !Task.isCancelled, loadKey == requestedKey else { return }
+            if await resolveAndLoadWithTimeout(url, requestedKey: requestedKey) {
+                return
+            }
+        }
+
+        if !Task.isCancelled, loadKey == requestedKey {
+            loadFailed = true
+        }
+    }
+
+    private func resolveAndLoadWithTimeout(_ requestedUrl: String, requestedKey: LoadKey) async -> Bool {
+        let loader = Task {
+            await resolveAndLoad(requestedUrl: requestedUrl, requestedKey: requestedKey)
+        }
+        let watchdog = Task {
+            try? await Task.sleep(for: .seconds(15))
+            guard !Task.isCancelled else { return }
+            if loadKey == requestedKey, loadedImage == nil {
+                loader.cancel()
+            }
+        }
+
+        let didLoad = await loader.value
+        watchdog.cancel()
+        return didLoad
+    }
+
+    private func resolveAndLoad(requestedUrl: String, requestedKey: LoadKey) async -> Bool {
         // Synchronous cache check — before any await, so no placeholder frame is rendered
-        if let cached = ImageCache.image(for: effectiveUrl) {
+        if let cached = ImageCache.image(for: requestedUrl) {
             loadedImage = cached
-            return
+            return true
         }
 
         // Resolve URL (gs:// needs async resolution, https:// is immediate)
         let url: URL?
-        if effectiveUrl.hasPrefix("http://") || effectiveUrl.hasPrefix("https://") {
-            url = URL(string: effectiveUrl)
+        if requestedUrl.hasPrefix("http://") || requestedUrl.hasPrefix("https://") {
+            url = URL(string: requestedUrl)
         } else {
-            url = await StorageURLResolver.resolve(effectiveUrl)
+            url = await StorageURLResolver.resolve(requestedUrl)
         }
 
-        guard !Task.isCancelled, self.effectiveUrl == requestedUrl else { return }
+        guard !Task.isCancelled, loadKey == requestedKey else { return false }
 
         guard let url else {
-            loadFailed = true
-            return
+            return false
         }
 
         // Download image bytes
@@ -114,24 +138,21 @@ struct FirebaseImage<Placeholder: View>: View {
             var request = URLRequest(url: url)
             request.timeoutInterval = 15
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard !Task.isCancelled else { return }
-            guard self.effectiveUrl == requestedUrl else { return }
+            guard !Task.isCancelled else { return false }
+            guard loadKey == requestedKey else { return false }
 
             if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                loadFailed = true
-                return
+                return false
             }
 
             guard let image = PlatformImage(data: data) else {
-                loadFailed = true
-                return
+                return false
             }
-            ImageCache.store(image, for: effectiveUrl, cost: data.count)
+            ImageCache.store(image, for: requestedUrl, cost: data.count)
             loadedImage = image
+            return true
         } catch {
-            if !Task.isCancelled {
-                loadFailed = true
-            }
+            return false
         }
     }
 }

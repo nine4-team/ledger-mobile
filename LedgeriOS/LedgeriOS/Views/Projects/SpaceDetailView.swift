@@ -627,20 +627,40 @@ struct SpaceDetailView: View {
         // H7: Write placeholder first so the Firestore record survives upload failures
         var images = liveSpace.images ?? []
         let isPrimary = images.isEmpty
-        images.append(AttachmentRef(url: "", fileName: filename, isPrimary: isPrimary, isUploading: true))
+        images.append(AttachmentRef(
+            url: "",
+            fileName: filename,
+            contentType: "image/jpeg",
+            isPrimary: isPrimary,
+            isUploading: true
+        ))
         updateSpace(fields: ["images": images.map(attachmentDict)])
 
         // Upload bytes (H8: MediaService retries on transient failures)
         let url = try await mediaService.uploadImage(data, path: path)
+        let thumbnails = await mediaService.uploadThumbnails(
+            for: data,
+            originalPath: path,
+            contentType: "image/jpeg"
+        )
 
         // Replace placeholder with real URL
         var updatedImages = liveSpace.images ?? []
-        if let idx = updatedImages.firstIndex(where: { $0.fileName == filename }) {
+        if let idx = updatedImages.firstIndex(where: { $0.url.isEmpty && $0.fileName == filename }) {
             updatedImages[idx].url = url
+            updatedImages[idx].thumbnailUrlSm = thumbnails.sm
+            updatedImages[idx].thumbnailUrlMd = thumbnails.md
             updatedImages[idx].isUploading = nil
         } else {
             // Listener hasn't reflected the placeholder yet — append the resolved ref directly
-            updatedImages.append(AttachmentRef(url: url, fileName: filename, isPrimary: isPrimary))
+            updatedImages.append(AttachmentRef(
+                url: url,
+                thumbnailUrlSm: thumbnails.sm,
+                thumbnailUrlMd: thumbnails.md,
+                fileName: filename,
+                contentType: "image/jpeg",
+                isPrimary: isPrimary
+            ))
         }
         updateSpace(fields: ["images": updatedImages.map(attachmentDict)])
     }
@@ -673,6 +693,8 @@ struct SpaceDetailView: View {
         if let contentType = ref.contentType { dict["contentType"] = contentType }
         if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
         if let isUploading = ref.isUploading { dict["isUploading"] = isUploading }
+        if let thumbnailUrlSm = ref.thumbnailUrlSm { dict["thumbnailUrlSm"] = thumbnailUrlSm }
+        if let thumbnailUrlMd = ref.thumbnailUrlMd { dict["thumbnailUrlMd"] = thumbnailUrlMd }
         return dict
     }
 
