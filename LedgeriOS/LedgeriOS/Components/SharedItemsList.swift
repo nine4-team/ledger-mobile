@@ -368,7 +368,7 @@ struct SharedItemsList: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, Spacing.xl)
         } else {
-            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+            LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 ForEach(processedProtoItems) { protoItem in
                     protoItemRow(for: protoItem)
                 }

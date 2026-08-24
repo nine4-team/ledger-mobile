@@ -20,7 +20,6 @@ struct ItemsTabView: View {
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
-    @State private var showBulkActionMenu = false
     @State private var showNewItem = false
     @State private var showNewItemDraft = false
     @State private var showAddItemMenu = false
@@ -83,23 +82,11 @@ struct ItemsTabView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if !selectedItemIds.isEmpty {
-                BulkSelectionBar(
-                    selectedCount: selectedItemIds.count,
-                    totalCents: selectedTotalCents,
-                    onBulkActions: { showBulkActionMenu = true },
-                    onClear: { selectedItemIds.removeAll() }
-                )
-            }
-        }
-        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
-            ActionMenuSheet(
-                title: "\(selectedItemIds.count) selected",
-                items: bulkActionMenuItems + [
-                    ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
-                        selectedItemIds.removeAll()
-                    })
-                ]
+            ItemsTabBulkSelectionControls(
+                selectedCount: selectedItemIds.count,
+                totalCents: selectedTotalCents,
+                menuItems: bulkActionMenuItems,
+                onClear: { selectedItemIds.removeAll() }
             )
         }
         .itemActionSheets(
@@ -526,4 +513,39 @@ struct ItemsTabView: View {
         return dict
     }
 
+}
+
+private struct ItemsTabBulkSelectionControls: View {
+    let selectedCount: Int
+    let totalCents: Int?
+    let menuItems: [ActionMenuItem]
+    let onClear: () -> Void
+
+    @State private var showBulkActionMenu = false
+
+    var body: some View {
+        Group {
+            if selectedCount > 0 {
+                BulkSelectionBar(
+                    selectedCount: selectedCount,
+                    totalCents: totalCents,
+                    onBulkActions: { showBulkActionMenu = true },
+                    onClear: onClear
+                )
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
+            ActionMenuSheet(
+                title: "\(selectedCount) selected",
+                items: menuItems + [
+                    ActionMenuItem(
+                        id: "clear-selection",
+                        label: "Clear Selection",
+                        icon: "xmark.circle",
+                        onPress: onClear
+                    )
+                ]
+            )
+        }
+    }
 }
