@@ -114,7 +114,9 @@ struct ImageGallery: View {
 
     // MARK: - Pager
 
+    @ViewBuilder
     private var pagerView: some View {
+        #if canImport(UIKit)
         TabView(selection: $currentIndex) {
             ForEach(Array(images.enumerated()), id: \.offset) { index, attachment in
                 ZoomableScrollView(
@@ -125,13 +127,20 @@ struct ImageGallery: View {
                 .tag(index)
             }
         }
-        #if canImport(UIKit)
         .tabViewStyle(.page(indexDisplayMode: .never))
-        #endif
         .onChange(of: currentIndex) { _, _ in
             currentZoom = 1.0
             resetHideTimer()
         }
+        #else
+        if images.indices.contains(currentIndex) {
+            ZoomableScrollView(
+                url: URL(string: images[currentIndex].url),
+                zoomScale: zoomBindingFor(currentIndex),
+                onSingleTap: { toggleControls() }
+            )
+        }
+        #endif
     }
 
     private static func clampedIndex(_ index: Int, total: Int) -> Int {

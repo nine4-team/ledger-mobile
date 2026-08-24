@@ -5,6 +5,15 @@
 Instrumentation and offline investigation completed; stable-network physical
 device capture remains pending.
 
+A subsequent updated-macOS user report narrowed one freeze to opening an item
+image from Halrow's filtered project-item list. The zoomable full-image viewer
+was still constructing `NSImage`/`UIImage` on an inheriting main-actor task and
+macOS could instantiate every full-resolution gallery page. That path now uses
+detached image preparation, cancellation, the bounded decoded-image cache, and
+current-image-only macOS loading. This is the strongest current
+interaction-specific causal candidate, though no hung-process sample was
+captured.
+
 Offline remediations completed after the diagnostic baseline include listener
 teardown, removal of duplicate project/category subscriptions, indexed card
 metadata, indexed financial publication, decoded-memory cache accounting, and

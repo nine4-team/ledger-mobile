@@ -265,6 +265,14 @@ struct PerformanceDiagnosticsTests {
         #expect(preparedImage.image.estimatedDecodedByteCount > 0)
     }
 
+    @Test("Zoomable viewer prepares a full-resolution image through the off-main decoder")
+    func zoomableViewerPreparesFullResolutionImage() async throws {
+        let imageData = makePerformanceTestImageData(width: 2_048, height: 1_536)
+
+        let image = try #require(await ZoomableImageLoader.prepare(imageData))
+        #expect(image.estimatedDecodedByteCount >= 2_048 * 1_536 * 4)
+    }
+
     @Test("Firestore snapshot decode queue runs away from the main thread")
     func firestoreSnapshotDecodeQueueAffinity() async {
         let queue = FirestoreSnapshotDecodeQueue()
@@ -524,19 +532,19 @@ private func decodeFirestoreBenchmarkDocument(
     try? decoder.decode(Item.self, from: document.data, in: document.reference)
 }
 
-private func makePerformanceTestImageData() -> Data {
+private func makePerformanceTestImageData(width: Int = 2, height: Int = 2) -> Data {
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     let context = CGContext(
         data: nil,
-        width: 2,
-        height: 2,
+        width: width,
+        height: height,
         bitsPerComponent: 8,
-        bytesPerRow: 8,
+        bytesPerRow: width * 4,
         space: colorSpace,
         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
     )!
     context.setFillColor(CGColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 1))
-    context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
     let data = NSMutableData()
     let destination = CGImageDestinationCreateWithData(

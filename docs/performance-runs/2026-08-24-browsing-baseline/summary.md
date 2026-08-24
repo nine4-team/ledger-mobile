@@ -195,29 +195,48 @@ record each Firestore snapshot's total/change counts and top-level project-items
 and shared-list body evaluations. A physical Halrow trace is required before
 splitting contexts into granular stores or changing view-state ownership.
 
+### 9. macOS zoomable full-image main-actor work
+
+After the publication experiment, a user on an updated macOS build reported a
+new narrow reproduction: in Halrow project items with the no-space filter
+active, opening an item/image caused a beachball lasting more than two minutes.
+
+The zoomable full-image viewer bypassed the earlier `FirebaseImage` fix. Its
+macOS loader was `@MainActor` and called `NSImage(data:)` after downloading the
+full-resolution image. The iOS equivalent also constructed `UIImage` in its
+inheriting task. In addition, the macOS gallery constructed a zoomable image
+view for every attachment through `TabView`, creating a possible concurrent
+full-image decode and memory multiplier.
+
+Both platforms now use the detached display-preparing decoder, cancel stale
+loads, and reuse the decoded-memory-bounded image cache. macOS instantiates only
+the currently visible full-resolution image. This preserves image quality and
+gallery commands; the next or previous image may show its spinner when selected
+instead of being speculatively loaded.
+
 ## Ranked Readout
 
-1. **Leaked project listeners:** confirmed architectural defect and plausible
+1. **Zoomable full-image main-actor work:** strongest current
+   interaction-specific causal candidate after a user reproduced a two-minute
+   macOS beachball while opening an item image. Remediated; same-item retest is
+   pending.
+2. **Leaked project listeners:** confirmed architectural defect and plausible
    source of progressively worsening browsing pressure. Fixed and regression
    tested.
-2. **Per-card linear metadata lookup churn:** measured frame-budget problem.
+3. **Per-card linear metadata lookup churn:** measured frame-budget problem.
    Fixed on the shared item-card/list path with synchronous freshness tests.
-3. **Main-actor financial publication:** a confirmed half-second synthetic
+4. **Main-actor financial publication:** a confirmed half-second synthetic
    callback path for limited-access accounts, reduced to approximately 3 ms.
-4. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
+5. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
    668-item full decode measured 10.537 ms. Subsequent one- and 20-document
    changes now measure 0.289 ms and 0.596 ms while preserving ordered,
    main-queue publication and live freshness.
-5. **Remaining account/project listener overlap:** item, transaction,
+6. **Remaining account/project listener overlap:** item, transaction,
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
    project subsets from account data.
-6. **Duplicate projects-list subscription:** confirmed redundant listener.
+7. **Duplicate projects-list subscription:** confirmed redundant listener.
    Removed by rendering the list from AccountContext's existing live projects.
-7. **Image decode and memory pressure:** confirmed architectural risk. Decoded
-   memory is now bounded correctly and display preparation no longer runs on
-   the main actor. Cold image-download timing remains unranked because the
-   network measurements are invalid in this run.
 8. **Full-array observable publication:** 0.311-0.327 ms at 668 items, and
    equal arrays do not notify observers. Not a primary cause; downstream SwiftUI
    fan-out from real changes remains pending physical measurement.
@@ -267,6 +286,8 @@ are debounced or suppressed.
 - Canonical serialized performance suite: 18 tests passed. Earlier synthetic
   benchmark numbers are directional because Swift Testing ran them in parallel;
   the experiment ledger identifies the controlled result bundle.
+- Zoomable full-image and media-gallery focused run: 84 tests passed on the iOS
+  simulator; macOS Debug app build passed.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.

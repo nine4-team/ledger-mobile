@@ -196,10 +196,61 @@ evaluation or more than one frame of downstream main-thread work. Consider
 listener-scope changes only if overlapping account/project publications are
 measured and their ownership/freshness requirements are documented first.
 
+## E08: macOS Full-Resolution Image Beachball
+
+**User reproduction:** on an updated macOS build, a user opened the large
+Halrow project's item section with the "no space assigned" filter active, opened
+an item to inspect its image, and encountered a macOS beachball lasting more
+than two minutes.
+
+**Hypothesis:** opening the zoomable full-resolution image performs image
+construction and pixel preparation on the main actor. The gallery may amplify
+the work by constructing zoom views for every attachment when only one image is
+visible.
+
+**Source evidence:** both platform implementations of `ZoomableScrollView`
+downloaded full image data and called `UIImage(data:)` or `NSImage(data:)` from
+an inheriting task. The macOS `loadImage` method was explicitly `@MainActor`.
+This path bypassed the detached `PlatformImageDecoder` already used by
+`FirebaseImage` thumbnails. The macOS `ImageGallery` also built a `TabView`
+containing a zoomable full-image view for every attachment.
+
+**Remediation:**
+
+- route iOS and macOS zoomable-image construction through the detached,
+  display-preparing `PlatformImageDecoder`;
+- reject canceled or superseded loads before publishing an image;
+- reuse the decoded-memory-bounded `ImageCache` for repeat opens;
+- track active zoomable requests and full-image decode duration;
+- instantiate only the currently visible full-resolution image on macOS.
+
+**Behavior implications:** image URLs, resolution, zoom limits, previous/next
+controls, save, share, and pin behavior are unchanged. macOS no longer
+pre-constructs every gallery image. A newly selected next/previous image may
+show its existing loading spinner until that image loads, rather than being
+incidentally prefetched. This trades speculative bandwidth and memory for a
+responsive main run loop.
+
+**Filter assessment:** the no-space filter is important reproduction context,
+but no filter-specific work occurs in the full-image decode path. It remains a
+possible contributor to navigation invalidation, not the direct source-level
+cause identified here.
+
+**Verification:** a 2,048 by 1,536 image regression exercises the zoomable
+viewer through the detached decoder. The focused performance and media-gallery
+run passed 84 tests, and the macOS Debug app build passed.
+
+**Confidence and decision:** high-confidence causal match, but not a captured
+stack trace. Ship the remediation and ask the reporter to repeat the same item,
+filter, and image. If the beachball persists, capture a macOS sample while it is
+hung and correlate item-detail startup, gallery presentation, and image decode
+events.
+
 ## Next Experiment
 
-Run the Halrow browsing and bulk-menu scenarios on a physical iPhone with a
-stable connection and `-LedgerPerformanceDiagnostics YES`. Capture an
-Instruments trace plus the diagnostic event stream. Classify any termination as
-exception, watchdog, memory pressure/jetsam, or unknown before selecting the
-next remediation.
+First, repeat E08 on the same macOS item, filter, and image using the remediated
+build. Separately, run the Halrow browsing and bulk-menu scenarios on a physical
+iPhone with a stable connection and `-LedgerPerformanceDiagnostics YES`.
+Capture an Instruments trace plus the diagnostic event stream. Classify any
+termination as exception, watchdog, memory pressure/jetsam, or unknown before
+selecting the next remediation.

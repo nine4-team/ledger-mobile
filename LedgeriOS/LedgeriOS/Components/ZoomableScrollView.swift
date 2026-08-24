@@ -1,3 +1,21 @@
+import Foundation
+
+enum ZoomableImageLoader {
+    static func prepare(_ data: Data) async -> PlatformImage? {
+        let startedAt = DispatchTime.now().uptimeNanoseconds
+        let preparedImage = await PlatformImageDecoder.decode(data)
+        let elapsed = Double(DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000
+        PerformanceDiagnostics.shared.duration(
+            "ZoomableImageDecode",
+            kind: preparedImage == nil ? "failed" : "success",
+            milliseconds: elapsed,
+            count: preparedImage?.image.estimatedDecodedByteCount ?? 0,
+            value: data.count
+        )
+        return preparedImage?.image
+    }
+}
+
 #if canImport(UIKit)
 import SwiftUI
 import UIKit
@@ -195,9 +213,11 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         // MARK: Image Loading
 
+        @MainActor
         func loadImage(url: URL?) {
             loadTask?.cancel()
             currentURL = url
+            spinner?.stopAnimating()
             imageView?.image = nil
             errorView?.isHidden = true
 
@@ -206,9 +226,20 @@ struct ZoomableScrollView: UIViewRepresentable {
                 return
             }
 
+            let cacheKey = url.absoluteString
+            if let cachedImage = ImageCache.image(for: cacheKey) {
+                PerformanceDiagnostics.shared.event("ImageCache", kind: "zoomable-hit")
+                displayImage(cachedImage)
+                return
+            }
+
             spinner?.startAnimating()
 
-            loadTask = Task { [weak self] in
+            loadTask = Task { @MainActor [weak self] in
+                PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: 1)
+                defer {
+                    PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: -1)
+                }
                 do {
                     // Resolve gs:// URLs to HTTPS download URLs
                     let loadableURL: URL
@@ -223,11 +254,13 @@ struct ZoomableScrollView: UIViewRepresentable {
                     }
 
                     let (data, _) = try await URLSession.shared.data(from: loadableURL)
-                    guard !Task.isCancelled else { return }
-                    guard let image = UIImage(data: data) else {
+                    guard !Task.isCancelled, self?.currentURL == url else { return }
+                    guard let image = await ZoomableImageLoader.prepare(data) else {
                         self?.showError()
                         return
                     }
+                    guard !Task.isCancelled, self?.currentURL == url else { return }
+                    ImageCache.store(image, for: cacheKey, cost: data.count)
                     self?.displayImage(image)
                 } catch {
                     if !Task.isCancelled {
@@ -366,13 +399,13 @@ struct ZoomableScrollView: NSViewRepresentable {
 
         // KVO on magnification to sync zoom back to SwiftUI
         context.coordinator.magnificationObservation = scrollView.observe(\.magnification, options: [.new]) { [weak coordinator = context.coordinator] scrollView, change in
-            guard let coordinator, let newValue = change.newValue else { return }
-            let logicalScale = MediaGalleryCalculations.logicalZoomScale(
-                platformZoom: newValue,
-                fitScale: scrollView.minMagnification
-            )
-            if abs(logicalScale - coordinator.parent.zoomScale) > 0.01 {
-                MainActor.assumeIsolated {
+            MainActor.assumeIsolated {
+                guard let coordinator, let newValue = change.newValue else { return }
+                let logicalScale = MediaGalleryCalculations.logicalZoomScale(
+                    platformZoom: newValue,
+                    fitScale: scrollView.minMagnification
+                )
+                if abs(logicalScale - coordinator.parent.zoomScale) > 0.01 {
                     coordinator.parent.zoomScale = logicalScale
                 }
             }
@@ -449,6 +482,7 @@ struct ZoomableScrollView: NSViewRepresentable {
 
         // MARK: Double-Click
 
+        @MainActor
         @objc func handleDoubleClick(_ recognizer: NSClickGestureRecognizer) {
             guard let scrollView = recognizer.view as? NSScrollView else { return }
 
@@ -468,6 +502,7 @@ struct ZoomableScrollView: NSViewRepresentable {
 
         // MARK: Single-Click
 
+        @MainActor
         @objc func handleSingleClick() {
             parent.onSingleTap?()
         }
@@ -478,6 +513,7 @@ struct ZoomableScrollView: NSViewRepresentable {
         func loadImage(url: URL?) {
             loadTask?.cancel()
             currentURL = url
+            spinner?.stopAnimation(nil)
             imageView?.image = nil
             errorView?.isHidden = true
 
@@ -486,9 +522,20 @@ struct ZoomableScrollView: NSViewRepresentable {
                 return
             }
 
+            let cacheKey = url.absoluteString
+            if let cachedImage = ImageCache.image(for: cacheKey) {
+                PerformanceDiagnostics.shared.event("ImageCache", kind: "zoomable-hit")
+                displayImage(cachedImage)
+                return
+            }
+
             spinner?.startAnimation(nil)
 
-            loadTask = Task { [weak self] in
+            loadTask = Task { @MainActor [weak self] in
+                PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: 1)
+                defer {
+                    PerformanceDiagnostics.shared.adjustCounter("active-zoomable-image-requests", delta: -1)
+                }
                 do {
                     // Resolve gs:// URLs to HTTPS download URLs
                     let loadableURL: URL
@@ -503,11 +550,13 @@ struct ZoomableScrollView: NSViewRepresentable {
                     }
 
                     let (data, _) = try await URLSession.shared.data(from: loadableURL)
-                    guard !Task.isCancelled else { return }
-                    guard let image = NSImage(data: data) else {
+                    guard !Task.isCancelled, self?.currentURL == url else { return }
+                    guard let image = await ZoomableImageLoader.prepare(data) else {
                         self?.showError()
                         return
                     }
+                    guard !Task.isCancelled, self?.currentURL == url else { return }
+                    ImageCache.store(image, for: cacheKey, cost: data.count)
                     self?.displayImage(image)
                 } catch {
                     if !Task.isCancelled {
