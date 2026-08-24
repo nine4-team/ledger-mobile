@@ -27,6 +27,7 @@ struct AddExistingItemsPicker: View {
     @State private var pendingItems: [Item] = []
     @State private var showCategoryPicker = false
     @State private var itemsAwaitingCategory: [Item] = []
+    @State private var resolvedSpaceCategoryId: String?
     @State private var showSpaceMoveConfirm = false
     @State private var spaceMoveConfirmCount = 0
 
@@ -200,14 +201,11 @@ struct AddExistingItemsPicker: View {
                 selectedId: nil,
                 onSelect: { category in
                     guard let categoryId = category?.id else { return }
-                    // Apply chosen category to items that were missing one, then proceed
+                    resolvedSpaceCategoryId = categoryId
                     let updatedItems = pendingItems.map { item -> Item in
-                        if item.budgetCategoryId == nil {
-                            var updated = item
-                            updated.budgetCategoryId = categoryId
-                            return updated
-                        }
-                        return item
+                        var updated = item
+                        updated.budgetCategoryId = categoryId
+                        return updated
                     }
                     executeAdd(items: updatedItems)
                 }
@@ -300,7 +298,7 @@ struct AddExistingItemsPicker: View {
             destinationCategoryId = liveTx.budgetCategoryId
         case .space:
             destinationProjectId = projectId
-            destinationCategoryId = nil
+            destinationCategoryId = resolvedSpaceCategoryId
         }
 
         let routing = AddExistingItemsCalculations.routeByScope(
@@ -334,58 +332,28 @@ struct AddExistingItemsPicker: View {
               let transactionId = transaction.id else { return }
 
         let liveTx = projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
-        let destinationProjectId = liveTx.projectId
-
-        let batch = FirestoreBatchWriter()
-        let itemsPath = "accounts/\(accountId)/items"
-        let txPath = "accounts/\(accountId)/transactions"
-
-        for item in items {
-            guard let itemId = item.id else { continue }
-
-            var fields: [String: Any] = [
-                "transactionId": transactionId,
-                "updatedAt": FieldValue.serverTimestamp(),
-            ]
-            // Set status to "returned" when adding to a return transaction
-            if liveTx.isReturnTransaction {
-                fields["status"] = ItemStatus.returned.rawValue
-            }
-            // Move item into the destination project (handles cross-scope)
-            if let destProjectId = destinationProjectId {
-                fields["projectId"] = destProjectId
-            }
-            // Clear stale space link when changing projects
-            if item.projectId != destinationProjectId {
-                fields["spaceId"] = NSNull()
-            }
-            if let budgetCategoryId = liveTx.budgetCategoryId, item.budgetCategoryId == nil {
-                fields["budgetCategoryId"] = budgetCategoryId
-            }
-            if let normalizedProjectPrice = item.normalizedProjectPriceCents {
-                fields["projectPriceCents"] = normalizedProjectPrice
-            }
-            batch.updateData(fields, forDocumentAt: "\(itemsPath)/\(itemId)")
-
-            // Remove from source transaction
-            if let fromTxId = item.transactionId {
-                batch.updateData(
-                    ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocumentAt: "\(txPath)/\(fromTxId)"
-                )
-            }
-        }
-
-        // Add all items to destination transaction
-        let newIds = items.compactMap(\.id)
-        batch.updateData(
-            ["itemIds": FieldValue.arrayUnion(newIds), "updatedAt": FieldValue.serverTimestamp()],
-            forDocumentAt: "\(txPath)/\(transactionId)"
-        )
-
+        let routing = AddExistingItemsCalculations.routeByScope(items: items, destinationProjectId: liveTx.projectId)
         Task {
-            do { try await batch.commit() }
-            catch { print("🔴 addItemsToTransaction batch failed: \(error)") }
+            do {
+                if !routing.sameScope.isEmpty {
+                    try await ItemsService().setTransaction(
+                        accountId: accountId,
+                        items: routing.sameScope,
+                        transactionId: transactionId
+                    )
+                }
+                if !routing.crossScope.isEmpty,
+                   let destinationProjectId = liveTx.projectId,
+                   let destinationCategoryId = liveTx.budgetCategoryId {
+                    try await InventoryOperationsService().reassignToProject(
+                        items: routing.crossScope,
+                        destinationTransactionId: transactionId,
+                        destinationProjectId: destinationProjectId,
+                        destinationBudgetCategoryId: destinationCategoryId,
+                        accountId: accountId
+                    )
+                }
+            } catch { print("🔴 addItemsToTransaction failed: \(error)") }
         }
 
         selectedIds.removeAll()
@@ -396,7 +364,8 @@ struct AddExistingItemsPicker: View {
 
     private func executeReturn(items: [Item]) {
         guard let accountId = accountContext.currentAccountId,
-              let transactionId = currentTransaction?.id else { return }
+              let transactionId = currentTransaction?.id,
+              let categoryId = currentTransaction?.budgetCategoryId else { return }
 
         let service = InventoryOperationsService()
         Task {
@@ -404,7 +373,7 @@ struct AddExistingItemsPicker: View {
                 try await service.returnToTransaction(
                     items: items,
                     destinationTransactionId: transactionId,
-                    destinationBudgetCategoryId: currentTransaction?.budgetCategoryId,
+                    destinationBudgetCategoryId: categoryId,
                     accountId: accountId
                 )
             } catch {
@@ -451,8 +420,7 @@ struct AddExistingItemsPicker: View {
             let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
             Task {
                 do {
-                    // Use the item's existing budgetCategoryId or "uncategorized"
-                    let categoryId = routing.crossScope.compactMap(\.budgetCategoryId).first ?? "uncategorized"
+                    guard let categoryId = resolvedSpaceCategoryId else { return }
                     try await ops.sellToProject(
                         items: routing.crossScope,
                         destinationProjectId: destProjectId,
@@ -471,6 +439,7 @@ struct AddExistingItemsPicker: View {
                         )
                     }
                     try await batch.commit()
+                    await MainActor.run { resolvedSpaceCategoryId = nil }
                 } catch {
                     print("🔴 cross-scope space add failed: \(error)")
                 }

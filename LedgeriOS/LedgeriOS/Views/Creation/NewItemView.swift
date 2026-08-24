@@ -186,7 +186,6 @@ struct NewItemView: View {
     }
 
     private var inventorySaleCategoryLabel: String {
-        if selectedInventorySaleCategoryId == "uncategorized" { return "Uncategorized" }
         return selectedInventorySaleCategory?.name ?? "Choose Category"
     }
 
@@ -262,9 +261,9 @@ struct NewItemView: View {
         .adaptivePresentation(isPresented: $showInventorySaleCategoryPicker, style: .picker) {
             CategoryPickerList(
                 categories: enabledPurchaseCategories,
-                selectedId: selectedInventorySaleCategoryId == "uncategorized" ? nil : selectedInventorySaleCategoryId,
+                selectedId: selectedInventorySaleCategoryId,
                 onSelect: { category in
-                    selectedInventorySaleCategoryId = category?.id ?? "uncategorized"
+                    selectedInventorySaleCategoryId = category?.id
                 }
             )
         }
@@ -450,7 +449,7 @@ struct NewItemView: View {
                                 projectTransactionMode = .createViaInventory
                                 selectedTransactionId = nil
                                 if selectedInventorySaleCategoryId == nil {
-                                    selectedInventorySaleCategoryId = enabledPurchaseCategories.first?.id ?? "uncategorized"
+                                    selectedInventorySaleCategoryId = enabledPurchaseCategories.first?.id
                                 }
                             } label: {
                                 pickerButton(
@@ -850,24 +849,47 @@ struct NewItemView: View {
             return
         }
 
+        let copies = (0..<quantity).map { _ -> Item in
+            var copy = item
+            copy.id = nil
+            return copy
+        }
+
+        if let transactionId = selectedTransactionId {
+            isCreating = true
+            Task {
+                do {
+                    let createdItems = try itemsService.createItemsForTransaction(
+                        accountId: accountId,
+                        transactionId: transactionId,
+                        budgetCategoryId: selectedTransaction?.budgetCategoryId,
+                        items: copies,
+                        onCommitError: { _, error in
+                            print("🔴 createItem linked batch failed: \(error)")
+                        }
+                    )
+                    let itemIds = createdItems.compactMap(\.id)
+                    await MainActor.run {
+                        onCreated?(itemIds)
+                        dismiss()
+                        enqueueImages(for: itemIds, accountId: accountId)
+                    }
+                } catch {
+                    await MainActor.run {
+                        isCreating = false
+                        submissionError = "Couldn't create the item."
+                    }
+                }
+            }
+            return
+        }
+
         do {
             isCreating = true
             var itemIds: [String] = []
-            for _ in 0..<quantity {
-                var copy = item
-                copy.id = nil
+            for copy in copies {
                 let itemId = try itemsService.createItem(accountId: accountId, item: copy)
                 itemIds.append(itemId)
-            }
-
-            if let transactionId = selectedTransactionId {
-                let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
-                Task {
-                    try? await Firestore.firestore().document(txPath).updateData([
-                        "itemIds": FieldValue.arrayUnion(itemIds),
-                        "updatedAt": FieldValue.serverTimestamp()
-                    ])
-                }
             }
 
             onCreated?(itemIds)
@@ -1081,10 +1103,8 @@ struct NewItemView: View {
                     ], forDocument: edgeRef)
                 }
 
-                if categoryId != "uncategorized" {
-                    let categoryRef = db.document("accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories/\(categoryId)")
-                    batch.setData(["updatedAt": FieldValue.serverTimestamp()], forDocument: categoryRef, merge: true)
-                }
+                let categoryRef = db.document("accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories/\(categoryId)")
+                batch.setData(["updatedAt": FieldValue.serverTimestamp()], forDocument: categoryRef, merge: true)
 
                 try await batch.commit()
                 onCreated?(itemIds)

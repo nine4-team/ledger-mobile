@@ -246,6 +246,10 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       const txData: Record<string, unknown> = {
         amountCents: transaction.amountCents,
         type: transaction.type,
+        projectId: routeInventorySource ? null : (transaction.projectId ?? null),
+        budgetCategoryId: transaction.projectId && !routeInventorySource
+          ? transaction.budgetCategoryId
+          : null,
         status: "completed",
         isComplete: false,
         itemIds: routeInventorySource ? [] : itemIds,
@@ -253,8 +257,12 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      if (!routeInventorySource) txData.budgetCategoryId = transaction.budgetCategoryId;
-      if (transaction.projectId && !routeInventorySource) txData.projectId = transaction.projectId;
+      if (!transaction.projectId || routeInventorySource) {
+        txData.intendedBudgetCategoryId = transaction.budgetCategoryId;
+      }
+      if (routeInventorySource && transaction.projectId) {
+        txData.intendedProjectId = transaction.projectId;
+      }
       if (transaction.source) txData.source = transaction.source;
       if (transaction.transactionDate) txData.transactionDate = transaction.transactionDate;
       if (transaction.subtotalCents !== undefined) txData.subtotalCents = transaction.subtotalCents;
@@ -292,8 +300,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        if (transaction.projectId && !routeInventorySource) itemData.projectId = transaction.projectId;
-        if (transaction.projectId && routeInventorySource) itemData.projectId = transaction.projectId;
+        itemData.projectId = transaction.projectId ?? null;
         if (item.purchasePriceCents !== undefined) itemData.purchasePriceCents = item.purchasePriceCents;
         applyItemPriceFloorToCreate(itemData, item);
         const itemSource = item.source;
@@ -304,9 +311,9 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         else if (itemSource) itemData.currentSource = itemSource;
         if (item.sku) itemData.sku = item.sku;
         if (item.spaceId) itemData.spaceId = item.spaceId;
-        if (routeInventorySource) itemData.budgetCategoryId = transaction.budgetCategoryId;
-        else if (item.budgetCategoryId) itemData.budgetCategoryId = item.budgetCategoryId;
-        else itemData.budgetCategoryId = transaction.budgetCategoryId;
+        itemData.budgetCategoryId = transaction.projectId
+          ? transaction.budgetCategoryId
+          : null;
         if (item.taxRatePct !== undefined) itemData.taxRatePct = item.taxRatePct;
         else if (resolvedTaxRate !== undefined) itemData.taxRatePct = resolvedTaxRate;
 

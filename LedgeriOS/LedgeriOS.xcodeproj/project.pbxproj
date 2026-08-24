@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BCAT00010000000000000002 /* ItemDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCAT00010000000000000001 /* ItemDeletionTests.swift */; };
 		01261AFE5A0846848B96077B /* InventoryOperationsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */; };
 		01E253341A7E4E01923816B2 /* FindMatchHighlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC03F3F9EB74C1994BF6F3C /* FindMatchHighlight.swift */; };
 		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
@@ -394,6 +395,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BCAT00010000000000000001 /* ItemDeletionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDeletionTests.swift; sourceTree = "<group>"; };
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
 		01B811FD8239474CAE880515 /* FinancesTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FinancesTabView.swift; sourceTree = "<group>"; };
@@ -1020,6 +1022,7 @@
 		79C14EF1AAD96575EAC6E631 /* LedgeriOSTests */ = {
 			isa = PBXGroup;
 			children = (
+				BCAT00010000000000000001 /* ItemDeletionTests.swift */,
 				C0D3A6020000000000000002 /* PerformanceDiagnosticsTests.swift */,
 				BL00000000000000000F0014 /* BillingSummaryCalculationTests.swift */,
 				BL00000000000000000F0015 /* InvoiceReportAggregationTests.swift */,
@@ -1862,6 +1865,7 @@
 				EB68FE991FC989138FA16DBF /* RelationshipIntegrationTests.swift in Sources */,
 				92C7FB032A3C1D4B227CBB78 /* InventoryOperationsIntegrationTests.swift in Sources */,
 				DE3BB99843848D19F4B865BC /* SpaceCRUDIntegrationTests.swift in Sources */,
+				BCAT00010000000000000002 /* ItemDeletionTests.swift in Sources */,
 				6013465FFB8316F5C15E9838 /* InventoryOperationsExecutionTests.swift in Sources */,
 				BA9FA5CF36AA56B2BEFE2F40 /* ImageThumbnailGeneratorTests.swift in Sources */,
 				8E9D15A7F8B24657A6B5F9F1 /* LoadingLifecycleTests.swift in Sources */,
@@ -2027,7 +2031,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 48;
+				CURRENT_PROJECT_VERSION = 49;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2066,7 +2070,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 48;
+				CURRENT_PROJECT_VERSION = 49;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (

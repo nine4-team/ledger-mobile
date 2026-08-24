@@ -527,7 +527,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── promote_quick_draft_item ─────────────────────────────────────────────
   server.tool(
     "promote_quick_draft_item",
-    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Photos become item images. Project items must have a transactionId; inventory items must not have budgetCategoryId.",
+    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Photos become item images. New project-item promotion requires a transactionId; inventory items must not have budgetCategoryId.",
     {
       quickDraftItemId: z.string().describe("Quick draft item ID."),
       name: z.string().optional().describe("Override item name. Defaults to draft name, SKU, or 'Untitled item'."),

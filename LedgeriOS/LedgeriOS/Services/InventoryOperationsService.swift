@@ -26,6 +26,9 @@ enum InventoryOperationError: Error {
     /// so the source project budget can subtract from the right category.
     case missingSourceBudgetCategory
 
+    /// Project-bound movements require a real persisted destination category.
+    case missingDestinationBudgetCategory
+
     /// A destination assignment references an item outside the movement.
     case invalidDestinationSpaceAssignment
 
@@ -94,6 +97,14 @@ struct InventoryOperationsService {
     static func inventoryLabel(for accountName: String?) -> String {
         let trimmed = accountName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? defaultInventoryLabel : "\(trimmed) Inventory"
+    }
+
+    private static func realCategoryId(_ value: String?) throws -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !trimmed.isEmpty, trimmed.lowercased() != "uncategorized" else {
+            throw InventoryOperationError.missingDestinationBudgetCategory
+        }
+        return trimmed
     }
 
     /// Returns `true` if the item's most recent scope entry was inventory,
@@ -211,6 +222,7 @@ struct InventoryOperationsService {
         destinationSpaceIdsByItem: [String: String] = [:]
     ) async throws {
         guard !items.isEmpty else { return }
+        let normalizedCategoryId = try Self.realCategoryId(budgetCategoryId)
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
@@ -239,7 +251,7 @@ struct InventoryOperationsService {
             "type": "Purchase",
             "source": inventoryLabel,
             "projectId": destinationProjectId,
-            "budgetCategoryId": budgetCategoryId,
+            "budgetCategoryId": normalizedCategoryId,
             "amountCents": totals.amountCents,
             "subtotalCents": totals.subtotalCents,
             "itemIds": itemIds,
@@ -258,7 +270,7 @@ struct InventoryOperationsService {
 
             var itemUpdate: [String: Any] = [
                 "projectId": destinationProjectId,
-                "budgetCategoryId": budgetCategoryId,
+                "budgetCategoryId": normalizedCategoryId,
                 "status": "purchased",
                 "transactionId": purchaseId,
                 "spaceId": NSNull(),
@@ -301,11 +313,9 @@ struct InventoryOperationsService {
         }
 
         // 5. Auto-enable destination budget category
-        if budgetCategoryId != "uncategorized" {
-            var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
-            if let userId { catFields["updatedBy"] = userId }
-            batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(budgetCategoryId)", merge: true)
-        }
+        var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+        if let userId { catFields["updatedBy"] = userId }
+        batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(normalizedCategoryId)", merge: true)
 
 
         if let resolveInventoryIntentTransactionId {
@@ -772,6 +782,7 @@ struct InventoryOperationsService {
         destinationSpaceIdsByItem: [String: String] = [:]
     ) async throws {
         guard !items.isEmpty else { return }
+        let destinationCategoryId = try Self.realCategoryId(destinationCategoryId)
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
@@ -949,11 +960,9 @@ struct InventoryOperationsService {
         }
 
         // 4. Auto-enable destination budget category
-        if destinationCategoryId != "uncategorized" {
-            var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
-            if let userId { catFields["updatedBy"] = userId }
-            batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(destinationCategoryId)", merge: true)
-        }
+        var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+        if let userId { catFields["updatedBy"] = userId }
+        batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(destinationCategoryId)", merge: true)
 
         try await batch.commit()
     }
@@ -966,11 +975,12 @@ struct InventoryOperationsService {
         items: [Item],
         destinationTransactionId: String,
         destinationProjectId: String,
-        destinationBudgetCategoryId: String? = nil,
+        destinationBudgetCategoryId: String,
         accountId: String,
         userId: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
+        let destinationBudgetCategoryId = try Self.realCategoryId(destinationBudgetCategoryId)
         _ = try Self.requireItemIds(items)
 
         let batch = makeBatch()
@@ -989,9 +999,7 @@ struct InventoryOperationsService {
                 "spaceId": NSNull(),
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let categoryId = destinationBudgetCategoryId {
-                itemUpdate["budgetCategoryId"] = categoryId
-            }
+            itemUpdate["budgetCategoryId"] = destinationBudgetCategoryId
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
             // C5: Move item between transaction itemIds arrays
@@ -1024,11 +1032,9 @@ struct InventoryOperationsService {
             batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
-        if let categoryId = destinationBudgetCategoryId, categoryId != "uncategorized" {
-            var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
-            if let userId { catFields["updatedBy"] = userId }
-            batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(categoryId)", merge: true)
-        }
+        var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+        if let userId { catFields["updatedBy"] = userId }
+        batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(destinationBudgetCategoryId)", merge: true)
 
         try await batch.commit()
     }
@@ -1042,11 +1048,12 @@ struct InventoryOperationsService {
     func returnToTransaction(
         items: [Item],
         destinationTransactionId: String,
-        destinationBudgetCategoryId: String? = nil,
+        destinationBudgetCategoryId: String,
         accountId: String,
         userId: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
+        let destinationBudgetCategoryId = try Self.realCategoryId(destinationBudgetCategoryId)
         _ = try Self.requireItemIds(items)
 
         let batch = makeBatch()
@@ -1063,9 +1070,7 @@ struct InventoryOperationsService {
                 "status": ItemStatus.returned.rawValue,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if item.budgetCategoryId == nil, let categoryId = destinationBudgetCategoryId {
-                itemUpdate["budgetCategoryId"] = categoryId
-            }
+            itemUpdate["budgetCategoryId"] = destinationBudgetCategoryId
             if let normalizedProjectPrice = item.normalizedProjectPriceCents {
                 itemUpdate["projectPriceCents"] = normalizedProjectPrice
             }

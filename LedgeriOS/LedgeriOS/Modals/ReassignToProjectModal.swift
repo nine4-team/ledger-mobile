@@ -75,7 +75,8 @@ struct ReassignToProjectModal: View {
     private func move(to project: Project, transaction: Transaction) {
         guard let accountId = accountContext.currentAccountId,
               let projectId = project.id,
-              let transactionId = transaction.id else { return }
+              let transactionId = transaction.id,
+              let categoryId = transaction.budgetCategoryId else { return }
 
         isSaving = true
         let service = InventoryOperationsService()
@@ -85,7 +86,7 @@ struct ReassignToProjectModal: View {
                     items: items,
                     destinationTransactionId: transactionId,
                     destinationProjectId: projectId,
-                    destinationBudgetCategoryId: transaction.budgetCategoryId,
+                    destinationBudgetCategoryId: categoryId,
                     accountId: accountId,
                     userId: authManager.currentUser?.uid
                 )

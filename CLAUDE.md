@@ -172,7 +172,7 @@ Key invariants:
 - **Inventory movement price basis is directional.** Inventory → project and project → project movements use project price. Standalone project → business inventory uses purchase price.
 - **Project price has a purchase-cost floor.** Every item write normalizes `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`. A higher project price is preserved; raising purchase price raises a lower project price; lowering purchase price does not lower project price. Destination-project sales prompt for a price, and non-interactive tools reject, only when neither field resolves to a positive price. See `docs/specs/items.md` for the canonical invariant.
 - **Items in business inventory have no budget category.** Invariant: `(item.projectId == null) ↔ (item.budgetCategoryId == null)`. Categories are wiped on return-to-inventory and re-resolved at sell-from-inventory time.
-- **Project items must have a transaction.** Invariant: `(item.projectId != null) → (item.transactionId != null)`. Enforced at the iOS and MCP write layers, not in Firestore rules. Legacy orphans (pre-invariant) are repaired manually via the Bulk Reassign UI.
+- **Project items may be intentionally unassigned.** `transactionId == null` is the explicit **No Transaction** correction/work-queue state. The item still requires a real `budgetCategoryId`. When linked, the item and transaction must share a project and category, and both sides of the association update atomically.
 - **One category per inventory-to-project batch.** When moving inventory into a project, the user picks one category that applies to every item in the batch.
 
 ### Navigation

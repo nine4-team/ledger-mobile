@@ -370,10 +370,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "project's budget under budgetCategoryId. Every item must currently be in business inventory " +
       "(projectId == null).\n\n" +
       "REAL EVENT vs CORRECTION: This records a real business event (money changes hands, budgets " +
-      "move). Do NOT use it to satisfy a schema rule when an item was logged incorrectly. If you " +
-      "encounter project items with no transaction (legacy orphans), the fix is `bulk_update_items` " +
-      "with `projectId: null` to relocate them to inventory as a CORRECTION — then sell from " +
-      "inventory normally. Inventing fake transactions to justify bad data pollutes the books.\n\n" +
+      "move). Do NOT use it merely because a categorized project item has no transaction; that is a " +
+      "valid correction/work-queue state until the proper transaction exists. Inventing fake transactions " +
+      "to justify bad data pollutes the books.\n\n" +
       "Ask the user to pick the category from get_project_budget_categories BEFORE calling — one " +
       "category per batch. Accounting fields (amountCents, budgetCategoryId, projectId, type, " +
       "source) are frozen at creation; itemIds tracks active membership. Cap: 100 items per call.\n\n" +

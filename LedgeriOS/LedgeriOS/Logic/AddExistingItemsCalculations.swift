@@ -202,15 +202,14 @@ enum AddExistingItemsCalculations {
 
     // MARK: - Category Resolution
 
-    /// Returns cross-scope items that lack a `budgetCategoryId` and can't fall back
-    /// to a destination transaction category. These need a user prompt before proceeding.
+    /// Returns cross-scope items that need an explicit destination category.
     static func itemsNeedingCategory(
         crossScopeItems: [Item],
         destinationCategoryId: String?
     ) -> [Item] {
-        // If the destination has a category, all items can fall back to it
+        // A transaction supplies its own category. A space does not.
         if destinationCategoryId != nil { return [] }
-        return crossScopeItems.filter { $0.budgetCategoryId == nil }
+        return crossScopeItems
     }
 
     // MARK: - Scope Routing

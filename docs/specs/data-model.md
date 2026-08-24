@@ -210,7 +210,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | id | string | Document ID |
 | accountId | string, nullable | FK to Account |
 | projectId | string, nullable | FK to Project. Null means item is in business inventory |
-| transactionId | string, nullable | FK to Transaction. **Exists but is NOT reliably set.** Do not use for lookups (see Relationships warning) |
+| transactionId | string, nullable | FK to Transaction. Null is the intentional **No Transaction** correction/work-queue state. When set, it must agree with canonical `transaction.itemIds` ownership. |
 | spaceId | string, nullable | FK to Space |
 | budgetCategoryId | string, nullable | FK to BudgetCategory. **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`** — items in business inventory have no category. Set when an item moves into a project (sell-to-project flow) and wiped when an item moves into inventory (return-to-inventory flow). See "Item Scope/Category Invariant" below. |
 | name | string, nullable | Primary display name |
@@ -244,6 +244,8 @@ For every Item:
 ```
 
 Items in business inventory (`projectId == null`) have `budgetCategoryId == null`. Items in a project have a `budgetCategoryId`. Both clients (iOS and MCP) enforce this on every write.
+
+Project items may have `transactionId == null` while awaiting a correct transaction. Clearing a transaction preserves the item's category. When linked, item and transaction must share a project and category; association writes update the item, old/new `transaction.itemIds`, and correction lineage atomically. Ordinary transaction category edits cascade to currently owned items. Generated inventory-movement transaction accounting fields remain immutable.
 
 **This replaces** the legacy "items carry their `budgetCategoryId` across scope moves" model. Under the new model, categories belong to projects — when an item moves into inventory, its category is wiped; when an item moves into a project, a category is acquired (resolved at sell time from user input).
 

@@ -359,6 +359,12 @@ struct ItemEntryFlowView: View {
             isSelling = false
             return
         }
+        guard let budgetCategoryId,
+              !budgetCategoryId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Choose a budget category."
+            isSelling = false
+            return
+        }
 
         let service = InventoryOperationsService()
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
@@ -368,7 +374,7 @@ struct ItemEntryFlowView: View {
                 try await service.sellToProject(
                     items: itemsToSell,
                     destinationProjectId: projectId,
-                    budgetCategoryId: budgetCategoryId ?? "uncategorized",
+                    budgetCategoryId: budgetCategoryId,
                     accountId: accountId,
                     inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid,

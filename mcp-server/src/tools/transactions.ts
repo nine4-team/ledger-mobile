@@ -436,15 +436,16 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }
 
       const data: Record<string, unknown> = {
-        budgetCategoryId,
+        projectId: projectId ?? null,
+        budgetCategoryId: projectId ? budgetCategoryId : null,
         amountCents,
         type: normalizedTxType,
         isComplete: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+      if (!projectId) data.intendedBudgetCategoryId = budgetCategoryId;
       if (status) data.status = status;
-      if (projectId) data.projectId = projectId;
       if (source && normalizedTxType !== "paymentToBusiness") data.source = source;
       if (transactionDate) data.transactionDate = transactionDate;
       if (notes) data.notes = tagNotesAsAi(notes);
@@ -460,22 +461,48 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (ingestionStatus) data.ingestionStatus = ingestionStatus;
       if (ingestionMeta) data.ingestionMeta = ingestionMeta;
 
-      const ref = await accountCollection(db, "transactions").add(data);
-
-      // Maintain bidirectional link: set transactionId on each linked item
+      const ref = accountCollection(db, "transactions").doc();
+      const linkedItems: Array<Item & { id: string }> = [];
       if (itemIds?.length) {
-        const batch = db.batch();
         for (const itemId of itemIds) {
           const item = await getDoc<Item>(db, "items", itemId);
-          if (!item) continue;
+          if (!item) return notFound("Item", itemId);
+          if ((item.projectId ?? null) !== (projectId ?? null)) {
+            return validation(`Item ${itemId} is not in the transaction's project.`, "Use items from the same project.");
+          }
+          linkedItems.push(item);
+        }
+      }
+
+      const batch = db.batch();
+      batch.set(ref, data);
+      for (const item of linkedItems) {
           const updates = applyItemPriceFloorToUpdate(item, {
             transactionId: ref.id,
+            budgetCategoryId: projectId ? budgetCategoryId : null,
             updatedAt: new Date(),
           });
-          batch.update(accountCollection(db, "items").doc(itemId), updates);
+          batch.update(accountCollection(db, "items").doc(item.id), updates);
+          if (item.transactionId && item.transactionId !== ref.id) {
+            batch.update(accountCollection(db, "transactions").doc(item.transactionId), {
+              itemIds: FieldValue.arrayRemove(item.id),
+              updatedAt: new Date(),
+            });
+          }
+          batch.set(accountCollection(db, "lineageEdges").doc(), {
+            accountId: accountPath().slice("accounts/".length),
+            itemId: item.id,
+            fromTransactionId: item.transactionId ?? null,
+            toTransactionId: ref.id,
+            fromProjectId: item.projectId ?? null,
+            toProjectId: projectId ?? null,
+            movementKind: "correction",
+            source: "mcp",
+            note: "Set transaction association during transaction creation",
+            createdAt: new Date(),
+          });
         }
-        await batch.commit();
-      }
+      await batch.commit();
 
       return { content: [{ type: "text", text: `Created transaction ${ref.id}` }] };
     }
@@ -484,7 +511,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── update_transaction ─────────────────────────────────────────────────────
   server.tool(
     "update_transaction",
-    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. For a data correction that moves an ordinary transaction to business inventory, pass `projectId: null`; `budgetCategoryId` is cleared automatically. This corrects the original record in place and creates no Sale, Return, or Purchase movement. Correct linked items separately with the item correction tools, then use inventory movement tools only for subsequent real sales/returns. Generated inventory movement transactions retain their frozen accounting shape.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
+    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. For a data correction that moves an ordinary transaction to business inventory, pass `projectId: null`; `budgetCategoryId` is cleared automatically, canonical item ownership is removed, and linked project items enter the categorized No Transaction work queue with correction lineage. This creates no Sale, Return, or Purchase movement. Generated inventory movement transactions retain their frozen accounting shape.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
@@ -524,6 +551,12 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
           "Use inventory operation tools for Sale, create_transaction/Client Payment for paymentToBusiness, and do not write legacy Fee/Expense/To Inventory values."
         );
       }
+      if (fields.itemIds !== undefined) {
+        return validation(
+          "update_transaction cannot replace itemIds directly.",
+          "Use update_item transactionId so item ownership, category inheritance, and both membership arrays update atomically."
+        );
+      }
 
       const updates: Record<string, unknown> = { updatedAt: new Date() };
       if (fields.notes !== undefined || fields.aiAuditAppend !== undefined) {
@@ -534,10 +567,30 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
-      // Business inventory is an explicit null scope. The transaction scope
-      // correction intentionally does not cascade into items or intent fields.
+      // Business inventory is an explicit null scope. Linked project items are
+      // detached below without changing their category.
       if (updates.projectId === null) {
         updates.budgetCategoryId = null;
+      }
+
+      const resultingProjectId = Object.prototype.hasOwnProperty.call(updates, "projectId")
+        ? (updates.projectId as string | null)
+        : (existing.projectId ?? null);
+      const resultingCategoryId = Object.prototype.hasOwnProperty.call(updates, "budgetCategoryId")
+        ? (updates.budgetCategoryId as string | null)
+        : (existing.budgetCategoryId ?? null);
+      if (resultingProjectId) {
+        const normalizedCategory = resultingCategoryId?.trim() ?? "";
+        if (!normalizedCategory || normalizedCategory.toLowerCase() === "uncategorized") {
+          return validation("Project transactions require a real budget category.", "Choose a persisted project budget category.");
+        }
+        const category = await getBudgetCategory(db, normalizedCategory);
+        if (!category) return notFound("Budget category", normalizedCategory);
+      } else if (resultingCategoryId != null) {
+        return validation(
+          "Inventory transactions cannot carry budgetCategoryId.",
+          "Pass budgetCategoryId: null, or move the transaction into a project with a real category."
+        );
       }
 
       // Server-side guard matching Firestore rules — reject writes to frozen
@@ -546,7 +599,63 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       const immutabilityError = checkInventoryMovementImmutability(existing, updates);
       if (immutabilityError) return immutabilityError;
 
-      await accountCollection(db, "transactions").doc(transactionId).update(updates);
+      if (updates.projectId === null) {
+        const batch = db.batch();
+        batch.update(accountCollection(db, "transactions").doc(transactionId), {
+          ...updates,
+          itemIds: [],
+        });
+        for (const itemId of existing.itemIds ?? []) {
+          batch.update(accountCollection(db, "items").doc(itemId), {
+            transactionId: null,
+            updatedAt: new Date(),
+          });
+          batch.set(accountCollection(db, "lineageEdges").doc(), {
+            accountId: accountPath().slice("accounts/".length),
+            itemId,
+            fromTransactionId: transactionId,
+            movementKind: "correction",
+            source: "mcp",
+            note: "Cleared transaction association during inventory-scope correction",
+            createdAt: new Date(),
+          });
+        }
+        await batch.commit();
+        return { content: [{ type: "text", text: `Updated transaction ${transactionId} and cleared ${existing.itemIds?.length ?? 0} item association(s).` }] };
+      }
+
+      const projectChanged = resultingProjectId !== (existing.projectId ?? null);
+      const categoryChanged = resultingProjectId && resultingCategoryId !== existing.budgetCategoryId;
+      if (projectChanged || categoryChanged) {
+        const batch = db.batch();
+        batch.update(accountCollection(db, "transactions").doc(transactionId), updates);
+        for (const itemId of existing.itemIds ?? []) {
+          const itemUpdates: Record<string, unknown> = {
+            projectId: resultingProjectId,
+            budgetCategoryId: resultingCategoryId,
+            updatedAt: new Date(),
+          };
+          if (projectChanged) itemUpdates.spaceId = null;
+          batch.update(accountCollection(db, "items").doc(itemId), itemUpdates);
+          if (projectChanged) {
+            batch.set(accountCollection(db, "lineageEdges").doc(), {
+              accountId: accountPath().slice("accounts/".length),
+              itemId,
+              fromTransactionId: transactionId,
+              toTransactionId: transactionId,
+              fromProjectId: existing.projectId ?? null,
+              toProjectId: resultingProjectId,
+              movementKind: "correction",
+              source: "mcp",
+              note: "Moved with transaction project correction",
+              createdAt: new Date(),
+            });
+          }
+        }
+        await batch.commit();
+      } else {
+        await accountCollection(db, "transactions").doc(transactionId).update(updates);
+      }
       return { content: [{ type: "text", text: `Updated transaction ${transactionId}` }] };
     }
   );

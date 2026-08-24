@@ -182,6 +182,7 @@ struct InventoryOperationsIntegrationTests {
             items: [item],
             destinationTransactionId: newTxId,
             destinationProjectId: projectId,
+            destinationBudgetCategoryId: "cat1",
             accountId: accountId
         )
 

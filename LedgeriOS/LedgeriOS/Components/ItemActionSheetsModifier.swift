@@ -46,7 +46,7 @@ private struct ItemActionSheetsModifier: ViewModifier {
                     selectedId: item.transactionId,
                     onSelect: { tx in
                         if let txId = tx.id {
-                            controller.updateItem(item, accountId: accountId, fields: ["transactionId": txId])
+                            controller.setTransaction(txId, for: item, accountId: accountId)
                         }
                     }
                 )

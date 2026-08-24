@@ -18,8 +18,203 @@ private func makeService(batch: RecordingBatch) -> ItemsService {
     ItemsService(makeBatch: { batch })
 }
 
+private func makeTransaction(
+    id: String,
+    projectId: String,
+    budgetCategoryId: String? = nil,
+    itemIds: [String] = []
+) -> Transaction {
+    var transaction = Transaction()
+    transaction.id = id
+    transaction.projectId = projectId
+    transaction.budgetCategoryId = budgetCategoryId
+    transaction.itemIds = itemIds
+    return transaction
+}
+
 @Suite("ItemsService — transaction membership batch operations")
 struct ItemDeletionTests {
+
+    @Test("generic create rejects a pre-linked item")
+    func genericCreateRejectsLinkedItem() throws {
+        let service = makeService(batch: RecordingBatch())
+        let item = makeItem(id: nil, transactionId: "tx1")
+
+        #expect(throws: ItemAssociationError.self) {
+            _ = try service.createItem(accountId: acct, item: item)
+        }
+    }
+
+    @Test("inventory item creation rejects a budget category")
+    func inventoryCreateRejectsCategory() throws {
+        let service = makeService(batch: RecordingBatch())
+        var item = makeItem(id: nil)
+        item.budgetCategoryId = "cat1"
+
+        #expect(throws: ItemAssociationError.self) {
+            _ = try service.createItem(accountId: acct, item: item)
+        }
+    }
+
+    @Test("generic transaction update rejects direct itemIds replacement")
+    func genericTransactionUpdateRejectsItemIds() async throws {
+        let batch = RecordingBatch()
+        let service = TransactionsService(makeBatch: { batch })
+
+        await #expect(throws: ItemAssociationError.self) {
+            try await service.updateTransaction(
+                accountId: acct,
+                transactionId: "tx1",
+                fields: ["itemIds": ["i1"]]
+            )
+        }
+        #expect(!batch.commitCalled)
+    }
+
+    @Test("set transaction — inherits category and moves canonical membership atomically")
+    func setTransactionInheritsCategory() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                makeTransaction(id: "tx2", projectId: "project1", budgetCategoryId: "cat2")
+            }
+        )
+        var item = makeItem(id: "i1", transactionId: "tx1")
+        item.projectId = "project1"
+        item.budgetCategoryId = "cat1"
+
+        try await service.setTransaction(accountId: acct, items: [item], transactionId: "tx2")
+
+        #expect(batch.commitCalled)
+        let itemUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/i1").first)
+        #expect(itemUpdate.fields["transactionId"] as? String == "tx2")
+        #expect(itemUpdate.fields["budgetCategoryId"] as? String == "cat2")
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx1").count == 1)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx2").count == 1)
+        #expect(batch.lineageEdges(accountId: acct, itemId: "i1").count == 1)
+    }
+
+    @Test("clear transaction — preserves category and removes canonical membership")
+    func clearTransactionPreservesCategory() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var item = makeItem(id: "i1", transactionId: "tx1")
+        item.projectId = "project1"
+        item.budgetCategoryId = "cat1"
+
+        try await service.clearTransaction(accountId: acct, items: [item])
+
+        let itemUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/i1").first)
+        #expect(itemUpdate.fields["transactionId"] is NSNull)
+        #expect(!itemUpdate.fields.keys.contains("budgetCategoryId"))
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx1").count == 1)
+        let edge = try #require(batch.lineageEdges(accountId: acct, itemId: "i1").first)
+        #expect(edge.fields["note"] as? String == "Cleared transaction association")
+    }
+
+    @Test("set transaction — rejects a project transaction without a real category")
+    func setTransactionRejectsMissingCategory() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                makeTransaction(id: "tx2", projectId: "project1")
+            }
+        )
+        var item = makeItem(id: "i1")
+        item.projectId = "project1"
+        item.budgetCategoryId = "cat1"
+
+        await #expect(throws: ItemAssociationError.self) {
+            try await service.setTransaction(accountId: acct, items: [item], transactionId: "tx2")
+        }
+        #expect(!batch.commitCalled)
+    }
+
+    @Test("transaction category edit — cascades to canonically owned items")
+    func transactionCategoryEditCascades() async throws {
+        let batch = RecordingBatch()
+        let service = TransactionsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                makeTransaction(
+                    id: "tx1",
+                    projectId: "project1",
+                    budgetCategoryId: "cat1",
+                    itemIds: ["i1", "i2"]
+                )
+            }
+        )
+
+        try await service.updateTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            fields: ["budgetCategoryId": "cat2"]
+        )
+
+        #expect(batch.commitCalled)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx1").count == 1)
+        for itemId in ["i1", "i2"] {
+            let update = try #require(batch.updatesForPath("accounts/\(acct)/items/\(itemId)").first)
+            #expect(update.fields["budgetCategoryId"] as? String == "cat2")
+        }
+    }
+
+    @Test("transaction inventory correction — detaches linked items into No Transaction state")
+    func transactionInventoryCorrectionDetachesItems() async throws {
+        let batch = RecordingBatch()
+        let service = TransactionsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                makeTransaction(
+                    id: "tx1",
+                    projectId: "project1",
+                    budgetCategoryId: "cat1",
+                    itemIds: ["i1"]
+                )
+            }
+        )
+
+        try await service.updateTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            fields: TransactionsService.moveToInventoryCorrectionFields()
+        )
+
+        let itemUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/i1").first)
+        #expect(itemUpdate.fields["transactionId"] is NSNull)
+        #expect(!itemUpdate.fields.keys.contains("budgetCategoryId"))
+        #expect(batch.lineageEdges(accountId: acct, itemId: "i1").count == 1)
+    }
+
+    @Test("transaction project correction — moves owned items and clears stale spaces")
+    func transactionProjectCorrectionMovesItems() async throws {
+        let batch = RecordingBatch()
+        let service = TransactionsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                makeTransaction(
+                    id: "tx1",
+                    projectId: "project1",
+                    budgetCategoryId: "cat1",
+                    itemIds: ["i1"]
+                )
+            }
+        )
+
+        try await service.updateTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            fields: ["projectId": "project2", "budgetCategoryId": "cat2"]
+        )
+
+        let update = try #require(batch.updatesForPath("accounts/\(acct)/items/i1").first)
+        #expect(update.fields["projectId"] as? String == "project2")
+        #expect(update.fields["budgetCategoryId"] as? String == "cat2")
+        #expect(update.fields["spaceId"] is NSNull)
+        #expect(batch.lineageEdges(accountId: acct, itemId: "i1").count == 1)
+    }
 
     @Test("create items for transaction — creates item docs and links transaction itemIds")
     func createItemsForTransaction() async throws {
@@ -37,6 +232,7 @@ struct ItemDeletionTests {
         let createdItems = try service.createItemsForTransaction(
             accountId: acct,
             transactionId: "tx1",
+            budgetCategoryId: "cat1",
             items: [item1, item2],
             onCommitError: { _, _ in }
         )
@@ -70,6 +266,7 @@ struct ItemDeletionTests {
         let createdItems = try service.createItemsForTransaction(
             accountId: acct,
             transactionId: "tx1",
+            budgetCategoryId: "cat1",
             items: [],
             onCommitError: { _, _ in }
         )

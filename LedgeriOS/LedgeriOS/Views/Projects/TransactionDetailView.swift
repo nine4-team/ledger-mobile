@@ -1720,21 +1720,15 @@ struct TransactionDetailView: View {
 
     private func setTransactionForSelected(transactionId: String) {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService()
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": transactionId]) }
-        }
+        let items = Array(selectedItems)
+        Task { try? await ItemsService().setTransaction(accountId: accountId, items: items, transactionId: transactionId) }
         selectedItemIds.removeAll()
     }
 
     private func clearTransactionForSelected() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService()
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
-        }
+        let items = Array(selectedItems)
+        Task { try? await ItemsService().clearTransaction(accountId: accountId, items: items) }
         selectedItemIds.removeAll()
     }
 
@@ -1794,6 +1788,7 @@ struct TransactionDetailView: View {
             let createdItems = try ItemsService().createItemsForTransaction(
                 accountId: accountId,
                 transactionId: transactionId,
+                budgetCategoryId: currentTransaction.budgetCategoryId ?? "",
                 items: items,
                 onCommitError: { itemIds, error in
                     Task { @MainActor in

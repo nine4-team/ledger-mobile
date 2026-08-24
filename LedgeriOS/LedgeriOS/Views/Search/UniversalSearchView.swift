@@ -513,15 +513,8 @@ struct UniversalSearchView: View {
     private func linkSelectedItemsToTransaction(_ transaction: Transaction) {
         guard let accountId = accountContext.currentAccountId,
               let transactionId = transaction.id else { return }
-        let itemIds = selectedItems.compactMap(\.id)
-        let service = TransactionsService()
-        Task {
-            try? await service.updateTransaction(
-                accountId: accountId,
-                transactionId: transactionId,
-                fields: ["itemIds": FieldValue.arrayUnion(itemIds), "updatedAt": FieldValue.serverTimestamp()]
-            )
-        }
+        let items = Array(selectedItems)
+        Task { try? await ItemsService().setTransaction(accountId: accountId, items: items, transactionId: transactionId) }
         selectedItemIds.removeAll()
     }
 
@@ -545,11 +538,8 @@ struct UniversalSearchView: View {
 
     private func clearTransactionForSelectedItems() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService()
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
-        }
+        let items = Array(selectedItems)
+        Task { try? await ItemsService().clearTransaction(accountId: accountId, items: items) }
         selectedItemIds.removeAll()
     }
 

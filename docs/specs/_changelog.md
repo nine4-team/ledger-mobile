@@ -1,6 +1,7 @@
 # Ledger Specs — Changelog
 
 ## 2026-08-24
+- **Defined and enforced categorized No Transaction items.** Project items may intentionally have no transaction while awaiting correction, but must retain a real category. Item/transaction association changes now update canonical membership and lineage atomically, linked items inherit transaction scope/category, ordinary transaction category/project corrections cascade to owned items, and writers no longer persist the literal `uncategorized` category ID.
 - **Aligned MCP returns with the per-batch inventory model.** Return-to-inventory now always creates a new frozen Return transaction, matching iOS; existing Return transaction IDs remain vendor-return-only. Inventory-owned items return to `purchased` status when they come back into stock. Updated `return-and-sale-tracking.md` to restore origin-aware Return versus Sale-to-Inventory routing and source-project budget attribution.
 
 ## 2026-08-19

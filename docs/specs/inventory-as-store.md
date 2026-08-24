@@ -35,13 +35,9 @@ Items in business inventory have no budget category. Items in a project have a b
 
 ### Transaction linkage
 
-```
-(item.projectId != null) → (item.transactionId != null)
-```
+Project items may intentionally have `transactionId == null`. This is the **No Transaction** correction/work-queue state used when an incorrect association is cleared before the proper transaction exists. The item remains in its project and keeps its real budget category.
 
-Project items must be attached to a transaction — the sale, purchase, or move that placed them in the project. Inventory items may or may not have a `transactionId`. Enforced at the iOS and MCP write layers; not in Firestore security rules.
-
-Legacy orphan items (project items with `transactionId == null` from before this invariant existed) are not backfilled. They remain in place and surface through the Bulk Reassign UI ([BulkSaleResolutionCalculations.swift](../../LedgeriOS/LedgeriOS/Logic/BulkSaleResolutionCalculations.swift)), which lets users attach them to an existing sale.
+When `transactionId` is set, the referenced transaction must exist in the same project, `transaction.itemIds` must contain the item, and the item's category must match the transaction category. Set, reassign, and clear operations update the item, old/new canonical membership arrays, and correction lineage atomically. New project-item creation remains strict and requires a valid transaction/category.
 
 ## Why It Matters
 

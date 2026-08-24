@@ -92,7 +92,7 @@ private struct LifecycleItemsService: ItemsServiceProtocol {
     func createItemsForTransaction(
         accountId: String,
         transactionId: String,
-        budgetCategoryId: String,
+        budgetCategoryId: String?,
         items: [Item],
         onCommitError: @escaping @Sendable ([String], Error) -> Void
     ) throws -> [Item] { [] }

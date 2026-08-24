@@ -208,7 +208,10 @@ struct ItemDetailView: View {
                 transactions: projectContext.transactions,
                 selectedId: liveItem.transactionId
             ) { transaction in
-                updateItem(fields: ["transactionId": transaction.id ?? ""])
+                guard let accountId = accountContext.currentAccountId,
+                      let transactionId = transaction.id else { return }
+                let item = liveItem
+                Task { try? await ItemsService().setTransaction(accountId: accountId, items: [item], transactionId: transactionId) }
             }
         }
         // Return Transaction Picker
@@ -218,7 +221,8 @@ struct ItemDetailView: View {
                 selectedId: liveItem.transactionId
             ) { transaction in
                 guard let accountId = accountContext.currentAccountId,
-                      let txId = transaction.id else { return }
+                      let txId = transaction.id,
+                      let categoryId = transaction.budgetCategoryId else { return }
                 let itemSnapshot = liveItem
                 let service = InventoryOperationsService()
                 Task {
@@ -226,6 +230,7 @@ struct ItemDetailView: View {
                         try await service.returnToTransaction(
                             items: [itemSnapshot],
                             destinationTransactionId: txId,
+                            destinationBudgetCategoryId: categoryId,
                             accountId: accountId
                         )
                     } catch {

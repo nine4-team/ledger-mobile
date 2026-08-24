@@ -1,8 +1,36 @@
 import FirebaseFirestore
 
 struct TransactionsService: TransactionsServiceProtocol {
+    private let makeBatch: @Sendable () -> any BatchWriting
+    private let loadTransaction: @Sendable (_ accountId: String, _ transactionId: String) async throws -> Transaction?
+
+    init(
+        makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() },
+        loadTransaction: @escaping @Sendable (_ accountId: String, _ transactionId: String) async throws -> Transaction? = { accountId, transactionId in
+            try await FirestoreRepository<Transaction>(path: "accounts/\(accountId)/transactions").get(id: transactionId)
+        }
+    ) {
+        self.makeBatch = makeBatch
+        self.loadTransaction = loadTransaction
+    }
+
+    private static func isRealCategory(_ value: String?) -> Bool {
+        guard let value else { return false }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && trimmed.lowercased() != "uncategorized"
+    }
+
+    private static func validateCategory(projectId: String?, categoryId: String?) throws {
+        if projectId != nil, !isRealCategory(categoryId) {
+            throw ItemAssociationError.invalidBudgetCategory
+        }
+        if projectId == nil, categoryId != nil {
+            throw ItemAssociationError.invalidBudgetCategory
+        }
+    }
+
     /// Payload for correcting an ordinary transaction into business inventory.
-    /// Linked items are separate records and are intentionally untouched.
+    /// `updateTransaction` atomically clears canonical item ownership.
     static func moveToInventoryCorrectionFields() -> [String: Any] {
         [
             "projectId": NSNull(),
@@ -19,6 +47,7 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func createTransaction(accountId: String, transaction: Transaction) throws -> String {
+        try Self.validateCategory(projectId: transaction.projectId, categoryId: transaction.budgetCategoryId)
         let normalized = normalizedAttachments(in: transaction)
         return try repo(accountId: accountId).create(normalized, additionalFields: extraFields(for: normalized))
     }
@@ -31,6 +60,7 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func createTransaction(accountId: String, id: String, transaction: Transaction) throws {
+        try Self.validateCategory(projectId: transaction.projectId, categoryId: transaction.budgetCategoryId)
         let normalized = normalizedAttachments(in: transaction)
         try repo(accountId: accountId).create(id: id, normalized, additionalFields: extraFields(for: normalized))
     }
@@ -55,10 +85,86 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func updateTransaction(accountId: String, transactionId: String, fields: [String: Any]) async throws {
+        if fields.keys.contains("itemIds") {
+            throw ItemAssociationError.genericItemIdsUpdate
+        }
         let normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
             fields,
             attachmentFieldNames: ["receiptImages", "otherImages", "transactionImages"]
         )
+        if normalizedFields["projectId"] is NSNull {
+            guard let existing = try await loadTransaction(accountId, transactionId) else {
+                throw ItemAssociationError.transactionNotFound(transactionId)
+            }
+            let batch = makeBatch()
+            var transactionFields = normalizedFields
+            transactionFields["budgetCategoryId"] = NSNull()
+            transactionFields["itemIds"] = [String]()
+            batch.updateData(transactionFields, forDocumentAt: "accounts/\(accountId)/transactions/\(transactionId)")
+            for itemId in existing.itemIds ?? [] {
+                batch.updateData(
+                    ["transactionId": NSNull(), "updatedAt": FieldValue.serverTimestamp()],
+                    forDocumentAt: "accounts/\(accountId)/items/\(itemId)"
+                )
+                batch.setDataAutoId(
+                    [
+                        "accountId": accountId,
+                        "itemId": itemId,
+                        "fromTransactionId": transactionId,
+                        "movementKind": "correction",
+                        "source": "app",
+                        "note": "Cleared transaction association during inventory-scope correction",
+                        "createdAt": FieldValue.serverTimestamp(),
+                    ],
+                    inCollection: "accounts/\(accountId)/lineageEdges"
+                )
+            }
+            try await batch.commit()
+            return
+        }
+        if normalizedFields.keys.contains("projectId") || normalizedFields.keys.contains("budgetCategoryId") {
+            guard let existing = try await loadTransaction(accountId, transactionId) else {
+                throw ItemAssociationError.transactionNotFound(transactionId)
+            }
+            let nextProjectId = normalizedFields["projectId"] as? String ?? existing.projectId
+            let nextCategoryId = normalizedFields["budgetCategoryId"] as? String ?? existing.budgetCategoryId
+            try Self.validateCategory(projectId: nextProjectId, categoryId: nextCategoryId)
+            if nextProjectId != existing.projectId || nextCategoryId != existing.budgetCategoryId {
+                let batch = makeBatch()
+                batch.updateData(normalizedFields, forDocumentAt: "accounts/\(accountId)/transactions/\(transactionId)")
+                for itemId in existing.itemIds ?? [] {
+                    var itemFields: [String: Any] = [
+                        "projectId": nextProjectId as Any? ?? NSNull(),
+                        "budgetCategoryId": nextCategoryId as Any? ?? NSNull(),
+                        "updatedAt": FieldValue.serverTimestamp(),
+                    ]
+                    if nextProjectId != existing.projectId { itemFields["spaceId"] = NSNull() }
+                    batch.updateData(
+                        itemFields,
+                        forDocumentAt: "accounts/\(accountId)/items/\(itemId)"
+                    )
+                    if nextProjectId != existing.projectId {
+                        batch.setDataAutoId(
+                            [
+                                "accountId": accountId,
+                                "itemId": itemId,
+                                "fromTransactionId": transactionId,
+                                "toTransactionId": transactionId,
+                                "fromProjectId": existing.projectId as Any? ?? NSNull(),
+                                "toProjectId": nextProjectId as Any? ?? NSNull(),
+                                "movementKind": "correction",
+                                "source": "app",
+                                "note": "Moved with transaction project correction",
+                                "createdAt": FieldValue.serverTimestamp(),
+                            ],
+                            inCollection: "accounts/\(accountId)/lineageEdges"
+                        )
+                    }
+                }
+                try await batch.commit()
+                return
+            }
+        }
         try await repo(accountId: accountId).update(id: transactionId, fields: normalizedFields)
     }
 

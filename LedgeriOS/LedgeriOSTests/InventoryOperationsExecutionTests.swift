@@ -842,7 +842,7 @@ struct ReassignToProjectExecutionTests {
         let service = makeService(batch: batch)
         try await service.reassignToProject(
             items: [], destinationTransactionId: destTx,
-            destinationProjectId: proj, accountId: acct
+            destinationProjectId: proj, destinationBudgetCategoryId: "cat1", accountId: acct
         )
         #expect(!batch.commitCalled)
     }
@@ -889,7 +889,7 @@ struct ReassignToProjectExecutionTests {
 
         try await service.reassignToProject(
             items: [item], destinationTransactionId: destTx,
-            destinationProjectId: proj, accountId: acct
+            destinationProjectId: proj, destinationBudgetCategoryId: "cat1", accountId: acct
         )
 
         #expect(batch.commitCalled)
@@ -917,8 +917,12 @@ struct ReassignToProjectExecutionTests {
         #expect(ef["fromTransactionId"] as? String == "oldTx")
         #expect(ef["toTransactionId"] as? String == destTx)
 
-        // No sale/return transactions created
-        #expect(batch.sets.isEmpty)
+        // Category activation is expected, but no financial movement is created.
+        let financialSets = batch.sets.filter {
+            let type = $0.fields["type"] as? String
+            return type == "Purchase" || type == "Sale" || type == "Return"
+        }
+        #expect(financialSets.isEmpty)
     }
 }
 
@@ -1303,6 +1307,7 @@ struct CurrentSourceDenormalizationTests {
             items: items,
             destinationTransactionId: "newTx",
             destinationProjectId: "proj1",
+            destinationBudgetCategoryId: "cat1",
             accountId: acct
         )
 
@@ -1321,6 +1326,7 @@ struct CurrentSourceDenormalizationTests {
         try await service.returnToTransaction(
             items: items,
             destinationTransactionId: "retTx",
+            destinationBudgetCategoryId: "cat1",
             accountId: acct
         )
 

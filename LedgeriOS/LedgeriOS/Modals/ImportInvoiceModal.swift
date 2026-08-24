@@ -356,11 +356,7 @@ struct ImportInvoiceModal: View {
         )
 
         do {
-            // 1. Create items, collect IDs
-            var itemIds: [String] = []
-            var createdItemIds: [String] = []
-
-            for draftItem in includedItems {
+            let draftItems = includedItems.map { draftItem -> Item in
                 var newItem = Item()
                 newItem.projectId = projectId
                 newItem.name = draftItem.description
@@ -376,23 +372,31 @@ struct ImportInvoiceModal: View {
                 if let attrs = draftItem.attributeLines, !attrs.isEmpty {
                     newItem.notes = attrs.joined(separator: "\n")
                 }
-
-                let id = try itemsService.createItem(accountId: accountId, item: newItem)
-                itemIds.append(id)
-                createdItemIds.append(id)
+                return newItem
             }
 
-            // 2. Create transaction with itemIds
+            // Create the transaction before the item batch so no item can be
+            // persisted with a one-sided transaction association.
             var tx = Transaction()
             tx.projectId = projectId
             tx.transactionType = .purchase
             tx.source = source
             tx.transactionDate = txDate
             tx.amountCents = totalCents
-            tx.itemIds = itemIds
+            tx.itemIds = []
             tx.budgetCategoryId = selectedCategoryId
 
             let txId = try transactionsService.createTransaction(accountId: accountId, transaction: tx)
+            let createdItems = try itemsService.createItemsForTransaction(
+                accountId: accountId,
+                transactionId: txId,
+                budgetCategoryId: selectedCategoryId,
+                items: draftItems,
+                onCommitError: { _, error in
+                    print("🔴 invoice item batch failed: \(error)")
+                }
+            )
+            let createdItemIds = createdItems.compactMap(\.id)
 
             // Dismiss immediately (optimistic UI)
             dismiss()

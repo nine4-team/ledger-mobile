@@ -74,21 +74,26 @@ struct MakeCopiesModal: View {
 
         Task {
             do {
-                var newItemIds: [String] = []
-                for _ in 0..<copyCount {
-                    let newId = try service.createItem(accountId: accountId, item: copyItem)
-                    newItemIds.append(newId)
-                }
-
-                // If the source item belongs to a transaction, add copies to it
                 if let transactionId = item.transactionId {
-                    let txRepo = FirestoreRepository<Transaction>(
-                        path: "accounts/\(accountId)/transactions"
+                    guard let destination = try await TransactionsService().getTransaction(
+                        accountId: accountId,
+                        transactionId: transactionId
+                    ) else {
+                        throw ItemAssociationError.transactionNotFound(transactionId)
+                    }
+                    _ = try service.createItemsForTransaction(
+                        accountId: accountId,
+                        transactionId: transactionId,
+                        budgetCategoryId: destination.budgetCategoryId,
+                        items: Array(repeating: copyItem, count: copyCount),
+                        onCommitError: { _, error in
+                            print("🔴 createCopies linked batch failed: \(error)")
+                        }
                     )
-                    try await txRepo.update(id: transactionId, fields: [
-                        "itemIds": FieldValue.arrayUnion(newItemIds),
-                        "updatedAt": FieldValue.serverTimestamp()
-                    ])
+                } else {
+                    for _ in 0..<copyCount {
+                        _ = try service.createItem(accountId: accountId, item: copyItem)
+                    }
                 }
 
                 await MainActor.run { dismiss() }

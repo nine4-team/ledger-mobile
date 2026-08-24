@@ -37,26 +37,29 @@ import {
 // Items in business inventory have no budget category. Categories are
 // resolved at sell-into-project time.
 //
-// Rule 2: (item.projectId != null) → (item.transactionId != null)
-// Project items must be attached to a transaction. Inventory items may or
-// may not have one. Legacy orphans (project items with no transactionId)
-// are left as-is; the Bulk Reassign UI repairs them manually.
+// Rule 2: project items may be intentionally unassigned, but always retain a
+// real category. When linked, item and transaction scope/category must match.
 //
 // See docs/specs/sale-transactions.md and docs/specs/inventory-as-store.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Reject create payloads that violate the inventory invariant. */
-function checkCreateInvariant(
+export function checkCreateInvariant(
   projectId: string | undefined | null,
   budgetCategoryId: string | undefined | null
 ): string | null {
   const inInventory = projectId == null || projectId === "";
-  if (inInventory && budgetCategoryId != null && budgetCategoryId !== "") {
+  const normalizedCategory = typeof budgetCategoryId === "string" ? budgetCategoryId.trim() : "";
+  const hasRealCategory = normalizedCategory !== "" && normalizedCategory.toLowerCase() !== "uncategorized";
+  if (inInventory && budgetCategoryId != null) {
     return (
       "Cannot create an inventory item (no projectId) with a budgetCategoryId. " +
       "Items in business inventory have no budget category — omit budgetCategoryId, " +
       "or set projectId to put the item in a project first."
     );
+  }
+  if (!inInventory && !hasRealCategory) {
+    return "Cannot create a project item without a real budgetCategoryId.";
   }
   return null;
 }
@@ -65,7 +68,7 @@ function checkCreateInvariant(
  * Reject update payloads that violate the inventory invariant.
  * `updates` is the incoming delta (only keys that were explicitly provided).
  */
-function checkUpdateInvariant(
+export function checkUpdateInvariant(
   existing: { projectId?: string | null; budgetCategoryId?: string | null },
   updates: Record<string, unknown>
 ): string | null {
@@ -80,9 +83,10 @@ function checkUpdateInvariant(
     : (existing.budgetCategoryId ?? null);
 
   const nextInInventory = nextProjectId == null || nextProjectId === "";
-  const nextHasCategory = nextCategory != null && nextCategory !== "";
+  const normalizedCategory = typeof nextCategory === "string" ? nextCategory.trim() : "";
+  const nextHasCategory = normalizedCategory !== "" && normalizedCategory.toLowerCase() !== "uncategorized";
 
-  if (nextInInventory && nextHasCategory) {
+  if (nextInInventory && nextCategory != null) {
     return (
       "Cannot set budgetCategoryId on an item that is in business inventory (projectId: null). " +
       "Items in inventory have no category. Either set projectId in the same update, or " +
@@ -90,14 +94,10 @@ function checkUpdateInvariant(
     );
   }
 
-  // Moving an item from inventory INTO a project requires a category.
-  const wasInInventory = existing.projectId == null || existing.projectId === "";
-  const isMovingIntoProject =
-    wasInInventory && hasProjectIdUpdate && !nextInInventory;
-  if (isMovingIntoProject && !nextHasCategory) {
+  if (!nextInInventory && !nextHasCategory) {
     return (
-      "Moving an item from business inventory into a project requires a budgetCategoryId. " +
-      "Pass both projectId and budgetCategoryId in the same update, or use sell_items_from_inventory_to_project instead."
+      "Project items require a real budgetCategoryId. " +
+      "Pass projectId and budgetCategoryId together, or preserve the item's existing real category."
     );
   }
 
@@ -127,55 +127,15 @@ export type LinkageStatus =
   | { kind: "warn"; message: string };
 
 /**
- * Evaluate the transaction-linkage invariant against an update payload.
- *
- * Hard-reject only when the update would CREATE a new orphan (existing item
- * was fine, post-update would be a project item with no transactionId).
- *
- * If the existing item was ALREADY an orphan and the update doesn't fix the
- * orphan state, allow the write and return a warning so the caller can
- * surface it. Routine edits (e.g. fixing a typo on a legacy orphan) should
- * not be blocked by a problem the update didn't introduce.
+ * Project items may intentionally be in the No Transaction work queue.
  */
 export function checkTransactionLinkageOnUpdate(
   existing: { projectId?: string | null; transactionId?: string | null },
   updates: Record<string, unknown>
 ): LinkageStatus {
-  const hasProjectIdUpdate = "projectId" in updates;
-  const hasTransactionIdUpdate = "transactionId" in updates;
-
-  const prevProjectId = existing.projectId ?? null;
-  const prevTransactionId = existing.transactionId ?? null;
-  const prevHasProject = prevProjectId != null && prevProjectId !== "";
-  const prevHasTransaction = prevTransactionId != null && prevTransactionId !== "";
-  const wasOrphan = prevHasProject && !prevHasTransaction;
-
-  const nextProjectId = hasProjectIdUpdate
-    ? (updates.projectId as string | null | undefined)
-    : prevProjectId;
-  const nextTransactionId = hasTransactionIdUpdate
-    ? (updates.transactionId as string | null | undefined)
-    : prevTransactionId;
-  const nextHasProject = nextProjectId != null && nextProjectId !== "";
-  const nextHasTransaction = nextTransactionId != null && nextTransactionId !== "";
-  const willBeOrphan = nextHasProject && !nextHasTransaction;
-
-  if (!willBeOrphan) return { kind: "ok" };
-  if (wasOrphan) {
-    return {
-      kind: "warn",
-      message:
-        "Item is a legacy orphan (project item with no transactionId). Update applied. " +
-        "To clean up: bulk_update_items with projectId: null moves it to inventory, " +
-        "then sell_items_from_inventory_to_project records the real purchase.",
-    };
-  }
-  return {
-    kind: "reject",
-    message:
-      "Cannot leave an item in a project (projectId set) without a transactionId. " +
-      "Either pass transactionId in the same update, or move the item to business inventory (projectId: null).",
-  };
+  void existing;
+  void updates;
+  return { kind: "ok" };
 }
 
 function formatItem(item: Item & { id: string }) {
@@ -312,7 +272,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── create_item ────────────────────────────────────────────────────────────
   server.tool(
     "create_item",
-    "[mutating] Create a new item.\n\nNOTES CONVENTION: `notes` is the optional user-facing description of the item (what it is — finish, size, room, etc.). Plain prose, no required format.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. Items in a project (projectId set) must have a transactionId — pass both together, or omit projectId to create in inventory.",
+    "[mutating] Create a new item.\n\nNOTES CONVENTION: `notes` is the optional user-facing description of the item (what it is — finish, size, room, etc.). Plain prose, no required format.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. New project-item creation requires a valid transactionId and inherits that transaction's real category. Existing project items may later enter the categorized No Transaction work queue through an explicit clear.",
     {
       name: z.string().describe("Item name"),
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
@@ -328,13 +288,19 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375). Auto-inherited from the linked transaction if not provided."),
     },
     async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId, taxRatePct }) => {
-      // Auto-inherit taxRatePct and budgetCategoryId from transaction if not explicitly provided
+      // A linked transaction owns project scope and category.
       let resolvedTaxRate = taxRatePct;
       let resolvedBudgetCategoryId = budgetCategoryId;
-      if ((resolvedTaxRate === undefined || resolvedBudgetCategoryId === undefined) && transactionId) {
-        const tx = await getDoc<Transaction>(db, "transactions", transactionId);
+      let linkedTransaction: Transaction | null = null;
+      if (transactionId) {
+        linkedTransaction = await getDoc<Transaction>(db, "transactions", transactionId);
+        if (!linkedTransaction) return notFound("Transaction", transactionId);
+        if ((linkedTransaction.projectId ?? null) !== (projectId ?? null)) {
+          return validation("Item and transaction must belong to the same project.", "Use a transaction in the item's project.");
+        }
+        resolvedBudgetCategoryId = linkedTransaction.budgetCategoryId ?? undefined;
+        const tx = linkedTransaction;
         if (resolvedTaxRate === undefined && tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
-        if (resolvedBudgetCategoryId === undefined && tx?.budgetCategoryId) resolvedBudgetCategoryId = tx.budgetCategoryId;
       }
 
       // If the item is going into business inventory (no projectId), strip any
@@ -377,15 +343,16 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (transactionId) data.transactionId = transactionId;
       if (resolvedTaxRate !== undefined) data.taxRatePct = resolvedTaxRate;
 
-      const ref = await accountCollection(db, "items").add(data);
-
-      // Maintain bidirectional link: append item to transaction's itemIds
+      const ref = accountCollection(db, "items").doc();
+      const batch = db.batch();
+      batch.set(ref, data);
       if (transactionId) {
-        await accountCollection(db, "transactions").doc(transactionId).update({
+        batch.update(accountCollection(db, "transactions").doc(transactionId), {
           itemIds: FieldValue.arrayUnion(ref.id),
           updatedAt: new Date(),
         });
       }
+      await batch.commit();
 
       return { content: [{ type: "text", text: `Created item ${ref.id}` }] };
     }
@@ -423,16 +390,17 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const createdIds: string[] = [];
       const txItemMap = new Map<string, string[]>();
 
-      // Pre-fetch transactions for taxRatePct inheritance (deduplicated)
+      // Pre-fetch every linked transaction for scope/category validation and inheritance.
       const txIds = new Set<string>();
       for (const item of items) {
         const txId = item.transactionId ?? defaultTransactionId;
-        if (txId && item.taxRatePct === undefined) txIds.add(txId);
+        if (txId) txIds.add(txId);
       }
       const txCache = new Map<string, Transaction>();
       for (const txId of txIds) {
         const tx = await getDoc<Transaction>(db, "transactions", txId);
-        if (tx) txCache.set(txId, tx);
+        if (!tx) return notFound("Transaction", txId);
+        txCache.set(txId, tx);
       }
 
       type BatchOp = { type: "set"; ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> }
@@ -442,6 +410,13 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       for (const item of items) {
         const resolvedProjectId = item.projectId ?? defaultProjectId;
         const resolvedTransactionId = item.transactionId ?? defaultTransactionId;
+        const linkedTransaction = resolvedTransactionId ? txCache.get(resolvedTransactionId) : undefined;
+        if (linkedTransaction && (linkedTransaction.projectId ?? null) !== (resolvedProjectId ?? null)) {
+          return validation(
+            `Item ${items.indexOf(item)} (${item.name}): item and transaction must belong to the same project.`,
+            "Use a transaction in the item's project."
+          );
+        }
 
         // Resolve tax rate: explicit > inherited from transaction
         let resolvedTaxRate = item.taxRatePct;
@@ -451,7 +426,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         }
 
         // Inventory invariant: strip category when item is going to inventory.
-        const categoryIn = resolvedProjectId ? item.budgetCategoryId : undefined;
+        const categoryIn = resolvedProjectId
+          ? (linkedTransaction ? (linkedTransaction.budgetCategoryId ?? undefined) : item.budgetCategoryId)
+          : undefined;
         const invariantError = checkCreateInvariant(resolvedProjectId, categoryIn);
         if (invariantError) {
           return validation(
@@ -542,13 +519,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "budgetCategoryId in the same update. When projectId changes and the item already " +
       "has a space, spaceId must be explicit: pass null to detach it or a space in the " +
       "resulting scope. Detached assignments are returned for a later sale.\n\n" +
-      "Transaction-linkage invariant: items in a project (projectId set) should have a " +
-      "transactionId. Updates that would CREATE a new project-orphan (e.g. setting projectId " +
-      "without transactionId on a non-orphan item) are rejected. Updates that touch an item " +
-      "that's ALREADY an orphan (legacy data) are allowed and return a warning so you can " +
-      "decide whether to clean it up. Do not invent a fake transactionId to dodge the warning. " +
-      "Correct path: bulk_update_items projectId: null moves the orphan to inventory, then " +
-      "sell_items_from_inventory_to_project records the real Purchase.",
+      "Transaction association: project items may intentionally have no transactionId. Clearing " +
+      "the link preserves the real category and records correction lineage. Linking requires the " +
+      "same project and always inherits the destination transaction's category.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -563,7 +536,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       projectId: z.string().nullable().optional().describe("Project ID — set to reassign item. Pass null to move into business inventory (budgetCategoryId is wiped automatically if needed)."),
       spaceId: z.string().nullable().optional().describe("Space ID in the resulting item scope. Pass null to detach; detached assignments are returned in the result."),
       budgetCategoryId: z.string().nullable().optional().describe("Budget category ID. Pass null to clear (required when projectId is null)."),
-      transactionId: z.string().optional().describe("Transaction ID to link this item to"),
+      transactionId: z.string().nullable().optional().describe("Transaction ID to link this item to. Pass null to clear it while preserving the item's category."),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
       quantity: z.coerce.number().optional().describe("Quantity (defaults to 1)"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375)"),
@@ -595,6 +568,31 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if ("projectId" in updates && updates.projectId == null) {
         if (!("budgetCategoryId" in updates)) updates.budgetCategoryId = null;
       }
+
+      const transactionWasProvided = Object.prototype.hasOwnProperty.call(fields, "transactionId");
+      const nextTransactionId = transactionWasProvided ? (fields.transactionId ?? null) : (existing.transactionId ?? null);
+      const nextProjectId = Object.prototype.hasOwnProperty.call(updates, "projectId")
+        ? (updates.projectId as string | null)
+        : (existing.projectId ?? null);
+      if (nextTransactionId) {
+        const destination = await getDoc<Transaction>(db, "transactions", nextTransactionId);
+        if (!destination) return notFound("Transaction", nextTransactionId);
+        if ((destination.projectId ?? null) !== nextProjectId) {
+          return validation("Item and transaction must belong to the same project.", "Clear the transaction or select one in the resulting project.");
+        }
+        if (nextProjectId) {
+          const destinationCategory = destination.budgetCategoryId?.trim();
+          if (!destinationCategory || destinationCategory.toLowerCase() === "uncategorized") {
+            return validation("The destination transaction has no real budget category.", "Assign the transaction a real category first.");
+          }
+          if ("budgetCategoryId" in fields && fields.budgetCategoryId !== destinationCategory) {
+            return validation("A linked item's category must match its transaction category.", "Omit budgetCategoryId; it is inherited from the destination transaction.");
+          }
+          updates.budgetCategoryId = destinationCategory;
+        } else if (transactionWasProvided) {
+          updates.budgetCategoryId = null;
+        }
+      }
       applyItemPriceFloorToUpdate(existing, updates);
 
       // Enforce the inventory invariant before writing.
@@ -624,31 +622,45 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (linkage.kind === "reject") {
         return validation(
           linkage.message,
-          "Do not invent a fake transactionId to satisfy this rule. If you're trying to fix a legacy orphan, " +
-            "use bulk_update_items with projectId: null to move it to inventory, then sell_items_from_inventory_to_project."
+          "Project items may be unassigned, but they must retain a real budget category."
         );
       }
 
-      // If transactionId is changing, sync itemIds on both old and new transactions
-      if (fields.transactionId !== undefined) {
-        const itemDoc = await accountCollection(db, "items").doc(itemId).get();
-        const oldTransactionId = itemDoc.exists ? (itemDoc.data() as Record<string, unknown>)?.transactionId as string | undefined : undefined;
-        const newTransactionId = fields.transactionId;
-
-        await accountCollection(db, "items").doc(itemId).update(updates);
+      // Transaction association changes are one atomic write, including audit lineage.
+      if (transactionWasProvided) {
+        const oldTransactionId = existing.transactionId ?? null;
+        const newTransactionId = fields.transactionId ?? null;
+        const batch = db.batch();
+        batch.update(accountCollection(db, "items").doc(itemId), updates);
 
         if (oldTransactionId && oldTransactionId !== newTransactionId) {
-          await accountCollection(db, "transactions").doc(oldTransactionId).update({
+          batch.update(accountCollection(db, "transactions").doc(oldTransactionId), {
             itemIds: FieldValue.arrayRemove(itemId),
             updatedAt: new Date(),
           });
         }
         if (newTransactionId && newTransactionId !== oldTransactionId) {
-          await accountCollection(db, "transactions").doc(newTransactionId).update({
+          batch.update(accountCollection(db, "transactions").doc(newTransactionId), {
             itemIds: FieldValue.arrayUnion(itemId),
             updatedAt: new Date(),
           });
         }
+        if (newTransactionId !== oldTransactionId) {
+          const edge: Record<string, unknown> = {
+            accountId: accountPath().slice("accounts/".length),
+            itemId,
+            fromTransactionId: oldTransactionId,
+            toTransactionId: newTransactionId,
+            fromProjectId: existing.projectId ?? null,
+            toProjectId: nextProjectId,
+            movementKind: "correction",
+            source: "mcp",
+            note: newTransactionId ? "Set transaction association" : "Cleared transaction association",
+            createdAt: new Date(),
+          };
+          batch.set(accountCollection(db, "lineageEdges").doc(), edge);
+        }
+        await batch.commit();
       } else {
         await accountCollection(db, "items").doc(itemId).update(updates);
       }
@@ -667,9 +679,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     "bulk_update_items",
     "DOCTRINE — CORRECTIONS PRIMITIVE: This is the tool for fixing data-entry mistakes (wrong project, " +
       "wrong category, wrong vendor on the original record) WITHOUT recording a financial event. " +
-      "Use it to relocate misfiled items — most commonly, pass `projectId: null` to move legacy orphans " +
-      "(items in a project with no transactionId) back to inventory as a correction; then re-record the " +
-      "real business event via sell_items_from_inventory_to_project.\n\n" +
+      "Project items may intentionally remain categorized with no transactionId while awaiting the " +
+      "correct association.\n\n" +
       "For real business events (items actually changing hands, budgets actually shifting), use " +
       "sell_items_from_* / return_items instead.\n\n" +
       "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that. Scope changes with existing spaces require explicit spaceId handling; pass null to detach and receive a reusable assignment receipt.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
@@ -734,12 +745,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       // Preflight: validate the invariant against every matched item.
       const violations: string[] = [];
-      const newOrphans: string[] = [];
-      const preExistingOrphans: string[] = [];
       const preparedUpdates = new Map<string, Record<string, unknown>>();
       const spaceViolations: Array<{ id: string; message: string; guidance: string }> = [];
       const detachedSpaceAssignments: DetachedSpaceAssignment[] = [];
       const spaceCache: SpaceCache = new Map();
+      const transactionCache = new Map<string, (Transaction & { id: string }) | null>();
       for (const doc of snapshot.docs) {
         const existing = doc.data() as Item & {
           projectId?: string | null;
@@ -747,6 +757,26 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           transactionId?: string | null;
         };
         const itemUpdates = applyItemPriceFloorToUpdate(existing, { ...updates });
+        if (existing.transactionId) {
+          let transaction = transactionCache.get(existing.transactionId);
+          if (transaction === undefined) {
+            transaction = await getDoc<Transaction>(db, "transactions", existing.transactionId);
+            transactionCache.set(existing.transactionId, transaction);
+          }
+          const nextProjectId = Object.prototype.hasOwnProperty.call(itemUpdates, "projectId")
+            ? (itemUpdates.projectId as string | null)
+            : (existing.projectId ?? null);
+          if (!transaction || (transaction.projectId ?? null) !== nextProjectId) {
+            violations.push(doc.id);
+          } else if (nextProjectId) {
+            const categoryId = transaction.budgetCategoryId?.trim();
+            if (!categoryId || categoryId.toLowerCase() === "uncategorized") {
+              violations.push(doc.id);
+            } else {
+              itemUpdates.budgetCategoryId = categoryId;
+            }
+          }
+        }
         preparedUpdates.set(doc.id, itemUpdates);
         if (checkUpdateInvariant(existing, itemUpdates)) violations.push(doc.id);
         const spaceIssue = await validateItemSpaceTransition(
@@ -769,9 +799,6 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           );
           if (detached) detachedSpaceAssignments.push(detached);
         }
-        const linkage = checkTransactionLinkageOnUpdate(existing, itemUpdates);
-        if (linkage.kind === "reject") newOrphans.push(doc.id);
-        else if (linkage.kind === "warn") preExistingOrphans.push(doc.id);
       }
       if (violations.length > 0) {
         return validation(
@@ -786,14 +813,6 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           first.guidance
         );
       }
-      if (newOrphans.length > 0) {
-        return validation(
-          `Bulk update would CREATE ${newOrphans.length} new project-orphan item(s) (project set, no transactionId): ${newOrphans.slice(0, 5).join(", ")}${newOrphans.length > 5 ? "…" : ""}`,
-          "Do not fabricate transactionIds to silence this rule. If you're trying to clean up legacy orphans, " +
-            "use bulk_update_items with projectId: null to move them to inventory, then sell_items_from_inventory_to_project."
-        );
-      }
-
       let processed = 0;
       let batch = db.batch();
       let batchCount = 0;
@@ -813,15 +832,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         processed += batchCount;
       }
 
-      const warning =
-        preExistingOrphans.length > 0
-          ? `${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
-          : null;
       return asToolResponse({
         message: `Updated ${processed} items matching filter.`,
         updatedCount: processed,
         detachedSpaceAssignments,
-        warning,
+        warning: null,
       });
     }
   );
@@ -831,9 +846,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     "bulk_update_items_by_id",
     "DOCTRINE — CORRECTIONS PRIMITIVE (per-item variant): Like bulk_update_items, this is for fixing " +
       "data-entry mistakes WITHOUT recording a financial event. Use it when each item needs different " +
-      "field values (filter-based bulk_update_items can't express that). Most common correction: pass " +
-      "`projectId: null` on legacy orphan items to relocate them to inventory, then re-record the real " +
-      "business event with sell_items_from_inventory_to_project. For real business events (items actually " +
+      "field values (filter-based bulk_update_items can't express that). Project items may intentionally " +
+      "remain categorized with no transactionId while awaiting a correct association. For real business events (items actually " +
       "changing hands, budgets actually shifting), use sell_items_from_* / return_items.\n\n" +
       "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that. Scope changes with existing spaces require explicit per-item spaceId handling; pass null to detach and receive a reusable assignment receipt.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
     {
@@ -869,9 +883,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const prepared: PreparedUpdate[] = [];
       const notFoundIds: string[] = [];
       const violations: Array<{ id: string; error: string }> = [];
-      const preExistingOrphans: string[] = [];
       const detachedSpaceAssignments: DetachedSpaceAssignment[] = [];
       const spaceCache: SpaceCache = new Map();
+      const transactionCache = new Map<string, (Transaction & { id: string }) | null>();
 
       for (const { id, ...fields } of updates) {
         const callerProvidedSpaceId = Object.prototype.hasOwnProperty.call(fields, "spaceId");
@@ -892,6 +906,29 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           if (!("budgetCategoryId" in itemUpdates)) itemUpdates.budgetCategoryId = null;
         }
         applyItemPriceFloorToUpdate(existing, itemUpdates);
+
+        if (existing.transactionId) {
+          let transaction = transactionCache.get(existing.transactionId);
+          if (transaction === undefined) {
+            transaction = await getDoc<Transaction>(db, "transactions", existing.transactionId);
+            transactionCache.set(existing.transactionId, transaction);
+          }
+          const nextProjectId = Object.prototype.hasOwnProperty.call(itemUpdates, "projectId")
+            ? (itemUpdates.projectId as string | null)
+            : (existing.projectId ?? null);
+          if (!transaction || (transaction.projectId ?? null) !== nextProjectId) {
+            violations.push({ id, error: "Linked item and transaction must remain in the same project. Use update_item to clear or reassign the transaction atomically." });
+            continue;
+          }
+          if (nextProjectId) {
+            const categoryId = transaction.budgetCategoryId?.trim();
+            if (!categoryId || categoryId.toLowerCase() === "uncategorized") {
+              violations.push({ id, error: "The linked transaction has no real budget category." });
+              continue;
+            }
+            itemUpdates.budgetCategoryId = categoryId;
+          }
+        }
 
         const err = checkUpdateInvariant(existing, itemUpdates);
         if (err) {
@@ -920,13 +957,6 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         );
         if (detached) detachedSpaceAssignments.push(detached);
 
-        const linkage = checkTransactionLinkageOnUpdate(existing, itemUpdates);
-        if (linkage.kind === "reject") {
-          violations.push({ id, error: linkage.message });
-          continue;
-        }
-        if (linkage.kind === "warn") preExistingOrphans.push(id);
-
         prepared.push({ id, data: itemUpdates });
       }
 
@@ -937,7 +967,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         const first = violations[0];
         return validation(
           `${violations.length} update(s) would violate an invariant. First (${first.id}): ${first.error}`,
-          "Items in business inventory have no budget category. Project items must have a transactionId — do not fabricate one; relocate orphans to inventory instead."
+          "Items in business inventory have no budget category. Project items require a real budget category."
         );
       }
 
@@ -960,15 +990,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         processed += batchCount;
       }
 
-      const warning =
-        preExistingOrphans.length > 0
-          ? `${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
-          : null;
       return asToolResponse({
         message: `Updated ${processed} items.`,
         updatedCount: processed,
         detachedSpaceAssignments,
-        warning,
+        warning: null,
       });
     }
   );

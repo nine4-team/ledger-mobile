@@ -54,7 +54,7 @@ final class ItemActionsController {
             onStatusChange: { [weak self] _ in self?.statusPickerItem = item },
             onSetTransaction: { [weak self] in self?.transactionPickerItem = item },
             onClearTransaction: { [weak self] in
-                self?.updateItem(item, accountId: accountId, fields: ["transactionId": NSNull()])
+                self?.clearTransaction(item, accountId: accountId)
             },
             onSetSpace: { [weak self] in self?.setSpaceItem = item },
             onClearSpace: { [weak self] in
@@ -87,6 +87,16 @@ final class ItemActionsController {
         let service = ItemsService()
         nonisolated(unsafe) let f = fields
         Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: f) }
+    }
+
+    func setTransaction(_ transactionId: String, for item: Item, accountId: String?) {
+        guard let accountId else { return }
+        Task { try? await ItemsService().setTransaction(accountId: accountId, items: [item], transactionId: transactionId) }
+    }
+
+    func clearTransaction(_ item: Item, accountId: String?) {
+        guard let accountId else { return }
+        Task { try? await ItemsService().clearTransaction(accountId: accountId, items: [item]) }
     }
 
     /// Performs the delete for `deleteConfirmItem`, then clears it.
