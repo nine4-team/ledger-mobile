@@ -16,7 +16,7 @@ not valid evidence for ranking architectural remediations.
 - The diagnostics foundation and focused instrumentation compile in the iOS
   and macOS application targets.
 - The focused diagnostics and lifecycle suites passed after the final changes:
-  26 tests in 2 suites, with 0 failures.
+  28 tests in 2 suites, with 0 failures.
 - Main-thread heartbeat delay, process-memory trends, listener and task counts,
   context publication time, list derivation time, card lookup time, image
   decoding, and warm-cache navigation remain valid measurements under degraded
@@ -43,15 +43,15 @@ it only stops obsolete listeners after that context has been released.
 
 ### 2. Repeated card metadata scans
 
-A deterministic Debug simulator benchmark modeled 668 items, 80 spaces, 40
-categories, and 80 invoices. The latest representative run measured:
+A deterministic serialized Debug simulator benchmark modeled 668 items, 80
+spaces, 40 categories, and 80 invoices. The controlled run measured:
 
-- filter/sort pipeline: 0.449 ms per evaluation;
-- grouping: 1.068 ms per evaluation;
-- 20-item selection total: 0.265 ms per evaluation;
-- linear space/category/invoice card lookups: 40.270 ms per 668-card pass;
-- indexed lookups: 0.258 ms per 668-card pass;
-- measured lookup improvement: 156.2x.
+- filter/sort pipeline: 0.369 ms per evaluation;
+- grouping: 0.930 ms per evaluation;
+- 20-item selection total: 0.267 ms per evaluation;
+- linear space/category/invoice card lookups: 41.315 ms per 668-card pass;
+- indexed lookups: 0.272 ms per 668-card pass;
+- measured lookup improvement: 152.0x.
 
 The optimized simulator run measured 0.184 ms for filter/sort, 0.724 ms for
 grouping, 0.091 ms for selection, 6.341 ms for linear card lookups, and 0.126
@@ -101,8 +101,12 @@ rebuilt the full transaction dictionary once for every invoice. Both now build
 category and transaction indexes once per publication. The identical benchmark
 after the change measured:
 
-- transaction filtering: 1.233 ms, about 14x faster;
-- invoice filtering: 3.357 ms, about 152x faster.
+- transaction filtering: 1.444 ms;
+- invoice filtering: 4.117 ms.
+
+The pre-fix and post-fix values establish an order-of-magnitude improvement, but
+the exact multiplier is directional because the historical pre-fix suite was
+not serialized.
 
 All financial-access policy tests pass, including limited fee-category and
 invoice visibility behavior.
@@ -129,7 +133,7 @@ The bundled Firebase SDK documents that Firestore completion and event handlers
 use the main queue by default. `FirestoreRepository` then decoded every document
 in collection and query snapshots synchronously inside that callback before a
 context could publish the result. A representative local benchmark measured a
-668-item Firestore Codable pass at 10.089 ms in Debug.
+668-item Firestore Codable pass at 10.537 ms in Debug.
 
 That isolated cost cannot explain a multi-minute stall. It is nevertheless
 confirmed main-thread work that can compound when account-wide and
@@ -142,8 +146,8 @@ result is emitted in the current snapshot's query order. The serial queue
 preserves snapshot arrival order, and completed arrays are still delivered on
 the main queue exactly as before.
 
-The integrated 668-item benchmark measured 0.393 ms for a one-document change
-and 0.549 ms for a 20-document change, approximately 25.7x and 18.4x faster than
+The integrated 668-item benchmark measured 0.289 ms for a one-document change
+and 0.596 ms for a 20-document change, approximately 36.5x and 17.7x faster than
 re-decoding all 668 documents. Equivalence tests cover additions, modifications,
 removals, query reordering, malformed modified documents, and snapshots with no
 document changes.
@@ -173,6 +177,24 @@ This removes one listener and one duplicate decode/publication path while the
 Projects screen is visible. Project card freshness, sorting, archive filtering,
 navigation, and preferences behavior are unchanged.
 
+### 8. Full-array publication and view invalidation
+
+A controlled Debug benchmark assigned independent 668-item arrays through an
+`@Observable` property. Equal-array publication measured 0.311 ms; a worst-case
+change in the final item measured 0.327 ms. The corresponding filter/sort and
+grouping passes measured 0.360 ms and 0.935 ms.
+
+An Observation regression test verified that an equal full-array publication
+causes zero observer notifications, while the changed array causes one. Direct
+publication is therefore not a credible explanation for multi-second or
+multi-minute stalls, and data-identical snapshots do not create the hypothesized
+SwiftUI invalidation storm.
+
+Real changes still correctly invalidate consumers. Diagnostic-only events now
+record each Firestore snapshot's total/change counts and top-level project-items
+and shared-list body evaluations. A physical Halrow trace is required before
+splitting contexts into granular stores or changing view-state ownership.
+
 ## Ranked Readout
 
 1. **Leaked project listeners:** confirmed architectural defect and plausible
@@ -183,8 +205,8 @@ navigation, and preferences behavior are unchanged.
 3. **Main-actor financial publication:** a confirmed half-second synthetic
    callback path for limited-access accounts, reduced to approximately 3 ms.
 4. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
-   668-item full decode measured 10.089 ms. Subsequent one- and 20-document
-   changes now measure 0.393 ms and 0.549 ms while preserving ordered,
+   668-item full decode measured 10.537 ms. Subsequent one- and 20-document
+   changes now measure 0.289 ms and 0.596 ms while preserving ordered,
    main-queue publication and live freshness.
 5. **Remaining account/project listener overlap:** item, transaction,
    proto-item, and space listeners still overlap by scope. A stable trace is
@@ -196,10 +218,13 @@ navigation, and preferences behavior are unchanged.
    memory is now bounded correctly and display preparation no longer runs on
    the main actor. Cold image-download timing remains unranked because the
    network measurements are invalid in this run.
-8. **List filtering, grouping, and selection totals:** measured too small to be
+8. **Full-array observable publication:** 0.311-0.327 ms at 668 items, and
+   equal arrays do not notify observers. Not a primary cause; downstream SwiftUI
+   fan-out from real changes remains pending physical measurement.
+9. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-9. **Unbatched bulk writes:** remains a write-completion and callback-storm
+10. **Unbatched bulk writes:** remains a write-completion and callback-storm
    issue, but does not explain slow browsing before a bulk operation begins.
 
 ## Evidence Unavailable
@@ -214,6 +239,8 @@ navigation, and preferences behavior are unchanged.
 
 The diagnostics are disabled by default and do not change UI presentation,
 listener scope or freshness, Firestore writes, or image-request concurrency.
+The new snapshot/body correlation events are also diagnostics-gated and record
+only collection kinds and counts, never customer IDs or field values.
 
 The listener cleanup and lookup indexes also preserve visible behavior and
 freshness. Cleanup occurs only after a project context is destroyed; lookup
@@ -235,8 +262,11 @@ are debounced or suppressed.
 - Latest focused performance suite, including image cache/decode coverage: 11
   tests passed on the iOS simulator.
 - Latest combined performance and lifecycle run, including Firestore queue,
-  cancellation, incremental equivalence, and 668-item decode coverage: 26 tests
-  passed on the iOS simulator.
+  cancellation, incremental equivalence, observable publication behavior, and
+  668-item coverage: 28 tests passed on the iOS simulator.
+- Canonical serialized performance suite: 18 tests passed. Earlier synthetic
+  benchmark numbers are directional because Swift Testing ran them in parallel;
+  the experiment ledger identifies the controlled result bundle.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.
@@ -254,7 +284,7 @@ When a physical iPhone and a stable connection are available, enable
 2. Select 20 items and open the bulk action menu.
 3. Open an item and navigate back ten times.
 4. Repeat the navigation once with warm caches.
-5. Record main-thread stalls, memory, active listeners and tasks, context
-   publications, list derivations, card lookups, image work, and Firestore
-   callback timing.
+5. Correlate Firestore snapshot total/change counts with repository callbacks,
+   context publications, project-items/shared-list body evaluations, list
+   derivations, card lookups, image work, main-thread stalls, and memory.
 6. Correlate any crash time with device analytics before choosing a fix.

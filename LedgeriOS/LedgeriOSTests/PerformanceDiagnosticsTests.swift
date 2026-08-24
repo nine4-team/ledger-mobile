@@ -1,10 +1,11 @@
 import Foundation
 import FirebaseFirestore
 import ImageIO
+import Observation
 import Testing
 @testable import LedgeriOS
 
-@Suite("Performance Diagnostics")
+@Suite("Performance Diagnostics", .serialized)
 struct PerformanceDiagnosticsTests {
     @Test("Runtime gate accepts launch argument")
     func runtimeGateArgument() {
@@ -130,6 +131,88 @@ struct PerformanceDiagnosticsTests {
             "indexed_card_lookups_ms=\(formatMilliseconds(indexedLookups.millisecondsPerIteration)) " +
             "lookup_speedup=\(String(format: "%.1f", linearLookups.millisecondsPerIteration / max(indexedLookups.millisecondsPerIteration, 0.000_001)))x"
         )
+    }
+
+    @Test("Synthetic 668-item observable publication cost profile")
+    func syntheticObservablePublicationCostProfile() {
+        let items = makeBrowsingItems(count: 668)
+        let firstEqualItems = items.map { $0 }
+        let secondEqualItems = items.map { $0 }
+        var changedItems = items
+        changedItems[changedItems.count - 1].name = "Changed item"
+        let plainProbe = PlainItemPublicationProbe(items: items)
+        let probe = ObservableItemPublicationProbe(items: items)
+        var publicationNumber = 0
+
+        let plainArrayAssignment = benchmark(iterations: 10_000) {
+            publicationNumber += 1
+            plainProbe.items = publicationNumber.isMultiple(of: 2) ? items : changedItems
+            return plainProbe.items.count
+        }
+        let observableScalarAssignment = benchmark(iterations: 10_000) {
+            publicationNumber += 1
+            probe.publicationNumber = publicationNumber
+            return probe.publicationNumber
+        }
+        let equalObservableArrayAssignment = benchmark(iterations: 10_000) {
+            publicationNumber += 1
+            probe.items = publicationNumber.isMultiple(of: 2) ? firstEqualItems : secondEqualItems
+            return probe.items.count
+        }
+        let changedObservableArrayAssignment = benchmark(iterations: 10_000) {
+            publicationNumber += 1
+            probe.items = publicationNumber.isMultiple(of: 2) ? items : changedItems
+            return probe.items.count
+        }
+        let filterSort = benchmark(iterations: 100) {
+            ListFilterSortCalculations.applyAllMultiFilters(
+                probe.items,
+                filters: [],
+                sort: .createdDesc,
+                search: ""
+            ).count
+        }
+        let grouping = benchmark(iterations: 100) {
+            ListFilterSortCalculations.groupItems(probe.items).count
+        }
+
+        #expect(plainArrayAssignment.result == 668)
+        #expect(observableScalarAssignment.result > 0)
+        #expect(equalObservableArrayAssignment.result == 668)
+        #expect(changedObservableArrayAssignment.result == 668)
+        #expect(filterSort.result == 668)
+        #expect(grouping.result > 0)
+        print(
+            "FULL_ARRAY_PUBLICATION_BENCHMARK items=668 " +
+            "plain_array_assignment_ms=\(formatMilliseconds(plainArrayAssignment.millisecondsPerIteration)) " +
+            "observable_scalar_assignment_ms=\(formatMilliseconds(observableScalarAssignment.millisecondsPerIteration)) " +
+            "equal_observable_array_assignment_ms=\(formatMilliseconds(equalObservableArrayAssignment.millisecondsPerIteration)) " +
+            "changed_observable_array_assignment_ms=\(formatMilliseconds(changedObservableArrayAssignment.millisecondsPerIteration)) " +
+            "filter_sort_ms=\(formatMilliseconds(filterSort.millisecondsPerIteration)) " +
+            "grouping_ms=\(formatMilliseconds(grouping.millisecondsPerIteration))"
+        )
+    }
+
+    @Test("Observable item arrays do not invalidate observers for equal publications")
+    func observableItemArrayEqualityBehavior() {
+        let items = makeBrowsingItems(count: 668)
+        let independentlyAllocatedEqualItems = items.map { $0 }
+        let probe = ObservableItemPublicationProbe(items: items)
+        let counter = ObservationChangeCounter()
+
+        withObservationTracking {
+            _ = probe.items
+        } onChange: {
+            counter.increment()
+        }
+
+        probe.items = independentlyAllocatedEqualItems
+        #expect(counter.value == 0)
+
+        var changedItems = items
+        changedItems[changedItems.count - 1].name = "Changed item"
+        probe.items = changedItems
+        #expect(counter.value == 1)
     }
 
     @Test("Account indexes preserve names and invoice status priority")
@@ -385,6 +468,37 @@ struct PerformanceDiagnosticsTests {
             "transaction_filter_ms=\(formatMilliseconds(visibleTransactions.millisecondsPerIteration)) " +
             "invoice_filter_ms=\(formatMilliseconds(visibleInvoices.millisecondsPerIteration))"
         )
+    }
+}
+
+@Observable
+private final class ObservableItemPublicationProbe {
+    var items: [Item]
+    var publicationNumber = 0
+
+    init(items: [Item]) {
+        self.items = items
+    }
+}
+
+private final class PlainItemPublicationProbe {
+    var items: [Item]
+
+    init(items: [Item]) {
+        self.items = items
+    }
+}
+
+private final class ObservationChangeCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var value: Int {
+        lock.withLock { count }
+    }
+
+    func increment() {
+        lock.withLock { count += 1 }
     }
 }
 

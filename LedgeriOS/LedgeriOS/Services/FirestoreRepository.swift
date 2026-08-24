@@ -259,9 +259,16 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                 print("[FirestoreRepo] \(collectionPath) snapshot nil")
                 return
             }
+            let documentChanges = snapshot?.documentChanges ?? []
+            PerformanceDiagnostics.shared.event(
+                "FirestoreSnapshotReceived",
+                kind: kind,
+                count: docs.count,
+                value: documentChanges.count
+            )
             let documents = FirestoreUncheckedSendable(value: docs)
             let changes = FirestoreUncheckedSendable(
-                value: Self.incrementalChanges(snapshot?.documentChanges ?? [])
+                value: Self.incrementalChanges(documentChanges)
             )
             let snapshotFlags = Self.snapshotFlags(snapshot)
             decodeQueue.async {
@@ -325,9 +332,16 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                     print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) snapshot nil")
                     return
                 }
+                let documentChanges = snapshot?.documentChanges ?? []
+                PerformanceDiagnostics.shared.event(
+                    "FirestoreSnapshotReceived",
+                    kind: kind,
+                    count: docs.count,
+                    value: documentChanges.count
+                )
                 let documents = FirestoreUncheckedSendable(value: docs)
                 let changes = FirestoreUncheckedSendable(
-                    value: Self.incrementalChanges(snapshot?.documentChanges ?? [])
+                    value: Self.incrementalChanges(documentChanges)
                 )
                 let snapshotFlags = Self.snapshotFlags(snapshot)
                 decodeQueue.async {

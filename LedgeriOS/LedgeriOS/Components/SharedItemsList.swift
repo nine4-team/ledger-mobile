@@ -142,6 +142,7 @@ struct SharedItemsList: View {
     // MARK: - Body
 
     var body: some View {
+        let _ = recordBodyEvaluation()
         Group {
             if inline {
                 Section {
@@ -265,6 +266,16 @@ struct SharedItemsList: View {
         } else {
             standardControlBar(style: style)
         }
+    }
+
+    private func recordBodyEvaluation() {
+        let diagnostics = PerformanceDiagnostics.shared
+        guard diagnostics.isEnabled else { return }
+        diagnostics.event(
+            "ViewBodyEvaluated",
+            kind: "shared-items-list.\(diagnosticMode)",
+            count: items.count
+        )
     }
 
     @ViewBuilder

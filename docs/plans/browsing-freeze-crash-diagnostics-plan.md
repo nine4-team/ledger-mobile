@@ -14,6 +14,10 @@ publication, and the projects list now uses AccountContext's existing live
 projects instead of opening a duplicate listener. After its initial full
 snapshot, each repository subscription now decodes only added or modified
 documents while retaining current query order and live publication behavior.
+The full-array publication experiment found a 0.311-0.327 ms direct observable
+setter cost at 668 items and confirmed that equal arrays do not invalidate
+observers. Snapshot change counts and top-level item-list body evaluations are
+now instrumented for the pending physical-device fan-out trace.
 These remediation changes are tracked in the run summary; the non-goals below
 describe the original instrumentation phase.
 
@@ -103,8 +107,8 @@ The first implementation pass should begin from these verified facts:
 - `AccountContext` maintains account-wide listeners for items, proto-items,
   transactions, spaces, budget categories, projects, and invoices.
 - Each `ProjectDetailContainer` creates an independent `ProjectContext` with
-  project-scoped listeners for project detail, projects, transactions, items,
-  proto-items, spaces, budget data, preferences, and notes.
+  project-scoped listeners for project detail, transactions, items, proto-items,
+  spaces, budget data, preferences, and notes.
 - `AccountContext` and `ProjectContext` therefore intentionally have overlapping
   coverage while a project is open. The cost and invalidation impact have not
   been measured.
@@ -114,18 +118,19 @@ The first implementation pass should begin from these verified facts:
   completed array back on main. The first snapshot is fully decoded; subsequent
   snapshots decode only added or modified documents, remove deleted documents,
   and reconstruct the result in current query order. A representative 668-item
-  benchmark measured 10.089 ms for a full decode, 0.393 ms for one changed
-  document, and 0.549 ms for 20 changed documents in Debug. Listener scope,
+  benchmark measured 10.537 ms for a full decode, 0.289 ms for one changed
+  document, and 0.596 ms for 20 changed documents in Debug. Listener scope,
   freshness, and publication ordering are unchanged. The full array is still
-  published on every snapshot, so broad SwiftUI invalidation remains to be
-  measured separately.
+  published on every snapshot. Its direct Observation cost is 0.311-0.327 ms at
+  668 items; equal arrays do not notify observers. Downstream fan-out from real
+  changes remains to be measured on a physical device.
 - Context callbacks enqueue `Task { @MainActor ... }`. Main-actor delivery delay
-  is not currently measured.
+  is recorded by `MainActorDelivery` when diagnostics are enabled.
 - `SharedItemsList` recomputes filtered items, groups, visible IDs, and selection
-  totals through computed properties. Invocation count and duration are not
-  measured.
-- `ItemCard` performs account-wide invoice and space searches during card
-  evaluation. Aggregate lookup cost is not measured.
+  totals through computed properties. Durations are aggregated, and top-level
+  body evaluations are now recorded when diagnostics are enabled.
+- `ItemCard` metadata lookups are indexed. Aggregate card-evaluation lookup cost
+  is recorded when diagnostics are enabled.
 - `ItemDetailView` owns focused item and transaction listeners plus an async
   lineage load task. It removes/cancels them on disappear, but repeated lifecycle
   counts and cancellation completion are not measured.

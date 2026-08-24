@@ -71,6 +71,7 @@ struct ItemsTabView: View {
     // MARK: - Body
 
     var body: some View {
+        let _ = recordBodyEvaluation()
         ScrollView {
             AdaptiveContentWidth {
                 LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
@@ -243,6 +244,16 @@ struct ItemsTabView: View {
             protoItemToastTask?.cancel()
             protoItemToastTask = nil
         }
+    }
+
+    private func recordBodyEvaluation() {
+        let diagnostics = PerformanceDiagnostics.shared
+        guard diagnostics.isEnabled else { return }
+        diagnostics.event(
+            "ViewBodyEvaluated",
+            kind: "project-items",
+            count: projectContext.items.count
+        )
     }
 
     private var itemDraftsSection: some View {
