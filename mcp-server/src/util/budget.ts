@@ -44,7 +44,7 @@ export function categoryPillLabel(c: BudgetCategory): string {
  *                                                   business_to_project). See
  *                                                   docs/specs/canonical-sales.md.
  *   3. Non-legacy project → inventory Sale      → always -1 (-|amount|)
- *   4. Everything else (Purchase, etc.)         → +amount (unchanged)
+ *   4. Everything else (Purchase, PaymentToBusiness, etc.) → +amount (unchanged)
  *
  * Canceled transactions contribute $0.
  *
@@ -57,10 +57,6 @@ export function normalizeSpendAmount(tx: Transaction): number {
 
   const amount = tx.amountCents;
   const rawType = typeof tx.type === "string" ? tx.type.trim().toLowerCase() : null;
-
-  if (rawType === "paymenttobusiness" || rawType === "payment_to_business" || rawType === "payment-to-business") {
-    return 0;
-  }
 
   // Case 1: Returns — always negative.
   if (rawType === "return") {

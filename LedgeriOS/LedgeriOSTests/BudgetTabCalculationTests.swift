@@ -276,6 +276,14 @@ struct BudgetTabCalculationTests {
         #expect(result == 15000)
     }
 
+    @Test("Payment to business adds to received fee budget")
+    func paymentToBusinessAdds() {
+        var tx = makeTransaction(amountCents: 25000)
+        tx.transactionType = .paymentToBusiness
+        let result = BudgetTabCalculations.normalizeTransactionAmount(tx)
+        #expect(result == 25000)
+    }
+
     @Test("Canceled overrides returned status")
     func canceledOverridesReturned() {
         let tx = makeTransaction(amountCents: 5000, status: .canceled)
@@ -338,6 +346,14 @@ struct BudgetTabCalculationTests {
         let result = BudgetTabCalculations.computeSpend(for: "cat1", transactions: transactions)
         // 10000 + 0 + (-3000) = 7000
         #expect(result == 7000)
+    }
+
+    @Test("Compute spend includes payment to business transactions")
+    func computeSpendIncludesPaymentToBusiness() {
+        var payment = makeTransaction(budgetCategoryId: "cat1", amountCents: 25000)
+        payment.transactionType = .paymentToBusiness
+        let result = BudgetTabCalculations.computeSpend(for: "cat1", transactions: [payment])
+        #expect(result == 25000)
     }
 
     // MARK: - Fee category label

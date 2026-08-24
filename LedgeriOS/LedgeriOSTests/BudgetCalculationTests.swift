@@ -26,6 +26,15 @@ struct BudgetCalculationTests {
         #expect(service.normalizeSpendAmount(tx) == 5000)
     }
 
+    @Test("Payment to business returns amount")
+    func paymentToBusinessReturnsAmount() {
+        var tx = Transaction()
+        tx.amountCents = 5000
+        tx.transactionType = .paymentToBusiness
+
+        #expect(service.normalizeSpendAmount(tx) == 5000)
+    }
+
     @Test("Nil amount returns zero")
     func nilAmountReturnsZero() {
         let tx = Transaction()

@@ -165,9 +165,8 @@ The system handles current per-batch inventory movement transactions plus legacy
 - **Inventory → project purchases** (`type == "Purchase"`, inventory source, `budgetCategoryId` set): always +1.
 - **Project → inventory sales** (`type == "Sale"`, no `isCanonicalInventorySale` flag): subtract from the transaction `budgetCategoryId`, which is the frozen source project accounting category.
 - **Returns** (`type == "Return"`): always -1. Includes both vendor returns and return-to-inventory transactions.
-- **Payment to business** (`type == "paymentToBusiness"`): excluded from
-  project spend. These rows record client payments collected by the business,
-  not project costs.
+- **Payment to business** (`type == "paymentToBusiness"`): always +1. In fee
+  categories this is displayed as money received, not ordinary project cost.
 
 ### Full table
 
@@ -177,7 +176,7 @@ The system handles current per-batch inventory movement transactions plus legacy
 | Return (vendor or inventory) | -1 | Subtracts from spent |
 | Inventory → project Purchase (`type: "Purchase"`, inventory source) | +1 | Adds to spent |
 | Project → inventory Sale (`type: "Sale"`, source category) | -1 | Subtracts from project spend |
-| Payment to business (`type: "paymentToBusiness"`) | excluded | Records collected money; not project spend |
+| Payment to business (`type: "paymentToBusiness"`) | +1 | Adds to received for fee categories |
 | **Legacy** canonical sale, `business_to_project` | +1 | Adds to spent |
 | **Legacy** canonical sale, `project_to_business` | -1 | Subtracts from spent |
 | Canceled transactions (`status == "canceled"`, any type) | excluded | No effect |

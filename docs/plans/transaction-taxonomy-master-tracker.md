@@ -110,7 +110,7 @@ Owner docs:
 | Resolve categories for item/transaction-sourced lines | in progress | Needed before collection. |
 | Block invoice save/collection when selected lines lack category | pending | Especially important for older invoices/manual lines. |
 | Group invoice collection by line `budgetCategoryId` | in progress | One `paymentToBusiness` per category. |
-| Exclude settlement transactions from billable pools/budget spend | in progress | Verify reports and billing summary. |
+| Exclude settlement transactions from billable pools | in progress | Budget rollups count categorized payments as received fee activity. Verify reports and billing summary. |
 | Audit invoice lines missing categories | pending | Use/read `scripts/audit-invoice-line-categories.mjs`. |
 
 ## Workstream D - Production Data Audits

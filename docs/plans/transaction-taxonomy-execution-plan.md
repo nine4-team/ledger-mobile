@@ -468,8 +468,8 @@ Required changes:
   presence, not transaction type alone.
 - Report aggregation must include non-itemized purchases as invoiceable cost
   lines and exclude settlement/payment rows.
-- Project list budget summaries should not treat `paymentToBusiness` as over/under
-  spend.
+- Project list budget summaries should count `paymentToBusiness` as positive
+  received activity for fee categories.
 
 Verification:
 
