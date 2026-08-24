@@ -16,7 +16,7 @@ not valid evidence for ranking architectural remediations.
 - The diagnostics foundation and focused instrumentation compile in the iOS
   and macOS application targets.
 - The focused diagnostics and lifecycle suites passed after the final changes:
-  24 tests in 2 suites, with 0 failures.
+  26 tests in 2 suites, with 0 failures.
 - Main-thread heartbeat delay, process-memory trends, listener and task counts,
   context publication time, list derivation time, card lookup time, image
   decoding, and warm-cache navigation remain valid measurements under degraded
@@ -129,20 +129,37 @@ The bundled Firebase SDK documents that Firestore completion and event handlers
 use the main queue by default. `FirestoreRepository` then decoded every document
 in collection and query snapshots synchronously inside that callback before a
 context could publish the result. A representative local benchmark measured a
-668-item Firestore Codable pass at 10.326 ms in Debug.
+668-item Firestore Codable pass at 10.089 ms in Debug.
 
 That isolated cost cannot explain a multi-minute stall. It is nevertheless
 confirmed main-thread work that can compound when account-wide and
 project-scoped listeners deliver overlapping snapshots or trigger broad view
 invalidation. Collection and query snapshot decoding now runs on a private
-serial queue per repository. The serial queue preserves snapshot arrival order,
-and completed arrays are still delivered on the main queue exactly as before.
+serial queue per repository. The first snapshot still decodes every document.
+Later snapshots apply Firestore's document changes: added and modified documents
+are decoded, removed documents are deleted from the decoded state, and the full
+result is emitted in the current snapshot's query order. The serial queue
+preserves snapshot arrival order, and completed arrays are still delivered on
+the main queue exactly as before.
+
+The integrated 668-item benchmark measured 0.393 ms for a one-document change
+and 0.549 ms for a 20-document change, approximately 25.7x and 18.4x faster than
+re-decoding all 668 documents. Equivalence tests cover additions, modifications,
+removals, query reordering, malformed modified documents, and snapshots with no
+document changes.
 
 Listener scope, cache/server behavior, and update freshness are unchanged. A
 publication is delayed only by the same decode work that previously blocked the
 main queue, plus the next main-queue turn. Firebase's global callback queue was
 not changed because several direct subscribers outside the repository mutate UI
 state under the existing main-queue assumption.
+
+Each active collection/query subscription now retains an ID-keyed decoded-value
+dictionary in addition to the full array published by its context. This is a
+modest memory tradeoff that should be checked on a physical device. Every
+snapshot still rebuilds and publishes a full array, so broad SwiftUI invalidation
+remains a separate architectural issue; this change only removes redundant
+Codable decoding.
 
 ### 7. Duplicate projects-list subscription
 
@@ -165,9 +182,10 @@ navigation, and preferences behavior are unchanged.
    Fixed on the shared item-card/list path with synchronous freshness tests.
 3. **Main-actor financial publication:** a confirmed half-second synthetic
    callback path for limited-access accounts, reduced to approximately 3 ms.
-4. **Main-queue Firestore snapshot decoding:** confirmed architecture risk.
-   A 668-item decode measured 10.326 ms in isolation and now runs on a serial
-   background queue while preserving ordered main-queue publication.
+4. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
+   668-item full decode measured 10.089 ms. Subsequent one- and 20-document
+   changes now measure 0.393 ms and 0.549 ms while preserving ordered,
+   main-queue publication and live freshness.
 5. **Remaining account/project listener overlap:** item, transaction,
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
@@ -203,7 +221,10 @@ indexes are rebuilt synchronously from each published source-array value.
 Image cache eviction now reflects decoded memory rather than compressed payload
 size, and image preparation moved off the main actor without resizing images.
 Firestore collection/query decoding now occurs on a private serial queue, with
-the same live snapshots published on the main queue in arrival order.
+the same live snapshots published on the main queue in arrival order. Initial
+snapshots are fully decoded; later snapshots incrementally update an ID-keyed
+decoded state and reconstruct the result in the current query order. No updates
+are debounced or suppressed.
 
 ## Verification
 
@@ -214,8 +235,8 @@ the same live snapshots published on the main queue in arrival order.
 - Latest focused performance suite, including image cache/decode coverage: 11
   tests passed on the iOS simulator.
 - Latest combined performance and lifecycle run, including Firestore queue,
-  cancellation, and 668-item decode coverage: 24 tests passed on the iOS
-  simulator.
+  cancellation, incremental equivalence, and 668-item decode coverage: 26 tests
+  passed on the iOS simulator.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.

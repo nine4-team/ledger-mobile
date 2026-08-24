@@ -204,26 +204,159 @@ struct PerformanceDiagnosticsTests {
         #expect(!gate.isActive)
     }
 
+    @Test("Incremental Firestore state matches a full rebuild for changes and ordering")
+    func incrementalFirestoreStateMatchesFullRebuild() {
+        let state = FirestoreIncrementalSnapshotState<Int>()
+        var documents = [
+            SnapshotFixture(id: "a", value: 1),
+            SnapshotFixture(id: "b", value: 2),
+            SnapshotFixture(id: "c", value: 3),
+        ]
+
+        let initial = state.apply(
+            orderedDocuments: documents,
+            documentID: { $0.id },
+            changes: [],
+            decode: { $0.value }
+        )
+        #expect(initial.values == fullSnapshotValues(documents))
+        #expect(initial.decodedDocumentCount == 3)
+
+        documents = [
+            SnapshotFixture(id: "c", value: 30),
+            SnapshotFixture(id: "d", value: 4),
+            SnapshotFixture(id: "a", value: 1),
+        ]
+        let updated = state.apply(
+            orderedDocuments: documents,
+            documentID: { $0.id },
+            changes: [
+                .upsert(documentID: "c", document: documents[0]),
+                .upsert(documentID: "d", document: documents[1]),
+                .remove(documentID: "b"),
+            ],
+            decode: { $0.value }
+        )
+
+        #expect(updated.values == fullSnapshotValues(documents))
+        #expect(updated.values == [30, 4, 1])
+        #expect(updated.decodedDocumentCount == 2)
+        #expect(updated.droppedDocumentCount == 0)
+    }
+
+    @Test("Incremental Firestore state preserves full-rebuild decode failure behavior")
+    func incrementalFirestoreStateHandlesDecodeFailure() {
+        let state = FirestoreIncrementalSnapshotState<Int>()
+        var documents = [
+            SnapshotFixture(id: "a", value: 1),
+            SnapshotFixture(id: "b", value: 2),
+        ]
+        _ = state.apply(
+            orderedDocuments: documents,
+            documentID: { $0.id },
+            changes: [],
+            decode: { $0.value }
+        )
+
+        documents[1] = SnapshotFixture(id: "b", value: nil)
+        let failedModification = state.apply(
+            orderedDocuments: documents,
+            documentID: { $0.id },
+            changes: [.upsert(documentID: "b", document: documents[1])],
+            decode: { $0.value }
+        )
+
+        #expect(failedModification.values == fullSnapshotValues(documents))
+        #expect(failedModification.values == [1])
+        #expect(failedModification.decodedDocumentCount == 1)
+        #expect(failedModification.droppedDocumentCount == 1)
+
+        let unchanged = state.apply(
+            orderedDocuments: documents,
+            documentID: { $0.id },
+            changes: [],
+            decode: { $0.value }
+        )
+        #expect(unchanged.values == [1])
+        #expect(unchanged.decodedDocumentCount == 0)
+    }
+
     @Test("Synthetic 668-item Firestore Codable decode cost profile")
     func syntheticFirestoreDecodeCostProfile() throws {
         let collection = Firestore.firestore().collection("__performance_benchmark_items")
         let encodedItems = try makeBrowsingItems(count: 668).enumerated().map { index, item in
-            (
+            FirestoreBenchmarkDocument(
+                id: "item-\(index)",
                 data: try Firestore.Encoder().encode(item),
                 reference: collection.document("item-\(index)")
             )
         }
-        let decode = benchmark(iterations: 25) {
+        let fullDecode = benchmark(iterations: 25) {
             let decoder = Firestore.Decoder()
             return encodedItems.compactMap {
                 try? decoder.decode(Item.self, from: $0.data, in: $0.reference)
             }.count
         }
 
-        #expect(decode.result == 668)
+        let incrementalState = FirestoreIncrementalSnapshotState<Item>()
+        let initialDecoder = Firestore.Decoder()
+        let initial = incrementalState.apply(
+            orderedDocuments: encodedItems,
+            documentID: { $0.id },
+            changes: [],
+            decode: { decodeFirestoreBenchmarkDocument($0, decoder: initialDecoder) }
+        )
+        let oneChange = [FirestoreSnapshotChange.upsert(
+            documentID: encodedItems[0].id,
+            document: encodedItems[0]
+        )]
+        let twentyChanges = encodedItems.prefix(20).map {
+            FirestoreSnapshotChange.upsert(documentID: $0.id, document: $0)
+        }
+        let probeDecoder = Firestore.Decoder()
+        let oneChangeProbe = incrementalState.apply(
+            orderedDocuments: encodedItems,
+            documentID: { $0.id },
+            changes: oneChange,
+            decode: { decodeFirestoreBenchmarkDocument($0, decoder: probeDecoder) }
+        )
+        let twentyChangeProbe = incrementalState.apply(
+            orderedDocuments: encodedItems,
+            documentID: { $0.id },
+            changes: twentyChanges,
+            decode: { decodeFirestoreBenchmarkDocument($0, decoder: probeDecoder) }
+        )
+        let incrementalOne = benchmark(iterations: 25) {
+            let decoder = Firestore.Decoder()
+            return incrementalState.apply(
+                orderedDocuments: encodedItems,
+                documentID: { $0.id },
+                changes: oneChange,
+                decode: { decodeFirestoreBenchmarkDocument($0, decoder: decoder) }
+            ).values.count
+        }
+        let incrementalTwenty = benchmark(iterations: 25) {
+            let decoder = Firestore.Decoder()
+            return incrementalState.apply(
+                orderedDocuments: encodedItems,
+                documentID: { $0.id },
+                changes: twentyChanges,
+                decode: { decodeFirestoreBenchmarkDocument($0, decoder: decoder) }
+            ).values.count
+        }
+
+        #expect(fullDecode.result == 668)
+        #expect(initial.values.count == 668)
+        #expect(initial.decodedDocumentCount == 668)
+        #expect(oneChangeProbe.decodedDocumentCount == 1)
+        #expect(twentyChangeProbe.decodedDocumentCount == 20)
+        #expect(incrementalOne.result == 668)
+        #expect(incrementalTwenty.result == 668)
         print(
             "FIRESTORE_DECODE_BENCHMARK items=668 " +
-            "decode_ms=\(formatMilliseconds(decode.millisecondsPerIteration))"
+            "full_decode_ms=\(formatMilliseconds(fullDecode.millisecondsPerIteration)) " +
+            "one_change_ms=\(formatMilliseconds(incrementalOne.millisecondsPerIteration)) " +
+            "twenty_change_ms=\(formatMilliseconds(incrementalTwenty.millisecondsPerIteration))"
         )
     }
 
@@ -253,6 +386,28 @@ struct PerformanceDiagnosticsTests {
             "invoice_filter_ms=\(formatMilliseconds(visibleInvoices.millisecondsPerIteration))"
         )
     }
+}
+
+private struct SnapshotFixture {
+    let id: String
+    let value: Int?
+}
+
+private func fullSnapshotValues(_ documents: [SnapshotFixture]) -> [Int] {
+    documents.compactMap(\.value)
+}
+
+private struct FirestoreBenchmarkDocument {
+    let id: String
+    let data: [String: Any]
+    let reference: DocumentReference
+}
+
+private func decodeFirestoreBenchmarkDocument(
+    _ document: FirestoreBenchmarkDocument,
+    decoder: Firestore.Decoder
+) -> Item? {
+    try? decoder.decode(Item.self, from: document.data, in: document.reference)
 }
 
 private func makePerformanceTestImageData() -> Data {

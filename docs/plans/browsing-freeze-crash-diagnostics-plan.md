@@ -11,9 +11,11 @@ metadata, indexed financial publication, decoded-memory cache accounting, and
 off-main image preparation. Firestore collection/query snapshot decoding also
 now runs on private serial repository queues before ordered main-queue
 publication, and the projects list now uses AccountContext's existing live
-projects instead of opening a duplicate listener. These remediation changes are
-tracked in the run summary; the non-goals below describe the original
-instrumentation phase.
+projects instead of opening a duplicate listener. After its initial full
+snapshot, each repository subscription now decodes only added or modified
+documents while retaining current query order and live publication behavior.
+These remediation changes are tracked in the run summary; the non-goals below
+describe the original instrumentation phase.
 
 This plan covers the measurement phase for Ledger's browsing freezes, crashes,
 and navigation latency on iOS and macOS. It deliberately separates diagnosis
@@ -109,9 +111,14 @@ The first implementation pass should begin from these verified facts:
 - `FirestoreRepository` originally decoded every document on Firebase's default
   main callback queue before invoking the context callback. Collection/query
   decoding now runs on a private serial queue per repository and publishes the
-  completed array back on main. A representative 668-item Codable pass measured
-  10.326 ms in Debug. Listener scope, freshness, and publication ordering are
-  unchanged.
+  completed array back on main. The first snapshot is fully decoded; subsequent
+  snapshots decode only added or modified documents, remove deleted documents,
+  and reconstruct the result in current query order. A representative 668-item
+  benchmark measured 10.089 ms for a full decode, 0.393 ms for one changed
+  document, and 0.549 ms for 20 changed documents in Debug. Listener scope,
+  freshness, and publication ordering are unchanged. The full array is still
+  published on every snapshot, so broad SwiftUI invalidation remains to be
+  measured separately.
 - Context callbacks enqueue `Task { @MainActor ... }`. Main-actor delivery delay
   is not currently measured.
 - `SharedItemsList` recomputes filtered items, groups, visible IDs, and selection

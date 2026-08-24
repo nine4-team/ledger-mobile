@@ -91,8 +91,66 @@ private final class FirestoreDocumentDecoder<Value: Codable>: @unchecked Sendabl
         }
     }
 
-    func decodeAll(_ documents: [QueryDocumentSnapshot]) -> [Value] {
-        documents.compactMap { decode($0) }
+}
+
+enum FirestoreSnapshotChange<Document> {
+    case upsert(documentID: String, document: Document)
+    case remove(documentID: String)
+
+    var requiresDecode: Bool {
+        switch self {
+        case .upsert: true
+        case .remove: false
+        }
+    }
+}
+
+struct FirestoreSnapshotReduction<Value> {
+    let values: [Value]
+    let decodedDocumentCount: Int
+    let droppedDocumentCount: Int
+}
+
+final class FirestoreIncrementalSnapshotState<Value>: @unchecked Sendable {
+    private var valuesByDocumentID: [String: Value] = [:]
+    private(set) var isInitialized = false
+
+    func apply<Document>(
+        orderedDocuments: [Document],
+        documentID: (Document) -> String,
+        changes: [FirestoreSnapshotChange<Document>],
+        decode: (Document) -> Value?
+    ) -> FirestoreSnapshotReduction<Value> {
+        var decodedDocumentCount = 0
+
+        if !isInitialized {
+            valuesByDocumentID.removeAll(keepingCapacity: true)
+            for document in orderedDocuments {
+                decodedDocumentCount += 1
+                let id = documentID(document)
+                if let value = decode(document) {
+                    valuesByDocumentID[id] = value
+                }
+            }
+            isInitialized = true
+        } else {
+            for change in changes {
+                switch change {
+                case .upsert(let id, let document):
+                    decodedDocumentCount += 1
+                    valuesByDocumentID[id] = decode(document)
+                case .remove(let id):
+                    valuesByDocumentID.removeValue(forKey: id)
+                }
+            }
+        }
+
+        let values = orderedDocuments.compactMap { valuesByDocumentID[documentID($0)] }
+        return FirestoreSnapshotReduction(
+            values: values,
+            decodedDocumentCount: decodedDocumentCount,
+            droppedDocumentCount: orderedDocuments.count - values.count
+        )
     }
 }
 
@@ -190,6 +248,7 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
         let callback = FirestoreUncheckedSendable(value: onChange)
         let documentDecoder = documentDecoder
         let decodeQueue = snapshotDecodeQueue
+        let snapshotState = FirestoreIncrementalSnapshotState<T>()
         let gate = FirestoreListenerGate()
         let registration = collectionRef.addSnapshotListener { [collectionPath] snapshot, error in
             guard gate.isActive else { return }
@@ -201,21 +260,34 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                 return
             }
             let documents = FirestoreUncheckedSendable(value: docs)
-            let changeCount = snapshot?.documentChanges.count ?? 0
+            let changes = FirestoreUncheckedSendable(
+                value: Self.incrementalChanges(snapshot?.documentChanges ?? [])
+            )
             let snapshotFlags = Self.snapshotFlags(snapshot)
             decodeQueue.async {
                 guard gate.isActive else { return }
+                let decodeCount = snapshotState.isInitialized
+                    ? changes.value.lazy.filter(\.requiresDecode).count
+                    : documents.value.count
                 let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
                     "FirestoreDecode",
                     kind: kind,
-                    count: documents.value.count
+                    count: decodeCount
                 )
-                let items = documentDecoder.decodeAll(documents.value)
-                PerformanceDiagnostics.shared.endInterval(decodeInterval, value: changeCount)
-                if items.count != documents.value.count {
-                    print("[FirestoreRepo] \(collectionPath) decode dropped \(documents.value.count - items.count)/\(documents.value.count) docs")
+                let reduction = snapshotState.apply(
+                    orderedDocuments: documents.value,
+                    documentID: \QueryDocumentSnapshot.documentID,
+                    changes: changes.value,
+                    decode: documentDecoder.decode
+                )
+                PerformanceDiagnostics.shared.endInterval(
+                    decodeInterval,
+                    value: changes.value.count
+                )
+                if reduction.droppedDocumentCount > 0 {
+                    print("[FirestoreRepo] \(collectionPath) decode dropped \(reduction.droppedDocumentCount)/\(documents.value.count) docs")
                 }
-                let decodedItems = FirestoreUncheckedSendable(value: items)
+                let decodedItems = FirestoreUncheckedSendable(value: reduction.values)
                 DispatchQueue.main.async {
                     guard gate.isActive else { return }
                     let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
@@ -240,6 +312,7 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
         let callback = FirestoreUncheckedSendable(value: onChange)
         let documentDecoder = documentDecoder
         let decodeQueue = snapshotDecodeQueue
+        let snapshotState = FirestoreIncrementalSnapshotState<T>()
         let gate = FirestoreListenerGate()
         let registration = collectionRef
             .whereField(field, isEqualTo: value)
@@ -253,21 +326,34 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                     return
                 }
                 let documents = FirestoreUncheckedSendable(value: docs)
-                let changeCount = snapshot?.documentChanges.count ?? 0
+                let changes = FirestoreUncheckedSendable(
+                    value: Self.incrementalChanges(snapshot?.documentChanges ?? [])
+                )
                 let snapshotFlags = Self.snapshotFlags(snapshot)
                 decodeQueue.async {
                     guard gate.isActive else { return }
+                    let decodeCount = snapshotState.isInitialized
+                        ? changes.value.lazy.filter(\.requiresDecode).count
+                        : documents.value.count
                     let decodeInterval = PerformanceDiagnostics.shared.beginInterval(
                         "FirestoreDecode",
                         kind: kind,
-                        count: documents.value.count
+                        count: decodeCount
                     )
-                    let items = documentDecoder.decodeAll(documents.value)
-                    PerformanceDiagnostics.shared.endInterval(decodeInterval, value: changeCount)
-                    if items.count != documents.value.count {
-                        print("[FirestoreRepo] \(collectionPath) WHERE \(field) decode dropped \(documents.value.count - items.count)/\(documents.value.count) docs")
+                    let reduction = snapshotState.apply(
+                        orderedDocuments: documents.value,
+                        documentID: \QueryDocumentSnapshot.documentID,
+                        changes: changes.value,
+                        decode: documentDecoder.decode
+                    )
+                    PerformanceDiagnostics.shared.endInterval(
+                        decodeInterval,
+                        value: changes.value.count
+                    )
+                    if reduction.droppedDocumentCount > 0 {
+                        print("[FirestoreRepo] \(collectionPath) WHERE \(field) decode dropped \(reduction.droppedDocumentCount)/\(documents.value.count) docs")
                     }
-                    let decodedItems = FirestoreUncheckedSendable(value: items)
+                    let decodedItems = FirestoreUncheckedSendable(value: reduction.values)
                     DispatchQueue.main.async {
                         guard gate.isActive else { return }
                         let callbackInterval = PerformanceDiagnostics.shared.beginInterval(
@@ -322,6 +408,19 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
         if snapshot.metadata.isFromCache { flags |= 1 }
         if snapshot.metadata.hasPendingWrites { flags |= 2 }
         return flags
+    }
+
+    private nonisolated static func incrementalChanges(
+        _ changes: [DocumentChange]
+    ) -> [FirestoreSnapshotChange<QueryDocumentSnapshot>] {
+        changes.map { change in
+            switch change.type {
+            case .added, .modified:
+                .upsert(documentID: change.document.documentID, document: change.document)
+            case .removed:
+                .remove(documentID: change.document.documentID)
+            }
+        }
     }
 
 }
