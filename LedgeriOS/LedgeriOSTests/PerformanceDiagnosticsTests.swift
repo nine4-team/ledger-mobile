@@ -156,6 +156,33 @@ struct PerformanceDiagnosticsTests {
         #expect(statuses["item-sent"] == .sent)
         #expect(statuses["item-canceled"] == nil)
     }
+
+    @Test("Synthetic account financial publication cost profile")
+    func syntheticFinancialPublicationCostProfile() {
+        let categories = makeFinancialCategories(count: 100)
+        let transactions = makeFinancialTransactions(count: 2_000, categoryCount: categories.count)
+        let invoices = makeFinancialInvoices(count: 200, transactions: transactions)
+        let policy = FinancialAccessPolicy(
+            access: .limited,
+            allowedFeeCategoryIds: Set((0..<10).map { "category-\($0)" })
+        )
+
+        let visibleTransactions = benchmark(iterations: 10) {
+            policy.visibleTransactions(transactions, categories: categories).count
+        }
+        let visibleInvoices = benchmark(iterations: 10) {
+            policy.visibleInvoices(invoices, transactions: transactions, categories: categories).count
+        }
+
+        #expect(visibleTransactions.result > 0)
+        #expect(visibleInvoices.result > 0)
+        print(
+            "FINANCIAL_PUBLICATION_BENCHMARK " +
+            "transactions=2000 categories=100 invoices=200 " +
+            "transaction_filter_ms=\(formatMilliseconds(visibleTransactions.millisecondsPerIteration)) " +
+            "invoice_filter_ms=\(formatMilliseconds(visibleInvoices.millisecondsPerIteration))"
+        )
+    }
 }
 
 private func makeBrowsingItems(count: Int) -> [Item] {
@@ -200,6 +227,42 @@ private func makeBrowsingInvoices(items: [Item], count: Int) -> [Invoice] {
         invoice.status = invoiceIndex.isMultiple(of: 3) ? .paid : .sent
         invoice.itemIds = stride(from: invoiceIndex, to: items.count, by: count)
             .compactMap { items[$0].id }
+        return invoice
+    }
+}
+
+private func makeFinancialCategories(count: Int) -> [BudgetCategory] {
+    (0..<count).map { index in
+        var category = BudgetCategory()
+        category.id = "category-\(index)"
+        category.name = "Category \(index)"
+        category.metadata = BudgetCategoryMetadata(
+            categoryType: index < 20 ? .fee : .general,
+            excludeFromOverallBudget: false
+        )
+        return category
+    }
+}
+
+private func makeFinancialTransactions(count: Int, categoryCount: Int) -> [Transaction] {
+    (0..<count).map { index in
+        var transaction = Transaction()
+        transaction.id = "transaction-\(index)"
+        transaction.transactionType = .purchase
+        transaction.budgetCategoryId = "category-\(index % categoryCount)"
+        transaction.amountCents = 1_000 + index
+        return transaction
+    }
+}
+
+private func makeFinancialInvoices(count: Int, transactions: [Transaction]) -> [Invoice] {
+    (0..<count).map { invoiceIndex in
+        var invoice = Invoice()
+        invoice.id = "financial-invoice-\(invoiceIndex)"
+        invoice.status = .sent
+        invoice.transactionIds = (0..<10).compactMap { offset in
+            transactions[(invoiceIndex * 10 + offset) % transactions.count].id
+        }
         return invoice
     }
 }

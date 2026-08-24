@@ -87,7 +87,6 @@ struct LedgerApp: App {
             itemsService: itemsService,
             protoItemsService: protoItemsService,
             spacesService: spacesService,
-            budgetCategoriesService: budgetCategoriesService,
             projectBudgetCategoriesService: projectBudgetCategoriesService
         ))
 

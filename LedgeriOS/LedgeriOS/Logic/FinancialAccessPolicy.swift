@@ -29,13 +29,28 @@ struct FinancialAccessPolicy: Equatable {
     }
 
     func canSeeTransaction(_ transaction: Transaction, categories: [BudgetCategory]) -> Bool {
-        guard isCompanyFee(transaction, categories: categories) else { return true }
+        canSeeTransaction(
+            transaction,
+            categoryById: Dictionary(uniqueKeysWithValues: categories.compactMap { category in
+                category.id.map { ($0, category) }
+            })
+        )
+    }
+
+    private func canSeeTransaction(
+        _ transaction: Transaction,
+        categoryById: [String: BudgetCategory]
+    ) -> Bool {
+        guard isCompanyFee(transaction, categoryById: categoryById) else { return true }
         guard let categoryId = transaction.budgetCategoryId else { return access == .full }
         return canSeeFeeCategory(id: categoryId)
     }
 
     func visibleTransactions(_ transactions: [Transaction], categories: [BudgetCategory]) -> [Transaction] {
-        transactions.filter { canSeeTransaction($0, categories: categories) }
+        let categoryById = Dictionary(uniqueKeysWithValues: categories.compactMap { category in
+            category.id.map { ($0, category) }
+        })
+        return transactions.filter { canSeeTransaction($0, categoryById: categoryById) }
     }
 
     func canSeeInvoice(_ invoice: Invoice, transactions: [Transaction], categories: [BudgetCategory]) -> Bool {
@@ -48,18 +63,39 @@ struct FinancialAccessPolicy: Equatable {
             return access == .limited && feeIds.isSubset(of: allowedFeeCategoryIds)
         }
 
-        let transactionLookup = Dictionary(uniqueKeysWithValues: transactions.compactMap { tx in
-            tx.id.map { ($0, tx) }
-        })
+        return canSeeInvoice(
+            invoice,
+            transactionById: Dictionary(uniqueKeysWithValues: transactions.compactMap { transaction in
+                transaction.id.map { ($0, transaction) }
+            }),
+            categoryById: Dictionary(uniqueKeysWithValues: categories.compactMap { category in
+                category.id.map { ($0, category) }
+            })
+        )
+    }
+
+    private func canSeeInvoice(
+        _ invoice: Invoice,
+        transactionById: [String: Transaction],
+        categoryById: [String: BudgetCategory]
+    ) -> Bool {
+        if access == .full { return true }
+
+        if let containsCompanyRevenue = invoice.containsCompanyRevenue {
+            guard containsCompanyRevenue else { return true }
+            let feeIds = Set(invoice.feeCategoryIds ?? [])
+            guard !feeIds.isEmpty else { return false }
+            return access == .limited && feeIds.isSubset(of: allowedFeeCategoryIds)
+        }
 
         var feeCategoryIds = Set<String>()
         var sawCompanyRevenue = false
 
         for transactionId in invoice.transactionIds ?? [] {
-            guard let transaction = transactionLookup[transactionId] else {
+            guard let transaction = transactionById[transactionId] else {
                 continue
             }
-            if isCompanyFee(transaction, categories: categories) {
+            if isCompanyFee(transaction, categoryById: categoryById) {
                 sawCompanyRevenue = true
                 guard let categoryId = transaction.budgetCategoryId else { return false }
                 feeCategoryIds.insert(categoryId)
@@ -69,10 +105,10 @@ struct FinancialAccessPolicy: Equatable {
         for line in invoice.lines ?? [] {
             switch line.sourceType {
             case .transaction:
-                guard let sourceId = line.sourceId, let transaction = transactionLookup[sourceId] else {
+                guard let sourceId = line.sourceId, let transaction = transactionById[sourceId] else {
                     continue
                 }
-                if isCompanyFee(transaction, categories: categories) {
+                if isCompanyFee(transaction, categoryById: categoryById) {
                     sawCompanyRevenue = true
                     guard let categoryId = transaction.budgetCategoryId else { return false }
                     feeCategoryIds.insert(categoryId)
@@ -94,7 +130,16 @@ struct FinancialAccessPolicy: Equatable {
     }
 
     func visibleInvoices(_ invoices: [Invoice], transactions: [Transaction], categories: [BudgetCategory]) -> [Invoice] {
-        invoices.filter { canSeeInvoice($0, transactions: transactions, categories: categories) }
+        if access == .full { return invoices }
+        let transactionById = Dictionary(uniqueKeysWithValues: transactions.compactMap { transaction in
+            transaction.id.map { ($0, transaction) }
+        })
+        let categoryById = Dictionary(uniqueKeysWithValues: categories.compactMap { category in
+            category.id.map { ($0, category) }
+        })
+        return invoices.filter {
+            canSeeInvoice($0, transactionById: transactionById, categoryById: categoryById)
+        }
     }
 
     private func canSeeFeeCategory(id: String) -> Bool {
@@ -108,9 +153,12 @@ struct FinancialAccessPolicy: Equatable {
         }
     }
 
-    private func isCompanyFee(_ transaction: Transaction, categories: [BudgetCategory]) -> Bool {
+    private func isCompanyFee(
+        _ transaction: Transaction,
+        categoryById: [String: BudgetCategory]
+    ) -> Bool {
         if transaction.transactionType == .paymentToBusiness { return true }
-        let category = categories.first { $0.id == transaction.budgetCategoryId }
+        let category = transaction.budgetCategoryId.flatMap { categoryById[$0] }
         let storedType = transaction.transactionType ?? .purchase
         return TransactionTaxonomy.resolve(storedType: storedType, category: category) == .fee
     }

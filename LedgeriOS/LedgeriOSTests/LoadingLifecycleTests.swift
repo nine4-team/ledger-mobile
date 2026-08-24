@@ -247,7 +247,6 @@ private func makeProjectContext(counter: ListenerCounter) -> ProjectContext {
         transactionsService: LifecycleTransactionsService(counter: counter),
         itemsService: LifecycleItemsService(counter: counter),
         spacesService: LifecycleSpacesService(counter: counter),
-        budgetCategoriesService: LifecycleBudgetCategoriesService(counter: counter),
         projectBudgetCategoriesService: LifecycleProjectBudgetCategoriesService(counter: counter),
         feeInstallmentsService: LifecycleFeeInstallmentsService(counter: counter),
         projectNotesService: LifecycleProjectNotesService(counter: counter)
@@ -341,11 +340,11 @@ struct LoadingLifecycleTests {
         context.activate(accountId: "account-1", projectId: "project-1")
 
         #expect(counter.projectDetailSubscriptions == 1)
-        #expect(counter.projectListSubscriptions == 1)
+        #expect(counter.projectListSubscriptions == 0)
         #expect(counter.itemSubscriptions == 1)
         #expect(counter.transactionSubscriptions == 1)
         #expect(counter.spaceSubscriptions == 1)
-        #expect(counter.budgetCategorySubscriptions == 1)
+        #expect(counter.budgetCategorySubscriptions == 0)
         #expect(counter.projectBudgetCategorySubscriptions == 1)
         #expect(counter.feeInstallmentSubscriptions == 1)
         #expect(counter.noteSubscriptions == 1)
@@ -364,15 +363,15 @@ struct LoadingLifecycleTests {
         context.activate(accountId: "account-1", projectId: "project-2")
 
         #expect(counter.projectDetailSubscriptions == 2)
-        #expect(counter.projectListSubscriptions == 2)
+        #expect(counter.projectListSubscriptions == 0)
         #expect(counter.itemSubscriptions == 2)
         #expect(counter.transactionSubscriptions == 2)
         #expect(counter.spaceSubscriptions == 2)
-        #expect(counter.budgetCategorySubscriptions == 2)
+        #expect(counter.budgetCategorySubscriptions == 0)
         #expect(counter.projectBudgetCategorySubscriptions == 2)
         #expect(counter.feeInstallmentSubscriptions == 2)
         #expect(counter.noteSubscriptions == 2)
-        #expect(counter.removeCalls == 9)
+        #expect(counter.removeCalls == 7)
         #expect(context.currentProjectId == "project-2")
         #expect(context.items.isEmpty)
     }
@@ -412,7 +411,42 @@ struct LoadingLifecycleTests {
         }
 
         #expect(releasedContext == nil)
-        #expect(counter.removeCalls == 9)
+        #expect(counter.removeCalls == 7)
+    }
+
+    @Test("ProjectContext uses live account categories without a duplicate listener")
+    @MainActor
+    func projectContextUsesAccountBudgetCategories() {
+        let counter = ListenerCounter()
+        let context = makeProjectContext(counter: counter)
+        var general = BudgetCategory()
+        general.id = "general"
+        general.name = "General"
+        var fee = BudgetCategory()
+        fee.id = "fee"
+        fee.name = "Design Fee"
+        fee.metadata = BudgetCategoryMetadata(categoryType: .fee, excludeFromOverallBudget: false)
+        var employee = AccountMember()
+        employee.role = .user
+        var owner = AccountMember()
+        owner.role = .owner
+
+        context.activate(
+            accountId: "account-1",
+            projectId: "project-1",
+            member: employee,
+            rawBudgetCategories: [general, fee]
+        )
+
+        #expect(counter.budgetCategorySubscriptions == 0)
+        #expect(context.budgetCategories.map(\.id) == ["general"])
+
+        context.updateFinancialContext(
+            member: owner,
+            rawBudgetCategories: [general, fee]
+        )
+
+        #expect(context.budgetCategories.map(\.id) == ["general", "fee"])
     }
 
     @Test("InventoryContext re-activating same account keeps existing listeners")

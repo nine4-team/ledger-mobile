@@ -68,6 +68,45 @@ indexes rebuilt synchronously whenever their source arrays are replaced. Tests
 verify invoice-status priority and that replacing or clearing source arrays
 immediately replaces or clears the indexes, preventing stale derived data.
 
+### 3. Duplicate project listeners
+
+Every project context also opened an account-wide projects listener whose
+`ProjectContext.projects` value had no reader anywhere in the application.
+That listener was removed; AccountContext remains the sole live projects-list
+owner used by navigation.
+
+ProjectContext also opened its own account-wide budget-category listener even
+though AccountContext already owns the same live query. Project contexts now
+receive AccountContext's raw category snapshot during activation and on every
+category or membership change. Passing the raw snapshot is important because
+financial-access classification cannot safely use the already-filtered public
+category array. Tests verify that no duplicate category listener starts and
+that employee/owner access changes immediately refresh visible categories.
+
+These changes reduce the test ProjectContext from 9 listeners originally to 7.
+The production configuration drops from up to 11 to up to 9, depending on
+optional proto-item and user-preference subscriptions.
+
+### 4. Financial publication complexity
+
+The account listener callback applies financial-access filtering on the main
+actor. A synthetic Debug benchmark with 2,000 transactions, 100 categories,
+and 200 legacy invoices measured the original implementation at:
+
+- transaction filtering: 17.538 ms;
+- invoice filtering: 509.954 ms.
+
+The transaction path searched the category array repeatedly. The invoice path
+rebuilt the full transaction dictionary once for every invoice. Both now build
+category and transaction indexes once per publication. The identical benchmark
+after the change measured:
+
+- transaction filtering: 1.233 ms, about 14x faster;
+- invoice filtering: 3.357 ms, about 152x faster.
+
+All financial-access policy tests pass, including limited fee-category and
+invoice visibility behavior.
+
 ## Ranked Readout
 
 1. **Leaked project listeners:** confirmed architectural defect and plausible
@@ -75,16 +114,19 @@ immediately replaces or clears the indexes, preventing stale derived data.
    tested.
 2. **Per-card linear metadata lookup churn:** measured frame-budget problem.
    Fixed on the shared item-card/list path with synchronous freshness tests.
-3. **Broad account plus project listener publication:** still plausible, but
-   needs a stable Halrow trace to determine whether valid simultaneous
-   listeners trigger excessive main-thread invalidation.
-4. **Image download and decode pressure:** still plausible for Spaces and image
+3. **Main-actor financial publication:** a confirmed half-second synthetic
+   callback path for limited-access accounts, reduced to approximately 3 ms.
+4. **Remaining account/project listener overlap:** item, transaction,
+   proto-item, and space listeners still overlap by scope. A stable trace is
+   needed before choosing between account-listener suspension and deriving
+   project subsets from account data.
+5. **Image download and decode pressure:** still plausible for Spaces and image
    heavy browsing. Decode and request counters are instrumented, but cold
    network measurements are invalid in this run.
-5. **List filtering, grouping, and selection totals:** measured too small to be
+6. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-6. **Unbatched bulk writes:** remains a write-completion and callback-storm
+7. **Unbatched bulk writes:** remains a write-completion and callback-storm
    issue, but does not explain slow browsing before a bulk operation begins.
 
 ## Evidence Unavailable
@@ -109,6 +151,8 @@ indexes are rebuilt synchronously from each published source-array value.
 
 - Performance diagnostics and loading lifecycle suites: 17 tests passed.
 - Optimized diagnostics benchmark suite: 8 tests passed.
+- Combined financial-policy, lifecycle, and performance suites after the
+  publication optimization: 25 tests passed.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.

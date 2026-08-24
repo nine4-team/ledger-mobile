@@ -13,7 +13,6 @@ private final class ProjectListenerBag {
 final class ProjectContext {
     var currentProjectId: String?
     var project: Project?
-    var projects: [Project] = []
     var transactions: [Transaction] = []
     var items: [Item] = []
     var protoItems: [ProtoItem] = []
@@ -40,7 +39,6 @@ final class ProjectContext {
     private let itemsService: ItemsServiceProtocol
     private let protoItemsService: ProtoItemsServiceProtocol?
     private let spacesService: SpacesServiceProtocol
-    private let budgetCategoriesService: BudgetCategoriesServiceProtocol
     private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol
     private let feeInstallmentsService: FeeInstallmentsServiceProtocol
     private let budgetProgressService: BudgetProgressService
@@ -53,7 +51,6 @@ final class ProjectContext {
         itemsService: ItemsServiceProtocol,
         protoItemsService: ProtoItemsServiceProtocol? = nil,
         spacesService: SpacesServiceProtocol,
-        budgetCategoriesService: BudgetCategoriesServiceProtocol,
         projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol,
         feeInstallmentsService: FeeInstallmentsServiceProtocol = FeeInstallmentsService(),
         budgetProgressService: BudgetProgressService = BudgetProgressService(),
@@ -65,7 +62,6 @@ final class ProjectContext {
         self.itemsService = itemsService
         self.protoItemsService = protoItemsService
         self.spacesService = spacesService
-        self.budgetCategoriesService = budgetCategoriesService
         self.projectBudgetCategoriesService = projectBudgetCategoriesService
         self.feeInstallmentsService = feeInstallmentsService
         self.budgetProgressService = budgetProgressService
@@ -75,14 +71,20 @@ final class ProjectContext {
 
     /// Activate subscriptions for a project. Re-entering the same account/project/user
     /// keeps the current listeners and cached data alive.
-    func activate(accountId: String, projectId: String, userId: String? = nil, member: AccountMember? = nil) {
+    func activate(
+        accountId: String,
+        projectId: String,
+        userId: String? = nil,
+        member: AccountMember? = nil,
+        rawBudgetCategories: [BudgetCategory] = []
+    ) {
         if activeAccountId == accountId,
            currentProjectId == projectId,
            activeUserId == userId,
            !listeners.isEmpty {
             NavLifecycleLog.log("ProjectContext.activate early-return (same project=\(projectId))")
             PerformanceDiagnostics.shared.event("ContextActivationEarlyReturn", kind: "project", count: listeners.count)
-            updateFinancialAccess(member: member)
+            updateFinancialContext(member: member, rawBudgetCategories: rawBudgetCategories)
             return
         }
 
@@ -97,6 +99,8 @@ final class ProjectContext {
         activeUserId = userId
         currentProjectId = projectId
         financialAccessMember = member
+        self.rawBudgetCategories = rawBudgetCategories
+        applyFinancialAccess()
 
         // 1. Project detail
         listeners.append(
@@ -111,20 +115,7 @@ final class ProjectContext {
             }
         )
 
-        // 2. Projects list (for sibling navigation)
-        listeners.append(
-            projectService.subscribeToProjects(accountId: accountId) { [weak self] projects in
-                let receivedAt = DispatchTime.now().uptimeNanoseconds
-                Task { @MainActor in
-                    guard let self else { return }
-                    self.publish(kind: "project.projects", receivedAt: receivedAt, count: projects.count) {
-                        self.projects = projects
-                    }
-                }
-            }
-        )
-
-        // 3. Transactions scoped to project
+        // 2. Transactions scoped to project
         listeners.append(
             transactionsService.subscribeToTransactions(accountId: accountId, scope: .project(projectId)) { [weak self] transactions in
                 let receivedAt = DispatchTime.now().uptimeNanoseconds
@@ -138,7 +129,7 @@ final class ProjectContext {
             }
         )
 
-        // 4. Items scoped to project
+        // 3. Items scoped to project
         listeners.append(
             itemsService.subscribeToItems(accountId: accountId, scope: .project(projectId)) { [weak self] items in
                 let receivedAt = DispatchTime.now().uptimeNanoseconds
@@ -151,7 +142,7 @@ final class ProjectContext {
             }
         )
 
-        // 5. Proto-items scoped to project
+        // 4. Proto-items scoped to project
         if let protoItemsService {
             listeners.append(
                 protoItemsService.subscribeToProtoItems(accountId: accountId, scope: .project(projectId)) { [weak self] protoItems in
@@ -166,7 +157,7 @@ final class ProjectContext {
             )
         }
 
-        // 6. Spaces scoped to project
+        // 5. Spaces scoped to project
         listeners.append(
             spacesService.subscribeToSpaces(accountId: accountId, scope: .project(projectId)) { [weak self] spaces in
                 let receivedAt = DispatchTime.now().uptimeNanoseconds
@@ -179,21 +170,7 @@ final class ProjectContext {
             }
         )
 
-        // 6. Budget categories (account-level presets)
-        listeners.append(
-            budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
-                let receivedAt = DispatchTime.now().uptimeNanoseconds
-                Task { @MainActor in
-                    guard let self else { return }
-                    self.publish(kind: "project.categories", receivedAt: receivedAt, count: categories.count) {
-                        self.rawBudgetCategories = categories
-                        self.applyFinancialAccess()
-                    }
-                }
-            }
-        )
-
-        // 7. Project budget categories
+        // 6. Project budget categories
         listeners.append(
             projectBudgetCategoriesService.subscribeToProjectBudgetCategories(
                 accountId: accountId,
@@ -210,7 +187,7 @@ final class ProjectContext {
             }
         )
 
-        // 8. Fee installments
+        // 7. Fee installments
         listeners.append(
             feeInstallmentsService.subscribeToFeeInstallments(
                 accountId: accountId,
@@ -226,7 +203,7 @@ final class ProjectContext {
             }
         )
 
-        // 9. Project preferences (pinned categories)
+        // 8. Project preferences (pinned categories)
         if let userId {
             listeners.append(
                 projectPreferencesService.subscribeToProjectPreferences(
@@ -245,7 +222,7 @@ final class ProjectContext {
             )
         }
 
-        // 10. Notes scoped to project
+        // 9. Notes scoped to project
         listeners.append(
             projectNotesService.subscribeToProjectNotes(
                 accountId: accountId,
@@ -321,8 +298,9 @@ final class ProjectContext {
         clearData()
     }
 
-    func updateFinancialAccess(member: AccountMember?) {
+    func updateFinancialContext(member: AccountMember?, rawBudgetCategories: [BudgetCategory]) {
         financialAccessMember = member
+        self.rawBudgetCategories = rawBudgetCategories
         applyFinancialAccess()
     }
 
@@ -331,7 +309,6 @@ final class ProjectContext {
         activeUserId = nil
         currentProjectId = nil
         project = nil
-        projects = []
         transactions = []
         items = []
         protoItems = []

@@ -767,6 +767,14 @@ architectural fix before the evidence is collected.
   optimized 668-card pass versus 0.126 ms with synchronous indexes, a 50.2x
   improvement. Replacement/clearing tests verify the indexes cannot retain
   stale source values.
+- Removed two exact duplicate project-context listeners: one unused account-wide
+  projects listener and one account-wide categories listener now supplied from
+  AccountContext's live raw category snapshot. ProjectContext's test listener
+  count dropped from 9 to 7 without weakening freshness or financial access.
+- A 2,000-transaction/100-category/200-invoice Debug benchmark found 17.538 ms
+  transaction filtering and 509.954 ms invoice filtering on the main actor.
+  Per-publication indexes reduced those paths to 1.233 ms and 3.357 ms while
+  all financial-access policy tests remained green.
 - The focused diagnostics and lifecycle suites passed 17 tests, the optimized
   diagnostics suite passed 8 tests, and the macOS scheme builds successfully.
 - The full iOS test target ran 925 tests but is not green: 42 emulator tests

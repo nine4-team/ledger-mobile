@@ -25,7 +25,6 @@ struct ProjectDetailContainer: View {
         let itemsService = ItemsService()
         let protoItemsService = ProtoItemsService()
         let spacesService = SpacesService()
-        let budgetCategoriesService = BudgetCategoriesService()
         let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
 
         _projectContext = State(initialValue: ProjectContext(
@@ -34,7 +33,6 @@ struct ProjectDetailContainer: View {
             itemsService: itemsService,
             protoItemsService: protoItemsService,
             spacesService: spacesService,
-            budgetCategoriesService: budgetCategoriesService,
             projectBudgetCategoriesService: projectBudgetCategoriesService
         ))
     }
@@ -65,7 +63,10 @@ struct ProjectDetailContainer: View {
                 activateProjectContext()
             }
             .onChange(of: accountContext.member) { _, member in
-                projectContext.updateFinancialAccess(member: member)
+                updateProjectFinancialContext(member: member)
+            }
+            .onChange(of: accountContext.rawAllBudgetCategories) { _, _ in
+                updateProjectFinancialContext(member: accountContext.member)
             }
     }
 
@@ -98,7 +99,15 @@ struct ProjectDetailContainer: View {
             accountId: accountId,
             projectId: projectId,
             userId: authManager.currentUser?.uid,
-            member: accountContext.member
+            member: accountContext.member,
+            rawBudgetCategories: accountContext.rawAllBudgetCategories
+        )
+    }
+
+    private func updateProjectFinancialContext(member: AccountMember?) {
+        projectContext.updateFinancialContext(
+            member: member,
+            rawBudgetCategories: accountContext.rawAllBudgetCategories
         )
     }
 }

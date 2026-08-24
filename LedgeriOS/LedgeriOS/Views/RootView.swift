@@ -374,7 +374,6 @@ private struct InviteSignupView: View {
             transactionsService: transactionsService,
             itemsService: itemsService,
             spacesService: spacesService,
-            budgetCategoriesService: budgetCategoriesService,
             projectBudgetCategoriesService: projectBudgetCategoriesService
         ))
         .environment(InventoryContext(

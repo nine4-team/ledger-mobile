@@ -63,7 +63,7 @@ final class AccountContext {
     private var invoiceStatusByItemId: [String: InvoiceStatus] = [:]
 
     private var rawAllTransactions: [Transaction] = []
-    private var rawAllBudgetCategories: [BudgetCategory] = []
+    private(set) var rawAllBudgetCategories: [BudgetCategory] = []
     private var rawAllInvoices: [Invoice] = []
     private var activeUserId: String?
     private var listeners: [ListenerRegistration] = []

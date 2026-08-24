@@ -77,7 +77,6 @@ struct TransactionDetailContainer: View {
             itemsService: ItemsService(),
             protoItemsService: ProtoItemsService(),
             spacesService: SpacesService(),
-            budgetCategoriesService: BudgetCategoriesService(),
             projectBudgetCategoriesService: ProjectBudgetCategoriesService()
         ))
     }
@@ -98,11 +97,21 @@ struct TransactionDetailContainer: View {
                             accountId: accountId,
                             projectId: projectId,
                             userId: authManager.currentUser?.uid,
-                            member: accountContext.member
+                            member: accountContext.member,
+                            rawBudgetCategories: accountContext.rawAllBudgetCategories
                         )
                     }
                     .onChange(of: accountContext.member) { _, member in
-                        scopedProjectContext.updateFinancialAccess(member: member)
+                        scopedProjectContext.updateFinancialContext(
+                            member: member,
+                            rawBudgetCategories: accountContext.rawAllBudgetCategories
+                        )
+                    }
+                    .onChange(of: accountContext.rawAllBudgetCategories) { _, categories in
+                        scopedProjectContext.updateFinancialContext(
+                            member: accountContext.member,
+                            rawBudgetCategories: categories
+                        )
                     }
             }
         }
