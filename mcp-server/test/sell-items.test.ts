@@ -529,7 +529,7 @@ describe("return_items", () => {
     const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item?.projectId).toBeNull();
     expect(item?.budgetCategoryId).toBeNull();
-    expect(item?.status).toBe("returned");
+    expect(item?.status).toBe("purchased");
     expect(item?.transactionId).toBe(returnTx.id);
 
     // Lineage edge (returned)
@@ -537,6 +537,18 @@ describe("return_items", () => {
     expect(edges.length).toBe(1);
     expect(edges[0].data.movementKind).toBe("returned");
     expect(edges[0].data.toTransactionId).toBe(returnTx.id);
+  });
+
+  test("inventory return rejects an existing Return transaction", async () => {
+    const result = await callTool("return_items", {
+      itemIds: ["item_1"],
+      returnTo: "inventory",
+      returnTransactionId: "existing_return",
+      dryRun: false,
+    });
+
+    expect(isError(result)).toBe(true);
+    expect(getText(result)).toContain("cannot be used when returnTo is 'inventory'");
   });
 });
 

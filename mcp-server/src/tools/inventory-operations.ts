@@ -627,8 +627,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "(business is genuinely acquiring the items for the first time)? → " +
       "sell_items_from_project_to_inventory. Or was it a data-entry mistake (the item should never " +
       "have been logged against the project)? → bulk_update_items with projectId: null " +
-      "(corrections doctrine). Creates a new Return transaction with source: 'Business Inventory' " +
-      "(or appends to one if returnTransactionId is provided). Items have budgetCategoryId and " +
+      "(corrections doctrine). Creates a new per-batch Return transaction with source: " +
+      "'Business Inventory'. Items have budgetCategoryId and " +
       "projectId cleared.\n\n" +
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes " +
       "(wrong project, wrong vendor on the original record), use `bulk_update_items` to relocate " +
@@ -644,14 +644,14 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         .enum(["vendor", "inventory"])
         .describe(
           "Where the items are going: 'vendor' (attach to an existing Return tx) or 'inventory' " +
-            "(new or reused Return tx with source: 'Business Inventory' — items must have come from inventory originally)"
+            "(new per-batch Return tx with the inventory source label — items must have come from inventory originally)"
         ),
       returnTransactionId: z
         .string()
         .optional()
         .describe(
           "When returnTo is 'vendor': REQUIRED existing Return transaction ID. " +
-            "When returnTo is 'inventory': OPTIONAL existing Return transaction ID to append to; if omitted, a new one is created."
+            "When returnTo is 'inventory': omit this field; inventory returns always create a new per-batch Return transaction."
         ),
       notes: z
         .string()
@@ -670,6 +670,12 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             "Create a vendor Return transaction first (type: 'Return'), then pass its ID as returnTransactionId."
           );
         }
+        if (returnTo === "inventory" && returnTransactionId) {
+          return validation(
+            "returnTransactionId cannot be used when returnTo is 'inventory'.",
+            "Omit returnTransactionId. Inventory returns always create a new per-batch Return transaction with frozen accounting fields."
+          );
+        }
 
         let existingReturnTx: (Transaction & { id: string }) | null = null;
         if (returnTransactionId) {
@@ -678,7 +684,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           if (!isReturnTransactionType(existingReturnTx.type)) {
             return validation(
               `Transaction ${returnTransactionId} is type '${existingReturnTx.type}', not 'Return'.`,
-              "Pass an existing Return transaction, or omit returnTransactionId to create a new one (only valid for returnTo: 'inventory')."
+              "Pass an existing vendor Return transaction. Inventory returns create their own per-batch Return transaction."
             );
           }
         }
@@ -712,22 +718,6 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           if (missingSourceCategory.length > 0) {
             return missingSourceBudgetCategoryError(missingSourceCategory);
           }
-          if (existingReturnTx) {
-            const groups = sourceCategoryGroups(items);
-            const existingCategory = existingReturnTx.budgetCategoryId?.trim();
-            if (!existingCategory) {
-              return validation(
-                `Existing Return transaction ${existingReturnTx.id} has no budgetCategoryId.`,
-                "Use a new inventory Return transaction so the source category can be recorded."
-              );
-            }
-            if (groups.length !== 1 || groups[0].budgetCategoryId !== existingCategory) {
-              return validation(
-                `Existing Return transaction ${existingReturnTx.id} uses budgetCategoryId ${existingCategory}, but selected items need ${groups.map((g) => g.budgetCategoryId).join(", ")}.`,
-                "Return items separately by source budget category, or omit returnTransactionId to create new grouped Return transactions."
-              );
-            }
-          }
         }
 
         if (dryRun) {
@@ -735,7 +725,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             dryRun: true,
             returnTo,
             existingReturnTransactionId: existingReturnTx?.id ?? null,
-            willCreateNewReturnTx: returnTo === "inventory" && !existingReturnTx,
+            willCreateNewReturnTx: returnTo === "inventory",
             plan: {
               itemUpdates: items.map((i) => ({
                 itemId: i.id,
@@ -743,7 +733,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 set:
                   returnTo === "inventory"
                     ? {
-                        status: "returned",
+                        status: "purchased",
                         projectId: null,
                         budgetCategoryId: null,
                         currentSource: inventoryLabel,
@@ -757,7 +747,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         }
 
         if (returnTo === "inventory") {
-          return await commitReturnToInventory(db, items, existingReturnTx, notes, inventoryLabel);
+          return await commitReturnToInventory(db, items, notes, inventoryLabel);
         }
         return await commitReturnToVendor(db, items, existingReturnTx!, notes);
       }
@@ -1153,7 +1143,6 @@ async function commitSellToInventory(
 async function commitReturnToInventory(
   db: Firestore,
   items: (Item & { id: string })[],
-  existingReturnTx: (Transaction & { id: string }) | null,
   notes: string | undefined,
   inventoryLabel: string
 ) {
@@ -1169,50 +1158,29 @@ async function commitReturnToInventory(
 
   // Standalone project→inventory returns use purchase price: the business is
   // taking inventory back at cost.
-  const returnAmount = computePurchasePriceTotals(items).amountCents;
   // projectId on the Return tx = source project (budget impact lands there).
   const sourceProjectId = items[0]?.projectId ?? null;
   const tagged = notes ? tagNotesAsAi(notes) : undefined;
 
   const returnTxByItemId = new Map<string, string>();
-  let isNewReturnTx: boolean;
-  if (existingReturnTx) {
-    const returnTxRef = txCol.doc(existingReturnTx.id);
-    isNewReturnTx = false;
-    const prevAmount = existingReturnTx.amountCents ?? 0;
-    const mergedNotes = tagged
-      ? existingReturnTx.notes
-        ? `${existingReturnTx.notes}\n\n${tagged}`
-        : tagged
-      : existingReturnTx.notes;
-    batch.update(returnTxRef, {
-      itemIds: FieldValue.arrayUnion(...items.map((i) => i.id)),
-      amountCents: prevAmount + returnAmount,
+  for (const group of sourceCategoryGroups(items)) {
+    const returnTxRef = txCol.doc();
+    const groupAmount = computePurchasePriceTotals(group.items).amountCents;
+    batch.set(returnTxRef, {
+      type: "Return",
+      source: inventoryLabel,
+      projectId: sourceProjectId,
+      budgetCategoryId: group.budgetCategoryId,
+      amountCents: groupAmount,
+      subtotalCents: groupAmount,
+      itemIds: group.items.map((i) => i.id),
+      status: "completed",
+      ...(tagged ? { notes: tagged } : {}),
+      createdAt: now,
       updatedAt: now,
-      ...(mergedNotes !== undefined ? { notes: mergedNotes } : {}),
+      createdBy: uid,
     });
-    for (const item of items) returnTxByItemId.set(item.id, returnTxRef.id);
-  } else {
-    isNewReturnTx = true;
-    for (const group of sourceCategoryGroups(items)) {
-      const returnTxRef = txCol.doc();
-      const groupAmount = computePurchasePriceTotals(group.items).amountCents;
-      batch.set(returnTxRef, {
-        type: "Return",
-        source: inventoryLabel,
-        projectId: sourceProjectId,
-        budgetCategoryId: group.budgetCategoryId,
-        amountCents: groupAmount,
-        subtotalCents: groupAmount,
-        itemIds: group.items.map((i) => i.id),
-        status: "completed",
-        ...(tagged ? { notes: tagged } : {}),
-        createdAt: now,
-        updatedAt: now,
-        createdBy: uid,
-      });
-      for (const item of group.items) returnTxByItemId.set(item.id, returnTxRef.id);
-    }
+    for (const item of group.items) returnTxByItemId.set(item.id, returnTxRef.id);
   }
 
   for (const item of items) {
@@ -1222,7 +1190,7 @@ async function commitReturnToInventory(
       projectId: null,
       budgetCategoryId: null,
       spaceId: null,
-      status: "returned",
+      status: "purchased",
       transactionId: returnTxId,
       currentSource: inventoryLabel,
       updatedAt: now,
@@ -1260,7 +1228,7 @@ async function commitReturnToInventory(
         type: "text" as const,
         text:
           `Returned ${items.length} item(s) to business inventory.\n` +
-          `${isNewReturnTx ? "New Return transaction(s)" : "Appended to existing Return transaction"}: ${[...new Set(returnTxByItemId.values())].join(", ")}\n` +
+          `New Return transaction(s): ${[...new Set(returnTxByItemId.values())].join(", ")}\n` +
           `Items now have projectId: null and budgetCategoryId: null.` +
           `${creditInvoiceIds.length ? `\nDraft credit invoice(s): ${creditInvoiceIds.join(", ")}` : ""}`,
       },

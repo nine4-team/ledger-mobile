@@ -1,5 +1,8 @@
 # Ledger Specs — Changelog
 
+## 2026-08-24
+- **Aligned MCP returns with the per-batch inventory model.** Return-to-inventory now always creates a new frozen Return transaction, matching iOS; existing Return transaction IDs remain vendor-return-only. Inventory-owned items return to `purchased` status when they come back into stock. Updated `return-and-sale-tracking.md` to restore origin-aware Return versus Sale-to-Inventory routing and source-project budget attribution.
+
 ## 2026-08-19
 - **Marked purchase handling and inventory intent shipped.** Installed-app QA and a disposable real-Firestore MCP smoke now cover both business-paid branches, intended-project follow-up, authoritative quick-draft transaction linkage, atomic From Inventory promotion, pricing, intent resolution, destination Purchase creation, and lineage. All smoke fixtures were removed afterward.
 - **Clarified proto-item rollout status.** Project quick-draft capture and inventory-linked routing are shipped; broader inventory capture, account-wide review, merge, and automation work remains in progress.

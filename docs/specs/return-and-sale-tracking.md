@@ -2,7 +2,7 @@
 
 ## Overview
 
-This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the **return-to-inventory** flow, which under the per-batch inventory movement redesign replaces the legacy "sell from project to business inventory" path.
+This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the origin-aware project-to-inventory flow: items that came from inventory go home through a Return, while project-originated items enter inventory through a Sale-to-Inventory transaction.
 
 > **Related specs:**
 > - [sale-transactions.md](sale-transactions.md) — the active inventory movement transaction model (per-batch, frozen accounting fields)
@@ -65,9 +65,10 @@ This means a $100 return subtracts $100 from the budget category's spent amount.
 After an item is returned, it may go through several dispositions:
 
 1. **Returned to vendor**: Item goes back to the vendor. The return transaction has the vendor's name as `source`. No further tracking needed.
-2. **Returned to business inventory**: Item moves to business inventory scope via a Return transaction with `source: "Business Inventory"`. This is the **only** path back to inventory in the per-batch model — there is no longer a "sell to inventory" sale path. See [inventory-as-store.md](inventory-as-store.md). Creates a `returned` lineage edge and wipes the item's `budgetCategoryId`.
-3. **Replaced**: A new item is purchased to replace the returned one. The replacement is a new item linked to a new purchase transaction.
-4. **Refunded**: The financial impact is handled by the return transaction's negative amount in budget calculations.
+2. **Returned to business inventory**: An item that previously came from inventory goes home through a Return transaction with the account inventory source label. This creates a `returned` lineage edge and wipes the item's `budgetCategoryId`.
+3. **Sold to business inventory**: A project-originated item that the business is acquiring for the first time uses a Sale-to-Inventory transaction. This creates a `soldToInventory` lineage edge and wipes the item's `budgetCategoryId`.
+4. **Replaced**: A new item is purchased to replace the returned one. The replacement is a new item linked to a new purchase transaction.
+5. **Refunded**: The financial impact is handled by the return transaction's negative amount in budget calculations.
 
 ## Incomplete Return Detection
 
@@ -104,16 +105,17 @@ The system surfaces incomplete returns to the user so they can:
 
 ## Returning to Inventory
 
-In the per-batch model, returning an item from a project to business inventory is **a single return transaction**, not a sale. This replaces the legacy two-step (return + canonical sale) process.
+In the per-batch model, an inventory-origin item going home from a project is **a single Return transaction**. Project-originated items instead use Sale-to-Inventory. This replaces the legacy canonical-sale aggregator model.
 
 ### What Happens
 
-When a user returns items from a project to business inventory, the flow:
+When a user returns inventory-origin items from a project to business inventory, the flow:
 
-1. Creates (or reuses an open) Return transaction at `accounts/{accountId}/transactions/{auto-id}` with:
+1. Creates a new per-batch Return transaction at `accounts/{accountId}/transactions/{auto-id}` with:
    - `type: "Return"`
-   - `source: "Business Inventory"`
-   - `projectId: null` (inventory scope)
+   - `source: "[Account Name] Inventory"` (or `"Business Inventory"` fallback)
+   - `projectId`: source project ID, so the budget reversal lands on that project
+   - `budgetCategoryId`: source project category
    - `amountCents`: sum of `purchasePriceCents` of the returned items
    - `itemIds`: the returned items
 2. For each item, updates `accounts/{accountId}/items/{itemId}`:
@@ -158,11 +160,9 @@ same Firestore batch when invoice context is available. If a caller cannot
 resolve invoice context, it should route through a context-aware flow or surface
 a blocking warning instead of silently skipping the credit.
 
-### Coalescing Returns
+### Per-Batch Returns
 
-A return-to-inventory transaction can grow during a single user session — if the user returns 3 items, then 2 more in the same flow, both batches can write to the same Return transaction's `itemIds` (using `arrayUnion`) and recalculate `amountCents`. Once the user leaves the flow (or 24h passes), the transaction is treated as closed and clients should create a new one for subsequent returns.
-
-Return-to-inventory documents follow the same rule as other inventory movement transactions: accounting fields stay frozen after creation, while `itemIds` may change to reflect current active membership.
+Every return-to-inventory action creates a new Return transaction. Return transactions are not reused across later actions. Their accounting fields, including `amountCents`, stay frozen after creation; `itemIds` may only change as items later leave that transaction through another movement.
 
 ### Budget Impact
 
@@ -187,12 +187,12 @@ The per-batch model collapses this to one return transaction with one budget imp
 
 ### Project → Project Moves
 
-A move from one project to another decomposes into two operations in one atomic batch:
+A move from one project to another decomposes into two origin-aware operations in one atomic batch:
 
-1. Return-to-inventory from the source project (this section).
+1. Source-project exit: Return for inventory-origin items, or Sale-to-Inventory for project-originated items.
 2. New per-batch Purchase-from-inventory into the destination project ([sale-transactions.md](sale-transactions.md)).
 
-Each item gets two lineage edges: one `returned` (source → inventory) and one `purchasedFromInventory` (inventory → destination). The destination purchase's category is collected from the user — the category is wiped during the return hop.
+Each item gets two lineage edges: `returned` or `soldToInventory` for the source exit, then `sold` for the inventory-to-destination Purchase. The destination purchase's category is collected from the user; the source category is not carried through inventory.
 
 ## Return Transaction Properties
 
@@ -217,7 +217,7 @@ Return transactions have specific characteristics:
 |-----------------|---------------|-------------------|---------------|
 | Purchase | Positive | +1 | Adds to spent |
 | Return (vendor or inventory) | Positive | -1 | Subtracts from spent |
-| Per-batch Sale (`type: "Sale"`, no `isCanonicalInventorySale`) | Positive | +1 | Adds to spent |
+| Per-batch Sale-to-Inventory (`type: "Sale"`, no `isCanonicalInventorySale`) | Positive | -1 | Subtracts from spent |
 | **Legacy** canonical sale, `business_to_project` | Positive | +1 | Adds to spent |
 | **Legacy** canonical sale, `project_to_business` | Positive | -1 | Subtracts from spent |
 | Canceled (any type) | — | 0 | Excluded |
