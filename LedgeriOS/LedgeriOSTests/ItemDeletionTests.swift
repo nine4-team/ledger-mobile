@@ -14,6 +14,177 @@ private func makeItem(
     return item
 }
 
+@Suite("ItemsService — bulk metadata updates")
+struct ItemsServiceBulkUpdateTests {
+    @Test("status update commits all items in one batch without transaction reads")
+    func statusUpdateUsesOneBatch() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                Issue.record("Bulk metadata update unexpectedly loaded a transaction")
+                return nil
+            }
+        )
+        var first = makeItem(id: "i1", transactionId: "tx1")
+        first.projectId = "project1"
+        first.budgetCategoryId = "cat1"
+        var second = first
+        second.id = "i2"
+
+        try await service.updateItems(
+            accountId: acct,
+            items: [first, second],
+            fields: ["status": ItemStatus.purchased.rawValue]
+        )
+
+        #expect(batch.commitCalled)
+        #expect(batch.updates.count == 2)
+        for itemId in ["i1", "i2"] {
+            let update = try #require(batch.updatesForPath("accounts/\(acct)/items/\(itemId)").first)
+            #expect(update.fields["status"] as? String == ItemStatus.purchased.rawValue)
+            #expect(update.fields.count == 1)
+        }
+    }
+
+    @Test("space clear preserves null and deduplicates item IDs")
+    func clearSpaceDeduplicatesItems() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "i1")
+
+        try await service.updateItems(
+            accountId: acct,
+            items: [item, item],
+            fields: ["spaceId": NSNull()]
+        )
+
+        #expect(batch.commitCalled)
+        #expect(batch.updates.count == 1)
+        let update = try #require(batch.updates.first)
+        #expect(update.fields["spaceId"] is NSNull)
+    }
+
+    @Test("unsupported association field fails before creating a batch")
+    func associationFieldRejected() async {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+
+        await #expect(throws: ItemAssociationError.self) {
+            try await service.updateItems(
+                accountId: acct,
+                items: [makeItem(id: "i1")],
+                fields: ["projectId": "project2"]
+            )
+        }
+
+        #expect(!batch.commitCalled)
+        #expect(batch.updates.isEmpty)
+    }
+
+    @Test("missing item ID fails before creating a batch")
+    func missingItemIdRejected() async {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+
+        await #expect(throws: ItemAssociationError.self) {
+            try await service.updateItems(
+                accountId: acct,
+                items: [makeItem(id: nil)],
+                fields: ["status": ItemStatus.toPurchase.rawValue]
+            )
+        }
+
+        #expect(!batch.commitCalled)
+        #expect(batch.updates.isEmpty)
+    }
+
+    @Test("legacy category state does not block an unrelated metadata update")
+    func legacyCategoryStateIsNotRewritten() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var item = makeItem(id: "i1")
+        item.projectId = "project1"
+        item.budgetCategoryId = nil
+
+        try await service.updateItems(
+            accountId: acct,
+            items: [item],
+            fields: ["spaceId": "space1"]
+        )
+
+        #expect(batch.commitCalled)
+        let update = try #require(batch.updates.first)
+        #expect(update.fields["spaceId"] as? String == "space1")
+        #expect(update.fields.count == 1)
+    }
+
+    @Test("more than 500 updates are committed in Firestore-safe chunks")
+    func largeSelectionUsesMultipleBatches() async throws {
+        let factory = RecordingBatchFactory()
+        let service = ItemsService(makeBatch: { factory.makeBatch() })
+        let items = (1...501).map { makeItem(id: "i\($0)") }
+
+        try await service.updateItems(
+            accountId: acct,
+            items: items,
+            fields: ["status": ItemStatus.toPurchase.rawValue]
+        )
+
+        let batches = factory.batches
+        #expect(batches.count == 2)
+        #expect(batches[0].commitCalled)
+        #expect(batches[0].updates.count == 500)
+        #expect(batches[1].commitCalled)
+        #expect(batches[1].updates.count == 1)
+    }
+
+    @Test("batch commit errors propagate to the caller")
+    func commitErrorPropagates() async {
+        enum ExpectedError: Error { case commit }
+        let batch = RecordingBatch()
+        batch.commitError = ExpectedError.commit
+        let service = makeService(batch: batch)
+
+        await #expect(throws: ExpectedError.self) {
+            try await service.updateItems(
+                accountId: acct,
+                items: [makeItem(id: "i1")],
+                fields: ["status": ItemStatus.returned.rawValue]
+            )
+        }
+        #expect(batch.commitCalled)
+    }
+
+    @Test("empty update does not create a batch")
+    func emptyUpdateReturnsImmediately() async throws {
+        let factory = RecordingBatchFactory()
+        let service = ItemsService(makeBatch: { factory.makeBatch() })
+
+        try await service.updateItems(accountId: acct, items: [], fields: ["status": "purchased"])
+        try await service.updateItems(accountId: acct, items: [makeItem(id: "i1")], fields: [:])
+
+        #expect(factory.batches.isEmpty)
+    }
+}
+
+private final class RecordingBatchFactory: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedBatches: [RecordingBatch] = []
+
+    var batches: [RecordingBatch] {
+        lock.withLock { storedBatches }
+    }
+
+    func makeBatch() -> RecordingBatch {
+        lock.withLock {
+            let batch = RecordingBatch()
+            storedBatches.append(batch)
+            return batch
+        }
+    }
+}
+
 private func makeService(batch: RecordingBatch) -> ItemsService {
     ItemsService(makeBatch: { batch })
 }

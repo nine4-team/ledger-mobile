@@ -7,6 +7,7 @@ enum ItemAssociationError: LocalizedError {
     case invalidBudgetCategory
     case scopeMismatch
     case genericTransactionUpdate
+    case unsupportedBulkUpdateField(String)
     case linkedItemCreation
     case genericItemIdsUpdate
 
@@ -18,6 +19,7 @@ enum ItemAssociationError: LocalizedError {
         case .invalidBudgetCategory: "Project records require a real budget category; inventory records may not carry one."
         case .scopeMismatch: "The item and transaction must belong to the same project."
         case .genericTransactionUpdate: "Use setTransaction or clearTransaction to change an item's transaction."
+        case .unsupportedBulkUpdateField(let field): "Bulk item updates do not support the \(field) field."
         case .linkedItemCreation: "Use createItemsForTransaction to create an item linked to a transaction."
         case .genericItemIdsUpdate: "Change transaction membership through ItemsService."
         }
@@ -25,6 +27,9 @@ enum ItemAssociationError: LocalizedError {
 }
 
 struct ItemsService: ItemsServiceProtocol {
+    private static let bulkUpdateFields: Set<String> = ["spaceId", "status"]
+    private static let maximumBatchOperationCount = 500
+
     private let makeBatch: @Sendable () -> any BatchWriting
     private let loadTransaction: @Sendable (_ accountId: String, _ transactionId: String) async throws -> Transaction?
 
@@ -158,6 +163,47 @@ struct ItemsService: ItemsServiceProtocol {
             attachmentFieldNames: ["images"]
         )
         try await itemRepo.update(id: itemId, fields: attachmentNormalizedFields)
+    }
+
+    /// Updates status or space metadata for the supplied live item snapshots.
+    /// Association fields use dedicated operations because they also mutate
+    /// transaction membership and category invariants.
+    func updateItems(accountId: String, items: [Item], fields: [String: Any]) async throws {
+        guard !items.isEmpty, !fields.isEmpty else { return }
+
+        if let unsupportedField = fields.keys
+            .filter({ !Self.bulkUpdateFields.contains($0) })
+            .sorted()
+            .first {
+            throw ItemAssociationError.unsupportedBulkUpdateField(unsupportedField)
+        }
+
+        var seenItemIds = Set<String>()
+        var updates: [(itemId: String, fields: [String: Any])] = []
+        updates.reserveCapacity(items.count)
+
+        for item in items {
+            guard let itemId = item.id else { throw ItemAssociationError.itemMissingId }
+            guard seenItemIds.insert(itemId).inserted else { continue }
+            updates.append((itemId, fields))
+        }
+
+        let itemsPath = "accounts/\(accountId)/items"
+        for startIndex in stride(
+            from: 0,
+            to: updates.count,
+            by: Self.maximumBatchOperationCount
+        ) {
+            let batch = makeBatch()
+            let endIndex = min(startIndex + Self.maximumBatchOperationCount, updates.count)
+            for update in updates[startIndex..<endIndex] {
+                batch.updateData(
+                    update.fields,
+                    forDocumentAt: "\(itemsPath)/\(update.itemId)"
+                )
+            }
+            try await batch.commit()
+        }
     }
 
     /// Atomically moves items between canonical transaction membership arrays.

@@ -246,6 +246,50 @@ filter, and image. If the beachball persists, capture a macOS sample while it is
 hung and correlate item-detail startup, gallery presentation, and image decode
 events.
 
+## E09: Bulk Item Metadata Task and Read Amplification
+
+**Hypothesis:** status and space bulk actions complete slowly because every
+selected item starts an independent task through the generic single-item update
+path, producing redundant reads, writes, and independently arriving listener
+callbacks.
+
+**Source evidence:** Project Items, Inventory Items, Transaction Detail, Space
+Detail, and Universal Search all looped over selected items and created one
+`Task` plus `ItemsService.updateItem` call per item. That service rereads the
+item and, when linked, its transaction before issuing the write.
+
+**Remediation:** add a shared `ItemsService.updateItems` operation that uses the
+selected live item snapshots, validates all inputs before writing, deduplicates
+IDs, and issues Firestore batch updates in chunks of at most 500 operations.
+Each write contains only the requested status or space field, preventing stale
+selected snapshots from overwriting unrelated price or association data.
+Migrate every item bulk-menu surface to one task and one service call per user
+action.
+
+**Behavior implications:** the API is intentionally restricted to `status` and
+`spaceId`. Transaction/category association and project movement remain on
+their dedicated multi-document operations. Menu structure, picker behavior,
+freshness, and immediate selection clearing are unchanged. An ordinary bulk
+selection commits atomically; selections above 500 items require sequential
+Firestore batches and can therefore partially complete if a later chunk fails.
+
+**Verification:** focused service tests cover one-batch status updates without
+transaction reads or unrelated field writes, null space assignment, duplicate
+IDs, unsupported fields, missing IDs, legacy category state, 501-item chunking,
+commit-error propagation, and empty input.
+
+On 2026-08-25, the production-backed iOS simulator was also verified against an
+authenticated playground account. A two-item Business Inventory selection was
+changed from Purchased to To Purchase through the bulk menu. Both listener-backed
+cards reflected the new status together in 1.655 seconds, including the UI
+automation stabilization delay. The same two items were restored to Purchased
+in 1.588 seconds and the final list confirmed both original values. No account
+or item identifiers were retained in the experiment artifacts.
+
+**Decision:** implement independent of the browsing diagnosis. It directly
+removes write-completion and callback amplification but is not evidence about
+latency before a bulk action starts.
+
 ## Next Experiment
 
 First, repeat E08 on the same macOS item, filter, and image using the remediated

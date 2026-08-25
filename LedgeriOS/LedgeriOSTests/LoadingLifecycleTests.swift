@@ -97,6 +97,7 @@ private struct LifecycleItemsService: ItemsServiceProtocol {
         onCommitError: @escaping @Sendable ([String], Error) -> Void
     ) throws -> [Item] { [] }
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {}
+    func updateItems(accountId: String, items: [Item], fields: [String: Any]) async throws {}
     func deleteItem(accountId: String, item: Item) async throws {}
     func deleteItems(accountId: String, items: [Item]) async throws {}
 

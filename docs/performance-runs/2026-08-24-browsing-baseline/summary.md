@@ -214,6 +214,33 @@ the currently visible full-resolution image. This preserves image quality and
 gallery commands; the next or previous image may show its spinner when selected
 instead of being speculatively loaded.
 
+### 10. Unbatched bulk item metadata writes
+
+Project Items, Inventory Items, Transaction Detail, Space Detail, and Universal
+Search each launched one independent task per selected item for status and space
+changes. Every task called the generic single-item update path, which reread the
+item and, for linked items, its transaction before writing. A 20-item action
+could therefore produce roughly 20 item reads, up to 20 transaction reads, 20
+writes, and 20 independently completing listener callbacks.
+
+All five surfaces now call one `ItemsService.updateItems` operation with the
+already-live selected item snapshots. The service validates every requested
+field and item ID before writing, deduplicates item IDs, and commits one
+Firestore batch for ordinary selections. It writes only the requested status
+or space field, so a
+bulk metadata action cannot overwrite a newer price or association value.
+Selections above Firestore's 500-operation limit are committed in sequential
+chunks. The API accepts only
+status and space metadata; transaction association, category, project movement,
+sales, returns, and deletion retain their dedicated multi-document operations.
+Preexisting association/category data is neither rewritten nor used to block an
+unrelated metadata change.
+
+Visible menu contents and immediate selection clearing are unchanged. The
+service propagates batch failure to its single caller task instead of creating
+independent partial task failures. Production timing remains to be captured,
+but the per-item read and task amplification is removed by construction.
+
 ## Ranked Readout
 
 1. **Zoomable full-image main-actor work:** strongest current
@@ -243,8 +270,10 @@ instead of being speculatively loaded.
 9. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-10. **Unbatched bulk writes:** remains a write-completion and callback-storm
-   issue, but does not explain slow browsing before a bulk operation begins.
+10. **Unbatched bulk item metadata writes:** confirmed implementation defect.
+   Status and space changes now use one validated batch operation across all five
+   item bulk surfaces. This improves action completion and callback pressure but
+   does not explain slow browsing before a bulk operation begins.
 
 ## Evidence Unavailable
 
@@ -288,6 +317,9 @@ are debounced or suppressed.
   the experiment ledger identifies the controlled result bundle.
 - Zoomable full-image and media-gallery focused run: 84 tests passed on the iOS
   simulator; macOS Debug app build passed.
+- Production-backed iOS simulator bulk-write check: two inventory items updated
+  together through one status action in 1.655 seconds, then both were restored
+  to their original status in 1.588 seconds.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.

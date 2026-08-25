@@ -490,24 +490,11 @@ struct UniversalSearchView: View {
     // MARK: - Item Bulk Actions
 
     private func setSpaceForSelectedItems(spaceId: String?) {
-        guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService()
-        nonisolated(unsafe) let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
-        }
-        selectedItemIds.removeAll()
+        updateSelectedItems(fields: ["spaceId": spaceId as Any? ?? NSNull()])
     }
 
     private func setStatusForSelectedItems(_ status: ItemStatus) {
-        guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService()
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status.rawValue]) }
-        }
-        selectedItemIds.removeAll()
+        updateSelectedItems(fields: ["status": status.rawValue])
     }
 
     private func linkSelectedItemsToTransaction(_ transaction: Transaction) {
@@ -527,11 +514,23 @@ struct UniversalSearchView: View {
     }
 
     private func clearSpaceForSelectedItems() {
+        updateSelectedItems(fields: ["spaceId": NSNull()])
+    }
+
+    private func updateSelectedItems(fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService()
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": NSNull()]) }
+        let items = selectedItems
+        nonisolated(unsafe) let updateFields = fields
+        Task {
+            do {
+                try await ItemsService().updateItems(
+                    accountId: accountId,
+                    items: items,
+                    fields: updateFields
+                )
+            } catch {
+                print("Bulk item update failed: \(error)")
+            }
         }
         selectedItemIds.removeAll()
     }
