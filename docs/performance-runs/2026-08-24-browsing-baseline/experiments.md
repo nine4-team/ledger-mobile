@@ -290,11 +290,61 @@ or item identifiers were retained in the experiment artifacts.
 removes write-completion and callback amplification but is not evidence about
 latency before a bulk action starts.
 
+## E10: macOS Item Detail Navigation AttributeGraph Loop
+
+**User reproduction:** a release 52 macOS user opened an item from a large
+project and encountered an infinite spinner/beachball that required a force
+quit. The reported action was opening Item Detail, not selecting an item or
+opening its image.
+
+**Exact reproduction:** the signed release 52 app and the current Debug app
+both reproduced against the same 546-item production project. Clicking a card
+body left the process at 99-100% CPU with growing memory. A five-second process
+sample placed the main thread in repeated SwiftUI `AttributeGraph` updates.
+
+**Isolation results:** replacing the destination with static text opened in
+1.272 seconds and remained responsive. The real `ItemDetailView` still looped
+after independently removing or bypassing the nested item-list lazy stack, the
+source list while detail was active, pinned list headers, the Item Detail
+toolbar, broad item-array route resolution, full detail content, inactive sheet
+and nested-destination hosts, find registration, focused listeners, and lineage
+startup. Even a static one-line body looped while it remained inside the
+original state-heavy `ItemDetailView` type. This rules out item payload size,
+network waiting, image decode, the source list, and any one visible detail
+section as the immediate trigger.
+
+**Remediation:** make the navigation destination a lightweight
+`ItemDetailView` wrapper. It first mounts a background-colored frame, yields
+one scheduler turn, and then mounts the unchanged stateful
+`ItemDetailContentView`. This prevents SwiftUI from adding the detail view's
+large dynamic-property graph during the same transaction that pushes away the
+546-item parent hierarchy.
+
+**Behavior and freshness implications:** Item Detail layout, media, notes,
+details, toolbar, sheets, nested navigation, focused Firestore listeners, and
+lineage behavior are unchanged. The only presentation difference is a possible
+single background-colored frame during the push. The focused item listener
+starts one scheduler turn later; no update is debounced, cached in place of a
+listener, or suppressed.
+
+**Production-backed verification:** the full detail screen opened in 1.387
+seconds on the first remediated run. Three additional opens completed in
+1.362-1.530 seconds; all expected detail sections and toolbar controls were
+present. Back completed in 1.241-1.272 seconds each time and returned to the
+546-item list. After settling, the app measured 0.0% CPU instead of the
+reproduced 99-100% loop. The macOS build also compiled the iOS application and
+test targets successfully.
+
+**Decision:** confirmed navigation-transaction defect; fixed with the deferred
+detail mount. Keep the diagnostics because other browsing crashes may have
+independent causes.
+
 ## Next Experiment
 
-First, repeat E08 on the same macOS item, filter, and image using the remediated
-build. Separately, run the Halrow browsing and bulk-menu scenarios on a physical
-iPhone with a stable connection and `-LedgerPerformanceDiagnostics YES`.
-Capture an Instruments trace plus the diagnostic event stream. Classify any
-termination as exception, watchdog, memory pressure/jetsam, or unknown before
-selecting the next remediation.
+Repeat E10 on release hardware after distribution, including an item opened
+from an active filter. Separately, repeat E08 on the same macOS item, filter,
+and image using the remediated build. Run the Halrow browsing and bulk-menu
+scenarios on a physical iPhone with a stable connection and
+`-LedgerPerformanceDiagnostics YES`. Classify any termination as exception,
+watchdog, memory pressure/jetsam, or unknown before selecting another
+remediation.

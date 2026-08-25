@@ -2,6 +2,45 @@ import FirebaseFirestore
 import SwiftUI
 
 struct ItemDetailView: View {
+    let itemId: String
+    let projectId: String?
+    let initialItem: Item?
+
+    @State private var isContentReady = false
+
+    init(itemId: String, projectId: String? = nil, initialItem: Item? = nil) {
+        self.itemId = itemId
+        self.projectId = projectId
+        self.initialItem = initialItem
+    }
+
+    init(item: Item) {
+        self.init(itemId: item.id ?? "", projectId: item.projectId, initialItem: item)
+    }
+
+    var body: some View {
+        Group {
+            if isContentReady {
+                ItemDetailContentView(
+                    itemId: itemId,
+                    projectId: projectId,
+                    initialItem: initialItem
+                )
+            } else {
+                BrandColors.background
+                    .ignoresSafeArea()
+            }
+        }
+        .task {
+            // Keep the large detail graph out of the navigation push transaction.
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            isContentReady = true
+        }
+    }
+}
+
+private struct ItemDetailContentView: View {
     /// Route identity is the item ID. The displayed item resolves from the
     /// focused listener, then project/account context, then the initial
     /// snapshot — never from a mutable model held as route identity.

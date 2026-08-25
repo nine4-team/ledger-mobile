@@ -241,36 +241,60 @@ service propagates batch failure to its single caller task instead of creating
 independent partial task failures. Production timing remains to be captured,
 but the per-item read and task amplification is removed by construction.
 
+### 11. macOS Item Detail navigation transaction loop
+
+Release 52 and the current Debug app both reproduced an infinite Item Detail
+navigation hang against a 546-item production project. The process remained at
+99-100% CPU, and samples showed repeated SwiftUI `AttributeGraph` updates rather
+than a thread blocked on Firestore or image download. A static destination
+opened normally, but the original `ItemDetailView` type still looped even after
+its body was reduced to one static label and its content, presentations,
+toolbar, find registration, and listener lifecycle were independently removed.
+
+The navigation destination is now a lightweight wrapper that yields one
+scheduler turn before mounting the unchanged state-heavy detail implementation.
+This keeps its large dynamic-property graph out of the parent list's navigation
+push transaction. The first full production-backed detail opened in 1.387
+seconds; three repeats opened in 1.362-1.530 seconds, Back returned in
+1.241-1.272 seconds, and settled CPU was 0.0%. All detail sections and toolbar
+controls remained present. The only possible visible difference is one
+background-colored frame during the push; live listeners start on the following
+scheduler turn and retain their original freshness behavior.
+
 ## Ranked Readout
 
-1. **Zoomable full-image main-actor work:** strongest current
+1. **Item Detail navigation transaction loop:** exact release 52 infinite-hang
+   reproduction confirmed at 99-100% CPU and fixed by deferring the state-heavy
+   detail mount one scheduler turn. Four production-backed opens and Back
+   operations completed responsively with the full UI intact.
+2. **Zoomable full-image main-actor work:** strongest current
    interaction-specific causal candidate after a user reproduced a two-minute
    macOS beachball while opening an item image. Remediated; same-item retest is
    pending.
-2. **Leaked project listeners:** confirmed architectural defect and plausible
+3. **Leaked project listeners:** confirmed architectural defect and plausible
    source of progressively worsening browsing pressure. Fixed and regression
    tested.
-3. **Per-card linear metadata lookup churn:** measured frame-budget problem.
+4. **Per-card linear metadata lookup churn:** measured frame-budget problem.
    Fixed on the shared item-card/list path with synchronous freshness tests.
-4. **Main-actor financial publication:** a confirmed half-second synthetic
+5. **Main-actor financial publication:** a confirmed half-second synthetic
    callback path for limited-access accounts, reduced to approximately 3 ms.
-5. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
+6. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
    668-item full decode measured 10.537 ms. Subsequent one- and 20-document
    changes now measure 0.289 ms and 0.596 ms while preserving ordered,
    main-queue publication and live freshness.
-6. **Remaining account/project listener overlap:** item, transaction,
+7. **Remaining account/project listener overlap:** item, transaction,
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
    project subsets from account data.
-7. **Duplicate projects-list subscription:** confirmed redundant listener.
+8. **Duplicate projects-list subscription:** confirmed redundant listener.
    Removed by rendering the list from AccountContext's existing live projects.
-8. **Full-array observable publication:** 0.311-0.327 ms at 668 items, and
+9. **Full-array observable publication:** 0.311-0.327 ms at 668 items, and
    equal arrays do not notify observers. Not a primary cause; downstream SwiftUI
    fan-out from real changes remains pending physical measurement.
-9. **List filtering, grouping, and selection totals:** measured too small to be
+10. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-10. **Unbatched bulk item metadata writes:** confirmed implementation defect.
+11. **Unbatched bulk item metadata writes:** confirmed implementation defect.
    Status and space changes now use one validated batch operation across all five
    item bulk surfaces. This improves action completion and callback pressure but
    does not explain slow browsing before a bulk operation begins.
@@ -320,6 +344,9 @@ are debounced or suppressed.
 - Production-backed iOS simulator bulk-write check: two inventory items updated
   together through one status action in 1.655 seconds, then both were restored
   to their original status in 1.588 seconds.
+- Production-backed macOS Item Detail check: four opens from a 546-item project
+  completed in 1.362-1.530 seconds, with Back completing in 1.241-1.272 seconds
+  and settled CPU at 0.0%.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.
