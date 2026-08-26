@@ -60,6 +60,14 @@ struct ItemMenuBuilderTests {
         #expect(ids(menu).prefix(2) == ["open", "select"])
     }
 
+    @Test("List context includes Make Copies")
+    func listContextMakeCopies() {
+        let menu = ItemMenuBuilder.buildSingleItemMenu(
+            context: .list, scope: .project, callbacks: allCallbacks()
+        )
+        #expect(ids(menu).contains("make-copies"))
+    }
+
     @Test("List context ends with Delete")
     func listContextDeleteLast() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(

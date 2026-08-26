@@ -70,6 +70,11 @@ private struct ItemActionSheetsModifier: ViewModifier {
                     onActionComplete?()
                 }
             }
+            .adaptivePresentation(item: $controller.makeCopiesItem, style: .quickMenu) { item in
+                if let accountId {
+                    MakeCopiesModal(item: item, accountId: accountId)
+                }
+            }
             .confirmationDialog("Delete item?", isPresented: deleteConfirmBinding) {
                 Button("Delete", role: .destructive) {
                     controller.performDelete(accountId: accountId)

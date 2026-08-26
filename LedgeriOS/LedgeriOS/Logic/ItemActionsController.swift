@@ -19,6 +19,7 @@ final class ItemActionsController {
     var returnToInventoryItem: Item?
     var sellToProjectItem: Item?
     var reassignItem: Item?
+    var makeCopiesItem: Item?
     var deleteConfirmItem: Item?
 
     // MARK: - Menu
@@ -67,6 +68,7 @@ final class ItemActionsController {
                 ? { [weak self] in self?.sellToProjectItem = item }
                 : nil,
             onReassignToProject: { [weak self] in self?.reassignItem = item },
+            onMakeCopies: { [weak self] in self?.makeCopiesItem = item },
             onCopyID: item.id.map { id in { Clipboard.copy(id) } },
             onDelete: { [weak self] in self?.deleteConfirmItem = item }
         )

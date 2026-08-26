@@ -90,6 +90,9 @@ enum ItemMenuBuilder {
             if let onSelect = callbacks.onSelect {
                 items.append(ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: onSelect))
             }
+            if let onMakeCopies = callbacks.onMakeCopies {
+                items.append(ActionMenuItem(id: "make-copies", label: "Make Copies", icon: "doc.on.doc", onPress: onMakeCopies))
+            }
         case .space:
             if let onOpen = callbacks.onOpen {
                 items.append(ActionMenuItem(id: "open", label: "Open", icon: "arrow.up.right.square", onPress: onOpen))
