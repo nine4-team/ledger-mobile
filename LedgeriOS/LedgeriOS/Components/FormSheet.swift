@@ -6,6 +6,7 @@ struct FormSheet<Content: View>: View {
     var showDismissButton: Bool = true
     let primaryAction: FormSheetAction
     var secondaryAction: FormSheetAction? = nil
+    var actionHint: String? = nil
     var error: String? = nil
     @ViewBuilder let content: Content
 
@@ -64,6 +65,23 @@ struct FormSheet<Content: View>: View {
                 Text(error)
                     .font(Typography.small)
                     .foregroundStyle(StatusColors.missedText)
+            }
+
+            // Guidance for disabled actions
+            if let actionHint {
+                HStack(alignment: .top, spacing: Spacing.xs) {
+                    Image(systemName: "info.circle.fill")
+                    Text(actionHint)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(Typography.small)
+                .foregroundStyle(StatusColors.inProgressText)
+                .padding(Spacing.sm)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                        .fill(StatusColors.inProgressBackground)
+                )
             }
 
             // Actions

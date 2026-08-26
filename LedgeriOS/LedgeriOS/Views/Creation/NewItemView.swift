@@ -13,7 +13,7 @@ private enum ProjectItemTransactionMode {
     case createViaInventory
 }
 
-/// Two-step bottom-sheet form for creating a new item.
+/// Single scrolling bottom-sheet form for creating a new item.
 struct NewItemView: View {
     @State private var resolvedContext: ItemCreationContext?
     @State private var selectedProject: Project?
@@ -56,10 +56,7 @@ struct NewItemView: View {
     @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(\.dismiss) private var dismiss
 
-    // Step
-    @State private var currentStep = 1
-
-    // Step 1 fields
+    // Item details
     @State private var name = ""
     @State private var sku = ""
     @State private var source = ""
@@ -67,7 +64,6 @@ struct NewItemView: View {
     @State private var imageItems: [PhotosPickerItem] = []
     @State private var imageDatas: [Data] = []
 
-    // Step 2 fields
     @State private var selectedTransactionId: String?
     @State private var projectTransactionMode: ProjectItemTransactionMode = .existing
     @State private var selectedInventorySaleCategoryId: String?
@@ -106,33 +102,114 @@ struct NewItemView: View {
     private let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
 
     private var isValid: Bool {
-        guard resolvedContext != nil,
-              ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count + initialImageRefs.count)
-        else { return false }
-        guard !isCreating else { return false }
-        if projectId != nil {
-            switch projectTransactionMode {
-            case .existing:
-                guard let selectedTransaction else { return false }
-                if selectedTransaction.projectId != nil,
-                   selectedTransaction.projectId != projectId { return false }
-                if initialSourceHint == .fromInventory,
-                   selectedTransaction.projectId != nil { return false }
-                if selectedTransaction.projectId == nil {
-                    guard convertingProtoItemId != nil,
-                          selectedTransaction.transactionType == .purchase,
-                          selectedInventorySaleCategoryId != nil,
-                          (parseCents(projectPrice) ?? 0) > 0 else { return false }
-                    if let intendedProjectId = selectedTransaction.intendedProjectId,
-                       intendedProjectId != projectId { return false }
+        !isCreating && unmetRequirements.isEmpty
+    }
+
+    private var isItemIdentityMissing: Bool {
+        !ItemFormValidation.isValidItem(
+            name: name,
+            imageCount: imageDatas.count + initialImageRefs.count
+        )
+    }
+
+    private var isTransactionChoiceMissing: Bool {
+        projectId != nil
+            && projectTransactionMode == .existing
+            && selectedTransaction == nil
+    }
+
+    private var isBudgetCategoryMissing: Bool {
+        projectId != nil
+            && selectedInventorySaleCategory == nil
+            && (projectTransactionMode == .createViaInventory || selectedTransactionIsInventoryAcquisition)
+    }
+
+    private var budgetCategoryRequirementMessage: String {
+        enabledPurchaseCategories.isEmpty
+            ? "Enable an itemized budget category for this project."
+            : "Choose a budget category."
+    }
+
+    private var isPriceMissing: Bool {
+        return (ItemPricePolicy.normalizedProjectPriceCents(
+            purchasePriceCents: parseCents(purchasePrice),
+            projectPriceCents: parseCents(projectPrice)
+        ) ?? 0) <= 0
+    }
+
+    private var unmetRequirements: [String] {
+        var requirements: [String] = []
+
+        if resolvedContext == nil {
+            requirements.append("choose a destination")
+        }
+        if !ItemFormValidation.isValidItem(
+            name: name,
+            imageCount: imageDatas.count + initialImageRefs.count
+        ) {
+            requirements.append("add a name or at least one image")
+        }
+        if isPriceMissing {
+            requirements.append("enter a purchase or project price")
+        }
+
+        guard let projectId else { return requirements }
+
+        switch projectTransactionMode {
+        case .existing:
+            guard let selectedTransaction else {
+                requirements.append("link a transaction or choose Create via Inventory")
+                return requirements
+            }
+
+            if selectedTransaction.projectId != nil,
+               selectedTransaction.projectId != projectId {
+                requirements.append("choose a transaction for this project")
+            } else if initialSourceHint == .fromInventory,
+                      selectedTransaction.projectId != nil {
+                requirements.append("select the business inventory purchase that acquired this item")
+            } else if selectedTransaction.projectId == nil {
+                if convertingProtoItemId == nil {
+                    requirements.append("choose a transaction for this project")
                 }
-            case .createViaInventory:
-                if convertingProtoItemId != nil,
-                   initialSourceHint == .fromInventory { return false }
-                if selectedInventorySaleCategoryId == nil { return false }
+                if selectedTransaction.transactionType != .purchase {
+                    requirements.append("select an inventory purchase transaction")
+                }
+                if selectedInventorySaleCategory == nil {
+                    requirements.append(
+                        enabledPurchaseCategories.isEmpty
+                            ? "enable an itemized budget category for this project"
+                            : "choose a budget category"
+                    )
+                }
+
+                if let intendedProjectId = selectedTransaction.intendedProjectId,
+                   intendedProjectId != projectId {
+                    requirements.append("select an acquisition intended for this project")
+                }
+            }
+
+        case .createViaInventory:
+            if convertingProtoItemId != nil,
+               initialSourceHint == .fromInventory {
+                requirements.append("select the business inventory purchase that acquired this item")
+            }
+            if selectedInventorySaleCategory == nil {
+                requirements.append(
+                    enabledPurchaseCategories.isEmpty
+                        ? "enable an itemized budget category for this project"
+                        : "choose a budget category"
+                )
             }
         }
-        return true
+
+        return requirements
+    }
+
+    private var unmetRequirementsMessage: String? {
+        let requirements = unmetRequirements
+        guard !requirements.isEmpty else { return nil }
+        return "Still needed: \(requirements.joined(separator: "; "))."
     }
 
     private var projectId: String? {
@@ -218,12 +295,7 @@ struct NewItemView: View {
     }
 
     var body: some View {
-        Group {
-            switch currentStep {
-            case 1: step1Essentials
-            default: step2Details
-            }
-        }
+        itemForm
         .adaptivePresentation(isPresented: $showDestinationPicker, style: .picker) {
             DestinationPickerSheet { context, project in
                 if resolvedContext != context {
@@ -295,32 +367,6 @@ struct NewItemView: View {
         }
     }
 
-    // MARK: - Step 1: Essentials
-
-    private var step1Essentials: some View {
-        MultiStepFormSheet(
-            title: "New Item",
-            description: "Add a name or at least one image to create an item.",
-            currentStep: 1,
-            totalSteps: 2,
-            primaryAction: FormSheetAction(title: "Next") {
-                currentStep = 2
-            },
-            secondaryAction: FormSheetAction(title: "Cancel") {
-                dismiss()
-            }
-        ) {
-            VStack(spacing: Spacing.md) {
-                destinationSection
-                imagesSection
-                FormField(label: "Name", text: $name, placeholder: "Item name")
-                skuSection
-                VendorPickerField(value: $source, showPicker: $showVendorPicker)
-                FormField(label: "Notes", text: $notes, placeholder: "Additional notes", axis: .vertical)
-            }
-        }
-    }
-
     private var skuSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
@@ -357,9 +403,7 @@ struct NewItemView: View {
 
     private var destinationSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Destination")
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.textSecondary)
+            fieldLabel("Destination", isMissing: resolvedContext == nil)
 
             Button { showDestinationPicker = true } label: {
                 HStack {
@@ -383,33 +427,46 @@ struct NewItemView: View {
                 )
             }
             .buttonStyle(.plain)
+
+            if resolvedContext == nil {
+                requirementMessage("Choose a destination.")
+            }
         }
     }
 
-    // MARK: - Step 2: Details
+    // MARK: - Item Form
 
-    private var step2Details: some View {
+    private var itemForm: some View {
         FormSheet(
             title: "New Item",
-            primaryAction: FormSheetAction(title: "Create Item", isDisabled: !isValid) {
+            description: "Add a name or at least one image, plus a price, to create an item.",
+            primaryAction: FormSheetAction(
+                title: "Create Item",
+                isLoading: isCreating,
+                isDisabled: !isValid
+            ) {
                 createItem()
             },
-            secondaryAction: FormSheetAction(title: "Back") {
-                currentStep = 1
-            },
+            actionHint: submissionError == nil && !isCreating ? unmetRequirementsMessage : nil,
             error: submissionError
         ) {
             VStack(spacing: Spacing.md) {
-                Text("Step 2 of 2")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
+                destinationSection
+                imagesSection
+                FormField(
+                    label: "Name",
+                    text: $name,
+                    placeholder: "Item name",
+                    errorText: isItemIdentityMissing ? "Add a name or at least one image." : nil
+                )
+                skuSection
+                VendorPickerField(value: $source, showPicker: $showVendorPicker)
+                FormField(label: "Notes", text: $notes, placeholder: "Additional notes", axis: .vertical)
 
                 // Transaction picker — available once a destination is chosen
                 if resolvedContext != nil {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Transaction")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.textSecondary)
+                        fieldLabel("Transaction", isMissing: isTransactionChoiceMissing)
 
                         if projectId != nil {
                             Text(convertingProtoItemId != nil && initialSourceHint == .fromInventory
@@ -425,9 +482,16 @@ struct NewItemView: View {
                                 .font(Typography.caption)
                                 .foregroundStyle(BrandColors.textSecondary)
                             Button { showInventorySaleCategoryPicker = true } label: {
-                                pickerButton(label: "Category: \(inventorySaleCategoryLabel)")
+                                pickerButton(
+                                    label: "Category: \(inventorySaleCategoryLabel)",
+                                    showsError: isBudgetCategoryMissing
+                                )
                             }
                             .buttonStyle(.plain)
+
+                            if isBudgetCategoryMissing {
+                                requirementMessage(budgetCategoryRequirementMessage)
+                            }
                         } else if initialSourceHint == .fromInventory,
                                   selectedTransaction?.projectId != nil {
                             Text("This draft is marked From Inventory. Select its inventory acquisition transaction or remove the marker before converting.")
@@ -461,10 +525,22 @@ struct NewItemView: View {
 
                             if projectTransactionMode == .createViaInventory {
                                 Button { showInventorySaleCategoryPicker = true } label: {
-                                    pickerButton(label: "Category: \(inventorySaleCategoryLabel)")
+                                    pickerButton(
+                                        label: "Budget category: \(inventorySaleCategoryLabel)",
+                                        font: Typography.caption,
+                                        showsError: isBudgetCategoryMissing
+                                    )
                                 }
                                 .buttonStyle(.plain)
+
+                                if isBudgetCategoryMissing {
+                                    requirementMessage(budgetCategoryRequirementMessage)
+                                }
                             }
+                        }
+
+                        if isTransactionChoiceMissing {
+                            requirementMessage("Link a transaction or choose Create via Inventory.")
                         }
                     }
                 }
@@ -484,12 +560,22 @@ struct NewItemView: View {
                 }
 
                 // Prices
-                FormField(text: $purchasePrice, placeholder: "Purchase price")
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    fieldLabel("Price", isMissing: isPriceMissing)
+
+                    FormField(
+                        text: $purchasePrice,
+                        placeholder: "Purchase price",
+                        errorText: isPriceMissing ? "Enter a purchase or project price." : nil
+                    )
                     .platformKeyboardType(.decimalPad)
-                FormField(text: $projectPrice, placeholder: "Project price")
-                    .platformKeyboardType(.decimalPad)
-                FormField(text: $marketValue, placeholder: "Market value")
-                    .platformKeyboardType(.decimalPad)
+
+                    FormField(text: $projectPrice, placeholder: "Project price")
+                        .platformKeyboardType(.decimalPad)
+
+                    FormField(text: $marketValue, placeholder: "Market value")
+                        .platformKeyboardType(.decimalPad)
+                }
 
                 // Quantity
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -694,7 +780,13 @@ struct NewItemView: View {
 
     // MARK: - Shared Picker Button
 
-    private func pickerButton(label: String, detail: String? = nil, isSelected: Bool = false) -> some View {
+    private func pickerButton(
+        label: String,
+        detail: String? = nil,
+        isSelected: Bool = false,
+        font: Font = Typography.input,
+        showsError: Bool = false
+    ) -> some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
@@ -710,15 +802,43 @@ struct NewItemView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
         }
-        .font(Typography.input)
+        .font(font)
         .padding(.horizontal, Spacing.md)
         .frame(minHeight: 44)
         .contentShape(Rectangle())
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                .stroke(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: Dimensions.borderWidth)
+                .stroke(
+                    isSelected
+                        ? BrandColors.primary
+                        : (showsError ? StatusColors.missedText : BrandColors.border),
+                    lineWidth: Dimensions.borderWidth
+                )
         )
+    }
+
+    private func fieldLabel(_ title: String, isMissing: Bool) -> some View {
+        HStack(spacing: Spacing.sm) {
+            Text(title)
+            if isMissing {
+                Text("Required")
+                    .font(Typography.caption)
+                    .foregroundStyle(StatusColors.missedText)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, 2)
+                    .background(StatusColors.missedBackground, in: Capsule())
+            }
+        }
+        .font(Typography.label)
+        .foregroundStyle(BrandColors.textSecondary)
+    }
+
+    private func requirementMessage(_ message: String) -> some View {
+        Label(message, systemImage: "exclamationmark.circle.fill")
+            .font(Typography.caption)
+            .foregroundStyle(StatusColors.missedText)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - Transaction Subscription
