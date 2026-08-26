@@ -257,8 +257,10 @@ active facets combine with AND logic. Every facet supports both **All except**
 Examples: deselecting Purchased from Status shows every other status; deselecting
 the account's inventory label from Source shows direct-source and no-source items.
 When filters change, bulk selection is intersected with the visible results so a
-bulk action cannot affect hidden items. Item quick drafts are hidden while persisted
-item filters are active because draft statuses and fields use a different schema.
+bulk action cannot affect hidden items. Quick drafts rendered inside the shared item
+list (currently inventory) are hidden while persisted-item filters are active because
+draft statuses and fields use a different schema. Project quick drafts remain in their
+separate section and are not governed by the Items-section filter.
 
 ### Duplicate Grouping
 

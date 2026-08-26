@@ -40,6 +40,6 @@ The existing Filter toolbar button presents `ItemFilterMenu` through `adaptivePr
 
 - All and None are state-changing controls, not stored item values.
 - Selecting every currently available value normalizes back to All so newly arriving values are included.
-- Item quick drafts are hidden whenever persisted-item facets are active; proto-item fields/statuses are not equivalent to Item fields/statuses.
+- Quick drafts rendered inside `SharedItemsList` are hidden whenever persisted-item facets are active; proto-item fields/statuses are not equivalent to Item fields/statuses. Project quick drafts live in a separate parent section and are unaffected by the Items-section filter.
 - Changing filters intersects bulk-selected IDs with visible item IDs to prevent hidden bulk mutations.
 - The legacy flat `ItemFilterOption` calculations remain for compatibility tests and callers, but `SharedItemsList` uses only the grouped filter pipeline.
