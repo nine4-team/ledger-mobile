@@ -105,7 +105,7 @@ Fires on every transaction create, update, or delete. Computes `isComplete` + `a
 
 ### 2. Item Price Change
 
-For ordinary vendor Purchases and Returns, the canonical audit price is `purchasePriceCents`. For project-destination Purchases whose source is the business inventory label, it is `projectPriceCents`. Linked and lineage items always inherit the price basis of the transaction being audited.
+For ordinary vendor Purchases, vendor Returns, and Sale-to-Inventory acquisitions, the canonical audit price is `purchasePriceCents`. For project-scoped inventory Purchases and inventory Returns, it is normalized `projectPriceCents`. Linked and lineage items always inherit the price basis of the transaction being audited.
 
 When an applicable item price changes, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold", "soldToInventory"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction. Frozen inventory movement transactions are intentionally skipped because their amounts are historical snapshots.
 

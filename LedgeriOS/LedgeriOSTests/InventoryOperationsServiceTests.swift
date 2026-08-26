@@ -21,6 +21,20 @@ struct InventoryOperationsServiceTests {
         return item
     }
 
+    private func makeTransaction(
+        id: String,
+        projectId: String,
+        source: String,
+        type: TransactionType = .purchase
+    ) -> Transaction {
+        var transaction = Transaction()
+        transaction.id = id
+        transaction.projectId = projectId
+        transaction.source = source
+        transaction.transactionType = type
+        return transaction
+    }
+
     // MARK: - computeBatchTotals
 
     @Test("computeBatchTotals — missing project price uses purchase price")
@@ -78,15 +92,50 @@ struct InventoryOperationsServiceTests {
         #expect(amountCents == 6000) // No tax applied
     }
 
-    @Test("computePurchasePriceTotals — sums purchasePriceCents only")
-    func purchasePriceTotals() {
+    @Test("project-origin acquisition ignores malformed project markup")
+    func projectOriginAcquisitionUsesPurchaseCost() {
         let items = [
-            makeItem(id: "i1", purchasePriceCents: 5000, projectPriceCents: 7000, taxRatePct: 10),
-            makeItem(id: "i2", purchasePriceCents: nil, projectPriceCents: 3000),
+            makeItem(id: "i1", purchasePriceCents: 1000, projectPriceCents: 1500, taxRatePct: 10),
         ]
-        let (subtotalCents, amountCents) = InventoryOperationsService.computePurchasePriceTotals(items)
-        #expect(subtotalCents == 5000)
-        #expect(amountCents == 5000)
+        let totals = InventoryOperationsService.computeProjectOriginAcquisitionTotals(items)
+        #expect(totals.subtotalCents == 1000)
+        #expect(totals.amountCents == 1000)
+    }
+
+    @Test("current inventory Purchase overrides stale source metadata")
+    func transactionProvesInventoryOrigin() {
+        var item = makeItem(id: "i1", purchasePriceCents: 699, projectPriceCents: 965)
+        item.projectId = "project"
+        item.transactionId = "inventory-purchase"
+        item.source = "Hobby Lobby"
+        item.currentSource = "Hobby Lobby"
+        let transaction = makeTransaction(
+            id: "inventory-purchase",
+            projectId: "project",
+            source: "1584 Design Inventory"
+        )
+
+        let split = InventoryOperationsService.splitByOrigin([item], transactions: [transaction])
+        #expect(split.returnItems.map(\.id) == ["i1"])
+        #expect(split.saleItems.isEmpty)
+    }
+
+    @Test("vendor Purchase overrides misleading inventory metadata")
+    func transactionProvesProjectOrigin() {
+        var item = makeItem(id: "i1", purchasePriceCents: 1000, projectPriceCents: 1500)
+        item.projectId = "project"
+        item.transactionId = "vendor-purchase"
+        item.source = "Wayfair"
+        item.currentSource = "1584 Design Inventory"
+        let transaction = makeTransaction(
+            id: "vendor-purchase",
+            projectId: "project",
+            source: "Wayfair"
+        )
+
+        let split = InventoryOperationsService.splitByOrigin([item], transactions: [transaction])
+        #expect(split.saleItems.map(\.id) == ["i1"])
+        #expect(split.returnItems.isEmpty)
     }
 
     // MARK: - todayDateString

@@ -56,7 +56,7 @@ Under the per-batch model ([sale-transactions.md](sale-transactions.md)), projec
 
 Inventory-destination sale:
 
-- **Project → Business Inventory** is a Sale-to-Inventory only when the item originated in the project. The sale uses purchase price because the business is acquiring the item as inventory.
+- **Project → Business Inventory** is a Sale-to-Inventory only when the item originated in the project. The business acquires it at `purchasePriceCents`; a higher `projectPriceCents` must not increase the acquisition credit.
 
 Project-destination sales always charge the destination project at normalized `projectPriceCents`. Ledger first raises it to at least `purchasePriceCents`; the UI asks what to sell it for only when neither price is positive.
 
@@ -80,8 +80,8 @@ Project-destination sales always charge the destination project at normalized `p
 ### Budget Impact
 
 - Adds to destination project's budget for the chosen category at project price
-- For project-to-project sales, the source project decreases at purchase price and the destination project increases at project price
-- For project-to-inventory sales, the source project decreases at purchase price
+- For project-to-project sales, each source exit uses its origin-aware basis and the destination project increases at project price
+- For project-to-inventory Sale-to-Inventory, the source project decreases at purchase cost
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch inventory movement flow.
 
@@ -91,7 +91,7 @@ Return to Inventory is only for items that originally came from inventory.
 
 ### Return to Inventory (item came from inventory)
 
-When `item.currentSource != item.source`, the item passed through inventory before landing in this project. A Return transaction is created (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
+When the item's current Purchase or sold lineage proves that it passed through inventory before landing in this project, a Return transaction is created (`type: "Return"`, `source: "[Account] Inventory"`). `currentSource != source` is only the legacy fallback. The item is going home.
 
 ### What Changes (both paths)
 
@@ -100,7 +100,7 @@ When `item.currentSource != item.source`, the item passed through inventory befo
 - `item.transactionId` set to the new transaction ID
 - `item.status` set to `"purchased"` (still owned, now in inventory)
 - `item.currentSource` set to the inventory label
-- Source project's budget decreases by `-1 × amountCents`; `amountCents` is based on `purchasePriceCents`
+- Source project's budget decreases by `-1 × amountCents`; `amountCents` is based on normalized `projectPriceCents`
 
 ### Lineage
 
@@ -127,7 +127,7 @@ When the source is another project and the destination is a project, **Sell** de
 
 All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 
-Pricing follows the sale destination: project-to-project uses purchase price for Hop 1 and normalized project price for Hop 2. Standalone project-to-business-inventory uses purchase price. Project-destination sales collect a price only when neither project nor purchase price is positive.
+Pricing is origin-aware. A Return leg reverses normalized project price because the item previously came from inventory and the project must recover its original charge. A Sale-to-Inventory leg uses purchase price because the business is acquiring a project-originated item; it must remain safe even if that item's project price is malformed and higher than cost. The destination Purchase uses normalized project price.
 
 ## Menu Visibility Rules
 
@@ -149,7 +149,7 @@ The actions available to users depend on context.
 ### "Return to Inventory" is available when:
 
 - Item is in a project (projectId is not null)
-- Item originally came from inventory (`currentSource != source`)
+- Item origin resolves to inventory from its current Purchase, sold lineage, or legacy source-metadata fallback
 
 (Previously "Send to Inventory." Renamed to make it clear this is a Return, not a Sale.)
 

@@ -375,7 +375,111 @@ describe("sell_items_from_inventory_to_project", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // M6 — return_items with returnTo: "inventory"
 // ─────────────────────────────────────────────────────────────────────────────
+describe("sell_items_from_project_to_inventory", () => {
+  test("project-origin acquisition uses purchase cost even when project price and metadata are higher", async () => {
+    await seedProject(db, {
+      id: "proj_source",
+      budgetCategories: [{ id: "cat_furnishings" }],
+    });
+    await seedTransaction(db, {
+      id: "vendor_purchase",
+      type: "Purchase",
+      source: "Home Depot",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_furnishings",
+      amountCents: 1000,
+      itemIds: ["project_item"],
+    });
+    await seedItem(db, {
+      id: "project_item",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_furnishings",
+      purchasePriceCents: 1000,
+      projectPriceCents: 1500,
+      taxRatePct: 10,
+      transactionId: "vendor_purchase",
+      source: "Home Depot",
+      // Deliberately misleading metadata: the current Purchase is authoritative.
+      currentSource: "Business Inventory",
+    });
+
+    const args = {
+      itemIds: ["project_item"],
+      sourceProjectId: "proj_source",
+      notes: "Acquire project-origin item",
+    };
+    const preview = await callTool("sell_items_from_project_to_inventory", {
+      ...args,
+      dryRun: true,
+    });
+    expect(isError(preview)).toBe(false);
+    const previewPlan = JSON.parse(getText(preview));
+    expect(previewPlan.plan.saleTransactions).toEqual([
+      {
+        type: "Sale",
+        source: "Business Inventory",
+        projectId: "proj_source",
+        budgetCategoryId: "cat_furnishings",
+        amountCents: 1000,
+        subtotalCents: 1000,
+        itemIds: ["project_item"],
+      },
+    ]);
+    expect(previewPlan.plan.credits).toEqual([
+      {
+        itemId: "project_item",
+        name: "project_item",
+        priceBasis: "purchasePriceCents",
+        purchasePriceCents: 1000,
+        creditSubtotalCents: 1000,
+        creditAmountCents: 1000,
+        origin: "project",
+        originEvidence: {
+          kind: "currentTransaction",
+          transactionId: "vendor_purchase",
+          detail: "Current Purchase source 'Home Depot' is not an inventory label.",
+        },
+      },
+    ]);
+    expect(previewPlan.totals).toEqual({ amountCents: 1000, subtotalCents: 1000 });
+
+    const result = await callTool("sell_items_from_project_to_inventory", {
+      ...args,
+      dryRun: false,
+    });
+    expect(isError(result)).toBe(false);
+    const sales = await listTransactionsOfType(db, "Sale");
+    expect(sales).toHaveLength(1);
+    expect(sales[0].data.amountCents).toBe(1000);
+    expect(sales[0].data.subtotalCents).toBe(1000);
+  });
+});
+
 describe("return_items", () => {
+  test("inventory return blocks when origin cannot be resolved safely", async () => {
+    await seedProject(db, {
+      id: "proj_source",
+      budgetCategories: [{ id: "cat_furnishings" }],
+    });
+    await seedItem(db, {
+      id: "unresolved_item",
+      projectId: "proj_source",
+      budgetCategoryId: "cat_furnishings",
+      purchasePriceCents: 699,
+      projectPriceCents: 965,
+    });
+
+    const result = await callTool("return_items", {
+      itemIds: ["unresolved_item"],
+      returnTo: "inventory",
+      dryRun: true,
+    });
+
+    expect(isError(result)).toBe(true);
+    expect(getText(result)).toContain("could not be resolved safely");
+    expect(await listTransactionsOfType(db, "Return")).toHaveLength(0);
+  });
+
   test("vendor return accepts lowercase type and preserves the recorded refund", async () => {
     await seedProject(db, {
       id: "proj_hal",
@@ -485,10 +589,10 @@ describe("return_items", () => {
       id: "proj_source",
       budgetCategories: [{ id: "cat_furnishings" }],
     });
-    // Item currently in a project, linked to a prior sale transaction.
+    // Item currently in a project, linked to the Purchase that charged the project.
     await seedTransaction(db, {
       id: "prior_sale",
-      type: "Sale",
+      type: "Purchase",
       source: "Business Inventory",
       projectId: "proj_source",
       budgetCategoryId: "cat_furnishings",
@@ -502,17 +606,51 @@ describe("return_items", () => {
       purchasePriceCents: 8000,
       projectPriceCents: 10000,
       transactionId: "prior_sale",
-      // currentSource != source → item came from inventory, eligible for return-to-inventory.
+      // Deliberately stale metadata: the current Purchase transaction is authoritative.
       source: "Home Depot",
-      currentSource: "Business Inventory",
+      currentSource: "Home Depot",
     });
 
-    const result = await callTool("return_items", {
+    const args = {
       itemIds: ["item_1"],
       returnTo: "inventory",
       notes: "4/9 — M6 return to inventory",
-      dryRun: false,
-    });
+    };
+
+    const preview = await callTool("return_items", { ...args, dryRun: true });
+    expect(isError(preview)).toBe(false);
+    const previewPlan = JSON.parse(getText(preview));
+    expect(previewPlan.plan.returnTransactions).toEqual([
+      {
+        type: "Return",
+        source: "Business Inventory",
+        projectId: "proj_source",
+        budgetCategoryId: "cat_furnishings",
+        amountCents: 10000,
+        subtotalCents: 10000,
+        itemIds: ["item_1"],
+      },
+    ]);
+    expect(previewPlan.plan.credits).toEqual([
+      {
+        itemId: "item_1",
+        name: "item_1",
+        priceBasis: "projectPriceCents",
+        projectPriceCents: 10000,
+        creditSubtotalCents: 10000,
+        creditAmountCents: 10000,
+        origin: "inventory",
+        originEvidence: {
+          kind: "currentTransaction",
+          transactionId: "prior_sale",
+          detail: "Current Purchase source 'Business Inventory' is an inventory label.",
+        },
+      },
+    ]);
+    expect(previewPlan.totals).toEqual({ amountCents: 10000, subtotalCents: 10000 });
+    expect(await listTransactionsOfType(db, "Return")).toHaveLength(0);
+
+    const result = await callTool("return_items", { ...args, dryRun: false });
 
     expect(isError(result)).toBe(false);
 
@@ -524,7 +662,10 @@ describe("return_items", () => {
     expect(returnTx.data.projectId).toBe("proj_source");
     expect(returnTx.data.budgetCategoryId).toBe("cat_furnishings");
     expect(returnTx.data.itemIds).toEqual(["item_1"]);
-    expect(returnTx.data.amountCents).toBe(8000);
+    // Inventory-originated returns reverse the prior project sale value, not
+    // the supplier acquisition cost.
+    expect(returnTx.data.amountCents).toBe(10000);
+    expect(returnTx.data.subtotalCents).toBe(10000);
 
     const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item?.projectId).toBeNull();
@@ -556,7 +697,7 @@ describe("return_items", () => {
 // M7 — sell_items_from_project_to_project
 // ─────────────────────────────────────────────────────────────────────────────
 describe("sell_items_from_project_to_project", () => {
-  test("M7: produces one Return + one Sale in a single batch", async () => {
+  test("M7: project-origin item creates a purchase-cost Sale plus destination Purchase", async () => {
     await seedProject(db, {
       id: "proj_source",
       budgetCategories: [{ id: "cat_furnishings" }],
@@ -566,9 +707,9 @@ describe("sell_items_from_project_to_project", () => {
       budgetCategories: [{ id: "cat_install" }],
     });
     await seedTransaction(db, {
-      id: "src_sale",
-      type: "Sale",
-      source: "Business Inventory",
+      id: "src_purchase",
+      type: "Purchase",
+      source: "Wayfair",
       projectId: "proj_source",
       budgetCategoryId: "cat_furnishings",
       amountCents: 10825,
@@ -581,7 +722,9 @@ describe("sell_items_from_project_to_project", () => {
       purchasePriceCents: 10000,
       projectPriceCents: 12000,
       taxRatePct: 8.25,
-      transactionId: "src_sale",
+      transactionId: "src_purchase",
+      source: "Wayfair",
+      currentSource: "Wayfair",
     });
 
     const result = await callTool("sell_items_from_project_to_project", {
@@ -597,21 +740,22 @@ describe("sell_items_from_project_to_project", () => {
     const sales = await listTransactionsOfType(db, "Sale");
     const purchases = await listTransactionsOfType(db, "Purchase");
     const returns = await listTransactionsOfType(db, "Return");
-    // Item originated in proj_source (no source field), so first hop is a
-    // Sale-to-Inventory against proj_source; second hop is a Purchase against
-    // proj_dest. src_sale (seed legacy Sale) is still there, no Return.
-    expect(sales.length).toBe(2);
-    expect(purchases.length).toBe(1);
+    // The current vendor Purchase proves project origin, so the first hop is a
+    // Sale-to-Inventory against proj_source; the second hop is a Purchase
+    // against proj_dest. The source vendor Purchase remains and no Return is made.
+    expect(sales.length).toBe(1);
+    expect(purchases.length).toBe(2);
     expect(returns.length).toBe(0);
 
-    const firstHopSale = sales.find((s) => s.id !== "src_sale");
+    const firstHopSale = sales[0];
     expect(firstHopSale).toBeDefined();
     expect(firstHopSale!.data.projectId).toBe("proj_source");
     expect(firstHopSale!.data.budgetCategoryId).toBe("cat_furnishings");
     expect(firstHopSale!.data.itemIds).toEqual(["item_1"]);
     expect(firstHopSale!.data.amountCents).toBe(10000);
+    expect(firstHopSale!.data.subtotalCents).toBe(10000);
 
-    const destPurchase = purchases[0];
+    const destPurchase = purchases.find((purchase) => purchase.id !== "src_purchase")!;
     expect(destPurchase.data.source).toBe("Business Inventory");
     expect(destPurchase.data.projectId).toBe("proj_dest");
     expect(destPurchase.data.budgetCategoryId).toBe("cat_install");

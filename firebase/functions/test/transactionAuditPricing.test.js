@@ -34,11 +34,31 @@ test('ordinary vendor Purchase remains purchase-price based', () => {
   }), 37698);
 });
 
-test('Returns remain purchase-price based, including inventory returns', () => {
+test('inventory Returns use project prices', () => {
   const basis = auditPriceBasis({
     type: 'Return',
     projectId: 'project-1',
     source: '1584 Design Inventory',
+  });
+
+  assert.equal(basis, 'project');
+});
+
+test('inventory Sales remain purchase-price based acquisitions', () => {
+  const basis = auditPriceBasis({
+    type: 'Sale',
+    projectId: 'project-1',
+    source: '1584 Design Inventory',
+  });
+
+  assert.equal(basis, 'purchase');
+});
+
+test('vendor Returns remain purchase-price based', () => {
+  const basis = auditPriceBasis({
+    type: 'Return',
+    projectId: 'project-1',
+    source: 'Wayfair',
   });
 
   assert.equal(basis, 'purchase');

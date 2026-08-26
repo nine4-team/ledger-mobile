@@ -188,9 +188,9 @@ xcodebuild test -quiet \
 Required assertions:
 
 - Inventory -> project creates a destination Purchase at `projectPriceCents`.
-- Project -> inventory creates source-side Return or Sale-to-Inventory at `purchasePriceCents`.
+- Project -> inventory is origin-aware: an inventory-originated Return reverses normalized `projectPriceCents`; a project-originated Sale-to-Inventory uses `purchasePriceCents`.
 - Project -> project creates two hops:
-  - source project -> business inventory at `purchasePriceCents`
+  - source project -> business inventory using the same origin-aware Return/Sale basis
   - business inventory -> destination project at `projectPriceCents`
 - Missing `projectPriceCents` is rejected or prompted only for project-destination sales.
 - Reassign/correct flows do not prompt for price and do not create Sale, Return, or Purchase transactions.
@@ -215,11 +215,11 @@ Scenarios:
   - item lands in inventory with no `projectId` / `budgetCategoryId`
 - From-inventory project item -> Return to Inventory:
   - creates Return, not Sale
-  - amount uses purchase price
+  - amount reverses normalized project price
   - lineage edge is `returned`
   - item lands in inventory with no `projectId` / `budgetCategoryId`
 - Project -> Project, from-inventory item:
-  - first hop is Return at purchase price
+  - first hop is Return at normalized project price
   - second hop is Purchase at project price
   - lineage includes first-hop return and second-hop sold edge
 - Project -> Project, project-originated item:
@@ -331,7 +331,7 @@ Write-mode requirements:
   - `firebase emulators:exec --only auth,firestore,storage --import=./firebase-export --config firebase.test.json "cd LedgeriOS && xcodebuild test -scheme 'LedgeriOS (Emulator)' -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5' -only-testing:LedgeriOSTests/InventoryOperationsIntegrationTests -derivedDataPath DerivedData -quiet"`
   - Latest `.xcresult`: 9/9 passed.
 - Added direct emulator coverage for `sellItemsFromProjectToProject`:
-  - from-inventory item creates first-hop `Return` at `purchasePriceCents`, then destination `Purchase` at `projectPriceCents`
+  - the original 2026-06-23 assertion priced a from-inventory first-hop `Return` at `purchasePriceCents`; this was incorrect and is superseded by the origin-aware rule above: Return at normalized `projectPriceCents`
   - project-originated item creates first-hop `Sale` to inventory at `purchasePriceCents`, then destination `Purchase` at `projectPriceCents`
   - both verify item relocation, source transaction item removal, and lineage edge kinds.
 - Firebase Functions TypeScript build passed: `cd firebase/functions && npm run build`.

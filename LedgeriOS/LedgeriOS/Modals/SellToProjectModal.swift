@@ -309,6 +309,10 @@ struct SellToProjectModal: View {
         let itemsToSell = pricedItems
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        let originsByItemId = InventoryOperationsService.originsByItemId(
+            itemsToSell,
+            transactions: accountContext.allTransactions
+        )
         Task {
             do {
                 if itemsToSell.allSatisfy({ $0.projectId == nil }) {
@@ -327,7 +331,8 @@ struct SellToProjectModal: View {
                         destinationCategoryId: categoryId,
                         accountId: acctId,
                         inventoryLabel: inventoryLabel,
-                        userId: authManager.currentUser?.uid
+                        userId: authManager.currentUser?.uid,
+                        originsByItemId: originsByItemId
                     )
                 }
                 await MainActor.run {

@@ -27,7 +27,8 @@ type TransactionPriceContext = {
 
 /** Historical branded inventory labels are recognized by the reserved suffix. */
 export function usesProjectPriceForAudit(transaction: TransactionPriceContext): boolean {
-  return transaction.type?.trim().toLowerCase() === "purchase" &&
+  const type = transaction.type?.trim().toLowerCase();
+  return (type === "purchase" || type === "return") &&
     !!transaction.projectId?.trim() &&
     !!transaction.source?.trim().endsWith(" Inventory");
 }

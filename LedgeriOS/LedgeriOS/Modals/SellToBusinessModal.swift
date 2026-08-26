@@ -14,7 +14,7 @@ struct SellToInventoryModal: View {
     @State private var errorMessage: String?
 
     private var split: (returnItems: [Item], saleItems: [Item]) {
-        InventoryOperationsService.splitByOrigin(items)
+        InventoryOperationsService.splitByOrigin(items, transactions: accountContext.allTransactions)
     }
 
     var body: some View {
@@ -101,7 +101,7 @@ struct MoveToInventoryModal: View {
     @State private var errorMessage: String?
 
     private var split: (returnItems: [Item], saleItems: [Item]) {
-        InventoryOperationsService.splitByOrigin(items)
+        InventoryOperationsService.splitByOrigin(items, transactions: accountContext.allTransactions)
     }
 
     private var returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] {
@@ -187,6 +187,10 @@ struct MoveToInventoryModal: View {
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         let credits = returnedPaidItemCredits
+        let originsByItemId = InventoryOperationsService.originsByItemId(
+            itemsToMove,
+            transactions: accountContext.allTransactions
+        )
         Task {
             do {
                 try await service.moveToInventory(
@@ -194,7 +198,8 @@ struct MoveToInventoryModal: View {
                     accountId: acctId,
                     inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid,
-                    returnedPaidItemCredits: credits
+                    returnedPaidItemCredits: credits,
+                    originsByItemId: originsByItemId
                 )
                 await MainActor.run {
                     onComplete()

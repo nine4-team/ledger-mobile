@@ -440,7 +440,8 @@ struct ReturnToInventoryExecutionTests {
                 id: "i\(i)", projectId: "srcProj",
                 budgetCategoryId: "cat1",
                 purchasePriceCents: 1000 * i,
-                transactionId: "oldTx"
+                transactionId: "oldTx",
+                projectPriceCents: 1500 * i
             )
         }
 
@@ -457,8 +458,9 @@ struct ReturnToInventoryExecutionTests {
         #expect(ret["projectId"] as? String == "srcProj")
         #expect(ret["budgetCategoryId"] as? String == "cat1")
         #expect(ret["status"] as? String == "completed")
-        // amountCents = sum of purchasePriceCents: 1000 + 2000 + 3000 = 6000
-        #expect(ret["amountCents"] as? Int == 6000)
+        // Return credits the project prices: 1500 + 3000 + 4500 = 9000.
+        #expect(ret["amountCents"] as? Int == 9000)
+        #expect(ret["subtotalCents"] as? Int == 9000)
 
         let itemIds = ret["itemIds"] as? [String] ?? []
         #expect(Set(itemIds) == Set(["i1", "i2", "i3"]))
@@ -631,7 +633,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let ret = returnSets[0].fields
         #expect(ret["projectId"] as? String == "srcProj")
         #expect(ret["budgetCategoryId"] as? String == "cat_src")
-        #expect(ret["amountCents"] as? Int == 5000)
+        #expect(ret["amountCents"] as? Int == 5500)
 
         let purchaseSets = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
         #expect(purchaseSets.count == 1)
@@ -747,7 +749,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let toInventoryItemIds = toInventory.fields["itemIds"] as? [String] ?? []
         #expect(toInventoryItemIds == ["i2"])
         #expect(toInventory.fields["amountCents"] as? Int == 3000)
-        #expect(returnSets[0].fields["amountCents"] as? Int == 2000)
+        #expect(returnSets[0].fields["amountCents"] as? Int == 2500)
 
         // Destination Purchase covers both items
         let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!

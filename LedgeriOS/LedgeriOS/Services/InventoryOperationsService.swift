@@ -43,6 +43,11 @@ struct InventorySpaceScope: Sendable, Equatable {
     let projectId: String?
 }
 
+enum InventoryItemOrigin: Sendable, Equatable {
+    case inventory
+    case project
+}
+
 // MARK: - Service
 
 /// Multi-step atomic Firestore operations for inventory movements:
@@ -75,9 +80,10 @@ struct InventorySpaceScope: Sendable, Equatable {
 ///     inventory before). The business is acquiring it. Creates a `Sale`
 ///     transaction with `inventorySaleDirection = .projectToBusiness`.
 ///
-/// Origin is derived from `Item.currentSource` vs. `Item.source`: when
-/// `currentSource == source` (or currentSource is nil), the item was never
-/// moved through inventory → Sale-to-Inventory. Otherwise → Return.
+/// Origin is derived from the item's current project Purchase when that
+/// transaction is loaded. Inventory-label Purchase sources prove inventory
+/// origin; vendor Purchase sources prove project origin. Source metadata is a
+/// compatibility fallback for legacy items without that transaction evidence.
 ///
 /// ## Batch Cap
 /// All operations are capped at 100 items per call.
@@ -115,11 +121,17 @@ struct InventoryOperationsService {
     /// never passed through inventory, meaning a project→inventory move should
     /// be a Sale-to-Inventory (business acquiring the item).
     ///
-    /// Rule: `currentSource != source` ⇒ touched inventory (currentSource was
-    /// overwritten with the inventory label on a prior sell/return/move).
-    /// Legacy items with `currentSource == nil` fall back to `source`, which
-    /// matches the original vendor → treated as originated-here.
-    static func cameFromInventory(_ item: Item) -> Bool {
+    /// Metadata fallback: `currentSource != source` ⇒ touched inventory
+    /// (`currentSource` was overwritten with the inventory label on a prior
+    /// sell/return/move). Legacy items with `currentSource == nil` fall back to
+    /// `source`, which matches the original vendor → treated as originated-here.
+    static func cameFromInventory(_ item: Item, sourceTransaction: Transaction? = nil) -> Bool {
+        if let sourceTransaction,
+           sourceTransaction.id == item.transactionId,
+           sourceTransaction.projectId == item.projectId,
+           sourceTransaction.transactionType == .purchase {
+            return sourceTransaction.source?.hasSuffix(" Inventory") == true
+        }
         let current = (item.currentSource ?? item.source ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let original = (item.source ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !current.isEmpty else { return false }
@@ -370,7 +382,7 @@ struct InventoryOperationsService {
 
         for group in categoryGroups {
             let groupItemIds = group.items.compactMap(\.id)
-            let returnAmount = group.items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+            let returnTotals = Self.computeBatchTotals(group.items)
             let sourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
 
             // 1. Create Return transaction
@@ -381,8 +393,8 @@ struct InventoryOperationsService {
                 "source": inventoryLabel,
                 "projectId": sourceProjectId,
                 "budgetCategoryId": group.categoryId,
-                "amountCents": returnAmount,
-                "subtotalCents": returnAmount,
+                "amountCents": returnTotals.amountCents,
+                "subtotalCents": returnTotals.subtotalCents,
                 "itemIds": groupItemIds,
                 "status": "completed",
                 "transactionDate": today,
@@ -484,7 +496,7 @@ struct InventoryOperationsService {
         let categoryGroups = try Self.sourceCategoryGroups(items)
 
         for group in categoryGroups {
-            let totals = Self.computePurchasePriceTotals(group.items)
+            let totals = Self.computeProjectOriginAcquisitionTotals(group.items)
             let sourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
 
             // 1. Create Sale transaction (project → inventory direction).
@@ -566,7 +578,8 @@ struct InventoryOperationsService {
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil,
-        returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] = []
+        returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] = [],
+        originsByItemId: [String: InventoryItemOrigin] = [:]
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -574,7 +587,7 @@ struct InventoryOperationsService {
         }
         _ = try Self.requireItemIds(items)
 
-        let split = Self.splitByOrigin(items)
+        let split = Self.splitByOrigin(items, originsByItemId: originsByItemId)
 
         // Single-path batches reuse the dedicated writers for simplicity.
         if split.returnItems.isEmpty {
@@ -615,15 +628,15 @@ struct InventoryOperationsService {
         // Return legs
         for group in returnGroups {
             let returnId = UUID().uuidString
-            let returnAmount = group.items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+            let returnTotals = Self.computeBatchTotals(group.items)
             let returnSourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
             var returnFields: [String: Any] = [
                 "type": "Return",
                 "source": inventoryLabel,
                 "projectId": returnSourceProjectId,
                 "budgetCategoryId": group.categoryId,
-                "amountCents": returnAmount,
-                "subtotalCents": returnAmount,
+                "amountCents": returnTotals.amountCents,
+                "subtotalCents": returnTotals.subtotalCents,
                 "itemIds": group.items.compactMap(\.id),
                 "status": "completed",
                 "transactionDate": today,
@@ -641,7 +654,7 @@ struct InventoryOperationsService {
         // Sale legs
         for group in saleGroups {
             let saleId = UUID().uuidString
-            let saleTotals = Self.computePurchasePriceTotals(group.items)
+            let saleTotals = Self.computeProjectOriginAcquisitionTotals(group.items)
             let saleSourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
             var saleFields: [String: Any] = [
                 "type": "Sale",
@@ -747,11 +760,41 @@ struct InventoryOperationsService {
 
     /// Partitions items by origin into the Return leg (from inventory) and
     /// Sale leg (originated in project). Preserves input order within each leg.
-    static func splitByOrigin(_ items: [Item]) -> (returnItems: [Item], saleItems: [Item]) {
+    static func originsByItemId(
+        _ items: [Item],
+        transactions: [Transaction]
+    ) -> [String: InventoryItemOrigin] {
+        let transactionsById = Dictionary(
+            uniqueKeysWithValues: transactions.compactMap { transaction in
+                transaction.id.map { ($0, transaction) }
+            }
+        )
+        return Dictionary(uniqueKeysWithValues: items.compactMap { item in
+            guard let itemId = item.id else { return nil }
+            let cameFromInventory = cameFromInventory(
+                item,
+                sourceTransaction: item.transactionId.flatMap { transactionsById[$0] }
+            )
+            return (itemId, cameFromInventory ? .inventory : .project)
+        })
+    }
+
+    static func splitByOrigin(
+        _ items: [Item],
+        transactions: [Transaction]
+    ) -> (returnItems: [Item], saleItems: [Item]) {
+        splitByOrigin(items, originsByItemId: originsByItemId(items, transactions: transactions))
+    }
+
+    static func splitByOrigin(
+        _ items: [Item],
+        originsByItemId: [String: InventoryItemOrigin] = [:]
+    ) -> (returnItems: [Item], saleItems: [Item]) {
         var returnItems: [Item] = []
         var saleItems: [Item] = []
         for item in items {
-            if cameFromInventory(item) {
+            let origin = item.id.flatMap { originsByItemId[$0] }
+            if origin == .inventory || (origin == nil && cameFromInventory(item)) {
                 returnItems.append(item)
             } else {
                 saleItems.append(item)
@@ -782,7 +825,8 @@ struct InventoryOperationsService {
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil,
-        destinationSpaceIdsByItem: [String: String] = [:]
+        destinationSpaceIdsByItem: [String: String] = [:],
+        originsByItemId: [String: InventoryItemOrigin] = [:]
     ) async throws {
         guard !items.isEmpty else { return }
         let destinationCategoryId = try Self.realCategoryId(destinationCategoryId)
@@ -817,7 +861,7 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
-        let split = Self.splitByOrigin(items)
+        let split = Self.splitByOrigin(items, originsByItemId: originsByItemId)
         let today = Self.todayDateString()
 
         let returnGroups = try Self.sourceCategoryGroups(split.returnItems)
@@ -828,7 +872,7 @@ struct InventoryOperationsService {
         // 1a. First hop — Return leg (items that came from inventory)
         for group in returnGroups {
             let id = UUID().uuidString
-            let returnTotals = Self.computePurchasePriceTotals(group.items)
+            let returnTotals = Self.computeBatchTotals(group.items)
             var returnFields: [String: Any] = [
                 "type": "Return",
                 "source": inventoryLabel,
@@ -853,7 +897,7 @@ struct InventoryOperationsService {
         // 1b. First hop — Sale-to-Inventory leg (items that originated here).
         for group in saleGroups {
             let id = UUID().uuidString
-            let saleTotals = Self.computePurchasePriceTotals(group.items)
+            let saleTotals = Self.computeProjectOriginAcquisitionTotals(group.items)
             var saleFields: [String: Any] = [
                 "type": "Sale",
                 "source": inventoryLabel,
@@ -928,9 +972,9 @@ struct InventoryOperationsService {
             }
 
             // First-hop lineage edge — "returned" or "soldToInventory" per origin
-            let cameFrom = Self.cameFromInventory(item)
-            let firstHopTxId = cameFrom ? returnTxByItemId[itemId] : saleTxByItemId[itemId]
-            let firstHopKind = cameFrom ? "returned" : "soldToInventory"
+            let isReturn = returnTxByItemId[itemId] != nil
+            let firstHopTxId = isReturn ? returnTxByItemId[itemId] : saleTxByItemId[itemId]
+            let firstHopKind = isReturn ? "returned" : "soldToInventory"
             if let firstHopTxId {
                 var firstEdge: [String: Any] = [
                     "accountId": accountId,
@@ -1114,7 +1158,8 @@ struct InventoryOperationsService {
 
     // MARK: - Pure Helpers (internal for testability)
 
-    /// Initial project-price total for a batch of items.
+    /// Project-price total for an inventory→project charge or an
+    /// inventory-originated Return that reverses that charge.
     /// Matches mcp-server/src/tools/inventory-operations.ts `computeProjectPriceTotals`.
     ///
     /// Missing project prices are initialized from a positive purchase price.
@@ -1141,8 +1186,10 @@ struct InventoryOperationsService {
         item.normalizedProjectPriceCents ?? 0
     }
 
-    /// Frozen purchase-price snapshot for standalone project→inventory moves.
-    static func computePurchasePriceTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
+    /// Business acquisition value for project-originated items entering inventory.
+    /// This deliberately ignores a higher project price so malformed markup
+    /// cannot cause the business to overpay for the item.
+    static func computeProjectOriginAcquisitionTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
         let subtotalCents = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
         return (subtotalCents, subtotalCents)
     }

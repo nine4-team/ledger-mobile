@@ -631,10 +631,10 @@ Compares linked item prices against the transaction subtotal to measure how well
 
 | Field | Type | How Computed |
 |-------|------|-------------|
-| itemsNetTotalCents | number | `sum(item.purchasePriceCents)` for all linked items (including returned and sold items from lineage) |
+| itemsNetTotalCents | number | Sum of the audited transaction's canonical item price for all linked items (including returned and sold items from lineage) |
 | discountCents | number | Transaction-level discount applied before comparing item totals to the resolved subtotal. Uses `discount.amountCents` when present |
 | itemsCount | number | Count of all linked items |
-| itemsMissingPriceCount | number | Count of linked items where `purchasePriceCents` is null or 0 |
+| itemsMissingPriceCount | number | Count of linked items whose canonical audit price is null or 0 |
 | transactionSubtotalCents | number | Resolved subtotal (see resolution order below) |
 | completenessRatio | number | `itemsNetTotalCents / transactionSubtotalCents` |
 | completenessStatus | string | One of: "complete", "near", "incomplete", "over" |
@@ -643,9 +643,9 @@ Compares linked item prices against the transaction subtotal to measure how well
 | varianceCents | number | `(itemsNetTotalCents - discountCents) - transactionSubtotalCents` |
 | variancePercent | number | `(varianceCents / transactionSubtotalCents) * 100` |
 | returnedItemsCount | number | Count of returned items from lineage |
-| returnedItemsTotalCents | number | Sum of returned items' purchasePriceCents |
+| returnedItemsTotalCents | number | Sum of returned items using the audited transaction's canonical item-price basis |
 | soldItemsCount | number | Count of sold items from lineage |
-| soldItemsTotalCents | number | Sum of sold items' purchasePriceCents |
+| soldItemsTotalCents | number | Sum of sold items using the audited transaction's canonical item-price basis |
 
 **Subtotal resolution order (first match wins):**
 
@@ -755,7 +755,7 @@ When an item moves between scopes, its `projectId` and `budgetCategoryId` are up
 
 - **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to a validated per-item destination assignment or null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at normalized project price. Ledger raises project price to at least purchase price and asks the user only when neither price is positive. See [sale-transactions.md](sale-transactions.md).
 - **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
-- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses purchase price. The destination Purchase uses project price after applying the canonical purchase-cost floor. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware: Return uses project price for items that came from inventory, while Sale-to-Inventory uses purchase cost for project-originated items. The destination Purchase uses project price after applying the canonical purchase-cost floor. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 - **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
 
 **The invariant is enforced on every write.** This replaces the legacy "items carry budgetCategoryId across scope moves" model. See [inventory-as-store.md](inventory-as-store.md) for the rationale.
@@ -792,8 +792,8 @@ The project-price floor is a domain invariant, not a form default. It applies ac
 Inventory movement price basis:
 
 - Inventory → project Purchase amounts use `projectPriceCents`.
-- Project → business inventory Return and Sale-to-Inventory amounts use `purchasePriceCents`.
-- Project → project moves use purchase price for the source exit and project price for the destination Purchase.
+- Project → business inventory Return amounts use normalized `projectPriceCents`; Sale-to-Inventory amounts use `purchasePriceCents`.
+- Project → project moves apply the origin-aware basis to the source exit and normalized project price to the destination Purchase.
 - Sell-to-project flows normalize the project-price floor before computing the movement. They collect a price, or reject in non-interactive tools, only when neither price is positive; they must never create a zero-amount destination Purchase.
 
 ### Budget calculations

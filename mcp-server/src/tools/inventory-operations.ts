@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, type WriteBatch, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { Invoice, InvoiceLine, Item, Transaction } from "../types.js";
+import type { Invoice, InvoiceLine, Item, LineageEdge, Transaction } from "../types.js";
 import { accountCollection, accountPath, subcollection, getDoc, queryDocs } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { notFound, validation } from "../util/errors.js";
@@ -34,7 +34,7 @@ import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 //        - inventory → project: Purchase with `budgetCategoryId` set.
 //        - project → inventory acquisition: Sale with source-category `budgetCategoryId`.
 //   • Return is RESERVED for items going HOME to inventory — i.e., items
-//     that previously passed through inventory (currentSource != source).
+//     whose current Purchase or lineage proves they passed through inventory.
 //     Items that originated in a project and are moving to inventory are a
 //     Sale-to-Inventory, NOT a Return.
 //   • Items in business inventory (projectId == null) have
@@ -61,8 +61,8 @@ function projectPriceForMovement(item: Item): number {
 }
 
 /**
- * Resolve a frozen project-price snapshot for a batch of items. Used for
- * inventory→project destination purchases.
+ * Resolve a project-price snapshot for an inventory→project charge or the
+ * inventory-originated Return that reverses it.
  */
 function computeProjectPriceTotals(items: (Item & { id: string })[]): {
   subtotalCents: number;
@@ -82,14 +82,57 @@ function computeProjectPriceTotals(items: (Item & { id: string })[]): {
   return { subtotalCents, amountCents, missingTax };
 }
 
-/** Resolve a frozen purchase-price snapshot for standalone project→inventory moves. */
-function computePurchasePriceTotals(items: (Item & { id: string })[]): {
+/**
+ * Reverse an inventory→project sale at the value the project originally paid.
+ *
+ * This is only for inventory-originated items going home. Project-originated
+ * items entering inventory are business acquisitions and use
+ * computeProjectOriginAcquisitionTotals instead.
+ */
+export function computeProjectToInventoryTotals(items: (Item & { id: string })[]): {
   subtotalCents: number;
   amountCents: number;
   missingTax: string[];
 } {
-  const subtotalCents = items.reduce((sum, i) => sum + (i.purchasePriceCents ?? 0), 0);
+  return computeProjectPriceTotals(items);
+}
+
+/** Business acquisition value for project-originated items entering inventory. */
+export function computeProjectOriginAcquisitionTotals(items: (Item & { id: string })[]): {
+  subtotalCents: number;
+  amountCents: number;
+  missingTax: string[];
+} {
+  const subtotalCents = items.reduce((sum, item) => sum + (item.purchasePriceCents ?? 0), 0);
   return { subtotalCents, amountCents: subtotalCents, missingTax: [] };
+}
+
+function inventoryCreditPreviews(items: (Item & { id: string })[]) {
+  return items.map((item) => {
+    const totals = computeProjectToInventoryTotals([item]);
+    return {
+      itemId: item.id,
+      name: item.name ?? null,
+      priceBasis: "projectPriceCents" as const,
+      projectPriceCents: projectPriceForMovement(item),
+      creditSubtotalCents: totals.subtotalCents,
+      creditAmountCents: totals.amountCents,
+    };
+  });
+}
+
+function acquisitionCreditPreviews(items: (Item & { id: string })[]) {
+  return items.map((item) => {
+    const creditCents = item.purchasePriceCents ?? 0;
+    return {
+      itemId: item.id,
+      name: item.name ?? null,
+      priceBasis: "purchasePriceCents" as const,
+      purchasePriceCents: creditCents,
+      creditSubtotalCents: creditCents,
+      creditAmountCents: creditCents,
+    };
+  });
 }
 
 type ReturnedPaidItemCreditContext = {
@@ -254,34 +297,126 @@ function missingTaxWarning(missingTax: string[], total: number): string {
   );
 }
 
-/**
- * True if the item's most recent scope move passed through inventory (i.e.
- * `currentSource != source`). A project→inventory move for such an item is
- * a Return (going home). For items that originated in their project
- * (`currentSource == source`, or currentSource missing), a project→inventory
- * move is a Sale-to-Inventory (business is acquiring the item).
- *
- * Mirrors InventoryOperationsService.cameFromInventory.
- */
-function cameFromInventory(item: Item): boolean {
-  const current = (item.currentSource ?? item.source ?? "").trim();
-  const original = (item.source ?? "").trim();
-  if (!current) return false;
-  return current !== original;
+/** Resolved origin with the evidence that selected the financial path. */
+type ItemOriginResolution = {
+  itemId: string;
+  origin: "inventory" | "project" | "unresolved";
+  evidence: {
+    kind: "currentTransaction" | "lineage" | "metadata" | "none";
+    detail: string;
+    transactionId?: string;
+    lineageEdgeId?: string;
+  };
+};
+
+function dateMillis(value: unknown): number {
+  if (value instanceof Date) return value.getTime();
+  if (value && typeof value === "object" && "toMillis" in value && typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+  if (value && typeof value === "object" && "toDate" in value && typeof value.toDate === "function") {
+    return value.toDate().getTime();
+  }
+  return 0;
 }
 
-/** Partition items by origin into Return leg and Sale-to-Inventory leg. */
-function splitByOrigin(items: (Item & { id: string })[]): {
+function isInventoryLabel(source: string | undefined): boolean {
+  return Boolean(source?.trim().endsWith(" Inventory"));
+}
+
+async function resolveItemOrigin(
+  db: Firestore,
+  item: Item & { id: string }
+): Promise<ItemOriginResolution> {
+  if (item.transactionId) {
+    const transaction = await getDoc<Transaction>(db, "transactions", item.transactionId);
+    const type = transaction?.type?.trim().toLowerCase();
+    if (transaction && transaction.projectId === item.projectId && type === "purchase") {
+      const inventoryOrigin = isInventoryLabel(transaction.source);
+      return {
+        itemId: item.id,
+        origin: inventoryOrigin ? "inventory" : "project",
+        evidence: {
+          kind: "currentTransaction",
+          transactionId: item.transactionId,
+          detail: inventoryOrigin
+            ? `Current Purchase source '${transaction.source}' is an inventory label.`
+            : `Current Purchase source '${transaction.source ?? ""}' is not an inventory label.`,
+        },
+      };
+    }
+  }
+
+  const edges = await queryDocs<LineageEdge>(
+    accountCollection(db, "lineageEdges").where("itemId", "==", item.id)
+  );
+  const inventoryEntries = edges
+    .filter((edge) => edge.movementKind === "sold" && edge.toProjectId === item.projectId)
+    .sort((a, b) => dateMillis(b.createdAt) - dateMillis(a.createdAt));
+  if (inventoryEntries[0]) {
+    return {
+      itemId: item.id,
+      origin: "inventory",
+      evidence: {
+        kind: "lineage",
+        lineageEdgeId: inventoryEntries[0].id,
+        detail: `Sold lineage enters current project ${item.projectId}.`,
+      },
+    };
+  }
+
+  const current = (item.currentSource ?? "").trim();
+  const original = (item.source ?? "").trim();
+  if (current && original) {
+    const inventoryOrigin = current !== original;
+    return {
+      itemId: item.id,
+      origin: inventoryOrigin ? "inventory" : "project",
+      evidence: {
+        kind: "metadata",
+        detail: inventoryOrigin
+          ? `Fallback only: currentSource '${current}' differs from source '${original}'.`
+          : `Fallback only: currentSource matches source '${original}'.`,
+      },
+    };
+  }
+
+  return {
+    itemId: item.id,
+    origin: "unresolved",
+    evidence: {
+      kind: "none",
+      detail: "No authoritative Purchase, inventory-entry lineage, or complete source metadata.",
+    },
+  };
+}
+
+async function resolveItemOrigins(
+  db: Firestore,
+  items: (Item & { id: string })[]
+): Promise<Map<string, ItemOriginResolution>> {
+  const resolutions = await Promise.all(items.map((item) => resolveItemOrigin(db, item)));
+  return new Map(resolutions.map((resolution) => [resolution.itemId, resolution]));
+}
+
+function unresolvedOriginError(resolutions: ItemOriginResolution[]) {
+  return validation(
+    `${resolutions.length} item origin(s) could not be resolved safely: ${resolutions.map((resolution) => resolution.itemId).join(", ")}.`,
+    "Repair or backfill transaction/lineage provenance before retrying. Ledger will not guess whether these are Returns or business acquisitions."
+  );
+}
+
+function splitByResolvedOrigin(
+  items: (Item & { id: string })[],
+  origins: Map<string, ItemOriginResolution>
+): {
   returnItems: (Item & { id: string })[];
   saleItems: (Item & { id: string })[];
 } {
-  const returnItems: (Item & { id: string })[] = [];
-  const saleItems: (Item & { id: string })[] = [];
-  for (const item of items) {
-    if (cameFromInventory(item)) returnItems.push(item);
-    else saleItems.push(item);
-  }
-  return { returnItems, saleItems };
+  return {
+    returnItems: items.filter((item) => origins.get(item.id)?.origin === "inventory"),
+    saleItems: items.filter((item) => origins.get(item.id)?.origin === "project"),
+  };
 }
 
 function sourceCategoryGroups(items: (Item & { id: string })[]): Array<{
@@ -506,20 +641,21 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "originated in the project). Creates ONE new Sale transaction against " +
       "sourceProjectId, decreasing that project's budget. Items land in inventory with projectId " +
       "and budgetCategoryId cleared.\n\n" +
-      "ORIGIN REQUIREMENT: every item must have originated in the source project (currentSource == " +
-      "source). Items that previously passed through inventory are going HOME — use return_items " +
+      "ORIGIN REQUIREMENT: every item must have project-origin provenance. The current project " +
+      "Purchase is authoritative when available; lineage is checked next and source metadata is " +
+      "only a fallback. Items that previously passed through inventory are going HOME — use return_items " +
       "(returnTo: 'inventory') for those, not this tool.\n\n" +
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes (item " +
       "logged against the wrong project), use `bulk_update_items` with `projectId: null` to relocate " +
       "without creating a transaction.\n\n" +
       "Accounting fields (amountCents, budgetCategoryId, projectId, type, source) are frozen at creation. " +
-      "Cap: 100 items per call. PRICING: amountCents/subtotalCents use purchasePriceCents.",
+      "Cap: 100 items per call. PRICING: this is a true business acquisition, so amountCents/subtotalCents use purchasePriceCents even if projectPriceCents is higher.",
     {
       itemIds: z
         .array(z.string())
         .min(1)
         .max(MAX_BATCH_ITEMS)
-        .describe(`Item document IDs to sell into inventory (max ${MAX_BATCH_ITEMS} per call). Every item must currently be in sourceProjectId AND have originated there.`),
+        .describe(`Item document IDs to sell into inventory (max ${MAX_BATCH_ITEMS} per call). Every item must currently be in sourceProjectId and have project-origin provenance.`),
       sourceProjectId: z
         .string()
         .describe("Source project ID — where items are coming from. Must match every item's current projectId."),
@@ -557,10 +693,13 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             "Every item must currently be in sourceProjectId."
           );
         }
-        const fromInventory = items.filter((i) => cameFromInventory(i));
+        const origins = await resolveItemOrigins(db, items);
+        const unresolved = [...origins.values()].filter((resolution) => resolution.origin === "unresolved");
+        if (unresolved.length > 0) return unresolvedOriginError(unresolved);
+        const fromInventory = items.filter((item) => origins.get(item.id)?.origin === "inventory");
         if (fromInventory.length > 0) {
           return validation(
-            `${fromInventory.length} item(s) previously passed through inventory (currentSource != source): ${fromInventory.map((i) => i.id).join(", ")}. These must go via return_items (Return), not sell_items_from_project_to_inventory.`,
+            `${fromInventory.length} item(s) have inventory-entry provenance: ${fromInventory.map((i) => i.id).join(", ")}. These must go via return_items (Return), not sell_items_from_project_to_inventory.`,
             "Use return_items with returnTo: 'inventory' for from-inventory items. sell_items_from_project_to_inventory is reserved for items that originated in the project."
           );
         }
@@ -569,10 +708,10 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           return missingSourceBudgetCategoryError(missingSourceCategory);
         }
 
-        const { subtotalCents, amountCents, missingTax } = computePurchasePriceTotals(items);
+        const { subtotalCents, amountCents, missingTax } = computeProjectOriginAcquisitionTotals(items);
         if (dryRun) {
           const saleTransactions = sourceCategoryGroups(items).map((group) => {
-            const totals = computePurchasePriceTotals(group.items);
+            const totals = computeProjectOriginAcquisitionTotals(group.items);
             return {
               type: "Sale" as const,
               source: inventoryLabel,
@@ -588,6 +727,11 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             direction: "projectToInventory",
             plan: {
               saleTransactions,
+              credits: acquisitionCreditPreviews(items).map((credit) => ({
+                ...credit,
+                origin: origins.get(credit.itemId)?.origin,
+                originEvidence: origins.get(credit.itemId)?.evidence,
+              })),
               itemUpdates: items.map((i) => ({
                 itemId: i.id,
                 set: {
@@ -623,8 +767,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "Return transaction first via create_transaction (type: 'Return'), then pass its ID as " +
       "returnTransactionId.\n\n" +
       "• returnTo: 'inventory' — moves items from their current project back to business inventory. " +
-      "ORIGIN REQUIREMENT: every item must have previously passed through inventory " +
-      "(currentSource != source). Items that originated in the project and have never been in " +
+      "ORIGIN REQUIREMENT: every item must have transaction or lineage proof that it previously passed through inventory. " +
+      "Items that originated in the project and have never been in " +
       "inventory before are NOT a return. For those, decide: was it a real business event " +
       "(business is genuinely acquiring the items for the first time)? → " +
       "sell_items_from_project_to_inventory. Or was it a data-entry mistake (the item should never " +
@@ -635,6 +779,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes " +
       "(wrong project, wrong vendor on the original record), use `bulk_update_items` to relocate " +
       "items without creating a Return transaction.\n\n" +
+      "PRICING: returnTo: 'inventory' always reverses normalized projectPriceCents (including " +
+      "recorded per-item tax), never purchasePriceCents. The dry-run lists each credit and its basis.\n\n" +
       "Cap: 100 items per call. Set dryRun: true to preview the plan.",
     {
       itemIds: z
@@ -706,10 +852,13 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         // previously passed through inventory. Items that originated in a
         // project go via sell_items_from_project_to_inventory.
         if (returnTo === "inventory") {
-          const originated = items.filter((i) => !cameFromInventory(i));
+          const origins = await resolveItemOrigins(db, items);
+          const unresolved = [...origins.values()].filter((resolution) => resolution.origin === "unresolved");
+          if (unresolved.length > 0) return unresolvedOriginError(unresolved);
+          const originated = items.filter((item) => origins.get(item.id)?.origin === "project");
           if (originated.length > 0) {
             return validation(
-              `${originated.length} item(s) originated in their current project (currentSource == source) — these are NOT a return: ${originated.map((i) => i.id).join(", ")}.`,
+              `${originated.length} item(s) have project-origin provenance — these are NOT a return: ${originated.map((i) => i.id).join(", ")}.`,
               "Decide first: REAL EVENT (business genuinely acquiring these for the first time) → " +
                 "sell_items_from_project_to_inventory. CORRECTION (the item should never have been " +
                 "logged against the project) → bulk_update_items with projectId: null. return_items " +
@@ -723,12 +872,38 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         }
 
         if (dryRun) {
+          const origins = returnTo === "inventory" ? await resolveItemOrigins(db, items) : new Map<string, ItemOriginResolution>();
+          const returnTransactions =
+            returnTo === "inventory"
+              ? sourceCategoryGroups(items).map((group) => {
+                  const totals = computeProjectToInventoryTotals(group.items);
+                  return {
+                    type: "Return" as const,
+                    source: inventoryLabel,
+                    projectId: group.items[0]?.projectId ?? null,
+                    budgetCategoryId: group.budgetCategoryId,
+                    amountCents: totals.amountCents,
+                    subtotalCents: totals.subtotalCents,
+                    itemIds: group.items.map((i) => i.id),
+                  };
+                })
+              : [];
+          const returnTotals =
+            returnTo === "inventory" ? computeProjectToInventoryTotals(items) : null;
           return asToolResponse({
             dryRun: true,
             returnTo,
             existingReturnTransactionId: existingReturnTx?.id ?? null,
             willCreateNewReturnTx: returnTo === "inventory",
             plan: {
+              returnTransactions,
+              credits: returnTo === "inventory"
+                ? inventoryCreditPreviews(items).map((credit) => ({
+                    ...credit,
+                    origin: origins.get(credit.itemId)?.origin,
+                    originEvidence: origins.get(credit.itemId)?.evidence,
+                  }))
+                : [],
               itemUpdates: items.map((i) => ({
                 itemId: i.id,
                 name: i.name ?? null,
@@ -745,6 +920,15 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               })),
               lineageEdges: items.length,
             },
+            totals: returnTotals
+              ? {
+                  amountCents: returnTotals.amountCents,
+                  subtotalCents: returnTotals.subtotalCents,
+                }
+              : null,
+            warning: returnTotals
+              ? missingTaxWarning(returnTotals.missingTax, items.length) || null
+              : null,
           });
         }
 
@@ -762,13 +946,15 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     "[event] Sell items from one project directly to another (items physically moved between project " +
       "sites; budgets shift accordingly). Implemented as an origin-aware two-hop atomic batch:\n\n" +
       "  FIRST HOP (per-item, origin-aware):\n" +
-      "   • Items that previously passed through inventory (currentSource != source) → a Return " +
+      "   • Items with inventory-entry provenance → a Return " +
       "transaction against the source project.\n" +
-      "   • Items that originated in the source project (currentSource == source) → a Sale-to-Inventory " +
+      "   • Items with project-origin provenance → a Sale-to-Inventory " +
       "transaction (type: 'Sale', source-category budgetCategoryId) against the source project.\n" +
       "   • Mixed batches produce BOTH first-hop transactions in the same Firestore batch.\n\n" +
       "  SECOND HOP: one Purchase-from-Inventory transaction (type: 'Purchase', with budgetCategoryId) " +
       "against the destination project, covering every item in the batch.\n\n" +
+      "PRICING: a Return first hop reverses normalized projectPriceCents; a Sale-to-Inventory first " +
+      "hop uses purchasePriceCents; the destination Purchase uses normalized projectPriceCents.\n\n" +
       "REAL EVENT vs CORRECTION: This records real financial movement — NOT a silent bookkeeping " +
       "repoint. For data-entry mistakes (item logged on the wrong project from the start), use " +
       "`bulk_update_items` to relocate without creating Sale/Return transactions.\n\n" +
@@ -872,12 +1058,15 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           return missingSourceBudgetCategoryError(missingSourceCategory);
         }
 
-        const split = splitByOrigin(items);
+        const origins = await resolveItemOrigins(db, items);
+        const unresolved = [...origins.values()].filter((resolution) => resolution.origin === "unresolved");
+        if (unresolved.length > 0) return unresolvedOriginError(unresolved);
+        const split = splitByResolvedOrigin(items, origins);
         const { subtotalCents, amountCents, missingTax } = computeProjectPriceTotals(items);
 
         if (dryRun) {
           const returnLegs = sourceCategoryGroups(split.returnItems).map((group) => {
-            const t = computePurchasePriceTotals(group.items);
+            const t = computeProjectToInventoryTotals(group.items);
             return {
                     type: "Return" as const,
                     source: inventoryLabel,
@@ -889,7 +1078,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             };
           });
           const saleToInventoryLegs = sourceCategoryGroups(split.saleItems).map((group) => {
-            const t = computePurchasePriceTotals(group.items);
+            const t = computeProjectOriginAcquisitionTotals(group.items);
             return {
                     type: "Sale" as const,
                     source: inventoryLabel,
@@ -906,6 +1095,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               firstHop: {
                 returnLegs,
                 saleToInventoryLegs,
+                originResolutions: items.map((item) => origins.get(item.id)),
               },
               secondHop: {
                 purchaseFromInventory: {
@@ -1068,7 +1258,7 @@ async function commitSellToInventory(
   const saleTxByItemId = new Map<string, string>();
   for (const group of sourceCategoryGroups(items)) {
     const saleRef = txCol.doc();
-    const groupTotals = computePurchasePriceTotals(group.items);
+    const groupTotals = computeProjectOriginAcquisitionTotals(group.items);
     batch.set(saleRef, {
       type: "Sale",
       source: totals.inventoryLabel,
@@ -1158,8 +1348,9 @@ async function commitReturnToInventory(
   const uid = safeGetUserId();
   const returnedPaidCredits = await returnedPaidItemCreditContexts(db, items);
 
-  // Standalone project→inventory returns use purchase price: the business is
-  // taking inventory back at cost.
+  // An inventory return reverses the project-side Purchase at its project-sale
+  // value. Project-originated Sale-to-Inventory is a distinct business
+  // acquisition and uses purchase cost in commitSellToInventory.
   // projectId on the Return tx = source project (budget impact lands there).
   const sourceProjectId = items[0]?.projectId ?? null;
   const tagged = notes ? tagNotesAsAi(notes) : undefined;
@@ -1167,14 +1358,14 @@ async function commitReturnToInventory(
   const returnTxByItemId = new Map<string, string>();
   for (const group of sourceCategoryGroups(items)) {
     const returnTxRef = txCol.doc();
-    const groupAmount = computePurchasePriceTotals(group.items).amountCents;
+    const groupTotals = computeProjectToInventoryTotals(group.items);
     batch.set(returnTxRef, {
       type: "Return",
       source: inventoryLabel,
       projectId: sourceProjectId,
       budgetCategoryId: group.budgetCategoryId,
-      amountCents: groupAmount,
-      subtotalCents: groupAmount,
+      amountCents: groupTotals.amountCents,
+      subtotalCents: groupTotals.subtotalCents,
       itemIds: group.items.map((i) => i.id),
       status: "completed",
       ...(tagged ? { notes: tagged } : {}),
@@ -1341,7 +1532,7 @@ async function commitSellItemsFromProjectToProject(
   const returnTxByItemId = new Map<string, string>();
   for (const group of sourceCategoryGroups(split.returnItems)) {
     const returnRef = txCol.doc();
-    const returnTotals = computePurchasePriceTotals(group.items);
+    const returnTotals = computeProjectToInventoryTotals(group.items);
     batch.set(returnRef, {
       type: "Return",
       source: totals.inventoryLabel,
@@ -1363,7 +1554,7 @@ async function commitSellItemsFromProjectToProject(
   const firstSaleTxByItemId = new Map<string, string>();
   for (const group of sourceCategoryGroups(split.saleItems)) {
     const saleRef = txCol.doc();
-    const saleTotals = computePurchasePriceTotals(group.items);
+    const saleTotals = computeProjectOriginAcquisitionTotals(group.items);
     batch.set(saleRef, {
       type: "Sale",
       source: totals.inventoryLabel,
@@ -1420,11 +1611,11 @@ async function commitSellItemsFromProjectToProject(
 
   // 5. Lineage edges — two per item.
   for (const item of items) {
-    const cameFrom = cameFromInventory(item);
-    const firstHopTxId = cameFrom
+    const isReturn = returnTxByItemId.has(item.id);
+    const firstHopTxId = isReturn
       ? returnTxByItemId.get(item.id) ?? null
       : firstSaleTxByItemId.get(item.id) ?? null;
-    const firstHopKind = cameFrom ? "returned" : "soldToInventory";
+    const firstHopKind = isReturn ? "returned" : "soldToInventory";
     if (firstHopTxId) {
       batch.set(edgesCol.doc(), {
         itemId: item.id,

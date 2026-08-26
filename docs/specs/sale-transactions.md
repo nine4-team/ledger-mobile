@@ -35,9 +35,9 @@ Direction is not stored as a dedicated field. It is **implicit in the transactio
 
 Item category and transaction category are different concepts. Inventory items have no category, so item `budgetCategoryId` is wiped when the item lands in inventory. The Sale transaction still carries `budgetCategoryId` as frozen source-project accounting attribution.
 
-**Item origin governs which direction applies for project → inventory moves.** Items whose most recent scope move passed through inventory (`currentSource != source`) go back via a Return. Items that originated in the project (`currentSource == source`) go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
+**Item origin governs which direction applies for project → inventory moves.** Resolve origin from durable accounting provenance, in order: (1) the item's current project-scoped Purchase, where an inventory-label source proves inventory origin and a vendor source proves project origin; (2) sold lineage entering the current project, which proves inventory origin; (3) `currentSource` versus `source` only as a legacy fallback. If none of those resolves the origin, non-interactive tooling must block instead of guessing. Inventory-originated items go back via Return; project-originated items go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
 
-**Price basis is directional.** Any project-destination Purchase uses `projectPriceCents`. Any project → business inventory exit uses `purchasePriceCents`, including the source exit of a project → project two-hop.
+**Project → inventory price basis is origin-aware.** An inventory-originated item goes home through a Return that reverses normalized `projectPriceCents`. A project-originated item enters inventory through a Sale-to-Inventory at `purchasePriceCents`. This distinction is defensive: the business must not overpay if a project-originated item has an incorrectly elevated project price.
 
 ## Inventory Purchase Transaction Shape
 
@@ -167,8 +167,8 @@ Changing the category for only a subset of a multi-item Purchase requires an exp
 Moving items from one project to another is a **two-hop** operation in a single atomic batch. The first hop is origin-aware:
 
 1. **First hop (per-item, per origin):**
-   - From-inventory items (`currentSource != source`) → a **Return** transaction against the source project.
-   - Items that originated in the source project (`currentSource == source`) → a **Sale-to-Inventory** transaction (`type: "Sale"`, source `budgetCategoryId`) against the source project.
+   - Items resolved as inventory-originated → a **Return** transaction against the source project.
+   - Items resolved as project-originated → a **Sale-to-Inventory** transaction (`type: "Sale"`, source `budgetCategoryId`) against the source project.
    - Mixed batches produce **both** first-hop transactions in the same Firestore batch.
 2. **Second hop:** one **Purchase-from-Inventory** transaction (`type: "Purchase"`, with `budgetCategoryId`) against the destination project. Covers every item in the batch.
 
@@ -193,16 +193,24 @@ The inventory movement transaction's initial `amountCents` is computed at creati
 | Movement | Price basis |
 |---|---|
 | Inventory → project Purchase | Project price (`projectPriceCents`) |
-| Project → inventory Sale-to-Inventory | Purchase price (`purchasePriceCents`) |
-| Return to inventory | Purchase price (`purchasePriceCents`) |
-| Project → project source exit | Purchase price (`purchasePriceCents`) |
+| Project → inventory Sale-to-Inventory | Purchase cost (`purchasePriceCents`) |
+| Return to inventory | Effective project-sale price (`max(projectPriceCents, purchasePriceCents)`), reversing the inventory→project Purchase |
+| Project → project source exit | Origin-aware: Return at project price; Sale-to-Inventory at purchase cost |
 | Project → project destination Purchase | Project price (`projectPriceCents`) |
 
 ```
-amountCents = sum(max(item.projectPriceCents ?? 0, item.purchasePriceCents ?? 0)) for item in items
+projectPriceSubtotalCents = sum(max(item.projectPriceCents ?? 0, item.purchasePriceCents ?? 0))
+projectPriceAmountCents = sum(round(effectiveProjectPriceCents * (1 + taxRatePct / 100)))
+saleToInventoryAmountCents = sum(item.purchasePriceCents ?? 0)
 ```
 
-The formula above is the project-price basis used by inventory → project and the destination Purchase in project → project movement. Project → business inventory exits use `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
+The transaction type records both origin and financial meaning:
+
+- An inventory-originated `Return` must reverse the amount the project was charged, including markup, rather than merely crediting supplier cost.
+- A project-originated `Sale` represents the business acquiring the item from the project. It uses purchase cost even if `projectPriceCents` is unexpectedly higher; the project-price floor is not relied upon as a safety mechanism.
+- A project → project batch may therefore have Return and Sale source legs with different price bases, followed by one destination Purchase at normalized project price.
+
+For project-price movements, `subtotalCents` excludes tax and `amountCents` includes per-item tax when recorded. Sale-to-Inventory acquisition amount and subtotal both equal purchase cost.
 
 After creation, most movement totals remain frozen. The exception is the destination project's Purchase-from-Inventory: when an item remains attached to that transaction and is not on a paid invoice, changing its effective project price adjusts `subtotalCents` by the item's project-price delta and `amountCents` by the corresponding tax-inclusive delta. The original vendor Purchase, Return/Sale-to-Inventory records, transactions the item has left, and paid invoice history never change.
 
@@ -281,10 +289,11 @@ Existing sale transactions written under the canonical-sale model remain in the 
 ## Edge Cases
 
 1. **Inventory → project item with a missing or below-cost project price.** Ledger raises it to the positive purchase price automatically. The movement requires user input only when neither price is positive. The normalized value is persisted on `item.projectPriceCents` and used for the Purchase amount.
-2. **Project → inventory item with no purchase price.** Contributes $0 to the Return or Sale-to-Inventory amount. Still included in `itemIds`. Lineage edge still created.
-3. **Movement with 0 total amount.** Allowed for project → inventory moves when items have no recorded purchase price.
-4. **Category not enabled in destination.** Pre-flight validation rejects with a clear error. UI prompts user to enable or pick a different category.
-5. **Item already in destination project.** Pre-flight validation rejects — the purchase-from-inventory flow only accepts inventory items.
-6. **Concurrent moves of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
-7. **Cancellation.** Setting `status: "canceled"` on an inventory movement transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.
-8. **Project price edited after collection.** Paid invoice lines and their associated project Purchase amount remain historical. The item editor disables ordinary project-price editing for paid items; privileged or legacy writes do not rewrite the collected movement.
+2. **Inventory-originated Return with no explicit project price.** The project-price floor uses a positive purchase price. If neither price is positive, the item contributes $0 but remains in `itemIds` and still receives a lineage edge.
+3. **Project-originated Sale with a higher project price.** The Sale still uses `purchasePriceCents`; malformed markup must not increase what the business pays.
+4. **Movement with 0 total amount.** Allowed when the selected origin-aware price basis has no positive value.
+5. **Category not enabled in destination.** Pre-flight validation rejects with a clear error. UI prompts user to enable or pick a different category.
+6. **Item already in destination project.** Pre-flight validation rejects — the purchase-from-inventory flow only accepts inventory items.
+7. **Concurrent moves of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
+8. **Cancellation.** Setting `status: "canceled"` on an inventory movement transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.
+9. **Project price edited after collection.** Paid invoice lines and their associated project Purchase amount remain historical. The item editor disables ordinary project-price editing for paid items; privileged or legacy writes do not rewrite the collected movement.

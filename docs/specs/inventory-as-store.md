@@ -21,7 +21,7 @@ Inventory items have no budget category; categories belong to projects. Items mo
 | Sale transaction shape | Long-lived aggregator per `(project, direction, category)` | New per-batch transaction per user action |
 | Project → project move | Two hops, both as sales | Origin-aware project → inventory hop + new Purchase to destination |
 | Inventory → project price | Often fell back to purchase price at read time | **Persisted floor:** project price is automatically at least purchase price; prompt only if neither is positive |
-| Project → inventory price | Sale-direction behavior varied by path | **Uses purchase price** |
+| Project → inventory price | Sale-direction behavior varied by path | **Origin-aware: Return uses project charge; Sale uses purchase cost** |
 
 ## The Core Invariant
 
@@ -68,8 +68,10 @@ A return transaction is a return transaction, whether the items go back to a ven
 
 The user performs a single **Return to Inventory** action. The service routes each item based on origin:
 
-- **Item came from inventory (`item.currentSource != item.source`)** → creates a **Return** transaction (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
-- **Item originated in the project (`item.currentSource == item.source`, or `currentSource == nil`)** → creates a **Sale-to-Inventory** transaction (`type: "Sale"`, source `budgetCategoryId`, `source: "[Account] Inventory"`). The business is acquiring the item for the first time.
+- **Item resolves as inventory-originated** → creates a **Return** transaction (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
+- **Item resolves as project-originated** → creates a **Sale-to-Inventory** transaction (`type: "Sale"`, source `budgetCategoryId`, `source: "[Account] Inventory"`). The business is acquiring the item for the first time.
+
+Origin resolution prioritizes the current project Purchase, then sold lineage entering the current project, and uses `currentSource` versus `source` only as a legacy fallback. Tooling blocks when the available evidence cannot resolve the origin safely.
 
 Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both emit a lineage edge — `returned` for the Return path, `soldToInventory` for the Sale-to-Inventory path.
 
@@ -77,7 +79,7 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 
 **Sign convention:** both paths subtract from the source project's budget (`-1 × amountCents`).
 
-**Price basis:** standalone project → inventory moves use the item's purchase price (`purchasePriceCents`) because the business is acquiring or taking back inventory at cost.
+**Price basis:** project → inventory is origin-aware. An inventory-originated Return reverses normalized `projectPriceCents`. A project-originated Sale-to-Inventory uses `purchasePriceCents`, even if a malformed higher project price exists, so the business cannot overpay.
 
 ### Moving out of inventory (sell-to-project)
 
@@ -102,7 +104,7 @@ The model has no direct project-to-project transfer. The flow is a two-hop routi
 
 All hops commit atomically when the user invokes **Sell** with a project destination from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
 
-**Price basis:** project → project uses purchase price for the source project exit and project price for the destination project Purchase.
+**Price basis:** project → project uses the origin-aware rule for the source exit (Return at project price, Sale at purchase cost) and normalized project price for the destination Purchase.
 
 Before the destination hop, each project price is normalized to at least its purchase price. The UI asks what the item should sell for only when neither price is positive.
 

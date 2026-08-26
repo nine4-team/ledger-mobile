@@ -410,7 +410,7 @@ Current implementation:
 - `Item.projectPriceCents`: what the project/client is charged for the item
 - item writes maintain `projectPriceCents >= purchasePriceCents`; invoice candidate readers defensively resolve `max(projectPriceCents ?? 0, purchasePriceCents ?? 0)` for legacy data
 - inventory-to-project movement requires `projectPriceCents`
-- project-to-inventory exits use `purchasePriceCents`
+- project-to-inventory exits are origin-aware: inventory Returns reverse normalized `projectPriceCents`, while project-originated Sale-to-Inventory acquisitions use `purchasePriceCents`
 
 Current conceptual direction to preserve:
 

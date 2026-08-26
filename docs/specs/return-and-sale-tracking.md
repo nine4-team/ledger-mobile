@@ -116,7 +116,7 @@ When a user returns inventory-origin items from a project to business inventory,
    - `source: "[Account Name] Inventory"` (or `"Business Inventory"` fallback)
    - `projectId`: source project ID, so the budget reversal lands on that project
    - `budgetCategoryId`: source project category
-   - `amountCents`: sum of `purchasePriceCents` of the returned items
+   - `amountCents`: sum of the returned items' normalized `projectPriceCents`, including per-item tax when recorded
    - `itemIds`: the returned items
 2. For each item, updates `accounts/{accountId}/items/{itemId}`:
    - `projectId` → null (back to inventory)
@@ -166,7 +166,7 @@ Every return-to-inventory action creates a new Return transaction. Return transa
 
 ### Budget Impact
 
-Return-to-inventory transactions follow the existing return sign convention: `-1 * amountCents` against the source project's budget for the relevant category. This means the source project's spend decreases by the total of the returned items' purchase prices.
+Return-to-inventory transactions follow the existing return sign convention: `-1 * amountCents` against the source project's budget for the relevant category. Because these items previously came from business inventory, the Return reverses their effective project-sale prices (including per-item tax when recorded), matching the project-side Purchase rather than creating a new acquisition at supplier cost.
 
 The destination ("Business Inventory") has no budget — it doesn't appear in any rollup.
 
@@ -205,7 +205,7 @@ Return transactions have specific characteristics:
 
 ## Edge Cases
 
-1. **Returning an item with no purchase price**: The item is returned but contributes $0 to the return transaction's amount.
+1. **Returning an item with no explicit project price**: Ledger uses the normalized project price, which falls back to a positive purchase price under the project-price floor. If neither price is positive, the item contributes $0.
 2. **Returning all items from a transaction**: The source transaction retains its data but has an empty `itemIds` array. It is not deleted.
 3. **Partial return**: Only some items from a transaction are returned. The remaining items stay in the source transaction.
 4. **Return of a sold item**: If an item was sold (canonical sale) and then returned, the return creates a lineage edge from the canonical sale transaction, not the original purchase.

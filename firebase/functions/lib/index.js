@@ -1175,8 +1175,8 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
         return { isComplete: false, audit: null };
     }
     // 6. Fetch linked items and sum the transaction's canonical item price.
-    // Inventory → project Purchases use projectPriceCents; vendor Purchases and
-    // Returns use purchasePriceCents.
+    // Inventory-sourced Purchases and Returns use projectPriceCents. Vendor
+    // transactions and Sale-to-Inventory acquisitions use purchasePriceCents.
     const priceBasis = (0, transactionAuditPricing_1.auditPriceBasis)(txData);
     // Firestore 'in' queries max 30 items per batch
     let linkedItemsSumCents = 0;

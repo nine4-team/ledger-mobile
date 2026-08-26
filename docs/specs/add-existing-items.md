@@ -127,11 +127,11 @@ The system determines the operation automatically based on source and destinatio
 | Project | Business inventory, item originated in project | **Sell → Business Inventory** | [sale-transactions.md](sale-transactions.md) |
 | Project A | Project B | **Sell → Project** (two-hop, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
 
-Cross-scope price basis follows movement direction:
+Cross-scope price basis is origin-aware:
 
 - Inventory → project uses normalized `projectPriceCents`, automatically raising it to at least `purchasePriceCents`. The UI asks for a sale price only when neither price is positive.
-- Project → business inventory uses `purchasePriceCents`.
-- Project → project uses purchase price for the source exit and project price for the destination Purchase.
+- Project → business inventory Return uses normalized `projectPriceCents`; Sale-to-Inventory uses `purchasePriceCents`.
+- Project → project applies that origin-aware rule to the source exit and normalized project price to the destination Purchase.
 
 ### Bulk Selection Across Scopes
 

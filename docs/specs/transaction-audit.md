@@ -14,12 +14,14 @@ The audit is only relevant when a transaction's budget category has `metadata.ca
 ```
 itemsNetTotal = linkedItemsSum + returnedItemsSum + soldItemsSum
 ```
-Where:
-- `linkedItemsSum` = sum of `purchasePriceCents` for items whose id appears in `transaction.itemIds`
-- `returnedItemsSum` = sum of `purchasePriceCents` for items referenced by lineage edges where `fromTransactionId == transaction.id` and `movementKind == "returned"`
-- `soldItemsSum` = sum of `purchasePriceCents` for items referenced by lineage edges where `fromTransactionId == transaction.id` and `movementKind == "sold"`
+Where each sum uses the transaction's canonical item-price basis:
+- Inventory-movement Purchases and Returns with a project and inventory-label source use normalized `projectPriceCents`.
+- Ordinary vendor Purchases, vendor Returns, and Sale-to-Inventory acquisitions use `purchasePriceCents`.
+- `linkedItemsSum` covers items whose id appears in `transaction.itemIds`.
+- `returnedItemsSum` covers lineage edges where `fromTransactionId == transaction.id` and `movementKind == "returned"`.
+- `soldItemsSum` covers lineage edges where `fromTransactionId == transaction.id` and `movementKind == "sold"`.
 
-Items with null or zero `purchasePriceCents` contribute $0 to the total. Lineage items already present in `transaction.itemIds` are excluded from the lineage sums to prevent double-counting.
+Items with no usable price on the transaction's canonical basis contribute $0 to the total. Lineage items already present in `transaction.itemIds` are excluded from the lineage sums to prevent double-counting.
 
 **Important:** Linked items are looked up by checking which items have an `id` that appears in `transaction.itemIds`. Do NOT look up items by filtering `item.transactionId == transaction.id` — see data-model.md for the canonical lookup direction. Lineage items are found by querying `lineageEdges` where `fromTransactionId == transaction.id`.
 
@@ -102,10 +104,10 @@ This is a persisted nested object on the transaction document, written by the Cl
 | `itemsSumCents` | integer (cents) | Total sum: `linkedItemsSumCents + returnedItemsSumCents + soldItemsSumCents` |
 | `varianceCents` | integer (cents) | `itemsSumCents - resolvedSubtotalCents` |
 | `variancePercent` | decimal | `(varianceCents / resolvedSubtotalCents) × 100` |
-| `linkedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items currently in `transaction.itemIds` |
-| `returnedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"returned"` lineage edges |
+| `linkedItemsSumCents` | integer (cents) | Sum of the transaction's canonical item price for items currently in `transaction.itemIds` |
+| `returnedItemsSumCents` | integer (cents) | Sum of the transaction's canonical item price for items that left via `"returned"` lineage edges |
 | `returnedItemsCount` | integer | Count of items that left via `"returned"` lineage edges |
-| `soldItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"sold"` lineage edges |
+| `soldItemsSumCents` | integer (cents) | Sum of the transaction's canonical item price for items that left via `"sold"` lineage edges |
 | `soldItemsCount` | integer | Count of items that left via `"sold"` lineage edges |
 
 `audit` is `null` when category is not itemized, transaction is canonical, subtotal can't be resolved, or no items are linked (neither in `itemIds` nor via lineage edges).
