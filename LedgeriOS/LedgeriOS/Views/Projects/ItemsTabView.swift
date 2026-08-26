@@ -2,6 +2,8 @@ import SwiftUI
 import FirebaseFirestore
 
 struct ItemsTabView: View {
+    private static let itemsScrollAnchor = "project-items-search-anchor"
+
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
@@ -72,14 +74,34 @@ struct ItemsTabView: View {
 
     var body: some View {
         let _ = recordBodyEvaluation()
-        ScrollView {
-            AdaptiveContentWidth {
-                LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                    itemDraftsSection
-                    itemsSection
+        ScrollViewReader { scrollProxy in
+            let searchText = Binding(
+                get: { itemSearchText },
+                set: { newValue in
+                    guard newValue != itemSearchText else { return }
+                    // Move while the old result set still defines a valid
+                    // scroll range. Publishing the query first can strand the
+                    // macOS ScrollView beyond the much shorter filtered list.
+                    scrollProxy.scrollTo(Self.itemsScrollAnchor, anchor: .top)
+                    itemSearchText = newValue
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.lg)
+            )
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id(Self.itemsScrollAnchor)
+
+                    AdaptiveContentWidth {
+                        LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                            itemDraftsSection
+                            itemsSection(searchText: searchText)
+                        }
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.lg)
+                    }
+                }
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -293,7 +315,7 @@ struct ItemsTabView: View {
     }
 
     @ViewBuilder
-    private var itemsSection: some View {
+    private func itemsSection(searchText: Binding<String>) -> some View {
         if expandedSections.contains("items") {
             SharedItemsList(
                 mode: .embedded(items: projectContext.items, onItemPress: { itemId in
@@ -313,7 +335,7 @@ struct ItemsTabView: View {
                 ),
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader),
-                externalSearchText: $itemSearchText
+                externalSearchText: searchText
             )
         } else {
             itemsSectionHeader
