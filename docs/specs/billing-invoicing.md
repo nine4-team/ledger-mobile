@@ -103,6 +103,7 @@ struct InvoiceLine {
     var id: String
     var sourceType: InvoiceLineSourceType
     var sourceId: String?
+    var sourceTransactionId: String?
     var budgetCategoryId: String?
     var amountCents: Int
     var sign: InvoiceLineSign
@@ -113,6 +114,7 @@ struct InvoiceLine {
 
 `id` is needed so settlement transactions can optionally target specific lines.
 `sourceId` is nil for manual lines.
+For item-backed lines, `sourceTransactionId` records which transaction association supplied the item's billing basis/category when the line was materialized. This additive reference prevents a later category correction from guessing after the same item has moved through another transaction. Legacy lines may omit it; ambiguous legacy lines must block an automatic correction rather than be rewritten speculatively.
 `budgetCategoryId` is required for every line. It should be resolved from the
 source record for item, transaction, and fee-installment lines. Manual lines use
 the reserved system category `Other Client Charges & Credits`; users never pick
@@ -276,6 +278,14 @@ settled lines.
 Every settlement transaction must have a `budgetCategoryId`. If a selected line
 cannot resolve a budget category, the app should block collection until the line
 or source record is categorized.
+
+### Purchase-from-Inventory Category Corrections
+
+An eligible Purchase from Business Inventory may be reclassified before collection. Because item- and transaction-backed invoice lines derive `budgetCategoryId` from their source, the correction keeps affected created/sent, uncollected line category snapshots aligned with the new project-enabled itemized category.
+
+The ordinary correction is blocked when an affected line has an active settlement/payment transaction or its invoice is paid. Canceled invoices and canceled settlement transactions do not create a lock. Once collection has categorized real money received, changing that accounting requires a separate explicit collected-accounting correction; the normal Purchase editor must not silently rewrite invoice or payment history.
+
+This rule does not change invoice amounts and does not itself choose between whole-invoice and selected-line collection. It defines the safe category boundary for either stored-data shape.
 
 For a normal manual adjustment, the category is always the reserved system
 category **Other Client Charges & Credits**. A returned paid-item credit is an

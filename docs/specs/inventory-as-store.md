@@ -82,11 +82,13 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 ### Moving out of inventory (sell-to-project)
 
 - **Triggered by:** the user selling items from inventory into a project.
-- **Requires a budget category.** The user picks one category for the whole batch. The category must be enabled in the destination project. If not enabled, prompt to enable or choose another.
+- **Requires a project-enabled itemized budget category.** The user picks one active, non-system itemized category for the whole batch from categories already enabled in the destination project. The sell flow does not auto-enable categories.
 - **Creates a per-batch Purchase transaction.** See [sale-transactions.md](sale-transactions.md).
 - **Normalizes project prices.** Before creating the Purchase transaction, Ledger raises each `projectPriceCents` to at least its `purchasePriceCents`. The UI asks what the item should sell for only when neither price is positive.
 - **Sets `budgetCategoryId`** on each item to the chosen category. The category is now part of the item's identity in the destination project.
 - **Sign convention:** budget impact is `+1 * amountCents` on the destination project.
+
+Before collection, the entire Purchase may be reclassified to another project-enabled itemized category through a dedicated atomic correction. The Purchase and its currently attached items change together. Departed items, downstream movements, amounts, prices, and the original vendor Purchase do not change. Collection locks the normal correction because invoice settlement accounting has already been categorized.
 
 ### Moving between projects
 

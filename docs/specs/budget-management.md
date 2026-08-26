@@ -266,7 +266,8 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 ## Transaction Budget Attribution
 
 - **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
-- **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. One category per Purchase transaction; no per-item category. Amounts use normalized `projectPriceCents`, which is automatically raised to at least `purchasePriceCents`; the UI collects a price only when neither is positive. See [sale-transactions.md](sale-transactions.md).
+- **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. The picker contains only active, non-system, itemized categories already enabled in the destination project. One category per Purchase transaction; no per-item category. Amounts use normalized `projectPriceCents`, which is automatically raised to at least `purchasePriceCents`; the UI collects a price only when neither is positive. See [sale-transactions.md](sale-transactions.md).
+- **Uncollected Purchase-from-Inventory correction:** The entire Purchase may be reclassified to another project-enabled itemized category through the dedicated trusted operation. The transaction and its currently attached items change atomically; departed item placement and downstream movement transactions do not. The normal operation is blocked after an affected invoice source is collected.
 - **Project → inventory exits**: Return and Sale-to-Inventory transactions subtract from the source project at `purchasePriceCents`, including the source exit of project → project moves. The destination Purchase in project → project moves uses project price.
 - **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
@@ -285,12 +286,9 @@ Items in business inventory have no category. Items in a project have a category
 3. **When purchasing from inventory into a project**: the user picks a category for the whole batch, which is set on every item AND on the new Purchase transaction. Each project price is normalized to at least purchase cost; the user sets a sale price only if neither price is positive.
 4. **When returning from a project to inventory**: `item.budgetCategoryId` is wiped to null.
 5. **When reassigning within the same project**: `item.budgetCategoryId` may be updated to match the new transaction's category, but the projectId does not change.
+6. **When reclassifying an uncollected Purchase from Inventory**: the target must be an active, non-system, project-enabled itemized category. The Purchase and all currently attached items move to that category atomically. This is a whole-transaction correction; it never changes only a selected subset of the Purchase.
 
-**Auto-enable on transfer:** When items or transactions are moved to a destination project, the system automatically creates `ProjectBudgetCategory` documents for any budget category IDs that don't already have one in the destination (using `setData(merge: true)` to avoid overwriting existing budget amounts). This applies to:
-- `sellToProject` — auto-enables the chosen batch category in the destination project
-- `reassignTransactionToProject` — auto-enables the transaction's `budgetCategoryId` in the destination project
-
-This ensures transferred spend always appears in the destination project's budget display without requiring manual category setup.
+**Project-enabled selection:** Inventory sale and Purchase reclassification pickers do not offer account categories that are not already enabled in the destination project. These paths never silently auto-enable a category. Any separate transaction/project reassignment flow that intentionally supports auto-enabling remains responsible for making that behavior explicit before the move.
 
 **Why the invariant matters:** Categories belong to projects. An item sitting in inventory has no project, so it has no category. Re-resolving the category at sell time makes the relationship explicit and eliminates a class of drift bugs that came from items carrying stale categories across scope moves. See [inventory-as-store.md](inventory-as-store.md) for the full rationale.
 

@@ -64,7 +64,7 @@ The iOS and MCP item write boundaries must apply the same shared normalization b
 
 For a partial update, normalization is computed from the merged post-update state. A write that changes only `purchasePriceCents` must compare it with the stored project price; a write that changes only `projectPriceCents` must compare it with the stored purchase price. Callers may omit an unchanged field, but they may not bypass the invariant by doing so.
 
-Readers should defensively use the same `max` rule while legacy documents are being repaired, so a stale zero or lower project price can never hide a positive purchase price. This rule governs current item state; frozen inventory-movement transaction amounts and sent invoice snapshots do not retroactively change when an item price changes.
+Readers should defensively use the same `max` rule while legacy documents are being repaired, so a stale zero or lower project price can never hide a positive purchase price. This rule governs current item state. For a sold item that remains attached to an unpaid project-side Purchase-from-Inventory, changing the effective project price automatically adjusts that transaction's subtotal and amount. Original vendor purchases, departed movement history, and paid invoice snapshots do not change.
 
 ### Display Name
 
@@ -76,6 +76,8 @@ Items live in a single flat collection (`accounts/{accountId}/items`). Scope is 
 
 - **Project item:** `projectId` is set → belongs to that project
 - **Inventory item:** `projectId` is null → belongs to business inventory
+
+Project items attached to a transaction use the same `budgetCategoryId` as that transaction. For an eligible uncollected Purchase from Business Inventory, changing the Purchase category is a whole-transaction correction: the trusted operation atomically updates every currently attached item to the selected active, non-system, project-enabled itemized category. Direct transaction-only or item-only category writes must not create a mismatch. Departed items retain their current scope/category.
 
 The `ListScope` enum controls query filtering:
 

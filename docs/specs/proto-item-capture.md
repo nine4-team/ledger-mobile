@@ -233,7 +233,7 @@ Before writing, validate that:
 
 - the referenced transaction exists, belongs to the same account, and has `projectId == null`;
 - the draft has a destination `projectId`;
-- the intended/destination budget category belongs to and is enabled for that project; and
+- the intended/destination budget category is active, non-system, canonically itemized, and already enabled for that project; and
 - the item has the other fields required by the canonical sale operation and its project price can be normalized to a positive value at least as high as purchase price.
 
 Once validation succeeds, perform one atomic operation:

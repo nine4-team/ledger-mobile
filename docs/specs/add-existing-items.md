@@ -177,7 +177,7 @@ This is a sell or return-to-inventory, depending on direction. Each is one Fires
 | `item.budgetCategoryId` | Set to the chosen batch category |
 | `item.status` | Set to `"purchased"` |
 | Source `transaction.itemIds` | Remove item ID (if any prior transaction) |
-| New Purchase transaction | Created with active `itemIds` and frozen `amountCents` for this batch |
+| New Purchase transaction | Created with active `itemIds`; amount/subtotal follow eligible sold-item project-price changes until payment |
 
 **Lineage:** A `sold` edge is created client-side per item.
 
@@ -213,8 +213,8 @@ Simple field update (Tier 1: fire-and-forget).
 
 Inventory items have **no `budgetCategoryId`** (the inventory invariant). The user must pick exactly one category for the whole batch before the sale can proceed:
 
-1. The picker shows categories enabled in the destination project.
-2. If the chosen category is not yet enabled, the system auto-enables it (`setData(merge: true)` on the `ProjectBudgetCategory` doc, preserving any existing budget amount).
+1. The picker shows only active, non-system, canonically itemized categories already enabled in the destination project.
+2. The sell flow does not auto-enable a category; project category setup is a separate explicit action.
 3. The chosen category is set on the new Purchase transaction AND on every item in the batch.
 
 There is no per-item override and no mixed-category batches. See [sale-transactions.md](sale-transactions.md) D4a.

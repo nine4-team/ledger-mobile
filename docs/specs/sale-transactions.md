@@ -1,6 +1,6 @@
 # Inventory Movement Transactions
 
-> **Status:** Active. Replaces the legacy "canonical sale" model documented in [canonical-sales.md](canonical-sales.md).
+> **Status:** Active. Replaces the legacy "canonical sale" model documented in [canonical-sales.md](canonical-sales.md). The Purchase-from-Inventory category-reclassification behavior below was approved on 2026-08-25 and is implementation-pending.
 
 ## Overview
 
@@ -8,14 +8,14 @@ When items move between business inventory and a project, the system creates a p
 
 ## The Per-Batch Model
 
-Every user action that moves items from inventory into a project creates **one new purchase transaction**. The transaction is written with a frozen amount snapshot and an initial active item list. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
+Every user action that moves items from inventory into a project creates **one new purchase transaction**. The transaction is written with an initial amount derived from the sold items' project prices and an initial active item list. If an active sold item's project price later changes before the existing paid-invoice freeze boundary, Ledger adjusts this project-side Purchase total by that item's price delta. Before collection, a user may also reclassify the entire Purchase to another project-enabled itemized category; Ledger updates the Purchase and all currently attached items atomically. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
 
 This is different from the legacy canonical-sale model, where one long-lived transaction per `(project, direction, category)` triple aggregated every inventory movement over time. The legacy model is preserved for historical data — see "Legacy Canonical Sales" below.
 
 ### Why per-batch
 
 - **Aggregator drift avoided.** Each movement is a per-batch document instead of a shared long-lived aggregator. Source `itemIds` still update for normal return/sale membership changes.
-- **Accounting-correct.** Historical movement amounts never shift retroactively. A movement records what was true at the moment it happened.
+- **Accounting-correct.** Structural movement fields and departed/paid item amounts remain historical. An open project-side Purchase may follow deliberate repricing of an item that is still attached to that sale.
 - **Matches user mental model.** "I bought these five things from inventory for Hawaii under Furnishings" = one transaction. Not "this category in this project has accumulated $X of inventory transfers."
 - **Atomic failure.** A failed batch fails as a unit. There's no partial state where some items moved and others didn't.
 
@@ -46,7 +46,7 @@ interface InventoryPurchaseTransaction {
   type: "Purchase";
   projectId: string;                    // destination project
   budgetCategoryId: string;             // destination category
-  amountCents: number;                  // frozen at creation; project-price basis
+  amountCents: number;                  // project-price basis; server-maintained while open
   itemIds: string[];                    // active membership, length 0..100 after returns/sales
   source: "[Account] Inventory";        // inventory label, the non-project side
   notes?: string;                       // optional audit note
@@ -64,11 +64,11 @@ interface InventoryPurchaseTransaction {
 
 The following invariants are enforced by Firestore security rules and by tests in both iOS and the MCP server:
 
-1. **Accounting immutability after creation.** `amountCents`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it's created. Mutable fields include `itemIds`, `notes`, `status`, `updatedAt`. `itemIds` is current active membership; lineage carries returned/sold historical membership.
+1. **Controlled accounting mutation after creation.** `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it is created. Clients cannot directly edit movement `amountCents`, `subtotalCents`, or `budgetCategoryId`. Trusted workflows have two narrow exceptions: the item-price trigger may adjust amount/subtotal for an attached item under its existing paid-invoice freeze rule; and the dedicated category-reclassification operation may change `budgetCategoryId` for an eligible uncollected project-side Purchase-from-Inventory while atomically updating its currently attached items. Mutable client fields include `itemIds`, `notes`, `status`, and `updatedAt`. `itemIds` is current active membership; lineage carries returned/sold historical membership.
 2. **Batch size cap.** Initial `itemIds.length >= 1 && itemIds.length <= 100`. Later returns/sales can reduce `itemIds` to zero on the source transaction. Both clients enforce the initial cap locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
 4. **Direction is type/source-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source is project → inventory acquisition. No dedicated direction field is written for new per-batch movements.
-5. **Category must be enabled (inventory → project only).** When `budgetCategoryId` is present, it must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the purchase. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
+5. **Category must be project-enabled and itemized (inventory → project only).** The selected account `BudgetCategory` must be active, non-system, and have canonical `metadata.categoryType == "itemized"`. A matching `ProjectBudgetCategory` must already exist in the destination project. Sale and reclassification pickers show only categories satisfying all of these conditions; these workflows do not auto-enable a category.
 6. **One accounting category per transaction.** Inventory → project purchases use one destination `budgetCategoryId`. Source project egress transactions use one source `budgetCategoryId`; mixed source categories are split into separate first-hop transactions.
 
 ## The Sell Flow
@@ -79,7 +79,7 @@ When a user purchases items from business inventory into a project:
 
 - **Items.** A list of business-inventory items (each must have `projectId == null`).
 - **Destination project.**
-- **Budget category.** One category, applied to every item in the batch (per invariant 5). The category must be enabled in the destination project.
+- **Budget category.** One active, non-system, itemized category, applied to every item in the batch (per invariant 5). It must already be enabled in the destination project.
 - **Optional notes.**
 
 ### 2. Pre-flight validation
@@ -87,10 +87,10 @@ When a user purchases items from business inventory into a project:
 - Every item must have `projectId == null` (in business inventory). If any item is in a project, fail with a clear error.
 - Item count must be 1..100.
 - Destination project must exist.
-- Budget category must exist as a `ProjectBudgetCategory` in the destination project. If not, prompt to enable.
+- Budget category must be an active, non-system account category with `metadata.categoryType == "itemized"` and must already exist as a `ProjectBudgetCategory` in the destination project. Otherwise reject and require the user to choose from the project-enabled itemized categories.
 - Every item must resolve to a positive project price. Ledger first applies the canonical item price floor, raising `projectPriceCents` to `purchasePriceCents` whenever it is missing, zero, or lower. An already higher project price is preserved. If neither price is positive, the UI asks the user what to sell it for and non-interactive callers reject the operation.
 
-### 3. Compute the snapshot amount
+### 3. Compute the initial amount
 
 ```
 resolvedProjectPrice(item) = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)
@@ -111,8 +111,7 @@ One batch, all-or-nothing:
    - `status` = `"purchased"`
    - `spaceId` = validated per-item destination assignment when supplied; otherwise null
    - `updatedAt` = serverTimestamp()
-3. **Auto-enable destination category** if not already enabled, by writing `accounts/{accountId}/projects/{destProjectId}/budgetCategories/{categoryId}` with `setData(merge: true)`. (Idempotent — preserves existing budget amounts.)
-4. **Create one `sold` lineage edge per item** at `accounts/{accountId}/lineageEdges/{auto-id}`:
+3. **Create one `sold` lineage edge per item** at `accounts/{accountId}/lineageEdges/{auto-id}`:
    - `itemId`
    - `fromProjectId`: null (item was in business inventory)
    - `toProjectId`: destination project
@@ -121,12 +120,47 @@ One batch, all-or-nothing:
    - `movementKind`: `"sold"`
    - `createdBy`, `createdAt`
 
-5. **Commit.** Single `batch.commit()`. If any write fails, the whole batch rolls back.
+4. **Commit.** Single `batch.commit()`. If any write fails, the whole batch rolls back.
 
 ### 5. Side effects (server-side, automatic)
 
 - The `onItemTransactionIdChanged` Cloud Function fires for each item, creating an `association` lineage edge as the audit trail. (Already exists, no change needed.)
 - The `onTransactionWritten` Cloud Function fires for the new Purchase transaction and recalculates the destination project's budget summary.
+
+## Purchase Category Reclassification
+
+Category reclassification is an accounting correction for the **entire** per-batch Purchase. It is not a per-item edit and does not split a transaction.
+
+### Eligibility
+
+The operation is available only when all of the following are true:
+
+- The transaction is a non-legacy, project-scoped `Purchase` whose source exactly matches the account's derived inventory label; a suffix-only match is not sufficient authorization.
+- The transaction is not canceled.
+- The target category is already enabled in the same project and its account category is active, non-system, and canonically itemized.
+- No affected invoice source has been collected. A paid invoice or an active settlement/payment transaction for an affected line is a collection lock. Canceled invoices and canceled settlement transactions do not lock the correction.
+
+### Atomic write contract
+
+One trusted operation must atomically:
+
+1. Re-read and validate the transaction and expected current category.
+2. Set the Purchase `budgetCategoryId` to the target category.
+3. Resolve current membership from both `Purchase.itemIds` and the reverse item `transactionId` association, require the ID sets and project scopes to match exactly, and set the same category on every resulting item.
+4. Keep any created or sent, uncollected invoice line category snapshots for affected sources aligned with the new category.
+5. Write a structured audit event containing actor, request ID, transaction ID, project ID, previous category, target category, affected active item IDs, and timestamp.
+
+The operation must fail without writes if membership is stale, the target is ineligible, or collection has locked any affected source. Direct client writes to movement `budgetCategoryId` remain prohibited; iOS and MCP use this dedicated operation.
+
+### What changes and what does not
+
+- The Purchase's **entire stored amount** moves from the old budget category to the new one. This includes the Purchase contribution of items that later left through return or sale.
+- Currently attached items receive the new category so item and transaction attribution cannot drift.
+- Departed items keep their current category/scope, and downstream movement transactions are not rewritten.
+- `amountCents`, `subtotalCents`, prices, `projectId`, `source`, `type`, dates, status, membership, lineage, and the original vendor Purchase do not change.
+- The existing project budget-summary trigger moves the Purchase amount between the old and new category rollups after commit.
+
+Changing the category for only a subset of a multi-item Purchase requires an explicit transaction-splitting correction and is out of scope for this operation.
 
 ## Project → Project Moves
 
@@ -154,7 +188,7 @@ Together they record the full path: source project → inventory → destination
 
 ## Amount Calculation
 
-The inventory movement transaction's `amountCents` is computed **once**, at creation time:
+The inventory movement transaction's initial `amountCents` is computed at creation time:
 
 | Movement | Price basis |
 |---|---|
@@ -170,7 +204,9 @@ amountCents = sum(max(item.projectPriceCents ?? 0, item.purchasePriceCents ?? 0)
 
 The formula above is the project-price basis used by inventory → project and the destination Purchase in project → project movement. Project → business inventory exits use `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
 
-After creation, `amountCents` does not change, even if an item's prices are later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
+After creation, most movement totals remain frozen. The exception is the destination project's Purchase-from-Inventory: when an item remains attached to that transaction and is not on a paid invoice, changing its effective project price adjusts `subtotalCents` by the item's project-price delta and `amountCents` by the corresponding tax-inclusive delta. The original vendor Purchase, Return/Sale-to-Inventory records, transactions the item has left, and paid invoice history never change.
+
+The adjustment is delta-based rather than a fresh sum of `transaction.itemIds`. `itemIds` represents current active membership and may omit items that left later; recomputing the entire transaction from it would incorrectly erase historical contributions. Server event IDs are deduplicated atomically so retries cannot apply a delta twice.
 
 Before a project-price movement, Ledger persists `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`. If neither price is positive, the UI must collect a price and non-interactive tools reject the call.
 
@@ -201,16 +237,16 @@ Resolution is implemented in `TransactionDisplayCalculations.displayName(for:)` 
 **Other display:**
 - **Type badge:** "Purchase", "Sale", or "Return" (type only — never direction).
 - **Source field:** the inventory label for inventory-involved transactions, the vendor name for vendor transactions.
-- **Amount:** the frozen `amountCents`.
+- **Amount:** the stored `amountCents`; for an open Purchase-from-Inventory it follows eligible sold-item project-price changes.
 - **Items:** current active items rendered from `itemIds`; items that left via return/sale render from lineage sections.
 
-Inventory movement transactions are NOT user-editable for accounting shape. Users can edit `notes` and add/cancel via `status`; inventory flows may update `itemIds` as items leave via return/sale.
+Inventory movement transactions are NOT directly user-editable for accounting shape or totals. Users edit the sold item's project price; the trusted server trigger maintains the eligible project Purchase amount. Users can edit `notes` and add/cancel via `status`; inventory flows may update `itemIds` as items leave via return/sale.
 
 ### Transaction List Grouping
 
 Transaction lists visually group inventory-movement records so the list reads as movement activity per project/category rather than a stream of per-batch documents. This grouping is **presentation-only**:
 
-- The underlying Sale, Return, and Purchase documents remain separate auditable records with frozen accounting fields.
+- The underlying Sale, Return, and Purchase documents remain separate auditable records. Their identity fields are frozen; only an eligible project Purchase-from-Inventory total has the controlled repricing exception described above.
 - Transaction detail always opens the real child transaction.
 - Bulk selection, export, and totals operate on the child transaction IDs.
 - No grouped row is written back to Firestore and no grouped row becomes a canonical aggregate.
@@ -251,3 +287,4 @@ Existing sale transactions written under the canonical-sale model remain in the 
 5. **Item already in destination project.** Pre-flight validation rejects — the purchase-from-inventory flow only accepts inventory items.
 6. **Concurrent moves of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
 7. **Cancellation.** Setting `status: "canceled"` on an inventory movement transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.
+8. **Project price edited after collection.** Paid invoice lines and their associated project Purchase amount remain historical. The item editor disables ordinary project-price editing for paid items; privileged or legacy writes do not rewrite the collected movement.

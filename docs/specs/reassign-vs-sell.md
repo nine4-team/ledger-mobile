@@ -66,7 +66,7 @@ Project-destination sales always charge the destination project at normalized `p
 - `item.budgetCategoryId` set to the chosen batch category
 - `item.transactionId` set to the new Purchase transaction ID
 - `item.status` set to `"purchased"`
-- A new Purchase transaction is created (auto-ID, frozen `amountCents`, current `itemIds`)
+- A new Purchase transaction is created (auto-ID, current `itemIds`); its amount/subtotal follow eligible sold-item project-price changes until payment
 - Items removed from any prior transaction's `itemIds`
 - One `"sold"` lineage edge per item
 - Budget spend in the destination project increases
@@ -163,13 +163,15 @@ The actions available to users depend on context.
 
 Under the per-batch model, **inventory items have no `budgetCategoryId`** (the inventory invariant). Every sell-to-project requires the user to pick exactly one batch-wide category before the sale can proceed:
 
-1. The picker shows categories enabled in the destination project.
-2. If the user picks a category that's not enabled, the system auto-enables it (creates a `ProjectBudgetCategory` doc with `setData(merge: true)`).
+1. The picker shows only active, non-system, canonically itemized categories already enabled in the destination project.
+2. The sell flow does not auto-enable categories. A category must be enabled through the project's budget-category controls before it can be selected.
 3. The chosen category is set on the new Purchase transaction AND on every item in the batch.
 
 There is no per-item category override and no mixed-category batches. Users wanting mixed categories must sell in separate batches. See [sale-transactions.md](sale-transactions.md) D4a.
 
-The sell flow also requires a positive project price for every item. Before confirmation, Ledger persists `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`, preserving higher markup and raising any lower value to cost. A price-entry step appears only when neither price is positive. The resulting values become the frozen amount snapshot for the destination Purchase.
+After the sale, the entire Purchase may be reclassified to another project-enabled itemized category while its affected invoice sources remain uncollected. This dedicated correction updates the Purchase and all currently attached items atomically. It does not reclassify only a selected subset, change prices/amounts, or rewrite departed items and downstream movement transactions.
+
+The sell flow also requires a positive project price for every item. Before confirmation, Ledger persists `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`, preserving higher markup and raising any lower value to cost. A price-entry step appears only when neither price is positive. The resulting values establish the destination Purchase's initial amount; eligible project-price edits before the existing paid-invoice freeze boundary adjust that project-side total automatically.
 
 ## Design Decision: Why Separate Operations?
 

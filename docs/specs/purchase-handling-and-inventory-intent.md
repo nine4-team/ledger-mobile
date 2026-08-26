@@ -207,8 +207,8 @@ It must be able to:
 - identify waiting-for-items, ready-to-sell, partially completed, missing-price,
   invalid-category, and unavailable-project conditions;
 - set, change, clear, or resolve intended project/category metadata;
-- validate that an intended category belongs to and is enabled for the intended
-  project;
+- validate that an intended category is active, non-system, canonically itemized,
+  and already enabled for the intended project;
 - perform canonical inventory-to-project sales for real movements;
 - atomically correct purchases that were routed to inventory but should be direct
   project reimbursements;

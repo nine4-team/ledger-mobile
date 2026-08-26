@@ -1,5 +1,11 @@
 # Ledger Specs — Changelog
 
+## 2026-08-25
+- **Approved whole-Purchase inventory category reclassification.** A non-legacy, uncollected project Purchase from Business Inventory may move to another active, non-system, project-enabled itemized category through a dedicated trusted operation. The Purchase and all currently attached items change atomically; amounts, prices, structural identity, departed item placement, downstream movements, and the original vendor Purchase remain unchanged.
+- **Defined the collection boundary.** Created/sent uncollected invoice line category snapshots follow the correction. Paid invoices or active settlement/payment transactions on affected lines block the normal correction; collected accounting requires a separate explicit workflow.
+- **Removed silent category enablement from the target behavior.** Inventory sale and Purchase-reclassification pickers offer only itemized categories already enabled in the project. The current app/MCP paths require implementation updates to enforce this approved rule.
+- **Added implementation plan.** See [inventory-purchase-category-reclassification-plan.md](../plans/inventory-purchase-category-reclassification-plan.md).
+
 ## 2026-08-24
 - **Defined and enforced categorized No Transaction items.** Project items may intentionally have no transaction while awaiting correction, but must retain a real category. Item/transaction association changes now update canonical membership and lineage atomically, linked items inherit transaction scope/category, ordinary transaction category/project corrections cascade to owned items, and writers no longer persist the literal `uncategorized` category ID.
 - **Aligned MCP returns with the per-batch inventory model.** Return-to-inventory now always creates a new frozen Return transaction, matching iOS; existing Return transaction IDs remain vendor-return-only. Inventory-owned items return to `purchased` status when they come back into stock. Updated `return-and-sale-tracking.md` to restore origin-aware Return versus Sale-to-Inventory routing and source-project budget attribution.
