@@ -145,7 +145,12 @@ struct ActionMenuSheet: View {
             item.subactions?.first(where: { $0.id == key })
         }
 
-        if let keySelected {
+        if let selectionSummary = item.selectionSummary {
+            Text(selectionSummary)
+                .font(Typography.small)
+                .foregroundStyle(item.isFilterActive == true ? BrandColors.primary : BrandColors.textSecondary)
+                .lineLimit(1)
+        } else if let keySelected {
             Text(keySelected.label)
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.primary)
@@ -196,8 +201,11 @@ struct ActionMenuSheet: View {
 
     private var hasActiveSelections: Bool {
         items.contains { item in
-            item.isSelected ||
-            (item.subactions?.contains { $0.id != "all" && $0.icon == "checkmark.circle.fill" } ?? false)
+            if let isFilterActive = item.isFilterActive {
+                return isFilterActive
+            }
+            return item.isSelected ||
+                (item.subactions?.contains { $0.id != "all" && $0.icon == "checkmark.circle.fill" } ?? false)
         }
     }
 

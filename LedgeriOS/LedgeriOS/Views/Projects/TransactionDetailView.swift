@@ -1205,6 +1205,8 @@ struct TransactionDetailView: View {
                 getBulkMenuItems: { bulkActionMenuItems },
                 selectedIds: $selectedItemIds,
                 filterScope: .project,
+                filterSpaces: scopedSpaces,
+                filterBudgetCategories: projectBudgetCategories,
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader)
             )

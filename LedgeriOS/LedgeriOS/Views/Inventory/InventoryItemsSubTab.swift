@@ -43,6 +43,7 @@ struct InventoryItemsSubTab: View {
             selectedIds: $selectedItemIds,
             emptyIcon: "shippingbox",
             filterScope: .inventory,
+            filterSpaces: inventoryContext.spaces,
             protoItems: inventoryContext.protoItems,
             protoItemCard: { protoItem in
                 AnyView(

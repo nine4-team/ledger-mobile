@@ -9,6 +9,10 @@ struct ActionMenuItem: Identifiable, @unchecked Sendable {
     var isDestructive: Bool = false
     var isActionOnly: Bool = false
     var isSelected: Bool = false
+    /// Optional filter-specific summary shown at the trailing edge of a submenu row.
+    var selectionSummary: String?
+    /// Overrides ActionMenuSheet's legacy inference for whether Clear is visible.
+    var isFilterActive: Bool?
     var onPress: (() -> Void)?
 }
 

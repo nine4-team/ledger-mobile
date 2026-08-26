@@ -14,6 +14,8 @@ struct SharedItemsList: View {
     var selectedIds: Binding<Set<String>>?
     var emptyIcon: String = "tray"
     var filterScope: ItemFilterScope?
+    var filterSpaces: [Space] = []
+    var filterBudgetCategories: [BudgetCategory] = []
     var inline: Bool = false
     var pickerItems: [Item]?
     var inlineSectionHeader: AnyView? = nil
@@ -28,7 +30,7 @@ struct SharedItemsList: View {
 
     @State private var items: [Item] = []
     @State private var searchText = ""
-    @State private var activeFilters: Set<ItemFilterOption> = []
+    @State private var activeFilters = ItemFilterState()
     @State private var activeSort: ItemSortOption = .createdDesc
     @State private var internalSelectedIds: Set<String> = []
     @State private var expandedGroups: Set<String> = []
@@ -60,7 +62,7 @@ struct SharedItemsList: View {
 
     private var processedItems: [Item] {
         PerformanceDiagnostics.shared.measureAggregate("ListDerivation", kind: "filter-sort-search") {
-            ListFilterSortCalculations.applyAllMultiFilters(
+            ListFilterSortCalculations.applyAllGroupedFilters(
                 items,
                 filters: activeFilters,
                 sort: activeSort,
@@ -70,6 +72,7 @@ struct SharedItemsList: View {
     }
 
     private var processedProtoItems: [ProtoItem] {
+        guard !activeFilters.isActive else { return [] }
         let trimmed = resolvedSearchText.wrappedValue.trimmingCharacters(in: .whitespaces)
         let activeProtoItems = protoItems.filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
         guard !trimmed.isEmpty else { return activeProtoItems }
@@ -84,8 +87,94 @@ struct SharedItemsList: View {
         !protoItems.isEmpty || !items.isEmpty
     }
 
+    private var sourceFilterChoices: [ItemFilterChoice] {
+        uniqueTextChoices(
+            items.compactMap { item in
+                let value = item.currentSource ?? item.source
+                guard let value else { return nil }
+                let label = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                return label.isEmpty ? nil : label
+            },
+            normalizedID: ItemFilterValues.normalizedText
+        )
+    }
+
+    private var spaceFilterChoices: [ItemFilterChoice] {
+        let referencedIDs = Set(items.compactMap { item -> String? in
+            let id = item.spaceId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return id.isEmpty ? nil : id
+        })
+        var choices = filterSpaces.compactMap { space -> ItemFilterChoice? in
+            guard let id = space.id else { return nil }
+            guard space.isArchived != true || referencedIDs.contains(id) else { return nil }
+            let baseLabel = space.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let name = baseLabel.isEmpty ? "Unnamed Space" : baseLabel
+            let label = space.isArchived == true ? "\(name) (Archived)" : name
+            return ItemFilterChoice(id: id, label: label)
+        }
+        let knownIDs = Set(choices.map(\.id))
+        choices.append(contentsOf: referencedIDs.subtracting(knownIDs).map {
+            ItemFilterChoice(id: $0, label: "Unknown Space")
+        })
+        return choices.sorted { $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending }
+    }
+
+    private var budgetCategoryFilterChoices: [ItemFilterChoice] {
+        let referencedIDs = Set(items.compactMap { item -> String? in
+            let id = item.budgetCategoryId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return id.isEmpty ? nil : id
+        })
+        var choices = filterBudgetCategories.compactMap { category -> ItemFilterChoice? in
+            guard let id = category.id else { return nil }
+            return ItemFilterChoice(id: id, label: category.name)
+        }
+        let knownIDs = Set(choices.map(\.id))
+        choices.append(contentsOf: referencedIDs.subtracting(knownIDs).map {
+            ItemFilterChoice(id: $0, label: "Unknown Category")
+        })
+        return choices.sorted { $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending }
+    }
+
+    private var purchasedByFilterChoices: [ItemFilterChoice] {
+        var choices = [
+            ItemFilterChoice(id: "client-card", label: "Client"),
+            ItemFilterChoice(id: "design-business", label: "Design Business"),
+            ItemFilterChoice(id: ItemFilterValues.missing, label: "Not Set"),
+        ]
+        let knownIDs = Set(choices.map(\.id))
+        let customLabels = items.compactMap { item -> String? in
+            guard let value = item.purchasedBy?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty,
+                  !knownIDs.contains(ItemFilterValues.purchasedBy(for: item)) else { return nil }
+            return value
+        }
+        choices.append(contentsOf: uniqueTextChoices(
+            customLabels,
+            normalizedID: ItemFilterValues.normalizedText
+        ))
+        return choices
+    }
+
     private var resolvedSearchText: Binding<String> {
         externalSearchText ?? $searchText
+    }
+
+    private func uniqueTextChoices(
+        _ labels: [String],
+        normalizedID: (String) -> String
+    ) -> [ItemFilterChoice] {
+        var labelsByID: [String: String] = [:]
+        for rawLabel in labels {
+            let label = rawLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+            let id = normalizedID(label)
+            guard !label.isEmpty, !id.isEmpty else { continue }
+            if labelsByID[id] == nil {
+                labelsByID[id] = label
+            }
+        }
+        return labelsByID
+            .map { ItemFilterChoice(id: $0.key, label: $0.value) }
+            .sorted { $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending }
     }
 
     private var groups: [ItemGroup] {
@@ -195,6 +284,10 @@ struct SharedItemsList: View {
                 items = newItems
             }
         }
+        .onChange(of: activeFilters) { _, _ in
+            // Bulk actions must never retain items hidden by a newly applied filter.
+            resolvedSelectedIds.wrappedValue.formIntersection(Set(allVisibleIds))
+        }
         .onDisappear {
             PerformanceDiagnostics.shared.event("ListDisappeared", kind: diagnosticMode, count: items.count)
             listener?.remove()
@@ -233,20 +326,14 @@ struct SharedItemsList: View {
                 onSelect: { activeSort = $0 }
             )
         ))
-        .background(FilterMenu(
+        .background(ItemFilterMenu(
             isPresented: $showFilterMenu,
-            filters: FilterMenu.filterMenuItems(
-                activeFilters: activeFilters,
-                scope: filterScope ?? (isStandalone ? .inventory : .project),
-                onToggle: { option in
-                    if activeFilters.contains(option) {
-                        activeFilters.remove(option)
-                    } else {
-                        activeFilters.insert(option)
-                    }
-                }
-            ),
-            closeOnItemPress: false
+            filterState: $activeFilters,
+            scope: filterScope ?? (isStandalone ? .inventory : .project),
+            spaces: spaceFilterChoices,
+            sources: sourceFilterChoices,
+            budgetCategories: budgetCategoryFilterChoices,
+            purchasedByOptions: purchasedByFilterChoices
         ))
     }
 
@@ -304,7 +391,7 @@ struct SharedItemsList: View {
         } filterMenu: {
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : BrandColors.textSecondary)
+                    .foregroundStyle(activeFilters.isActive ? BrandColors.primary : BrandColors.textSecondary)
             }
         }
     }
@@ -332,7 +419,7 @@ struct SharedItemsList: View {
 
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : BrandColors.textSecondary)
+                    .foregroundStyle(activeFilters.isActive ? BrandColors.primary : BrandColors.textSecondary)
             }
             .buttonStyle(CircleBarButtonStyle())
             .tint(BrandColors.textSecondary)

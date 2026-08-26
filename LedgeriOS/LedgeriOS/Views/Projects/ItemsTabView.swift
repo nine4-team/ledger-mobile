@@ -303,6 +303,8 @@ struct ItemsTabView: View {
                 selectedIds: $selectedItemIds,
                 emptyIcon: "cube.box",
                 filterScope: .project,
+                filterSpaces: projectContext.spaces,
+                filterBudgetCategories: projectContext.budgetCategories,
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader),
                 externalSearchText: $itemSearchText

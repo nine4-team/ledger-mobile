@@ -4,6 +4,28 @@ import Foundation
 /// Used by SharedItemsList views and testable without SwiftUI.
 enum ListFilterSortCalculations {
 
+    // MARK: - Grouped Facet Filters
+
+    /// Applies AND logic across facets. A facet's selection applies OR logic
+    /// among the values it includes.
+    static func applyGroupedFilters(_ items: [Item], filters: ItemFilterState) -> [Item] {
+        guard filters.isActive else { return items }
+
+        return items.filter { item in
+            filters.status.includes(ItemFilterValues.status(for: item))
+                && filters.space.includes(ItemFilterValues.space(for: item))
+                && filters.source.includes(ItemFilterValues.source(for: item))
+                && filters.budgetCategory.includes(ItemFilterValues.budgetCategory(for: item))
+                && filters.purchasedBy.includes(ItemFilterValues.purchasedBy(for: item))
+                && filters.transaction.includes(ItemFilterValues.transaction(for: item))
+                && filters.bookmark.includes(ItemFilterValues.bookmark(for: item))
+                && filters.image.includes(ItemFilterValues.image(for: item))
+                && filters.sku.includes(ItemFilterValues.sku(for: item))
+                && filters.name.includes(ItemFilterValues.name(for: item))
+                && filters.projectPrice.includes(ItemFilterValues.projectPrice(for: item))
+        }
+    }
+
     // MARK: - Filter Predicates
 
     /// Returns a predicate for the given filter option.
@@ -162,6 +184,18 @@ enum ListFilterSortCalculations {
         search: String
     ) -> [Item] {
         let filtered = applyMultipleFilters(items, modes: filters)
+        let searched = applySearch(filtered, query: search)
+        return applySort(searched, sort: sort)
+    }
+
+    /// Applies grouped facets, search, and sort in sequence.
+    static func applyAllGroupedFilters(
+        _ items: [Item],
+        filters: ItemFilterState,
+        sort: ItemSortOption,
+        search: String
+    ) -> [Item] {
+        let filtered = applyGroupedFilters(items, filters: filters)
         let searched = applySearch(filtered, query: search)
         return applySort(searched, sort: sort)
     }

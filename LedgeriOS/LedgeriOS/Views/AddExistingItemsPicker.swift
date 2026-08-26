@@ -159,6 +159,8 @@ struct AddExistingItemsPicker: View {
                 selectedIds: $selectedIds,
                 emptyIcon: "shippingbox",
                 filterScope: (activeTab == .outside || activeTab == .projects) ? nil : (activeTab == .inventory ? .inventory : .project),
+                filterSpaces: activeTab == .inventory ? [] : projectContext.spaces,
+                filterBudgetCategories: activeTab == .inventory ? [] : projectContext.budgetCategories,
                 pickerItems: pickerItems
             )
         }

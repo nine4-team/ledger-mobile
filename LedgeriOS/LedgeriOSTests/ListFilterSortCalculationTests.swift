@@ -14,6 +14,8 @@ private func makeItem(
     currentSource: String? = nil,
     projectId: String? = nil,
     spaceId: String? = nil,
+    purchasedBy: String? = nil,
+    budgetCategoryId: String? = nil,
     projectPriceCents: Int? = nil,
     purchasePriceCents: Int? = nil,
     images: [AttachmentRef]? = nil,
@@ -31,6 +33,8 @@ private func makeItem(
     item.currentSource = currentSource
     item.projectId = projectId
     item.spaceId = spaceId
+    item.purchasedBy = purchasedBy
+    item.budgetCategoryId = budgetCategoryId
     item.projectPriceCents = projectPriceCents
     item.purchasePriceCents = purchasePriceCents
     item.images = images
@@ -41,6 +45,90 @@ private func makeItem(
 
 @Suite("List Filter/Sort Calculation Tests")
 struct ListFilterSortCalculationTests {
+
+    // MARK: - Grouped Facet Selection
+
+    @Test("Toggling a value from All excludes only that value")
+    func facetSelectionExcludesFromAll() {
+        var selection = ItemFacetSelection.all
+
+        selection.toggle("purchased", availableValues: ["purchased", "returned", "sold"])
+
+        #expect(selection.includes("returned"))
+        #expect(selection.includes("sold"))
+        #expect(!selection.includes("purchased"))
+        #expect(selection.isActive)
+    }
+
+    @Test("Select None followed by a value creates an only selection")
+    func facetSelectionBuildsOnlySelection() {
+        var selection = ItemFacetSelection.all
+        selection.selectNone()
+
+        selection.toggle("space-1", availableValues: ["space-1", "space-2"])
+
+        #expect(selection.includes("space-1"))
+        #expect(!selection.includes("space-2"))
+    }
+
+    @Test("Status can show everything except purchased")
+    func groupedStatusExcludesPurchased() {
+        var filters = ItemFilterState()
+        filters.status.toggle(
+            ItemFilterValues.status(.purchased),
+            availableValues: ItemFilterValues.allStatusValues
+        )
+        let items = [
+            makeItem(name: "To buy", status: .toPurchase),
+            makeItem(name: "Bought", status: .purchased),
+            makeItem(name: "Returning", status: .toReturn),
+            makeItem(name: "No status"),
+        ]
+
+        let result = ListFilterSortCalculations.applyGroupedFilters(items, filters: filters)
+
+        #expect(result.map(\.name) == ["To buy", "Returning", "No status"])
+    }
+
+    @Test("Source exclusion uses current source and includes missing sources")
+    func groupedSourceExcludesDisplayedInventorySource() {
+        let inventorySource = ItemFilterValues.normalizedText("1584 Design Inventory")
+        var filters = ItemFilterState()
+        filters.source.toggle(
+            inventorySource,
+            availableValues: [inventorySource, ItemFilterValues.normalizedText("Wayfair"), ItemFilterValues.missing]
+        )
+        let items = [
+            makeItem(name: "Inventory", source: "Wayfair", currentSource: "1584 DESIGN INVENTORY"),
+            makeItem(name: "Direct", source: "Wayfair", currentSource: "Wayfair"),
+            makeItem(name: "Missing"),
+        ]
+
+        let result = ListFilterSortCalculations.applyGroupedFilters(items, filters: filters)
+
+        #expect(result.map(\.name) == ["Direct", "Missing"])
+    }
+
+    @Test("Grouped filters OR within a facet and AND across facets")
+    func groupedFiltersCombineFacets() {
+        var filters = ItemFilterState()
+        filters.space.selectNone()
+        let availableSpaces: Set<String> = ["living", "bedroom", "kitchen"]
+        filters.space.toggle("living", availableValues: availableSpaces)
+        filters.space.toggle("bedroom", availableValues: availableSpaces)
+        filters.image.selectNone()
+        filters.image.toggle(ItemFilterValues.no, availableValues: ItemFilterValues.yesNoValues)
+        let items = [
+            makeItem(name: "Living missing image", spaceId: "living"),
+            makeItem(name: "Bedroom missing image", spaceId: "bedroom"),
+            makeItem(name: "Living with image", spaceId: "living", images: [AttachmentRef(url: "image")]),
+            makeItem(name: "Kitchen missing image", spaceId: "kitchen"),
+        ]
+
+        let result = ListFilterSortCalculations.applyGroupedFilters(items, filters: filters)
+
+        #expect(result.map(\.name) == ["Living missing image", "Bedroom missing image"])
+    }
 
     // MARK: - Filter: .all
 

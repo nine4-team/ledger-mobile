@@ -234,21 +234,31 @@ Items are displayed using the shared `SharedItemsList` component, which operates
 - **Filter:** Multi-select filter options (see below)
 - **Select all:** Toggle to select/deselect all visible items
 
-### Filter Options
+### Filter Facets
 
-| Filter | Key | Available In |
-|--------|-----|-------------|
-| Bookmarked | `bookmarked` | All |
-| From Inventory | `from-inventory` | Project |
-| To Return | `to-return` | All |
-| Returned | `returned` | All |
-| No SKU | `no-sku` | All |
-| No Name | `no-name` | All |
-| No Project Price | `no-project-price` | All; matches only when the normalized project price is not positive |
-| No Image | `no-image` | All |
-| No Transaction | `no-transaction` | All |
+Item filters use grouped multi-select facets. Values within one facet use OR logic;
+active facets combine with AND logic. Every facet supports both **All except**
+(start with All and deselect values) and **Only** (start with None and select values).
 
-Filter scope (`.project`, `.inventory`, `.spaceDetail`) determines which subset of filters is shown.
+| Facet | Values | Scope Notes |
+|-------|--------|-------------|
+| Status | To Purchase, Purchased, To Return, Returned, Sold, Not Set | All item lists |
+| Space | No Space plus the current scope's named spaces | Hidden in Space Detail; referenced archived spaces remain available |
+| Source | No Source plus sources derived from current items | Uses `currentSource ?? source`, matching item-card display and inventory masking |
+| Budget Category | Uncategorized plus available categories | Hidden in inventory, where items cannot have a category |
+| Purchased By | Client, Design Business, Not Set, plus encountered legacy values | All item lists |
+| Transaction | Has Transaction, No Transaction | All item lists |
+| Bookmark | Bookmarked, Not Bookmarked | All item lists |
+| Image | Has Image, No Image | All item lists |
+| SKU | Has SKU, No SKU | All item lists |
+| Name | Has Name, No Name | All item lists |
+| Project Price | Has Project Price, No Project Price | A meaningful price is a positive normalized project price |
+
+Examples: deselecting Purchased from Status shows every other status; deselecting
+the account's inventory label from Source shows direct-source and no-source items.
+When filters change, bulk selection is intersected with the visible results so a
+bulk action cannot affect hidden items. Item quick drafts are hidden while persisted
+item filters are active because draft statuses and fields use a different schema.
 
 ### Duplicate Grouping
 
