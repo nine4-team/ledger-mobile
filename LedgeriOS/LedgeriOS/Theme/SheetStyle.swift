@@ -13,6 +13,9 @@ enum SheetStyle {
     /// Input fields, creation/edit flows.
     case form
 
+    /// Input form kept short enough to leave a pinned reference panel visible.
+    case referenceForm
+
     /// Single-select from variable-length list.
     case picker
 
@@ -131,6 +134,12 @@ private struct IOSSheetStyleModifier: ViewModifier {
                 .presentationDetents([detent])
                 .presentationContentInteraction(.scrolls)
                 .presentationDragIndicator(.visible)
+        case .referenceForm:
+            content
+                .presentationDetents([detent])
+                .presentationContentInteraction(.scrolls)
+                .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled)
         }
     }
 
@@ -139,6 +148,7 @@ private struct IOSSheetStyleModifier: ViewModifier {
         case .quickMenu:              return .medium
         case .selectionMenu, .picker: return .fraction(0.65)
         case .form:                   return .fraction(0.85)
+        case .referenceForm:          return .fraction(0.60)
         case .fullSheet, .viewer:     return .large
         }
     }
@@ -154,6 +164,7 @@ extension SheetStyle {
         case .selectionMenu: return (400, 420)
         case .picker:        return (400, 420)
         case .form:          return (480, 560)
+        case .referenceForm: return (480, 520)
         case .fullSheet:     return (520, 640)
         case .viewer:        return (800, 700)
         }

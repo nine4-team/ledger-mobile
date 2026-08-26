@@ -127,8 +127,14 @@ private struct SpaceDetailContentView: View {
     @State private var showEditNotes = false
     @State private var showEditChecklists = false
     @State private var showDeleteConfirmation = false
+    @State private var showAddItemMenu = false
+    @State private var showCreateNewItem = false
     @State private var menuPendingAction: (() -> Void)?
     @State private var errorMessage: String?
+
+    // Image pinning
+    @State private var pinnedAttachment: AttachmentRef?
+    @State private var pinnedImageSource: [AttachmentRef] = []
 
     // Items picker
     @State private var showAddExistingItems = false
@@ -212,18 +218,25 @@ private struct SpaceDetailContentView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                AdaptiveContentWidth {
-                    VStack(alignment: .leading, spacing: Spacing.lg) {
-                        sectionsArea
+        PinnedImageLayout(
+            pinnedAttachment: pinnedAttachment,
+            allImages: pinnedImageSource,
+            onClose: { pinnedAttachment = nil },
+            onChangeImage: { pinnedAttachment = $0 }
+        ) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    AdaptiveContentWidth {
+                        VStack(alignment: .leading, spacing: Spacing.lg) {
+                            sectionsArea
+                        }
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.sm)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.sm)
                 }
-            }
-            .onReceive(findState.scrollToPublisher) { matchID in
-                withAnimation { proxy.scrollTo(matchID, anchor: .center) }
+                .onReceive(findState.scrollToPublisher) { matchID in
+                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
+                }
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -294,6 +307,38 @@ private struct SpaceDetailContentView: View {
                 context: .space(liveSpace),
                 projectId: projectId,
                 onDismiss: { showAddExistingItems = false }
+            )
+        }
+        .adaptivePresentation(isPresented: $showAddItemMenu, style: .quickMenu, onDismiss: {
+            menuPendingAction?()
+            menuPendingAction = nil
+        }) {
+            ActionMenuSheet(
+                title: "Add Item",
+                items: [
+                    ActionMenuItem(
+                        id: "create-new",
+                        label: "Create New Item",
+                        icon: "plus.square.fill",
+                        onPress: { showCreateNewItem = true }
+                    ),
+                    ActionMenuItem(
+                        id: "add-existing",
+                        label: "Add Existing Items",
+                        icon: "plus.square.on.square",
+                        onPress: { showAddExistingItems = true }
+                    ),
+                ],
+                onSelectAction: { action in menuPendingAction = action }
+            )
+        }
+        .adaptivePresentation(
+            isPresented: $showCreateNewItem,
+            style: pinnedAttachment == nil ? .form : .referenceForm
+        ) {
+            NewItemView(
+                context: projectId.map { .project($0, spaceId: liveSpace.id) } ?? .inventory,
+                initialSpaceId: liveSpace.id
             )
         }
         .confirmationDialog("Delete Space?", isPresented: $showDeleteConfirmation) {
@@ -438,6 +483,9 @@ private struct SpaceDetailContentView: View {
             },
             onSetPrimary: { attachment in
                 setPrimaryImage(attachment)
+            },
+            onPinImage: { attachment in
+                pinImage(attachment)
             }
         )
         .padding(.top, Spacing.xs)
@@ -469,7 +517,7 @@ private struct SpaceDetailContentView: View {
             }),
             getMenuItems: { spaceItemMenuItems(for: $0) },
             emptyMessage: "No items in this space",
-            onAdd: { showAddExistingItems = true },
+            onAdd: { showAddItemMenu = true },
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             filterScope: .spaceDetail,
@@ -774,6 +822,11 @@ private struct SpaceDetailContentView: View {
             return copy
         }
         updateSpace(fields: ["images": images.map(attachmentDict)])
+    }
+
+    private func pinImage(_ attachment: AttachmentRef) {
+        pinnedImageSource = (liveSpace.images ?? []).filter(PinnedImageCalculations.canPin)
+        pinnedAttachment = attachment
     }
 
     private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {

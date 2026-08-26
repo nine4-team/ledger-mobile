@@ -32,6 +32,7 @@ struct NewItemView: View {
         initialSkuCandidates: [String] = [],
         initialQuantity: Int? = nil,
         initialImageRefs: [AttachmentRef] = [],
+        initialSpaceId: String? = nil,
         convertingProtoItemId: String? = nil,
         initialSourceHint: ProtoItemSourceHint? = nil,
         onCreated: (([String]) -> Void)? = nil
@@ -42,6 +43,7 @@ struct NewItemView: View {
         self._notes = State(initialValue: initialNotes ?? "")
         self._sku = State(initialValue: initialSku ?? "")
         self._quantity = State(initialValue: min(max(initialQuantity ?? 1, 1), 9999))
+        self._selectedSpaceId = State(initialValue: initialSpaceId)
         self.initialSkuCandidates = initialSkuCandidates
         self.initialImageRefs = initialImageRefs
         self.convertingProtoItemId = convertingProtoItemId
@@ -361,7 +363,8 @@ struct NewItemView: View {
             projectCategoryListener = nil
         }
         .onAppear {
-            if case .project(_, let spaceId) = resolvedContext {
+            if selectedSpaceId == nil,
+               case .project(_, let spaceId) = resolvedContext {
                 selectedSpaceId = spaceId
             }
         }
