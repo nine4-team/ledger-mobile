@@ -483,3 +483,68 @@ struct ReturnedPaidItemCreditContextTests {
         #expect(contexts.isEmpty)
     }
 }
+
+@Suite("InvoiceLineCalculations — project price locking")
+struct ProjectPriceLockingTests {
+
+    @Test("paid invoice membership locks an item's project price")
+    func paidInvoiceLocksProjectPrice() {
+        var invoice = Invoice()
+        invoice.status = .paid
+        invoice.projectId = "project1"
+        invoice.itemIds = ["item1"]
+
+        #expect(InvoiceLineCalculations.isProjectPriceLocked(
+            itemId: "item1",
+            projectId: "project1",
+            invoices: [invoice]
+        ))
+    }
+
+    @Test("created, sent, and canceled invoices leave project price editable")
+    func openInvoicesLeaveProjectPriceEditable() {
+        let invoices = [InvoiceStatus.created, .sent, .canceled].map { status in
+            var invoice = Invoice()
+            invoice.status = status
+            invoice.projectId = "project1"
+            invoice.itemIds = ["item1"]
+            return invoice
+        }
+
+        #expect(!InvoiceLineCalculations.isProjectPriceLocked(
+            itemId: "item1",
+            projectId: "project1",
+            invoices: invoices
+        ))
+    }
+
+    @Test("paid legacy line locks even when flat membership is missing")
+    func paidLineLocksWithoutMembershipIndex() {
+        var invoice = Invoice()
+        invoice.status = .paid
+        invoice.projectId = "project1"
+        invoice.lines = [
+            InvoiceLine(sourceType: .item, sourceId: "item1", amountCents: 10_000, sign: .charge),
+        ]
+
+        #expect(InvoiceLineCalculations.isProjectPriceLocked(
+            itemId: "item1",
+            projectId: "project1",
+            invoices: [invoice]
+        ))
+    }
+
+    @Test("paid invoice from a prior project does not lock the current sale")
+    func priorProjectPaidInvoiceDoesNotLockCurrentProjectPrice() {
+        var invoice = Invoice()
+        invoice.status = .paid
+        invoice.projectId = "oldProject"
+        invoice.itemIds = ["item1"]
+
+        #expect(!InvoiceLineCalculations.isProjectPriceLocked(
+            itemId: "item1",
+            projectId: "newProject",
+            invoices: [invoice]
+        ))
+    }
+}

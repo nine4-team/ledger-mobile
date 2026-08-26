@@ -177,7 +177,7 @@ or { error: { code, message, hint } }</div>
 <p><code>sell_items</code>, <code>return_items</code>, and <code>move_items_between_projects</code> accept <code>dryRun: true</code>. You get the full plan — the new Purchase/Return/Sale-to-Inventory transaction shape, item updates, source-transaction removals, lineage edges — with zero side effects.</p>
 <details>
   <summary>How it actually works</summary>
-  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, each tool computes its plan (including the frozen <code>amountCents</code> snapshot and itemIds) and either returns it (<code>dryRun: true</code>) or commits a Firestore batch. Since the per-batch inventory movement redesign, each move produces immutable transaction records — there are no long-lived aggregators to mutate.</p>
+  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, each tool computes its plan (including the initial <code>amountCents</code> snapshot and itemIds) and either returns it (<code>dryRun: true</code>) or commits a Firestore batch. Each movement creates a separate transaction rather than mutating a long-lived aggregator. A project-side Purchase from Inventory has one controlled exception: its amount/subtotal follow later effective project-price changes until the item is on a paid invoice.</p>
 </details>
 <details>
   <summary>Why</summary>

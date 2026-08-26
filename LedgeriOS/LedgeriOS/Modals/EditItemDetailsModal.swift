@@ -4,6 +4,7 @@ import SwiftUI
 /// Field order (FR-8.1): Name, Source, SKU, Purchase Price, Project Price, Market Value.
 struct EditItemDetailsModal: View {
     let item: Item
+    let isProjectPriceLocked: Bool
     let onSave: ([String: Any]) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -16,8 +17,13 @@ struct EditItemDetailsModal: View {
     @State private var projectPrice: String
     @State private var marketValue: String
 
-    init(item: Item, onSave: @escaping ([String: Any]) -> Void) {
+    init(
+        item: Item,
+        isProjectPriceLocked: Bool = false,
+        onSave: @escaping ([String: Any]) -> Void
+    ) {
         self.item = item
+        self.isProjectPriceLocked = isProjectPriceLocked
         self.onSave = onSave
         _name = State(initialValue: item.displayName)
         _source = State(initialValue: item.source ?? "")
@@ -45,6 +51,14 @@ struct EditItemDetailsModal: View {
                     .platformKeyboardType(.decimalPad)
                 FormField(label: "Project Price", text: $projectPrice, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
+                    .disabled(isProjectPriceLocked)
+                    .opacity(isProjectPriceLocked ? 0.55 : 1)
+                if isProjectPriceLocked {
+                    Text("Project price is locked because this item is on a paid invoice.")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 FormField(label: "Market Value", text: $marketValue, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
             }
@@ -78,10 +92,12 @@ struct EditItemDetailsModal: View {
             fields["purchasePriceCents"] = NSNull()
         }
 
-        if let cents = parseCents(projectPrice) {
-            fields["projectPriceCents"] = cents
-        } else if projectPrice.isEmpty {
-            fields["projectPriceCents"] = NSNull()
+        if !isProjectPriceLocked {
+            if let cents = parseCents(projectPrice) {
+                fields["projectPriceCents"] = cents
+            } else if projectPrice.isEmpty {
+                fields["projectPriceCents"] = NSNull()
+            }
         }
 
         if let cents = parseCents(marketValue) {

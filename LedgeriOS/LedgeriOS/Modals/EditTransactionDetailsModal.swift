@@ -7,6 +7,7 @@ import SwiftUI
 struct EditTransactionDetailsModal: View {
     let transaction: Transaction
     let budgetCategories: [BudgetCategory]
+    let isAccountingLocked: Bool
     let onSave: ([String: Any]) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -27,9 +28,15 @@ struct EditTransactionDetailsModal: View {
     // Sheet presentation
     @State private var showCategoryPicker = false
 
-    init(transaction: Transaction, budgetCategories: [BudgetCategory], onSave: @escaping ([String: Any]) -> Void) {
+    init(
+        transaction: Transaction,
+        budgetCategories: [BudgetCategory],
+        isAccountingLocked: Bool = false,
+        onSave: @escaping ([String: Any]) -> Void
+    ) {
         self.transaction = transaction
         self.budgetCategories = budgetCategories
+        self.isAccountingLocked = isAccountingLocked
         self.onSave = onSave
 
         _source = State(initialValue: transaction.source ?? "")
@@ -74,10 +81,19 @@ struct EditTransactionDetailsModal: View {
             VStack(spacing: Spacing.lg) {
                 // 1. Vendor/Source
                 FormField(label: "Vendor / Source", text: $source, placeholder: "e.g. Amazon, Wayfair")
+                    .disabled(isAccountingLocked)
 
                 // 2. Amount
                 FormField(label: "Amount ($)", text: $amountText, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
+                    .disabled(isAccountingLocked)
+
+                if isAccountingLocked {
+                    Text("Movement source, totals, type, and category are managed by the inventory workflow. For a Purchase from Inventory, edit the sold item's project price to update its total.")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 // 3. Date
                 FormDateField(label: "Date", date: $transactionDate)
@@ -97,6 +113,7 @@ struct EditTransactionDetailsModal: View {
                 FormSelect(label: "Transaction Type", selection: $transactionType, options:
                     TransactionType.normalEntryCases.map { ($0.rawValue, $0.displayLabel) }
                 )
+                .disabled(isAccountingLocked)
 
                 // 7. Payable
                 FormSelect(label: "Payable", selection: $reimbursementType, options: [
@@ -113,6 +130,7 @@ struct EditTransactionDetailsModal: View {
                 ) {
                     showCategoryPicker = true
                 }
+                .disabled(isAccountingLocked)
 
                 // 9. Email Receipt
                 FormToggle(label: "Email Receipt", isOn: $hasEmailReceipt)
@@ -121,9 +139,11 @@ struct EditTransactionDetailsModal: View {
                 if isItemizedCategory {
                     FormField(label: "Subtotal ($)", text: $subtotalText, placeholder: "0.00")
                         .platformKeyboardType(.decimalPad)
+                        .disabled(isAccountingLocked)
 
                     FormField(label: "Tax Rate (%)", text: $taxRateText, placeholder: "0.00")
                         .platformKeyboardType(.decimalPad)
+                        .disabled(isAccountingLocked)
 
                     // Read-only computed tax amount
                     DetailRow(label: "Tax Amount", value: computedTaxAmount, showDivider: false)
@@ -149,31 +169,34 @@ struct EditTransactionDetailsModal: View {
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
 
         var fields: [String: Any] = [
-            "source": source,
             "transactionDate": dateFormatter.string(from: transactionDate),
             "status": isCanceled ? "canceled" : NSNull(),
             "purchasedBy": purchasedBy,
-            "transactionType": transactionType,
             "reimbursementType": reimbursementType,
             "hasEmailReceipt": hasEmailReceipt,
         ]
 
-        if let cents = textToCents(amountText) {
-            fields["amountCents"] = cents
-        }
+        if !isAccountingLocked {
+            fields["source"] = source
+            fields["transactionType"] = transactionType
 
-        if let catId = budgetCategoryId {
-            fields["budgetCategoryId"] = catId
-        } else {
-            fields["budgetCategoryId"] = NSNull()
-        }
-
-        if isItemizedCategory {
-            if let subtotal = textToCents(subtotalText) {
-                fields["subtotalCents"] = subtotal
+            if let cents = textToCents(amountText) {
+                fields["amountCents"] = cents
             }
-            if let rate = Double(taxRateText), rate > 0 {
-                fields["taxRatePct"] = rate
+
+            if let catId = budgetCategoryId {
+                fields["budgetCategoryId"] = catId
+            } else {
+                fields["budgetCategoryId"] = NSNull()
+            }
+
+            if isItemizedCategory {
+                if let subtotal = textToCents(subtotalText) {
+                    fields["subtotalCents"] = subtotal
+                }
+                if let rate = Double(taxRateText), rate > 0 {
+                    fields["taxRatePct"] = rate
+                }
             }
         }
 

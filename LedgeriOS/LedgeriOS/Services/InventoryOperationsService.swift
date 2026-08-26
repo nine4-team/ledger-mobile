@@ -53,8 +53,10 @@ struct InventorySpaceScope: Sendable, Equatable {
 /// ## Per-Batch Inventory Movement Transactions
 /// Inventory → project creates ONE new Purchase transaction with an auto-ID.
 /// Project → inventory acquisition creates ONE new Sale transaction.
-/// Accounting shape fields (amountCents, budgetCategoryId, type, source,
-/// projectId) are frozen at creation and never mutated. `itemIds` tracks
+/// Structural accounting fields (budgetCategoryId, type, source, projectId)
+/// are frozen at creation. Movement totals reject direct client edits; the
+/// trusted item-price trigger may maintain amount/subtotal on an open
+/// project-side Purchase-from-Inventory. `itemIds` tracks
 /// current membership and can change when items leave via returns/sales.
 ///
 /// Inventory movement direction is implicit in the transaction shape:
@@ -208,8 +210,9 @@ struct InventoryOperationsService {
     /// Purchases items from business inventory (or another project) into a destination project.
     /// Creates ONE new Purchase transaction per call. No long-lived aggregators.
     ///
-    /// The Purchase transaction's accounting shape (amountCents,
-    /// budgetCategoryId, projectId, type, source) is frozen at creation.
+    /// The Purchase transaction's structural accounting shape (budgetCategoryId,
+    /// projectId, type, source) is frozen at creation. Its initial amount is
+    /// server-maintained when an attached sold item is repriced before payment.
     func sellToProject(
         items: [Item],
         destinationProjectId: String,
@@ -240,10 +243,10 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
-        // Frozen amount snapshot
+        // Initial project-price amount
         let totals = Self.computeBatchTotals(items)
 
-        // 1. Create new Purchase transaction (auto-ID, frozen accounting shape)
+        // 1. Create new Purchase transaction (auto-ID, fixed structural shape)
         let purchaseId = UUID().uuidString
         let purchaseDocPath = "\(txPath)/\(purchaseId)"
         let today = Self.todayDateString()
@@ -1111,7 +1114,7 @@ struct InventoryOperationsService {
 
     // MARK: - Pure Helpers (internal for testability)
 
-    /// Frozen project-price snapshot for a batch of items.
+    /// Initial project-price total for a batch of items.
     /// Matches mcp-server/src/tools/inventory-operations.ts `computeProjectPriceTotals`.
     ///
     /// Missing project prices are initialized from a positive purchase price.

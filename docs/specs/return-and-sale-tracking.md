@@ -5,7 +5,7 @@
 This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the origin-aware project-to-inventory flow: items that came from inventory go home through a Return, while project-originated items enter inventory through a Sale-to-Inventory transaction.
 
 > **Related specs:**
-> - [sale-transactions.md](sale-transactions.md) — the active inventory movement transaction model (per-batch, frozen accounting fields)
+> - [sale-transactions.md](sale-transactions.md) — the active inventory movement transaction model (per-batch, frozen identity fields with one controlled destination-Purchase repricing exception)
 > - [inventory-as-store.md](inventory-as-store.md) — why returning to inventory is a return, not a sale
 > - [canonical-sales.md](canonical-sales.md) — the legacy canonical-sale model (historical reads only)
 

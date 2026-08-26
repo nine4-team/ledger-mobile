@@ -606,6 +606,7 @@ struct TransactionDetailView: View {
             EditTransactionDetailsModal(
                 transaction: currentTransaction,
                 budgetCategories: projectBudgetCategories,
+                isAccountingLocked: currentTransaction.isInventoryMovement,
                 onSave: { fields in
                     updateTransaction(fields: fields)
                 }

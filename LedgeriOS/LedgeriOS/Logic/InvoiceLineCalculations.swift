@@ -35,6 +35,24 @@ enum InvoiceLineCalculations {
         var lineId: String
     }
 
+    /// Once an item has been collected on a paid invoice, its project price is
+    /// historical accounting input. Created and sent invoices remain live in
+    /// the current billing model; paid invoice lines are the freeze boundary.
+    static func isProjectPriceLocked(
+        itemId: String,
+        projectId: String?,
+        invoices: [Invoice]
+    ) -> Bool {
+        guard let projectId else { return false }
+        return invoices.contains { invoice in
+            guard invoice.status == .paid, invoice.projectId == projectId else { return false }
+            if invoice.itemIds?.contains(itemId) == true { return true }
+            return invoice.lines?.contains { line in
+                line.sourceType == .item && line.sourceId == itemId
+            } == true
+        }
+    }
+
     static func returnedPaidItemCreditLineId(
         paidInvoiceId: String,
         paidInvoiceLineId: String,

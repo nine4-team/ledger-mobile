@@ -25,9 +25,11 @@ import { effectiveProjectPriceCents } from "../util/item-pricing.js";
 //
 // Key invariants (also enforced by Firestore rules):
 //   • Each inventory movement creates at least one new Purchase, Sale, or
-//     Return transaction with an auto-ID. Accounting shape fields (amountCents,
-//     budgetCategoryId, type, source, projectId) are frozen at creation;
-//     itemIds tracks current active membership.
+//     Return transaction with an auto-ID. Structural fields (budgetCategoryId,
+//     type, source, projectId) are frozen at creation, and clients cannot edit
+//     totals directly. The trusted price trigger maintains an eligible unpaid
+//     project-side Purchase when an attached sold item is repriced. itemIds
+//     tracks current active membership.
 //   • Inventory movement direction is derived from transaction shape:
 //        - inventory → project: Purchase with `budgetCategoryId` set.
 //        - project → inventory acquisition: Sale with source-category `budgetCategoryId`.
@@ -374,8 +376,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "valid correction/work-queue state until the proper transaction exists. Inventing fake transactions " +
       "to justify bad data pollutes the books.\n\n" +
       "Ask the user to pick the category from get_project_budget_categories BEFORE calling — one " +
-      "category per batch. Accounting fields (amountCents, budgetCategoryId, projectId, type, " +
-      "source) are frozen at creation; itemIds tracks active membership. Cap: 100 items per call.\n\n" +
+      "category per batch. Structural fields (budgetCategoryId, projectId, type, source) are frozen; " +
+      "clients cannot edit totals directly. Eligible sold-item project-price changes update this " +
+      "project Purchase automatically. itemIds tracks active membership. Cap: 100 items per call.\n\n" +
       "SPACE ASSIGNMENTS: destinationSpaceAssignments may restore selected per-item assignments " +
       "captured during correction. Every supplied space is validated against the destination project; " +
       "omitted items land unassigned.\n\n" +
@@ -970,7 +973,7 @@ async function commitSellToProject(
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
 
-  // 1. New Purchase transaction (frozen accounting shape).
+  // 1. New Purchase transaction (fixed structural shape, server-maintained open total).
   const purchaseRef = txCol.doc();
   batch.set(purchaseRef, {
     type: "Purchase",

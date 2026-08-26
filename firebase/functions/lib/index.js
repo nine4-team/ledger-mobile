@@ -2,10 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInviteHttp = exports.acceptInvite = exports.previewInviteHttp = exports.createProject = exports.createAccountHttp = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = exports.enforceItemProjectPriceFloor = void 0;
 const admin = require("firebase-admin");
+const node_crypto_1 = require("node:crypto");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
 const firestore_2 = require("firebase-functions/v2/firestore");
 const transactionAuditPricing_1 = require("./transactionAuditPricing");
+const inventoryMovementRepricing_1 = require("./inventoryMovementRepricing");
 const itemPricing_1 = require("./itemPricing");
 admin.initializeApp();
 /**
@@ -185,12 +187,103 @@ exports.onLineageEdgeCreated = (0, firestore_2.onDocumentCreated)('accounts/{acc
         console.error(`[onLineageEdgeCreated] isComplete recompute failed for tx ${fromTransactionId}:`, err);
     }
 });
+function timestampMillis(value) {
+    if (value instanceof firestore_1.Timestamp)
+        return value.toMillis();
+    if (value instanceof Date)
+        return value.getTime();
+    if (typeof value === 'string') {
+        const parsed = Date.parse(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+}
+async function itemPriceWasLockedBeforeChange(db, accountId, projectId, itemId, itemUpdateMillis) {
+    const invoices = await db
+        .collection(`accounts/${accountId}/invoices`)
+        .where('projectId', '==', projectId)
+        .get();
+    return invoices.docs.some((invoiceDoc) => {
+        const invoice = invoiceDoc.data() ?? {};
+        if (!(0, inventoryMovementRepricing_1.isPaidInvoiceForItem)(invoice, projectId, itemId))
+            return false;
+        // Legacy paid invoices may not have datePaid. Treat those as already
+        // locked; for current invoices, compare timestamps so a delayed item event
+        // that happened before collection still applies.
+        const paidAtMillis = timestampMillis(invoice.datePaid);
+        return paidAtMillis == null || paidAtMillis <= itemUpdateMillis;
+    });
+}
+async function syncProjectInventoryPurchaseAmount(db, accountId, itemId, eventId, itemUpdateMillis, before, after) {
+    if (!(0, inventoryMovementRepricing_1.hasStableProjectTransactionAssociation)(before, after))
+        return;
+    const transactionId = after.transactionId;
+    const projectId = after.projectId;
+    const change = (0, inventoryMovementRepricing_1.projectPriceChange)(before, after);
+    if (change.subtotalDeltaCents === 0 && change.amountDeltaCents === 0)
+        return;
+    const transactionRef = db.doc(`accounts/${accountId}/transactions/${transactionId}`);
+    const initialTransaction = await transactionRef.get();
+    if (!initialTransaction.exists)
+        return;
+    const initialData = initialTransaction.data() ?? {};
+    if (!(0, inventoryMovementRepricing_1.isProjectInventoryPurchase)(initialData) || initialData.projectId !== projectId)
+        return;
+    if (await itemPriceWasLockedBeforeChange(db, accountId, projectId, itemId, itemUpdateMillis)) {
+        console.log(`[onItemPriceChanged] preserving paid Purchase-from-Inventory ${transactionId} for item ${itemId}`);
+        return;
+    }
+    const eventKey = (0, node_crypto_1.createHash)('sha256')
+        .update(`${transactionId}:${eventId}`)
+        .digest('hex');
+    const markerRef = db.doc(`accounts/${accountId}/transactionRepricingEvents/${eventKey}`);
+    await db.runTransaction(async (firestoreTransaction) => {
+        const [markerSnapshot, transactionSnapshot] = await Promise.all([
+            firestoreTransaction.get(markerRef),
+            firestoreTransaction.get(transactionRef),
+        ]);
+        if (markerSnapshot.exists || !transactionSnapshot.exists)
+            return;
+        const transactionData = transactionSnapshot.data() ?? {};
+        if (!(0, inventoryMovementRepricing_1.isProjectInventoryPurchase)(transactionData) || transactionData.projectId !== projectId)
+            return;
+        const activeItemIds = Array.isArray(transactionData.itemIds) ? transactionData.itemIds : [];
+        const adjusted = (0, inventoryMovementRepricing_1.adjustInventoryPurchaseTotals)(transactionData, change, activeItemIds.includes(itemId));
+        const fields = {
+            amountCents: adjusted.amountCents,
+            lastItemProjectPriceAdjustment: {
+                itemId,
+                subtotalDeltaCents: change.subtotalDeltaCents,
+                amountDeltaCents: change.amountDeltaCents,
+                eventKey,
+                appliedAt: firestore_1.FieldValue.serverTimestamp(),
+            },
+            updatedAt: firestore_1.FieldValue.serverTimestamp(),
+        };
+        if (adjusted.subtotalCents != null)
+            fields.subtotalCents = adjusted.subtotalCents;
+        if (adjusted.audit != null)
+            fields.audit = adjusted.audit;
+        if (typeof adjusted.isComplete === 'boolean')
+            fields.isComplete = adjusted.isComplete;
+        firestoreTransaction.update(transactionRef, fields);
+        firestoreTransaction.create(markerRef, {
+            accountId,
+            projectId,
+            transactionId,
+            itemId,
+            subtotalDeltaCents: change.subtotalDeltaCents,
+            amountDeltaCents: change.amountDeltaCents,
+            createdAt: firestore_1.FieldValue.serverTimestamp(),
+        });
+    });
+}
 /**
- * Recompute isComplete for any parent transactions that reference this item
- * when the item's price changes. Inventory movement transactions are
- * intentionally NOT touched: their `amountCents` is a frozen snapshot at
- * creation time and must never be rewritten here. Legacy canonical sales are
- * also frozen historical records. Both are skipped below.
+ * Keep ordinary transaction completeness in sync with item cost changes. For
+ * a sold item that is still associated with its project-side
+ * Purchase-from-Inventory transaction, also apply the project-price delta to
+ * that transaction's subtotal/amount. Original vendor purchases and all
+ * project-egress movement transactions remain untouched.
  */
 exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accountId}/items/{itemId}', async (event) => {
     const before = event.data?.before.data() ?? null;
@@ -201,11 +294,29 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
     const afterPurchase = after.purchasePriceCents ?? null;
     const beforeProject = before.projectPriceCents ?? null;
     const afterProject = after.projectPriceCents ?? null;
-    if (beforePurchase === afterPurchase && beforeProject === afterProject)
+    const beforeTaxRate = before.taxRatePct ?? null;
+    const afterTaxRate = after.taxRatePct ?? null;
+    if (beforePurchase === afterPurchase &&
+        beforeProject === afterProject &&
+        beforeTaxRate === afterTaxRate)
         return;
     const accountId = event.params.accountId;
     const itemId = event.params.itemId;
     const db = (0, firestore_1.getFirestore)();
+    // Production snapshots expose updateTime; the Functions emulator may omit
+    // it from the decoded snapshot even though the CloudEvent carries `time`.
+    // Preserve the same ordering contract in both environments.
+    const itemUpdateMillis = timestampMillis(event.data?.after.updateTime) ??
+        timestampMillis(event.time);
+    if (itemUpdateMillis == null)
+        return;
+    try {
+        await syncProjectInventoryPurchaseAmount(db, accountId, itemId, event.id, itemUpdateMillis, before, after);
+    }
+    catch (err) {
+        console.error(`[onItemPriceChanged] Purchase-from-Inventory amount sync failed for item ${itemId}:`, err);
+        throw err;
+    }
     const isFrozenInventoryMovement = (txData) => {
         const rawType = (txData.type ?? txData.transactionType ?? null);
         const type = typeof rawType === 'string' ? rawType.trim().toLowerCase() : '';
@@ -1138,12 +1249,35 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
 }
 /** Fields that, when they are the ONLY changes, should not re-trigger isComplete computation. */
 const IS_COMPLETE_LOOP_GUARD_FIELDS = new Set(['isComplete', 'audit', 'updatedAt']);
+const PROJECT_PRICE_ADJUSTMENT_FIELDS = new Set([
+    'amountCents',
+    'subtotalCents',
+    'isComplete',
+    'audit',
+    'lastItemProjectPriceAdjustment',
+    'updatedAt',
+]);
 function onlyLoopGuardFieldsChanged(before, after) {
     if (!before || !after)
         return false;
     const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
     for (const key of allKeys) {
         if (IS_COMPLETE_LOOP_GUARD_FIELDS.has(key))
+            continue;
+        if (JSON.stringify(before[key]) !== JSON.stringify(after[key]))
+            return false;
+    }
+    return true;
+}
+function onlyProjectPriceAdjustmentFieldsChanged(before, after) {
+    if (!before || !after)
+        return false;
+    if (JSON.stringify(before.lastItemProjectPriceAdjustment) === JSON.stringify(after.lastItemProjectPriceAdjustment)) {
+        return false;
+    }
+    const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    for (const key of allKeys) {
+        if (PROJECT_PRICE_ADJUSTMENT_FIELDS.has(key))
             continue;
         if (JSON.stringify(before[key]) !== JSON.stringify(after[key]))
             return false;
@@ -1164,6 +1298,7 @@ exports.onTransactionWritten = (0, firestore_2.onDocumentWritten)('accounts/{acc
     if (beforeData && afterData && onlyLoopGuardFieldsChanged(beforeData, afterData)) {
         return;
     }
+    const isProjectPriceAdjustment = onlyProjectPriceAdjustmentFieldsChanged(beforeData, afterData);
     // --- Budget summary recalculation (existing logic, project-scoped only) ---
     const beforeProjectId = typeof beforeData?.projectId === 'string' ? beforeData.projectId : null;
     const afterProjectId = typeof afterData?.projectId === 'string' ? afterData.projectId : null;
@@ -1174,7 +1309,7 @@ exports.onTransactionWritten = (0, firestore_2.onDocumentWritten)('accounts/{acc
         : Promise.resolve();
     // --- isComplete computation (runs for ALL transactions) ---
     let isCompletePromise = Promise.resolve();
-    if (afterData) {
+    if (afterData && !isProjectPriceAdjustment) {
         // Transaction exists (create or update) — compute isComplete
         isCompletePromise = (async () => {
             try {

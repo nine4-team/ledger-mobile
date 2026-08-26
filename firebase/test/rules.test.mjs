@@ -40,6 +40,7 @@ const TARGET_MEMBER_ID = 'target_member_rules_test';
 const SALE_ID = 'sale_new_perbatch';
 const LEGACY_SALE_ID = 'SALE_legacy_business_to_project_cat1';
 const PURCHASE_ID = 'tx_purchase';
+const INVENTORY_PURCHASE_ID = 'tx_inventory_purchase';
 
 const results = [];
 let failures = 0;
@@ -118,6 +119,18 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     amountCents: 3000,
     itemIds: ['itemX'],
   });
+
+  // Project-side Purchase created by selling an item from business inventory.
+  // Clients cannot edit its totals directly; the trusted price trigger can.
+  await setDoc(doc(db, `accounts/${ACCOUNT_ID}/transactions/${INVENTORY_PURCHASE_ID}`), {
+    type: 'Purchase',
+    source: 'Business Inventory',
+    projectId: 'proj1',
+    budgetCategoryId: 'cat1',
+    amountCents: 12000,
+    subtotalCents: 12000,
+    itemIds: ['itemSold'],
+  });
 });
 
 const authed = testEnv.authenticatedContext(USER_ID).firestore();
@@ -125,6 +138,7 @@ const employeeAuthed = testEnv.authenticatedContext(EMPLOYEE_ID).firestore();
 const saleRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${SALE_ID}`);
 const legacyRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${LEGACY_SALE_ID}`);
 const purchaseRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${PURCHASE_ID}`);
+const inventoryPurchaseRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${INVENTORY_PURCHASE_ID}`);
 const targetMemberRef = doc(authed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
 const employeeTargetMemberRef = doc(employeeAuthed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
 const validItemRef = doc(authed, `accounts/${ACCOUNT_ID}/items/item_price_valid`);
@@ -154,6 +168,18 @@ await run('R5: update amountCents on legacy canonical sale → allowed', async (
 
 await run('R6: update amountCents on Purchase transaction → allowed (regression)', async () => {
   await assertSucceeds(updateDoc(purchaseRef, { amountCents: 77 }));
+});
+
+await run('R6a: direct amount update on Purchase-from-Inventory → rejected', async () => {
+  await assertFails(updateDoc(inventoryPurchaseRef, { amountCents: 15000 }));
+});
+
+await run('R6b: direct subtotal update on Purchase-from-Inventory → rejected', async () => {
+  await assertFails(updateDoc(inventoryPurchaseRef, { subtotalCents: 15000 }));
+});
+
+await run('R6c: notes update on Purchase-from-Inventory → allowed', async () => {
+  await assertSucceeds(updateDoc(inventoryPurchaseRef, { notes: 'reviewed' }));
 });
 
 await run('R7: update type on per-batch Sale → rejected', async () => {

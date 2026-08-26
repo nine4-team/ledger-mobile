@@ -191,6 +191,7 @@ service cloud.firestore {
               && resource.data.get('isCanonicalInventorySale', false) != true)
             || resource.data.get('isCanonicalInventorySale', false) == true
             || (request.resource.data.get('amountCents', null) == resource.data.get('amountCents', null)
+                && request.resource.data.get('subtotalCents', null) == resource.data.get('subtotalCents', null)
                 && request.resource.data.get('budgetCategoryId', null) == resource.data.get('budgetCategoryId', null)
                 && request.resource.data.get('type', null) == resource.data.get('type', null)
                 && request.resource.data.get('source', null) == resource.data.get('source', null)

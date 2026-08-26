@@ -49,7 +49,8 @@ function isFeeCategory(category: BudgetCategory): boolean {
 
 /**
  * Server-side defense matching Firestore rules: per-batch inventory movement
- * transactions have frozen accounting shape fields (amountCents,
+ * transactions reject direct edits to accounting shape fields (amountCents,
+ * subtotalCents,
  * budgetCategoryId, type, source, projectId). Legacy canonical sales
  * (isCanonicalInventorySale == true) are exempt so cancel_transaction, etc.
  * still work on historical docs.
@@ -58,6 +59,7 @@ function isFeeCategory(category: BudgetCategory): boolean {
  */
 const FROZEN_MOVEMENT_FIELDS = [
   "amountCents",
+  "subtotalCents",
   "budgetCategoryId",
   "type",
   "source",
@@ -83,8 +85,9 @@ function checkInventoryMovementImmutability(
 
   return validation(
     `Inventory movement transaction ${existing.id} has frozen accounting fields; cannot update: ${violated.join(", ")}.`,
-    "Per-batch inventory movement transactions are immutable after creation. If the movement needs to be " +
-      "corrected, cancel it via cancel_transaction and issue a new one via inventory movement tools. " +
+    "Per-batch inventory movement totals cannot be edited directly. Change an attached sold item's projectPriceCents " +
+      "to update an eligible project-side Purchase automatically. If another movement field needs correction, " +
+      "cancel it via cancel_transaction and issue a new one via inventory movement tools. " +
       "Mutable fields include itemIds, notes, status, updatedAt."
   );
 }
@@ -511,7 +514,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── update_transaction ─────────────────────────────────────────────────────
   server.tool(
     "update_transaction",
-    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. For a data correction that moves an ordinary transaction to business inventory, pass `projectId: null`; `budgetCategoryId` is cleared automatically, canonical item ownership is removed, and linked project items enter the categorized No Transaction work queue with correction lineage. This creates no Sale, Return, or Purchase movement. Generated inventory movement transactions retain their frozen accounting shape.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
+    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. For a data correction that moves an ordinary transaction to business inventory, pass `projectId: null`; `budgetCategoryId` is cleared automatically, canonical item ownership is removed, and linked project items enter the categorized No Transaction work queue with correction lineage. This creates no Sale, Return, or Purchase movement. Generated inventory movement transactions retain their fixed structural shape and reject direct total edits; change an attached sold item's projectPriceCents to update an eligible project-side Purchase automatically.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),

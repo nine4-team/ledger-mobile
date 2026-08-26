@@ -26,15 +26,16 @@ const ENTITIES: Record<string, EntitySchema> = {
     description:
       "A purchase, return, sale-to-inventory, or payment-to-business event. Owned by an account; may belong to a project. " +
       "Completeness (`isComplete`) is computed server-side — do not set manually. " +
-      "Inventory movement transactions are per-batch. Accounting fields are immutable after creation " +
-      "(amountCents, budgetCategoryId, type, source, projectId are frozen); itemIds tracks active membership.",
+      "Inventory movement transactions are per-batch. Structural fields are immutable after creation " +
+      "(budgetCategoryId, type, source, projectId are frozen); clients cannot edit totals directly. " +
+      "The server maintains an unpaid project-side Purchase amount when an attached sold item is repriced. itemIds tracks active membership.",
     requiredOnCreate: ["budgetCategoryId", "amountCents", "type", "notes"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID. Store exactly as returned." },
       { name: "projectId", type: "string?", description: "Null = business inventory." },
       { name: "type", type: "enum(transactionType)", description: "Normal creates accept enum(transactionTypeForCreate): Purchase, Return, or paymentToBusiness. Purchase covers goods/services; categoryType owns itemization. Client payments write paymentToBusiness and require categoryType == fee. Inventory operations create Sale. Legacy Fee/Expense/To Inventory are read/filter only." },
       { name: "source", type: "string", description: "Vendor for purchases/returns; inventory label for inventory movement transactions. Omit for paymentToBusiness client payments." },
-      { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on inventory movement transactions." },
+      { name: "amountCents", type: "number", description: "Total amount including tax, in cents. Direct edits are blocked on inventory movements; eligible project Purchase totals follow sold-item repricing server-side." },
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
       { name: "taxRatePct", type: "number?", description: "Percent, e.g. 8.25." },
       { name: "discount", type: "Discount?", description: "Transaction-level discount. amountCents is the exact positive discount applied against subtotal." },
@@ -48,7 +49,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       "Every mutation must include a dated audit note in `notes`.",
       "Client payments are paymentToBusiness transactions with categoryType == fee, no source/vendor, no item/tax/subtotal/discount fields, and no purchaser/reimbursement fields.",
       "Canceled transactions contribute $0 to budget calculations.",
-      "Inventory movement accounting fields (amountCents, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. itemIds, notes, status, and updatedAt are mutable.",
+      "Inventory movement structural fields (budgetCategoryId, type, source, projectId) are frozen after creation. Direct amountCents/subtotalCents edits are also blocked; eligible project Purchase totals are maintained only by the sold-item repricing trigger. itemIds, notes, status, and updatedAt are mutable.",
       "Legacy canonical sales (isCanonicalInventorySale == true) are exempt from Sale immutability for backwards compatibility.",
     ],
   },

@@ -387,15 +387,16 @@ struct InventoryOperationsIntegrationTests {
 
     // MARK: - E4: Price change after sale
 
-    /// E4: Updating an item's purchasePriceCents after a sale must NOT change
-    /// the inventory Purchase transaction's amountCents. Verifies `onItemPriceChanged`'s guard.
+    /// E4: Updating a sold item's projectPriceCents adjusts the separate
+    /// project-side Purchase-from-Inventory transaction. The vendor purchase is
+    /// not the item's active transaction and is never targeted by this trigger.
     ///
     /// Requires the **Functions emulator** in addition to Firestore. Boot with:
     /// ```
     /// firebase emulators:start --config firebase.test.json
     /// ```
-    @Test("E4: price change on moved item does not mutate Purchase tx amountCents")
-    func priceChangeDoesNotMutateSaleAmount() async throws {
+    @Test("E4: sold item project-price change updates project Purchase amountCents")
+    func priceChangeUpdatesProjectPurchaseAmount() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
         let destProjectId = "projE4-\(UUID().uuidString)"
@@ -423,19 +424,25 @@ struct InventoryOperationsIntegrationTests {
         let originalAmountCents = try #require(originalPurchase["amountCents"] as? Int)
         #expect(originalAmountCents == 12000)
 
-        // E4 action: change the item's purchasePriceCents (triggers onItemPriceChanged)
+        // E4 action: change the item's projectPriceCents (triggers onItemPriceChanged)
         try await Firestore.firestore()
             .document("\(itemsPath)/\(itemId)")
-            .updateData(["purchasePriceCents": 99999])
+            .updateData(["projectPriceCents": 15000])
 
-        // Wait for the Cloud Function trigger to fire (and short-circuit on the frozen Purchase tx)
-        try await Task.sleep(nanoseconds: 3_000_000_000) // 3s
+        // The full integration suite generates many emulator events in parallel.
+        // Poll the server-backed document rather than relying on a fixed delay.
+        var amountAfter = originalAmountCents
+        for _ in 0..<20 where amountAfter != 15000 {
+            try await Task.sleep(nanoseconds: 500_000_000)
+            let purchaseAfter = try #require(
+                await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)")
+            )
+            amountAfter = try #require(purchaseAfter["amountCents"] as? Int)
+        }
 
-        // Verify: Purchase tx amountCents is unchanged
-        let purchaseAfter = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)"))
-        let amountAfter = try #require(purchaseAfter["amountCents"] as? Int)
-        #expect(amountAfter == originalAmountCents,
-                "Purchase.amountCents changed from \(originalAmountCents) to \(amountAfter) — onItemPriceChanged guard failed")
+        // Verify: only the project-side Purchase amount follows the project price.
+        #expect(amountAfter == 15000,
+                "Purchase.amountCents should change from \(originalAmountCents) to 15000, got \(amountAfter)")
     }
 
     // MARK: - E6: Offline sell, reconnect

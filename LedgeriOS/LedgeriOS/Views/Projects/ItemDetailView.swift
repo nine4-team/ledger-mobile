@@ -135,6 +135,14 @@ private struct ItemDetailContentView: View {
         return initialItem ?? Item()
     }
 
+    private var isProjectPriceLocked: Bool {
+        InvoiceLineCalculations.isProjectPriceLocked(
+            itemId: itemId,
+            projectId: liveItem.projectId,
+            invoices: accountContext.allInvoices
+        )
+    }
+
     var body: some View {
         PinnedImageLayout(
             pinnedAttachment: pinnedAttachment,
@@ -200,7 +208,10 @@ private struct ItemDetailContentView: View {
         }
         // Edit Details
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
-            EditItemDetailsModal(item: liveItem) { fields in
+            EditItemDetailsModal(
+                item: liveItem,
+                isProjectPriceLocked: isProjectPriceLocked
+            ) { fields in
                 updateItem(fields: fields)
             }
         }
