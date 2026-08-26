@@ -200,6 +200,10 @@ struct ItemsTabView: View {
             ItemQuickDraftMergePicker(
                 protoItem: protoItem,
                 items: dedupeItems(projectContext.items + accountContext.allItems),
+                filterCatalog: ItemFilterCatalog(
+                    spaces: accountContext.allSpaces,
+                    budgetCategories: accountContext.allBudgetCategories
+                ),
                 onMerge: { item in
                     Task { await mergeProtoItem(protoItem, into: item) }
                 }
@@ -303,8 +307,10 @@ struct ItemsTabView: View {
                 selectedIds: $selectedItemIds,
                 emptyIcon: "cube.box",
                 filterScope: .project,
-                filterSpaces: projectContext.spaces,
-                filterBudgetCategories: projectContext.budgetCategories,
+                filterCatalog: ItemFilterCatalog(
+                    spaces: projectContext.spaces,
+                    budgetCategories: projectContext.budgetCategories
+                ),
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader),
                 externalSearchText: $itemSearchText

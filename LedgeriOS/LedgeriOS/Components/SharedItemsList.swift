@@ -1,6 +1,15 @@
 import SwiftUI
 import FirebaseFirestore
 
+struct ItemFilterCatalog {
+    let spaces: [Space]
+    let budgetCategories: [BudgetCategory]
+
+    static var empty: ItemFilterCatalog {
+        ItemFilterCatalog(spaces: [], budgetCategories: [])
+    }
+}
+
 struct SharedItemsList: View {
     let mode: ItemsListMode
     var onItemPress: ((String) -> Void)?
@@ -14,8 +23,7 @@ struct SharedItemsList: View {
     var selectedIds: Binding<Set<String>>?
     var emptyIcon: String = "tray"
     var filterScope: ItemFilterScope?
-    var filterSpaces: [Space] = []
-    var filterBudgetCategories: [BudgetCategory] = []
+    var filterCatalog: ItemFilterCatalog = .empty
     var inline: Bool = false
     var pickerItems: [Item]?
     var inlineSectionHeader: AnyView? = nil
@@ -104,7 +112,7 @@ struct SharedItemsList: View {
             let id = item.spaceId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             return id.isEmpty ? nil : id
         })
-        var choices = filterSpaces.compactMap { space -> ItemFilterChoice? in
+        var choices = filterCatalog.spaces.compactMap { space -> ItemFilterChoice? in
             guard let id = space.id else { return nil }
             guard space.isArchived != true || referencedIDs.contains(id) else { return nil }
             let baseLabel = space.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -124,7 +132,7 @@ struct SharedItemsList: View {
             let id = item.budgetCategoryId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             return id.isEmpty ? nil : id
         })
-        var choices = filterBudgetCategories.compactMap { category -> ItemFilterChoice? in
+        var choices = filterCatalog.budgetCategories.compactMap { category -> ItemFilterChoice? in
             guard let id = category.id else { return nil }
             return ItemFilterChoice(id: id, label: category.name)
         }

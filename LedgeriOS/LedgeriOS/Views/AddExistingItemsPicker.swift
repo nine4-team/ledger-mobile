@@ -108,6 +108,21 @@ struct AddExistingItemsPicker: View {
         }
     }
 
+    private var filterCatalog: ItemFilterCatalog {
+        switch activeTab {
+        case .suggested, .project:
+            return ItemFilterCatalog(
+                spaces: projectContext.spaces,
+                budgetCategories: projectContext.budgetCategories
+            )
+        case .outside, .inventory, .projects:
+            return ItemFilterCatalog(
+                spaces: accountContext.allSpaces,
+                budgetCategories: accountContext.allBudgetCategories
+            )
+        }
+    }
+
     private var navigationTitle: String {
         switch context {
         case .transaction: "Add Existing Items"
@@ -159,8 +174,7 @@ struct AddExistingItemsPicker: View {
                 selectedIds: $selectedIds,
                 emptyIcon: "shippingbox",
                 filterScope: (activeTab == .outside || activeTab == .projects) ? nil : (activeTab == .inventory ? .inventory : .project),
-                filterSpaces: activeTab == .inventory ? [] : projectContext.spaces,
-                filterBudgetCategories: activeTab == .inventory ? [] : projectContext.budgetCategories,
+                filterCatalog: filterCatalog,
                 pickerItems: pickerItems
             )
         }

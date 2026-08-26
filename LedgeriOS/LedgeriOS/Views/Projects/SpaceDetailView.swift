@@ -473,7 +473,10 @@ private struct SpaceDetailContentView: View {
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             filterScope: .spaceDetail,
-            filterBudgetCategories: projectId == nil ? [] : projectContext.budgetCategories,
+            filterCatalog: ItemFilterCatalog(
+                spaces: [],
+                budgetCategories: projectId == nil ? [] : projectContext.budgetCategories
+            ),
             inline: true
         )
         .padding(.top, Spacing.xs)

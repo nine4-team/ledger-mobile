@@ -712,6 +712,10 @@ struct TransactionDetailView: View {
             ItemQuickDraftMergePicker(
                 protoItem: protoItem,
                 items: dedupeItems(scopedItems + accountContext.allItems),
+                filterCatalog: ItemFilterCatalog(
+                    spaces: accountContext.allSpaces,
+                    budgetCategories: accountContext.allBudgetCategories
+                ),
                 onMerge: { item in
                     Task { await mergeProtoItem(protoItem, into: item) }
                 }
@@ -1205,8 +1209,10 @@ struct TransactionDetailView: View {
                 getBulkMenuItems: { bulkActionMenuItems },
                 selectedIds: $selectedItemIds,
                 filterScope: .project,
-                filterSpaces: scopedSpaces,
-                filterBudgetCategories: projectBudgetCategories,
+                filterCatalog: ItemFilterCatalog(
+                    spaces: scopedSpaces,
+                    budgetCategories: projectBudgetCategories
+                ),
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader)
             )

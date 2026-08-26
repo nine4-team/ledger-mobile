@@ -119,6 +119,10 @@ struct ItemQuickDraftDetailView: View {
             ItemQuickDraftMergePicker(
                 protoItem: liveProtoItem,
                 items: mergeCandidateItems,
+                filterCatalog: ItemFilterCatalog(
+                    spaces: accountContext.allSpaces,
+                    budgetCategories: accountContext.allBudgetCategories
+                ),
                 onMerge: { item in
                     Task { await mergeWithExistingItem(item) }
                 }
@@ -568,6 +572,7 @@ struct ItemQuickDraftDetailView: View {
 struct ItemQuickDraftMergePicker: View {
     let protoItem: ProtoItem
     let items: [Item]
+    let filterCatalog: ItemFilterCatalog
     var onMerge: (Item) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -607,6 +612,7 @@ struct ItemQuickDraftMergePicker: View {
                 ),
                 emptyMessage: "No items available",
                 emptyIcon: "cube.box",
+                filterCatalog: filterCatalog,
                 pickerItems: items
             )
         }
