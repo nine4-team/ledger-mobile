@@ -261,40 +261,95 @@ controls remained present. The only possible visible difference is one
 background-colored frame during the push; live listeners start on the following
 scheduler turn and retain their original freshness behavior.
 
+### 12. macOS Transaction Detail navigation transaction loop
+
+The signed release 53 app reproduced an indefinite beachball after opening an
+item from Universal Search and then opening its linked transaction. The exact
+production transaction contained 37 linked items. The process stayed at 97%
+CPU, and a five-second sample placed the main thread in repeated
+`NSHostingView` layout and SwiftUI `AttributeGraph` updates through
+`TransactionDetailView.body`, rather than waiting on Firestore, images, or the
+network.
+
+`TransactionDetailContainer` now uses the same lightweight deferred-mount
+boundary as Item Detail. It yields one scheduler turn before creating the
+state-heavy scoped context and full transaction detail graph. The existing UI,
+expanded sections, live listeners, scoped context, freshness, and nested
+navigation remain unchanged. The previously hanging transaction rendered in
+the remediated Debug app, Back remained responsive, a warm repeat completed,
+and CPU returned to 0.0% after each open.
+
+### 13. Navigation destination audit and Space Detail scope
+
+The app-wide destination audit found one additional high-risk entity screen:
+Space Detail had the same push-time combination of a large state graph, item
+list, modal hosts, and live listener. It also exposed a separate functional
+scope bug. Universal Search advertised a project space with 157 items, but the
+detail screen showed zero because Search did not own the `ProjectContext` that
+Space Detail used as its collection source.
+
+`SpaceDetailView` now uses the same deferred-mount boundary as Item and
+Transaction Detail. It reuses the active project context for in-project
+navigation, keeps inventory routes on `InventoryContext`, and activates an
+isolated live project context only for cross-project routes. The exact Search
+result opened in 1.951 seconds, displayed all 157 items, retained the complete
+space UI, and settled at 0.0% CPU.
+
+An in-project space also retained all 21 expected items and settled at 0.0%
+CPU. Its automation stabilization took 10.218 seconds while thumbnail views
+remained busy, which is tracked as image/network loading rather than the
+high-CPU navigation transaction defect.
+
+The audit also production-checked the nearest uncovered destinations. Search
+to Item Quick Draft completed in 1.470 seconds, a 554-item project opened in
+2.022 seconds, and its 207-row Invoice report opened in 1.479 seconds. The
+process settled at 0.0% CPU after the Quick Draft and report checks. No global
+navigation deferral was added to these measured-safe routes.
+
 ## Ranked Readout
 
-1. **Item Detail navigation transaction loop:** exact release 52 infinite-hang
+1. **Transaction Detail navigation transaction loop:** exact release 53
+   Search-item-to-linked-transaction hang reproduced at 97% CPU and fixed by
+   deferring the state-heavy transaction container one scheduler turn. The full
+   37-item transaction rendered, Back and a warm repeat completed, and CPU
+   returned to 0.0%.
+2. **Item Detail navigation transaction loop:** exact release 52 infinite-hang
    reproduction confirmed at 99-100% CPU and fixed by deferring the state-heavy
    detail mount one scheduler turn. Four production-backed opens and Back
    operations completed responsively with the full UI intact.
-2. **Zoomable full-image main-actor work:** strongest current
+3. **Zoomable full-image main-actor work:** strongest current
    interaction-specific causal candidate after a user reproduced a two-minute
    macOS beachball while opening an item image. Remediated; same-item retest is
    pending.
-3. **Leaked project listeners:** confirmed architectural defect and plausible
+4. **Cross-project Space Detail scope and navigation graph:** audit found that
+   Search opened a 157-item project space with no active project context and
+   displayed zero items. Space Detail now mounts after the push and activates a
+   live scoped context only when the ambient one does not own the project; the
+   exact route displayed all 157 items in 1.951 seconds at 0.0% settled CPU.
+5. **Leaked project listeners:** confirmed architectural defect and plausible
    source of progressively worsening browsing pressure. Fixed and regression
    tested.
-4. **Per-card linear metadata lookup churn:** measured frame-budget problem.
+6. **Per-card linear metadata lookup churn:** measured frame-budget problem.
    Fixed on the shared item-card/list path with synchronous freshness tests.
-5. **Main-actor financial publication:** a confirmed half-second synthetic
+7. **Main-actor financial publication:** a confirmed half-second synthetic
    callback path for limited-access accounts, reduced to approximately 3 ms.
-6. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
+8. **Repeated Firestore snapshot decoding:** confirmed architecture risk. A
    668-item full decode measured 10.537 ms. Subsequent one- and 20-document
    changes now measure 0.289 ms and 0.596 ms while preserving ordered,
    main-queue publication and live freshness.
-7. **Remaining account/project listener overlap:** item, transaction,
+9. **Remaining account/project listener overlap:** item, transaction,
    proto-item, and space listeners still overlap by scope. A stable trace is
    needed before choosing between account-listener suspension and deriving
    project subsets from account data.
-8. **Duplicate projects-list subscription:** confirmed redundant listener.
+10. **Duplicate projects-list subscription:** confirmed redundant listener.
    Removed by rendering the list from AccountContext's existing live projects.
-9. **Full-array observable publication:** 0.311-0.327 ms at 668 items, and
+11. **Full-array observable publication:** 0.311-0.327 ms at 668 items, and
    equal arrays do not notify observers. Not a primary cause; downstream SwiftUI
    fan-out from real changes remains pending physical measurement.
-10. **List filtering, grouping, and selection totals:** measured too small to be
+12. **List filtering, grouping, and selection totals:** measured too small to be
    a primary cause at 668 items, unless SwiftUI causes an unexpectedly large
    number of reevaluations.
-11. **Unbatched bulk item metadata writes:** confirmed implementation defect.
+13. **Unbatched bulk item metadata writes:** confirmed implementation defect.
    Status and space changes now use one validated batch operation across all five
    item bulk surfaces. This improves action completion and callback pressure but
    does not explain slow browsing before a bulk operation begins.
@@ -347,6 +402,14 @@ are debounced or suppressed.
 - Production-backed macOS Item Detail check: four opens from a 546-item project
   completed in 1.362-1.530 seconds, with Back completing in 1.241-1.272 seconds
   and settled CPU at 0.0%.
+- Production-backed macOS Transaction Detail check: the signed release 53 app
+  reproduced at 97% CPU; the remediated Debug app rendered the same 37-item
+  transaction repeatedly, returned Back in 2.359 seconds, and settled at 0.0%
+  CPU. The final full working-tree build completed the exact transition in
+  1.943 seconds.
+- Production-backed macOS Space Detail check: Search originally opened a
+  157-item project space with zero items. The scoped deferred route opened in
+  1.951 seconds, displayed all 157 items, and settled at 0.0% CPU.
 - Listener regression before fix: 0 of 9 registrations removed; test failed.
 - Listener regression after fix: 9 of 9 registrations removed; test passed.
 - macOS Debug scheme build: passed.

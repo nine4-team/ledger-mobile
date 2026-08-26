@@ -54,6 +54,45 @@ enum TransactionDetailResolution {
 /// transaction's project. Inventory transactions use the session InventoryContext.
 struct TransactionDetailContainer: View {
     let transactionId: String
+    let projectId: String?
+    let initialTransaction: Transaction?
+
+    @State private var isContentReady = false
+
+    init(
+        transactionId: String,
+        projectId: String?,
+        initialTransaction: Transaction? = nil
+    ) {
+        self.transactionId = transactionId
+        self.projectId = projectId
+        self.initialTransaction = initialTransaction
+    }
+
+    var body: some View {
+        Group {
+            if isContentReady {
+                TransactionDetailContainerContent(
+                    transactionId: transactionId,
+                    projectId: projectId,
+                    initialTransaction: initialTransaction
+                )
+            } else {
+                BrandColors.background
+                    .ignoresSafeArea()
+            }
+        }
+        .task {
+            // Keep the large detail and scoped-context graph out of the navigation push transaction.
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            isContentReady = true
+        }
+    }
+}
+
+private struct TransactionDetailContainerContent: View {
+    let transactionId: String
     let scope: TransactionDetailScope
     let initialTransaction: Transaction?
 

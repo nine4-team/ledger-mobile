@@ -3,6 +3,101 @@ import SwiftUI
 
 struct SpaceDetailView: View {
     let space: Space
+    let projectId: String?
+
+    @State private var isContentReady = false
+
+    init(space: Space, projectId: String? = nil) {
+        self.space = space
+        self.projectId = projectId ?? space.projectId
+    }
+
+    var body: some View {
+        Group {
+            if isContentReady {
+                SpaceDetailContainerContent(space: space, projectId: projectId)
+            } else {
+                BrandColors.background
+                    .ignoresSafeArea()
+            }
+        }
+        .task {
+            // Keep the large detail and scoped-context graph out of the navigation push transaction.
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            isContentReady = true
+        }
+    }
+}
+
+private struct SpaceDetailContainerContent: View {
+    let space: Space
+    let projectId: String?
+
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
+    @Environment(ProjectContext.self) private var ambientProjectContext
+    @State private var scopedProjectContext: ProjectContext
+
+    init(space: Space, projectId: String?) {
+        self.space = space
+        self.projectId = projectId
+        _scopedProjectContext = State(initialValue: ProjectContext(
+            projectService: ProjectService(),
+            transactionsService: TransactionsService(),
+            itemsService: ItemsService(),
+            protoItemsService: ProtoItemsService(),
+            spacesService: SpacesService(),
+            projectBudgetCategoriesService: ProjectBudgetCategoriesService()
+        ))
+    }
+
+    var body: some View {
+        if let projectId, ambientProjectContext.currentProjectId != projectId {
+            detail
+                .environment(scopedProjectContext)
+                .task(id: activationKey(projectId: projectId)) {
+                    guard let accountId = accountContext.currentAccountId else { return }
+                    scopedProjectContext.activate(
+                        accountId: accountId,
+                        projectId: projectId,
+                        userId: authManager.currentUser?.uid,
+                        member: accountContext.member,
+                        rawBudgetCategories: accountContext.rawAllBudgetCategories
+                    )
+                }
+                .onChange(of: accountContext.member) { _, member in
+                    scopedProjectContext.updateFinancialContext(
+                        member: member,
+                        rawBudgetCategories: accountContext.rawAllBudgetCategories
+                    )
+                }
+                .onChange(of: accountContext.rawAllBudgetCategories) { _, categories in
+                    scopedProjectContext.updateFinancialContext(
+                        member: accountContext.member,
+                        rawBudgetCategories: categories
+                    )
+                }
+        } else {
+            detail
+        }
+    }
+
+    private var detail: some View {
+        SpaceDetailContentView(space: space, projectId: projectId)
+    }
+
+    private func activationKey(projectId: String) -> String {
+        [
+            accountContext.currentAccountId ?? "",
+            projectId,
+            authManager.currentUser?.uid ?? "",
+        ].joined(separator: "|")
+    }
+}
+
+private struct SpaceDetailContentView: View {
+    let space: Space
     /// Navigation scope is immutable route context. Do not infer it from a
     /// listener-updated document; a transient/legacy missing `projectId`
     /// would incorrectly switch a project space to inventory data.

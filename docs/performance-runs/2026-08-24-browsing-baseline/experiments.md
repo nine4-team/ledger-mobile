@@ -339,12 +339,109 @@ test targets successfully.
 detail mount. Keep the diagnostics because other browsing crashes may have
 independent causes.
 
+## E11: macOS Search Item to Transaction Detail AttributeGraph Loop
+
+**User reproduction:** a release 53 macOS user searched for an item, opened it,
+then clicked its linked transaction and encountered an indefinite beachball.
+
+**Exact reproduction:** the signed release 53 app reproduced on the 1584 Design
+production account. Universal Search opened an item in Witzenman's project, but
+opening its linked Wayfair transaction timed out after 18 seconds. The process
+remained at 97% CPU. A five-second sample showed the main thread continuously
+performing `NSHostingView` layout and SwiftUI `AttributeGraph` updates, including
+repeated `TransactionDetailView.body` and selection derivation evaluations. No
+Firestore wait, image decode, or blocked network stack appeared on the hot path.
+
+**Remediation:** make `TransactionDetailContainer` a lightweight navigation
+wrapper. It mounts the background, yields one scheduler turn, and then mounts a
+private stateful container that preserves the existing project-scope resolution,
+scoped `ProjectContext`, live listeners, asynchronous lineage loads, sections,
+and nested destinations.
+
+**Behavior and freshness implications:** transaction content, expanded-section
+defaults, controls, listener scope, and freshness are unchanged. The only
+possible visual difference is one background-colored frame during navigation.
+Scoped context activation and focused transaction listeners begin on the next
+scheduler turn; no snapshots are cached, debounced, or suppressed.
+
+**Production-backed verification:** the previously hanging 37-item transaction
+rendered completely in the remediated Debug app, including three receipts,
+notes, details, item drafts, and item controls. The first automated transition
+stabilized in 8.756 seconds and a warm repeat in 4.090 seconds; these include UI
+automation stabilization and are not direct first-paint measurements. Back
+returned to the item in 2.359 seconds. The process settled at 0.0% CPU after
+each successful open instead of remaining at 97%. After applying the same
+change to the full working tree and rebuilding both app targets, the exact
+Search-item-to-transaction path completed in 1.943 seconds; the preceding item
+open completed in 1.807 seconds and CPU again settled at 0.0%.
+
+**Decision:** confirmed second navigation-transaction defect; apply the same
+deferred-mount boundary to transaction detail and retain the current live data
+architecture.
+
+## E12: Navigation Destination Audit and Cross-Project Space Scope
+
+**Motivation:** two independently reproduced 97-100% CPU navigation loops in
+Item Detail and Transaction Detail indicate an architectural trigger rather
+than two unrelated screens. Audit every navigation destination before waiting
+for another user report.
+
+**Static audit:** all app `navigationDestination` call sites were classified by
+parent hierarchy size, destination dynamic-property graph, synchronous work,
+and data-scope ownership. The three largest entity detail surfaces are Item,
+Transaction, and Space. Item and Transaction already have deferred mount
+boundaries from E10 and E11. Space still mounted 18 local state slots, five
+environment dependencies, an item list, bulk-action hosts, and a focused space
+listener in the navigation push transaction.
+
+**Production finding:** Universal Search listed a project space with 157 items,
+but opening it displayed zero items. The transition completed in 2.052 seconds,
+so the absent project data hid the destination's real graph. Search had no
+activated `ProjectContext`, while `SpaceDetailView` read project items,
+transactions, and spaces exclusively from that ambient context.
+
+**Remediation:** make `SpaceDetailView` a lightweight deferred wrapper. After
+one scheduler yield, a private container reuses the ambient `ProjectContext`
+when it already owns the route's project, uses `InventoryContext` for inventory
+spaces, and creates an isolated live `ProjectContext` only for cross-project
+entry points such as Search or an item opened outside its project.
+
+**Behavior and freshness implications:** the visible space screen, expansion
+defaults, media, notes, checklists, item actions, bulk actions, and focused space
+listener are unchanged. In-project routes do not add another project context.
+Cross-project routes now receive the same live project-scoped subscriptions as
+Project Detail; no update is cached, debounced, or suppressed. As with Item and
+Transaction Detail, the only possible presentation difference is one
+background-colored frame during the push.
+
+**Production-backed verification:** the same Search result now opened in 1.951
+seconds and displayed all 157 items. The full space controls and initial item
+rows were present, and the process settled at 0.0% CPU. The macOS Debug scheme
+build also compiled and signed both macOS and iOS app/test products. An
+in-project route reused its active context and displayed all 21 expected items.
+UI automation stabilized in 10.218 seconds because multiple thumbnail views
+remained busy; the process settled at 0.0% CPU, distinguishing that known
+image/network path from an AttributeGraph navigation loop.
+
+**Remaining destination checks:** Search to Item Quick Draft completed in 1.470
+seconds and settled at 0.0% CPU. Opening a 554-item project completed in 2.022
+seconds. Its 207-row Invoice report completed in 1.479 seconds and settled at
+0.0% CPU. These routes do not currently justify speculative deferred wrappers.
+Invoice Detail and Inventory remain lower-risk watch points because their
+destination graphs are materially smaller and their parent routes do not
+combine the confirmed high-risk factors.
+
+**Decision:** fix Space Detail's deferred mount and scope ownership. Retain the
+explicit wrappers for the three large entity details rather than applying a
+global navigation delay to every destination.
+
 ## Next Experiment
 
-Repeat E10 on release hardware after distribution, including an item opened
-from an active filter. Separately, repeat E08 on the same macOS item, filter,
-and image using the remediated build. Run the Halrow browsing and bulk-menu
-scenarios on a physical iPhone with a stable connection and
+Repeat E10 and E11 on release hardware after distribution, including an item
+opened from an active filter and a transaction opened directly from Search.
+Separately, repeat E08 on the same macOS item, filter, and image using the
+remediated build. Run the Halrow browsing and bulk-menu scenarios on a physical
+iPhone with a stable connection and
 `-LedgerPerformanceDiagnostics YES`. Classify any termination as exception,
 watchdog, memory pressure/jetsam, or unknown before selecting another
 remediation.
