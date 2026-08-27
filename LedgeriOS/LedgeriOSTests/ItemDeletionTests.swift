@@ -434,6 +434,35 @@ struct ItemDeletionTests {
         #expect(txUpdates[0].fields.keys.contains("updatedAt"))
     }
 
+    @Test("create inventory item for transaction — preserves inventory scope")
+    func createInventoryItemForTransaction() throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var item = makeItem(id: nil)
+        item.name = "Lamp"
+
+        let createdItems = try service.createItemsForTransaction(
+            accountId: acct,
+            transactionId: "inventory-tx",
+            budgetCategoryId: nil,
+            items: [item],
+            onCommitError: { _, _ in }
+        )
+
+        let created = try #require(createdItems.first)
+        let itemId = try #require(created.id)
+        let itemSet = try #require(
+            batch.setsForPath("accounts/\(acct)/items/\(itemId)").first
+        )
+
+        #expect(created.projectId == nil)
+        #expect(created.budgetCategoryId == nil)
+        #expect(created.transactionId == "inventory-tx")
+        #expect(itemSet.fields["projectId"] is NSNull)
+        #expect(itemSet.fields["budgetCategoryId"] is NSNull)
+        #expect(batch.commitCalled)
+    }
+
     @Test("create empty item array — does not commit")
     func createItemsForTransactionEmptyArray() async throws {
         let batch = RecordingBatch()

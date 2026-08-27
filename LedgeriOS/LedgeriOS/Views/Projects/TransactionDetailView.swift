@@ -324,6 +324,20 @@ struct TransactionDetailView: View {
         }
     }
 
+    private var itemFilterScope: ItemFilterScope {
+        switch scope {
+        case .project: return .project
+        case .inventory: return .inventory
+        }
+    }
+
+    private var itemCreationContext: ItemCreationContext {
+        if let projectId = transactionProjectId {
+            return .project(projectId, spaceId: nil)
+        }
+        return .inventory
+    }
+
     private var currentTransaction: Transaction {
         var tx = liveTransaction
             ?? scopedTransactions.first(where: { $0.id == transactionId })
@@ -423,6 +437,12 @@ struct TransactionDetailView: View {
         transactionProtoItems
             .filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
             .sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+    }
+
+    private var hasTransactionImages: Bool {
+        !(currentTransaction.receiptImages ?? []).isEmpty
+            || !(currentTransaction.otherImages ?? []).isEmpty
+            || !(currentTransaction.transactionImages ?? []).isEmpty
     }
 
     private var categoryLookup: [String: BudgetCategory] {
@@ -640,49 +660,27 @@ struct TransactionDetailView: View {
         }) {
             ActionMenuSheet(
                 title: "Add Item",
-                items: {
-                    var items = [
-                        ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
-                            showCreateItemDraft = true
-                        }),
-                    ]
-
-                    if transactionProjectId != nil {
-                        items.append(
-                            ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
-                                showCreateNewItem = true
-                            })
-                        )
-                    }
-
-                    items.append(contentsOf: [
-                        ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
-                            showAddExistingItems = true
-                        }),
-                    ])
-
-                    let hasImages = !(currentTransaction.receiptImages ?? []).isEmpty
-                        || !(currentTransaction.otherImages ?? []).isEmpty
-                        || !(currentTransaction.transactionImages ?? []).isEmpty
-                    if hasImages, transactionProjectId != nil {
-                        items.append(ActionMenuItem(id: "create-from-images", label: "Create from Images", icon: "photo.on.rectangle.angled", onPress: {
-                            showCreateItemsFromImages = true
-                        }))
-                    }
-                    return items
-                }(),
+                items: TransactionMenuBuilder.buildItemCreationMenu(
+                    callbacks: TransactionItemCreationMenuCallbacks(
+                        onCreateQuickDraft: { showCreateItemDraft = true },
+                        onCreateItem: { showCreateNewItem = true },
+                        onAddExisting: { showAddExistingItems = true },
+                        onCreateFromImages: hasTransactionImages
+                            ? { showCreateItemsFromImages = true }
+                            : nil
+                    )
+                ),
                 onSelectAction: { action in
                     menuPendingAction = action
                 }
             )
         }
         .adaptivePresentation(isPresented: $showCreateNewItem, style: .form) {
-            if let projectId = transactionProjectId {
-                NewItemView(
-                    context: .project(projectId, spaceId: nil),
-                    initialTransactionId: currentTransaction.id
-                )
-            }
+            NewItemView(
+                context: itemCreationContext,
+                initialTransactionId: currentTransaction.id,
+                onCreated: { itemIds in mergeCreatedItemIds(itemIds) }
+            )
         }
         .adaptivePresentation(isPresented: $showCreateItemDraft, style: .form) {
             ItemDraftCaptureSheet(
@@ -1208,7 +1206,7 @@ struct TransactionDetailView: View {
                 onAdd: { showAddItemMenu = true },
                 getBulkMenuItems: { bulkActionMenuItems },
                 selectedIds: $selectedItemIds,
-                filterScope: .project,
+                filterScope: itemFilterScope,
                 filterCatalog: ItemFilterCatalog(
                     spaces: scopedSpaces,
                     budgetCategories: projectBudgetCategories
@@ -1813,8 +1811,10 @@ struct TransactionDetailView: View {
     }
 
     private func createItemsFromImageGroups(_ groups: [ImageGroup]) {
-        guard let accountId = accountContext.currentAccountId,
-              let projectId = transactionProjectId else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
+
+        let projectId = transactionProjectId
+        let budgetCategoryId = projectId == nil ? nil : currentTransaction.budgetCategoryId
 
         let items = groups.map { group -> Item in
             var images = group.images
@@ -1825,7 +1825,7 @@ struct TransactionDetailView: View {
             item.projectId = projectId
             item.status = .purchased
             item.transactionId = transactionId
-            item.budgetCategoryId = currentTransaction.budgetCategoryId
+            item.budgetCategoryId = budgetCategoryId
             item.images = images
             return item
         }
@@ -1835,7 +1835,7 @@ struct TransactionDetailView: View {
             let createdItems = try ItemsService().createItemsForTransaction(
                 accountId: accountId,
                 transactionId: transactionId,
-                budgetCategoryId: currentTransaction.budgetCategoryId ?? "",
+                budgetCategoryId: budgetCategoryId,
                 items: items,
                 onCommitError: { itemIds, error in
                     Task { @MainActor in

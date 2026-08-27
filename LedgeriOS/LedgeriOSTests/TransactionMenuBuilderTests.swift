@@ -37,11 +37,44 @@ struct TransactionMenuBuilderTests {
         return tx
     }
 
+    private func allItemCreationCallbacks() -> TransactionItemCreationMenuCallbacks {
+        TransactionItemCreationMenuCallbacks(
+            onCreateQuickDraft: {},
+            onCreateItem: {},
+            onAddExisting: {},
+            onCreateFromImages: {}
+        )
+    }
+
     private func canonicalTransaction() -> Transaction {
         var tx = Transaction()
         tx.id = "tx-canonical"
         tx.isCanonicalInventorySale = true
         return tx
+    }
+
+    // MARK: - Item Creation Menu
+
+    @Test("Item creation menu exposes all available creation paths")
+    func itemCreationMenuAllPaths() {
+        let menu = TransactionMenuBuilder.buildItemCreationMenu(
+            callbacks: allItemCreationCallbacks()
+        )
+
+        #expect(ids(menu) == ["item-draft", "create-new", "add-existing", "create-from-images"])
+    }
+
+    @Test("Item creation menu keeps full item creation when images are unavailable")
+    func itemCreationMenuWithoutImages() {
+        let menu = TransactionMenuBuilder.buildItemCreationMenu(
+            callbacks: TransactionItemCreationMenuCallbacks(
+                onCreateQuickDraft: {},
+                onCreateItem: {},
+                onAddExisting: {}
+            )
+        )
+
+        #expect(ids(menu) == ["item-draft", "create-new", "add-existing"])
     }
 
     // MARK: - Card Menu

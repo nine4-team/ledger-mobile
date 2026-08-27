@@ -21,9 +21,62 @@ struct BulkTransactionMenuCallbacks {
     var onDelete: (() -> Void)?
 }
 
+/// Creation actions exposed from the Items section of a transaction detail.
+/// Keeping this menu scope-agnostic ensures project and inventory transactions
+/// offer the same creation paths.
+struct TransactionItemCreationMenuCallbacks {
+    var onCreateQuickDraft: (() -> Void)?
+    var onCreateItem: (() -> Void)?
+    var onAddExisting: (() -> Void)?
+    var onCreateFromImages: (() -> Void)?
+}
+
 // MARK: - Builder
 
 enum TransactionMenuBuilder {
+
+    // MARK: Item Creation Menu
+
+    static func buildItemCreationMenu(
+        callbacks: TransactionItemCreationMenuCallbacks
+    ) -> [ActionMenuItem] {
+        var items: [ActionMenuItem] = []
+
+        if let onCreateQuickDraft = callbacks.onCreateQuickDraft {
+            items.append(ActionMenuItem(
+                id: "item-draft",
+                label: "Item Quick Draft",
+                icon: "camera.badge.ellipsis",
+                onPress: onCreateQuickDraft
+            ))
+        }
+        if let onCreateItem = callbacks.onCreateItem {
+            items.append(ActionMenuItem(
+                id: "create-new",
+                label: "Create New Item",
+                icon: "plus.square.fill",
+                onPress: onCreateItem
+            ))
+        }
+        if let onAddExisting = callbacks.onAddExisting {
+            items.append(ActionMenuItem(
+                id: "add-existing",
+                label: "Add Existing Items",
+                icon: "plus.square.on.square",
+                onPress: onAddExisting
+            ))
+        }
+        if let onCreateFromImages = callbacks.onCreateFromImages {
+            items.append(ActionMenuItem(
+                id: "create-from-images",
+                label: "Create from Images",
+                icon: "photo.on.rectangle.angled",
+                onPress: onCreateFromImages
+            ))
+        }
+
+        return items
+    }
 
     // MARK: Card Menu
 
