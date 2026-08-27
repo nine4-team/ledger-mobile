@@ -393,6 +393,7 @@ struct ItemDeletionTests {
         let service = makeService(batch: batch)
         var item1 = makeItem(id: nil)
         item1.projectId = "project1"
+        item1.spaceId = "space1"
         item1.name = "Lamp"
         item1.budgetCategoryId = "cat1"
         var item2 = makeItem(id: nil)
@@ -413,6 +414,7 @@ struct ItemDeletionTests {
         #expect(Set(ids).count == 2)
         #expect(createdItems.allSatisfy { $0.accountId == acct })
         #expect(createdItems.allSatisfy { $0.transactionId == "tx1" })
+        #expect(createdItems[0].spaceId == "space1")
         #expect(batch.commitCalled)
 
         #expect(batch.sets.count == 2)
@@ -421,6 +423,9 @@ struct ItemDeletionTests {
             #expect(itemSets.count == 1)
             #expect(itemSets[0].fields["accountId"] as? String == acct)
             #expect(itemSets[0].fields["transactionId"] as? String == "tx1")
+            if id == createdItems[0].id {
+                #expect(itemSets[0].fields["spaceId"] as? String == "space1")
+            }
         }
 
         let txUpdates = batch.updatesForPath("accounts/\(acct)/transactions/tx1")

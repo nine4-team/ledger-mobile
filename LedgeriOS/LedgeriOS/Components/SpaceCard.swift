@@ -30,6 +30,9 @@ struct SpaceCard: View {
                         .font(Typography.h3)
                         .foregroundStyle(BrandColors.textPrimary)
                         .lineLimit(2)
+                        // A card title is an activation target, not selectable copy.
+                        // Let the containing Button own pointer events on macOS.
+                        .allowsHitTesting(false)
 
                     Spacer()
 
@@ -62,6 +65,13 @@ struct SpaceCard: View {
             }
             .frame(minHeight: 72, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // Plain buttons otherwise derive their hit region from rendered
+        // descendants, which can leave gaps in a card unclickable on macOS.
+        .contentShape(
+            .interaction,
+            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+        )
         .findEntity(id: space.id)
         .findMatchHighlight()
     }

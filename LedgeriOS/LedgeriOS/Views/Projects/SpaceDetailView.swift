@@ -129,6 +129,7 @@ private struct SpaceDetailContentView: View {
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
     @State private var showCreateNewItem = false
+    @State private var isPrintingPhotos = false
     @State private var menuPendingAction: (() -> Void)?
     @State private var errorMessage: String?
 
@@ -426,9 +427,7 @@ private struct SpaceDetailContentView: View {
 
     private var sectionsArea: some View {
         VStack(alignment: .leading, spacing: 0) {
-            CollapsibleSection(title: "MEDIA", isExpanded: $isMediaExpanded) {
-                mediaContent
-            }
+            mediaSection
 
             Divider()
                 .padding(.vertical, Spacing.xs)
@@ -468,7 +467,25 @@ private struct SpaceDetailContentView: View {
         .cardStyle()
     }
 
+    private var mediaSection: some View {
+        CollapsibleSection(
+            title: "MEDIA",
+            isExpanded: $isMediaExpanded,
+            onPrint: printSpacePhotos,
+            isPrinting: isPrintingPhotos,
+            isPrintDisabled: printableSpacePhotos.isEmpty
+        ) {
+            mediaContent
+        }
+    }
+
     // MARK: - Media
+
+    private var printableSpacePhotos: [AttachmentRef] {
+        (liveSpace.images ?? []).filter {
+            $0.kind == .image && !$0.url.isEmpty && $0.isUploading != true
+        }
+    }
 
     @ViewBuilder
     private var mediaContent: some View {
@@ -656,6 +673,24 @@ private struct SpaceDetailContentView: View {
     }
 
     // MARK: - Actions
+
+    private func printSpacePhotos() {
+        guard !isPrintingPhotos else { return }
+        let photos = printableSpacePhotos
+        let spaceName = liveSpace.name.isEmpty ? "Space" : liveSpace.name
+        isPrintingPhotos = true
+        Task {
+            defer { isPrintingPhotos = false }
+            do {
+                try await PhotoPrintHelper.printPhotos(
+                    photos,
+                    jobName: "\(spaceName) Photos"
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
 
     private func startSpaceListener() {
         guard spaceListener == nil,

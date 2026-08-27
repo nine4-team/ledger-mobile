@@ -9,6 +9,9 @@ struct CollapsibleSection<Content: View>: View {
     var statusBadgeColor: Color = StatusColors.badgeNeedsReview
     var onEdit: (() -> Void)? = nil
     var onAdd: (() -> Void)? = nil
+    var onPrint: (() -> Void)? = nil
+    var isPrinting: Bool = false
+    var isPrintDisabled: Bool = false
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -64,6 +67,25 @@ struct CollapsibleSection<Content: View>: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                }
+
+                if let onPrint {
+                    Button(action: onPrint) {
+                        Group {
+                            if isPrinting {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "printer")
+                                    .foregroundStyle(BrandColors.textSecondary)
+                            }
+                        }
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isPrinting || isPrintDisabled)
+                    .accessibilityLabel(isPrinting ? "Preparing photos to print" : "Print photos")
                 }
             }
 

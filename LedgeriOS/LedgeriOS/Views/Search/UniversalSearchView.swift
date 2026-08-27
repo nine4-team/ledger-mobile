@@ -400,6 +400,10 @@ struct UniversalSearchView: View {
                 ForEach(searchResults.spaces) { space in
                     if let spaceId = space.id {
                         Button {
+                            PerformanceDiagnostics.shared.event(
+                                "SpaceCardTapped",
+                                kind: "search"
+                            )
                             selectedSpaceId = spaceId
                             selectedSpaceProjectId = space.projectId
                             showSpaceDetail = true

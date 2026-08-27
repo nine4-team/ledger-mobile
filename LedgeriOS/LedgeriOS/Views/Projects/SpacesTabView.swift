@@ -74,6 +74,10 @@ struct SpacesTabView: View {
                     ForEach(filteredSpaces) { space in
                         if let spaceId = space.id {
                             Button {
+                                PerformanceDiagnostics.shared.event(
+                                    "SpaceCardTapped",
+                                    kind: "project"
+                                )
                                 selectedSpaceId = spaceId
                                 showSpaceDetail = true
                             } label: {

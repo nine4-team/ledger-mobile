@@ -17,6 +17,7 @@ struct FindMatchHighlight: ViewModifier {
                 RoundedRectangle(cornerRadius: Dimensions.cardRadius)
                     .stroke(BrandColors.primary, lineWidth: 2.5)
                     .opacity(isCurrent ? 1 : 0)
+                    .allowsHitTesting(false)
             )
     }
 }

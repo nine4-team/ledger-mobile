@@ -19,6 +19,7 @@ struct ImageCard<Content: View>: View {
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.cardRadius)
                 .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+                .allowsHitTesting(false)
         )
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
 
