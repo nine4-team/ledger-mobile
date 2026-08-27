@@ -216,7 +216,8 @@ or { error: { code, message, hint } }</div>
   <tr><td>index.ts</td><td>Entry point. Registers every tool + resource. The <code>instructions</code> field (lines 28–35) is what Claude reads on connect.</td></tr>
   <tr><td>firebase.ts</td><td>Firebase Admin SDK init. Local MCP validation should use real Firestore with a service-account key. <code>FIRESTORE_EMULATOR_HOST</code> is only for the legacy emulator test harness.</td></tr>
   <tr><td>tools/transactions.ts</td><td>list / get / search / create / update / bulk-update / cancel.</td></tr>
-  <tr><td>tools/items.ts</td><td>Item CRUD + bulk ops + items_needing_attention.</td></tr>
+  <tr><td>tools/items.ts</td><td>Item CRUD + bulk ops + items_needing_attention. Image tools separate Storage-free primary/order/detach operations from explicitly destructive, item-namespace-gated deletion.</td></tr>
+  <tr><td>tools/quick-draft-items.ts</td><td>Quick-draft CRUD and promotion. Promotion copies and verifies full images plus generated thumbnails under the destination item's Storage namespace before Firestore changes, while preserving draft originals.</td></tr>
   <tr><td>tools/projects.ts</td><td>Project CRUD + health + budget breakdowns.</td></tr>
   <tr><td>tools/inventory-operations.ts</td><td><code>sell_items</code>, <code>return_items</code>, <code>move_items_between_projects</code> — destructive, dryRun-aware, per-batch immutable.</td></tr>
   <tr><td>tools/composite.ts</td><td><code>reconcile_transaction</code>, <code>create_transaction_with_items</code>, <code>triage_inbox</code>.</td></tr>
@@ -227,6 +228,8 @@ or { error: { code, message, hint } }</div>
   <tr><td>util/projections.ts</td><td>Summary shapes, <code>capResponse</code>, 50KB budget.</td></tr>
   <tr><td>util/telemetry.ts</td><td><code>withTelemetry</code> wrapper.</td></tr>
   <tr><td>util/query.ts</td><td><code>getDoc</code>, <code>getDocs</code> (bulk), <code>accountCollection</code>.</td></tr>
+  <tr><td>util/item-images.ts</td><td>Primary/order invariants, exact-set validation, attachment removal, namespace ownership checks, and standard image-operation responses.</td></tr>
+  <tr><td>util/item-image-storage.ts</td><td>Verified quick-draft-to-item Storage copying, item-owned thumbnail generation, and rollback cleanup.</td></tr>
   <tr><td>util/enums.ts</td><td>Single source of truth for transaction types, statuses, item states, etc.</td></tr>
 </table>
 

@@ -82,6 +82,12 @@ For write-path changes, run a disposable smoke against real Firestore using a se
   - Note: `create_transaction` rejects `type: "Sale"` — use `sell_items_from_project_to_inventory` instead
   - `update_transaction` accepts `projectId: null` to correct an ordinary transaction into business inventory; it clears `budgetCategoryId` and does not move linked items or create an inventory movement
 - `create_item`, `update_item`, `delete_item`
+- `attach_item_image({ itemId, fileData|fileUrl, fileName, contentType?, isPrimary?, position? })` — upload an item-owned attachment; the first image becomes primary
+- `set_primary_item_image({ itemId, imageUrl })` — atomically choose the primary and move it to index 0; never touches Storage
+- `reorder_item_images({ itemId, orderedImageUrls, primaryImageUrl? })` — atomically reorder the exact current image set while preserving metadata; never touches Storage
+- `detach_item_image({ itemId, imageUrl })` — remove only the Firestore attachment reference; never touches Storage
+- `delete_item_image({ itemId, imageUrl })` — **destructive** for item-owned objects only; external, shared, `protoItems`, and other-item objects are detached but preserved
+- `promote_quick_draft_item({ quickDraftItemId, ..., primaryImageUrl?, mergeIntoItemId? })` — copy and verify draft originals/thumbnails into the destination item's namespace before atomically creating/merging; draft originals are preserved
 - `create_space`, `update_space`
 - `update_project_budget_allocation`, `enable_category_for_project`
 

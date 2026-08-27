@@ -20,7 +20,7 @@ import {
   quickDraftItemStatuses,
   quickDraftSourceHints,
 } from "../util/enums.js";
-import { checkTransactionLinkageOnCreate } from "./items.js";
+import { checkTransactionLinkageOnCreate, checkUpdateInvariant } from "./items.js";
 import {
   applyItemPriceFloorToCreate,
   applyItemPriceFloorToUpdate,
@@ -28,6 +28,18 @@ import {
 } from "../util/item-pricing.js";
 import { resolveInventoryLabel } from "../util/inventory.js";
 import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
+import {
+  cleanupCopiedItemImages,
+  copyAttachmentsToItemNamespace,
+  type CopiedItemImages,
+} from "../util/item-image-storage.js";
+import {
+  attachmentStorageUrls,
+  imageOperationResult,
+  isPathOwnedByItem,
+  orderedWithPrimary,
+} from "../util/item-images.js";
+import { storagePathFromUrl } from "../storage.js";
 
 const QuickDraftStatus = z.enum(quickDraftItemStatuses);
 const QuickDraftCaptureContext = z.enum(quickDraftCaptureContexts);
@@ -108,15 +120,49 @@ function cleanString(value: string | undefined | null): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function mergeAttachments(existing: AttachmentRef[], incoming: AttachmentRef[]): AttachmentRef[] {
-  const seen = new Set(existing.map((ref) => ref.url).filter(Boolean));
-  const merged = [...existing];
-  for (const ref of incoming) {
-    if (!ref.url || seen.has(ref.url)) continue;
-    seen.add(ref.url);
-    merged.push({ ...ref, isPrimary: merged.length === 0 ? (ref.isPrimary ?? true) : (ref.isPrimary ?? false) });
+export function documentedPromotionMergeOverrides(
+  existingItem: Item,
+  draft: ProtoItem,
+  args: {
+    name?: string;
+    notes?: string;
+    quantity?: number;
+    sku?: string;
+    status?: string;
+    source?: string;
+    purchasePriceCents?: number;
+    projectPriceCents?: number;
+    marketValueCents?: number;
+    taxRatePct?: number;
+    projectId?: string | null;
+    transactionId?: string | null;
+    budgetCategoryId?: string | null;
+    spaceId?: string;
   }
-  return normalizePrimaryAttachments(merged);
+): Record<string, unknown> {
+  const updates: Record<string, unknown> = {};
+  if (args.name !== undefined) updates.name = cleanString(args.name) ?? "Untitled item";
+  if (args.notes !== undefined) updates.notes = args.notes;
+  if (args.quantity !== undefined) updates.quantity = args.quantity;
+  if (args.sku !== undefined) updates.sku = cleanString(args.sku) ?? "";
+  else if (!cleanString(existingItem.sku) && cleanString(draft.sku)) updates.sku = cleanString(draft.sku);
+  if (args.status !== undefined) updates.status = args.status;
+  if (args.source !== undefined) updates.source = args.source;
+  if (args.purchasePriceCents !== undefined) updates.purchasePriceCents = args.purchasePriceCents;
+  if (args.projectPriceCents !== undefined) updates.projectPriceCents = args.projectPriceCents;
+  if (args.marketValueCents !== undefined) updates.marketValueCents = args.marketValueCents;
+  if (args.taxRatePct !== undefined) updates.taxRatePct = args.taxRatePct;
+  if (args.projectId !== undefined) updates.projectId = args.projectId;
+  if (args.transactionId !== undefined) updates.transactionId = args.transactionId;
+  if (args.budgetCategoryId !== undefined) updates.budgetCategoryId = args.budgetCategoryId;
+  if (args.spaceId !== undefined) updates.spaceId = args.spaceId;
+  return updates;
+}
+
+export function mergePromotedAttachments(existing: AttachmentRef[], incoming: AttachmentRef[]): AttachmentRef[] {
+  if (incoming.length === 0) return orderedWithPrimary(existing);
+  const incomingPrimary = incoming.find((attachment) => attachment.isPrimary)?.url ?? incoming[0].url;
+  return orderedWithPrimary([...incoming, ...existing], incomingPrimary);
 }
 
 async function validateDraftTransactionLink(
@@ -164,7 +210,7 @@ async function promoteInventoryDraftToProject(
     transactionId: string;
     budgetCategoryId: string;
     spaceId?: string;
-    status: string;
+    status?: string;
     source?: string;
     sku?: string;
     quantity?: number;
@@ -173,6 +219,7 @@ async function promoteInventoryDraftToProject(
     marketValueCents?: number;
     taxRatePct?: number;
     notes?: string;
+    primaryImageUrl?: string;
   },
   draft: ProtoItem & { id: string },
   acquisition: Transaction & { id: string }
@@ -202,15 +249,30 @@ async function promoteInventoryDraftToProject(
   const sku = cleanString(args.sku) ?? cleanString(draft.sku);
   const notes = args.notes !== undefined ? args.notes : draft.notes;
 
+  let copied: CopiedItemImages;
+  try {
+    copied = await copyAttachmentsToItemNamespace(
+      draft.photos ?? [],
+      getAccountId(),
+      itemRef.id,
+      args.primaryImageUrl
+    );
+  } catch (error) {
+    return validation(
+      `Could not copy and verify quick-draft photos: ${error instanceof Error ? error.message : String(error)}`,
+      "The draft and its source photos were left unchanged. Repair the source file, then retry promotion."
+    );
+  }
+
   const itemData: Record<string, unknown> = {
     accountId: getAccountId(),
     name: cleanString(args.name) ?? cleanString(draft.name) ?? sku ?? "Untitled item",
     projectId: args.projectId,
     budgetCategoryId: args.budgetCategoryId,
     transactionId: purchaseRef.id,
-    status: args.status,
+    status: args.status ?? "purchased",
     quantity: args.quantity ?? draft.quantity ?? 1,
-    images: normalizePrimaryAttachments(draft.photos ?? []),
+    images: copied.images,
     source: args.source ?? acquisition.source ?? inventoryLabel,
     currentSource: inventoryLabel,
     projectPriceCents: args.projectPriceCents,
@@ -267,15 +329,25 @@ async function promoteInventoryDraftToProject(
     updatedAt: now,
     updatedBy: uid,
   });
-  await batch.commit();
+  try {
+    await batch.commit();
+  } catch (error) {
+    await cleanupCopiedItemImages(copied);
+    throw error;
+  }
 
   return asToolResponse({
     quickDraftItemId: args.quickDraftItemId,
-    itemId: itemRef.id,
     acquisitionTransactionId: args.transactionId,
     projectPurchaseTransactionId: purchaseRef.id,
     routedThroughInventory: true,
     status: "converted",
+    ...imageOperationResult({
+      itemId: itemRef.id,
+      images: copied.images,
+      storageObjectsCopied: copied.copiedPaths.length > 0,
+      storagePathsAffected: copied.copiedPaths,
+    }),
   });
 }
 
@@ -527,7 +599,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── promote_quick_draft_item ─────────────────────────────────────────────
   server.tool(
     "promote_quick_draft_item",
-    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Photos become item images. New project-item promotion requires a transactionId; inventory items must not have budgetCategoryId.",
+    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Full-resolution photos are copied and verified in the destination item's Storage namespace, item-owned thumbnails are generated, and draft originals are preserved. The draft primary is used unless primaryImageUrl selects another draft photo.",
     {
       quickDraftItemId: z.string().describe("Quick draft item ID."),
       name: z.string().optional().describe("Override item name. Defaults to draft name, SKU, or 'Untitled item'."),
@@ -535,7 +607,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       transactionId: z.string().nullable().optional().describe("Override the authoritative transaction ID. Omit to use draft.transactionId. Pass null to clear."),
       budgetCategoryId: z.string().nullable().optional().describe("Budget category. Auto-inherited from transaction when possible. Must be absent/null for inventory."),
       spaceId: z.string().optional().describe("Optional destination space."),
-      status: z.string().default("purchased").describe("Real item status."),
+      status: z.string().optional().describe("Real item status. Defaults to purchased for a new item; preserves the existing status on merge when omitted."),
       source: z.string().optional().describe("Vendor/source for the real item."),
       sku: z.string().optional().describe("Override SKU. Defaults to draft SKU."),
       quantity: z.coerce.number().int().positive().optional().describe("Override quantity. Defaults to draft quantity or 1."),
@@ -543,8 +615,9 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       projectPriceCents: z.coerce.number().optional(),
       marketValueCents: z.coerce.number().optional(),
       taxRatePct: z.coerce.number().optional().describe("Auto-inherited from transaction when omitted."),
-      notes: z.string().optional().describe("Optional item notes. Defaults to draft notes."),
-      mergeIntoItemId: z.string().optional().describe("Instead of creating a new item, merge draft photos/SKU into an existing item and mark the draft converted."),
+      notes: z.string().optional().describe("Item notes override. A new item defaults to draft notes; a merge preserves existing notes when omitted."),
+      primaryImageUrl: z.string().optional().describe("URL of a current quick-draft photo to make primary. Defaults to the draft's primary photo."),
+      mergeIntoItemId: z.string().optional().describe("Instead of creating a new item, copy and merge the draft photos into an existing item. Explicit item-field overrides are applied."),
     },
     withTelemetry("promote_quick_draft_item", async (args) => {
       const draft = await getDoc<ProtoItem>(db, "protoItems", args.quickDraftItemId);
@@ -564,17 +637,78 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       if (args.mergeIntoItemId) {
         const existingItem = await getDoc<Item>(db, "items", args.mergeIntoItemId);
         if (!existingItem) return notFound("Item", args.mergeIntoItemId, "list_items");
+
+        const nextProjectId = args.projectId !== undefined ? args.projectId : (existingItem.projectId ?? null);
+        const nextTransactionId = args.transactionId !== undefined ? args.transactionId : (existingItem.transactionId ?? null);
+        let destinationTransaction: (Transaction & { id: string }) | null = null;
+        if (nextTransactionId) {
+          destinationTransaction = await getDoc<Transaction>(db, "transactions", nextTransactionId);
+          if (!destinationTransaction) return notFound("Transaction", nextTransactionId, "list_transactions");
+          if ((destinationTransaction.projectId ?? null) !== nextProjectId) {
+            return validation(
+              "Merged item and transaction must belong to the same project.",
+              "Choose a transaction in the resulting project or pass transactionId: null."
+            );
+          }
+        }
+
         const updates: Record<string, unknown> = {
-          images: mergeAttachments(existingItem.images ?? [], draftPhotos),
+          ...documentedPromotionMergeOverrides(existingItem, draft, args),
           updatedAt: now,
           updatedBy: uid,
         };
-        const draftSku = cleanString(args.sku) ?? cleanString(draft.sku);
-        if (!cleanString(existingItem.sku) && draftSku) updates.sku = draftSku;
+
+        if (!nextProjectId) {
+          updates.budgetCategoryId = null;
+        } else if (destinationTransaction) {
+          const transactionCategory = destinationTransaction.budgetCategoryId?.trim();
+          if (!transactionCategory || transactionCategory.toLowerCase() === "uncategorized") {
+            return validation("The destination transaction has no real budget category.", "Assign the transaction a category first.");
+          }
+          if (args.budgetCategoryId !== undefined && args.budgetCategoryId !== transactionCategory) {
+            return validation("budgetCategoryId must match the destination transaction category.", "Omit it to inherit the transaction category.");
+          }
+          updates.budgetCategoryId = transactionCategory;
+        } else if (args.budgetCategoryId !== undefined) {
+          updates.budgetCategoryId = args.budgetCategoryId;
+        }
+        const invariantError = checkUpdateInvariant(existingItem, updates);
+        if (invariantError) return validation(invariantError, "Provide a real category for project scope, or null for inventory.");
+
+        let copied: CopiedItemImages;
+        try {
+          copied = await copyAttachmentsToItemNamespace(
+            draftPhotos,
+            getAccountId(),
+            args.mergeIntoItemId,
+            args.primaryImageUrl
+          );
+        } catch (error) {
+          return validation(
+            `Could not copy and verify quick-draft photos: ${error instanceof Error ? error.message : String(error)}`,
+            "No Firestore records changed and the draft source photos were preserved."
+          );
+        }
+        updates.images = mergePromotedAttachments(existingItem.images ?? [], copied.images);
         applyItemPriceFloorToUpdate(existingItem, updates);
 
         const batch = db.batch();
         batch.update(accountCollection(db, "items").doc(args.mergeIntoItemId), updates);
+        const oldTransactionId = existingItem.transactionId ?? null;
+        if (args.transactionId !== undefined && oldTransactionId !== nextTransactionId) {
+          if (oldTransactionId) {
+            batch.update(accountCollection(db, "transactions").doc(oldTransactionId), {
+              itemIds: FieldValue.arrayRemove(args.mergeIntoItemId),
+              updatedAt: now,
+            });
+          }
+          if (nextTransactionId) {
+            batch.update(accountCollection(db, "transactions").doc(nextTransactionId), {
+              itemIds: FieldValue.arrayUnion(args.mergeIntoItemId),
+              updatedAt: now,
+            });
+          }
+        }
         batch.update(accountCollection(db, "protoItems").doc(args.quickDraftItemId), {
           status: "converted",
           convertedItemId: args.mergeIntoItemId,
@@ -583,12 +717,30 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
           updatedAt: now,
           updatedBy: uid,
         });
-        await batch.commit();
+        try {
+          await batch.commit();
+        } catch (error) {
+          await cleanupCopiedItemImages(copied);
+          throw error;
+        }
+        const finalImages = updates.images as AttachmentRef[];
+        const hasExternalExistingAttachment = (existingItem.images ?? []).flatMap(attachmentStorageUrls).some((url) => {
+          const path = storagePathFromUrl(url);
+          return !path || !isPathOwnedByItem(path, getAccountId(), args.mergeIntoItemId!);
+        });
         return asToolResponse({
           quickDraftItemId: args.quickDraftItemId,
-          itemId: args.mergeIntoItemId,
           merged: true,
           status: "converted",
+          ...imageOperationResult({
+            itemId: args.mergeIntoItemId,
+            images: finalImages,
+            storageObjectsCopied: copied.copiedPaths.length > 0,
+            storagePathsAffected: copied.copiedPaths,
+            warnings: hasExternalExistingAttachment
+              ? ["The item still has pre-existing attachments outside its own Storage namespace; they were preserved."]
+              : [],
+          }),
         });
       }
 
@@ -686,11 +838,25 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       }
 
       const itemRef = accountCollection(db, "items").doc();
+      let copied: CopiedItemImages;
+      try {
+        copied = await copyAttachmentsToItemNamespace(
+          draftPhotos,
+          getAccountId(),
+          itemRef.id,
+          args.primaryImageUrl
+        );
+      } catch (error) {
+        return validation(
+          `Could not copy and verify quick-draft photos: ${error instanceof Error ? error.message : String(error)}`,
+          "No Firestore records changed and the draft source photos were preserved."
+        );
+      }
       const itemData: Record<string, unknown> = {
         name: cleanString(args.name) ?? cleanString(draft.name) ?? cleanString(draft.sku) ?? "Untitled item",
-        status: args.status,
+        status: args.status ?? "purchased",
         quantity: args.quantity ?? draft.quantity ?? 1,
-        images: draftPhotos,
+        images: copied.images,
         createdBy: uid,
         updatedBy: uid,
         createdAt: now,
@@ -726,13 +892,23 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         updatedAt: now,
         updatedBy: uid,
       });
-      await batch.commit();
+      try {
+        await batch.commit();
+      } catch (error) {
+        await cleanupCopiedItemImages(copied);
+        throw error;
+      }
 
       return asToolResponse({
         quickDraftItemId: args.quickDraftItemId,
-        itemId: itemRef.id,
         merged: false,
         status: "converted",
+        ...imageOperationResult({
+          itemId: itemRef.id,
+          images: copied.images,
+          storageObjectsCopied: copied.copiedPaths.length > 0,
+          storagePathsAffected: copied.copiedPaths,
+        }),
       });
     })
   );

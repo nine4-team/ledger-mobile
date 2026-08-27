@@ -1,11 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Item, Transaction, AttachmentRef } from "../types.js";
 import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { itemMatches } from "../util/search.js";
-import { uploadToStorage, deleteFromStorage } from "../storage.js";
+import { uploadToStorage, deleteFromStorage, storagePathFromUrl } from "../storage.js";
+import { getAccountId } from "../context.js";
 import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
 import {
   ProjectionMode,
@@ -22,7 +24,17 @@ import {
   applyItemPriceFloorToUpdate,
   normalizedProjectPriceCents,
 } from "../util/item-pricing.js";
-import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
+import {
+  attachmentStorageUrls,
+  attachmentNamespaceWarnings,
+  imageOperationResult,
+  insertAttachment,
+  isPathOwnedByItem,
+  orderedWithPrimary,
+  partitionAttachmentStorageObjects,
+  removeAttachment,
+  reorderAttachments,
+} from "../util/item-images.js";
 import {
   detachedSpaceAssignment,
   validateItemSpaceTransition,
@@ -162,9 +174,12 @@ function formatItem(item: Item & { id: string }) {
     imageCount: item.images?.length ?? 0,
     images: (item.images ?? []).map((ref: AttachmentRef) => ({
       url: ref.url,
+      thumbnailUrlSm: ref.thumbnailUrlSm ?? null,
+      thumbnailUrlMd: ref.thumbnailUrlMd ?? null,
       kind: ref.kind ?? "image",
       fileName: ref.fileName ?? null,
       contentType: ref.contentType ?? null,
+      isPrimary: ref.isPrimary ?? false,
     })),
   };
 }
@@ -1025,15 +1040,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       await batch.commit();
 
-      // Best-effort cleanup of Storage files for any images on the item
+      // Best-effort cleanup of item-owned Storage files only. Attachments can
+      // legally point at shared/source namespaces and must never delete them.
       if (item.images?.length) {
         for (const img of item.images) {
-          try { await deleteFromStorage(img.url); } catch { /* ignore */ }
-          if (img.thumbnailUrlSm) {
-            try { await deleteFromStorage(img.thumbnailUrlSm); } catch { /* ignore */ }
-          }
-          if (img.thumbnailUrlMd) {
-            try { await deleteFromStorage(img.thumbnailUrlMd); } catch { /* ignore */ }
+          for (const imageUrl of attachmentStorageUrls(img)) {
+            const path = storagePathFromUrl(imageUrl);
+            if (!path || !isPathOwnedByItem(path, getAccountId(), itemId)) continue;
+            try { await deleteFromStorage(imageUrl); } catch { /* ignore */ }
           }
         }
       }
@@ -1045,15 +1059,17 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── attach_item_image ───────────────────────────────────────────────────────
   server.tool(
     "attach_item_image",
-    "Attach an image or file to an item. Uploads to Firebase Storage and appends an AttachmentRef to the item's images array. For images, generates sm (300px) and md (800px) thumbnails. Returned URLs are public HTTPS download URLs (Firebase Storage token URLs) — fetch directly with curl/WebFetch later, no auth required.",
+    "[mutating] Attach an image or file to an item. Uploads an item-owned object plus image thumbnails. Use isPrimary to atomically demote the old primary; use position to insert at a specific array index. The first attachment automatically becomes primary.",
     {
       itemId: z.string().describe("Item document ID"),
       fileData: z.string().optional().describe("Base64-encoded file content (provide this OR fileUrl, not both)"),
       fileUrl: z.string().optional().describe("URL to fetch the file from (provide this OR fileData, not both)"),
       fileName: z.string().describe("File name (e.g. 'photo.jpg', 'spec-sheet.pdf')"),
       contentType: z.string().optional().describe("MIME type (e.g. 'image/jpeg', 'image/png', 'application/pdf'). Inferred from response headers when using fileUrl."),
+      isPrimary: z.boolean().optional().describe("When true, make this attachment primary and atomically demote every existing primary."),
+      position: z.coerce.number().int().nonnegative().optional().describe("Zero-based insertion index. Must be between 0 and the current image count."),
     },
-    async ({ itemId, fileData, fileUrl, fileName, contentType }) => {
+    async ({ itemId, fileData, fileUrl, fileName, contentType, isPrimary, position }) => {
       // 1. Validate item exists before uploading anything
       const item = await getDoc<Item>(db, "items", itemId);
       if (!item) {
@@ -1101,7 +1117,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           : "file";
 
       // 4. Upload primary file
-      const storagePath = `${accountPath()}/items/${itemId}/${fileName}`;
+      const safeFileName = fileName.replace(/[\\/]/g, "_");
+      const storagePath = `${accountPath()}/items/${itemId}/${randomUUID()}-${safeFileName}`;
       const url = await uploadToStorage(storagePath, data, resolvedContentType);
 
       // 5. Generate and upload thumbnails for images
@@ -1121,12 +1138,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       }
 
       // 6. Build AttachmentRef entry
-      const isPrimary = !item.images?.length;
-
       const entry: AttachmentRef = {
         url,
         kind,
-        isPrimary,
+        isPrimary: false,
       };
       if (fileName) entry.fileName = fileName;
       if (resolvedContentType) entry.contentType = resolvedContentType;
@@ -1137,15 +1152,28 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       // uploads can never leave more than one primary image.
       try {
         const itemRef = accountCollection(db, "items").doc(itemId);
-        await db.runTransaction(async (firestoreTransaction) => {
+        const images = await db.runTransaction(async (firestoreTransaction) => {
           const snapshot = await firestoreTransaction.get(itemRef);
+          if (!snapshot.exists) throw new Error(`Item ${itemId} no longer exists.`);
           const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
-          const images = normalizePrimaryAttachments([...current, entry]);
+          const images = insertAttachment(current, entry, { isPrimary, position });
           const updates = applyItemPriceFloorToUpdate(item, {
             images,
             updatedAt: new Date(),
           });
           firestoreTransaction.update(itemRef, updates);
+          return images;
+        });
+
+        return asToolResponse({
+          message: `Attached ${fileName} to item ${itemId}.`,
+          ...imageOperationResult({
+            itemId,
+            images,
+            storagePathsAffected: [storagePath, thumbnailUrlSm ? thumbnailPath(storagePath, "sm") : null, thumbnailUrlMd ? thumbnailPath(storagePath, "md") : null]
+              .filter((path): path is string => path !== null),
+            warnings: attachmentNamespaceWarnings(images, getAccountId(), itemId),
+          }),
         });
       } catch (err) {
         // Clean up uploaded files on Firestore failure
@@ -1154,67 +1182,177 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (thumbnailUrlMd) await deleteFromStorage(thumbnailUrlMd).catch(() => {});
         throw err;
       }
+    }
+  );
 
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            message: `Attached ${fileName} to item ${itemId}`,
-            url,
-            kind,
-            thumbnailUrlSm: thumbnailUrlSm ?? null,
-            thumbnailUrlMd: thumbnailUrlMd ?? null,
-          }, null, 2),
-        }],
-      };
+  // ── set_primary_item_image ────────────────────────────────────────────────
+  server.tool(
+    "set_primary_item_image",
+    "[mutating, storage-safe] Make one current item image primary. Atomically moves it to images[0], clears every other primary flag, and never copies, moves, or deletes Storage objects.",
+    {
+      itemId: z.string().describe("Item document ID"),
+      imageUrl: z.string().describe("URL already present in the item's current images array"),
+    },
+    async ({ itemId, imageUrl }) => {
+      const itemRef = accountCollection(db, "items").doc(itemId);
+      try {
+        const images = await db.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(itemRef);
+          if (!snapshot.exists) throw new Error(`Item ${itemId} not found.`);
+          const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
+          const next = orderedWithPrimary(current, imageUrl);
+          transaction.update(itemRef, { images: next, updatedAt: new Date() });
+          return next;
+        });
+        return asToolResponse(imageOperationResult({
+          itemId,
+          images,
+          warnings: attachmentNamespaceWarnings(images, getAccountId(), itemId),
+        }));
+      } catch (error) {
+        return validation(error instanceof Error ? error.message : String(error), "Choose an imageUrl returned by get_item.");
+      }
+    }
+  );
+
+  // ── reorder_item_images ───────────────────────────────────────────────────
+  server.tool(
+    "reorder_item_images",
+    "[mutating, storage-safe] Atomically reorder an item's complete images array without changing attachment metadata or Storage. orderedImageUrls must exactly match the current set. Omit primaryImageUrl to preserve the existing primary.",
+    {
+      itemId: z.string().describe("Item document ID"),
+      orderedImageUrls: z.array(z.string()).describe("Every current image URL exactly once, in desired order"),
+      primaryImageUrl: z.string().optional().describe("Optional current URL to make primary; otherwise preserves the current primary"),
+    },
+    async ({ itemId, orderedImageUrls, primaryImageUrl }) => {
+      const itemRef = accountCollection(db, "items").doc(itemId);
+      try {
+        const images = await db.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(itemRef);
+          if (!snapshot.exists) throw new Error(`Item ${itemId} not found.`);
+          const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
+          const next = reorderAttachments(current, orderedImageUrls, primaryImageUrl);
+          transaction.update(itemRef, { images: next, updatedAt: new Date() });
+          return next;
+        });
+        return asToolResponse(imageOperationResult({
+          itemId,
+          images,
+          warnings: attachmentNamespaceWarnings(images, getAccountId(), itemId),
+        }));
+      } catch (error) {
+        return validation(error instanceof Error ? error.message : String(error), "Pass every current image URL exactly once.");
+      }
     }
   );
 
   // ── detach_item_image ───────────────────────────────────────────────────────
   server.tool(
     "detach_item_image",
-    "Remove an attachment from an item. Deletes the file and its thumbnails from Firebase Storage and removes the AttachmentRef from the item's images array. If the removed image was primary, promotes the next image.",
+    "[mutating, non-destructive] Remove an attachment reference from an item without deleting or modifying any Firebase Storage object. If the removed image was primary, the next image becomes primary.",
     {
       itemId: z.string().describe("Item document ID"),
-      url: z.string().describe("The attachment URL to remove (matches the 'url' field in the AttachmentRef)"),
+      imageUrl: z.string().describe("The attachment URL to detach (matches images[].url)"),
     },
-    async ({ itemId, url }) => {
-      const item = await getDoc<Item>(db, "items", itemId);
-      if (!item) {
-        return { content: [{ type: "text", text: `Item ${itemId} not found.` }], isError: true };
+    async ({ itemId, imageUrl }) => {
+      const itemRef = accountCollection(db, "items").doc(itemId);
+      try {
+        const result = await db.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(itemRef);
+          if (!snapshot.exists) throw new Error(`Item ${itemId} not found.`);
+          const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
+          const { removed, remaining } = removeAttachment(current, imageUrl);
+          transaction.update(itemRef, { images: remaining, updatedAt: new Date() });
+          return { removed, images: remaining };
+        });
+        const warnings = attachmentNamespaceWarnings(
+          [...result.images, result.removed],
+          getAccountId(),
+          itemId
+        );
+        return asToolResponse({
+          message: `Detached image from item ${itemId}; no Storage objects were deleted.`,
+          ...imageOperationResult({
+            itemId,
+            images: result.images,
+            warnings,
+          }),
+        });
+      } catch (error) {
+        return validation(error instanceof Error ? error.message : String(error), "Choose an imageUrl returned by get_item.");
       }
+    }
+  );
 
-      const attachments = item.images;
-      const entry = attachments?.find((a) => a.url === url);
-      if (!entry) {
-        return { content: [{ type: "text", text: "No attachment with that URL found in images." }], isError: true };
+  // ── delete_item_image ─────────────────────────────────────────────────────
+  server.tool(
+    "delete_item_image",
+    "[DESTRUCTIVE] Permanently delete an item-owned image and item-owned thumbnails, then remove its Firestore attachment reference. Objects outside accounts/{accountId}/items/{itemId}/ are never deleted; such attachments are detached only and return a warning.",
+    {
+      itemId: z.string().describe("Item document ID"),
+      imageUrl: z.string().describe("The attachment URL to permanently remove (matches images[].url)"),
+    },
+    async ({ itemId, imageUrl }) => {
+      const itemRef = accountCollection(db, "items").doc(itemId);
+      try {
+        const detached = await db.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(itemRef);
+          if (!snapshot.exists) throw new Error(`Item ${itemId} not found.`);
+          const current = (snapshot.data()?.images as AttachmentRef[] | undefined) ?? [];
+          const result = removeAttachment(current, imageUrl);
+          transaction.update(itemRef, { images: result.remaining, updatedAt: new Date() });
+          return result;
+        });
+
+        const { owned, external } = partitionAttachmentStorageObjects(
+          detached.removed,
+          getAccountId(),
+          itemId,
+          storagePathFromUrl
+        );
+        const remainingPaths = new Set(
+          detached.remaining
+            .flatMap(attachmentStorageUrls)
+            .map(storagePathFromUrl)
+            .filter((path): path is string => path !== null)
+        );
+        const deletable = owned.filter((entry) => !remainingPaths.has(entry.path));
+        const stillReferenced = owned.filter((entry) => remainingPaths.has(entry.path));
+        const deletedPaths: string[] = [];
+        const warnings = attachmentNamespaceWarnings(
+          [...detached.remaining, detached.removed],
+          getAccountId(),
+          itemId
+        );
+        for (const entry of deletable) {
+          try {
+            await deleteFromStorage(entry.url);
+            deletedPaths.push(entry.path);
+          } catch (error) {
+            warnings.push(`Failed to delete ${entry.path}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+        if (stillReferenced.length > 0) {
+          warnings.push("One or more item-owned Storage paths are still referenced by another attachment and were preserved.");
+        }
+        if (external.length > 0 && warnings.length === 0) {
+          warnings.push("Attachment includes paths outside this item's Storage namespace; those source/shared objects were preserved.");
+        }
+        return asToolResponse({
+          message: deletable.length === 0
+            ? `Detached image from item ${itemId}; no Storage objects were eligible for deletion.`
+            : `Detached image from item ${itemId} and deleted ${deletedPaths.length} item-owned Storage object(s).`,
+          ...imageOperationResult({
+            itemId,
+            images: detached.remaining,
+            storageObjectsDeleted: deletedPaths.length > 0,
+            storagePathsAffected: deletedPaths,
+            warnings,
+          }),
+        });
+      } catch (error) {
+        return validation(error instanceof Error ? error.message : String(error), "Choose an imageUrl returned by get_item.");
       }
-
-      // Removing any attachment also repairs legacy duplicate/missing primary flags.
-      const remaining = normalizePrimaryAttachments(attachments!.filter((a) => a.url !== url));
-
-      const updates = applyItemPriceFloorToUpdate(item, {
-        images: remaining,
-        updatedAt: new Date(),
-      });
-      await accountCollection(db, "items").doc(itemId).update(updates);
-
-      // Delete files from Storage (best-effort)
-      const deleted: string[] = [];
-      try { await deleteFromStorage(url); deleted.push("primary"); } catch { /* ignore */ }
-      if (entry.thumbnailUrlSm) {
-        try { await deleteFromStorage(entry.thumbnailUrlSm); deleted.push("thumbnail-sm"); } catch { /* ignore */ }
-      }
-      if (entry.thumbnailUrlMd) {
-        try { await deleteFromStorage(entry.thumbnailUrlMd); deleted.push("thumbnail-md"); } catch { /* ignore */ }
-      }
-
-      return {
-        content: [{
-          type: "text",
-          text: `Removed attachment from item ${itemId}. Deleted from storage: ${deleted.join(", ") || "none (files may have already been removed)"}`,
-        }],
-      };
     }
   );
 }

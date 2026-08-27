@@ -26,7 +26,7 @@ import { registerQuickDraftItemTools } from "./tools/quick-draft-items.js";
  * and instructions cannot drift between local and remote deployments.
  */
 
-export const SERVER_VERSION = "1.2.0";
+export const SERVER_VERSION = "1.3.0";
 
 export const SERVER_INSTRUCTIONS =
   "START HERE: Call `server_info` and `describe_schema` (or read ledger://schema) once per session to learn capabilities, enums, and entity rules.\n\n" +
@@ -41,6 +41,7 @@ export const SERVER_INSTRUCTIONS =
   "TOKEN BUDGET: list_/search_/get_ tools default to `mode: 'summary'` — pass `mode: 'full'` or explicit `fields` only when you need more. Use `get_transactions` / `get_items` / `get_projects` for bulk ID lookups in one round-trip.\n\n" +
   "INVOICING: Invoices are demands for money; transactions are records of money movement. Use item, transaction, or feeInstallment lines for normal source-backed demands; manual is an invoice-only charge or credit. Manual lines automatically use the hidden Other Client Charges & Credits settlement category, while returned paid-item credits retain the original line category. Marking an invoice collected creates categorized paymentToBusiness transaction(s) linked by settlementInvoiceId. Never create synthetic Credit: returned transactions.\n\n" +
   "ITEM QUICK DRAFTS: Quick draft items live in protoItems and are separate from real items. Use list_quick_draft_items, get_quick_draft_item, search_quick_draft_items, create_quick_draft_item, update_quick_draft_item, and promote_quick_draft_item to manage photo-first captures and convert them into real items.\n\n" +
+  "ITEM IMAGES: Use set_primary_item_image and reorder_item_images for Storage-free ordering changes. detach_item_image only removes the Firestore reference. delete_item_image is explicitly destructive and deletes objects only when they are owned by the target item's accounts/{accountId}/items/{itemId}/ namespace. Quick-draft promotion copies and verifies photos into that namespace while preserving draft originals.\n\n" +
   "REPORTS / BULK PULLS: For reports and bulk operations, pass `fields: [...]` to slim each row to exactly what you need (e.g. `fields: ['id', 'name', 'purchasePriceCents']` for a property-management export). A slim projection over hundreds of rows fits comfortably under the default 75KB response cap; full documents do not. If a legitimate report still hits `truncated: true`, raise `responseLimit` (max 200KB) on the same call rather than paginating blindly.\n\n" +
   "PREFER TASK TOOLS: `reconcile_transaction`, `create_transaction_with_items`, `triage_inbox` collapse long primitive chains. `sell_items_from_*` and `return_items` support `dryRun: true` — use it before committing.\n\n" +
   "ERRORS: Failures return structured JSON with `{ code, message, hint, retryable }`. Branch on `code`; the `hint` field tells you how to recover.";
