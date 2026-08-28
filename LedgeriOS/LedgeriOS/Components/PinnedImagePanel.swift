@@ -220,10 +220,15 @@ private struct ImageCheckmarkEditor: View {
     @State private var isLoading = false
     @State private var loadFailed = false
 
+    private let coordinateSpaceName = "image-checkmark-editor"
+
     var body: some View {
         GeometryReader { geometry in
             if let image {
-                let imageRect = aspectFitRect(imageSize: image.size, in: geometry.size)
+                let imageRect = PinnedImageCalculations.aspectFitRect(
+                    imageSize: image.size,
+                    in: geometry.size
+                )
                 ZStack(alignment: .topLeading) {
                     platformImage(image)
                         .resizable()
@@ -237,9 +242,10 @@ private struct ImageCheckmarkEditor: View {
                             .contentShape(Rectangle())
                             .position(x: imageRect.midX, y: imageRect.midY)
                             .gesture(
-                                SpatialTapGesture().onEnded { value in
-                                    addCheckmark(at: value.location, imageSize: imageRect.size)
-                                }
+                                SpatialTapGesture(coordinateSpace: .named(coordinateSpaceName))
+                                    .onEnded { value in
+                                        addCheckmark(at: value.location, imageRect: imageRect)
+                                    }
                             )
                     }
 
@@ -259,12 +265,15 @@ private struct ImageCheckmarkEditor: View {
                         .buttonStyle(.plain)
                         .allowsHitTesting(isEditing)
                         .position(
-                            x: imageRect.minX + CGFloat(mark.x) * imageRect.width,
-                            y: imageRect.minY + CGFloat(mark.y) * imageRect.height
+                            PinnedImageCalculations.renderedPoint(
+                                for: CGPoint(x: CGFloat(mark.x), y: CGFloat(mark.y)),
+                                in: imageRect
+                            )
                         )
                         .accessibilityLabel(isEditing ? "Remove checkmark" : "Checked item")
                     }
                 }
+                .coordinateSpace(name: coordinateSpaceName)
             } else if isLoading {
                 ProgressView().tint(.white)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -288,24 +297,18 @@ private struct ImageCheckmarkEditor: View {
         #endif
     }
 
-    private func aspectFitRect(imageSize: CGSize, in containerSize: CGSize) -> CGRect {
-        guard imageSize.width > 0, imageSize.height > 0,
-              containerSize.width > 0, containerSize.height > 0 else { return .zero }
-        let scale = min(containerSize.width / imageSize.width, containerSize.height / imageSize.height)
-        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-        return CGRect(
-            x: (containerSize.width - size.width) / 2,
-            y: (containerSize.height - size.height) / 2,
-            width: size.width,
-            height: size.height
-        )
-    }
+    private func addCheckmark(at point: CGPoint, imageRect: CGRect) {
+        guard let normalizedPoint = PinnedImageCalculations.normalizedImagePoint(
+            for: point,
+            in: imageRect
+        ) else { return }
 
-    private func addCheckmark(at point: CGPoint, imageSize: CGSize) {
-        guard imageSize.width > 0, imageSize.height > 0 else { return }
-        let localX = min(max(point.x / imageSize.width, 0), 1)
-        let localY = min(max(point.y / imageSize.height, 0), 1)
-        onChange(checkmarks + [ImageCheckmark(x: Double(localX), y: Double(localY))])
+        onChange(checkmarks + [
+            ImageCheckmark(
+                x: Double(normalizedPoint.x),
+                y: Double(normalizedPoint.y)
+            )
+        ])
     }
 
     @MainActor

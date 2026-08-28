@@ -5,6 +5,63 @@ import Testing
 @Suite("Pinned Image Calculation Tests")
 struct PinnedImageCalculationTests {
 
+    // MARK: - Checkmark calibration
+
+    @Test("Portrait image tap renders at the same point")
+    func portraitImageTapRoundTrips() {
+        let imageRect = PinnedImageCalculations.aspectFitRect(
+            imageSize: CGSize(width: 900, height: 1600),
+            in: CGSize(width: 390, height: 300)
+        )
+        let tap = CGPoint(x: 195, y: 150)
+
+        let normalized = PinnedImageCalculations.normalizedImagePoint(for: tap, in: imageRect)
+        let rendered = normalized.map {
+            PinnedImageCalculations.renderedPoint(for: $0, in: imageRect)
+        }
+
+        #expect(normalized != nil)
+        #expect(abs((normalized?.x ?? 0) - 0.5) < 0.000_001)
+        #expect(abs((normalized?.y ?? 0) - 0.5) < 0.000_001)
+        #expect(abs((rendered?.x ?? 0) - tap.x) < 0.001)
+        #expect(abs((rendered?.y ?? 0) - tap.y) < 0.001)
+    }
+
+    @Test("Landscape image taps render within pixel tolerance")
+    func landscapeImageTapsRoundTrip() {
+        let imageRect = PinnedImageCalculations.aspectFitRect(
+            imageSize: CGSize(width: 1600, height: 900),
+            in: CGSize(width: 390, height: 300)
+        )
+        let taps = [
+            CGPoint(x: imageRect.minX + 1, y: imageRect.minY + 1),
+            CGPoint(x: imageRect.midX, y: imageRect.midY),
+            CGPoint(x: imageRect.maxX - 1, y: imageRect.maxY - 1)
+        ]
+
+        for tap in taps {
+            let normalized = PinnedImageCalculations.normalizedImagePoint(for: tap, in: imageRect)
+            let rendered = normalized.map {
+                PinnedImageCalculations.renderedPoint(for: $0, in: imageRect)
+            }
+
+            #expect(normalized != nil)
+            #expect(abs((rendered?.x ?? 0) - tap.x) < 0.001)
+            #expect(abs((rendered?.y ?? 0) - tap.y) < 0.001)
+        }
+    }
+
+    @Test("Taps outside the image clamp to its edge")
+    func outsideTapClampsToImageEdge() {
+        let imageRect = CGRect(x: 100, y: 40, width: 200, height: 120)
+        let normalized = PinnedImageCalculations.normalizedImagePoint(
+            for: CGPoint(x: 20, y: 220),
+            in: imageRect
+        )
+
+        #expect(normalized == CGPoint(x: 0, y: 1))
+    }
+
     // MARK: - clampedFraction
 
     @Test("Clamps below minimum")
