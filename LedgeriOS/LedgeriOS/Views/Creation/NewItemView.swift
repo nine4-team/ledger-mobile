@@ -980,12 +980,19 @@ struct NewItemView: View {
 
         if let transactionId = selectedTransactionId {
             isCreating = true
+            submissionError = nil
             Task {
                 do {
+                    // Inventory items cannot carry a project budget category. Older
+                    // acquisitions may still expose one as accounting metadata, so
+                    // do not pass it into item persistence for inventory scope.
+                    let linkedCategoryId = projectId == nil
+                        ? nil
+                        : selectedTransaction?.budgetCategoryId
                     let createdItems = try itemsService.createItemsForTransaction(
                         accountId: accountId,
                         transactionId: transactionId,
-                        budgetCategoryId: selectedTransaction?.budgetCategoryId,
+                        budgetCategoryId: linkedCategoryId,
                         items: copies,
                         onCommitError: { _, error in
                             print("🔴 createItem linked batch failed: \(error)")
@@ -1000,7 +1007,7 @@ struct NewItemView: View {
                 } catch {
                     await MainActor.run {
                         isCreating = false
-                        submissionError = "Couldn't create the item."
+                        submissionError = error.localizedDescription
                     }
                 }
             }

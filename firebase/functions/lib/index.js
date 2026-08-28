@@ -9,6 +9,7 @@ const firestore_2 = require("firebase-functions/v2/firestore");
 const transactionAuditPricing_1 = require("./transactionAuditPricing");
 const inventoryMovementRepricing_1 = require("./inventoryMovementRepricing");
 const itemPricing_1 = require("./itemPricing");
+const transactionCategory_1 = require("./transactionCategory");
 admin.initializeApp();
 /**
  * Final server-side safety net for clients, imports, or admin writers that do
@@ -941,9 +942,7 @@ function resolveCategoryTypeFromCategoryData(data) {
     return normalizeCategoryType(typeof metadata.categoryType === 'string' ? metadata.categoryType : null) ?? 'general';
 }
 async function transactionUsesItemsCategory(db, accountId, txData) {
-    const categoryId = typeof txData.budgetCategoryId === 'string'
-        ? txData.budgetCategoryId.trim()
-        : null;
+    const categoryId = (0, transactionCategory_1.transactionCategoryIdForCompleteness)(txData);
     if (!categoryId)
         return false;
     const categorySnap = await db

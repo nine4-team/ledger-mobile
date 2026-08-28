@@ -492,7 +492,7 @@ struct ItemDeletionTests {
         #expect(txUpdates[0].fields.keys.contains("updatedAt"))
     }
 
-    @Test("create inventory item for transaction — preserves inventory scope")
+    @Test("create inventory item for legacy categorized transaction — strips category")
     func createInventoryItemForTransaction() throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -502,7 +502,7 @@ struct ItemDeletionTests {
         let createdItems = try service.createItemsForTransaction(
             accountId: acct,
             transactionId: "inventory-tx",
-            budgetCategoryId: nil,
+            budgetCategoryId: "legacy-project-category",
             items: [item],
             onCommitError: { _, _ in }
         )

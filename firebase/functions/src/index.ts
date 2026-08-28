@@ -18,6 +18,7 @@ import {
   projectPriceChange,
 } from './inventoryMovementRepricing';
 import { needsProjectPriceRepair, normalizedProjectPriceCents } from './itemPricing';
+import { transactionCategoryIdForCompleteness } from './transactionCategory';
 
 admin.initializeApp();
 
@@ -1311,10 +1312,7 @@ async function transactionUsesItemsCategory(
   accountId: string,
   txData: DocumentData
 ): Promise<boolean> {
-  const categoryId =
-    typeof txData.budgetCategoryId === 'string'
-      ? txData.budgetCategoryId.trim()
-      : null;
+  const categoryId = transactionCategoryIdForCompleteness(txData);
   if (!categoryId) return false;
 
   const categorySnap = await db
