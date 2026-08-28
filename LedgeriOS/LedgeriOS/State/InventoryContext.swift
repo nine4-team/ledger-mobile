@@ -56,10 +56,14 @@ final class InventoryContext {
             )
         }
 
-        // 2. Transactions scoped to inventory
+        // 2. Transactions scoped to inventory. Fetch all transactions and apply
+        // the model-level scope rule locally because Firestore's `== null` query
+        // excludes legacy documents where projectId is omitted. Both omitted and
+        // explicit-null projectId values decode as nil and mean business inventory.
         listeners.append(
-            transactionsService.subscribeToTransactions(accountId: accountId, scope: .inventory) { [weak self] transactions in
-                Task { @MainActor in self?.transactions = transactions }
+            transactionsService.subscribeToTransactions(accountId: accountId, scope: .all) { [weak self] transactions in
+                let inventoryTransactions = ScopeFilters.transactions(transactions, scope: .inventory)
+                Task { @MainActor in self?.transactions = inventoryTransactions }
             }
         )
 

@@ -212,6 +212,32 @@ struct AmountMatchTests {
         let tx = makeTransaction(amountCents: 5050)
         #expect(SearchCalculations.transactionMatches(transaction: tx, query: "40", categories: []) == false)
     }
+
+    @Test("Inventory amount search includes active and canceled transactions with nil project scope")
+    func inventoryAmountSearchIncludesBothProjectIdRepresentations() {
+        let activeID = "hrjMH82zVSLejOKricfF"
+        let canceledID = "kZG8HFTrF8hQqF51R37K"
+        let transactions = [
+            makeTransaction(id: activeID, amountCents: 119_821),
+            makeTransaction(id: canceledID, amountCents: 119_821, status: .canceled),
+            {
+                var transaction = makeTransaction(id: "project-transaction", amountCents: 119_821)
+                transaction.projectId = "project-1"
+                return transaction
+            }(),
+        ]
+
+        let inventoryTransactions = ScopeFilters.transactions(transactions, scope: .inventory)
+        let results = SearchCalculations.search(
+            query: "1198.21",
+            items: [],
+            transactions: inventoryTransactions,
+            spaces: [],
+            categories: []
+        )
+
+        #expect(Set(results.transactions.compactMap(\.id)) == [activeID, canceledID])
+    }
 }
 
 // MARK: - SKU Normalization Tests
