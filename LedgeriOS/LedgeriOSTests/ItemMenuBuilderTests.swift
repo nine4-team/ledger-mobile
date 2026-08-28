@@ -197,14 +197,59 @@ struct ItemMenuBuilderTests {
 
     // MARK: - Scope: Inventory
 
-    @Test("Inventory scope hides Return and shows Sell")
-    func inventoryScopeNoReturnOrMove() {
+    @Test("Inventory scope shows Return to Project instead of Sell")
+    func inventoryScopeReturnToProject() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
-            context: .list, scope: .inventory, callbacks: allCallbacks()
+            context: .list,
+            scope: .inventory,
+            callbacks: allCallbacks(),
+            projectDestinationPresentation: .returnToProject
         )
         let menuIds = ids(menu)
         #expect(!menuIds.contains("return-to-inventory"))
-        #expect(menuIds.contains("sell"))
+        #expect(!menuIds.contains("sell"))
+        #expect(menuIds.contains("return-to-project"))
+        #expect(menu.first(where: { $0.id == "return-to-project" })?.label == "Return to Project")
+    }
+
+    @Test("Inventory scope keeps Sell when no return project is known")
+    func inventoryScopeSellWithoutReturnProvenance() {
+        let menu = ItemMenuBuilder.buildSingleItemMenu(
+            context: .list, scope: .inventory, callbacks: allCallbacks()
+        )
+        #expect(ids(menu).contains("sell"))
+        #expect(!ids(menu).contains("return-to-project"))
+    }
+
+    @Test("Return presentation resolves only when the proven source project still exists")
+    func returnPresentationRequiresExistingSourceProject() {
+        var item = Item()
+        item.id = "item-1"
+        item.transactionId = "return-1"
+
+        var transaction = Transaction()
+        transaction.id = "return-1"
+        transaction.projectId = "project-home"
+        transaction.source = "Business Inventory"
+        transaction.transactionType = .return
+        transaction.itemIds = ["item-1"]
+        transaction.budgetCategoryId = "furnishings"
+        transaction.subtotalCents = 0
+        transaction.amountCents = 0
+
+        var project = Project()
+        project.id = "project-home"
+
+        #expect(ProjectDestinationPresentation.resolve(
+            for: [item],
+            transactions: [transaction],
+            projects: [project]
+        ) == .returnToProject)
+        #expect(ProjectDestinationPresentation.resolve(
+            for: [item],
+            transactions: [transaction],
+            projects: []
+        ) == .sell)
     }
 
     @Test("Inventory scope still shows Correct / Move")
@@ -290,12 +335,18 @@ struct ItemMenuBuilderTests {
         #expect(menuIds.contains("delete"))
     }
 
-    @Test("Bulk menu inventory scope hides Return and shows Sell")
+    @Test("Bulk menu inventory scope shows Return to Project instead of Sell")
     func bulkMenuInventoryScope() {
-        let menu = ItemMenuBuilder.buildBulkMenu(scope: .inventory, callbacks: allBulkCallbacks())
+        let menu = ItemMenuBuilder.buildBulkMenu(
+            scope: .inventory,
+            callbacks: allBulkCallbacks(),
+            projectDestinationPresentation: .returnToProject
+        )
         let menuIds = ids(menu)
         #expect(!menuIds.contains("return-to-inventory"))
-        #expect(menuIds.contains("sell"))
+        #expect(!menuIds.contains("sell"))
+        #expect(menuIds.contains("return-to-project"))
+        #expect(menu.first(where: { $0.id == "return-to-project" })?.label == "Return to Project")
         #expect(menuIds.contains("correct-move"))
     }
 

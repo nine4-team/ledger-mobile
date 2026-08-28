@@ -54,6 +54,16 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     var taxRatePct: Double?
     var taxAmountPurchasePriceCents: Int?
     var taxAmountProjectPriceCents: Int?
+
+    /// Immutable accounting snapshot captured when the item most recently
+    /// entered business inventory from a project. Return-to-project uses this
+    /// instead of mutable item pricing so it can reverse the original project
+    /// movement into the same project/category for the same amount.
+    var inventoryEntryTransactionId: String?
+    var inventoryEntryProjectId: String?
+    var inventoryEntryBudgetCategoryId: String?
+    var inventoryEntryPriceCents: Int?
+    var inventoryEntryAmountCents: Int?
     var images: [AttachmentRef]?
     var createdBy: String?
     var updatedBy: String?
@@ -81,6 +91,9 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
              transactionId, purchasePriceCents, projectPriceCents, marketValueCents,
              purchasedBy, bookmark, budgetCategoryId, quantity,
              taxRatePct, taxAmountPurchasePriceCents, taxAmountProjectPriceCents,
+             inventoryEntryTransactionId, inventoryEntryProjectId,
+             inventoryEntryBudgetCategoryId, inventoryEntryPriceCents,
+             inventoryEntryAmountCents,
              images, createdBy, updatedBy, createdAt, updatedAt
     }
 }

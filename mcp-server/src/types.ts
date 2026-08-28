@@ -178,6 +178,12 @@ export interface Item {
   budgetCategoryId?: string;
   quantity?: number;
   taxRatePct?: number;
+  /** Immutable accounting provenance captured when this item most recently entered business inventory from a project. */
+  inventoryEntryTransactionId?: string;
+  inventoryEntryProjectId?: string;
+  inventoryEntryBudgetCategoryId?: string;
+  inventoryEntryPriceCents?: number;
+  inventoryEntryAmountCents?: number;
   images?: AttachmentRef[];
   createdBy?: string;
   updatedBy?: string;

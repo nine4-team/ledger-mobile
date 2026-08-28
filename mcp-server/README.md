@@ -92,12 +92,13 @@ For write-path changes, run a disposable smoke against real Firestore using a se
 - `update_project_budget_allocation`, `enable_category_for_project`
 
 ### Inventory Operations
+- `return_items_from_inventory_to_project` — Return items to the project/category and exact accounting values frozen when they entered inventory. The caller cannot choose destination accounting fields. Different original categories create separate Purchases atomically; ambiguous legacy records fail safely.
 - `sell_items_from_inventory_to_project` — Sell items from business inventory into a project. Creates ONE new Purchase transaction per call (auto-ID). Its amount/subtotal follow later project-price changes until the item is on a paid invoice; the remaining accounting identity is frozen. Cap: 100 items. One budget category per batch.
 - `sell_items_from_project_to_inventory` — Sell project-originated items into business inventory (the business is acquiring them). Creates ONE new Sale transaction against the source project. Items must have originated in that project; items that previously passed through inventory must use `return_items` instead.
 - `sell_items_from_project_to_project` — Sell items from one project directly to another in a single atomic batch (origin-aware first hop into inventory + Purchase into destination). Cap: 100 items. One destination category per batch.
 - `return_items` — Return items to a vendor (attach to an existing Return transaction) or back to business inventory (always creates a new per-batch Return transaction with the inventory source label; wipes item category). Cap: 100 items.
 
-Inventory movement identity fields (`budgetCategoryId`, `type`, `source`, `projectId`) are frozen after creation, and clients cannot edit movement totals directly. The trusted item-price trigger adjusts `amountCents`/`subtotalCents` only for a project-side Purchase from Inventory when its sold item's effective project price changes. Other movement totals remain frozen. `itemIds` tracks active membership. Item invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.
+Inventory movement identity fields (`budgetCategoryId`, `type`, `source`, `projectId`) are frozen after creation, and clients cannot edit movement totals directly. Inventory-entry items also preserve the movement transaction, source project/category, and per-item subtotal/amount used by Return to Project. The generic inventory-sale tool refuses items carrying return provenance. The trusted item-price trigger adjusts `amountCents`/`subtotalCents` only for a project-side Purchase from Inventory when its sold item's effective project price changes. Other movement totals remain frozen. `itemIds` tracks active membership. Item invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.
 
 ### Item Copies and Quantity Expansion
 

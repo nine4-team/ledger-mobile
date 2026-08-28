@@ -97,7 +97,12 @@ struct ItemsService: ItemsServiceProtocol {
         }
     ) throws -> [Item] {
         guard !items.isEmpty else { return [] }
-        let categoryId = Self.realCategoryId(budgetCategoryId)
+        // Legacy inventory transactions can retain a project category even
+        // though their projectId is nil. That transaction-level accounting
+        // metadata must never leak onto newly-created inventory items.
+        let categoryId = items.allSatisfy { $0.projectId == nil }
+            ? nil
+            : Self.realCategoryId(budgetCategoryId)
         for item in items {
             try Self.validateCategory(projectId: item.projectId, categoryId: categoryId)
         }

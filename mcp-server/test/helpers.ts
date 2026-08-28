@@ -75,6 +75,14 @@ export function makeCapturedServer(): CapturedServer {
 
 /** Wipe all docs we care about under the test account. */
 export async function wipeAccount(db: Firestore): Promise<void> {
+  const presetCategories = await db
+    .collection(`accounts/${TEST_ACCOUNT_ID}/presets/default/budgetCategories`)
+    .get();
+  if (!presetCategories.empty) {
+    const batch = db.batch();
+    for (const category of presetCategories.docs) batch.delete(category.ref);
+    await batch.commit();
+  }
   const collections = [
     "items",
     "transactions",
@@ -144,6 +152,11 @@ export interface SeedItemOptions {
   source?: string;
   currentSource?: string;
   spaceId?: string | null;
+  inventoryEntryTransactionId?: string;
+  inventoryEntryProjectId?: string;
+  inventoryEntryBudgetCategoryId?: string;
+  inventoryEntryPriceCents?: number;
+  inventoryEntryAmountCents?: number;
 }
 
 export async function seedItem(db: Firestore, opts: SeedItemOptions): Promise<void> {
@@ -163,6 +176,11 @@ export async function seedItem(db: Firestore, opts: SeedItemOptions): Promise<vo
   if (opts.source !== undefined) data.source = opts.source;
   if (opts.currentSource !== undefined) data.currentSource = opts.currentSource;
   if (opts.spaceId !== undefined) data.spaceId = opts.spaceId;
+  if (opts.inventoryEntryTransactionId !== undefined) data.inventoryEntryTransactionId = opts.inventoryEntryTransactionId;
+  if (opts.inventoryEntryProjectId !== undefined) data.inventoryEntryProjectId = opts.inventoryEntryProjectId;
+  if (opts.inventoryEntryBudgetCategoryId !== undefined) data.inventoryEntryBudgetCategoryId = opts.inventoryEntryBudgetCategoryId;
+  if (opts.inventoryEntryPriceCents !== undefined) data.inventoryEntryPriceCents = opts.inventoryEntryPriceCents;
+  if (opts.inventoryEntryAmountCents !== undefined) data.inventoryEntryAmountCents = opts.inventoryEntryAmountCents;
   await ref.set(data);
 }
 
@@ -187,6 +205,7 @@ export interface SeedTransactionOptions {
   projectId?: string | null;
   budgetCategoryId?: string | null;
   amountCents?: number;
+  subtotalCents?: number;
   itemIds?: string[];
   isCanonicalInventorySale?: boolean;
   inventorySaleDirection?: string;
@@ -210,6 +229,7 @@ export async function seedTransaction(
   if (opts.projectId !== undefined) data.projectId = opts.projectId;
   if (opts.budgetCategoryId !== undefined) data.budgetCategoryId = opts.budgetCategoryId;
   if (opts.amountCents !== undefined) data.amountCents = opts.amountCents;
+  if (opts.subtotalCents !== undefined) data.subtotalCents = opts.subtotalCents;
   if (opts.itemIds !== undefined) data.itemIds = opts.itemIds;
   if (opts.isCanonicalInventorySale !== undefined) {
     data.isCanonicalInventorySale = opts.isCanonicalInventorySale;

@@ -318,11 +318,15 @@ struct TransactionDetailView: View {
         return accountContext.allProjects.first { $0.id == projectId }
     }
 
-    private var itemScope: ItemScope {
-        switch scope {
-        case .project: return .project
-        case .inventory: return .inventory
-        }
+    private func itemScope(for item: Item) -> ItemScope {
+        item.projectId == nil ? .inventory : .project
+    }
+
+    private var selectedItemsScope: ItemScope? {
+        guard !selectedItems.isEmpty else { return nil }
+        if selectedItems.allSatisfy({ $0.projectId == nil }) { return .inventory }
+        if selectedItems.allSatisfy({ $0.projectId != nil }) { return .project }
+        return nil
     }
 
     private var itemFilterScope: ItemFilterScope {
@@ -1371,10 +1375,15 @@ struct TransactionDetailView: View {
         guard let itemId = item.id else { return [] }
         return itemActions.buildMenu(
             for: item,
-            scope: .project,
+            scope: itemScope(for: item),
             menuContext: .transaction,
             accountId: accountContext.currentAccountId,
-            onSelect: { selectedItemIds.insert(itemId) }
+            onSelect: { selectedItemIds.insert(itemId) },
+            projectDestinationPresentation: .resolve(
+                for: [item],
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
+            )
         )
     }
 
@@ -1421,22 +1430,28 @@ struct TransactionDetailView: View {
     }
 
     private var bulkActionMenuItems: [ActionMenuItem] {
-        ItemMenuBuilder.buildBulkMenu(
+        let selectedScope = selectedItemsScope
+        return ItemMenuBuilder.buildBulkMenu(
             context: .transaction,
-            scope: itemScope,
+            scope: selectedScope ?? .search,
             callbacks: BulkItemMenuCallbacks(
                 onStatusChange: { _ in showBulkStatusPicker = true },
                 onSetTransaction: { showBulkTransactionPicker = true },
                 onClearTransaction: { clearTransactionForSelected() },
                 onSetSpace: { showBulkSetSpace = true },
                 onClearSpace: { clearSpaceForSelected() },
-                onReturnToInventory: selectedItemsCanReturnToInventory
+                onReturnToInventory: selectedScope == .project && selectedItemsCanReturnToInventory
                     ? { showBulkReturnToInventory = true }
                     : nil,
-                onSellToProject: { showBulkSellToProject = true },
+                onSellToProject: selectedScope == nil ? nil : { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },
                 onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
                 onDelete: { showBulkDeleteConfirmation = true }
+            ),
+            projectDestinationPresentation: .resolve(
+                for: selectedItems,
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
             )
         )
     }

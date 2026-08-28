@@ -25,14 +25,187 @@ struct InventoryOperationsServiceTests {
         id: String,
         projectId: String,
         source: String,
-        type: TransactionType = .purchase
+        type: TransactionType = .purchase,
+        itemIds: [String] = [],
+        budgetCategoryId: String = "furnishings"
     ) -> Transaction {
         var transaction = Transaction()
         transaction.id = id
         transaction.projectId = projectId
         transaction.source = source
         transaction.transactionType = type
+        transaction.itemIds = itemIds
+        transaction.budgetCategoryId = budgetCategoryId
+        transaction.subtotalCents = 0
+        transaction.amountCents = 0
         return transaction
+    }
+
+    private func makeInventoryItem(id: String, transactionId: String) -> Item {
+        var item = Item()
+        item.id = id
+        item.projectId = nil
+        item.transactionId = transactionId
+        return item
+    }
+
+    // MARK: - Return project resolution
+
+    @Test("return project resolves from current project-scoped inventory movement")
+    func returnProjectResolvesFromCurrentMovement() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "return-1")
+        let transaction = makeTransaction(
+            id: "return-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .return,
+            itemIds: ["item-1"]
+        )
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == "project-home")
+    }
+
+    @Test("return project does not resolve for ordinary inventory purchase")
+    func ordinaryInventoryPurchaseIsNotReturn() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "purchase-1")
+        var transaction = Transaction()
+        transaction.id = "purchase-1"
+        transaction.projectId = nil
+        transaction.source = "Wayfair"
+        transaction.transactionType = .purchase
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
+    }
+
+    @Test("mixed source projects cannot resolve as one return")
+    func mixedReturnProjectsDoNotResolve() {
+        let items = [
+            makeInventoryItem(id: "item-1", transactionId: "return-1"),
+            makeInventoryItem(id: "item-2", transactionId: "return-2"),
+        ]
+        let transactions = [
+            makeTransaction(id: "return-1", projectId: "project-a", source: "Business Inventory", type: .return, itemIds: ["item-1"]),
+            makeTransaction(id: "return-2", projectId: "project-b", source: "Business Inventory", type: .return, itemIds: ["item-2"]),
+        ]
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: items,
+            transactions: transactions
+        ) == nil)
+    }
+
+    @Test("project sale without an inventory source is not return provenance")
+    func ordinaryProjectSaleIsNotReturn() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "sale-1")
+        let transaction = makeTransaction(
+            id: "sale-1",
+            projectId: "project-home",
+            source: "Customer",
+            type: .sale,
+            itemIds: ["item-1"]
+        )
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
+    }
+
+    @Test("sale-to-inventory resolves as return provenance")
+    func saleToInventoryResolves() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "sale-1")
+        let transaction = makeTransaction(
+            id: "sale-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .sale,
+            itemIds: ["item-1"]
+        )
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == "project-home")
+    }
+
+    @Test("transaction must still contain the inventory item")
+    func staleTransactionMembershipIsNotReturn() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "return-1")
+        let transaction = makeTransaction(
+            id: "return-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .return,
+            itemIds: []
+        )
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
+    }
+
+    @Test("canceled movement is not return provenance")
+    func canceledMovementIsNotReturn() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "return-1")
+        var transaction = makeTransaction(
+            id: "return-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .return,
+            itemIds: ["item-1"]
+        )
+        transaction.status = .canceled
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
+    }
+
+    @Test("partial inventory snapshot blocks return instead of falling back")
+    func partialSnapshotDoesNotResolve() {
+        var item = makeInventoryItem(id: "item-1", transactionId: "return-1")
+        item.inventoryEntryProjectId = "wrong-project"
+        var transaction = makeTransaction(
+            id: "return-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .return,
+            itemIds: ["item-1"]
+        )
+        transaction.subtotalCents = 10_000
+        transaction.amountCents = 10_825
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
+    }
+
+    @Test("ambiguous multi-item legacy movement blocks return")
+    func ambiguousLegacyMovementDoesNotResolve() {
+        let item = makeInventoryItem(id: "item-1", transactionId: "return-1")
+        var transaction = makeTransaction(
+            id: "return-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .return,
+            itemIds: ["item-1", "item-2"]
+        )
+        transaction.subtotalCents = 20_000
+        transaction.amountCents = 21_650
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
     }
 
     // MARK: - computeBatchTotals

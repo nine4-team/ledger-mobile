@@ -127,6 +127,7 @@ func makeSpace(
     notes: String? = nil,
     images: [AttachmentRef]? = nil,
     checklists: [Checklist]? = nil,
+    isComplete: Bool? = nil,
     isArchived: Bool? = nil
 ) -> Space {
     var space = Space()
@@ -137,6 +138,7 @@ func makeSpace(
     space.notes = notes
     space.images = images
     space.checklists = checklists
+    space.isComplete = isComplete
     space.isArchived = isArchived
     return space
 }

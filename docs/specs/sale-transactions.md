@@ -8,7 +8,7 @@ When items move between business inventory and a project, the system creates a p
 
 ## The Per-Batch Model
 
-Every user action that moves items from inventory into a project creates **one new purchase transaction**. The transaction is written with an initial amount derived from the sold items' project prices and an initial active item list. If an active sold item's project price later changes before the existing paid-invoice freeze boundary, Ledger adjusts this project-side Purchase total by that item's price delta. Before collection, a user may also reclassify the entire Purchase to another project-enabled itemized category; Ledger updates the Purchase and all currently attached items atomically. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
+An ordinary Sell from inventory into a project creates **one new purchase transaction**. Return to Project instead restores the original category per item, so a bulk return creates one Purchase per represented original category in the same atomic batch. Each transaction has an initial active item list. Configurable Sell amounts derive from sold items' project prices; Return-to-Project amounts come from immutable inventory-entry accounting snapshots. If an active ordinarily sold item's project price later changes before the existing paid-invoice freeze boundary, Ledger adjusts this project-side Purchase total by that item's price delta. Before collection, a user may also reclassify the entire Purchase to another project-enabled itemized category; Ledger updates the Purchase and all currently attached items atomically. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
 
 This is different from the legacy canonical-sale model, where one long-lived transaction per `(project, direction, category)` triple aggregated every inventory movement over time. The legacy model is preserved for historical data — see "Legacy Canonical Sales" below.
 
@@ -68,7 +68,7 @@ The following invariants are enforced by Firestore security rules and by tests i
 2. **Batch size cap.** Initial `itemIds.length >= 1 && itemIds.length <= 100`. Later returns/sales can reduce `itemIds` to zero on the source transaction. Both clients enforce the initial cap locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
 4. **Direction is type/source-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source is project → inventory acquisition. No dedicated direction field is written for new per-batch movements.
-5. **Category must be project-enabled and itemized (inventory → project only).** The selected account `BudgetCategory` must be active, non-system, and have canonical `metadata.categoryType == "itemized"`. A matching `ProjectBudgetCategory` must already exist in the destination project. Sale and reclassification pickers show only categories satisfying all of these conditions; these workflows do not auto-enable a category.
+5. **Category must be project-enabled and itemized for configurable Sell.** The selected account `BudgetCategory` must be active, non-system, and have canonical `metadata.categoryType == "itemized"`. A matching `ProjectBudgetCategory` must already exist in the destination project. Sale and reclassification pickers show only categories satisfying all of these conditions; these workflows do not auto-enable a category. Return to Project is the narrow exception: it restores and re-enables the recorded original category rather than asking the user to choose a new one.
 6. **One accounting category per transaction.** Inventory → project purchases use one destination `budgetCategoryId`. Source project egress transactions use one source `budgetCategoryId`; mixed source categories are split into separate first-hop transactions.
 
 ## The Sell Flow
@@ -126,6 +126,14 @@ One batch, all-or-nothing:
 
 - The `onItemTransactionIdChanged` Cloud Function fires for each item, creating an `association` lineage edge as the audit trail. (Already exists, no change needed.)
 - The `onTransactionWritten` Cloud Function fires for the new Purchase transaction and recalculates the destination project's budget summary.
+
+## The Return-to-Project Flow
+
+Return to Project is a reversal, not a configurable sale. It is available only while every selected item is in inventory and its current active inventory-entry transaction proves the same source project. The confirmation UI does not offer project, category, or price controls.
+
+When an item moves from a project into inventory, the item stores an immutable snapshot of that movement's transaction ID, source project, source budget category, accounting price, and tax-inclusive amount. Returning the item uses those values even if its mutable prices change later. A Return entry snapshots project price plus tax; a Sale-to-Inventory entry snapshots purchase cost. A pre-snapshot item is accepted only when a single-item source movement stores an exact subtotal and amount. Ambiguous legacy allocations are blocked until verified snapshots are backfilled; Ledger never recalculates a historical return amount from mutable item fields.
+
+The atomic writer groups selected items by their recorded original category and creates one Purchase-from-Inventory per category. Each Purchase restores the recorded subtotal and amount, each item returns to the recorded project/category, source transaction membership is removed, and lineage is written in the same batch. The original category is restored even if it is not currently enabled; the same batch re-enables its project category record. If provenance changes between presentation and confirmation, the operation fails rather than guessing.
 
 ## Purchase Category Reclassification
 
@@ -193,6 +201,7 @@ The inventory movement transaction's initial `amountCents` is computed at creati
 | Movement | Price basis |
 |---|---|
 | Inventory → project Purchase | Project price (`projectPriceCents`) |
+| Return to Project Purchase | Immutable inventory-entry price and amount, restoring the original project/category movement |
 | Project → inventory Sale-to-Inventory | Purchase cost (`purchasePriceCents`) |
 | Return to inventory | Effective project-sale price (`max(projectPriceCents, purchasePriceCents)`), reversing the inventory→project Purchase |
 | Project → project source exit | Origin-aware: Return at project price; Sale-to-Inventory at purchase cost |

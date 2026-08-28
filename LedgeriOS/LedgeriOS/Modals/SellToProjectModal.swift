@@ -1,9 +1,9 @@
 import SwiftUI
 import FirebaseFirestore
 
-/// Entry point for financial sale flows.
-/// Inventory-originated project items return to inventory through the Return
-/// action; project-originated items can be sold to business inventory here.
+/// Entry point for financial cross-scope item flows.
+/// Inventory items with proven source-project provenance return there directly;
+/// other inventory items and project items use the normal sale destination flow.
 struct SellItemsModal: View {
     let items: [Item]
     let accountId: String
@@ -23,15 +23,37 @@ struct SellItemsModal: View {
             && items.allSatisfy { !InventoryOperationsService.cameFromInventory($0) }
     }
 
+    @Environment(AccountContext.self) private var accountContext
+
+    private var returnDestination: (project: Project, provenance: ReturnToProjectProvenance)? {
+        guard let provenance = InventoryOperationsService.returnToProjectProvenance(
+            for: items,
+            transactions: accountContext.allTransactions
+        ), let project = accountContext.allProjects.first(where: { $0.id == provenance.projectId }) else {
+            return nil
+        }
+        return (project, provenance)
+    }
+
     var body: some View {
         Group {
-            switch destination {
-            case .project:
-                SellToProjectModal(items: items, accountId: accountId, onComplete: onComplete)
-            case .inventory:
-                SellToInventoryModal(items: items, accountId: accountId, onComplete: onComplete)
-            case nil:
-                destinationPicker
+            if let returnDestination {
+                ReturnToProjectModal(
+                    items: items,
+                    accountId: accountId,
+                    project: returnDestination.project,
+                    initialProvenance: returnDestination.provenance,
+                    onComplete: onComplete
+                )
+            } else {
+                switch destination {
+                case .project:
+                    SellToProjectModal(items: items, accountId: accountId, onComplete: onComplete)
+                case .inventory:
+                    SellToInventoryModal(items: items, accountId: accountId, onComplete: onComplete)
+                case nil:
+                    destinationPicker
+                }
             }
         }
     }
@@ -97,7 +119,127 @@ struct SellItemsModal: View {
     }
 }
 
-/// Two-step flow for selling items to a project.
+/// A true reversal of the current project-to-inventory movement. Destination,
+/// categories, and amounts are locked to the movement's recorded provenance.
+struct ReturnToProjectModal: View {
+    let items: [Item]
+    let accountId: String
+    let project: Project
+    let initialProvenance: ReturnToProjectProvenance
+    let onComplete: () -> Void
+
+    @Environment(AuthManager.self) private var authManager
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(\.dismiss) private var dismiss
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    private var categoryDescription: String {
+        let categories = initialProvenance.categoryIds.compactMap { id in
+            accountContext.allBudgetCategories.first(where: { $0.id == id })?.name
+        }.sorted()
+        if initialProvenance.categoryIds.count == 1 {
+            return categories.first ?? "Original category"
+        }
+        return categories.count == initialProvenance.categoryIds.count
+            ? categories.joined(separator: ", ")
+            : "\(initialProvenance.categoryIds.count) original categories"
+    }
+
+    var body: some View {
+        FormSheet(
+            title: "Return to Project",
+            description: "This reverses the inventory movement using its original project, budget category, and amount.",
+            primaryAction: FormSheetAction(title: "Cancel", action: { dismiss() })
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                summaryRow(label: "Project", value: project.name)
+                summaryRow(label: "Budget Category", value: categoryDescription)
+                summaryRow(
+                    label: "Amount",
+                    value: CurrencyFormatting.formatCentsWithDecimals(initialProvenance.amountCents)
+                )
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(Typography.small)
+                        .foregroundStyle(StatusColors.missedText)
+                }
+
+                AppButton(
+                    title: "Confirm Return",
+                    isLoading: isSaving,
+                    action: performReturn
+                )
+            }
+        }
+    }
+
+    private func summaryRow(label: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
+            Text(label)
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+            Spacer()
+            Text(value)
+                .font(Typography.body)
+                .foregroundStyle(BrandColors.textPrimary)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(Spacing.md)
+        .background(BrandColors.surfaceTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func performReturn() {
+        guard !isSaving else { return }
+        var liveItemsById: [String: Item] = [:]
+        for item in accountContext.allItems {
+            if let itemId = item.id { liveItemsById[itemId] = item }
+        }
+        let liveItems = items.compactMap { item in
+            item.id.flatMap { liveItemsById[$0] }
+        }
+        guard liveItems.count == items.count else {
+            errorMessage = "One or more items are no longer available. Close and try again."
+            return
+        }
+        guard let liveProvenance = InventoryOperationsService.returnToProjectProvenance(
+            for: liveItems,
+            transactions: accountContext.allTransactions
+        ), liveProvenance == initialProvenance,
+           accountContext.allProjects.contains(where: { $0.id == liveProvenance.projectId }) else {
+            errorMessage = "This item's return details changed. Close and try again."
+            return
+        }
+
+        isSaving = true
+        errorMessage = nil
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        Task {
+            do {
+                try await InventoryOperationsService().returnToProject(
+                    items: liveItems,
+                    provenance: liveProvenance,
+                    accountId: accountId,
+                    inventoryLabel: inventoryLabel,
+                    userId: authManager.currentUser?.uid
+                )
+                await MainActor.run {
+                    onComplete()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed: \(error.localizedDescription)"
+                    isSaving = false
+                }
+            }
+        }
+    }
+}
+
+/// Project-destination sale flow.
 /// Steps: (1) pick destination project, (2) pick budget category + confirm.
 /// One category applies to the entire batch.
 struct SellToProjectModal: View {
@@ -118,8 +260,6 @@ struct SellToProjectModal: View {
     /// Budget categories fetched independently for the destination project step.
     @State private var accountCategories: [BudgetCategory] = []
     @State private var categoriesListener: ListenerRegistration?
-
-    private static let descriptionText = "A sale record will be created for financial tracking. One budget category applies to all items in this batch."
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -146,7 +286,7 @@ struct SellToProjectModal: View {
 
     private var stepHeader: some View {
         HStack {
-            if step > 1 {
+            if canGoBack {
                 Button {
                     if step == 3 && missingProjectPriceItems.isEmpty {
                         step = 1
@@ -178,6 +318,10 @@ struct SellToProjectModal: View {
         .padding(.bottom, Spacing.md)
     }
 
+    private var canGoBack: Bool {
+        step > 1
+    }
+
     private var stepTitle: String {
         switch step {
         case 1: return "Sell to Project"
@@ -191,7 +335,7 @@ struct SellToProjectModal: View {
 
     private var step1DestinationProject: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(Self.descriptionText)
+            Text("A sale record will be created for financial tracking. One budget category applies to all items in this batch.")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
                 .padding(.horizontal, Spacing.screenPadding)
@@ -209,7 +353,7 @@ struct SellToProjectModal: View {
 
     private var step2ProjectPrices: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Set the sale price for each item.")
+            Text("Set the project price for each item.")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
                 .padding(.horizontal, Spacing.screenPadding)
@@ -279,7 +423,7 @@ struct SellToProjectModal: View {
                 AppButton(
                     title: "Confirm Sale",
                     isLoading: isSaving,
-                    action: { performSale() }
+                    action: { performProjectMovement() }
                 )
             }
             .padding(.horizontal, Spacing.screenPadding)
@@ -289,7 +433,7 @@ struct SellToProjectModal: View {
 
     // MARK: - Action
 
-    private func performSale() {
+    private func performProjectMovement() {
         guard let project = destinationProject, let projectId = project.id else { return }
 
         guard let categoryId = destinationCategoryId, !categoryId.isEmpty else {

@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, type WriteBatch, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { Invoice, InvoiceLine, Item, LineageEdge, Transaction } from "../types.js";
+import type { Invoice, InvoiceLine, Item, LineageEdge, Project, Transaction } from "../types.js";
 import { accountCollection, accountPath, subcollection, getDoc, queryDocs } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { notFound, validation } from "../util/errors.js";
@@ -56,6 +56,17 @@ const destinationSpaceAssignmentsSchema = z
     "Optional per-item destination spaces. Each space must exist and belong to destinationProjectId. Items omitted here land unassigned."
   );
 
+const returnToProjectSpaceAssignmentsSchema = z
+  .array(z.object({
+    itemId: z.string().describe("Item ID from this return."),
+    spaceId: z.string().describe("Space ID in the item's locked original project."),
+  }))
+  .max(MAX_BATCH_ITEMS)
+  .optional()
+  .describe(
+    "Optional per-item spaces in the locked original project. Items omitted here land unassigned."
+  );
+
 function projectPriceForMovement(item: Item): number {
   return effectiveProjectPriceCents(item);
 }
@@ -105,6 +116,292 @@ export function computeProjectOriginAcquisitionTotals(items: (Item & { id: strin
 } {
   const subtotalCents = items.reduce((sum, item) => sum + (item.purchasePriceCents ?? 0), 0);
   return { subtotalCents, amountCents: subtotalCents, missingTax: [] };
+}
+
+function inventoryEntrySnapshot(
+  item: Item & { id: string },
+  transactionId: string,
+  projectId: string,
+  transactionType: "Return" | "Sale"
+) {
+  const categoryId = item.budgetCategoryId;
+  if (!categoryId) throw new Error(`Item ${item.id} is missing its source budget category.`);
+  const line = transactionType === "Sale"
+    ? computeProjectOriginAcquisitionTotals([item])
+    : computeProjectToInventoryTotals([item]);
+  return {
+    inventoryEntryTransactionId: transactionId,
+    inventoryEntryProjectId: projectId,
+    inventoryEntryBudgetCategoryId: categoryId,
+    inventoryEntryPriceCents: line.subtotalCents,
+    inventoryEntryAmountCents: line.amountCents,
+  };
+}
+
+type ReturnToProjectEvidence = "snapshot" | "legacySingleItemTransaction";
+
+type ReturnToProjectLine = {
+  item: Item & { id: string };
+  sourceTransactionId: string;
+  projectId: string;
+  budgetCategoryId: string;
+  priceCents: number;
+  amountCents: number;
+  evidence: ReturnToProjectEvidence;
+};
+
+type ReturnToProjectResolution = {
+  ok: true;
+  projectId: string;
+  lines: ReturnToProjectLine[];
+};
+
+type ReturnToProjectIssue = {
+  ok: false;
+  message: string;
+  hint: string;
+};
+
+class ReturnToProjectValidationError extends Error {
+  constructor(
+    message: string,
+    readonly hint: string
+  ) {
+    super(message);
+    this.name = "ReturnToProjectValidationError";
+  }
+}
+
+function nonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function normalizedString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function inventoryEntrySnapshotIsPresent(item: Item): boolean {
+  return [
+    item.inventoryEntryTransactionId,
+    item.inventoryEntryProjectId,
+    item.inventoryEntryBudgetCategoryId,
+    item.inventoryEntryPriceCents,
+    item.inventoryEntryAmountCents,
+  ].some((value) => value !== undefined && value !== null);
+}
+
+function isInventoryEntryMovement(
+  item: Item & { id: string },
+  transaction: (Transaction & { id: string }) | undefined
+): transaction is Transaction & { id: string } {
+  if (!transaction) return false;
+  const type = normalizedString(transaction.type)?.toLowerCase();
+  return (
+    (type === "return" || type === "sale") &&
+    normalizedString(transaction.status)?.toLowerCase() !== "canceled" &&
+    isInventoryLabel(transaction.source) &&
+    transaction.itemIds?.includes(item.id) === true
+  );
+}
+
+/**
+ * Resolve the immutable accounting line for inventory items returning to their
+ * source project. New records must use the per-item snapshot. A legacy record
+ * is accepted only when its source movement has exactly one active item, so
+ * the transaction subtotal and amount prove that item's exact values.
+ */
+export function resolveReturnToProjectProvenance(
+  items: (Item & { id: string })[],
+  transactionsById: ReadonlyMap<string, Transaction & { id: string }>
+): ReturnToProjectResolution | ReturnToProjectIssue {
+  if (items.length === 0) {
+    return {
+      ok: false,
+      message: "At least one inventory item is required.",
+      hint: "Pass one or more itemIds currently held in business inventory.",
+    };
+  }
+
+  const uniqueItemIds = new Set(items.map((item) => item.id));
+  if (uniqueItemIds.size !== items.length) {
+    return {
+      ok: false,
+      message: "itemIds contains duplicates.",
+      hint: "Pass each inventory item exactly once.",
+    };
+  }
+
+  const lines: ReturnToProjectLine[] = [];
+  const projectIds = new Set<string>();
+  for (const item of items) {
+    if (item.projectId !== null && item.projectId !== undefined) {
+      return {
+        ok: false,
+        message: `Item ${item.id} is not currently in business inventory.`,
+        hint: "Return to Project only accepts items whose projectId is null.",
+      };
+    }
+
+    const sourceTransactionId = normalizedString(item.transactionId);
+    if (!sourceTransactionId) {
+      return {
+        ok: false,
+        message: `Item ${item.id} has no current inventory-entry transaction.`,
+        hint: "Repair the item's transaction provenance before returning it. Ledger will not ask for a substitute project or category.",
+      };
+    }
+
+    const transaction = transactionsById.get(sourceTransactionId);
+    if (!transaction) {
+      return {
+        ok: false,
+        message: `Inventory-entry transaction ${sourceTransactionId} for item ${item.id} does not exist.`,
+        hint: "Repair the missing transaction provenance before returning the item.",
+      };
+    }
+    if (!isInventoryEntryMovement(item, transaction)) {
+      return {
+        ok: false,
+        message: `Item ${item.id} is not an active member of a valid Return or Sale-to-Inventory transaction.`,
+        hint: "The current transaction must be active, inventory-labeled, uncanceled, and contain the item. Do not convert this into a configurable sale.",
+      };
+    }
+
+    const projectId = normalizedString(transaction.projectId);
+    const budgetCategoryId = normalizedString(transaction.budgetCategoryId);
+    if (!projectId || !budgetCategoryId) {
+      return {
+        ok: false,
+        message: `Inventory-entry transaction ${transaction.id} is missing its source project or budget category.`,
+        hint: "Repair the source movement before returning the item; the destination cannot be selected manually.",
+      };
+    }
+
+    let priceCents: number;
+    let amountCents: number;
+    let evidence: ReturnToProjectEvidence;
+    if (inventoryEntrySnapshotIsPresent(item)) {
+      const snapshotMatches =
+        item.inventoryEntryTransactionId === transaction.id &&
+        item.inventoryEntryProjectId === projectId &&
+        item.inventoryEntryBudgetCategoryId === budgetCategoryId &&
+        nonNegativeInteger(item.inventoryEntryPriceCents) &&
+        nonNegativeInteger(item.inventoryEntryAmountCents);
+      if (!snapshotMatches) {
+        return {
+          ok: false,
+          message: `Item ${item.id} has incomplete or inconsistent inventory-entry snapshot fields.`,
+          hint: "Repair the frozen transaction/project/category/price/amount snapshot as one verified unit before returning the item.",
+        };
+      }
+      priceCents = item.inventoryEntryPriceCents!;
+      amountCents = item.inventoryEntryAmountCents!;
+      evidence = "snapshot";
+    } else {
+      const activeItemIds = transaction.itemIds ?? [];
+      if (
+        activeItemIds.length !== 1 ||
+        activeItemIds[0] !== item.id ||
+        !nonNegativeInteger(transaction.subtotalCents) ||
+        !nonNegativeInteger(transaction.amountCents)
+      ) {
+        return {
+          ok: false,
+          message: `Legacy item ${item.id} does not have an exact provable per-item return amount.`,
+          hint: "Only a single-item legacy inventory movement with stored subtotalCents and amountCents can be returned automatically. Backfill a verified snapshot for ambiguous records.",
+        };
+      }
+      priceCents = transaction.subtotalCents;
+      amountCents = transaction.amountCents;
+      evidence = "legacySingleItemTransaction";
+    }
+
+    if (priceCents < Math.max(item.purchasePriceCents ?? 0, 0)) {
+      return {
+        ok: false,
+        message: `Item ${item.id}'s proven return price is below its purchase-price floor.`,
+        hint: "Repair and verify the historical accounting record before returning the item; MCP will not write an invalid project price.",
+      };
+    }
+
+    projectIds.add(projectId);
+    lines.push({
+      item,
+      sourceTransactionId,
+      projectId,
+      budgetCategoryId,
+      priceCents,
+      amountCents,
+      evidence,
+    });
+  }
+
+  if (projectIds.size !== 1) {
+    return {
+      ok: false,
+      message: "Selected inventory items came from different projects.",
+      hint: "Return one source project per call. Categories may differ and will be grouped automatically.",
+    };
+  }
+
+  return { ok: true, projectId: lines[0].projectId, lines };
+}
+
+function returnToProjectCategoryGroups(lines: ReturnToProjectLine[]): Array<{
+  budgetCategoryId: string;
+  lines: ReturnToProjectLine[];
+  subtotalCents: number;
+  amountCents: number;
+}> {
+  const order: string[] = [];
+  const byCategory = new Map<string, ReturnToProjectLine[]>();
+  for (const line of lines) {
+    if (!byCategory.has(line.budgetCategoryId)) {
+      order.push(line.budgetCategoryId);
+      byCategory.set(line.budgetCategoryId, []);
+    }
+    byCategory.get(line.budgetCategoryId)!.push(line);
+  }
+  return order.map((budgetCategoryId) => {
+    const categoryLines = byCategory.get(budgetCategoryId)!;
+    return {
+      budgetCategoryId,
+      lines: categoryLines,
+      subtotalCents: categoryLines.reduce((sum, line) => sum + line.priceCents, 0),
+      amountCents: categoryLines.reduce((sum, line) => sum + line.amountCents, 0),
+    };
+  });
+}
+
+async function loadCurrentTransactions(
+  db: Firestore,
+  items: (Item & { id: string })[]
+): Promise<Map<string, Transaction & { id: string }>> {
+  const ids = [...new Set(items.map((item) => normalizedString(item.transactionId)).filter((id): id is string => id !== null))];
+  if (ids.length === 0) return new Map();
+  const refs = ids.map((id) => accountCollection(db, "transactions").doc(id));
+  const snapshots = await db.getAll(...refs);
+  return new Map(
+    snapshots
+      .filter((snapshot) => snapshot.exists)
+      .map((snapshot) => [snapshot.id, { ...(snapshot.data() as Transaction), id: snapshot.id }])
+  );
+}
+
+async function inventoryReturnCandidateIds(
+  db: Firestore,
+  items: (Item & { id: string })[]
+): Promise<string[]> {
+  const transactionsById = await loadCurrentTransactions(db, items);
+  return items
+    .filter((item) => {
+      const transactionId = normalizedString(item.transactionId);
+      return inventoryEntrySnapshotIsPresent(item) ||
+        Boolean(transactionId && isInventoryEntryMovement(item, transactionsById.get(transactionId)));
+    })
+    .map((item) => item.id);
 }
 
 function inventoryCreditPreviews(items: (Item & { id: string })[]) {
@@ -499,6 +796,139 @@ async function validateCategoryInProject(
 // ── Tool Registration ────────────────────────────────────────────────────────
 
 export function registerInventoryOperationTools(server: McpServer, db: Firestore) {
+  // ── return_items_from_inventory_to_project ─────────────────────────────────
+  server.tool(
+    "return_items_from_inventory_to_project",
+    "[event] Return business-inventory items to the exact project, budget category, price, and " +
+      "amount recorded when they most recently entered inventory. This is a locked reversal, not " +
+      "a configurable sale: callers provide itemIds only; destination accounting fields are resolved " +
+      "from active Return or Sale-to-Inventory provenance. All items must resolve to one original " +
+      "project. Different original categories are grouped into separate Purchase transactions in one " +
+      "atomic operation. Current item prices and tax rates are ignored.\n\n" +
+      "LEGACY SAFETY: a pre-snapshot item is accepted only when its inventory-entry transaction has " +
+      "exactly one active item and stores both subtotalCents and amountCents. Ambiguous legacy amounts " +
+      "are rejected rather than recalculated.\n\n" +
+      "Use sell_items_from_inventory_to_project only for ordinary inventory that does not have " +
+      "return provenance. Cap: 100 items per call. Use dryRun first to inspect the locked result.",
+    {
+      itemIds: z
+        .array(z.string())
+        .min(1)
+        .max(MAX_BATCH_ITEMS)
+        .describe(`Inventory item document IDs to return (max ${MAX_BATCH_ITEMS} per call). Project/category/amount are resolved automatically.`),
+      destinationSpaceAssignments: returnToProjectSpaceAssignmentsSchema,
+      notes: z
+        .string()
+        .optional()
+        .describe("Optional dated audit note explaining the return. Project, category, price, and amount cannot be overridden."),
+      dryRun: z.boolean().default(false).describe("If true, validate and return the locked plan without writing."),
+    },
+    withTelemetry(
+      "return_items_from_inventory_to_project",
+      async ({ itemIds, destinationSpaceAssignments, notes, dryRun }) => {
+        const inventoryLabel = await resolveInventoryLabel(db);
+        const items: (Item & { id: string })[] = [];
+        const missing: string[] = [];
+        for (const itemId of itemIds) {
+          const item = await getDoc<Item>(db, "items", itemId);
+          if (!item) missing.push(itemId);
+          else items.push(item);
+        }
+        if (missing.length > 0) return notFound("Items", missing.join(", "), "get_items");
+
+        const transactionsById = await loadCurrentTransactions(db, items);
+        const resolution = resolveReturnToProjectProvenance(items, transactionsById);
+        if (!resolution.ok) return validation(resolution.message, resolution.hint);
+
+        const project = await getDoc<Project>(db, "projects", resolution.projectId);
+        if (!project) {
+          return validation(
+            `Original project ${resolution.projectId} no longer exists.`,
+            "Restore or repair the original project before returning these items; do not choose a substitute project."
+          );
+        }
+
+        for (const categoryId of new Set(resolution.lines.map((line) => line.budgetCategoryId))) {
+          const projectCategoryRef = subcollection(db, "projects", resolution.projectId, "budgetCategories").doc(categoryId);
+          const accountCategoryRef = accountCollection(db, "presets/default/budgetCategories").doc(categoryId);
+          const [projectCategorySnapshot, accountCategorySnapshot] = await db.getAll(
+            projectCategoryRef,
+            accountCategoryRef
+          );
+          if (!projectCategorySnapshot.exists && !accountCategorySnapshot.exists) {
+            return validation(
+              `Original budget category ${categoryId} no longer exists.`,
+              "Restore or repair the original category before returning these items; do not select a replacement category."
+            );
+          }
+        }
+
+        const resolvedSpaces = await validateDestinationSpaceAssignments(
+          db,
+          itemIds,
+          resolution.projectId,
+          destinationSpaceAssignments as DestinationSpaceAssignment[] | undefined
+        );
+        if (!resolvedSpaces.ok) {
+          return validation(resolvedSpaces.issue.message, resolvedSpaces.issue.guidance);
+        }
+
+        const groups = returnToProjectCategoryGroups(resolution.lines);
+        if (dryRun) {
+          return asToolResponse({
+            dryRun: true,
+            direction: "inventoryToOriginalProject",
+            lockedDestination: { projectId: resolution.projectId },
+            purchaseTransactions: groups.map((group) => ({
+              type: "Purchase" as const,
+              source: inventoryLabel,
+              projectId: resolution.projectId,
+              budgetCategoryId: group.budgetCategoryId,
+              subtotalCents: group.subtotalCents,
+              amountCents: group.amountCents,
+              itemIds: group.lines.map((line) => line.item.id),
+            })),
+            itemUpdates: resolution.lines.map((line) => ({
+              itemId: line.item.id,
+              sourceTransactionId: line.sourceTransactionId,
+              evidence: line.evidence,
+              lockedAccountingAmountCents: line.amountCents,
+              set: {
+                projectId: line.projectId,
+                budgetCategoryId: line.budgetCategoryId,
+                projectPriceCents: line.priceCents,
+                status: "purchased",
+                spaceId: resolvedSpaces.byItemId.get(line.item.id) ?? null,
+              },
+            })),
+            totals: {
+              subtotalCents: groups.reduce((sum, group) => sum + group.subtotalCents, 0),
+              amountCents: groups.reduce((sum, group) => sum + group.amountCents, 0),
+            },
+            warning: resolution.lines.some((line) => line.evidence !== "snapshot")
+              ? "One or more legacy single-item movements use exact stored transaction totals."
+              : null,
+          });
+        }
+
+        try {
+          return await commitReturnToProject(
+            db,
+            itemIds,
+            resolvedSpaces.byItemId,
+            notes,
+            inventoryLabel
+          );
+        } catch (error) {
+          if (error instanceof ReturnToProjectValidationError) {
+            return validation(error.message, error.hint);
+          }
+          throw error;
+        }
+      }
+    )
+  );
+
   // ── sell_items_from_inventory_to_project ───────────────────────────────────
   server.tool(
     "sell_items_from_inventory_to_project",
@@ -568,6 +998,14 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           return validation(
             `${notInInventory.length} item(s) are not in business inventory: ${notInInventory.map((i) => i.id).join(", ")}`,
             "For items currently in a project, use sell_items_from_project_to_project or sell_items_from_project_to_inventory."
+          );
+        }
+
+        const returnCandidates = await inventoryReturnCandidateIds(db, items);
+        if (returnCandidates.length > 0) {
+          return validation(
+            `${returnCandidates.length} item(s) have inventory-entry provenance and must return to their original project: ${returnCandidates.join(", ")}.`,
+            "Use return_items_from_inventory_to_project. Its project, budget category, price, and amount are locked from the inventory-entry movement."
           );
         }
 
@@ -1151,6 +1589,230 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// commit: return_items_from_inventory_to_project
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function commitReturnToProject(
+  db: Firestore,
+  itemIds: string[],
+  destinationSpaceIdsByItem: Map<string, string>,
+  notes: string | undefined,
+  inventoryLabel: string
+) {
+  const itemsCol = accountCollection(db, "items");
+  const txCol = accountCollection(db, "transactions");
+  const edgesCol = accountCollection(db, "lineageEdges");
+  const uid = safeGetUserId();
+  const accountId = accountPath().split("/")[1];
+
+  const result = await db.runTransaction(async (firestoreTransaction) => {
+    // Re-read all accounting provenance while holding transaction locks. The
+    // dry-run/preflight result is deliberately not trusted for the commit.
+    const itemRefs = itemIds.map((itemId) => itemsCol.doc(itemId));
+    const itemSnapshots = await firestoreTransaction.getAll(...itemRefs);
+    const missingItemIds = itemSnapshots
+      .filter((snapshot) => !snapshot.exists)
+      .map((snapshot) => snapshot.id);
+    if (missingItemIds.length > 0) {
+      throw new ReturnToProjectValidationError(
+        `Items disappeared before commit: ${missingItemIds.join(", ")}.`,
+        "Refresh the inventory list and retry. Nothing was written."
+      );
+    }
+    const freshItems = itemSnapshots.map((snapshot) => ({
+      ...(snapshot.data() as Item),
+      id: snapshot.id,
+    }));
+
+    const sourceTransactionIds = [...new Set(
+      freshItems
+        .map((item) => normalizedString(item.transactionId))
+        .filter((id): id is string => id !== null)
+    )];
+    const sourceTransactionSnapshots = sourceTransactionIds.length > 0
+      ? await firestoreTransaction.getAll(...sourceTransactionIds.map((id) => txCol.doc(id)))
+      : [];
+    const transactionsById = new Map<string, Transaction & { id: string }>(
+      sourceTransactionSnapshots
+        .filter((snapshot) => snapshot.exists)
+        .map((snapshot) => [snapshot.id, { ...(snapshot.data() as Transaction), id: snapshot.id }])
+    );
+    const resolution = resolveReturnToProjectProvenance(freshItems, transactionsById);
+    if (!resolution.ok) {
+      throw new ReturnToProjectValidationError(resolution.message, resolution.hint);
+    }
+
+    const projectRef = accountCollection(db, "projects").doc(resolution.projectId);
+    const projectSnapshot = await firestoreTransaction.get(projectRef);
+    if (!projectSnapshot.exists) {
+      throw new ReturnToProjectValidationError(
+        `Original project ${resolution.projectId} no longer exists.`,
+        "Restore or repair the original project before returning these items; nothing was written."
+      );
+    }
+
+    const categoryIds = [...new Set(resolution.lines.map((line) => line.budgetCategoryId))];
+    const categoryRefs = categoryIds.map((categoryId) =>
+      subcollection(db, "projects", resolution.projectId, "budgetCategories").doc(categoryId)
+    );
+    const accountCategoryRefs = categoryIds.map((categoryId) =>
+      accountCollection(db, "presets/default/budgetCategories").doc(categoryId)
+    );
+    const categorySnapshots = await firestoreTransaction.getAll(...categoryRefs);
+    const accountCategorySnapshots = await firestoreTransaction.getAll(...accountCategoryRefs);
+    const missingCategoryIds = categoryIds.filter((categoryId, index) =>
+      !categorySnapshots[index].exists && !accountCategorySnapshots[index].exists
+    );
+    if (missingCategoryIds.length > 0) {
+      throw new ReturnToProjectValidationError(
+        `Original budget categories no longer exist in project ${resolution.projectId}: ${missingCategoryIds.join(", ")}.`,
+        "Restore or repair the original categories before returning these items; nothing was written."
+      );
+    }
+
+    const itemIdSet = new Set(itemIds);
+    for (const itemId of destinationSpaceIdsByItem.keys()) {
+      if (!itemIdSet.has(itemId)) {
+        throw new ReturnToProjectValidationError(
+          `Space assignment references item ${itemId}, which is not in this return.`,
+          "Every destination space assignment must reference one selected item."
+        );
+      }
+    }
+    const uniqueSpaceIds = [...new Set(destinationSpaceIdsByItem.values())];
+    const spaceSnapshots = uniqueSpaceIds.length > 0
+      ? await firestoreTransaction.getAll(...uniqueSpaceIds.map((spaceId) => accountCollection(db, "spaces").doc(spaceId)))
+      : [];
+    const spacesById = new Map(spaceSnapshots.map((snapshot) => [snapshot.id, snapshot]));
+    for (const [itemId, spaceId] of destinationSpaceIdsByItem) {
+      const spaceSnapshot = spacesById.get(spaceId);
+      const spaceProjectId = normalizedString(spaceSnapshot?.data()?.projectId);
+      if (!spaceSnapshot?.exists || spaceProjectId !== resolution.projectId) {
+        throw new ReturnToProjectValidationError(
+          `Destination space ${spaceId} for item ${itemId} is missing or no longer belongs to project ${resolution.projectId}.`,
+          "Choose a current space in the locked original project, or omit the assignment. Nothing was written."
+        );
+      }
+    }
+
+    // All reads are complete. The remaining writes commit atomically.
+    const now = FieldValue.serverTimestamp();
+    const taggedNotes = notes ? tagNotesAsAi(notes) : undefined;
+    const groups = returnToProjectCategoryGroups(resolution.lines);
+    const purchaseByCategory = new Map<string, FirebaseFirestore.DocumentReference>();
+    for (const group of groups) {
+      const purchaseRef = txCol.doc();
+      purchaseByCategory.set(group.budgetCategoryId, purchaseRef);
+      firestoreTransaction.create(purchaseRef, {
+        type: "Purchase",
+        source: inventoryLabel,
+        projectId: resolution.projectId,
+        budgetCategoryId: group.budgetCategoryId,
+        subtotalCents: group.subtotalCents,
+        amountCents: group.amountCents,
+        itemIds: group.lines.map((line) => line.item.id),
+        status: "completed",
+        isComplete: true,
+        ...(taggedNotes ? { notes: taggedNotes } : {}),
+        createdAt: now,
+        updatedAt: now,
+        createdBy: uid,
+      });
+    }
+
+    for (const categoryRef of categoryRefs) {
+      firestoreTransaction.set(
+        categoryRef,
+        { updatedAt: now, updatedBy: uid },
+        { merge: true }
+      );
+    }
+
+    for (const line of resolution.lines) {
+      const purchaseRef = purchaseByCategory.get(line.budgetCategoryId);
+      if (!purchaseRef) {
+        throw new Error(`Missing generated Purchase for category ${line.budgetCategoryId}.`);
+      }
+      firestoreTransaction.update(itemsCol.doc(line.item.id), {
+        projectId: resolution.projectId,
+        budgetCategoryId: line.budgetCategoryId,
+        status: "purchased",
+        transactionId: purchaseRef.id,
+        spaceId: destinationSpaceIdsByItem.get(line.item.id) ?? null,
+        currentSource: inventoryLabel,
+        projectPriceCents: line.priceCents,
+        updatedAt: now,
+        updatedBy: uid,
+      });
+    }
+
+    const itemIdsBySourceTransaction = new Map<string, string[]>();
+    for (const line of resolution.lines) {
+      const ids = itemIdsBySourceTransaction.get(line.sourceTransactionId) ?? [];
+      ids.push(line.item.id);
+      itemIdsBySourceTransaction.set(line.sourceTransactionId, ids);
+    }
+    for (const [sourceTransactionId, returnedItemIds] of itemIdsBySourceTransaction) {
+      firestoreTransaction.update(txCol.doc(sourceTransactionId), {
+        itemIds: FieldValue.arrayRemove(...returnedItemIds),
+        updatedAt: now,
+      });
+    }
+
+    for (const line of resolution.lines) {
+      const purchaseRef = purchaseByCategory.get(line.budgetCategoryId)!;
+      firestoreTransaction.create(edgesCol.doc(), {
+        accountId,
+        itemId: line.item.id,
+        fromTransactionId: line.sourceTransactionId,
+        toTransactionId: purchaseRef.id,
+        fromProjectId: null,
+        toProjectId: resolution.projectId,
+        movementKind: "sold",
+        source: "mcp",
+        createdBy: uid,
+        createdAt: now,
+      });
+    }
+
+    return {
+      projectId: resolution.projectId,
+      groups,
+      purchaseByCategory,
+      lines: resolution.lines,
+    };
+  });
+
+  const subtotalCents = result.groups.reduce((sum, group) => sum + group.subtotalCents, 0);
+  const amountCents = result.groups.reduce((sum, group) => sum + group.amountCents, 0);
+  return asToolResponse({
+    message: `Returned ${result.lines.length} item(s) to original project ${result.projectId}.`,
+    projectId: result.projectId,
+    purchaseTransactions: result.groups.map((group) => ({
+      transactionId: result.purchaseByCategory.get(group.budgetCategoryId)!.id,
+      budgetCategoryId: group.budgetCategoryId,
+      subtotalCents: group.subtotalCents,
+      amountCents: group.amountCents,
+      itemIds: group.lines.map((line) => line.item.id),
+    })),
+    totals: {
+      subtotalCents,
+      amountCents,
+      amount: formatCents(amountCents),
+    },
+    finalItems: result.lines.map((line) => ({
+      itemId: line.item.id,
+      projectId: result.projectId,
+      budgetCategoryId: line.budgetCategoryId,
+      projectPriceCents: line.priceCents,
+      accountingAmountCents: line.amountCents,
+      spaceId: destinationSpaceIdsByItem.get(line.item.id) ?? null,
+      evidence: line.evidence,
+    })),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // commit: sell_items_from_inventory_to_project
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1295,6 +1957,7 @@ async function commitSellToInventory(
       spaceId: null,
       status: "purchased",
       transactionId: saleTxId,
+      ...inventoryEntrySnapshot(item, saleTxId, sourceProjectId, "Sale"),
       currentSource: totals.inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
@@ -1360,7 +2023,8 @@ async function commitReturnToInventory(
   // value. Project-originated Sale-to-Inventory is a distinct business
   // acquisition and uses purchase cost in commitSellToInventory.
   // projectId on the Return tx = source project (budget impact lands there).
-  const sourceProjectId = items[0]?.projectId ?? null;
+  const sourceProjectId = items[0]?.projectId;
+  if (!sourceProjectId) throw new Error("Return-to-inventory requires a source project.");
   const tagged = notes ? tagNotesAsAi(notes) : undefined;
 
   const returnTxByItemId = new Map<string, string>();
@@ -1393,6 +2057,7 @@ async function commitReturnToInventory(
       spaceId: null,
       status: "purchased",
       transactionId: returnTxId,
+      ...inventoryEntrySnapshot(item, returnTxId, sourceProjectId, "Return"),
       currentSource: inventoryLabel,
       updatedAt: now,
       updatedBy: uid,

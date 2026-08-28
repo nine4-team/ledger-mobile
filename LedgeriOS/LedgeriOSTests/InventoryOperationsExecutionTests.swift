@@ -38,6 +38,246 @@ private func makeService(batch: RecordingBatch) -> InventoryOperationsService {
     InventoryOperationsService(makeBatch: { batch })
 }
 
+// MARK: - returnToProject
+
+@Suite("InventoryOperationsService.returnToProject")
+struct ReturnToProjectExecutionTests {
+    private func provenance(
+        item: Item,
+        transactionId: String,
+        projectId: String = "project-home",
+        categoryId: String = "furnishings",
+        type: TransactionType = .return
+    ) throws -> ReturnToProjectProvenance {
+        let itemId = try #require(item.id)
+        var transaction = Transaction()
+        transaction.id = transactionId
+        transaction.projectId = projectId
+        transaction.source = "Business Inventory"
+        transaction.transactionType = type
+        transaction.itemIds = [itemId]
+        transaction.budgetCategoryId = categoryId
+        let priceCents = type == .sale
+            ? max(item.purchasePriceCents ?? 0, 0)
+            : max(item.normalizedProjectPriceCents ?? 0, 0)
+        let taxRatePct = type == .sale ? 0 : (item.taxRatePct ?? 0)
+        transaction.subtotalCents = priceCents
+        transaction.amountCents = taxRatePct > 0
+            ? Int((Double(priceCents) * (1 + taxRatePct / 100)).rounded())
+            : priceCents
+        return try #require(InventoryOperationsService.returnToProjectProvenance(
+            for: [item],
+            transactions: [transaction]
+        ))
+    }
+
+    @Test("inventory item returns as a project Purchase with correct membership and lineage")
+    func inventoryItemReturnsToProject() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "item-returning",
+            projectId: nil,
+            purchasePriceCents: 8_000,
+            transactionId: "inventory-return",
+            projectPriceCents: 10_000
+        )
+        let returnProvenance = try provenance(
+            item: item,
+            transactionId: "inventory-return"
+        )
+        try await service.returnToProject(
+            items: [item],
+            provenance: returnProvenance,
+            accountId: acct
+        )
+
+        let purchase = try #require(batch.sets.first {
+            ($0.fields["type"] as? String) == "Purchase"
+        })
+        #expect(purchase.fields["projectId"] as? String == "project-home")
+        #expect(purchase.fields["budgetCategoryId"] as? String == "furnishings")
+        #expect(purchase.fields["amountCents"] as? Int == 10_000)
+
+        let itemUpdate = try #require(
+            batch.updatesForPath("accounts/\(acct)/items/item-returning").first
+        )
+        #expect(itemUpdate.fields["projectId"] as? String == "project-home")
+        #expect(itemUpdate.fields["budgetCategoryId"] as? String == "furnishings")
+        #expect(itemUpdate.fields["status"] as? String == "purchased")
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/inventory-return").count == 1)
+
+        let edge = try #require(batch.lineageEdges(accountId: acct).first)
+        #expect(edge.fields["movementKind"] as? String == "sold")
+        #expect(edge.fields["toProjectId"] as? String == "project-home")
+        #expect(batch.commitCalled)
+    }
+
+    @Test("project item cannot use return-to-project writer")
+    func rejectsProjectItem() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "already-project-scoped", projectId: "project-a")
+        let proofItem = makeItem(id: "already-project-scoped", projectId: nil, transactionId: "return-tx")
+        let returnProvenance = try provenance(
+            item: proofItem,
+            transactionId: "return-tx",
+            projectId: "project-a"
+        )
+
+        await #expect(throws: InventoryOperationError.itemsNotInInventory) {
+            try await service.returnToProject(
+                items: [item],
+                provenance: returnProvenance,
+                accountId: acct
+            )
+        }
+        #expect(!batch.commitCalled)
+    }
+
+    @Test("return-to-project rejects stale transaction provenance")
+    func rejectsStaleProvenance() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "item-returning", projectId: nil, transactionId: "newer-return-tx")
+        let returnProvenance = try provenance(
+            item: makeItem(id: "item-returning", projectId: nil, transactionId: "older-return-tx"),
+            transactionId: "older-return-tx"
+        )
+        await #expect(throws: InventoryOperationError.invalidReturnProject) {
+            try await service.returnToProject(
+                items: [item],
+                provenance: returnProvenance,
+                accountId: acct
+            )
+        }
+        #expect(!batch.commitCalled)
+    }
+
+    @Test("return-to-project rejects duplicate item input")
+    func rejectsDuplicateItems() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "item-returning", projectId: nil, transactionId: "return-tx")
+        let returnProvenance = try provenance(
+            item: item,
+            transactionId: "return-tx"
+        )
+
+        await #expect(throws: InventoryOperationError.invalidReturnProject) {
+            try await service.returnToProject(
+                items: [item, item],
+                provenance: returnProvenance,
+                accountId: acct
+            )
+        }
+        #expect(!batch.commitCalled)
+    }
+
+    @Test("sale-to-inventory reverses at original category and purchase cost")
+    func saleToInventoryReturnUsesAcquisitionCost() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "project-originated",
+            projectId: nil,
+            purchasePriceCents: 8_000,
+            transactionId: "inventory-sale",
+            projectPriceCents: 12_000,
+            taxRatePct: 10
+        )
+        let returnProvenance = try provenance(
+            item: item,
+            transactionId: "inventory-sale",
+            categoryId: "original-category",
+            type: .sale
+        )
+
+        try await service.returnToProject(
+            items: [item],
+            provenance: returnProvenance,
+            accountId: acct
+        )
+
+        let purchase = try #require(batch.sets.first { ($0.fields["type"] as? String) == "Purchase" })
+        #expect(purchase.fields["budgetCategoryId"] as? String == "original-category")
+        #expect(purchase.fields["subtotalCents"] as? Int == 8_000)
+        #expect(purchase.fields["amountCents"] as? Int == 8_000)
+        let update = try #require(batch.updatesForPath("accounts/\(acct)/items/project-originated").first)
+        #expect(update.fields["projectPriceCents"] as? Int == 8_000)
+    }
+
+    @Test("immutable inventory-entry snapshot wins over later item price edits")
+    func immutableSnapshotWins() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var item = makeItem(
+            id: "snapshotted",
+            projectId: nil,
+            purchasePriceCents: 8_000,
+            transactionId: "inventory-return",
+            projectPriceCents: 15_000,
+            taxRatePct: 10
+        )
+        item.inventoryEntryTransactionId = "inventory-return"
+        item.inventoryEntryProjectId = "project-home"
+        item.inventoryEntryBudgetCategoryId = "original-category"
+        item.inventoryEntryPriceCents = 10_000
+        item.inventoryEntryAmountCents = 10_825
+        let returnProvenance = try provenance(
+            item: item,
+            transactionId: "inventory-return",
+            categoryId: "original-category"
+        )
+
+        #expect(returnProvenance.subtotalCents == 10_000)
+        #expect(returnProvenance.amountCents == 10_825)
+        try await service.returnToProject(items: [item], provenance: returnProvenance, accountId: acct)
+
+        let purchase = try #require(batch.sets.first { ($0.fields["type"] as? String) == "Purchase" })
+        #expect(purchase.fields["subtotalCents"] as? Int == 10_000)
+        #expect(purchase.fields["amountCents"] as? Int == 10_825)
+    }
+
+    @Test("mixed original categories create separate atomic Purchase reversals")
+    func mixedCategoriesSplitAtomically() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let itemA = makeItem(id: "a", projectId: nil, transactionId: "return-a", projectPriceCents: 2_000)
+        let itemB = makeItem(id: "b", projectId: nil, transactionId: "return-b", projectPriceCents: 3_000)
+        var transactionA = Transaction()
+        transactionA.id = "return-a"
+        transactionA.projectId = "project-home"
+        transactionA.source = "Business Inventory"
+        transactionA.transactionType = .return
+        transactionA.itemIds = ["a"]
+        transactionA.budgetCategoryId = "lighting"
+        transactionA.subtotalCents = 2_000
+        transactionA.amountCents = 2_000
+        var transactionB = transactionA
+        transactionB.id = "return-b"
+        transactionB.itemIds = ["b"]
+        transactionB.budgetCategoryId = "furniture"
+        transactionB.subtotalCents = 3_000
+        transactionB.amountCents = 3_000
+        let returnProvenance = try #require(InventoryOperationsService.returnToProjectProvenance(
+            for: [itemA, itemB],
+            transactions: [transactionA, transactionB]
+        ))
+
+        try await service.returnToProject(
+            items: [itemA, itemB],
+            provenance: returnProvenance,
+            accountId: acct
+        )
+
+        let purchases = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
+        #expect(purchases.count == 2)
+        #expect(Set(purchases.compactMap { $0.fields["budgetCategoryId"] as? String }) == Set(["lighting", "furniture"]))
+        #expect(batch.commitCalled)
+    }
+}
+
 // MARK: - sellToProject (I1, I2, I5, I6)
 
 @Suite("InventoryOperationsService.sellToProject — per-batch")
@@ -474,6 +714,11 @@ struct ReturnToInventoryExecutionTests {
             #expect(f["budgetCategoryId"] is NSNull)
             #expect(f["spaceId"] is NSNull)
             #expect(f["status"] as? String == "purchased")
+            #expect(f["inventoryEntryProjectId"] as? String == "srcProj")
+            #expect(f["inventoryEntryBudgetCategoryId"] as? String == "cat1")
+            #expect(f["inventoryEntryPriceCents"] as? Int == 1500 * i)
+            #expect(f["inventoryEntryAmountCents"] as? Int == 1500 * i)
+            #expect(f["inventoryEntryTransactionId"] as? String == f["transactionId"] as? String)
         }
 
         // 3 lineage edges with movementKind "returned"
@@ -569,6 +814,93 @@ struct ReturnToInventoryExecutionTests {
 
         let edges = batch.lineageEdges(accountId: acct, itemId: "i1")
         #expect(edges[0].fields["createdBy"] == nil)
+    }
+
+    @Test("inventory-entry snapshot includes the exact tax-inclusive Return amount")
+    func snapshotIncludesExactReturnAmount() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "taxed",
+            projectId: "proj1",
+            budgetCategoryId: "cat1",
+            purchasePriceCents: 8_000,
+            projectPriceCents: 10_000,
+            taxRatePct: 8.25
+        )
+
+        try await service.returnToInventory(items: [item], accountId: acct)
+
+        let update = try #require(batch.updatesForPath("accounts/\(acct)/items/taxed").first)
+        #expect(update.fields["inventoryEntryPriceCents"] as? Int == 10_000)
+        #expect(update.fields["inventoryEntryAmountCents"] as? Int == 10_825)
+        #expect(update.fields["inventoryEntryProjectId"] as? String == "proj1")
+        #expect(update.fields["inventoryEntryBudgetCategoryId"] as? String == "cat1")
+    }
+}
+
+@Suite("InventoryOperationsService inventory-entry snapshots")
+struct InventoryEntrySnapshotExecutionTests {
+    @Test("Sale-to-Inventory snapshots purchase cost, not project markup")
+    func saleSnapshotUsesPurchaseCost() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "sale-item",
+            projectId: "proj1",
+            budgetCategoryId: "original-category",
+            purchasePriceCents: 8_000,
+            projectPriceCents: 12_000,
+            taxRatePct: 10
+        )
+
+        try await service.sellToInventory(items: [item], accountId: acct)
+
+        let update = try #require(batch.updatesForPath("accounts/\(acct)/items/sale-item").first)
+        #expect(update.fields["inventoryEntryPriceCents"] as? Int == 8_000)
+        #expect(update.fields["inventoryEntryAmountCents"] as? Int == 8_000)
+        #expect(update.fields["inventoryEntryProjectId"] as? String == "proj1")
+        #expect(update.fields["inventoryEntryBudgetCategoryId"] as? String == "original-category")
+        let sale = try #require(batch.sets.first { ($0.fields["type"] as? String) == "Sale" })
+        #expect(update.fields["inventoryEntryTransactionId"] as? String == sale.path.split(separator: "/").last.map(String.init))
+    }
+
+    @Test("mixed-origin move snapshots each leg's own price basis")
+    func mixedMoveSnapshotsBothLegs() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let returned = makeItem(
+            id: "returned",
+            projectId: "proj1",
+            budgetCategoryId: "returns",
+            purchasePriceCents: 5_000,
+            projectPriceCents: 7_000,
+            taxRatePct: 10
+        )
+        let sold = makeItem(
+            id: "sold",
+            projectId: "proj1",
+            budgetCategoryId: "sales",
+            purchasePriceCents: 4_000,
+            projectPriceCents: 9_000,
+            taxRatePct: 10
+        )
+
+        try await service.moveToInventory(
+            items: [returned, sold],
+            accountId: acct,
+            originsByItemId: ["returned": .inventory, "sold": .project]
+        )
+
+        let returnedUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/returned").first)
+        #expect(returnedUpdate.fields["inventoryEntryBudgetCategoryId"] as? String == "returns")
+        #expect(returnedUpdate.fields["inventoryEntryPriceCents"] as? Int == 7_000)
+        #expect(returnedUpdate.fields["inventoryEntryAmountCents"] as? Int == 7_700)
+        let soldUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/sold").first)
+        #expect(soldUpdate.fields["inventoryEntryBudgetCategoryId"] as? String == "sales")
+        #expect(soldUpdate.fields["inventoryEntryPriceCents"] as? Int == 4_000)
+        #expect(soldUpdate.fields["inventoryEntryAmountCents"] as? Int == 4_000)
+        #expect(batch.commitCalled)
     }
 }
 

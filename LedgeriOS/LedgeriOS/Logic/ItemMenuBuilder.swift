@@ -17,6 +17,25 @@ enum ItemScope {
     case search // Cross-scope — shows all options
 }
 
+enum ProjectDestinationPresentation {
+    case sell
+    case returnToProject
+
+    static func resolve(
+        for items: [Item],
+        transactions: [Transaction],
+        projects: [Project]
+    ) -> Self {
+        guard let projectId = InventoryOperationsService.returnProjectId(
+            for: items,
+            transactions: transactions
+        ), projects.contains(where: { $0.id == projectId }) else {
+            return .sell
+        }
+        return .returnToProject
+    }
+}
+
 /// Callbacks for single-item menu actions. All optional so callers only wire what they need.
 struct SingleItemMenuCallbacks {
     // Navigation
@@ -77,7 +96,8 @@ enum ItemMenuBuilder {
         context: ItemMenuContext,
         scope: ItemScope,
         callbacks: SingleItemMenuCallbacks,
-        currentStatus: String? = nil
+        currentStatus: String? = nil,
+        projectDestinationPresentation: ProjectDestinationPresentation = .sell
     ) -> [ActionMenuItem] {
         var items: [ActionMenuItem] = []
 
@@ -196,10 +216,12 @@ enum ItemMenuBuilder {
             }
         }
         if let onSellToProject = callbacks.onSellToProject {
+            let isReturnToProject = scope == .inventory
+                && projectDestinationPresentation == .returnToProject
             items.append(ActionMenuItem(
-                id: "sell",
-                label: "Sell",
-                icon: "arrow.right.square",
+                id: isReturnToProject ? "return-to-project" : "sell",
+                label: isReturnToProject ? "Return to Project" : "Sell",
+                icon: isReturnToProject ? "arrow.uturn.backward" : "arrow.right.square",
                 onPress: onSellToProject
             ))
         }
@@ -235,7 +257,8 @@ enum ItemMenuBuilder {
     static func buildBulkMenu(
         context: ItemMenuContext = .list,
         scope: ItemScope,
-        callbacks: BulkItemMenuCallbacks
+        callbacks: BulkItemMenuCallbacks,
+        projectDestinationPresentation: ProjectDestinationPresentation = .sell
     ) -> [ActionMenuItem] {
         var items: [ActionMenuItem] = []
 
@@ -294,10 +317,12 @@ enum ItemMenuBuilder {
             }
         }
         if let onSellToProject = callbacks.onSellToProject {
+            let isReturnToProject = scope == .inventory
+                && projectDestinationPresentation == .returnToProject
             items.append(ActionMenuItem(
-                id: "sell",
-                label: "Sell",
-                icon: "arrow.right.square",
+                id: isReturnToProject ? "return-to-project" : "sell",
+                label: isReturnToProject ? "Return to Project" : "Sell",
+                icon: isReturnToProject ? "arrow.uturn.backward" : "arrow.right.square",
                 onPress: onSellToProject
             ))
         }

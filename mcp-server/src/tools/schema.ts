@@ -57,7 +57,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     name: "item",
     description:
       "A single line item (physical good) tracked across projects, inventory, and sales. " +
-      "Moved between scopes via sell_items_from_* / return_items " +
+      "Moved between scopes via sell_items_from_* / return_items / return_items_from_inventory_to_project " +
       "(never manually edit transactionId for moves).",
     requiredOnCreate: ["name", "notes"],
     keyFields: [
@@ -69,6 +69,11 @@ const ENTITIES: Record<string, EntitySchema> = {
       { name: "transactionId", type: "string?", description: "Current owning transaction. NOT authoritative for reverse lookups — use transaction.itemIds." },
       { name: "purchasePriceCents", type: "number?", description: "Pre-tax purchase price in cents." },
       { name: "taxRatePct", type: "number?", description: "Auto-inherited from transaction if omitted on create." },
+      { name: "inventoryEntryTransactionId", type: "string?", description: "Immutable snapshot of the movement transaction that most recently put this item into inventory." },
+      { name: "inventoryEntryProjectId", type: "string?", description: "Source project restored by Return to Project." },
+      { name: "inventoryEntryBudgetCategoryId", type: "string?", description: "Original source category restored by Return to Project." },
+      { name: "inventoryEntryPriceCents", type: "number?", description: "Per-item pre-tax accounting price frozen at inventory entry." },
+      { name: "inventoryEntryAmountCents", type: "number?", description: "Per-item accounting amount, including applicable tax, frozen at inventory entry." },
       { name: "status", type: "enum(itemStatus)", description: "Current lifecycle status." },
       { name: "images", type: "AttachmentRef[]", description: "Ordered attachments. Exactly one isPrimary is true when non-empty; the primary is stored at index 0. Use set_primary_item_image or reorder_item_images for non-destructive ordering, detach_item_image to keep Storage, and explicitly destructive delete_item_image only for item-owned files." },
     ],
@@ -76,6 +81,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     notes: [
       "Invariant: (projectId == null) ↔ (budgetCategoryId == null). Enforced on write.",
       "Items in business inventory have no budget category.",
+      "Inventory items with active project-egress provenance must use return_items_from_inventory_to_project; generic inventory sale is rejected for them.",
       "Copy-name invariant: quantity expansion, receipt/inventory reconstruction, and duplication preserve the source name exactly on every physical item document. Do not append unit counts, copy/duplicate labels, parenthetical numbers, or any other differentiator. Different names require an explicit user name or source evidence for individually named units.",
       "Inventory movements update existing item documents in place and never rename them.",
       "An item may contain legacy/shared image URLs outside its own Storage namespace. Removing those references never deletes the source object.",

@@ -651,7 +651,12 @@ private struct ItemDetailContentView: View {
                 onCopyID: liveItem.id.map { id in { Clipboard.copy(id) } },
                 onDelete: { showDeleteConfirmation = true }
             ),
-            currentStatus: liveItem.status?.rawValue
+            currentStatus: liveItem.status?.rawValue,
+            projectDestinationPresentation: .resolve(
+                for: [liveItem],
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
+            )
         )
     }
 

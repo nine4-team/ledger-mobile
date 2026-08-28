@@ -122,7 +122,12 @@ struct InventoryItemsSubTab: View {
             for: item,
             scope: .inventory,
             accountId: accountContext.currentAccountId,
-            onSelect: { selectedItemIds.insert(itemId) }
+            onSelect: { selectedItemIds.insert(itemId) },
+            projectDestinationPresentation: .resolve(
+                for: [item],
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
+            )
         )
     }
 
@@ -141,6 +146,11 @@ struct InventoryItemsSubTab: View {
                 onReassignToProject: { showBulkReassign = true },
                 onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
                 onDelete: { showBulkDeleteConfirmation = true }
+            ),
+            projectDestinationPresentation: .resolve(
+                for: selectedItems,
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
             )
         )
     }

@@ -8,6 +8,7 @@ UI labels (final):
 
 - **Correct / Move** — corrections only, no financial impact. Within-scope reassignment.
 - **Sell** — financial sale flow. User chooses Project or, when eligible, Business Inventory as the destination.
+- **Return to Project** — items currently in business inventory going back into a project.
 - **Return to Inventory** — items originally from inventory returning home to business inventory.
 - **Return to Vendor** — items being physically sent back to the vendor.
 
@@ -58,7 +59,7 @@ Inventory-destination sale:
 
 - **Project → Business Inventory** is a Sale-to-Inventory only when the item originated in the project. The business acquires it at `purchasePriceCents`; a higher `projectPriceCents` must not increase the acquisition credit.
 
-Project-destination sales always charge the destination project at normalized `projectPriceCents`. Ledger first raises it to at least `purchasePriceCents`; the UI asks what to sell it for only when neither price is positive.
+Project-destination sales always charge the destination project at normalized `projectPriceCents`. Ledger first raises it to at least `purchasePriceCents`; the UI asks for a project price only when neither price is positive.
 
 ### What Changes
 
@@ -73,7 +74,6 @@ Project-destination sales always charge the destination project at normalized `p
 
 ### When to Use
 
-- Selling items from business inventory into a project
 - Selling items from one project to another project
 - Selling project-originated items into business inventory
 
@@ -84,6 +84,12 @@ Project-destination sales always charge the destination project at normalized `p
 - For project-to-inventory Sale-to-Inventory, the source project decreases at purchase cost
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch inventory movement flow.
+
+## Return to Project (Inventory → Project)
+
+Return to Project is the inventory-context action for sending an item back to its recorded source project. Ledger resolves the project, original budget category, and original movement amount from the item's current project-scoped Return or Sale-to-Inventory transaction and immutable inventory-entry snapshot; the user chooses none of them. The confirmation sheet only shows what will be restored. Ledger creates a new Purchase-from-inventory transaction, moves the item into the source project, removes it from its prior inventory transaction membership, and records destination lineage. The Purchase is intentional: it restores the exact project-budget charge that was removed when the item entered inventory. A bulk return spanning categories creates one Purchase per original category in one atomic batch.
+
+If project provenance cannot be resolved, or a bulk selection contains items from different source projects, Ledger does not call the operation a return. The inventory action remains Sell and uses the normal destination picker.
 
 ## Return to Inventory (Project → Inventory)
 
@@ -112,7 +118,7 @@ When the item's current Purchase or sold lineage proves that it passed through i
 |--------|-------------|--------------------|----------------------|------------------|
 | Project A, Transaction X | Project A, Transaction Y | **Correct / Move** | `transactionId` swap | None |
 | Business Inventory, Txn X | Business Inventory, Txn Y | **Correct / Move** | `transactionId` swap | None |
-| Business Inventory | Project A | **Sell → Project** | Single Purchase from inventory | Adds to Project A budget |
+| Business Inventory | Project A | **Return to Project** | Single Purchase from inventory | Adds to Project A budget |
 | Project A | Business Inventory (item came from inventory) | **Return to Inventory** | Return transaction | Subtracts from Project A budget |
 | Project A | Business Inventory (item originated in A) | **Sell → Business Inventory** | Sale-to-Inventory transaction | Subtracts from Project A budget |
 | Project A | Project B | **Sell → Project** | Two-hop atomic: origin-aware hop 1 + destination Purchase from inventory | Subtracts from A, adds to B |
@@ -141,9 +147,14 @@ The actions available to users depend on context.
 
 ### "Sell" is available when:
 
-- Item is in business inventory (projectId is null) AND at least one project exists, OR
 - Item is in a project (projectId is not null) AND at least one other project exists
 - Item is in a project and originated in that project, allowing the **Business Inventory** destination
+
+### "Return to Project" is available when:
+
+- Item is in business inventory (`projectId == null`)
+- Its current inventory-entry transaction is an active, inventory-sourced, project-scoped Return or Sale-to-Inventory that still contains the item
+- Every item in a bulk selection resolves to the same source project
 - A project destination uses the single-hop or two-hop mechanics above
 
 ### "Return to Inventory" is available when:

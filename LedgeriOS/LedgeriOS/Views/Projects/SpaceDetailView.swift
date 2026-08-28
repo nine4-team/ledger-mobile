@@ -588,7 +588,12 @@ private struct SpaceDetailContentView: View {
             scope: itemScope,
             menuContext: .space,
             accountId: accountContext.currentAccountId,
-            onSelect: { selectedItemIds.insert(itemId) }
+            onSelect: { selectedItemIds.insert(itemId) },
+            projectDestinationPresentation: .resolve(
+                for: [item],
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
+            )
         )
     }
 
@@ -702,6 +707,11 @@ private struct SpaceDetailContentView: View {
                 onReassignToProject: { showBulkReassign = true },
                 onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
                 onDelete: { showBulkDeleteConfirmation = true }
+            ),
+            projectDestinationPresentation: .resolve(
+                for: selectedItems,
+                transactions: accountContext.allTransactions,
+                projects: accountContext.allProjects
             )
         )
     }

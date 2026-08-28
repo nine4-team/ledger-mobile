@@ -33,6 +33,11 @@ struct ModelCodableTests {
         item.status = .purchased
         item.source = "Amazon"
         item.currentSource = "1584 Design Inventory"
+        item.inventoryEntryTransactionId = "return-1"
+        item.inventoryEntryProjectId = "project-1"
+        item.inventoryEntryBudgetCategoryId = "furnishings"
+        item.inventoryEntryPriceCents = 10_000
+        item.inventoryEntryAmountCents = 10_825
         item.bookmark = true
         item.images = [AttachmentRef(url: "https://example.com/img.jpg")]
         item.createdBy = "user123"
@@ -46,6 +51,11 @@ struct ModelCodableTests {
         #expect(dict["status"] as? String == "purchased")
         #expect(dict["source"] as? String == "Amazon")
         #expect(dict["currentSource"] as? String == "1584 Design Inventory")
+        #expect(dict["inventoryEntryTransactionId"] as? String == "return-1")
+        #expect(dict["inventoryEntryProjectId"] as? String == "project-1")
+        #expect(dict["inventoryEntryBudgetCategoryId"] as? String == "furnishings")
+        #expect(dict["inventoryEntryPriceCents"] as? Int == 10_000)
+        #expect(dict["inventoryEntryAmountCents"] as? Int == 10_825)
         #expect(dict["bookmark"] as? Bool == true)
         #expect(dict["createdBy"] as? String == "user123")
         #expect(dict["createdAt"] != nil)

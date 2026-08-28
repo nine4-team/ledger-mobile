@@ -19,6 +19,13 @@ enum InventoryOperationError: Error {
     /// sellItemsFromProjectToProject requires all items to be in a project (not inventory).
     case itemsNotInProject
 
+    /// Return-to-project is only valid for items currently in business inventory.
+    case itemsNotInInventory
+
+    /// Return-to-project requires one shared, provable source project and must
+    /// target that same project.
+    case invalidReturnProject
+
     /// Inventory movement writers require persisted item documents with IDs.
     case itemsMissingIds
 
@@ -46,6 +53,33 @@ struct InventorySpaceScope: Sendable, Equatable {
 enum InventoryItemOrigin: Sendable, Equatable {
     case inventory
     case project
+}
+
+/// Evidence that a set of inventory items currently belongs to one
+/// project-scoped inventory-entry transaction (or transactions) from the same
+/// project. The initializer is intentionally private: callers obtain this only
+/// by resolving the items against loaded transaction data.
+struct ReturnToProjectProvenance: Sendable, Equatable {
+    let projectId: String
+    let categoryIds: Set<String>
+    let subtotalCents: Int
+    let amountCents: Int
+    fileprivate let itemsById: [String: ReturnToProjectItemProvenance]
+
+    fileprivate init(projectId: String, itemsById: [String: ReturnToProjectItemProvenance]) {
+        self.projectId = projectId
+        self.itemsById = itemsById
+        self.categoryIds = Set(itemsById.values.map(\.budgetCategoryId))
+        self.subtotalCents = itemsById.values.reduce(0) { $0 + $1.priceCents }
+        self.amountCents = itemsById.values.reduce(0) { $0 + $1.amountCents }
+    }
+}
+
+fileprivate struct ReturnToProjectItemProvenance: Sendable, Equatable {
+    let transactionId: String
+    let budgetCategoryId: String
+    let priceCents: Int
+    let amountCents: Int
 }
 
 // MARK: - Service
@@ -218,6 +252,202 @@ struct InventoryOperationsService {
     }
 
     // MARK: - Sell to Project
+
+    /// Resolves the one project that all supplied inventory items most recently
+    /// came from. A valid return source is the item's current project-scoped
+    /// inventory movement transaction (Return or Sale-to-Inventory).
+    static func returnToProjectProvenance(
+        for items: [Item],
+        transactions: [Transaction]
+    ) -> ReturnToProjectProvenance? {
+        guard !items.isEmpty, items.allSatisfy({ $0.projectId == nil }) else { return nil }
+        var transactionsById: [String: Transaction] = [:]
+        for transaction in transactions {
+            guard let transactionId = transaction.id else { continue }
+            transactionsById[transactionId] = transaction
+        }
+
+        var projectIds = Set<String>()
+        var itemsById: [String: ReturnToProjectItemProvenance] = [:]
+        for item in items {
+            guard let itemId = item.id,
+                  itemsById[itemId] == nil,
+                  let transactionId = item.transactionId,
+                  let transaction = transactionsById[transactionId],
+                  let rawProjectId = transaction.projectId,
+                  let rawCategoryId = transaction.budgetCategoryId,
+                  transaction.status != .canceled,
+                  transaction.transactionType == .return || transaction.transactionType == .sale,
+                  let transactionSource = transaction.source?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  transactionSource.hasSuffix(" Inventory"),
+                  transaction.itemIds?.contains(itemId) == true else {
+                return nil
+            }
+            let projectId = rawProjectId.trimmingCharacters(in: .whitespacesAndNewlines)
+            let categoryId = rawCategoryId.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !projectId.isEmpty, !categoryId.isEmpty else { return nil }
+            guard let line = returnToProjectLine(
+                item: item,
+                transaction: transaction,
+                projectId: projectId,
+                categoryId: categoryId
+            ) else { return nil }
+            projectIds.insert(projectId)
+            itemsById[itemId] = ReturnToProjectItemProvenance(
+                transactionId: transactionId,
+                budgetCategoryId: categoryId,
+                priceCents: line.priceCents,
+                amountCents: line.amountCents
+            )
+        }
+        guard projectIds.count == 1 else { return nil }
+        return ReturnToProjectProvenance(
+            projectId: projectIds.first!,
+            itemsById: itemsById
+        )
+    }
+
+    static func returnProjectId(
+        for items: [Item],
+        transactions: [Transaction]
+    ) -> String? {
+        returnToProjectProvenance(for: items, transactions: transactions)?.projectId
+    }
+
+    /// Returns items currently held in business inventory to a project.
+    ///
+    /// The user-facing operation is a return, while the destination project's
+    /// accounting record is still a Purchase from inventory: the project takes
+    /// the item back into its budget, and the item receives a project category.
+    func returnToProject(
+        items: [Item],
+        provenance: ReturnToProjectProvenance,
+        accountId: String,
+        inventoryLabel: String = Self.defaultInventoryLabel,
+        userId: String? = nil,
+        notes: String? = nil,
+        destinationSpaceIdsByItem: [String: String] = [:]
+    ) async throws {
+        guard !items.isEmpty else { return }
+        guard items.count <= Self.maxBatchItems else {
+            throw InventoryOperationError.batchSizeExceeded
+        }
+        guard items.allSatisfy({ $0.projectId == nil }) else {
+            throw InventoryOperationError.itemsNotInInventory
+        }
+        _ = try Self.requireItemIds(items)
+        var currentTransactionIdsByItemId: [String: String] = [:]
+        for item in items {
+            guard let itemId = item.id,
+                  currentTransactionIdsByItemId[itemId] == nil,
+                  let transactionId = item.transactionId else {
+                throw InventoryOperationError.invalidReturnProject
+            }
+            currentTransactionIdsByItemId[itemId] = transactionId
+        }
+        let provenTransactionIdsByItemId = provenance.itemsById.mapValues(\.transactionId)
+        guard currentTransactionIdsByItemId.count == items.count,
+              currentTransactionIdsByItemId == provenTransactionIdsByItemId else {
+            throw InventoryOperationError.invalidReturnProject
+        }
+
+        let validatedSpaceIds = try await validatedDestinationSpaceIds(
+            items: items,
+            destinationProjectId: provenance.projectId,
+            destinationSpaceIdsByItem: destinationSpaceIdsByItem,
+            accountId: accountId
+        )
+
+        var categoryOrder: [String] = []
+        var itemsByCategory: [String: [Item]] = [:]
+        for item in items {
+            guard let itemId = item.id,
+                  let itemProvenance = provenance.itemsById[itemId] else {
+                throw InventoryOperationError.invalidReturnProject
+            }
+            let categoryId = itemProvenance.budgetCategoryId
+            if itemsByCategory[categoryId] == nil {
+                categoryOrder.append(categoryId)
+                itemsByCategory[categoryId] = []
+            }
+            itemsByCategory[categoryId]?.append(item)
+        }
+
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
+        let pbcPath = "accounts/\(accountId)/projects/\(provenance.projectId)/budgetCategories"
+        let today = Self.todayDateString()
+
+        for categoryId in categoryOrder {
+            let groupItems = itemsByCategory[categoryId] ?? []
+            let purchaseId = UUID().uuidString
+            let groupProvenance = groupItems.compactMap { item in
+                item.id.flatMap { provenance.itemsById[$0] }
+            }
+            let subtotalCents = groupProvenance.reduce(0) { $0 + $1.priceCents }
+            let amountCents = groupProvenance.reduce(0) { $0 + $1.amountCents }
+            var purchaseFields: [String: Any] = [
+                "type": "Purchase",
+                "source": inventoryLabel,
+                "projectId": provenance.projectId,
+                "budgetCategoryId": categoryId,
+                "amountCents": amountCents,
+                "subtotalCents": subtotalCents,
+                "itemIds": groupItems.compactMap(\.id),
+                "isComplete": true,
+                "transactionDate": today,
+                "createdAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let notes { purchaseFields["notes"] = notes }
+            if let userId { purchaseFields["createdBy"] = userId }
+            batch.setData(purchaseFields, forDocumentAt: "\(txPath)/\(purchaseId)", merge: false)
+
+            var categoryFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+            if let userId { categoryFields["updatedBy"] = userId }
+            batch.setData(categoryFields, forDocumentAt: "\(pbcPath)/\(categoryId)", merge: true)
+
+            for item in groupItems {
+                guard let itemId = item.id,
+                      let itemProvenance = provenance.itemsById[itemId] else { continue }
+                var itemUpdate: [String: Any] = [
+                    "projectId": provenance.projectId,
+                    "budgetCategoryId": categoryId,
+                    "status": "purchased",
+                    "transactionId": purchaseId,
+                    "spaceId": NSNull(),
+                    "projectPriceCents": itemProvenance.priceCents,
+                    "currentSource": inventoryLabel,
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ]
+                if let destinationSpaceId = validatedSpaceIds[itemId] {
+                    itemUpdate["spaceId"] = destinationSpaceId
+                }
+                batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
+                batch.updateData(
+                    ["itemIds": FieldValue.arrayRemove([itemId])],
+                    forDocumentAt: "\(txPath)/\(itemProvenance.transactionId)"
+                )
+
+                var edge: [String: Any] = [
+                    "accountId": accountId,
+                    "itemId": itemId,
+                    "toProjectId": provenance.projectId,
+                    "fromTransactionId": itemProvenance.transactionId,
+                    "toTransactionId": purchaseId,
+                    "movementKind": "sold",
+                    "source": "app",
+                    "createdAt": FieldValue.serverTimestamp(),
+                ]
+                if let userId { edge["createdBy"] = userId }
+                batch.setDataAutoId(edge, inCollection: edgesPath)
+            }
+        }
+
+        try await batch.commit()
+    }
 
     /// Purchases items from business inventory (or another project) into a destination project.
     /// Creates ONE new Purchase transaction per call. No long-lived aggregators.
@@ -409,7 +639,7 @@ struct InventoryOperationsService {
             for item in group.items {
                 guard let itemId = item.id else { continue }
 
-                batch.updateData([
+                var itemUpdate: [String: Any] = [
                     "projectId": NSNull(),
                     "budgetCategoryId": NSNull(),
                     "spaceId": NSNull(),
@@ -421,7 +651,17 @@ struct InventoryOperationsService {
                     // store it was originally bought from.
                     "currentSource": inventoryLabel,
                     "updatedAt": FieldValue.serverTimestamp(),
-                ], forDocumentAt: "\(itemsPath)/\(itemId)")
+                ]
+                if let sourceProjectId = item.projectId {
+                    itemUpdate.merge(Self.inventoryEntrySnapshotFields(
+                        item: item,
+                        transactionId: returnId,
+                        projectId: sourceProjectId,
+                        categoryId: group.categoryId,
+                        transactionType: .return
+                    )) { _, new in new }
+                }
+                batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
                 // 3. Remove from source transaction's active membership.
                 if let fromTxId = item.transactionId {
@@ -522,7 +762,7 @@ struct InventoryOperationsService {
             for item in group.items {
                 guard let itemId = item.id else { continue }
 
-                batch.updateData([
+                var itemUpdate: [String: Any] = [
                     "projectId": NSNull(),
                     "budgetCategoryId": NSNull(),
                     "spaceId": NSNull(),
@@ -532,7 +772,17 @@ struct InventoryOperationsService {
                     // the inventory label. Original `source` (vendor) is preserved.
                     "currentSource": inventoryLabel,
                     "updatedAt": FieldValue.serverTimestamp(),
-                ], forDocumentAt: "\(itemsPath)/\(itemId)")
+                ]
+                if let sourceProjectId = item.projectId {
+                    itemUpdate.merge(Self.inventoryEntrySnapshotFields(
+                        item: item,
+                        transactionId: saleId,
+                        projectId: sourceProjectId,
+                        categoryId: group.categoryId,
+                        transactionType: .sale
+                    )) { _, new in new }
+                }
+                batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
                 // 3. Remove from source transaction's active membership.
                 if let fromTxId = item.transactionId {
@@ -623,7 +873,9 @@ struct InventoryOperationsService {
         let returnGroups = try Self.sourceCategoryGroups(split.returnItems)
         let saleGroups = try Self.sourceCategoryGroups(split.saleItems)
         var returnTxByItemId: [String: String] = [:]
+        var returnCategoryByItemId: [String: String] = [:]
         var saleTxByItemId: [String: String] = [:]
+        var saleCategoryByItemId: [String: String] = [:]
 
         // Return legs
         for group in returnGroups {
@@ -647,7 +899,10 @@ struct InventoryOperationsService {
             if let userId { returnFields["createdBy"] = userId }
             batch.setData(returnFields, forDocumentAt: "\(txPath)/\(returnId)", merge: false)
             for item in group.items {
-                if let itemId = item.id { returnTxByItemId[itemId] = returnId }
+                if let itemId = item.id {
+                    returnTxByItemId[itemId] = returnId
+                    returnCategoryByItemId[itemId] = group.categoryId
+                }
             }
         }
 
@@ -673,7 +928,10 @@ struct InventoryOperationsService {
             if let userId { saleFields["createdBy"] = userId }
             batch.setData(saleFields, forDocumentAt: "\(txPath)/\(saleId)", merge: false)
             for item in group.items {
-                if let itemId = item.id { saleTxByItemId[itemId] = saleId }
+                if let itemId = item.id {
+                    saleTxByItemId[itemId] = saleId
+                    saleCategoryByItemId[itemId] = group.categoryId
+                }
             }
         }
 
@@ -681,7 +939,9 @@ struct InventoryOperationsService {
         for item in split.returnItems {
             guard let itemId = item.id else { continue }
             guard let returnId = returnTxByItemId[itemId] else { continue }
-            batch.updateData([
+            guard let sourceProjectId = item.projectId,
+                  let categoryId = returnCategoryByItemId[itemId] else { continue }
+            var itemUpdate: [String: Any] = [
                 "projectId": NSNull(),
                 "budgetCategoryId": NSNull(),
                 "spaceId": NSNull(),
@@ -689,7 +949,15 @@ struct InventoryOperationsService {
                 "transactionId": returnId,
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocumentAt: "\(itemsPath)/\(itemId)")
+            ]
+            itemUpdate.merge(Self.inventoryEntrySnapshotFields(
+                item: item,
+                transactionId: returnId,
+                projectId: sourceProjectId,
+                categoryId: categoryId,
+                transactionType: .return
+            )) { _, new in new }
+            batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
             if let fromTxId = item.transactionId {
                 batch.updateData(
@@ -715,7 +983,9 @@ struct InventoryOperationsService {
         for item in split.saleItems {
             guard let itemId = item.id else { continue }
             guard let saleId = saleTxByItemId[itemId] else { continue }
-            batch.updateData([
+            guard let sourceProjectId = item.projectId,
+                  let categoryId = saleCategoryByItemId[itemId] else { continue }
+            var itemUpdate: [String: Any] = [
                 "projectId": NSNull(),
                 "budgetCategoryId": NSNull(),
                 "spaceId": NSNull(),
@@ -723,7 +993,15 @@ struct InventoryOperationsService {
                 "transactionId": saleId,
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocumentAt: "\(itemsPath)/\(itemId)")
+            ]
+            itemUpdate.merge(Self.inventoryEntrySnapshotFields(
+                item: item,
+                transactionId: saleId,
+                projectId: sourceProjectId,
+                categoryId: categoryId,
+                transactionType: .sale
+            )) { _, new in new }
+            batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
             if let fromTxId = item.transactionId {
                 batch.updateData(
@@ -1184,6 +1462,77 @@ struct InventoryOperationsService {
 
     static func projectPriceForMovement(_ item: Item) -> Int {
         item.normalizedProjectPriceCents ?? 0
+    }
+
+    /// Resolves the immutable accounting line for a return from inventory back
+    /// to its source project. New movements carry a per-item snapshot; legacy
+    /// movements are accepted only when a single-item source transaction proves
+    /// the exact stored subtotal and amount. Ambiguous history is never rebuilt
+    /// from mutable item price or tax fields.
+    private static func returnToProjectLine(
+        item: Item,
+        transaction: Transaction,
+        projectId: String,
+        categoryId: String
+    ) -> (priceCents: Int, amountCents: Int)? {
+        let hasAnySnapshotField = item.inventoryEntryTransactionId != nil
+            || item.inventoryEntryProjectId != nil
+            || item.inventoryEntryBudgetCategoryId != nil
+            || item.inventoryEntryPriceCents != nil
+            || item.inventoryEntryAmountCents != nil
+        if hasAnySnapshotField {
+            guard item.inventoryEntryTransactionId == transaction.id,
+                  item.inventoryEntryProjectId == projectId,
+                  item.inventoryEntryBudgetCategoryId == categoryId,
+                  let priceCents = item.inventoryEntryPriceCents,
+                  let amountCents = item.inventoryEntryAmountCents,
+                  priceCents >= max(item.purchasePriceCents ?? 0, 0),
+                  amountCents >= 0 else {
+                return nil
+            }
+            return (priceCents, amountCents)
+        }
+
+        guard let itemId = item.id,
+              transaction.itemIds?.count == 1,
+              transaction.itemIds?.first == itemId,
+              let priceCents = transaction.subtotalCents,
+              let amountCents = transaction.amountCents,
+              priceCents >= max(item.purchasePriceCents ?? 0, 0),
+              amountCents >= 0 else { return nil }
+        return (priceCents, amountCents)
+    }
+
+    private static func projectPriceLine(_ item: Item) -> (priceCents: Int, amountCents: Int) {
+        let priceCents = max(projectPriceForMovement(item), 0)
+        let rate = item.taxRatePct ?? 0
+        let amountCents = rate > 0
+            ? Int((Double(priceCents) * (1 + rate / 100)).rounded())
+            : priceCents
+        return (priceCents, amountCents)
+    }
+
+    private static func inventoryEntrySnapshotFields(
+        item: Item,
+        transactionId: String,
+        projectId: String,
+        categoryId: String,
+        transactionType: TransactionType
+    ) -> [String: Any] {
+        let line: (priceCents: Int, amountCents: Int)
+        if transactionType == .sale {
+            let priceCents = max(item.purchasePriceCents ?? 0, 0)
+            line = (priceCents, priceCents)
+        } else {
+            line = projectPriceLine(item)
+        }
+        return [
+            "inventoryEntryTransactionId": transactionId,
+            "inventoryEntryProjectId": projectId,
+            "inventoryEntryBudgetCategoryId": categoryId,
+            "inventoryEntryPriceCents": line.priceCents,
+            "inventoryEntryAmountCents": line.amountCents,
+        ]
     }
 
     /// Business acquisition value for project-originated items entering inventory.

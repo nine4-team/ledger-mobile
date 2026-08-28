@@ -35,7 +35,7 @@ final class ItemActionsController {
     ///   - accountId: Used for inline clear writes (clear space / clear transaction).
     ///   - onSelect: Optional bulk-selection callback (caller wires to its `Set<String>`).
     ///   - includeReturnToInventory: Surface the "Return to Inventory" action. Default: project items that originally came from inventory.
-    ///   - includeSellToProject: Surface the "Sell" action. Default: true for project/inventory.
+    ///   - includeSellToProject: Surface the project-destination action. Proven inventory provenance can present it as "Return to Project"; otherwise it is "Sell". Default: true for project/inventory.
     func buildMenu(
         for item: Item,
         scope: ItemScope,
@@ -43,7 +43,8 @@ final class ItemActionsController {
         accountId: String?,
         onSelect: (() -> Void)? = nil,
         includeReturnToInventory: Bool? = nil,
-        includeSellToProject: Bool? = nil
+        includeSellToProject: Bool? = nil,
+        projectDestinationPresentation: ProjectDestinationPresentation = .sell
     ) -> [ActionMenuItem] {
         let wantsReturnToInventory = includeReturnToInventory ?? (
             scope == .project && InventoryOperationsService.cameFromInventory(item)
@@ -77,7 +78,8 @@ final class ItemActionsController {
             context: menuContext,
             scope: scope,
             callbacks: callbacks,
-            currentStatus: item.status?.rawValue
+            currentStatus: item.status?.rawValue,
+            projectDestinationPresentation: projectDestinationPresentation
         )
     }
 
