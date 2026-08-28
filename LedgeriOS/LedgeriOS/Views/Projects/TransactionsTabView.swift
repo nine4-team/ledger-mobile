@@ -40,9 +40,10 @@ struct TransactionsTabView: View {
     }
 
     private var transactionRows: [TransactionListRow] {
-        TransactionFilterSortCalculations.groupedRows(
+        TransactionFilterSortCalculations.rows(
             for: processedTransactions,
-            scope: .project
+            scope: .project,
+            search: searchText
         )
     }
 
@@ -301,6 +302,7 @@ struct TransactionsTabView: View {
         TransactionCard(
             transaction: transaction,
             budgetCategoryName: catName,
+            searchQuery: searchText,
             isSelected: Binding(
                 get: { selectedIds.contains(txId) },
                 set: { if $0 { selectedIds.insert(txId) } else { selectedIds.remove(txId) } }

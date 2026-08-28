@@ -374,6 +374,7 @@ struct UniversalSearchView: View {
                             for: transaction,
                             projects: accountContext.allProjects
                         ),
+                        searchQuery: debouncedQuery,
                         isSelected: isSelected,
                         menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : [],
                         onPress: selectedTransactionIds.isEmpty ? {

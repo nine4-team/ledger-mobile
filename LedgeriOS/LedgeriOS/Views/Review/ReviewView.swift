@@ -164,6 +164,7 @@ struct ReviewView: View {
                                     for: transaction,
                                     projects: accountContext.allProjects
                                 ),
+                                searchQuery: searchText,
                                 onPress: {
                                     openTransaction(transaction)
                                 }

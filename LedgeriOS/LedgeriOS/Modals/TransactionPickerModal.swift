@@ -21,7 +21,7 @@ struct TransactionPickerModal: View {
     }
 
     private var hasSearchQuery: Bool {
-        !searchText.trimmingCharacters(in: .whitespaces).isEmpty
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
@@ -43,7 +43,7 @@ struct TransactionPickerModal: View {
 
             SearchField(
                 text: $searchText,
-                placeholder: "Search source or amount"
+                placeholder: "Search ID, source, or amount"
             )
             .padding(.horizontal, Spacing.screenPadding)
 
@@ -130,16 +130,16 @@ struct TransactionPickerModal: View {
     private func transactionSublabel(_ transaction: Transaction) -> String? {
         let vendor = transaction.source
         let amount = transaction.amountCents.map { CurrencyFormatting.formatCentsWithDecimals($0) }
+        let matchingID = SearchCalculations.matchingTransactionID(
+            transaction: transaction,
+            query: searchText
+        )
 
-        switch (vendor, amount) {
-        case (let v?, let a?) where !v.isEmpty:
-            return "\(v) · \(a)"
-        case (_, let a?):
-            return a
-        case (let v?, nil) where !v.isEmpty:
-            return v
-        default:
-            return nil
-        }
+        var components: [String] = []
+        if let vendor, !vendor.isEmpty { components.append(vendor) }
+        if let amount { components.append(amount) }
+        if let matchingID { components.append("ID: \(matchingID)") }
+
+        return components.isEmpty ? nil : components.joined(separator: " · ")
     }
 }

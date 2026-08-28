@@ -44,13 +44,21 @@ struct InventoryTransactionsSubTab: View {
         )
     }
 
+    private var isSearching: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var transactionRows: [TransactionListRow] {
-        TransactionFilterSortCalculations.groupedRows(
-            for: processedTransactions.filter { transaction in
+        let transactions = isSearching
+            ? processedTransactions
+            : processedTransactions.filter { transaction in
                 guard let id = transaction.id else { return true }
                 return !plannedPurchaseIntentIds.contains(id)
-            },
-            scope: .inventory
+            }
+        return TransactionFilterSortCalculations.rows(
+            for: transactions,
+            scope: .inventory,
+            search: searchText
         )
     }
 
@@ -243,7 +251,7 @@ struct InventoryTransactionsSubTab: View {
         } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
-                    if !plannedPurchaseIntents.isEmpty {
+                    if !isSearching && !plannedPurchaseIntents.isEmpty {
                         plannedForProjectsSection
                     }
 
@@ -371,6 +379,7 @@ struct InventoryTransactionsSubTab: View {
     private func transactionCardContent(for transaction: Transaction, txId: String) -> some View {
         TransactionCard(
             transaction: transaction,
+            searchQuery: searchText,
             isSelected: Binding(
                 get: { selectedIds.contains(txId) },
                 set: { if $0 { selectedIds.insert(txId) } else { selectedIds.remove(txId) } }

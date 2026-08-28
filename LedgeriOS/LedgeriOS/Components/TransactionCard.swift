@@ -11,6 +11,9 @@ struct TransactionCard: View {
     /// Resolved by the caller via `TransactionDisplayCalculations.projectLabel(for:projects:)`.
     /// Pass nil to suppress (e.g. in already-project-scoped views where it would be redundant).
     var projectName: String?
+    /// When this query matches the transaction ID, show that ID on the card so
+    /// the reason the transaction matched is visible to the user.
+    var searchQuery: String? = nil
 
     // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
@@ -50,6 +53,10 @@ struct TransactionCard: View {
 
     private var itemCount: Int? {
         transaction.itemIds?.count
+    }
+
+    private var matchingTransactionID: String? {
+        SearchCalculations.matchingTransactionID(transaction: transaction, query: searchQuery)
     }
 
     var body: some View {
@@ -196,6 +203,20 @@ struct TransactionCard: View {
                 }
             }
             #endif
+
+            if let transactionID = matchingTransactionID {
+                HStack(spacing: Spacing.xs) {
+                    Text("Transaction ID:")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    FindableText(transactionID)
+                        .font(Typography.small.monospaced())
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .accessibilityElement(children: .combine)
+            }
 
             // Notes
             Group {

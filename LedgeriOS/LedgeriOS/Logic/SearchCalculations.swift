@@ -139,9 +139,22 @@ enum SearchCalculations {
         return false
     }
 
+    static func matchingTransactionID(transaction: Transaction, query: String?) -> String? {
+        guard let query else { return nil }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let id = transaction.id,
+              textMatch(query: trimmed, in: id) else { return nil }
+        return id
+    }
+
     static func transactionPickerMatches(transaction: Transaction, query: String) -> Bool {
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return true }
+
+        if matchingTransactionID(transaction: transaction, query: trimmed) != nil {
+            return true
+        }
 
         if textMatch(query: trimmed, in: transaction.source) {
             return true

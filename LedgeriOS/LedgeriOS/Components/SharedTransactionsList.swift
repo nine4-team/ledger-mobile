@@ -153,7 +153,7 @@ enum TransactionFilterSortCalculations {
     }
 
     static func applySearch(_ transactions: [Transaction], query: String) -> [Transaction] {
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return transactions }
         return transactions.filter { SearchCalculations.transactionMatches(transaction: $0, query: trimmed) }
     }
@@ -326,6 +326,18 @@ enum TransactionFilterSortCalculations {
                 return lhs.row.id < rhs.row.id
             }
             .map(\.row)
+    }
+
+    static func rows(
+        for transactions: [Transaction],
+        scope: TransactionListScope,
+        search: String
+    ) -> [TransactionListRow] {
+        let isSearching = !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if isSearching {
+            return transactions.map(TransactionListRow.transaction)
+        }
+        return groupedRows(for: transactions, scope: scope)
     }
 
     private enum InventoryMovementDirection: String, Hashable {
@@ -644,6 +656,7 @@ struct SharedTransactionsList: View {
                     for: transaction,
                     projects: accountContext.allProjects
                 ),
+                searchQuery: searchText,
                 isSelected: isSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
                 menuItems: menuItems,
                 onPress: {

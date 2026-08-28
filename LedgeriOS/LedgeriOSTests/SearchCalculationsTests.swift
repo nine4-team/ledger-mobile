@@ -642,6 +642,21 @@ struct TransactionDisplayNameTests {
         #expect(result == true)
     }
 
+    @Test("Transaction picker search matches transaction ID")
+    func transactionPickerSearchMatchesTransactionID() {
+        let tx = makeTransaction(id: "abc123def456", transactionType: .purchase, notes: "sofa", amountCents: 5000)
+        let result = SearchCalculations.transactionPickerMatches(transaction: tx, query: "123def")
+        #expect(result == true)
+    }
+
+    @Test("Matching transaction ID returns visible card context")
+    func matchingTransactionIDReturnsID() {
+        let tx = makeTransaction(id: "abc123def456")
+        #expect(SearchCalculations.matchingTransactionID(transaction: tx, query: "123DEF") == "abc123def456")
+        #expect(SearchCalculations.matchingTransactionID(transaction: tx, query: "unrelated") == nil)
+        #expect(SearchCalculations.matchingTransactionID(transaction: tx, query: "  ") == nil)
+    }
+
     @Test("Transaction picker search ignores unrelated fields")
     func transactionPickerSearchIgnoresUnrelatedFields() {
         let tx = makeTransaction(id: "abc123def456", transactionType: .purchase, notes: "sofa", amountCents: 5000)
@@ -683,6 +698,13 @@ struct CentralizedSearchTests {
         #expect(results.isEmpty)
     }
 
+    @Test("TransactionFilterSortCalculations.applySearch treats whitespace and newlines as empty")
+    func transactionListWhitespaceSearch() {
+        let transactions = [makeTransaction(id: "one"), makeTransaction(id: "two")]
+        let results = TransactionFilterSortCalculations.applySearch(transactions, query: " \n ")
+        #expect(results.count == 2)
+    }
+
     @Test("ListFilterSortCalculations.applySearch matches item amount")
     func itemListAmountSearch() {
         let item = makeItem(purchasePriceCents: 5099)
@@ -714,6 +736,75 @@ struct CentralizedSearchTests {
 
 @Suite("Inventory Transaction Grouping")
 struct InventoryTransactionGroupingTests {
+
+    @Test("Active search renders matching inventory movements as individual rows")
+    func searchUngroupsInventoryMovements() {
+        var purchase = makeTransaction(
+            id: "purchase-1",
+            source: "Wayfair",
+            transactionType: .purchase,
+            amountCents: 12000
+        )
+        purchase.projectId = nil
+
+        let rows = TransactionFilterSortCalculations.rows(
+            for: [purchase],
+            scope: .inventory,
+            search: "purchase-1"
+        )
+
+        guard case .transaction(let transaction) = rows.first else {
+            Issue.record("Expected search results to render as individual transaction rows")
+            return
+        }
+        #expect(transaction.id == "purchase-1")
+    }
+
+    @Test("Active search renders project inventory movements as individual rows")
+    func searchUngroupsProjectInventoryMovements() {
+        var purchase = makeTransaction(
+            id: "project-purchase-1",
+            source: "1584 Design Inventory",
+            transactionType: .purchase,
+            budgetCategoryId: "furnishings",
+            amountCents: 12000
+        )
+        purchase.projectId = "project-1"
+
+        let rows = TransactionFilterSortCalculations.rows(
+            for: [purchase],
+            scope: .project,
+            search: "project-purchase-1"
+        )
+
+        guard case .transaction(let transaction) = rows.first else {
+            Issue.record("Expected project search results to render as individual transaction rows")
+            return
+        }
+        #expect(transaction.id == "project-purchase-1")
+    }
+
+    @Test("Whitespace-only search preserves inventory grouping")
+    func whitespaceSearchPreservesGrouping() {
+        var purchase = makeTransaction(
+            id: "purchase-1",
+            source: "Wayfair",
+            transactionType: .purchase,
+            amountCents: 12000
+        )
+        purchase.projectId = nil
+
+        let rows = TransactionFilterSortCalculations.rows(
+            for: [purchase],
+            scope: .inventory,
+            search: " \n "
+        )
+
+        guard case .inventoryGroup = rows.first else {
+            Issue.record("Expected whitespace-only search to preserve grouping")
+            return
+        }
+    }
 
     @Test("Inventory purchases group only in inventory scope")
     func inventoryPurchasesGroupOnlyInInventoryScope() {
