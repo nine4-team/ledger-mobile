@@ -31,6 +31,14 @@ Build and upload Ledger to TestFlight
 
 Build, upload, wait for processing, and attach Ledger to external TestFlight groups
 
+### ios build_testflight_ipa
+
+```sh
+[bundle exec] fastlane ios build_testflight_ipa
+```
+
+Internal lane; use scripts/release-testflight.sh --no-upload
+
 ### ios distribute_existing_external
 
 ```sh

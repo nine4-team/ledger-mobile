@@ -1,10 +1,13 @@
 opt_out_usage
 
+require "shellwords"
+
 default_platform(:ios)
 
 APP_IDENTIFIER = "apps.nine4.ledger"
 TEAM_ID = "5VHL56HV63"
 PROJECT = "LedgeriOS/LedgeriOS.xcodeproj"
+PROJECT_FILE = File.expand_path("../LedgeriOS/LedgeriOS.xcodeproj/project.pbxproj", __dir__)
 SCHEME = "LedgeriOS"
 CONFIGURATION = "Release"
 BUILD_DIR = "build/TestFlight"
@@ -64,6 +67,69 @@ def release_notes_from(options)
   options[:changelog] || ENV["TESTFLIGHT_CHANGELOG"] || "Ledger beta update"
 end
 
+def release_signing
+  certificate_sha1 = ENV["LEDGER_RELEASE_CERTIFICATE_SHA1"].to_s.strip
+  profile_name = ENV["LEDGER_RELEASE_PROFILE_NAME"].to_s.strip
+
+  UI.user_error!("Ledger signing preflight was not run; use scripts/release-testflight.sh") unless ENV["LEDGER_SIGNING_PREFLIGHT_PASSED"] == "1"
+  UI.user_error!("LEDGER_RELEASE_CERTIFICATE_SHA1 is required; run scripts/release-testflight.sh") if certificate_sha1.empty?
+  UI.user_error!("LEDGER_RELEASE_PROFILE_NAME is required; run scripts/release-testflight.sh") if profile_name.empty?
+
+  {
+    certificate_sha1: certificate_sha1,
+    profile_name: profile_name
+  }
+end
+
+def build_ledger_ipa(version:, build_number:)
+  signing = release_signing
+  archive_settings = [
+    "DEVELOPMENT_TEAM=#{TEAM_ID}",
+    "MARKETING_VERSION=#{Shellwords.escape(version)}",
+    "CURRENT_PROJECT_VERSION=#{Shellwords.escape(build_number)}"
+  ].join(" ")
+
+  original_project = File.binread(PROJECT_FILE)
+
+  begin
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: PROJECT,
+      team_id: TEAM_ID,
+      targets: [SCHEME],
+      build_configurations: [CONFIGURATION],
+      sdk: "iphoneos*",
+      code_sign_identity: signing[:certificate_sha1],
+      profile_name: signing[:profile_name]
+    )
+
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      configuration: CONFIGURATION,
+      export_method: "app-store",
+      export_team_id: TEAM_ID,
+      export_options: {
+        signingStyle: "manual",
+        signingCertificate: signing[:certificate_sha1],
+        provisioningProfiles: {
+          APP_IDENTIFIER => signing[:profile_name]
+        },
+        manageAppVersionAndBuildNumber: false,
+        uploadSymbols: true
+      },
+      output_directory: BUILD_DIR,
+      output_name: "Ledger-#{version}-#{build_number}.ipa",
+      include_symbols: true,
+      xcodebuild_formatter: "",
+      clean: false,
+      xcargs: archive_settings
+    )
+  ensure
+    File.binwrite(PROJECT_FILE, original_project)
+  end
+end
+
 platform :ios do
   desc "Build and upload Ledger to TestFlight"
   lane :upload_testflight do |options|
@@ -72,20 +138,7 @@ platform :ios do
     build_number = build_number_from(options, api_key, version)
     changelog = release_notes_from(options)
 
-    build_app(
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: CONFIGURATION,
-      export_method: "app-store",
-      export_team_id: TEAM_ID,
-      output_directory: BUILD_DIR,
-      output_name: "Ledger-#{version}-#{build_number}.ipa",
-      include_symbols: true,
-      xcodebuild_formatter: "",
-      clean: false,
-      xcargs: "DEVELOPMENT_TEAM=#{TEAM_ID} CODE_SIGN_STYLE=Automatic MARKETING_VERSION=#{version} CURRENT_PROJECT_VERSION=#{build_number}",
-      export_xcargs: "-allowProvisioningUpdates"
-    )
+    build_ledger_ipa(version: version, build_number: build_number)
 
     upload_to_testflight(
       api_key: api_key,
@@ -108,20 +161,7 @@ platform :ios do
     changelog = release_notes_from(options)
     groups = external_groups_from(options)
 
-    build_app(
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: CONFIGURATION,
-      export_method: "app-store",
-      export_team_id: TEAM_ID,
-      output_directory: BUILD_DIR,
-      output_name: "Ledger-#{version}-#{build_number}.ipa",
-      include_symbols: true,
-      xcodebuild_formatter: "",
-      clean: false,
-      xcargs: "DEVELOPMENT_TEAM=#{TEAM_ID} CODE_SIGN_STYLE=Automatic MARKETING_VERSION=#{version} CURRENT_PROJECT_VERSION=#{build_number}",
-      export_xcargs: "-allowProvisioningUpdates"
-    )
+    build_ledger_ipa(version: version, build_number: build_number)
 
     upload_to_testflight(
       api_key: api_key,
@@ -137,6 +177,17 @@ platform :ios do
     )
 
     UI.success("Uploaded Ledger #{version} (#{build_number}) and requested external distribution to #{groups.join(', ')}")
+  end
+
+  desc "Internal lane; use scripts/release-testflight.sh --no-upload"
+  lane :build_testflight_ipa do |options|
+    api_key = app_store_api_key
+    version = marketing_version_from(options)
+    build_number = build_number_from(options, api_key, version)
+
+    build_ledger_ipa(version: version, build_number: build_number)
+
+    UI.success("Exported signed Ledger #{version} (#{build_number}) IPA without uploading")
   end
 
   desc "Attach an already-uploaded Ledger build to external TestFlight groups"
