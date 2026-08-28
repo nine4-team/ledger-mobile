@@ -148,6 +148,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       { name: "id", type: "string", description: "Opaque document ID." },
       { name: "projectId", type: "string", description: "Parent project." },
       { name: "name", type: "string", description: "Space name." },
+      { name: "isComplete", type: "boolean", description: "True when the physical space has been wrapped up and matches Ledger." },
       { name: "checklists", type: "Checklist[]", description: "Optional checklists with items." },
     ],
     enums: [],

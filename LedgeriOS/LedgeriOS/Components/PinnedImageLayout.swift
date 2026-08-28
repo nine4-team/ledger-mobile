@@ -10,6 +10,7 @@ struct PinnedImageLayout<Content: View>: View {
     let allImages: [AttachmentRef]
     let onClose: () -> Void
     let onChangeImage: (AttachmentRef) -> Void
+    var onUpdateCheckmarks: ((AttachmentRef, [ImageCheckmark]) -> Void)? = nil
     @ViewBuilder let content: () -> Content
 
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -41,7 +42,8 @@ struct PinnedImageLayout<Content: View>: View {
                     attachment: attachment,
                     allImages: allImages,
                     onClose: onClose,
-                    onChangeImage: onChangeImage
+                    onChangeImage: onChangeImage,
+                    onUpdateCheckmarks: onUpdateCheckmarks
                 )
                 .frame(height: panelHeight)
                 .id(attachment.url)
@@ -68,7 +70,8 @@ struct PinnedImageLayout<Content: View>: View {
                     attachment: attachment,
                     allImages: allImages,
                     onClose: onClose,
-                    onChangeImage: onChangeImage
+                    onChangeImage: onChangeImage,
+                    onUpdateCheckmarks: onUpdateCheckmarks
                 )
                 .frame(width: sidebarWidth)
                 .id(attachment.url)

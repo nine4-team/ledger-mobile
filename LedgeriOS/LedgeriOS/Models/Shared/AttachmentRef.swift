@@ -8,9 +8,18 @@ struct AttachmentRef: Codable, Hashable, Sendable {
     var fileName: String?
     var contentType: String?
     var isPrimary: Bool?
+    /// Non-destructive visual checkmarks positioned over this attachment. Coordinates
+    /// are normalized to the image bounds so the marks work at every display size.
+    var checkmarks: [ImageCheckmark]?
     /// H7: True while bytes are being uploaded to Storage. Written immediately with a
     /// placeholder URL so the Firestore record survives upload failures.
     var isUploading: Bool?
+}
+
+struct ImageCheckmark: Codable, Hashable, Identifiable, Sendable {
+    var id: String = UUID().uuidString
+    var x: Double
+    var y: Double
 }
 
 enum AttachmentKind: String, Codable, Sendable {

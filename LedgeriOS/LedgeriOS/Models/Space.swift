@@ -8,12 +8,13 @@ struct Space: Codable, Identifiable, Hashable {
     var notes: String?
     var images: [AttachmentRef]?
     var checklists: [Checklist]?
+    var isComplete: Bool?
     var isArchived: Bool?
     var createdAt: Date?
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, projectId, name, notes, images, checklists, isArchived
+        case id, accountId, projectId, name, notes, images, checklists, isComplete, isArchived
     }
 }
 

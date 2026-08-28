@@ -40,6 +40,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
         name: s.name,
         projectId: s.projectId ?? null,
         notes: s.notes ?? "",
+        isComplete: s.isComplete === true,
         isArchived: s.isArchived,
         itemCount: itemCountBySpace.get(s.id) ?? 0,
         checklistCount: s.checklists?.length ?? 0,
@@ -81,6 +82,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
         name: space.name,
         projectId: space.projectId ?? null,
         notes: space.notes ?? "",
+        isComplete: space.isComplete === true,
         isArchived: space.isArchived,
         images: space.images ?? [],
         checklists,
@@ -127,6 +129,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
       spaceId: z.string().describe("Space document ID"),
       name: z.string().optional().describe("Space name"),
       notes: z.string().optional().describe("Notes"),
+      isComplete: z.boolean().optional().describe("Whether the physical space is fully reconciled with Ledger"),
     },
     async ({ spaceId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };

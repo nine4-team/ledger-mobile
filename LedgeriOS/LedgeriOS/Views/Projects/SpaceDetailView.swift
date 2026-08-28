@@ -223,7 +223,8 @@ private struct SpaceDetailContentView: View {
             pinnedAttachment: pinnedAttachment,
             allImages: pinnedImageSource,
             onClose: { pinnedAttachment = nil },
-            onChangeImage: { pinnedAttachment = $0 }
+            onChangeImage: { pinnedAttachment = $0 },
+            onUpdateCheckmarks: updateImageCheckmarks
         ) {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -427,6 +428,11 @@ private struct SpaceDetailContentView: View {
 
     private var sectionsArea: some View {
         VStack(alignment: .leading, spacing: 0) {
+            completionControl
+
+            Divider()
+                .padding(.vertical, Spacing.xs)
+
             mediaSection
 
             Divider()
@@ -465,6 +471,34 @@ private struct SpaceDetailContentView: View {
             }
         }
         .cardStyle()
+    }
+
+    private var completionControl: some View {
+        Button {
+            updateSpace(fields: ["isComplete": liveSpace.isComplete != true])
+        } label: {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: liveSpace.isComplete == true ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(liveSpace.isComplete == true ? .green : BrandColors.textTertiary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(liveSpace.isComplete == true ? "Space complete" : "Mark space complete")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Text(liveSpace.isComplete == true
+                         ? "The physical space matches Ledger."
+                         : "Confirm the physical space and every Ledger item match.")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+
+                Spacer()
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(liveSpace.isComplete == true ? "Complete" : "Incomplete")
     }
 
     private var mediaSection: some View {
@@ -875,7 +909,21 @@ private struct SpaceDetailContentView: View {
         if let isUploading = ref.isUploading { dict["isUploading"] = isUploading }
         if let thumbnailUrlSm = ref.thumbnailUrlSm { dict["thumbnailUrlSm"] = thumbnailUrlSm }
         if let thumbnailUrlMd = ref.thumbnailUrlMd { dict["thumbnailUrlMd"] = thumbnailUrlMd }
+        if let checkmarks = ref.checkmarks {
+            dict["checkmarks"] = checkmarks.map { mark in
+                ["id": mark.id, "x": mark.x, "y": mark.y] as [String: Any]
+            }
+        }
         return dict
+    }
+
+    private func updateImageCheckmarks(_ attachment: AttachmentRef, _ checkmarks: [ImageCheckmark]) {
+        guard var images = liveSpace.images,
+              let index = images.firstIndex(where: { $0.url == attachment.url }) else { return }
+        images[index].checkmarks = checkmarks.isEmpty ? nil : checkmarks
+        pinnedImageSource = images.filter(PinnedImageCalculations.canPin)
+        pinnedAttachment = images[index]
+        updateSpace(fields: ["images": images.map(attachmentDict)])
     }
 
     private func saveAsTemplate() {

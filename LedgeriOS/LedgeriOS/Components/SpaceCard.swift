@@ -36,6 +36,13 @@ struct SpaceCard: View {
 
                     Spacer()
 
+                    if space.isComplete == true {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(.green)
+                            .accessibilityLabel("Space complete")
+                    }
+
                     if let onMenuPress {
                         CardKebabButton(action: onMenuPress)
                     }

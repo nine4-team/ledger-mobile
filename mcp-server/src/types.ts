@@ -242,6 +242,7 @@ export interface Space {
   notes?: string;
   images?: AttachmentRef[];
   checklists?: Checklist[];
+  isComplete?: boolean;
   isArchived: boolean;
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
@@ -319,4 +320,13 @@ export interface AttachmentRef {
   contentType?: string;
   isPrimary?: boolean;
   isUploading?: boolean;
+  checkmarks?: ImageCheckmark[];
+}
+
+export interface ImageCheckmark {
+  id: string;
+  /** Horizontal position normalized to the image bounds (0...1). */
+  x: number;
+  /** Vertical position normalized to the image bounds (0...1). */
+  y: number;
 }
