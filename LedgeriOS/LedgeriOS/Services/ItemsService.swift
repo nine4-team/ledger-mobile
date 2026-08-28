@@ -63,6 +63,16 @@ struct ItemsService: ItemsServiceProtocol {
         FirestoreRepository<Item>(path: "accounts/\(accountId)/items")
     }
 
+    private func existingTransactionIds(accountId: String, candidateIds: Set<String>) async throws -> Set<String> {
+        var existingIds = Set<String>()
+        for transactionId in candidateIds {
+            if try await loadTransaction(accountId, transactionId) != nil {
+                existingIds.insert(transactionId)
+            }
+        }
+        return existingIds
+    }
+
     func getItem(accountId: String, itemId: String) async throws -> Item? {
         try await repo(accountId: accountId).get(id: itemId)
     }
@@ -224,6 +234,18 @@ struct ItemsService: ItemsServiceProtocol {
         )
         let destinationCategoryId = Self.realCategoryId(destination.budgetCategoryId)
 
+        // Deleted transactions can leave stale item back-references in legacy
+        // data. Only detach from source transactions that still exist so a
+        // reassignment does not fail or recreate an empty transaction document.
+        let sourceTransactionIds = Set(items.compactMap { item -> String? in
+            guard let sourceId = item.transactionId, sourceId != transactionId else { return nil }
+            return sourceId
+        })
+        let existingSourceTransactionIds = try await existingTransactionIds(
+            accountId: accountId,
+            candidateIds: sourceTransactionIds
+        )
+
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let transactionsPath = "accounts/\(accountId)/transactions"
@@ -245,7 +267,9 @@ struct ItemsService: ItemsServiceProtocol {
             }
             batch.updateData(itemFields, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            if let oldTransactionId = item.transactionId, oldTransactionId != transactionId {
+            if let oldTransactionId = item.transactionId,
+               oldTransactionId != transactionId,
+               existingSourceTransactionIds.contains(oldTransactionId) {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId]), "updatedAt": FieldValue.serverTimestamp()],
                     forDocumentAt: "\(transactionsPath)/\(oldTransactionId)"
@@ -286,6 +310,11 @@ struct ItemsService: ItemsServiceProtocol {
             guard item.id != nil else { throw ItemAssociationError.itemMissingId }
         }
 
+        let existingSourceTransactionIds = try await existingTransactionIds(
+            accountId: accountId,
+            candidateIds: Set(linkedItems.compactMap(\.transactionId))
+        )
+
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let transactionsPath = "accounts/\(accountId)/transactions"
@@ -297,10 +326,12 @@ struct ItemsService: ItemsServiceProtocol {
                 ["transactionId": NSNull(), "updatedAt": FieldValue.serverTimestamp()],
                 forDocumentAt: "\(itemsPath)/\(itemId)"
             )
-            batch.updateData(
-                ["itemIds": FieldValue.arrayRemove([itemId]), "updatedAt": FieldValue.serverTimestamp()],
-                forDocumentAt: "\(transactionsPath)/\(oldTransactionId)"
-            )
+            if existingSourceTransactionIds.contains(oldTransactionId) {
+                batch.updateData(
+                    ["itemIds": FieldValue.arrayRemove([itemId]), "updatedAt": FieldValue.serverTimestamp()],
+                    forDocumentAt: "\(transactionsPath)/\(oldTransactionId)"
+                )
+            }
             var edge: [String: Any] = [
                 "accountId": accountId,
                 "itemId": itemId,
@@ -325,6 +356,11 @@ struct ItemsService: ItemsServiceProtocol {
     func deleteItems(accountId: String, items: [Item]) async throws {
         guard !items.isEmpty else { return }
 
+        let existingSourceTransactionIds = try await existingTransactionIds(
+            accountId: accountId,
+            candidateIds: Set(items.compactMap(\.transactionId))
+        )
+
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions"
@@ -334,7 +370,8 @@ struct ItemsService: ItemsServiceProtocol {
 
             batch.deleteDocument(atPath: "\(itemsPath)/\(itemId)")
 
-            if let transactionId = item.transactionId {
+            if let transactionId = item.transactionId,
+               existingSourceTransactionIds.contains(transactionId) {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId]),
                      "updatedAt": FieldValue.serverTimestamp()],

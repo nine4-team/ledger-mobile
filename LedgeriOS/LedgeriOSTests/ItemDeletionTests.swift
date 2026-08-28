@@ -186,7 +186,14 @@ private final class RecordingBatchFactory: @unchecked Sendable {
 }
 
 private func makeService(batch: RecordingBatch) -> ItemsService {
-    ItemsService(makeBatch: { batch })
+    ItemsService(
+        makeBatch: { batch },
+        loadTransaction: { _, transactionId in
+            var transaction = Transaction()
+            transaction.id = transactionId
+            return transaction
+        }
+    )
 }
 
 private func makeTransaction(
@@ -266,6 +273,38 @@ struct ItemDeletionTests {
         #expect(batch.lineageEdges(accountId: acct, itemId: "i1").count == 1)
     }
 
+    @Test("set transaction — tolerates a deleted source transaction")
+    func setTransactionToleratesDeletedSource() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadTransaction: { _, transactionId in
+                guard transactionId == "tx2" else { return nil }
+                return makeTransaction(id: "tx2", projectId: "project1", budgetCategoryId: "cat2")
+            }
+        )
+        var first = makeItem(id: "i1", transactionId: "deleted-tx")
+        first.projectId = "project1"
+        first.budgetCategoryId = "cat1"
+        var second = first
+        second.id = "i2"
+
+        try await service.setTransaction(
+            accountId: acct,
+            items: [first, second],
+            transactionId: "tx2"
+        )
+
+        #expect(batch.commitCalled)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/deleted-tx").isEmpty)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx2").count == 1)
+        for itemId in ["i1", "i2"] {
+            let update = try #require(batch.updatesForPath("accounts/\(acct)/items/\(itemId)").first)
+            #expect(update.fields["transactionId"] as? String == "tx2")
+            #expect(update.fields["budgetCategoryId"] as? String == "cat2")
+        }
+    }
+
     @Test("clear transaction — preserves category and removes canonical membership")
     func clearTransactionPreservesCategory() async throws {
         let batch = RecordingBatch()
@@ -282,6 +321,25 @@ struct ItemDeletionTests {
         #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx1").count == 1)
         let edge = try #require(batch.lineageEdges(accountId: acct, itemId: "i1").first)
         #expect(edge.fields["note"] as? String == "Cleared transaction association")
+    }
+
+    @Test("clear transaction — tolerates a deleted source transaction")
+    func clearTransactionToleratesDeletedSource() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in nil }
+        )
+        var item = makeItem(id: "i1", transactionId: "deleted-tx")
+        item.projectId = "project1"
+        item.budgetCategoryId = "cat1"
+
+        try await service.clearTransaction(accountId: acct, items: [item])
+
+        #expect(batch.commitCalled)
+        let itemUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/i1").first)
+        #expect(itemUpdate.fields["transactionId"] is NSNull)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/deleted-tx").isEmpty)
     }
 
     @Test("set transaction — rejects a project transaction without a real category")
@@ -503,6 +561,22 @@ struct ItemDeletionTests {
         #expect(txUpdates[0].fields.keys.contains("updatedAt"))
     }
 
+    @Test("delete item — tolerates a deleted source transaction")
+    func deleteToleratesDeletedSource() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in nil }
+        )
+        let item = makeItem(id: "i1", transactionId: "deleted-tx")
+
+        try await service.deleteItem(accountId: acct, item: item)
+
+        #expect(batch.commitCalled)
+        #expect(batch.deletesForPath("accounts/\(acct)/items/i1").count == 1)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/deleted-tx").isEmpty)
+    }
+
     @Test("delete item without transactionId — only deletes item doc")
     func deleteWithoutTransactionId() async throws {
         let batch = RecordingBatch()
@@ -559,5 +633,44 @@ struct ItemDeletionTests {
         #expect(!batch.commitCalled)
         #expect(batch.deletes.isEmpty)
         #expect(batch.updates.isEmpty)
+    }
+}
+
+@Suite("TransactionsService — linked-item deletion guard")
+struct TransactionDeletionTests {
+    @Test("linked transaction is rejected before deletion")
+    func linkedTransactionIsRejected() async {
+        let service = TransactionsService(
+            loadTransaction: { _, _ in
+                makeTransaction(
+                    id: "tx1",
+                    projectId: "project1",
+                    itemIds: ["i1", "i2"]
+                )
+            }
+        )
+
+        await #expect(throws: TransactionDeletionError.self) {
+            try await service.deleteTransaction(accountId: acct, transactionId: "tx1")
+        }
+    }
+
+    @Test("single and bulk deletion notices use plain-language counts")
+    func deletionNoticesUsePlainLanguageCounts() throws {
+        let linked = makeTransaction(
+            id: "tx1",
+            projectId: "project1",
+            itemIds: ["i1", "i2"]
+        )
+        let empty = makeTransaction(id: "tx2", projectId: "project1")
+
+        let singleNotice = try #require(TransactionsService.deletionNotice(for: linked))
+        #expect(singleNotice.title == "Can’t Delete This Transaction")
+        #expect(singleNotice.message.contains("2 items"))
+        #expect(TransactionsService.deletionNotice(for: empty) == nil)
+
+        let bulkNotice = try #require(TransactionsService.deletionNotice(for: [linked, empty]))
+        #expect(bulkNotice.title == "Some Transactions Can’t Be Deleted")
+        #expect(bulkNotice.message.contains("1 selected transaction"))
     }
 }

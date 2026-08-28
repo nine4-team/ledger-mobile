@@ -224,6 +224,7 @@ struct TransactionDetailView: View {
     @State private var showEditNotes = false
     @State private var showCreateItemsFromImages = false
     @State private var showDeleteConfirmation = false
+    @State private var transactionDeletionNotice: TransactionDeletionNotice?
     @State private var showAddItemMenu = false
     @State private var showCreateNewItem = false
     @State private var showCreateItemDraft = false
@@ -620,7 +621,14 @@ struct TransactionDetailView: View {
                 deleteTransaction()
             }
         } message: {
-            Text("This action cannot be undone. All linked items will be unlinked.")
+            Text("This action cannot be undone.")
+        }
+        .alert(item: $transactionDeletionNotice) { notice in
+            Alert(
+                title: Text(notice.title),
+                message: Text(notice.message),
+                dismissButton: .default(Text("OK"))
+            )
         }
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditTransactionDetailsModal(
@@ -1407,7 +1415,7 @@ struct TransactionDetailView: View {
                 onReassignToInventory: { correctTransactionToInventory() },
                 onReassignToProject: { showReassign = true },
                 onCopyID: currentTransaction.id.map { id in { Clipboard.copy(id) } },
-                onDelete: { showDeleteConfirmation = true }
+                onDelete: { requestDeleteTransaction() }
             )
         )
     }
@@ -1804,10 +1812,22 @@ struct TransactionDetailView: View {
     private func deleteTransaction() {
         guard let accountId = accountContext.currentAccountId else { return }
         Task {
-            try? await TransactionsService()
-                .deleteTransaction(accountId: accountId, transactionId: transactionId)
-            dismiss()
+            do {
+                try await TransactionsService()
+                    .deleteTransaction(accountId: accountId, transactionId: transactionId)
+                dismiss()
+            } catch {
+                transactionDeletionNotice = TransactionsService.failureNotice(for: error)
+            }
         }
+    }
+
+    private func requestDeleteTransaction() {
+        if let notice = TransactionsService.deletionNotice(for: currentTransaction) {
+            transactionDeletionNotice = notice
+            return
+        }
+        showDeleteConfirmation = true
     }
 
     private func createItemsFromImageGroups(_ groups: [ImageGroup]) {

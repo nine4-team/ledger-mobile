@@ -27,6 +27,7 @@ struct TransactionsTabView: View {
     // Single-transaction actions
     @State private var actionTargetTransactionId: String?
     @State private var showSingleDeleteConfirmation = false
+    @State private var deletionNotice: TransactionDeletionNotice?
 
     // MARK: - Computed
 
@@ -123,6 +124,13 @@ struct TransactionsTabView: View {
             Button("Delete", role: .destructive) { deleteSelectedTransactions() }
         } message: {
             Text("This action cannot be undone.")
+        }
+        .alert(item: $deletionNotice) { notice in
+            Alert(
+                title: Text(notice.title),
+                message: Text(notice.message),
+                dismissButton: .default(Text("OK"))
+            )
         }
         .confirmationDialog("Delete transaction?", isPresented: $showSingleDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSingleTransaction() }
@@ -322,8 +330,7 @@ struct TransactionsTabView: View {
             callbacks: SingleTransactionMenuCallbacks(
                 onCopyID: { Clipboard.copy(txId) },
                 onDelete: {
-                    actionTargetTransactionId = txId
-                    showSingleDeleteConfirmation = true
+                    requestDelete(transaction, transactionId: txId)
                 }
             )
         )
@@ -333,7 +340,7 @@ struct TransactionsTabView: View {
         TransactionMenuBuilder.buildBulkMenu(
             callbacks: BulkTransactionMenuCallbacks(
                 onCopyIDs: { Clipboard.copyLines(selectedIds) },
-                onDelete: { showBulkDeleteConfirmation = true }
+                onDelete: { requestBulkDelete() }
             )
         )
     }
@@ -366,17 +373,49 @@ struct TransactionsTabView: View {
     private func deleteSingleTransaction() {
         guard let accountId = accountContext.currentAccountId,
               let txId = actionTargetTransactionId else { return }
-        let service = TransactionsService()
-        Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+        Task {
+            do {
+                try await TransactionsService().deleteTransaction(accountId: accountId, transactionId: txId)
+                actionTargetTransactionId = nil
+            } catch {
+                deletionNotice = TransactionsService.failureNotice(for: error)
+            }
+        }
     }
 
     private func deleteSelectedTransactions() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = TransactionsService()
-        for tx in selectedTransactions {
-            guard let txId = tx.id else { continue }
-            Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+        let transactions = selectedTransactions
+        Task {
+            do {
+                for transaction in transactions {
+                    guard let transactionId = transaction.id else { continue }
+                    try await TransactionsService().deleteTransaction(
+                        accountId: accountId,
+                        transactionId: transactionId
+                    )
+                }
+                selectedIds.removeAll()
+            } catch {
+                deletionNotice = TransactionsService.failureNotice(for: error)
+            }
         }
-        selectedIds.removeAll()
+    }
+
+    private func requestDelete(_ transaction: Transaction, transactionId: String) {
+        if let notice = TransactionsService.deletionNotice(for: transaction) {
+            deletionNotice = notice
+            return
+        }
+        actionTargetTransactionId = transactionId
+        showSingleDeleteConfirmation = true
+    }
+
+    private func requestBulkDelete() {
+        if let notice = TransactionsService.deletionNotice(for: selectedTransactions) {
+            deletionNotice = notice
+            return
+        }
+        showBulkDeleteConfirmation = true
     }
 }

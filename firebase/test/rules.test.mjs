@@ -28,7 +28,7 @@ import {
   assertFails,
   assertSucceeds,
 } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RULES_PATH = resolve(__dirname, '../firestore.rules');
@@ -40,6 +40,7 @@ const TARGET_MEMBER_ID = 'target_member_rules_test';
 const SALE_ID = 'sale_new_perbatch';
 const LEGACY_SALE_ID = 'SALE_legacy_business_to_project_cat1';
 const PURCHASE_ID = 'tx_purchase';
+const EMPTY_TRANSACTION_ID = 'tx_empty';
 const INVENTORY_PURCHASE_ID = 'tx_inventory_purchase';
 
 const results = [];
@@ -120,6 +121,13 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     itemIds: ['itemX'],
   });
 
+  await setDoc(doc(db, `accounts/${ACCOUNT_ID}/transactions/${EMPTY_TRANSACTION_ID}`), {
+    type: 'Purchase',
+    source: 'HomeGoods',
+    projectId: 'proj1',
+    itemIds: [],
+  });
+
   // Project-side Purchase created by selling an item from business inventory.
   // Clients cannot edit its totals directly; the trusted price trigger can.
   await setDoc(doc(db, `accounts/${ACCOUNT_ID}/transactions/${INVENTORY_PURCHASE_ID}`), {
@@ -138,6 +146,7 @@ const employeeAuthed = testEnv.authenticatedContext(EMPLOYEE_ID).firestore();
 const saleRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${SALE_ID}`);
 const legacyRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${LEGACY_SALE_ID}`);
 const purchaseRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${PURCHASE_ID}`);
+const emptyTransactionRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${EMPTY_TRANSACTION_ID}`);
 const inventoryPurchaseRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${INVENTORY_PURCHASE_ID}`);
 const targetMemberRef = doc(authed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
 const employeeTargetMemberRef = doc(employeeAuthed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
@@ -240,6 +249,14 @@ await run('R15: item project price below purchase cost → rejected', async () =
 
 await run('R16: partial update cannot raise purchase above project price → rejected', async () => {
   await assertFails(updateDoc(validItemRef, { purchasePriceCents: 12000 }));
+});
+
+await run('R17: deleting a transaction with linked items → rejected', async () => {
+  await assertFails(deleteDoc(purchaseRef));
+});
+
+await run('R18: deleting a transaction without linked items → allowed', async () => {
+  await assertSucceeds(deleteDoc(emptyTransactionRef));
 });
 
 await testEnv.cleanup();

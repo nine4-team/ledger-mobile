@@ -1,5 +1,23 @@
 import FirebaseFirestore
 
+struct TransactionDeletionNotice: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
+}
+
+enum TransactionDeletionError: LocalizedError {
+    case linkedItems(count: Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .linkedItems(let count):
+            let noun = count == 1 ? "item" : "items"
+            return "This transaction still has \(count) \(noun) attached. Move or remove the transaction from the attached \(noun), then try again."
+        }
+    }
+}
+
 struct TransactionsService: TransactionsServiceProtocol {
     private let makeBatch: @Sendable () -> any BatchWriting
     private let loadTransaction: @Sendable (_ accountId: String, _ transactionId: String) async throws -> Transaction?
@@ -27,6 +45,38 @@ struct TransactionsService: TransactionsServiceProtocol {
         if projectId == nil, categoryId != nil {
             throw ItemAssociationError.invalidBudgetCategory
         }
+    }
+
+    static func deletionNotice(for transaction: Transaction) -> TransactionDeletionNotice? {
+        let count = transaction.itemIds?.count ?? 0
+        guard count > 0 else { return nil }
+        return TransactionDeletionNotice(
+            title: "Can’t Delete This Transaction",
+            message: TransactionDeletionError.linkedItems(count: count).localizedDescription
+        )
+    }
+
+    static func deletionNotice(for transactions: [Transaction]) -> TransactionDeletionNotice? {
+        let blockedCount = transactions.filter { !($0.itemIds ?? []).isEmpty }.count
+        guard blockedCount > 0 else { return nil }
+        let noun = blockedCount == 1 ? "transaction still has" : "transactions still have"
+        return TransactionDeletionNotice(
+            title: "Some Transactions Can’t Be Deleted",
+            message: "\(blockedCount) selected \(noun) items attached. Move those items or remove their transaction, then try again."
+        )
+    }
+
+    static func failureNotice(for error: Error) -> TransactionDeletionNotice {
+        if let deletionError = error as? TransactionDeletionError {
+            return TransactionDeletionNotice(
+                title: "Can’t Delete This Transaction",
+                message: deletionError.localizedDescription
+            )
+        }
+        return TransactionDeletionNotice(
+            title: "Couldn’t Delete Transaction",
+            message: "Something went wrong while deleting this transaction. Please try again."
+        )
     }
 
     /// Payload for correcting an ordinary transaction into business inventory.
@@ -183,7 +233,24 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func deleteTransaction(accountId: String, transactionId: String) async throws {
-        try await repo(accountId: accountId).delete(id: transactionId)
+        guard let transaction = try await loadTransaction(accountId, transactionId) else {
+            throw ItemAssociationError.transactionNotFound(transactionId)
+        }
+        if Self.deletionNotice(for: transaction) != nil {
+            throw TransactionDeletionError.linkedItems(count: transaction.itemIds?.count ?? 0)
+        }
+        do {
+            try await repo(accountId: accountId).delete(id: transactionId)
+        } catch {
+            // The Firestore rule closes the race between this read and delete.
+            // Re-read once so a newly attached item still gets the useful
+            // explanation instead of a generic permission error.
+            if let latest = try? await loadTransaction(accountId, transactionId),
+               Self.deletionNotice(for: latest) != nil {
+                throw TransactionDeletionError.linkedItems(count: latest.itemIds?.count ?? 0)
+            }
+            throw error
+        }
     }
 
     func subscribeToTransactions(accountId: String, scope: ListScope, onChange: @escaping ([Transaction]) -> Void) -> ListenerRegistration {

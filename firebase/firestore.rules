@@ -220,7 +220,9 @@ service cloud.firestore {
     // exempt so existing flows (cancel_transaction, etc.) continue to work.
     // Other transactions remain unrestricted.
     match /accounts/{accountId}/transactions/{transactionId} {
-      allow read, create, delete: if isAccountMember(accountId);
+      allow read, create: if isAccountMember(accountId);
+      allow delete: if isAccountMember(accountId)
+        && resource.data.get('itemIds', []).size() == 0;
 
       allow update: if isAccountMember(accountId)
         && (!((resource.data.get('type', '') == 'Sale'

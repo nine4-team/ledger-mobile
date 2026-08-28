@@ -34,6 +34,7 @@ struct ItemsTabView: View {
     @State private var menuPendingAction: (() -> Void)?
     @State private var selectedItemId: String?
     @State private var showItemDetail = false
+    @State private var errorMessage: String?
 
     // MARK: - Computed
 
@@ -167,6 +168,14 @@ struct ItemsTabView: View {
             Button("Delete", role: .destructive) { deleteSelected() }
         } message: {
             Text("This action cannot be undone.")
+        }
+        .alert("Error", isPresented: .init(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
         }
         .adaptivePresentation(isPresented: $showNewItem, style: .form) {
             if let projectId = projectContext.currentProjectId {
@@ -451,8 +460,19 @@ struct ItemsTabView: View {
     private func setTransactionForSelected(transactionId: String) {
         guard let accountId = accountContext.currentAccountId else { return }
         let items = Array(selectedItems)
-        Task { try? await ItemsService().setTransaction(accountId: accountId, items: items, transactionId: transactionId) }
-        selectedItemIds.removeAll()
+        let itemIds = Set(items.compactMap(\.id))
+        Task {
+            do {
+                try await ItemsService().setTransaction(
+                    accountId: accountId,
+                    items: items,
+                    transactionId: transactionId
+                )
+                selectedItemIds.subtract(itemIds)
+            } catch {
+                errorMessage = "Couldn't link the selected items: \(error.localizedDescription)"
+            }
+        }
     }
 
     private func clearTransactionForSelected() {

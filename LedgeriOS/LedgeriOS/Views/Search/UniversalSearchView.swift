@@ -43,6 +43,7 @@ struct UniversalSearchView: View {
     // Single-transaction actions
     @State private var actionTargetTransactionId: String?
     @State private var showSingleTransactionDeleteConfirmation = false
+    @State private var transactionDeletionNotice: TransactionDeletionNotice?
 
     private var itemsCount: Int { searchResults.items.count + searchResults.protoItems.count }
     private var transactionsCount: Int { searchResults.transactions.count }
@@ -178,6 +179,13 @@ struct UniversalSearchView: View {
             Button("Delete", role: .destructive) { deleteSelectedItems() }
         } message: {
             Text("This action cannot be undone.")
+        }
+        .alert(item: $transactionDeletionNotice) { notice in
+            Alert(
+                title: Text(notice.title),
+                message: Text(notice.message),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
 
@@ -458,8 +466,7 @@ struct UniversalSearchView: View {
             callbacks: SingleTransactionMenuCallbacks(
                 onCopyID: { Clipboard.copy(txId) },
                 onDelete: {
-                    actionTargetTransactionId = txId
-                    showSingleTransactionDeleteConfirmation = true
+                    requestDelete(transaction, transactionId: txId)
                 }
             )
         )
@@ -487,7 +494,7 @@ struct UniversalSearchView: View {
         TransactionMenuBuilder.buildBulkMenu(
             callbacks: BulkTransactionMenuCallbacks(
                 onCopyIDs: { Clipboard.copyLines(selectedTransactionIds) },
-                onDelete: { showTransactionDeleteConfirmation = true }
+                onDelete: { requestBulkDelete() }
             )
         )
     }
@@ -559,18 +566,50 @@ struct UniversalSearchView: View {
     private func deleteSingleTransaction() {
         guard let accountId = accountContext.currentAccountId,
               let txId = actionTargetTransactionId else { return }
-        let service = TransactionsService()
-        Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+        Task {
+            do {
+                try await TransactionsService().deleteTransaction(accountId: accountId, transactionId: txId)
+                actionTargetTransactionId = nil
+            } catch {
+                transactionDeletionNotice = TransactionsService.failureNotice(for: error)
+            }
+        }
     }
 
     private func deleteSelectedTransactions() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = TransactionsService()
-        for tx in selectedTransactions {
-            guard let txId = tx.id else { continue }
-            Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+        let transactions = selectedTransactions
+        Task {
+            do {
+                for transaction in transactions {
+                    guard let transactionId = transaction.id else { continue }
+                    try await TransactionsService().deleteTransaction(
+                        accountId: accountId,
+                        transactionId: transactionId
+                    )
+                }
+                selectedTransactionIds.removeAll()
+            } catch {
+                transactionDeletionNotice = TransactionsService.failureNotice(for: error)
+            }
         }
-        selectedTransactionIds.removeAll()
+    }
+
+    private func requestDelete(_ transaction: Transaction, transactionId: String) {
+        if let notice = TransactionsService.deletionNotice(for: transaction) {
+            transactionDeletionNotice = notice
+            return
+        }
+        actionTargetTransactionId = transactionId
+        showSingleTransactionDeleteConfirmation = true
+    }
+
+    private func requestBulkDelete() {
+        if let notice = TransactionsService.deletionNotice(for: selectedTransactions) {
+            transactionDeletionNotice = notice
+            return
+        }
+        showTransactionDeleteConfirmation = true
     }
 
     // MARK: - Helpers
