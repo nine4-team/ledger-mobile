@@ -99,6 +99,10 @@ For write-path changes, run a disposable smoke against real Firestore using a se
 
 Inventory movement identity fields (`budgetCategoryId`, `type`, `source`, `projectId`) are frozen after creation, and clients cannot edit movement totals directly. The trusted item-price trigger adjusts `amountCents`/`subtotalCents` only for a project-side Purchase from Inventory when its sold item's effective project price changes. Other movement totals remain frozen. `itemIds` tracks active membership. Item invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.
 
+### Item Copies and Quantity Expansion
+
+When a receipt line, quick draft, or source item is expanded into multiple physical item documents, every document keeps the source `name` exactly, byte-for-byte. Repeated identical names are valid because document IDs identify the physical records. Reconstruction and duplication workflows must not append unit counts, “copy,” “duplicate,” parenthetical numbers, or any other generated differentiator. Names differ only when the user explicitly requests distinct names or source evidence names individual units differently. Inventory movements preserve names and this release does not rename existing data.
+
 ### Analytics
 - `project_health` — Budget utilization, item counts, attention items
 - `inventory_summary` — Business inventory overview

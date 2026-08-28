@@ -164,7 +164,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
   // ── create_transaction_with_items ──────────────────────────────────────────
   server.tool(
     "create_transaction_with_items",
-    "[mutating] Atomically create a transaction and its items in a single batched write. Replaces the create_transaction + bulk_create_items chain and rolls back if any step fails. Requires a dated audit note.",
+    "[mutating] Atomically create a transaction and its items in a single batched write. Replaces the create_transaction + bulk_create_items chain and rolls back if any step fails. Requires a dated audit note. For receipt reconstruction or quantity expansion, create one document per physical unit and repeat the receipt-line/source name exactly, byte-for-byte, on every unit. Duplicate names are valid; do not invent unit/copy/duplicate/sequence suffixes. Preserve distinct names only when explicitly supplied by the user or source evidence.",
     {
       transaction: z
         .object({
@@ -184,7 +184,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       items: z
         .array(
           z.object({
-            name: z.string(),
+            name: z.string().describe("Item name. For expanded receipt quantities, repeat the source line name exactly on every physical item document."),
             purchasePriceCents: z.coerce.number().optional(),
             projectPriceCents: z.coerce.number().optional(),
             status: z.string().default("purchased"),

@@ -287,9 +287,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── create_item ────────────────────────────────────────────────────────────
   server.tool(
     "create_item",
-    "[mutating] Create a new item.\n\nNOTES CONVENTION: `notes` is the optional user-facing description of the item (what it is — finish, size, room, etc.). Plain prose, no required format.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. New project-item creation requires a valid transactionId and inherits that transaction's real category. Existing project items may later enter the categorized No Transaction work queue through an explicit clear.",
+    "[mutating] Create a new item. When creating a physical copy from a source item or receipt line, pass the source name exactly, byte-for-byte. Duplicate names are valid; never add unit/copy/duplicate/sequence suffixes unless the user explicitly supplied a distinct name or source evidence distinguishes the unit.\n\nNOTES CONVENTION: `notes` is the optional user-facing description of the item (what it is — finish, size, room, etc.). Plain prose, no required format.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. New project-item creation requires a valid transactionId and inherits that transaction's real category. Existing project items may later enter the categorized No Transaction work queue through an explicit clear.",
     {
-      name: z.string().describe("Item name"),
+      name: z.string().describe("Item name. For a copy/expanded unit, preserve the source name exactly, byte-for-byte; repeated identical names are valid."),
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       purchasePriceCents: z.coerce.number().optional().describe("Purchase price in cents"),
       projectPriceCents: z.coerce.number().optional().describe("Project price in cents"),
@@ -376,12 +376,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── bulk_create_items ─────────────────────────────────────────────────────
   server.tool(
     "bulk_create_items",
-    "Create multiple items in one batch. Top-level transactionId and projectId are defaults applied to all items unless overridden per-item.",
+    "Create multiple items in one batch. Top-level transactionId and projectId are defaults applied to all items unless overridden per-item. Repeated identical names are explicitly valid. When expanding one source item or receipt line into multiple physical documents, repeat its name exactly for every copy; never generate unit/copy/duplicate/sequence suffixes. Preserve explicit user-supplied distinct names unchanged.",
     {
       transactionId: z.string().optional().describe("Transaction ID — applied to all items unless overridden per-item"),
       projectId: z.string().optional().describe("Project ID — applied to all items unless overridden per-item"),
       items: z.array(z.object({
-        name: z.string().describe("Item name"),
+        name: z.string().describe("Item name. Identical repeated values are valid and required for copies unless the user or source evidence provides distinct per-unit names."),
         projectId: z.string().optional().describe("Project ID (overrides top-level)"),
         purchasePriceCents: z.coerce.number().optional().describe("Purchase price in cents"),
         projectPriceCents: z.coerce.number().optional().describe("Project price in cents"),

@@ -70,6 +70,12 @@ Readers should defensively use the same `max` rule while legacy documents are be
 
 The canonical display name is `name ?? description ?? ""`. The `description` field is a legacy fallback — new items always use `name`.
 
+### Physical Copies and Quantity Expansion
+
+When one source item, proto item, or receipt line is materialized as multiple physical `Item` documents, every created document preserves the resolved source `name` exactly, byte-for-byte. Duplicate names are valid because document IDs distinguish physical records. Writers must not append unit counts, copy/duplicate labels, parenthetical numbers, or other generated sequence/quantity suffixes. A unit may have a different name only when the user explicitly supplies it or source evidence names that unit differently.
+
+Inventory movements update the existing item documents and do not change `name`. This invariant applies prospectively to creation/copy workflows; it does not trigger a migration or automatic rename of existing records.
+
 ## Scoping
 
 Items live in a single flat collection (`accounts/{accountId}/items`). Scope is determined by the `projectId` field:

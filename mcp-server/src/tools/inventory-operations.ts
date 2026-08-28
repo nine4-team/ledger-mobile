@@ -517,6 +517,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "SPACE ASSIGNMENTS: destinationSpaceAssignments may restore selected per-item assignments " +
       "captured during correction. Every supplied space is validated against the destination project; " +
       "omitted items land unassigned.\n\n" +
+      "NAME PRESERVATION: this movement updates the existing physical item documents in place and never " +
+      "changes their names. Identical names across multiple items remain identical.\n\n" +
       "PRICING: amountCents/subtotalCents are derived from each item's normalized projectPriceCents " +
       "(the client-charged price). Ledger raises projectPriceCents to purchasePriceCents whenever it " +
       "is missing, zero, or lower, and persists that value atomically. The call fails " +
@@ -648,6 +650,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes (item " +
       "logged against the wrong project), use `bulk_update_items` with `projectId: null` to relocate " +
       "without creating a transaction.\n\n" +
+      "NAME PRESERVATION: this movement updates existing item documents in place and never changes " +
+      "their names, including when several physical items share the same name.\n\n" +
       "Accounting fields (amountCents, budgetCategoryId, projectId, type, source) are frozen at creation. " +
       "Cap: 100 items per call. PRICING: this is a true business acquisition, so amountCents/subtotalCents use purchasePriceCents even if projectPriceCents is higher.",
     {
@@ -779,6 +783,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes " +
       "(wrong project, wrong vendor on the original record), use `bulk_update_items` to relocate " +
       "items without creating a Return transaction.\n\n" +
+      "NAME PRESERVATION: return/movement updates never rename existing item documents. Duplicate " +
+      "names remain valid and unchanged.\n\n" +
       "PRICING: returnTo: 'inventory' always reverses normalized projectPriceCents (including " +
       "recorded per-item tax), never purchasePriceCents. The dry-run lists each credit and its basis.\n\n" +
       "Cap: 100 items per call. Set dryRun: true to preview the plan.",
@@ -958,6 +964,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "REAL EVENT vs CORRECTION: This records real financial movement — NOT a silent bookkeeping " +
       "repoint. For data-entry mistakes (item logged on the wrong project from the start), use " +
       "`bulk_update_items` to relocate without creating Sale/Return transactions.\n\n" +
+      "NAME PRESERVATION: both movement hops update the same item documents and never change their " +
+      "names. Identically named physical records remain identically named.\n\n" +
       "All items must be in the same source project. Cap: 100 items per call. One destination category " +
       "applies to the whole batch — ask the user to pick from get_project_budget_categories before " +
       "calling. Source and destination must differ.\n\n" +

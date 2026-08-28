@@ -468,7 +468,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── create_quick_draft_item ──────────────────────────────────────────────
   server.tool(
     "create_quick_draft_item",
-    "[mutating] Create a photo-first item quick draft. This does not create a real item or touch transactions.",
+    "[mutating] Create a photo-first item quick draft. This does not create a real item or touch transactions. Quantity remains draft metadata; if a later workflow expands it into separate physical item documents, every unit must preserve the resolved draft/source name exactly, without generated suffixes.",
     {
       projectId: z.string().nullable().optional().describe("Project where the draft was captured. Omit/null for inventory."),
       intendedProjectId: z.string().nullable().optional().describe("Optional intended destination project."),
@@ -479,7 +479,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       sourceHint: QuickDraftSourceHint.default("unknown").describe("Source hint."),
       photos: z.array(AttachmentInput).default([]).describe("Photo attachment refs."),
       sku: z.string().optional().describe("SKU."),
-      quantity: z.coerce.number().int().positive().default(1).describe("Quantity."),
+      quantity: z.coerce.number().int().positive().default(1).describe("Quantity. Expansion into separate item documents must reuse the exact resolved source name for every unit."),
       notes: z.string().optional().describe("Draft notes."),
       extracted: ExtractionInput,
       candidateItemId: z.string().optional().describe("Suggested existing item match."),
@@ -599,10 +599,10 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── promote_quick_draft_item ─────────────────────────────────────────────
   server.tool(
     "promote_quick_draft_item",
-    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Full-resolution photos are copied and verified in the destination item's Storage namespace, item-owned thumbnails are generated, and draft originals are preserved. The draft primary is used unless primaryImageUrl selects another draft photo.",
+    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Full-resolution photos are copied and verified in the destination item's Storage namespace, item-owned thumbnails are generated, and draft originals are preserved. The draft primary is used unless primaryImageUrl selects another draft photo. This call creates one real item. If the captured quantity is instead expanded through a multi-document workflow, every physical item must use the same resolved source name exactly, byte-for-byte; never add generated quantity/copy suffixes.",
     {
       quickDraftItemId: z.string().describe("Quick draft item ID."),
-      name: z.string().optional().describe("Override item name. Defaults to draft name, SKU, or 'Untitled item'."),
+      name: z.string().optional().describe("Override item name. Defaults to draft name, SKU, or 'Untitled item'. For quantity-expanded copies, reuse the resolved name exactly unless the user or source evidence supplies distinct names."),
       projectId: z.string().nullable().optional().describe("Override project ID. Omit to use draft projectId. Pass null for inventory."),
       transactionId: z.string().nullable().optional().describe("Override the authoritative transaction ID. Omit to use draft.transactionId. Pass null to clear."),
       budgetCategoryId: z.string().nullable().optional().describe("Budget category. Auto-inherited from transaction when possible. Must be absent/null for inventory."),
@@ -610,7 +610,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       status: z.string().optional().describe("Real item status. Defaults to purchased for a new item; preserves the existing status on merge when omitted."),
       source: z.string().optional().describe("Vendor/source for the real item."),
       sku: z.string().optional().describe("Override SKU. Defaults to draft SKU."),
-      quantity: z.coerce.number().int().positive().optional().describe("Override quantity. Defaults to draft quantity or 1."),
+      quantity: z.coerce.number().int().positive().optional().describe("Override quantity. Defaults to draft quantity or 1. This field does not authorize encoding quantity or sequence text in the item name."),
       purchasePriceCents: z.coerce.number().optional(),
       projectPriceCents: z.coerce.number().optional(),
       marketValueCents: z.coerce.number().optional(),

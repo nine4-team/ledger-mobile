@@ -62,6 +62,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     requiredOnCreate: ["name", "notes"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID." },
+      { name: "name", type: "string", description: "Item name. When a source item or receipt line is expanded into multiple physical item documents, copy this value exactly, byte-for-byte, to every document. Duplicate names are valid; never generate sequence or quantity suffixes." },
       { name: "projectId", type: "string?", description: "Null = business inventory. MUST be null for inventory items." },
       { name: "spaceId", type: "string?", description: "Optional space within a project." },
       { name: "budgetCategoryId", type: "string?", description: "MUST be null when projectId is null (invariant: items in inventory have no category). Resolved at sell-into-project time." },
@@ -75,6 +76,8 @@ const ENTITIES: Record<string, EntitySchema> = {
     notes: [
       "Invariant: (projectId == null) ↔ (budgetCategoryId == null). Enforced on write.",
       "Items in business inventory have no budget category.",
+      "Copy-name invariant: quantity expansion, receipt/inventory reconstruction, and duplication preserve the source name exactly on every physical item document. Do not append unit counts, copy/duplicate labels, parenthetical numbers, or any other differentiator. Different names require an explicit user name or source evidence for individually named units.",
+      "Inventory movements update existing item documents in place and never rename them.",
       "An item may contain legacy/shared image URLs outside its own Storage namespace. Removing those references never deletes the source object.",
     ],
   },
@@ -93,6 +96,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       { name: "captureContext", type: "enum(quickDraftCaptureContext)", description: "project, inventory, or transaction." },
       { name: "status", type: "enum(quickDraftItemStatus)", description: "open, in_review, or converted." },
       { name: "sourceHint", type: "enum(quickDraftSourceHint)", description: "client_purchase, business_purchase, from_inventory, or unknown." },
+      { name: "quantity", type: "number", description: "Captured quantity. If it is materialized as multiple physical item documents, every unit keeps the resolved source name exactly; quantity is never encoded into generated name suffixes." },
       { name: "photos", type: "AttachmentRef[]", description: "Draft photos. Promotion copies and verifies full-resolution files plus new thumbnails in the destination item's namespace; source draft objects are preserved." },
       { name: "convertedItemId", type: "string?", description: "Real item ID after promotion/conversion." },
     ],
@@ -102,6 +106,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       "Promoting creates a real item or merges into an existing item, then marks the draft converted.",
       "primaryImageUrl can select a promoted draft photo; otherwise the draft's primary photo becomes the item primary, including merges.",
       "Project promotions follow normal item invariants: project items need transactionId; inventory items have no budgetCategoryId.",
+      "When expanding a quick-draft quantity into separate physical item documents, preserve the draft/resolved name exactly on every created item unless the user or source evidence supplies distinct per-unit names.",
     ],
   },
   project: {
@@ -189,6 +194,8 @@ export function registerSchemaTools(server: McpServer, db: Firestore) {
             "Every create/update MUST include a dated audit note in `notes`, e.g. '4/6 — moved 3 fixtures to Witzenman'. Calls without one are rejected with a VALIDATION error.",
           money: "All amounts are integer cents. Tax rates are percentages (e.g. 8.25 = 8.25%).",
           linkage: "Transaction → Items is the canonical direction: use transaction.itemIds, not item.transactionId.",
+          itemCopyNames:
+            "When one source item, quick draft, or receipt line becomes multiple physical item documents, every copy preserves the source name exactly, byte-for-byte. Duplicate names are valid. Never generate unit/copy/duplicate/sequence suffixes; only explicit user names or distinct source evidence may differ. Existing records are never renamed automatically.",
         },
       });
     })
