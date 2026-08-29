@@ -12,7 +12,7 @@ PREFLIGHT_ONLY=false
 BUILD_NUMBER=""
 VERSION=""
 CHANGELOG=""
-GROUPS=""
+EXTERNAL_GROUPS=""
 
 usage() {
   cat <<'USAGE'
@@ -53,7 +53,7 @@ while (($#)); do
       ;;
     --groups)
       [[ $# -ge 2 ]] || { printf '%s\n' "--groups requires a value" >&2; exit 2; }
-      GROUPS="$2"
+      EXTERNAL_GROUPS="$2"
       shift 2
       ;;
     --internal)
@@ -96,6 +96,18 @@ FASTLANE_ARGS=(ios "$LANE")
 [[ -z "$BUILD_NUMBER" ]] || FASTLANE_ARGS+=("build_number:$BUILD_NUMBER")
 [[ -z "$VERSION" ]] || FASTLANE_ARGS+=("version:$VERSION")
 [[ -z "$CHANGELOG" ]] || FASTLANE_ARGS+=("changelog:$CHANGELOG")
-[[ -z "$GROUPS" ]] || FASTLANE_ARGS+=("groups:$GROUPS")
+[[ -z "$EXTERNAL_GROUPS" ]] || FASTLANE_ARGS+=("groups:$EXTERNAL_GROUPS")
+
+# Reuse the main checkout's validated Swift package cache from release worktrees.
+# This avoids a redundant network-backed package resolution before each archive.
+COMMON_GIT_DIR="$(git -C "$ROOT_DIR" rev-parse --path-format=absolute --git-common-dir)"
+SHARED_REPO_ROOT="$(dirname "$COMMON_GIT_DIR")"
+SOURCE_PACKAGES_PATH="${LEDGER_SOURCE_PACKAGES_PATH:-$SHARED_REPO_ROOT/LedgeriOS/DerivedData-Codex/SourcePackages}"
+if [[ -d "$SOURCE_PACKAGES_PATH/checkouts" && -d "$SOURCE_PACKAGES_PATH/artifacts" ]]; then
+  export GYM_CLONED_SOURCE_PACKAGES_PATH="$SOURCE_PACKAGES_PATH"
+  export GYM_SKIP_PACKAGE_DEPENDENCIES_RESOLUTION=true
+  export GYM_DISABLE_PACKAGE_AUTOMATIC_UPDATES=true
+  export GYM_SKIP_PACKAGE_REPOSITORY_FETCHES=true
+fi
 
 "$WRAPPER" env LEDGER_SIGNING_PREFLIGHT_PASSED=1 PATH="$RELEASE_PATH" "$BUNDLE_BIN" exec fastlane "${FASTLANE_ARGS[@]}"
