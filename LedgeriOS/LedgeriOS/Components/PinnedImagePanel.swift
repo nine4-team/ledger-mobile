@@ -42,6 +42,25 @@ struct PinnedImagePanel: View {
         }
     }
 
+    private var pendingItemIsAlreadyMarked: Bool {
+        guard let pendingItemId else { return false }
+        return allImages.contains { image in
+            (localCheckmarksByURL[image.url] ?? image.checkmarks ?? []).contains {
+                $0.itemId == pendingItemId
+            }
+        }
+    }
+
+    private var zoomAnnotations: [ZoomableImageAnnotation] {
+        currentCheckmarks.map { mark in
+            ZoomableImageAnnotation(
+                id: mark.id,
+                point: CGPoint(x: mark.x, y: mark.y),
+                isHighlighted: mark.itemId == pendingItemId
+            )
+        }
+    }
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -49,13 +68,18 @@ struct PinnedImagePanel: View {
             if currentAttachment.kind == .pdf {
                 pdfContent
             } else if onUpdateCheckmarks != nil {
-                ImageCheckmarkEditor(
-                    attachment: currentAttachment,
-                    checkmarks: currentCheckmarks,
-                    pendingItemId: pendingItemId,
-                    onSelect: { selectedCheckmark = $0 },
-                    onPlace: { itemId, point in
-                        onPlaceItemCheckmark?(currentAttachment, itemId, point)
+                ZoomableScrollView(
+                    url: URL(string: currentAttachment.url),
+                    zoomScale: $zoomScale,
+                    onSingleTap: nil,
+                    annotations: zoomAnnotations,
+                    annotationSelectionEnabled: pendingItemId == nil,
+                    onImageTap: { point in
+                        guard let pendingItemId else { return }
+                        onPlaceItemCheckmark?(currentAttachment, pendingItemId, point)
+                    },
+                    onAnnotationTap: { annotationID in
+                        selectedCheckmark = currentCheckmarks.first { $0.id == annotationID }
                     }
                 )
             } else {
@@ -91,6 +115,17 @@ struct PinnedImagePanel: View {
                     Spacer()
                 }
                 .padding(.horizontal, Spacing.md)
+            }
+
+            if currentAttachment.kind == .image, onUpdateCheckmarks != nil {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        pinnedImageZoomControls
+                    }
+                    .padding(Spacing.sm)
+                }
             }
 
             if let selectedCheckmark {
@@ -237,7 +272,9 @@ struct PinnedImagePanel: View {
                 .foregroundStyle(.green)
             Text(pendingItemId == nil
                  ? "Choose Mark in photo on an item card"
-                 : "Tap where \(pendingItemName ?? "the item") appears")
+                 : pendingItemIsAlreadyMarked
+                    ? "Moving \(pendingItemName ?? "item"). Tap its new location"
+                    : "Tap where \(pendingItemName ?? "the item") appears")
                 .font(Typography.small)
                 .foregroundStyle(.white)
                 .lineLimit(2)
@@ -323,6 +360,40 @@ struct PinnedImagePanel: View {
         .accessibilityLabel("Unpin image")
     }
 
+    private var pinnedImageZoomControls: some View {
+        HStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    zoomScale = max(1, zoomScale - 0.75)
+                }
+            } label: {
+                Image(systemName: "minus")
+                    .frame(width: 40, height: 40)
+            }
+            .disabled(zoomScale <= 1.01)
+            .accessibilityLabel("Zoom out")
+
+            Text("\(Int((zoomScale * 100).rounded()))%")
+                .font(Typography.caption)
+                .frame(minWidth: 48)
+                .accessibilityLabel("Zoom level")
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    zoomScale = min(5, zoomScale + 0.75)
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .frame(width: 40, height: 40)
+            }
+            .disabled(zoomScale >= 4.99)
+            .accessibilityLabel("Zoom in")
+        }
+        .foregroundStyle(.white)
+        .background(.black.opacity(0.68))
+        .clipShape(Capsule())
+    }
+
     // MARK: - Image Counter
 
     private var imageCounter: some View {
@@ -362,6 +433,7 @@ struct PinnedImagePanel: View {
     }
 }
 
+#if false // Retired: checkmark editing now extends the existing native ZoomableScrollView.
 private struct ImageCheckmarkEditor: View {
     let attachment: AttachmentRef
     let checkmarks: [ImageCheckmark]
@@ -640,3 +712,4 @@ private struct ImageCheckmarkEditor: View {
         }
     }
 }
+#endif

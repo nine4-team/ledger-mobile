@@ -1,5 +1,13 @@
 import Foundation
 
+/// An item-linked marker rendered by the existing native image zoom surface.
+/// The point is normalized to the image bounds (0...1 on each axis).
+struct ZoomableImageAnnotation: Equatable, Identifiable {
+    let id: String
+    let point: CGPoint
+    var isHighlighted: Bool = false
+}
+
 enum ZoomableImageLoader {
     static func prepare(_ data: Data) async -> PlatformImage? {
         let startedAt = DispatchTime.now().uptimeNanoseconds
@@ -20,6 +28,16 @@ enum ZoomableImageLoader {
 import SwiftUI
 import UIKit
 
+private final class AccessibleAnnotationImageView: UIImageView {
+    var annotationID = ""
+    var onActivate: ((String) -> Void)?
+
+    override func accessibilityActivate() -> Bool {
+        onActivate?(annotationID)
+        return true
+    }
+}
+
 /// Zoomable image viewer backed by UIScrollView. Supports pinch-to-zoom, double-tap zoom,
 /// pan when zoomed, and async image loading with spinner/error states.
 ///
@@ -28,6 +46,10 @@ struct ZoomableScrollView: UIViewRepresentable {
     let url: URL?
     @Binding var zoomScale: CGFloat
     var onSingleTap: (() -> Void)?
+    var annotations: [ZoomableImageAnnotation] = []
+    var annotationSelectionEnabled = true
+    var onImageTap: ((CGPoint) -> Void)?
+    var onAnnotationTap: ((String) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -75,7 +97,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         context.coordinator.doubleTapGesture = doubleTap
 
         // Single-tap gesture (requires double-tap to fail first)
-        let singleTap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleTap))
+        let singleTap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleTap(_:)))
         singleTap.numberOfTapsRequired = 1
         singleTap.require(toFail: doubleTap)
         scrollView.addGestureRecognizer(singleTap)
@@ -94,6 +116,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         if context.coordinator.currentURL != url {
             context.coordinator.loadImage(url: url)
         }
+        context.coordinator.updateAnnotations(annotations)
 
         // Sync logical zoom from SwiftUI → UIKit. In SwiftUI state, 1.0 means
         // fitted-to-container; UIScrollView's actual scale may be below 1.0.
@@ -115,6 +138,8 @@ struct ZoomableScrollView: UIViewRepresentable {
         var errorView: UIImageView?
         var doubleTapGesture: UITapGestureRecognizer?
         var currentURL: URL?
+        var annotations: [ZoomableImageAnnotation] = []
+        fileprivate var annotationViews: [String: AccessibleAnnotationImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
 
         init(parent: ZoomableScrollView) {
@@ -133,6 +158,7 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         func scrollViewDidZoom(_ scrollView: UIScrollView) {
             centerImage(in: scrollView)
+            layoutAnnotationViews(in: scrollView)
             // Report zoom back to SwiftUI as a logical scale where 1.0 means fit.
             let scale = MediaGalleryCalculations.logicalZoomScale(
                 platformZoom: scrollView.zoomScale,
@@ -207,8 +233,120 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         // MARK: Single-Tap
 
-        @objc func handleSingleTap() {
-            parent.onSingleTap?()
+        @objc func handleSingleTap(_ recognizer: UITapGestureRecognizer) {
+            guard let scrollView = recognizer.view as? UIScrollView,
+                  let imageView,
+                  imageView.image != nil else {
+                parent.onSingleTap?()
+                return
+            }
+
+            let tapInScrollView = recognizer.location(in: scrollView)
+            if parent.annotationSelectionEnabled,
+               let annotation = nearestAnnotation(to: tapInScrollView, in: scrollView) {
+                parent.onAnnotationTap?(annotation.id)
+                return
+            }
+
+            let tapInImage = recognizer.location(in: imageView)
+            guard imageView.bounds.contains(tapInImage),
+                  imageView.bounds.width > 0,
+                  imageView.bounds.height > 0 else {
+                parent.onSingleTap?()
+                return
+            }
+            if let onImageTap = parent.onImageTap,
+               let normalizedPoint = PinnedImageCalculations.normalizedImagePoint(
+                    for: tapInImage,
+                    in: imageView.bounds
+               ) {
+                onImageTap(normalizedPoint)
+            } else {
+                parent.onSingleTap?()
+            }
+        }
+
+        // MARK: Annotations
+
+        @MainActor
+        func updateAnnotations(_ annotations: [ZoomableImageAnnotation]) {
+            self.annotations = annotations
+            let currentIDs = Set(annotations.map(\.id))
+            let removedIDs = annotationViews.keys.filter { !currentIDs.contains($0) }
+            for id in removedIDs {
+                annotationViews.removeValue(forKey: id)?.removeFromSuperview()
+            }
+
+            for annotation in annotations {
+                let annotationView: AccessibleAnnotationImageView
+                if let existing = annotationViews[annotation.id] {
+                    annotationView = existing
+                } else {
+                    let configuration = UIImage.SymbolConfiguration(pointSize: 16, weight: .heavy)
+                    annotationView = AccessibleAnnotationImageView(
+                        image: UIImage(systemName: "checkmark", withConfiguration: configuration)
+                    )
+                    annotationView.contentMode = .scaleAspectFit
+                    annotationView.isAccessibilityElement = true
+                    annotationView.accessibilityLabel = "Show checked item"
+                    annotationView.accessibilityTraits = .button
+                    annotationView.annotationID = annotation.id
+                    annotationView.onActivate = { [weak self] id in
+                        guard let self, self.parent.annotationSelectionEnabled else { return }
+                        self.parent.onAnnotationTap?(id)
+                    }
+                    imageView?.addSubview(annotationView)
+                    annotationViews[annotation.id] = annotationView
+                }
+                annotationView.tintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                annotationView.isAccessibilityElement = parent.annotationSelectionEnabled
+            }
+
+            if let scrollView = imageView?.superview as? UIScrollView {
+                layoutAnnotationViews(in: scrollView)
+            }
+        }
+
+        @MainActor
+        private func layoutAnnotationViews(in scrollView: UIScrollView) {
+            guard let imageView, scrollView.zoomScale > 0 else { return }
+            let markerSize = 24 / scrollView.zoomScale
+            for annotation in annotations {
+                guard let annotationView = annotationViews[annotation.id] else { continue }
+                annotationView.bounds = CGRect(x: 0, y: 0, width: markerSize, height: markerSize)
+                annotationView.center = PinnedImageCalculations.renderedPoint(
+                    for: annotation.point,
+                    in: imageView.bounds
+                )
+            }
+        }
+
+        @MainActor
+        private func nearestAnnotation(
+            to tapPoint: CGPoint,
+            in scrollView: UIScrollView
+        ) -> ZoomableImageAnnotation? {
+            guard let imageView else { return nil }
+            let selectionRadius: CGFloat = 22
+            let maximumSquaredDistance = selectionRadius * selectionRadius
+            return annotations
+                .compactMap { annotation -> (ZoomableImageAnnotation, CGFloat)? in
+                    let imagePoint = PinnedImageCalculations.renderedPoint(
+                        for: annotation.point,
+                        in: imageView.bounds
+                    )
+                    let renderedPoint = imageView.convert(imagePoint, to: scrollView)
+                    let dx = renderedPoint.x - tapPoint.x
+                    let dy = renderedPoint.y - tapPoint.y
+                    let distance = dx * dx + dy * dy
+                    guard distance <= maximumSquaredDistance else { return nil }
+                    return (annotation, distance)
+                }
+                .min { lhs, rhs in
+                    if lhs.1 == rhs.1 { return lhs.0.id < rhs.0.id }
+                    return lhs.1 < rhs.1
+                }?
+                .0
         }
 
         // MARK: Image Loading
@@ -295,6 +433,7 @@ struct ZoomableScrollView: UIViewRepresentable {
             scrollView.zoomScale = fitScale
 
             centerImage(in: scrollView)
+            layoutAnnotationViews(in: scrollView)
 
             DispatchQueue.main.async {
                 self.parent.zoomScale = 1.0
@@ -325,6 +464,16 @@ struct ZoomableScrollView: UIViewRepresentable {
 import SwiftUI
 import AppKit
 
+private final class AccessibleAnnotationNSImageView: NSImageView {
+    var annotationID = ""
+    var onActivate: ((String) -> Void)?
+
+    override func accessibilityPerformPress() -> Bool {
+        onActivate?(annotationID)
+        return true
+    }
+}
+
 /// macOS zoomable image viewer backed by NSScrollView. Supports trackpad pinch-to-zoom,
 /// double-click zoom, pan when zoomed, and async image loading with spinner/error states.
 ///
@@ -333,6 +482,10 @@ struct ZoomableScrollView: NSViewRepresentable {
     let url: URL?
     @Binding var zoomScale: CGFloat
     var onSingleTap: (() -> Void)?
+    var annotations: [ZoomableImageAnnotation] = []
+    var annotationSelectionEnabled = true
+    var onImageTap: ((CGPoint) -> Void)?
+    var onAnnotationTap: ((String) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -392,7 +545,7 @@ struct ZoomableScrollView: NSViewRepresentable {
         // Note: NSGestureRecognizer doesn't support failure requirements like UIKit.
         // Single-click will also fire on double-click, which is acceptable — it toggles
         // controls visibility while double-click handles zoom.
-        let singleClick = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleClick))
+        let singleClick = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleClick(_:)))
         singleClick.numberOfClicksRequired = 1
         singleClick.delaysPrimaryMouseButtonEvents = false
         scrollView.addGestureRecognizer(singleClick)
@@ -408,6 +561,7 @@ struct ZoomableScrollView: NSViewRepresentable {
                 if abs(logicalScale - coordinator.parent.zoomScale) > 0.01 {
                     coordinator.parent.zoomScale = logicalScale
                 }
+                coordinator.layoutAnnotationViews(in: scrollView)
             }
         }
 
@@ -424,6 +578,7 @@ struct ZoomableScrollView: NSViewRepresentable {
         if context.coordinator.currentURL != url {
             context.coordinator.loadImage(url: url)
         }
+        context.coordinator.updateAnnotations(annotations)
 
         // Sync logical zoom from SwiftUI → AppKit. In SwiftUI state, 1.0 means
         // fitted-to-container; NSScrollView's actual magnification may be below 1.0.
@@ -469,6 +624,8 @@ struct ZoomableScrollView: NSViewRepresentable {
         var errorView: NSImageView?
         var currentURL: URL?
         var magnificationObservation: NSKeyValueObservation?
+        var annotations: [ZoomableImageAnnotation] = []
+        fileprivate var annotationViews: [String: AccessibleAnnotationNSImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
 
         init(parent: ZoomableScrollView) {
@@ -503,8 +660,133 @@ struct ZoomableScrollView: NSViewRepresentable {
         // MARK: Single-Click
 
         @MainActor
-        @objc func handleSingleClick() {
-            parent.onSingleTap?()
+        @objc func handleSingleClick(_ recognizer: NSClickGestureRecognizer) {
+            guard let scrollView = recognizer.view as? NSScrollView,
+                  let imageView,
+                  imageView.image != nil else {
+                parent.onSingleTap?()
+                return
+            }
+
+            let tapInScrollView = recognizer.location(in: scrollView)
+            if parent.annotationSelectionEnabled,
+               let annotation = nearestAnnotation(to: tapInScrollView, in: scrollView) {
+                parent.onAnnotationTap?(annotation.id)
+                return
+            }
+
+            let tapInImage = recognizer.location(in: imageView)
+            guard imageView.bounds.contains(tapInImage),
+                  imageView.bounds.width > 0,
+                  imageView.bounds.height > 0 else {
+                parent.onSingleTap?()
+                return
+            }
+            let topLeftTap = CGPoint(
+                x: tapInImage.x,
+                y: imageView.bounds.height - tapInImage.y
+            )
+            if let onImageTap = parent.onImageTap,
+               let normalizedPoint = PinnedImageCalculations.normalizedImagePoint(
+                    for: topLeftTap,
+                    in: imageView.bounds
+               ) {
+                onImageTap(normalizedPoint)
+            } else {
+                parent.onSingleTap?()
+            }
+        }
+
+        // MARK: Annotations
+
+        @MainActor
+        func updateAnnotations(_ annotations: [ZoomableImageAnnotation]) {
+            self.annotations = annotations
+            let currentIDs = Set(annotations.map(\.id))
+            let removedIDs = annotationViews.keys.filter { !currentIDs.contains($0) }
+            for id in removedIDs {
+                annotationViews.removeValue(forKey: id)?.removeFromSuperview()
+            }
+
+            for annotation in annotations {
+                let annotationView: AccessibleAnnotationNSImageView
+                if let existing = annotationViews[annotation.id] {
+                    annotationView = existing
+                } else {
+                    let configuration = NSImage.SymbolConfiguration(pointSize: 16, weight: .heavy)
+                    let symbol = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Show checked item")?
+                        .withSymbolConfiguration(configuration)
+                    annotationView = AccessibleAnnotationNSImageView(image: symbol ?? NSImage())
+                    annotationView.imageScaling = .scaleProportionallyUpOrDown
+                    annotationView.setAccessibilityElement(true)
+                    annotationView.setAccessibilityRole(.button)
+                    annotationView.setAccessibilityLabel("Show checked item")
+                    annotationView.annotationID = annotation.id
+                    annotationView.onActivate = { [weak self] id in
+                        guard let self, self.parent.annotationSelectionEnabled else { return }
+                        self.parent.onAnnotationTap?(id)
+                    }
+                    imageView?.addSubview(annotationView)
+                    annotationViews[annotation.id] = annotationView
+                }
+                annotationView.contentTintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                annotationView.setAccessibilityElement(parent.annotationSelectionEnabled)
+            }
+
+            if let scrollView = imageView?.enclosingScrollView {
+                layoutAnnotationViews(in: scrollView)
+            }
+        }
+
+        @MainActor
+        fileprivate func layoutAnnotationViews(in scrollView: NSScrollView) {
+            guard let imageView, scrollView.magnification > 0 else { return }
+            let markerSize = 24 / scrollView.magnification
+            for annotation in annotations {
+                guard let annotationView = annotationViews[annotation.id] else { continue }
+                let topLeftPoint = PinnedImageCalculations.renderedPoint(
+                    for: annotation.point,
+                    in: imageView.bounds
+                )
+                annotationView.frame = CGRect(
+                    x: topLeftPoint.x - markerSize / 2,
+                    y: imageView.bounds.height - topLeftPoint.y - markerSize / 2,
+                    width: markerSize,
+                    height: markerSize
+                )
+            }
+        }
+
+        @MainActor
+        private func nearestAnnotation(
+            to tapPoint: CGPoint,
+            in scrollView: NSScrollView
+        ) -> ZoomableImageAnnotation? {
+            guard let imageView else { return nil }
+            let selectionRadius: CGFloat = 22
+            let maximumSquaredDistance = selectionRadius * selectionRadius
+            return annotations
+                .compactMap { annotation -> (ZoomableImageAnnotation, CGFloat)? in
+                    let topLeftPoint = PinnedImageCalculations.renderedPoint(
+                        for: annotation.point,
+                        in: imageView.bounds
+                    )
+                    let imagePoint = CGPoint(
+                        x: topLeftPoint.x,
+                        y: imageView.bounds.height - topLeftPoint.y
+                    )
+                    let renderedPoint = imageView.convert(imagePoint, to: scrollView)
+                    let dx = renderedPoint.x - tapPoint.x
+                    let dy = renderedPoint.y - tapPoint.y
+                    let distance = dx * dx + dy * dy
+                    guard distance <= maximumSquaredDistance else { return nil }
+                    return (annotation, distance)
+                }
+                .min { lhs, rhs in
+                    if lhs.1 == rhs.1 { return lhs.0.id < rhs.0.id }
+                    return lhs.1 < rhs.1
+                }?
+                .0
         }
 
         // MARK: Image Loading
@@ -593,6 +875,7 @@ struct ZoomableScrollView: NSViewRepresentable {
                 self.parent.zoomScale = 1.0
             }
 
+            layoutAnnotationViews(in: scrollView)
             layoutOverlays()
         }
 
