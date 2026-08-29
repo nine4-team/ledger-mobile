@@ -5,6 +5,82 @@ import Testing
 @Suite("Pinned Image Calculation Tests")
 struct PinnedImageCalculationTests {
 
+    @Test("marked item IDs include linked marks across photos and ignore unassigned marks")
+    func markedItemIdsAcrossPhotos() {
+        let attachments = [
+            AttachmentRef(
+                url: "one",
+                checkmarks: [
+                    ImageCheckmark(id: "m1", x: 0.1, y: 0.2, itemId: "item1"),
+                    ImageCheckmark(id: "legacy", x: 0.3, y: 0.4),
+                ]
+            ),
+            AttachmentRef(
+                url: "two",
+                checkmarks: [ImageCheckmark(id: "m2", x: 0.5, y: 0.6, itemId: "item2")]
+            ),
+        ]
+
+        #expect(PinnedImageCalculations.markedItemIds(in: attachments) == ["item1", "item2"])
+    }
+
+    @Test("placing a mark moves the item from another photo instead of duplicating it")
+    func placingMarkEnforcesOnePhotoPerItem() throws {
+        let attachments = [
+            AttachmentRef(
+                url: "one",
+                checkmarks: [
+                    ImageCheckmark(id: "old", x: 0.1, y: 0.2, itemId: "item1"),
+                    ImageCheckmark(id: "other", x: 0.3, y: 0.4, itemId: "item2"),
+                ]
+            ),
+            AttachmentRef(url: "two"),
+        ]
+
+        let updated = PinnedImageCalculations.placingCheckmark(
+            for: "item1",
+            at: CGPoint(x: 0.75, y: 0.25),
+            in: "two",
+            attachments: attachments,
+            checkmarkId: "replacement"
+        )
+
+        let expectedOtherMark = ImageCheckmark(id: "other", x: 0.3, y: 0.4, itemId: "item2")
+        #expect(updated[0].checkmarks == [expectedOtherMark])
+        let replacement = try #require(updated[1].checkmarks?.first)
+        let expectedReplacement = ImageCheckmark(
+            id: "replacement",
+            x: 0.75,
+            y: 0.25,
+            itemId: "item1"
+        )
+        #expect(replacement == expectedReplacement)
+        let itemMarks = updated.flatMap { $0.checkmarks ?? [] }.filter { $0.itemId == "item1" }
+        #expect(itemMarks.count == 1)
+    }
+
+    @Test("cleanup removes moved item marks while preserving unassigned and unrelated marks")
+    func cleanupPreservesOtherMarks() {
+        let attachments = [AttachmentRef(
+            url: "one",
+            checkmarks: [
+                ImageCheckmark(id: "moved", x: 0.1, y: 0.2, itemId: "item1"),
+                ImageCheckmark(id: "kept", x: 0.3, y: 0.4, itemId: "item2"),
+                ImageCheckmark(id: "legacy", x: 0.5, y: 0.6),
+            ]
+        )]
+
+        let updated = PinnedImageCalculations.removingCheckmarks(
+            for: ["item1"],
+            from: attachments
+        )
+
+        #expect(updated[0].checkmarks == [
+            ImageCheckmark(id: "kept", x: 0.3, y: 0.4, itemId: "item2"),
+            ImageCheckmark(id: "legacy", x: 0.5, y: 0.6),
+        ])
+    }
+
     // MARK: - Checkmark calibration
 
     @Test("Portrait image tap renders at the same point")

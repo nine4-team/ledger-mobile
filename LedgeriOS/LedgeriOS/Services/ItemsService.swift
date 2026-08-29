@@ -1,5 +1,10 @@
 import FirebaseFirestore
 
+struct SpacePhotoAnnotations: Sendable {
+    let spaceId: String
+    let images: [AttachmentRef]
+}
+
 enum ItemAssociationError: LocalizedError {
     case itemMissingId
     case itemNotFound(String)
@@ -32,15 +37,23 @@ struct ItemsService: ItemsServiceProtocol {
 
     private let makeBatch: @Sendable () -> any BatchWriting
     private let loadTransaction: @Sendable (_ accountId: String, _ transactionId: String) async throws -> Transaction?
+    private let loadSpacePhotoAnnotations: @Sendable (_ accountId: String, _ spaceId: String) async throws -> SpacePhotoAnnotations?
 
     init(
         makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() },
         loadTransaction: @escaping @Sendable (_ accountId: String, _ transactionId: String) async throws -> Transaction? = { accountId, transactionId in
             try await FirestoreRepository<Transaction>(path: "accounts/\(accountId)/transactions").get(id: transactionId)
+        },
+        loadSpacePhotoAnnotations: @escaping @Sendable (_ accountId: String, _ spaceId: String) async throws -> SpacePhotoAnnotations? = { accountId, spaceId in
+            guard let space = try await FirestoreRepository<Space>(path: "accounts/\(accountId)/spaces").get(id: spaceId) else {
+                return nil
+            }
+            return SpacePhotoAnnotations(spaceId: spaceId, images: space.images ?? [])
         }
     ) {
         self.makeBatch = makeBatch
         self.loadTransaction = loadTransaction
+        self.loadSpacePhotoAnnotations = loadSpacePhotoAnnotations
     }
 
     private static func realCategoryId(_ value: String?) -> String? {
@@ -71,6 +84,38 @@ struct ItemsService: ItemsServiceProtocol {
             }
         }
         return existingIds
+    }
+
+    private func photoAnnotationCleanupUpdates(
+        accountId: String,
+        items: [Item],
+        destinationSpaceId: String?
+    ) async throws -> [(spaceId: String, fields: [String: Any])] {
+        var itemIdsBySpace: [String: Set<String>] = [:]
+        for item in items {
+            guard let itemId = item.id,
+                  let sourceSpaceId = item.spaceId,
+                  sourceSpaceId != destinationSpaceId else { continue }
+            itemIdsBySpace[sourceSpaceId, default: []].insert(itemId)
+        }
+
+        var updates: [(spaceId: String, fields: [String: Any])] = []
+        for (spaceId, itemIds) in itemIdsBySpace {
+            guard let annotations = try await loadSpacePhotoAnnotations(accountId, spaceId) else { continue }
+            let cleaned = PinnedImageCalculations.removingCheckmarks(
+                for: itemIds,
+                from: annotations.images
+            )
+            guard cleaned != annotations.images else { continue }
+            updates.append((
+                spaceId: annotations.spaceId,
+                fields: [
+                    "images": cleaned.map(\.firestoreDictionary),
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ]
+            ))
+        }
+        return updates
     }
 
     func getItem(accountId: String, itemId: String) async throws -> Item? {
@@ -177,7 +222,32 @@ struct ItemsService: ItemsServiceProtocol {
             normalizedFields,
             attachmentFieldNames: ["images"]
         )
-        try await itemRepo.update(id: itemId, fields: attachmentNormalizedFields)
+        let changesSpace = fields.keys.contains("spaceId")
+        let destinationSpaceId = changesSpace ? fields["spaceId"] as? String : existing.spaceId
+        let cleanupUpdates = changesSpace
+            ? try await photoAnnotationCleanupUpdates(
+                accountId: accountId,
+                items: [existing],
+                destinationSpaceId: destinationSpaceId
+            )
+            : []
+        guard !cleanupUpdates.isEmpty else {
+            try await itemRepo.update(id: itemId, fields: attachmentNormalizedFields)
+            return
+        }
+
+        let batch = makeBatch()
+        batch.updateData(
+            attachmentNormalizedFields,
+            forDocumentAt: "accounts/\(accountId)/items/\(itemId)"
+        )
+        for cleanup in cleanupUpdates {
+            batch.updateData(
+                cleanup.fields,
+                forDocumentAt: "accounts/\(accountId)/spaces/\(cleanup.spaceId)"
+            )
+        }
+        try await batch.commit()
     }
 
     /// Updates status or space metadata for the supplied live item snapshots.
@@ -203,19 +273,31 @@ struct ItemsService: ItemsServiceProtocol {
             updates.append((itemId, fields))
         }
 
+        let destinationSpaceId = fields.keys.contains("spaceId") ? fields["spaceId"] as? String : nil
+        let cleanupUpdates = fields.keys.contains("spaceId")
+            ? try await photoAnnotationCleanupUpdates(
+                accountId: accountId,
+                items: items,
+                destinationSpaceId: destinationSpaceId
+            )
+            : []
+
         let itemsPath = "accounts/\(accountId)/items"
+        let spacesPath = "accounts/\(accountId)/spaces"
+        let documentUpdates: [(path: String, fields: [String: Any])] = updates.map {
+            (path: "\(itemsPath)/\($0.itemId)", fields: $0.fields)
+        } + cleanupUpdates.map {
+            (path: "\(spacesPath)/\($0.spaceId)", fields: $0.fields)
+        }
         for startIndex in stride(
             from: 0,
-            to: updates.count,
+            to: documentUpdates.count,
             by: Self.maximumBatchOperationCount
         ) {
             let batch = makeBatch()
-            let endIndex = min(startIndex + Self.maximumBatchOperationCount, updates.count)
-            for update in updates[startIndex..<endIndex] {
-                batch.updateData(
-                    update.fields,
-                    forDocumentAt: "\(itemsPath)/\(update.itemId)"
-                )
+            let endIndex = min(startIndex + Self.maximumBatchOperationCount, documentUpdates.count)
+            for update in documentUpdates[startIndex..<endIndex] {
+                batch.updateData(update.fields, forDocumentAt: update.path)
             }
             try await batch.commit()
         }
@@ -369,6 +451,12 @@ struct ItemsService: ItemsServiceProtocol {
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions"
+        let spacesPath = "accounts/\(accountId)/spaces"
+        let cleanupUpdates = try await photoAnnotationCleanupUpdates(
+            accountId: accountId,
+            items: items,
+            destinationSpaceId: nil
+        )
 
         for item in items {
             guard let itemId = item.id else { continue }
@@ -383,6 +471,13 @@ struct ItemsService: ItemsServiceProtocol {
                     forDocumentAt: "\(txPath)/\(transactionId)"
                 )
             }
+        }
+
+        for cleanup in cleanupUpdates {
+            batch.updateData(
+                cleanup.fields,
+                forDocumentAt: "\(spacesPath)/\(cleanup.spaceId)"
+            )
         }
 
         try await batch.commit()

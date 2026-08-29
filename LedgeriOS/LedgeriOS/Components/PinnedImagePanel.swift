@@ -10,12 +10,17 @@ struct PinnedImagePanel: View {
     let onClose: () -> Void
     let onChangeImage: (AttachmentRef) -> Void
     var onUpdateCheckmarks: ((AttachmentRef, [ImageCheckmark]) -> Void)?
+    var isMatchingItems: Bool = false
+    var pendingItemId: String?
+    var pendingItemName: String?
+    var onToggleItemMatching: (() -> Void)?
+    var onCancelPendingItemMatch: (() -> Void)?
+    var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)?
 
     @State private var zoomScale: CGFloat = 1.0
     @State private var currentIndex: Int = 0
     @State private var pdfDocument: PDFDocument?
     @State private var isPDFLoading = false
-    @State private var isEditingCheckmarks = false
     @State private var localCheckmarksByURL: [String: [ImageCheckmark]] = [:]
 
     private var currentAttachment: AttachmentRef {
@@ -36,8 +41,12 @@ struct PinnedImagePanel: View {
                 ImageCheckmarkEditor(
                     attachment: currentAttachment,
                     checkmarks: currentCheckmarks,
-                    isEditing: isEditingCheckmarks,
-                    onChange: updateCheckmarks
+                    isEditing: isMatchingItems,
+                    pendingItemId: pendingItemId,
+                    onChange: updateCheckmarks,
+                    onPlace: { itemId, point in
+                        onPlaceItemCheckmark?(currentAttachment, itemId, point)
+                    }
                 )
             } else {
                 ZoomableScrollView(
@@ -50,8 +59,8 @@ struct PinnedImagePanel: View {
             // Close button — top trailing
             VStack {
                 HStack {
-                    if currentAttachment.kind == .image, onUpdateCheckmarks != nil {
-                        editCheckmarksButton
+                    if currentAttachment.kind == .image, onToggleItemMatching != nil {
+                        matchItemsButton
                     }
                     Spacer()
                     closeButton
@@ -59,6 +68,16 @@ struct PinnedImagePanel: View {
                 .padding(.horizontal, Spacing.md)
                 .padding(.top, Spacing.sm)
                 Spacer()
+            }
+
+            if isMatchingItems {
+                VStack {
+                    matchingInstruction
+                        .padding(.top, 58)
+                        .allowsHitTesting(pendingItemId != nil)
+                    Spacer()
+                }
+                .padding(.horizontal, Spacing.md)
             }
 
             // Image counter — bottom center
@@ -76,13 +95,15 @@ struct PinnedImagePanel: View {
         }
         .onChange(of: attachment.url) { _, newURL in
             zoomScale = 1.0
-            isEditingCheckmarks = false
             currentIndex = allImages.firstIndex(where: { $0.url == newURL }) ?? 0
         }
         .onChange(of: currentAttachment.url) {
             if currentAttachment.kind == .pdf {
                 Task { await loadPDF() }
             }
+        }
+        .onChange(of: currentAttachment.checkmarks) { _, newCheckmarks in
+            localCheckmarksByURL[currentAttachment.url] = newCheckmarks ?? []
         }
         .task {
             if currentAttachment.kind == .pdf {
@@ -133,13 +154,13 @@ struct PinnedImagePanel: View {
 
     // MARK: - Close Button
 
-    private var editCheckmarksButton: some View {
+    private var matchItemsButton: some View {
         Button {
-            isEditingCheckmarks.toggle()
+            onToggleItemMatching?()
         } label: {
             HStack(spacing: Spacing.xs) {
-                Image(systemName: isEditingCheckmarks ? "checkmark" : "checkmark.circle")
-                Text(isEditingCheckmarks ? "Done" : "Check off")
+                Image(systemName: isMatchingItems ? "checkmark" : "checkmark.circle")
+                Text(isMatchingItems ? "Done" : "Match items")
             }
             .font(Typography.label)
             .foregroundStyle(.white)
@@ -148,9 +169,34 @@ struct PinnedImagePanel: View {
             .background(.black.opacity(0.6))
             .clipShape(Capsule())
         }
-        .accessibilityHint(isEditingCheckmarks
-            ? "Finish placing checkmarks"
-            : "Tap the image to place checkmarks; tap a checkmark to remove it")
+        .accessibilityHint(isMatchingItems
+            ? "Finish matching items to this photo"
+            : "Show item matching controls")
+    }
+
+    private var matchingInstruction: some View {
+        HStack(spacing: Spacing.sm) {
+            Image(systemName: pendingItemId == nil ? "list.bullet" : "hand.tap")
+                .foregroundStyle(.green)
+            Text(pendingItemId == nil
+                 ? "Choose Mark in photo on an item card"
+                 : "Tap where \(pendingItemName ?? "the item") appears")
+                .font(Typography.small)
+                .foregroundStyle(.white)
+                .lineLimit(2)
+            Spacer(minLength: 0)
+            if pendingItemId != nil {
+                Button("Cancel") {
+                    onCancelPendingItemMatch?()
+                }
+                .font(Typography.label)
+                .foregroundStyle(.white)
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+        .frame(minHeight: 44)
+        .background(.black.opacity(0.78))
+        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
     }
 
     private func updateCheckmarks(_ checkmarks: [ImageCheckmark]) {
@@ -214,7 +260,9 @@ private struct ImageCheckmarkEditor: View {
     let attachment: AttachmentRef
     let checkmarks: [ImageCheckmark]
     let isEditing: Bool
+    let pendingItemId: String?
     let onChange: ([ImageCheckmark]) -> Void
+    let onPlace: (String, CGPoint) -> Void
 
     @State private var image: PlatformImage?
     @State private var isLoading = false
@@ -236,7 +284,7 @@ private struct ImageCheckmarkEditor: View {
                         .frame(width: imageRect.width, height: imageRect.height)
                         .position(x: imageRect.midX, y: imageRect.midY)
 
-                    if isEditing {
+                    if let pendingItemId {
                         Color.clear
                             .frame(width: imageRect.width, height: imageRect.height)
                             .contentShape(Rectangle())
@@ -244,7 +292,11 @@ private struct ImageCheckmarkEditor: View {
                             .gesture(
                                 SpatialTapGesture(coordinateSpace: .named(coordinateSpaceName))
                                     .onEnded { value in
-                                        addCheckmark(at: value.location, imageRect: imageRect)
+                                        placeCheckmark(
+                                            for: pendingItemId,
+                                            at: value.location,
+                                            imageRect: imageRect
+                                        )
                                     }
                             )
                     }
@@ -297,18 +349,12 @@ private struct ImageCheckmarkEditor: View {
         #endif
     }
 
-    private func addCheckmark(at point: CGPoint, imageRect: CGRect) {
+    private func placeCheckmark(for itemId: String, at point: CGPoint, imageRect: CGRect) {
         guard let normalizedPoint = PinnedImageCalculations.normalizedImagePoint(
             for: point,
             in: imageRect
         ) else { return }
-
-        onChange(checkmarks + [
-            ImageCheckmark(
-                x: Double(normalizedPoint.x),
-                y: Double(normalizedPoint.y)
-            )
-        ])
+        onPlace(itemId, normalizedPoint)
     }
 
     @MainActor

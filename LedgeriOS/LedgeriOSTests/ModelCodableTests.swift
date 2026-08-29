@@ -289,7 +289,7 @@ struct ModelCodableTests {
         space.isComplete = true
         space.images = [AttachmentRef(
             url: "https://example.com/room.jpg",
-            checkmarks: [ImageCheckmark(id: "mark1", x: 0.25, y: 0.75)]
+            checkmarks: [ImageCheckmark(id: "mark1", x: 0.25, y: 0.75, itemId: "item1")]
         )]
         space.checklists = [
             Checklist(id: "cl1", name: "Furniture", items: [
@@ -306,6 +306,7 @@ struct ModelCodableTests {
         let images = dict["images"] as? [[String: Any]]
         let marks = images?.first?["checkmarks"] as? [[String: Any]]
         #expect(marks?.first?["id"] as? String == "mark1")
+        #expect(marks?.first?["itemId"] as? String == "item1")
         #expect(marks?.first?["x"] as? Double == 0.25)
         #expect(marks?.first?["y"] as? Double == 0.75)
 
@@ -390,12 +391,12 @@ struct ModelCodableTests {
     func attachmentRefCheckmarks() throws {
         let ref = AttachmentRef(
             url: "https://example.com/room.jpg",
-            checkmarks: [ImageCheckmark(id: "mark1", x: 0.2, y: 0.8)]
+            checkmarks: [ImageCheckmark(id: "mark1", x: 0.2, y: 0.8, itemId: "item1")]
         )
         let data = try JSONEncoder().encode(ref)
         let decoded = try JSONDecoder().decode(AttachmentRef.self, from: data)
 
-        #expect(decoded.checkmarks == [ImageCheckmark(id: "mark1", x: 0.2, y: 0.8)])
+        #expect(decoded.checkmarks == [ImageCheckmark(id: "mark1", x: 0.2, y: 0.8, itemId: "item1")])
     }
 
     // MARK: - Enums (JSON round-trip — no Firebase wrappers)

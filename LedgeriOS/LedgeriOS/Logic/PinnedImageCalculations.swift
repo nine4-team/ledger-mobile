@@ -3,6 +3,56 @@ import CoreGraphics
 
 enum PinnedImageCalculations {
 
+    /// Item IDs that have a linked checkmark in any of the supplied attachments.
+    static func markedItemIds(in attachments: [AttachmentRef]) -> Set<String> {
+        Set(attachments.flatMap { attachment in
+            (attachment.checkmarks ?? []).compactMap(\.itemId)
+        })
+    }
+
+    /// Places or moves an item's single linked checkmark. Any previous mark for
+    /// the item is removed from every attachment before the replacement is added.
+    static func placingCheckmark(
+        for itemId: String,
+        at normalizedPoint: CGPoint,
+        in attachmentURL: String,
+        attachments: [AttachmentRef],
+        checkmarkId: String = UUID().uuidString
+    ) -> [AttachmentRef] {
+        attachments.map { attachment in
+            var updated = attachment
+            var marks = (attachment.checkmarks ?? []).filter { $0.itemId != itemId }
+            if attachment.url == attachmentURL {
+                marks.append(ImageCheckmark(
+                    id: checkmarkId,
+                    x: Double(normalizedPoint.x),
+                    y: Double(normalizedPoint.y),
+                    itemId: itemId
+                ))
+            }
+            updated.checkmarks = marks.isEmpty ? nil : marks
+            return updated
+        }
+    }
+
+    /// Removes linked marks for items that no longer belong to the space while
+    /// preserving legacy unassigned marks and marks for all other items.
+    static func removingCheckmarks(
+        for itemIds: Set<String>,
+        from attachments: [AttachmentRef]
+    ) -> [AttachmentRef] {
+        guard !itemIds.isEmpty else { return attachments }
+        return attachments.map { attachment in
+            var updated = attachment
+            let marks = (attachment.checkmarks ?? []).filter { mark in
+                guard let itemId = mark.itemId else { return true }
+                return !itemIds.contains(itemId)
+            }
+            updated.checkmarks = marks.isEmpty ? nil : marks
+            return updated
+        }
+    }
+
     /// The image frame produced by aspect-fit inside a container.
     static func aspectFitRect(imageSize: CGSize, in containerSize: CGSize) -> CGRect {
         guard imageSize.width > 0, imageSize.height > 0,

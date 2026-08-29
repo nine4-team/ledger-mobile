@@ -11,6 +11,12 @@ struct PinnedImageLayout<Content: View>: View {
     let onClose: () -> Void
     let onChangeImage: (AttachmentRef) -> Void
     var onUpdateCheckmarks: ((AttachmentRef, [ImageCheckmark]) -> Void)? = nil
+    var isMatchingItems: Bool = false
+    var pendingItemId: String? = nil
+    var pendingItemName: String? = nil
+    var onToggleItemMatching: (() -> Void)? = nil
+    var onCancelPendingItemMatch: (() -> Void)? = nil
+    var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)? = nil
     @ViewBuilder let content: () -> Content
 
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -43,7 +49,13 @@ struct PinnedImageLayout<Content: View>: View {
                     allImages: allImages,
                     onClose: onClose,
                     onChangeImage: onChangeImage,
-                    onUpdateCheckmarks: onUpdateCheckmarks
+                    onUpdateCheckmarks: onUpdateCheckmarks,
+                    isMatchingItems: isMatchingItems,
+                    pendingItemId: pendingItemId,
+                    pendingItemName: pendingItemName,
+                    onToggleItemMatching: onToggleItemMatching,
+                    onCancelPendingItemMatch: onCancelPendingItemMatch,
+                    onPlaceItemCheckmark: onPlaceItemCheckmark
                 )
                 .frame(height: panelHeight)
                 .id(attachment.url)
@@ -71,7 +83,13 @@ struct PinnedImageLayout<Content: View>: View {
                     allImages: allImages,
                     onClose: onClose,
                     onChangeImage: onChangeImage,
-                    onUpdateCheckmarks: onUpdateCheckmarks
+                    onUpdateCheckmarks: onUpdateCheckmarks,
+                    isMatchingItems: isMatchingItems,
+                    pendingItemId: pendingItemId,
+                    pendingItemName: pendingItemName,
+                    onToggleItemMatching: onToggleItemMatching,
+                    onCancelPendingItemMatch: onCancelPendingItemMatch,
+                    onPlaceItemCheckmark: onPlaceItemCheckmark
                 )
                 .frame(width: sidebarWidth)
                 .id(attachment.url)

@@ -16,6 +16,74 @@ private func makeItem(
 
 @Suite("ItemsService — bulk metadata updates")
 struct ItemsServiceBulkUpdateTests {
+    @Test("moving an item clears its linked checkmarks from every old-space photo")
+    func movingItemClearsOldSpacePhotoMarks() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadSpacePhotoAnnotations: { _, spaceId in
+                SpacePhotoAnnotations(
+                    spaceId: spaceId,
+                    images: [
+                        AttachmentRef(
+                            url: "one",
+                            checkmarks: [
+                                ImageCheckmark(id: "remove1", x: 0.1, y: 0.2, itemId: "i1"),
+                                ImageCheckmark(id: "keep", x: 0.3, y: 0.4, itemId: "i2"),
+                            ]
+                        ),
+                        AttachmentRef(
+                            url: "two",
+                            checkmarks: [ImageCheckmark(id: "remove2", x: 0.5, y: 0.6, itemId: "i1")]
+                        ),
+                    ]
+                )
+            }
+        )
+        var item = makeItem(id: "i1")
+        item.spaceId = "old-space"
+
+        try await service.updateItems(
+            accountId: acct,
+            items: [item],
+            fields: ["spaceId": "new-space"]
+        )
+
+        let itemUpdate = try #require(batch.updatesForPath("accounts/\(acct)/items/i1").first)
+        #expect(itemUpdate.fields["spaceId"] as? String == "new-space")
+
+        let spaceUpdate = try #require(batch.updatesForPath("accounts/\(acct)/spaces/old-space").first)
+        let images = try #require(spaceUpdate.fields["images"] as? [[String: Any]])
+        let firstMarks = try #require(images[0]["checkmarks"] as? [[String: Any]])
+        #expect(firstMarks.count == 1)
+        #expect(firstMarks[0]["id"] as? String == "keep")
+        #expect(firstMarks[0]["itemId"] as? String == "i2")
+        #expect(images[1]["checkmarks"] == nil)
+    }
+
+    @Test("moving within the same space leaves photo marks untouched")
+    func sameSpaceDoesNotRewritePhotoMarks() async throws {
+        let batch = RecordingBatch()
+        let service = ItemsService(
+            makeBatch: { batch },
+            loadSpacePhotoAnnotations: { _, _ in
+                Issue.record("Same-space update unexpectedly loaded photo annotations")
+                return nil
+            }
+        )
+        var item = makeItem(id: "i1")
+        item.spaceId = "space1"
+
+        try await service.updateItems(
+            accountId: acct,
+            items: [item],
+            fields: ["spaceId": "space1"]
+        )
+
+        #expect(batch.updates.count == 1)
+        #expect(batch.updates.first?.path == "accounts/\(acct)/items/i1")
+    }
+
     @Test("status update commits all items in one batch without transaction reads")
     func statusUpdateUsesOneBatch() async throws {
         let batch = RecordingBatch()

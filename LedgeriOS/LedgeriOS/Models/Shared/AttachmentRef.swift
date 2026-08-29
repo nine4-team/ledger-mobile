@@ -20,6 +20,38 @@ struct ImageCheckmark: Codable, Hashable, Identifiable, Sendable {
     var id: String = UUID().uuidString
     var x: Double
     var y: Double
+    /// The item represented by this mark. Optional so checkmarks created before
+    /// item matching was introduced remain visible and editable.
+    var itemId: String?
+}
+
+extension AttachmentRef {
+    /// Firestore-ready representation used when a containing entity rewrites its
+    /// embedded attachment array.
+    var firestoreDictionary: [String: Any] {
+        var fields: [String: Any] = [
+            "url": url,
+            "kind": kind.rawValue,
+        ]
+        if let thumbnailUrlSm { fields["thumbnailUrlSm"] = thumbnailUrlSm }
+        if let thumbnailUrlMd { fields["thumbnailUrlMd"] = thumbnailUrlMd }
+        if let fileName { fields["fileName"] = fileName }
+        if let contentType { fields["contentType"] = contentType }
+        if let isPrimary { fields["isPrimary"] = isPrimary }
+        if let isUploading { fields["isUploading"] = isUploading }
+        if let checkmarks {
+            fields["checkmarks"] = checkmarks.map { mark in
+                var markFields: [String: Any] = [
+                    "id": mark.id,
+                    "x": mark.x,
+                    "y": mark.y,
+                ]
+                if let itemId = mark.itemId { markFields["itemId"] = itemId }
+                return markFields
+            }
+        }
+        return fields
+    }
 }
 
 enum AttachmentKind: String, Codable, Sendable {

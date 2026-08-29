@@ -1,5 +1,4 @@
 import SwiftUI
-import FirebaseFirestore
 
 /// Context describing where items are being added.
 enum AddItemsPickerContext {
@@ -413,20 +412,19 @@ struct AddExistingItemsPicker: View {
             destinationProjectId: projectId
         )
 
-        // Same-scope: batch update spaceId
+        // Same-scope: use the canonical item service so leaving another space
+        // also clears this item's linked photo checkmark there.
         if !routing.sameScope.isEmpty {
-            let batch = FirestoreBatchWriter()
-            let itemsPath = "accounts/\(accountId)/items"
-            for item in routing.sameScope {
-                guard let itemId = item.id else { continue }
-                batch.updateData(
-                    ["spaceId": spaceId, "updatedAt": FieldValue.serverTimestamp()],
-                    forDocumentAt: "\(itemsPath)/\(itemId)"
-                )
-            }
             Task {
-                do { try await batch.commit() }
-                catch { print("🔴 space batch spaceId update failed: \(error)") }
+                do {
+                    try await ItemsService().updateItems(
+                        accountId: accountId,
+                        items: routing.sameScope,
+                        fields: ["spaceId": spaceId]
+                    )
+                } catch {
+                    print("🔴 space batch spaceId update failed: \(error)")
+                }
             }
         }
 
@@ -444,17 +442,13 @@ struct AddExistingItemsPicker: View {
                         accountId: accountId,
                         inventoryLabel: inventoryLabel
                     )
-                    // After sell completes, set spaceId
-                    let batch = FirestoreBatchWriter()
-                    let itemsPath = "accounts/\(accountId)/items"
-                    for item in routing.crossScope {
-                        guard let itemId = item.id else { continue }
-                        batch.updateData(
-                            ["spaceId": spaceId, "updatedAt": FieldValue.serverTimestamp()],
-                            forDocumentAt: "\(itemsPath)/\(itemId)"
-                        )
-                    }
-                    try await batch.commit()
+                    // After the sale completes, route the placement through the
+                    // canonical service to clean the item's old-space photo mark.
+                    try await ItemsService().updateItems(
+                        accountId: accountId,
+                        items: routing.crossScope,
+                        fields: ["spaceId": spaceId]
+                    )
                     await MainActor.run { resolvedSpaceCategoryId = nil }
                 } catch {
                     print("🔴 cross-scope space add failed: \(error)")

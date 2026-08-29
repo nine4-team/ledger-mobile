@@ -21,6 +21,12 @@ struct ItemCard: View {
     // Bookmark
     var onBookmarkPress: (() -> Void)?
 
+    // Space-photo matching
+    var isMarkedInPhoto: Bool = false
+    var photoMatchActionTitle: String?
+    var isPhotoMatchTarget: Bool = false
+    var onPhotoMatchPress: (() -> Void)?
+
     // Actions
     var onPress: (() -> Void)?
     var menuItems: [ActionMenuItem] = []
@@ -72,7 +78,11 @@ struct ItemCard: View {
     }
 
     var body: some View {
-        let base = Card(padding: 0, isSelected: isSelected?.wrappedValue ?? false, accent: accent) {
+        let base = Card(
+            padding: 0,
+            isSelected: isSelected?.wrappedValue ?? false,
+            accent: accent || isPhotoMatchTarget
+        ) {
             VStack(alignment: .leading, spacing: 0) {
                 CardHeader(
                     isSelected: isSelected,
@@ -102,10 +112,21 @@ struct ItemCard: View {
 
     private var contentArea: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            FindableText(item.displayName)
-                .font(Typography.h3)
-                .foregroundStyle(BrandColors.textPrimary)
-                .lineLimit(3)
+            HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
+                FindableText(item.displayName)
+                    .font(Typography.h3)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(3)
+
+                Spacer(minLength: 0)
+
+                if isMarkedInPhoto {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.green)
+                        .accessibilityLabel("Marked in a space photo")
+                }
+            }
 
             HStack(alignment: .top, spacing: Spacing.md) {
                 thumbnailView
@@ -142,6 +163,25 @@ struct ItemCard: View {
                         .font(Typography.small)
                 }
                 .foregroundStyle(StatusColors.badgeWarning)
+            }
+
+            if let photoMatchActionTitle, let onPhotoMatchPress {
+                Button(action: onPhotoMatchPress) {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: isMarkedInPhoto ? "arrow.triangle.2.circlepath" : "checkmark.circle")
+                        Text(photoMatchActionTitle)
+                    }
+                    .font(Typography.label)
+                    .foregroundStyle(isPhotoMatchTarget ? .white : BrandColors.primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 40)
+                    .background(isPhotoMatchTarget ? BrandColors.primary : BrandColors.primary.opacity(0.10))
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(isMarkedInPhoto
+                    ? "Choose a new location for this item's checkmark"
+                    : "Select this item, then tap its location in the pinned photo")
             }
         }
         .padding(Spacing.lg)

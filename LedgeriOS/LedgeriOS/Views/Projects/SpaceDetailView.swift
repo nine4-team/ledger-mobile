@@ -136,6 +136,8 @@ private struct SpaceDetailContentView: View {
     // Image pinning
     @State private var pinnedAttachment: AttachmentRef?
     @State private var pinnedImageSource: [AttachmentRef] = []
+    @State private var isMatchingItemsToPhoto = false
+    @State private var pendingPhotoMatchItemId: String?
 
     // Items picker
     @State private var showAddExistingItems = false
@@ -189,6 +191,15 @@ private struct SpaceDetailContentView: View {
         return activeItems.filter { $0.spaceId == spaceId }
     }
 
+    private var markedPhotoItemIds: Set<String> {
+        PinnedImageCalculations.markedItemIds(in: liveSpace.images ?? [])
+    }
+
+    private var pendingPhotoMatchItemName: String? {
+        guard let pendingPhotoMatchItemId else { return nil }
+        return spaceItems.first(where: { $0.id == pendingPhotoMatchItemId })?.displayName
+    }
+
     private var selectedItems: [Item] {
         activeItems.filter { item in
             guard let id = item.id else { return false }
@@ -222,9 +233,15 @@ private struct SpaceDetailContentView: View {
         PinnedImageLayout(
             pinnedAttachment: pinnedAttachment,
             allImages: pinnedImageSource,
-            onClose: { pinnedAttachment = nil },
-            onChangeImage: { pinnedAttachment = $0 },
-            onUpdateCheckmarks: updateImageCheckmarks
+            onClose: closePinnedImage,
+            onChangeImage: changePinnedImage,
+            onUpdateCheckmarks: updateImageCheckmarks,
+            isMatchingItems: isMatchingItemsToPhoto,
+            pendingItemId: pendingPhotoMatchItemId,
+            pendingItemName: pendingPhotoMatchItemName,
+            onToggleItemMatching: toggleItemMatching,
+            onCancelPendingItemMatch: { pendingPhotoMatchItemId = nil },
+            onPlaceItemCheckmark: placeItemCheckmark
         ) {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -576,7 +593,20 @@ private struct SpaceDetailContentView: View {
                 spaces: [],
                 budgetCategories: projectId == nil ? [] : projectContext.budgetCategories
             ),
-            inline: true
+            inline: true,
+            isItemMarkedInPhoto: { item in
+                guard let itemId = item.id else { return false }
+                return markedPhotoItemIds.contains(itemId)
+            },
+            photoMatchActionTitle: { item in
+                guard isMatchingItemsToPhoto,
+                      pinnedAttachment?.kind == .image,
+                      let itemId = item.id else { return nil }
+                return markedPhotoItemIds.contains(itemId) ? "Move checkmark" : "Mark in photo"
+            },
+            photoMatchTargetItemId: pendingPhotoMatchItemId,
+            onPhotoMatchPress: beginPhotoMatch,
+            forceIndividualItems: isMatchingItemsToPhoto
         )
         .padding(.top, Spacing.xs)
     }
@@ -906,25 +936,40 @@ private struct SpaceDetailContentView: View {
     private func pinImage(_ attachment: AttachmentRef) {
         pinnedImageSource = (liveSpace.images ?? []).filter(PinnedImageCalculations.canPin)
         pinnedAttachment = attachment
+        pendingPhotoMatchItemId = nil
+    }
+
+    private func closePinnedImage() {
+        pinnedAttachment = nil
+        isMatchingItemsToPhoto = false
+        pendingPhotoMatchItemId = nil
+    }
+
+    private func changePinnedImage(_ attachment: AttachmentRef) {
+        pinnedAttachment = attachment
+        pendingPhotoMatchItemId = nil
+        if attachment.kind != .image {
+            isMatchingItemsToPhoto = false
+        }
+    }
+
+    private func toggleItemMatching() {
+        isMatchingItemsToPhoto.toggle()
+        pendingPhotoMatchItemId = nil
+        if isMatchingItemsToPhoto {
+            isItemsExpanded = true
+        }
+    }
+
+    private func beginPhotoMatch(_ item: Item) {
+        guard isMatchingItemsToPhoto,
+              pinnedAttachment?.kind == .image,
+              let itemId = item.id else { return }
+        pendingPhotoMatchItemId = itemId
     }
 
     private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {
-        var dict: [String: Any] = [
-            "url": ref.url,
-            "kind": ref.kind.rawValue,
-        ]
-        if let fileName = ref.fileName { dict["fileName"] = fileName }
-        if let contentType = ref.contentType { dict["contentType"] = contentType }
-        if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
-        if let isUploading = ref.isUploading { dict["isUploading"] = isUploading }
-        if let thumbnailUrlSm = ref.thumbnailUrlSm { dict["thumbnailUrlSm"] = thumbnailUrlSm }
-        if let thumbnailUrlMd = ref.thumbnailUrlMd { dict["thumbnailUrlMd"] = thumbnailUrlMd }
-        if let checkmarks = ref.checkmarks {
-            dict["checkmarks"] = checkmarks.map { mark in
-                ["id": mark.id, "x": mark.x, "y": mark.y] as [String: Any]
-            }
-        }
-        return dict
+        ref.firestoreDictionary
     }
 
     private func updateImageCheckmarks(_ attachment: AttachmentRef, _ checkmarks: [ImageCheckmark]) {
@@ -933,6 +978,24 @@ private struct SpaceDetailContentView: View {
         images[index].checkmarks = checkmarks.isEmpty ? nil : checkmarks
         pinnedImageSource = images.filter(PinnedImageCalculations.canPin)
         pinnedAttachment = images[index]
+        updateSpace(fields: ["images": images.map(attachmentDict)])
+    }
+
+    private func placeItemCheckmark(
+        _ attachment: AttachmentRef,
+        _ itemId: String,
+        _ normalizedPoint: CGPoint
+    ) {
+        guard pendingPhotoMatchItemId == itemId else { return }
+        let images = PinnedImageCalculations.placingCheckmark(
+            for: itemId,
+            at: normalizedPoint,
+            in: attachment.url,
+            attachments: liveSpace.images ?? []
+        )
+        pinnedImageSource = images.filter(PinnedImageCalculations.canPin)
+        pinnedAttachment = images.first(where: { $0.url == attachment.url })
+        pendingPhotoMatchItemId = nil
         updateSpace(fields: ["images": images.map(attachmentDict)])
     }
 

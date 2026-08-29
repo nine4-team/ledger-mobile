@@ -30,6 +30,11 @@ struct SharedItemsList: View {
     var externalSearchText: Binding<String>?
     var protoItems: [ProtoItem] = []
     var protoItemCard: ((ProtoItem) -> AnyView)?
+    var isItemMarkedInPhoto: ((Item) -> Bool)?
+    var photoMatchActionTitle: ((Item) -> String?)?
+    var photoMatchTargetItemId: String?
+    var onPhotoMatchPress: ((Item) -> Void)?
+    var forceIndividualItems: Bool = false
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -192,7 +197,7 @@ struct SharedItemsList: View {
     }
 
     private var showGrouped: Bool {
-        ListFilterSortCalculations.shouldShowGrouped(groups)
+        !forceIndividualItems && ListFilterSortCalculations.shouldShowGrouped(groups)
     }
 
     private var allVisibleIds: [String] {
@@ -599,6 +604,10 @@ struct SharedItemsList: View {
                                     indexLabel: "\(index + 1)/\(group.items.count)",
                                     statusOverride: item.status?.displayLabel,
                                     isSelected: selectionBinding,
+                                    isMarkedInPhoto: isItemMarkedInPhoto?(item) ?? false,
+                                    photoMatchActionTitle: photoMatchActionTitle?(item),
+                                    isPhotoMatchTarget: photoMatchTargetItemId == item.id,
+                                    onPhotoMatchPress: onPhotoMatchPress.map { action in { action(item) } },
                                     onPress: { handleItemPress(item) },
                                     menuItems: getMenuItems?(item) ?? [],
                                     warningMessage: getWarning?(item)
@@ -651,6 +660,10 @@ struct SharedItemsList: View {
                         get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
                         set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
                     ),
+                    isMarkedInPhoto: isItemMarkedInPhoto?(item) ?? false,
+                    photoMatchActionTitle: photoMatchActionTitle?(item),
+                    isPhotoMatchTarget: photoMatchTargetItemId == item.id,
+                    onPhotoMatchPress: onPhotoMatchPress.map { action in { action(item) } },
                     onPress: { handleItemPress(item) },
                     menuItems: menuItems,
                     warningMessage: warning
@@ -830,6 +843,10 @@ struct SharedItemsList: View {
                     indexLabel: "\(index + 1)/\(group.items.count)",
                     statusOverride: item.status?.displayLabel,
                     isSelected: selectionBinding,
+                    isMarkedInPhoto: isItemMarkedInPhoto?(item) ?? false,
+                    photoMatchActionTitle: photoMatchActionTitle?(item),
+                    isPhotoMatchTarget: photoMatchTargetItemId == item.id,
+                    onPhotoMatchPress: onPhotoMatchPress.map { action in { action(item) } },
                     onPress: { handleItemPress(item) },
                     menuItems: getMenuItems?(item) ?? [],
                     warningMessage: getWarning?(item)
