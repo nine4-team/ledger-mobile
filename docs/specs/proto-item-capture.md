@@ -47,7 +47,7 @@ At review time, ask what the business needs.
 
 This means capture should not require price, vendor, tax, budget category, SKU, transaction, project price, or final item details. It should prioritize repeated capture speed: optional quick name, photo, tag photo, save, next.
 
-The add flow is photo-first with one optional text field: a quick name/label. Project-scoped capture may also expose the lightweight **From Inventory** affordance because it records routing intent without requiring conversion metadata. When the user taps add for an Item Quick Draft, the app shows the lightweight draft form and lets the user add photos from camera or photo library. The user must be able to select multiple photos from the library and take multiple camera photos before returning to the form. Source, notes, SKU, vendor, category, price, and other item metadata are collected later during conversion, when the draft is converted into or merged with a real `Item`.
+The add flow is photo-first with an optional quick name/label and direct user notes. Project-scoped capture may also expose the lightweight **From Inventory** affordance because it records routing intent without requiring conversion metadata. When the user taps add for an Item Quick Draft, the app shows the lightweight draft form and lets the user add photos from camera or photo library. The user must be able to select multiple photos from the library and take multiple camera photos before returning to the form. Source, SKU, vendor, category, price, and other item metadata are collected later during conversion, when the draft is converted into or merged with a real `Item`.
 
 ## Entry Points
 
@@ -184,7 +184,7 @@ Only `open` and `in_review` proto items appear in active review queues.
 
 ### Conversion Metadata
 
-Source, destination, SKU, vendor, category, price, notes, and suggested matches are conversion metadata. They are collected when an Item Quick Draft is turned into a real item, merged with an item, or routed through the inventory-to-project flow. Except for the lightweight **From Inventory** hint, they should not be required in the initial photo capture flow.
+Source, destination, SKU, vendor, category, price, and suggested matches are conversion metadata. They are collected when an Item Quick Draft is turned into a real item, merged with an item, or routed through the inventory-to-project flow. Direct user notes may be captured at any time and must be read before inferred metadata or routing markers. Except for the lightweight **From Inventory** marker, conversion metadata should not be required in the initial photo capture flow.
 
 Conversion hints should be simple and reversible:
 
@@ -193,7 +193,7 @@ Conversion hints should be simple and reversible:
 | `projectId` | Project the capture is currently associated with. Null means inventory/unassigned. |
 | `intendedProjectId` | Destination project hint for an inventory capture. |
 | `transactionId` | The single authoritative transaction the eventual item should initially join. Null means no transaction has been selected yet. |
-| `sourceHint` | One of `unknown`, `client_purchase`, `business_purchase`, `from_inventory`. `from_inventory` may be set by the card-level **From Inventory** control. |
+| `isFromInventory` | Boolean routing marker. `true` means this project draft originated in business inventory and must be matched to its inventory acquisition transaction. Defaults to `false`. |
 | `candidateItemId` | Possible matching item. Not authoritative until converted. |
 
 `transactionId` is not a suggestion field. Capturing from Transaction Detail sets it immediately. A transaction suggested later by Ledger remains transient until a human accepts it; acceptance writes `transactionId`. `candidateTransactionId` is deprecated and must not be used as a promotion fallback.
@@ -246,7 +246,7 @@ Once validation succeeds, perform one atomic operation:
 
 Do not create the inventory item first and attempt the sale in a later non-atomic step. Apply the canonical item price floor during promotion; only the absence of both positive prices is a missing-price error. Missing required price, category, project, or transaction data must leave the quick draft unconverted rather than stranding a partially converted item in inventory.
 
-The **From Inventory** marker remains useful before a transaction is selected: it tells review that an inventory transaction must be chosen. Once `transactionId` is set, the referenced transaction's scope is authoritative. A project transaction combined with `sourceHint == from_inventory` is a conflict that must be resolved before conversion.
+The **From Inventory** marker remains useful before a transaction is selected: it tells review that an inventory transaction must be chosen. Once `transactionId` is set, the referenced transaction's scope is authoritative. A project transaction combined with `isFromInventory == true` is a conflict that must be resolved before conversion.
 
 ### Delete Draft
 

@@ -84,7 +84,7 @@ struct ModelCodableTests {
         protoItem.projectId = "project1"
         protoItem.captureContext = .project
         protoItem.status = .open
-        protoItem.sourceHint = .businessPurchase
+        protoItem.isFromInventory = true
         protoItem.quantity = 1
         protoItem.notes = "Blue fish with tag"
         protoItem.photos = [
@@ -103,7 +103,8 @@ struct ModelCodableTests {
         #expect(dict["projectId"] as? String == "project1")
         #expect(dict["captureContext"] as? String == "project")
         #expect(dict["status"] as? String == "open")
-        #expect(dict["sourceHint"] as? String == "business_purchase")
+        #expect(dict["isFromInventory"] as? Bool == true)
+        #expect(dict["sourceHint"] == nil)
         #expect(dict["quantity"] as? Int == 1)
         #expect(dict["notes"] as? String == "Blue fish with tag")
 

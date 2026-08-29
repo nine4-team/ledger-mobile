@@ -282,9 +282,9 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 | convertedItemId | string, nullable | FK to Item. Set when status becomes `"converted"`. |
 | name | string, nullable | Optional quick capture label. Not a finalized item name until conversion. |
 | status | string | One of: `"open"`, `"in_review"`, `"converted"`. Defaults to `"open"`. |
-| sourceHint | string, nullable | Conversion hint. One of: `"unknown"`, `"client_purchase"`, `"business_purchase"`, `"from_inventory"`. `from_inventory` may be set during initial project capture or from the project-scoped draft card/detail control. |
+| isFromInventory | boolean | User-selected routing marker. `true` means a project draft originated in business inventory and must be matched to its inventory acquisition transaction. Defaults to `false`. |
 | images | array of AttachmentRef | Object, tag, SKU, price, packaging, or supporting photos. At least one image is required for normal capture. |
-| notes | string, nullable | Reviewer/conversion notes. Not collected in the initial photo capture flow. |
+| notes | string, nullable | Direct user-authored capture and conversion instructions. These may be entered during initial capture or review and take precedence over inferred metadata and routing markers. |
 | extractedText | string, nullable | OCR text from images. Optional; may be added by later automation. |
 | extractedMeta | map, nullable | Optional structured extraction, such as candidate SKU, price, vendor, or confidence values. |
 | createdBy | string, nullable | Firebase Auth UID |
@@ -294,7 +294,7 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 | updatedAt | timestamp | |
 | convertedAt | timestamp, nullable | |
 
-**Validation:** A proto item requires at least one image in the normal capture UX. The capture flow may collect an optional quick name/label. Metadata such as source, notes, SKU, vendor, category, and price is collected during conversion, when the draft becomes or merges into a real item. The **From Inventory** hint is allowed during initial project capture and at the card/detail level because it records capture intent only; it does not create item, budget, transaction, sale, or lineage effects.
+**Validation:** A proto item requires at least one image or a non-empty note. The capture flow may collect an optional quick name/label and direct user notes. Metadata such as source, SKU, vendor, category, and price is collected during conversion, when the draft becomes or merges into a real item. The **From Inventory** marker is allowed during initial project capture and at the card/detail level because it records routing intent only; it does not create item, budget, transaction, sale, or lineage effects.
 
 **Transaction association:** `transactionId` is authoritative. Suggested transaction matches remain transient until a human confirms one and writes this field. The legacy `candidateTransactionId` field is deprecated and must not be used as an automatic fallback during promotion.
 

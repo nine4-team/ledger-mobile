@@ -107,7 +107,7 @@ struct ItemQuickDraftDetailView: View {
                 initialQuantity: liveProtoItem.quantity,
                 initialImageRefs: photos,
                 convertingProtoItemId: liveProtoItem.id,
-                initialSourceHint: liveProtoItem.sourceHint,
+                initialIsFromInventory: liveProtoItem.usesInventoryRouting,
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
                         Task { await markConverted(itemId: itemId) }
@@ -282,7 +282,7 @@ struct ItemQuickDraftDetailView: View {
         VStack(spacing: Spacing.sm) {
             if liveProtoItem.projectId != nil {
                 AppButton(
-                    title: liveProtoItem.sourceHint == .fromInventory ? "Marked \"From Inventory\"" : "Mark \"From Inventory\"",
+                    title: liveProtoItem.usesInventoryRouting ? "Marked \"From Inventory\"" : "Mark \"From Inventory\"",
                     variant: .secondary,
                     action: { Task { await toggleFromInventory() } }
                 )
@@ -478,14 +478,12 @@ struct ItemQuickDraftDetailView: View {
         guard let accountId = accountContext.currentAccountId,
               let protoItemId = liveProtoItem.id else { return }
         do {
-            let isRemoving = liveProtoItem.sourceHint == .fromInventory
-            let nextValue: Any = isRemoving
-                ? ProtoItemSourceHint.unknown.rawValue
-                : ProtoItemSourceHint.fromInventory.rawValue
+            let isRemoving = liveProtoItem.usesInventoryRouting
+            let nextValue: Any = !isRemoving
             try await protoItemsService.updateProtoItem(
                 accountId: accountId,
                 protoItemId: protoItemId,
-                fields: ["sourceHint": nextValue]
+                fields: ["isFromInventory": nextValue]
             )
             showToast(isRemoving ? "Removed \"From Inventory\" Marker." : "Marked \"From Inventory\"")
         } catch {

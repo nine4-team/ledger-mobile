@@ -18,7 +18,6 @@ import { withTelemetry } from "../util/telemetry.js";
 import {
   quickDraftCaptureContexts,
   quickDraftItemStatuses,
-  quickDraftSourceHints,
 } from "../util/enums.js";
 import { checkTransactionLinkageOnCreate, checkUpdateInvariant } from "./items.js";
 import {
@@ -43,7 +42,6 @@ import { storagePathFromUrl } from "../storage.js";
 
 const QuickDraftStatus = z.enum(quickDraftItemStatuses);
 const QuickDraftCaptureContext = z.enum(quickDraftCaptureContexts);
-const QuickDraftSourceHint = z.enum(quickDraftSourceHints);
 
 const AttachmentInput = z.object({
   url: z.string(),
@@ -71,6 +69,10 @@ function defaultCaptureContext(args: {
   return "inventory";
 }
 
+function draftIsFromInventory(draft: ProtoItem): boolean {
+  return draft.isFromInventory ?? draft.sourceHint === "from_inventory";
+}
+
 function formatQuickDraftItem(draft: ProtoItem & { id: string }) {
   return {
     id: draft.id,
@@ -81,7 +83,7 @@ function formatQuickDraftItem(draft: ProtoItem & { id: string }) {
     name: draft.name ?? "",
     captureContext: draft.captureContext ?? defaultCaptureContext(draft),
     status: draft.status ?? "open",
-    sourceHint: draft.sourceHint ?? "unknown",
+    isFromInventory: draftIsFromInventory(draft),
     sku: draft.sku ?? "",
     quantity: draft.quantity ?? 1,
     notes: draft.notes ?? "",
@@ -355,14 +357,14 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── list_quick_draft_items ────────────────────────────────────────────────
   server.tool(
     "list_quick_draft_items",
-    "[read-only] List item quick drafts from accounts/{accountId}/protoItems. These are photo-first draft captures that are not real items until promoted. Supports exact-match filters and pagination.",
+    "[read-only] List item quick drafts from accounts/{accountId}/protoItems. These are photo-first draft captures that are not real items until promoted. Default summaries include direct user-authored notes; read them before inferred metadata or routing markers. Supports exact-match filters and pagination.",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for inventory-scope drafts with no project."),
       intendedProjectId: z.string().optional().describe("Filter by intended destination project ID."),
       transactionId: z.string().optional().describe("Filter by linked transaction ID."),
       status: QuickDraftStatus.optional().describe("Filter by draft status."),
       captureContext: QuickDraftCaptureContext.optional().describe("Filter by capture context."),
-      sourceHint: QuickDraftSourceHint.optional().describe("Filter by source hint."),
+      isFromInventory: z.boolean().optional().describe("Filter by the user-selected From Inventory routing marker."),
       activeOnly: z.boolean().default(false).describe("When true, only return open/in_review drafts."),
       limit: z.coerce.number().default(50).describe("Max results (ignored when fetchAll is true)."),
       offset: z.coerce.number().default(0).describe("Number of results to skip."),
@@ -371,7 +373,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
       responseLimit: ResponseLimitArg,
     },
-    withTelemetry("list_quick_draft_items", async ({ projectId, intendedProjectId, transactionId, status, captureContext, sourceHint, activeOnly, limit, offset, fetchAll, mode, fields, responseLimit }) => {
+    withTelemetry("list_quick_draft_items", async ({ projectId, intendedProjectId, transactionId, status, captureContext, isFromInventory, activeOnly, limit, offset, fetchAll, mode, fields, responseLimit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "protoItems");
 
       if (projectId === "inventory") query = query.where("projectId", "==", null);
@@ -380,15 +382,20 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       if (transactionId) query = query.where("transactionId", "==", transactionId);
       if (status) query = query.where("status", "==", status);
       if (captureContext) query = query.where("captureContext", "==", captureContext);
-      if (sourceHint) query = query.where("sourceHint", "==", sourceHint);
       if (activeOnly && !status) query = query.where("status", "in", ["open", "in_review"]);
 
-      if (!fetchAll) query = query.offset(offset).limit(limit);
+      // Inventory filtering stays in memory while legacy records are read-compatible.
+      if (!fetchAll && isFromInventory === undefined) query = query.offset(offset).limit(limit);
       let drafts = await queryDocs<ProtoItem>(query);
       if (activeOnly && status) {
         drafts = drafts.filter((draft) => draft.status === "open" || draft.status === "in_review");
       }
-      const page = fetchAll ? drafts : drafts.slice(0, limit);
+      if (isFromInventory !== undefined) {
+        drafts = drafts.filter((draft) => draftIsFromInventory(draft) === isFromInventory);
+      }
+      const page = fetchAll
+        ? drafts
+        : drafts.slice(isFromInventory === undefined ? 0 : offset, isFromInventory === undefined ? limit : offset + limit);
       const projected = page.map((draft) => projectDraft(draft, mode, fields));
       return asToolResponse(capResponse(projected, { limitBytes: responseLimit, offset, fetchAll }));
     })
@@ -397,7 +404,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
   // ── get_quick_draft_item ─────────────────────────────────────────────────
   server.tool(
     "get_quick_draft_item",
-    "[read-only] Get one item quick draft with all details, including photos[].",
+    "[read-only] Get one item quick draft with all details, including direct user-authored notes and photos[]. Notes take precedence over inferred metadata and the isFromInventory routing marker.",
     { quickDraftItemId: z.string().describe("Quick draft item document ID from protoItems.") },
     withTelemetry("get_quick_draft_item", async ({ quickDraftItemId }) => {
       const draft = await getDoc<ProtoItem>(db, "protoItems", quickDraftItemId);
@@ -456,7 +463,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         .map((draft) => ({
           quickDraftItemId: draft.id,
           projectId: draft.projectId ?? null,
-          sourceHint: draft.sourceHint ?? "unknown",
+          isFromInventory: draftIsFromInventory(draft),
           authoritativeTransactionId: draft.transactionId ?? null,
           legacyCandidateTransactionId: draft.candidateTransactionId,
           conflict: Boolean(draft.transactionId && draft.transactionId !== draft.candidateTransactionId),
@@ -476,7 +483,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       name: z.string().optional().describe("Draft item name."),
       captureContext: QuickDraftCaptureContext.optional().describe("Defaults from transactionId/projectId."),
       status: QuickDraftStatus.default("open").describe("Draft lifecycle status."),
-      sourceHint: QuickDraftSourceHint.default("unknown").describe("Source hint."),
+      isFromInventory: z.boolean().default(false).describe("True only when the user says this project draft came from business inventory and needs inventory routing."),
       photos: z.array(AttachmentInput).default([]).describe("Photo attachment refs."),
       sku: z.string().optional().describe("SKU."),
       quantity: z.coerce.number().int().positive().default(1).describe("Quantity. Expansion into separate item documents must reuse the exact resolved source name for every unit."),
@@ -498,7 +505,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         intendedProjectId: args.intendedProjectId ?? null,
         captureContext: args.captureContext ?? defaultCaptureContext({ transactionId: args.transactionId, projectId }),
         status: args.status,
-        sourceHint: args.sourceHint,
+        isFromInventory: args.isFromInventory,
         quantity: args.quantity,
         photos: args.photos,
         createdBy: uid,
@@ -527,7 +534,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       name: z.string().nullable().optional().describe("Draft name. Pass null to clear."),
       captureContext: QuickDraftCaptureContext.optional(),
       status: QuickDraftStatus.optional(),
-      sourceHint: QuickDraftSourceHint.optional(),
+      isFromInventory: z.boolean().optional().describe("User-selected inventory-routing marker."),
       photos: z.array(AttachmentInput).optional().describe("Replace the photos array."),
       sku: z.string().nullable().optional().describe("SKU. Pass null to clear."),
       quantity: z.coerce.number().int().positive().optional(),

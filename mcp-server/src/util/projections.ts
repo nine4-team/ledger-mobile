@@ -73,6 +73,7 @@ export function itemSummary(item: Item & { id: string }) {
 }
 
 export function quickDraftItemSummary(draft: ProtoItem & { id: string }) {
+  const isFromInventory = draft.isFromInventory ?? draft.sourceHint === "from_inventory";
   return {
     id: draft.id,
     name: draft.name ?? "",
@@ -81,9 +82,10 @@ export function quickDraftItemSummary(draft: ProtoItem & { id: string }) {
     projectId: draft.projectId ?? null,
     intendedProjectId: draft.intendedProjectId ?? null,
     transactionId: draft.transactionId ?? null,
-    sourceHint: draft.sourceHint ?? null,
+    isFromInventory,
     sku: draft.sku ?? "",
     quantity: draft.quantity ?? 1,
+    notes: draft.notes ?? "",
     photoCount: draft.photos?.length ?? 0,
     candidateItemId: draft.candidateItemId ?? null,
     convertedItemId: draft.convertedItemId ?? null,

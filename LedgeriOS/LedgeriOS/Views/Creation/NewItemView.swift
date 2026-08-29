@@ -20,7 +20,7 @@ struct NewItemView: View {
     private let initialImageRefs: [AttachmentRef]
     private let initialSkuCandidates: [String]
     private let convertingProtoItemId: String?
-    private let initialSourceHint: ProtoItemSourceHint?
+    private let initialIsFromInventory: Bool
     private let onCreated: (([String]) -> Void)?
 
     init(
@@ -34,7 +34,7 @@ struct NewItemView: View {
         initialImageRefs: [AttachmentRef] = [],
         initialSpaceId: String? = nil,
         convertingProtoItemId: String? = nil,
-        initialSourceHint: ProtoItemSourceHint? = nil,
+        initialIsFromInventory: Bool = false,
         onCreated: (([String]) -> Void)? = nil
     ) {
         self._resolvedContext = State(initialValue: context)
@@ -47,7 +47,7 @@ struct NewItemView: View {
         self.initialSkuCandidates = initialSkuCandidates
         self.initialImageRefs = initialImageRefs
         self.convertingProtoItemId = convertingProtoItemId
-        self.initialSourceHint = initialSourceHint
+        self.initialIsFromInventory = initialIsFromInventory
         self.onCreated = onCreated
     }
 
@@ -167,7 +167,7 @@ struct NewItemView: View {
             if selectedTransaction.projectId != nil,
                selectedTransaction.projectId != projectId {
                 requirements.append("choose a transaction for this project")
-            } else if initialSourceHint == .fromInventory,
+            } else if initialIsFromInventory,
                       selectedTransaction.projectId != nil {
                 requirements.append("select the business inventory purchase that acquired this item")
             } else if selectedTransaction.projectId == nil {
@@ -193,7 +193,7 @@ struct NewItemView: View {
 
         case .createViaInventory:
             if convertingProtoItemId != nil,
-               initialSourceHint == .fromInventory {
+               initialIsFromInventory {
                 requirements.append("select the business inventory purchase that acquired this item")
             }
             if selectedInventorySaleCategory == nil {
@@ -236,7 +236,7 @@ struct NewItemView: View {
     }
 
     private var transactionPickerTransactions: [Transaction] {
-        if initialSourceHint == .fromInventory {
+        if initialIsFromInventory {
             return scopedTransactions.filter {
                 $0.projectId == nil
                     && $0.transactionType == .purchase
@@ -472,7 +472,7 @@ struct NewItemView: View {
                         fieldLabel("Transaction", isMissing: isTransactionChoiceMissing)
 
                         if projectId != nil {
-                            Text(convertingProtoItemId != nil && initialSourceHint == .fromInventory
+                            Text(convertingProtoItemId != nil && initialIsFromInventory
                                 ? "Select the business inventory purchase that acquired this item. Ledger will create the project Purchase and sale lineage together."
                                 : "Choose how this item gets attached to the project: link it to an existing transaction, or create it through inventory so Ledger creates an inventory sale transaction automatically.")
                                 .font(Typography.caption)
@@ -495,7 +495,7 @@ struct NewItemView: View {
                             if isBudgetCategoryMissing {
                                 requirementMessage(budgetCategoryRequirementMessage)
                             }
-                        } else if initialSourceHint == .fromInventory,
+                        } else if initialIsFromInventory,
                                   selectedTransaction?.projectId != nil {
                             Text("This draft is marked From Inventory. Select its inventory acquisition transaction or remove the marker before converting.")
                                 .font(Typography.caption)
@@ -511,7 +511,7 @@ struct NewItemView: View {
                         .buttonStyle(.plain)
 
                         if projectId != nil,
-                           !(convertingProtoItemId != nil && initialSourceHint == .fromInventory) {
+                           !(convertingProtoItemId != nil && initialIsFromInventory) {
                             Button {
                                 projectTransactionMode = .createViaInventory
                                 selectedTransactionId = nil
@@ -860,7 +860,7 @@ struct NewItemView: View {
         let scope: ListScope
         switch context {
         case .project(let id, _):
-            scope = initialSourceHint == .fromInventory ? .all : .project(id)
+            scope = initialIsFromInventory ? .all : .project(id)
         case .inventory: scope = .inventory
         }
 

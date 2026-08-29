@@ -23,7 +23,7 @@ Add a separate `ProtoItem` model and service layer.
 
 Progress:
 
-- Created the `ProtoItem` model, status/context/source-hint enums, and extraction payload.
+- Created the `ProtoItem` model, status/context enums, inventory-routing marker, and extraction payload.
 - Added `ProtoItemsService` and `ProtoItemsServiceProtocol` for create, update, delete, review, convert, scoped subscriptions, and photo upload metadata.
 - Added Firestore rules for `accounts/{accountId}/protoItems/{protoItemId}`.
 - Added initial codable and media path tests.
@@ -50,7 +50,7 @@ Build the capture experience around repeated, low-friction entry.
 Progress:
 
 - Added a project-scoped `ItemDraftCaptureSheet` entry from the Project Items tab.
-- The sheet captures an optional quick name plus grouped photos. It preserves multi-select from the photo library and multi-shot camera capture before returning to the form. Source, notes, SKU, vendor, category, price, and other item metadata belong to the conversion flow when the draft becomes or merges into a real item.
+- The sheet captures an optional quick name, direct user notes, and grouped photos. It preserves multi-select from the photo library and multi-shot camera capture before returning to the form. Source, SKU, vendor, category, price, and other item metadata belong to the conversion flow when the draft becomes or merges into a real item.
 - Saving creates a `ProtoItem`, queues photo uploads, and resets for the next item quick draft.
 
 Entry points:
@@ -64,7 +64,7 @@ Capture UI:
 - Add object photo.
 - Add tag/SKU/price photo.
 - Add more photos if needed.
-- Optional quick source hint: client purchase, business purchase, from inventory. Project capture exposes **From Inventory** during initial creation.
+- Optional **From Inventory** boolean marker during project capture.
 - [x] Save and immediately reset for the next item quick draft.
 
 Acceptance:

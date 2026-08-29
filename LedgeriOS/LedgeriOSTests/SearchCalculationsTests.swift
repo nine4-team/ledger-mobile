@@ -74,7 +74,7 @@ private func makeProtoItem(
     sku: String? = nil,
     notes: String? = nil,
     status: ProtoItemStatus? = nil,
-    sourceHint: ProtoItemSourceHint? = nil,
+    isFromInventory: Bool? = nil,
     captureContext: ProtoItemCaptureContext? = nil,
     extractedSkuCandidates: [String]? = nil
 ) -> ProtoItem {
@@ -84,7 +84,7 @@ private func makeProtoItem(
     protoItem.sku = sku
     protoItem.notes = notes
     protoItem.status = status
-    protoItem.sourceHint = sourceHint
+    protoItem.isFromInventory = isFromInventory
     protoItem.captureContext = captureContext
     if let extractedSkuCandidates {
         var extracted = ProtoItemExtraction()
@@ -422,11 +422,11 @@ struct TextSubstringTests {
         #expect(result == true)
     }
 
-    @Test("Proto item status and source hint match")
-    func protoItemStatusAndSourceHintMatch() {
-        let protoItem = makeProtoItem(status: .inReview, sourceHint: .fromInventory)
+    @Test("Proto item status and inventory marker match")
+    func protoItemStatusAndInventoryMarkerMatch() {
+        let protoItem = makeProtoItem(status: .inReview, isFromInventory: true)
         #expect(SearchCalculations.protoItemMatches(protoItem: protoItem, query: "in review") == true)
-        #expect(SearchCalculations.protoItemMatches(protoItem: protoItem, query: "from_inventory") == true)
+        #expect(SearchCalculations.protoItemMatches(protoItem: protoItem, query: "from inventory") == true)
     }
 }
 

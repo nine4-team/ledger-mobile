@@ -993,20 +993,18 @@ struct TransactionDetailView: View {
     private func toggleFromInventory(_ protoItem: ProtoItem) {
         guard let accountId = accountContext.currentAccountId,
               let protoItemId = protoItem.id else { return }
-        let isRemoving = protoItem.sourceHint == .fromInventory
+        let isRemoving = protoItem.usesInventoryRouting
         showProtoItemToast(
             protoItemId: protoItemId,
             message: isRemoving ? "Removed \"From Inventory\" Marker." : "Marked \"From Inventory\""
         )
-        let nextValue = isRemoving
-            ? ProtoItemSourceHint.unknown.rawValue
-            : ProtoItemSourceHint.fromInventory.rawValue
+        let nextValue = !isRemoving
         Task {
             do {
                 try await ProtoItemsService().updateProtoItem(
                     accountId: accountId,
                     protoItemId: protoItemId,
-                    fields: ["sourceHint": nextValue]
+                    fields: ["isFromInventory": nextValue]
                 )
             } catch {
                 // Keep the capture flow light; failed writes leave the current state unchanged.

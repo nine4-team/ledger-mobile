@@ -51,7 +51,7 @@ Items that are in inventory but not associated with a project, or items that nee
 The grouping gives the user an instant visual map of their review workload organized by project, instead of a jumbled list where items from five different projects are mixed together.
 
 **Proto item rows**
-Item Quick Drafts render as capture groups rather than normal item rows. The row should emphasize the photos, capture context, source hint, and next action. An item quick draft row does not open the normal item detail view because it is not an item yet; it opens a conversion workflow.
+Item Quick Drafts render as capture groups rather than normal item rows. The row should emphasize user notes, photos, capture context, the **From Inventory** marker when enabled, and the next action. An item quick draft row does not open the normal item detail view because it is not an item yet; it opens a conversion workflow.
 
 Needs Review uses the same unconverted Item Quick Drafts that appear under Project Items, Inventory Items, and Transaction Detail. Converting or deleting a draft from Needs Review removes it from both the global queue and its contextual Item Quick Drafts section.
 

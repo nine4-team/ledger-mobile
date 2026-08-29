@@ -258,7 +258,7 @@ struct ItemDraftCaptureSheet: View {
                 ? (projectId == nil ? .inventory : .project)
                 : .transaction
             protoItem.status = .open
-            protoItem.sourceHint = isFromInventory ? .fromInventory : .unknown
+            protoItem.isFromInventory = isFromInventory
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
             protoItem.notes = trimmedNotes.isEmpty ? nil : trimmedNotes

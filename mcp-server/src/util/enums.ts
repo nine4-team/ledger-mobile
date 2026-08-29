@@ -92,14 +92,6 @@ export type QuickDraftItemStatus = (typeof quickDraftItemStatuses)[number];
 export const quickDraftCaptureContexts = ["project", "inventory", "transaction"] as const;
 export type QuickDraftCaptureContext = (typeof quickDraftCaptureContexts)[number];
 
-export const quickDraftSourceHints = [
-  "client_purchase",
-  "business_purchase",
-  "from_inventory",
-  "unknown",
-] as const;
-export type QuickDraftSourceHint = (typeof quickDraftSourceHints)[number];
-
 export const invoiceStatuses = ["created", "sent", "paid", "canceled"] as const;
 export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
@@ -176,11 +168,6 @@ export const ENUMS: EnumSpec[] = [
     name: "quickDraftCaptureContext",
     values: quickDraftCaptureContexts,
     description: "Where a quick draft item was captured: project, inventory, or transaction.",
-  },
-  {
-    name: "quickDraftSourceHint",
-    values: quickDraftSourceHints,
-    description: "Optional hint for whether the eventual item is client-purchased, business-purchased, from inventory, or unknown.",
   },
   {
     name: "invoiceStatus",

@@ -26,7 +26,7 @@ struct ItemDraftCard: View {
     }
 
     private var isFromInventory: Bool {
-        protoItem.sourceHint == .fromInventory
+        protoItem.usesInventoryRouting
     }
 
     private var showsFromInventoryControl: Bool {

@@ -86,7 +86,7 @@ enum SearchCalculations {
             protoItem.notes,
             protoItem.status?.rawValue,
             protoItem.status?.displayLabel,
-            protoItem.sourceHint?.rawValue,
+            protoItem.usesInventoryRouting ? "from inventory" : nil,
             protoItem.captureContext?.rawValue,
             protoItem.projectId,
             protoItem.intendedProjectId,

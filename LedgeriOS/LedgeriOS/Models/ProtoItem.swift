@@ -20,13 +20,6 @@ enum ProtoItemCaptureContext: String, Codable, CaseIterable, CaseInsensitiveStri
     case transaction
 }
 
-enum ProtoItemSourceHint: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
-    case clientPurchase = "client_purchase"
-    case businessPurchase = "business_purchase"
-    case fromInventory = "from_inventory"
-    case unknown
-}
-
 struct ProtoItemExtraction: Codable, Hashable, Sendable {
     var rawText: String?
     var barcodePayloads: [String]?
@@ -64,7 +57,10 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     var name: String?
     var captureContext: ProtoItemCaptureContext?
     var status: ProtoItemStatus?
-    var sourceHint: ProtoItemSourceHint?
+    /// User-selected routing marker for project drafts that originated in business inventory.
+    var isFromInventory: Bool?
+    /// Read-only compatibility for drafts created before `isFromInventory` replaced source hints.
+    private var legacySourceHint: String?
     var photos: [AttachmentRef]?
     var sku: String?
     var quantity: Int?
@@ -84,9 +80,14 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, intendedProjectId, transactionId,
-             name, captureContext, status, sourceHint, photos, sku, quantity, notes, extracted,
+             name, captureContext, status, isFromInventory, photos, sku, quantity, notes, extracted,
              candidateTransactionId, candidateItemId, convertedItemId,
              convertedAt, createdBy, updatedBy, convertedBy,
              createdAt, updatedAt
+        case legacySourceHint = "sourceHint"
+    }
+
+    var usesInventoryRouting: Bool {
+        isFromInventory ?? (legacySourceHint == "from_inventory")
     }
 }

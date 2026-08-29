@@ -193,11 +193,6 @@ export interface Item {
 
 export type ProtoItemStatus = "open" | "in_review" | "converted";
 export type ProtoItemCaptureContext = "project" | "inventory" | "transaction";
-export type ProtoItemSourceHint =
-  | "client_purchase"
-  | "business_purchase"
-  | "from_inventory"
-  | "unknown";
 
 export interface ProtoItemExtraction {
   rawText?: string;
@@ -222,7 +217,10 @@ export interface ProtoItem {
   name?: string;
   captureContext?: ProtoItemCaptureContext;
   status?: ProtoItemStatus;
-  sourceHint?: ProtoItemSourceHint;
+  /** User-selected routing marker for a project draft originating in business inventory. */
+  isFromInventory?: boolean;
+  /** @deprecated Read compatibility only. New tools never expose or write this field. */
+  sourceHint?: string;
   photos?: AttachmentRef[];
   sku?: string;
   quantity?: number;
