@@ -15,6 +15,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     @Binding var searchText: String
     var searchPlaceholder: String = "Search..."
     var onAdd: (() -> Void)?
+    var onToggleGroupExpansion: (() -> Void)?
+    var areGroupsExpanded: Bool
     var style: ControlBarStyle
     var showSearch: Bool = true
     @ViewBuilder var selectAll: () -> SelectAllContent
@@ -28,6 +30,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         searchText: Binding<String>,
         searchPlaceholder: String = "Search...",
         onAdd: (() -> Void)? = nil,
+        onToggleGroupExpansion: (() -> Void)? = nil,
+        areGroupsExpanded: Bool = false,
         style: ControlBarStyle = .capsule,
         showSearch: Bool = true,
         @ViewBuilder selectAll: @escaping () -> SelectAllContent = { EmptyView() },
@@ -37,6 +41,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         self._searchText = searchText
         self.searchPlaceholder = searchPlaceholder
         self.onAdd = onAdd
+        self.onToggleGroupExpansion = onToggleGroupExpansion
+        self.areGroupsExpanded = areGroupsExpanded
         self.style = style
         self.showSearch = showSearch
         self.selectAll = selectAll
@@ -79,6 +85,19 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 
                 barItem(label: "Filter") {
                     filterMenu()
+                }
+
+                if let onToggleGroupExpansion {
+                    let label = areGroupsExpanded ? "Collapse all item groups" : "Expand all item groups"
+                    barItem(label: areGroupsExpanded ? "Collapse" : "Expand") {
+                        Button(action: onToggleGroupExpansion) {
+                            Image(systemName: areGroupsExpanded ? "chevron.up.2" : "chevron.down.2")
+                                .foregroundStyle(areGroupsExpanded ? BrandColors.primary : BrandColors.textSecondary)
+                        }
+                        .tint(areGroupsExpanded ? BrandColors.primary : BrandColors.textSecondary)
+                        .accessibilityLabel(label)
+                        .help(label)
+                    }
                 }
 
                 if let onAdd {
@@ -260,7 +279,7 @@ struct CardGlassModifier: ViewModifier {
     } sortMenu: {
         Menu {
             Picker("Sort", selection: $sort) {
-                ForEach(ItemSortOption.allCases, id: \.self) { option in
+                ForEach(ItemSortOption.standardCases, id: \.self) { option in
                     Text(ListFilterSortCalculations.sortLabel(for: option)).tag(option)
                 }
             }

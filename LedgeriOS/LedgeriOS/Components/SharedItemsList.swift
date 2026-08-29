@@ -34,6 +34,7 @@ struct SharedItemsList: View {
     var photoMatchActionTitle: ((Item) -> String?)?
     var photoMatchTargetItemId: String?
     var onPhotoMatchPress: ((Item) -> Void)?
+    var showsGroupExpansionControl: Bool = false
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -78,9 +79,18 @@ struct SharedItemsList: View {
                 items,
                 filters: activeFilters,
                 sort: activeSort,
-                search: resolvedSearchText.wrappedValue
+                search: resolvedSearchText.wrappedValue,
+                photoMarkedItemIDs: markedPhotoItemIDs
             )
         }
+    }
+
+    private var markedPhotoItemIDs: Set<String> {
+        guard filterScope == .spaceDetail, let isItemMarkedInPhoto else { return [] }
+        return Set(items.compactMap { item in
+            guard isItemMarkedInPhoto(item) else { return nil }
+            return item.id
+        })
     }
 
     private var processedProtoItems: [ProtoItem] {
@@ -195,8 +205,33 @@ struct SharedItemsList: View {
         }
     }
 
+    private var sourceGroupsByID: [String: ItemGroup] {
+        guard filterScope == .spaceDetail else { return [:] }
+        return Dictionary(
+            uniqueKeysWithValues: ListFilterSortCalculations.groupItems(items).map { ($0.id, $0) }
+        )
+    }
+
     private var showGrouped: Bool {
         ListFilterSortCalculations.shouldShowGrouped(groups)
+    }
+
+    private var visibleExpandableGroupIDs: Set<String> {
+        ListFilterSortCalculations.expandableGroupIDs(in: groups)
+    }
+
+    private var showsVisibleGroupExpansionControl: Bool {
+        showsGroupExpansionControl && !visibleExpandableGroupIDs.isEmpty
+    }
+
+    private var areAllVisibleGroupsExpanded: Bool {
+        let groupIDs = visibleExpandableGroupIDs
+        return !groupIDs.isEmpty && groupIDs.isSubset(of: expandedGroups)
+    }
+
+    private var visibleGroupExpansionAction: (() -> Void)? {
+        guard showsVisibleGroupExpansionControl else { return nil }
+        return { toggleVisibleGroupExpansion() }
     }
 
     private var allVisibleIds: [String] {
@@ -300,6 +335,11 @@ struct SharedItemsList: View {
             // Bulk actions must never retain items hidden by a newly applied filter.
             resolvedSelectedIds.wrappedValue.formIntersection(Set(allVisibleIds))
         }
+        .onChange(of: showsGroupExpansionControl) { _, isEnabled in
+            if !isEnabled {
+                expandedGroups.removeAll()
+            }
+        }
         .onDisappear {
             PerformanceDiagnostics.shared.event("ListDisappeared", kind: diagnosticMode, count: items.count)
             listener?.remove()
@@ -335,6 +375,7 @@ struct SharedItemsList: View {
             isPresented: $showSortMenu,
             sortOptions: SortMenu.itemSortMenuItems(
                 activeSort: activeSort,
+                includePhotoCheckmark: filterScope == .spaceDetail,
                 onSelect: { activeSort = $0 }
             )
         ))
@@ -383,6 +424,8 @@ struct SharedItemsList: View {
             searchText: resolvedSearchText,
             searchPlaceholder: "Search items...",
             onAdd: onAdd,
+            onToggleGroupExpansion: visibleGroupExpansionAction,
+            areGroupsExpanded: areAllVisibleGroupsExpanded,
             style: style
         ) {
             Button {
@@ -488,6 +531,8 @@ struct SharedItemsList: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, Spacing.xl)
         } else {
+            let completeGroupsByID = sourceGroupsByID
+            let photoMarkedIDs = markedPhotoItemIDs
             LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 ForEach(processedProtoItems) { protoItem in
                     protoItemRow(for: protoItem)
@@ -496,7 +541,11 @@ struct SharedItemsList: View {
                 if showGrouped {
                     ForEach(groups) { group in
                         if group.count > 1 {
-                            groupedCard(for: group)
+                            groupedCard(
+                                for: group,
+                                completeGroup: completeGroupsByID[group.id],
+                                photoMarkedItemIDs: photoMarkedIDs
+                            )
                         } else if let item = group.items.first {
                             singleItemCard(for: item)
                         }
@@ -515,6 +564,8 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private var itemList: some View {
+        let completeGroupsByID = sourceGroupsByID
+        let photoMarkedIDs = markedPhotoItemIDs
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVGrid(
@@ -529,7 +580,11 @@ struct SharedItemsList: View {
                     if showGrouped {
                         ForEach(groups) { group in
                             if group.count > 1 {
-                                groupedCard(for: group)
+                                groupedCard(
+                                    for: group,
+                                    completeGroup: completeGroupsByID[group.id],
+                                    photoMarkedItemIDs: photoMarkedIDs
+                                )
                             } else if let item = group.items.first {
                                 singleItemCard(for: item)
                             }
@@ -726,7 +781,11 @@ struct SharedItemsList: View {
     }
 
     @ViewBuilder
-    private func groupedCard(for group: ItemGroup) -> some View {
+    private func groupedCard(
+        for group: ItemGroup,
+        completeGroup: ItemGroup?,
+        photoMarkedItemIDs: Set<String>
+    ) -> some View {
         // Issue 4: Use compactMap to only include items with valid IDs
         let ids = resolvedSelectedIds.wrappedValue
         let validItems = group.items.filter { $0.id != nil }
@@ -745,6 +804,10 @@ struct SharedItemsList: View {
         let summaryItem = group.items.first(where: { ItemCardCalculations.primaryImage(from: $0.images) != nil }) ?? group.items.first
         let summaryImage = ItemCardCalculations.primaryImage(from: summaryItem?.images)
         let spaceName = groupedSpaceName(for: group)
+        let isGroupMarkedInPhoto = ListFilterSortCalculations.isGroupFullyMarkedInPhoto(
+            completeGroup ?? group,
+            markedItemIDs: photoMarkedItemIDs
+        )
 
         let selectionBinding = Binding(
             get: { groupSelected },
@@ -774,6 +837,7 @@ struct SharedItemsList: View {
             sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
             spaceName: spaceName,
             priceLabel: displayedPriceLabel,
+            isMarkedInPhoto: isGroupMarkedInPhoto,
             isExpanded: inlineGroupExpansionBinding(for: group),
             isSelected: selectionBinding,
             onSelectedChange: onSelectedChange,
@@ -795,6 +859,15 @@ struct SharedItemsList: View {
             get: { expandedGroups.contains(group.id) },
             set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
         )
+    }
+
+    private func toggleVisibleGroupExpansion() {
+        withAnimation {
+            expandedGroups = ListFilterSortCalculations.toggledExpandedGroupIDs(
+                expandedGroupIDs: expandedGroups,
+                visibleGroupIDs: visibleExpandableGroupIDs
+            )
+        }
     }
 
     private func groupedCardPressAction(for group: ItemGroup) -> (() -> Void)? {

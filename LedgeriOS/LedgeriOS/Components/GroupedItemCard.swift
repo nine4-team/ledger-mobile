@@ -32,6 +32,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     var spaceName: String?
     var locationLabel: String?
     var priceLabel: String?
+    var isMarkedInPhoto: Bool = false
     var microcopyWhenCollapsed: String? = "View All"
     var isExpanded: Binding<Bool>?
     var defaultExpanded: Bool = false
@@ -54,6 +55,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         spaceName: String? = nil,
         locationLabel: String? = nil,
         priceLabel: String? = nil,
+        isMarkedInPhoto: Bool = false,
         microcopyWhenCollapsed: String? = "View All",
         isExpanded: Binding<Bool>? = nil,
         defaultExpanded: Bool = false,
@@ -73,6 +75,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         self.spaceName = spaceName
         self.locationLabel = locationLabel
         self.priceLabel = priceLabel
+        self.isMarkedInPhoto = isMarkedInPhoto
         self.microcopyWhenCollapsed = microcopyWhenCollapsed
         self.isExpanded = isExpanded
         self.defaultExpanded = defaultExpanded
@@ -177,10 +180,21 @@ struct GroupedItemCard<ExpandedContent: View>: View {
 
     private var collapsedContent: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            FindableText(name)
-                .font(Typography.h3)
-                .foregroundStyle(BrandColors.textPrimary)
-                .lineLimit(3)
+            HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
+                FindableText(name)
+                    .font(Typography.h3)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(3)
+
+                Spacer(minLength: 0)
+
+                if isMarkedInPhoto {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.green)
+                        .accessibilityLabel("All items marked in a space photo")
+                }
+            }
 
             HStack(alignment: .top, spacing: Spacing.md) {
                 thumbnail

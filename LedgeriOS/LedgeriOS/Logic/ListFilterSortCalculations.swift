@@ -8,7 +8,11 @@ enum ListFilterSortCalculations {
 
     /// Applies AND logic across facets. A facet's selection applies OR logic
     /// among the values it includes.
-    static func applyGroupedFilters(_ items: [Item], filters: ItemFilterState) -> [Item] {
+    static func applyGroupedFilters(
+        _ items: [Item],
+        filters: ItemFilterState,
+        photoMarkedItemIDs: Set<String> = []
+    ) -> [Item] {
         guard filters.isActive else { return items }
 
         return items.filter { item in
@@ -23,6 +27,9 @@ enum ListFilterSortCalculations {
                 && filters.sku.includes(ItemFilterValues.sku(for: item))
                 && filters.name.includes(ItemFilterValues.name(for: item))
                 && filters.projectPrice.includes(ItemFilterValues.projectPrice(for: item))
+                && filters.photoMark.includes(
+                    ItemFilterValues.photoMark(for: item, markedItemIDs: photoMarkedItemIDs)
+                )
         }
     }
 
@@ -74,7 +81,10 @@ enum ListFilterSortCalculations {
     // MARK: - Sort Comparators
 
     /// Returns a comparator for the given sort option.
-    static func sortComparator(for option: ItemSortOption) -> (Item, Item) -> Bool {
+    static func sortComparator(
+        for option: ItemSortOption,
+        photoMarkedItemIDs: Set<String> = []
+    ) -> (Item, Item) -> Bool {
         switch option {
         case .createdDesc:
             return { a, b in
@@ -112,12 +122,27 @@ enum ListFilterSortCalculations {
                 if !nameB.isEmpty { return false }
                 return (a.id ?? "") > (b.id ?? "")
             }
+        case .photoUncheckedFirst, .photoCheckedFirst:
+            let checkedFirst = option == .photoCheckedFirst
+            let createdDescending = sortComparator(for: .createdDesc)
+            return { a, b in
+                let aIsMarked = a.id.map(photoMarkedItemIDs.contains) ?? false
+                let bIsMarked = b.id.map(photoMarkedItemIDs.contains) ?? false
+                if aIsMarked != bIsMarked {
+                    return checkedFirst ? aIsMarked : !aIsMarked
+                }
+                return createdDescending(a, b)
+            }
         }
     }
 
     /// Sorts items by the given sort option.
-    static func applySort(_ items: [Item], sort: ItemSortOption) -> [Item] {
-        items.sorted(by: sortComparator(for: sort))
+    static func applySort(
+        _ items: [Item],
+        sort: ItemSortOption,
+        photoMarkedItemIDs: Set<String> = []
+    ) -> [Item] {
+        items.sorted(by: sortComparator(for: sort, photoMarkedItemIDs: photoMarkedItemIDs))
     }
 
     // MARK: - Search
@@ -193,11 +218,16 @@ enum ListFilterSortCalculations {
         _ items: [Item],
         filters: ItemFilterState,
         sort: ItemSortOption,
-        search: String
+        search: String,
+        photoMarkedItemIDs: Set<String> = []
     ) -> [Item] {
-        let filtered = applyGroupedFilters(items, filters: filters)
+        let filtered = applyGroupedFilters(
+            items,
+            filters: filters,
+            photoMarkedItemIDs: photoMarkedItemIDs
+        )
         let searched = applySearch(filtered, query: search)
-        return applySort(searched, sort: sort)
+        return applySort(searched, sort: sort, photoMarkedItemIDs: photoMarkedItemIDs)
     }
 
     // MARK: - Grouping
@@ -238,6 +268,31 @@ enum ListFilterSortCalculations {
         groups.contains { $0.count > 1 }
     }
 
+    static func expandableGroupIDs(in groups: [ItemGroup]) -> Set<String> {
+        Set(groups.lazy.filter { $0.count > 1 }.map(\.id))
+    }
+
+    static func toggledExpandedGroupIDs(
+        expandedGroupIDs: Set<String>,
+        visibleGroupIDs: Set<String>
+    ) -> Set<String> {
+        guard !visibleGroupIDs.isEmpty else { return expandedGroupIDs }
+        if visibleGroupIDs.isSubset(of: expandedGroupIDs) {
+            return expandedGroupIDs.subtracting(visibleGroupIDs)
+        }
+        return expandedGroupIDs.union(visibleGroupIDs)
+    }
+
+    static func isGroupFullyMarkedInPhoto(
+        _ group: ItemGroup,
+        markedItemIDs: Set<String>
+    ) -> Bool {
+        !group.items.isEmpty && group.items.allSatisfy { item in
+            guard let itemID = item.id else { return false }
+            return markedItemIDs.contains(itemID)
+        }
+    }
+
     // MARK: - Private Helpers
 
     /// Checks whether the normalized project price is positive.
@@ -273,6 +328,8 @@ enum ListFilterSortCalculations {
         case .createdAsc: return "Oldest First"
         case .alphabeticalAsc: return "A to Z"
         case .alphabeticalDesc: return "Z to A"
+        case .photoUncheckedFirst: return "Unchecked First"
+        case .photoCheckedFirst: return "Checked First"
         }
     }
 
@@ -283,6 +340,8 @@ enum ListFilterSortCalculations {
         case .createdAsc: return "Oldest"
         case .alphabeticalAsc: return "A-Z"
         case .alphabeticalDesc: return "Z-A"
+        case .photoUncheckedFirst: return "Unchecked"
+        case .photoCheckedFirst: return "Checked"
         }
     }
 

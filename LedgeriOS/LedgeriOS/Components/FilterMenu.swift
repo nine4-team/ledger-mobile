@@ -46,6 +46,15 @@ struct ItemFilterMenu: View {
             } + [ItemFilterChoice(id: ItemFilterValues.missing, label: "Not Set")]
         ))
 
+        if scope == .spaceDetail {
+            items.append(singleChoiceFilterGroup(
+                id: "item-photo-checkmark",
+                label: "Photo Checkmark",
+                group: .photoMark,
+                options: yesNoOptions(yes: "Checked", no: "Not Checked")
+            ))
+        }
+
         if scope != .spaceDetail {
             items.append(filterGroup(
                 id: "item-space",
@@ -173,6 +182,46 @@ struct ItemFilterMenu: View {
             label: label,
             subactions: subactions,
             selectionSummary: summary(for: selection, options: options),
+            isFilterActive: selection.isActive
+        )
+    }
+
+    private func singleChoiceFilterGroup(
+        id: String,
+        label: String,
+        group: ItemFilterGroup,
+        options: [ItemFilterChoice]
+    ) -> ActionMenuItem {
+        let selection = filterState.selection(for: group)
+        let selectedValue: String? = {
+            guard case .only(let selected) = selection, selected.count == 1 else { return nil }
+            return selected.first
+        }()
+        let subactions = [
+            ActionMenuSubitem(
+                id: "all",
+                label: "All",
+                icon: selection == .all ? "checkmark.circle.fill" : "circle"
+            ) {
+                filterState.selectAll(group: group)
+            },
+        ] + options.map { option in
+            ActionMenuSubitem(
+                id: option.id,
+                label: option.label,
+                icon: selectedValue == option.id ? "checkmark.circle.fill" : "circle"
+            ) {
+                filterState.selectOnly(group: group, value: option.id)
+            }
+        }
+
+        return ActionMenuItem(
+            id: id,
+            label: label,
+            subactions: subactions,
+            selectionSummary: selectedValue.flatMap { selectedID in
+                options.first(where: { $0.id == selectedID })?.label
+            } ?? "All",
             isFilterActive: selection.isActive
         )
     }

@@ -375,6 +375,90 @@ struct ListFilterSortCalculationTests {
         #expect(result.map(\.name) == ["Has Name", ""])
     }
 
+    @Test("Photo checkmark filter can show only unchecked space items")
+    func photoCheckmarkFilterShowsUncheckedItems() {
+        var filters = ItemFilterState()
+        filters.selectOnly(group: .photoMark, value: ItemFilterValues.no)
+        let items = [
+            makeItem(id: "unchecked-1", name: "Lamp"),
+            makeItem(id: "checked", name: "Chair"),
+            makeItem(id: "unchecked-2", name: "Table"),
+        ]
+
+        let result = ListFilterSortCalculations.applyGroupedFilters(
+            items,
+            filters: filters,
+            photoMarkedItemIDs: ["checked"]
+        )
+
+        #expect(result.compactMap(\.id) == ["unchecked-1", "unchecked-2"])
+    }
+
+    @Test("Photo checkmark filter can show only checked space items")
+    func photoCheckmarkFilterShowsCheckedItems() {
+        var filters = ItemFilterState()
+        filters.selectOnly(group: .photoMark, value: ItemFilterValues.yes)
+        let items = [
+            makeItem(id: "unchecked", name: "Lamp"),
+            makeItem(id: "checked-1", name: "Chair"),
+            makeItem(id: "checked-2", name: "Table"),
+        ]
+
+        let result = ListFilterSortCalculations.applyGroupedFilters(
+            items,
+            filters: filters,
+            photoMarkedItemIDs: ["checked-1", "checked-2"]
+        )
+
+        #expect(result.compactMap(\.id) == ["checked-1", "checked-2"])
+    }
+
+    @Test("Unchecked-first photo sort partitions items and preserves newest-first order")
+    func photoCheckmarkSortShowsUncheckedFirst() {
+        let items = [
+            makeItem(id: "checked-new", name: "Checked New", createdAt: Date(timeIntervalSince1970: 4000)),
+            makeItem(id: "unchecked-old", name: "Unchecked Old", createdAt: Date(timeIntervalSince1970: 1000)),
+            makeItem(id: "checked-old", name: "Checked Old", createdAt: Date(timeIntervalSince1970: 2000)),
+            makeItem(id: "unchecked-new", name: "Unchecked New", createdAt: Date(timeIntervalSince1970: 3000)),
+        ]
+
+        let result = ListFilterSortCalculations.applySort(
+            items,
+            sort: .photoUncheckedFirst,
+            photoMarkedItemIDs: ["checked-new", "checked-old"]
+        )
+
+        #expect(result.compactMap(\.id) == [
+            "unchecked-new",
+            "unchecked-old",
+            "checked-new",
+            "checked-old",
+        ])
+    }
+
+    @Test("Collapsed group is complete only when every item has a photo checkmark")
+    func groupedPhotoCheckmarkRequiresEveryItem() {
+        let group = ItemGroup(
+            id: "pillows",
+            name: "Pillow",
+            sku: nil,
+            source: nil,
+            items: [
+                makeItem(id: "pillow-1", name: "Pillow"),
+                makeItem(id: "pillow-2", name: "Pillow"),
+            ]
+        )
+
+        #expect(!ListFilterSortCalculations.isGroupFullyMarkedInPhoto(
+            group,
+            markedItemIDs: ["pillow-1"]
+        ))
+        #expect(ListFilterSortCalculations.isGroupFullyMarkedInPhoto(
+            group,
+            markedItemIDs: ["pillow-1", "pillow-2"]
+        ))
+    }
+
     // MARK: - Search
 
     @Test("Search matches item name")
@@ -697,6 +781,34 @@ struct ListFilterSortCalculationTests {
         ]
         let groups = ListFilterSortCalculations.groupItems(items)
         #expect(groups.count == 2)
+    }
+
+    @Test("Group expansion toggles all visible multi-item groups without changing hidden groups")
+    func groupExpansionTogglesVisibleGroups() {
+        let groups = ListFilterSortCalculations.groupItems([
+            makeItem(id: "chair-1", name: "Chair"),
+            makeItem(id: "chair-2", name: "Chair"),
+            makeItem(id: "table-1", name: "Table"),
+            makeItem(id: "table-2", name: "Table"),
+            makeItem(id: "lamp-1", name: "Lamp"),
+        ])
+        let visibleGroupIDs = ListFilterSortCalculations.expandableGroupIDs(in: groups)
+        let hiddenExpandedID = "hidden-group"
+
+        #expect(visibleGroupIDs.count == 2)
+
+        let expanded = ListFilterSortCalculations.toggledExpandedGroupIDs(
+            expandedGroupIDs: [hiddenExpandedID],
+            visibleGroupIDs: visibleGroupIDs
+        )
+        #expect(visibleGroupIDs.isSubset(of: expanded))
+        #expect(expanded.contains(hiddenExpandedID))
+
+        let collapsed = ListFilterSortCalculations.toggledExpandedGroupIDs(
+            expandedGroupIDs: expanded,
+            visibleGroupIDs: visibleGroupIDs
+        )
+        #expect(collapsed == [hiddenExpandedID])
     }
 
     // MARK: - Combined Multi-Filter Pipeline

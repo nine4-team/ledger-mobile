@@ -20,7 +20,7 @@ struct SortMenu: View {
         activeSort: ItemSortOption,
         onSelect: @escaping (ItemSortOption) -> Void
     ) -> [ActionMenuItem] {
-        ItemSortOption.allCases.map { option in
+        ItemSortOption.standardCases.map { option in
             ActionMenuItem(
                 id: option.rawValue,
                 label: sortLabel(for: option),
@@ -36,6 +36,8 @@ struct SortMenu: View {
         case .createdAsc: return "Oldest First"
         case .alphabeticalAsc: return "A to Z"
         case .alphabeticalDesc: return "Z to A"
+        case .photoUncheckedFirst: return "Unchecked First"
+        case .photoCheckedFirst: return "Checked First"
         }
     }
 
@@ -43,9 +45,10 @@ struct SortMenu: View {
 
     static func itemSortMenuItems(
         activeSort: ItemSortOption,
+        includePhotoCheckmark: Bool = false,
         onSelect: @escaping (ItemSortOption) -> Void
     ) -> [ActionMenuItem] {
-        [
+        var items = [
             ActionMenuItem(
                 id: "created",
                 label: "Created",
@@ -67,6 +70,21 @@ struct SortMenu: View {
                 selectedSubactionKey: [.alphabeticalAsc, .alphabeticalDesc].contains(activeSort) ? activeSort.rawValue : nil
             ),
         ]
+
+        if includePhotoCheckmark {
+            items.append(ActionMenuItem(
+                id: "photo-checkmark",
+                label: "Photo Checkmark",
+                icon: "checkmark.circle",
+                subactions: [
+                    ActionMenuSubitem(id: ItemSortOption.photoUncheckedFirst.rawValue, label: "Unchecked First") { onSelect(.photoUncheckedFirst) },
+                    ActionMenuSubitem(id: ItemSortOption.photoCheckedFirst.rawValue, label: "Checked First") { onSelect(.photoCheckedFirst) },
+                ],
+                selectedSubactionKey: [.photoUncheckedFirst, .photoCheckedFirst].contains(activeSort) ? activeSort.rawValue : nil
+            ))
+        }
+
+        return items
     }
 
     // MARK: - Hierarchical Transaction Sort Menu

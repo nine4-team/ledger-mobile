@@ -97,6 +97,7 @@ struct ItemFilterState: Equatable {
     var sku: ItemFacetSelection = .all
     var name: ItemFacetSelection = .all
     var projectPrice: ItemFacetSelection = .all
+    var photoMark: ItemFacetSelection = .all
 
     var isActive: Bool {
         ItemFilterGroup.allCases.contains { selection(for: $0).isActive }
@@ -119,6 +120,7 @@ struct ItemFilterState: Equatable {
         case .sku: return sku
         case .name: return name
         case .projectPrice: return projectPrice
+        case .photoMark: return photoMark
         }
     }
 
@@ -128,6 +130,10 @@ struct ItemFilterState: Equatable {
 
     mutating func selectNone(group: ItemFilterGroup) {
         update(group: group) { $0.selectNone() }
+    }
+
+    mutating func selectOnly(group: ItemFilterGroup, value: String) {
+        update(group: group) { $0 = .only([value]) }
     }
 
     mutating func toggle(group: ItemFilterGroup, value: String, availableValues: Set<String>) {
@@ -150,6 +156,7 @@ struct ItemFilterState: Equatable {
         case .sku: mutation(&sku)
         case .name: mutation(&name)
         case .projectPrice: mutation(&projectPrice)
+        case .photoMark: mutation(&photoMark)
         }
     }
 }
@@ -166,6 +173,7 @@ enum ItemFilterGroup: CaseIterable {
     case sku
     case name
     case projectPrice
+    case photoMark
 }
 
 enum ItemFilterValues {
@@ -234,6 +242,11 @@ enum ItemFilterValues {
         (item.normalizedProjectPriceCents ?? 0) > 0 ? yes : no
     }
 
+    static func photoMark(for item: Item, markedItemIDs: Set<String>) -> String {
+        guard let itemID = item.id else { return no }
+        return markedItemIDs.contains(itemID) ? yes : no
+    }
+
     private static func normalizedOptionalText(
         _ value: String?,
         normalizeCase: Bool = true
@@ -250,4 +263,13 @@ enum ItemSortOption: String, CaseIterable {
     case createdAsc = "created-asc"
     case alphabeticalAsc = "alphabetical-asc"
     case alphabeticalDesc = "alphabetical-desc"
+    case photoUncheckedFirst = "photo-unchecked-first"
+    case photoCheckedFirst = "photo-checked-first"
+
+    static let standardCases: [ItemSortOption] = [
+        .createdDesc,
+        .createdAsc,
+        .alphabeticalAsc,
+        .alphabeticalDesc,
+    ]
 }

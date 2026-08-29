@@ -608,7 +608,8 @@ private struct SpaceDetailContentView: View {
                 return markedPhotoItemIds.contains(itemId) ? "Move checkmark" : "Mark in photo"
             },
             photoMatchTargetItemId: pendingPhotoMatchItemId,
-            onPhotoMatchPress: beginPhotoMatch
+            onPhotoMatchPress: beginPhotoMatch,
+            showsGroupExpansionControl: isMatchingItemsToPhoto
         )
         .padding(.top, Spacing.xs)
     }
