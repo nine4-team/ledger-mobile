@@ -232,29 +232,68 @@ enum ListFilterSortCalculations {
 
     // MARK: - Grouping
 
-    /// Groups items by normalized name + SKU + source key.
-    /// Items with same name, SKU, and source form a single group.
+    /// Groups items by normalized SKU when available, falling back to name.
+    /// SKU matches ignore name differences. SKU-less items join a matching
+    /// name's SKU group only when that name identifies exactly one SKU group.
+    /// Source remains a grouping boundary in both cases.
     /// Single items become groups of 1 for uniform list handling.
-    static func groupItems(_ items: [Item]) -> [ItemGroup] {
+    static func groupItems(_ items: [Item], resolutionContext: [Item]? = nil) -> [ItemGroup] {
         guard !items.isEmpty else { return [] }
 
-        var groupMap: [String: (name: String, sku: String?, source: String?, items: [Item])] = [:]
-        var keyOrder: [String] = []
+        typealias GroupAccumulator = (
+            name: String,
+            sku: String?,
+            source: String?,
+            hasSkuRepresentative: Bool,
+            items: [Item]
+        )
+
+        // Discover all authoritative SKU groups before assigning SKU-less items.
+        // This makes the result independent of whether resolved or unresolved
+        // copies happen to appear first in the input.
+        var skuGroupsByName: [NameGroupIdentity: Set<ItemGroupIdentity>] = [:]
+        for item in resolutionContext ?? items {
+            let sku = normalizedGroupingValue(item.sku)
+            let name = normalizedGroupingValue(item.displayName)
+            guard !sku.isEmpty, !name.isEmpty else { continue }
+
+            let source = normalizedGroupingValue(item.source)
+            let nameIdentity = NameGroupIdentity(source: source, name: name)
+            skuGroupsByName[nameIdentity, default: []].insert(.sku(source: source, sku: sku))
+        }
+
+        var groupMap: [ItemGroupIdentity: GroupAccumulator] = [:]
+        var keyOrder: [ItemGroupIdentity] = []
 
         for item in items {
-            let key = groupKey(for: item)
-            if groupMap[key] != nil {
-                groupMap[key]?.items.append(item)
+            let identity = groupIdentity(for: item, skuGroupsByName: skuGroupsByName)
+            let itemHasSku = !normalizedGroupingValue(item.sku).isEmpty
+
+            if var group = groupMap[identity] {
+                group.items.append(item)
+                if itemHasSku, !group.hasSkuRepresentative {
+                    group.name = item.displayName
+                    group.sku = item.sku
+                    group.source = item.source
+                    group.hasSkuRepresentative = true
+                }
+                groupMap[identity] = group
             } else {
-                groupMap[key] = (name: item.displayName, sku: item.sku, source: item.source, items: [item])
-                keyOrder.append(key)
+                groupMap[identity] = (
+                    name: item.displayName,
+                    sku: itemHasSku ? item.sku : nil,
+                    source: item.source,
+                    hasSkuRepresentative: itemHasSku,
+                    items: [item]
+                )
+                keyOrder.append(identity)
             }
         }
 
-        return keyOrder.compactMap { key in
-            guard let group = groupMap[key] else { return nil }
+        return keyOrder.compactMap { identity in
+            guard let group = groupMap[identity] else { return nil }
             return ItemGroup(
-                id: key,
+                id: identity.id,
                 name: group.name,
                 sku: group.sku,
                 source: group.source,
@@ -345,12 +384,50 @@ enum ListFilterSortCalculations {
         }
     }
 
-    /// Generates a grouping key from name + SKU + source, normalized to lowercase.
-    private static func groupKey(for item: Item) -> String {
-        let name = item.displayName.trimmingCharacters(in: .whitespaces).lowercased()
-        let sku = (item.sku ?? "").trimmingCharacters(in: .whitespaces).lowercased()
-        let source = (item.source ?? "").trimmingCharacters(in: .whitespaces).lowercased()
-        return "\(name)::\(sku)::\(source)"
+    private static func groupIdentity(
+        for item: Item,
+        skuGroupsByName: [NameGroupIdentity: Set<ItemGroupIdentity>]
+    ) -> ItemGroupIdentity {
+        let source = normalizedGroupingValue(item.source)
+        let sku = normalizedGroupingValue(item.sku)
+        if !sku.isEmpty {
+            return .sku(source: source, sku: sku)
+        }
+
+        let name = normalizedGroupingValue(item.displayName)
+        let nameIdentity = NameGroupIdentity(source: source, name: name)
+        if !name.isEmpty,
+           let candidates = skuGroupsByName[nameIdentity],
+           candidates.count == 1,
+           let onlyCandidate = candidates.first {
+            return onlyCandidate
+        }
+        return .name(source: source, name: name)
+    }
+
+    private static func normalizedGroupingValue(_ value: String?) -> String {
+        (value ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+}
+
+private struct NameGroupIdentity: Hashable {
+    let source: String
+    let name: String
+}
+
+private enum ItemGroupIdentity: Hashable {
+    case sku(source: String, sku: String)
+    case name(source: String, name: String)
+
+    var id: String {
+        switch self {
+        case let .sku(source, sku):
+            return "sku::\(source)::\(sku)"
+        case let .name(source, name):
+            return "name::\(source)::\(name)"
+        }
     }
 }
 

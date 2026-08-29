@@ -534,11 +534,11 @@ struct ListFilterSortCalculationTests {
 
     // MARK: - Grouping
 
-    @Test("Groups items with same name and SKU together")
-    func groupBySameNameAndSku() {
+    @Test("Groups matching SKUs even when names differ")
+    func groupBySkuIgnoringName() {
         let items = [
             makeItem(name: "Chair", sku: "CH-1"),
-            makeItem(name: "Chair", sku: "CH-1"),
+            makeItem(name: "Blue upholstered chair", sku: "ch-1"),
             makeItem(name: "Table", sku: "TB-1"),
         ]
         let groups = ListFilterSortCalculations.groupItems(items)
@@ -547,6 +547,65 @@ struct ListFilterSortCalculationTests {
         #expect(chairGroup?.count == 2)
         let tableGroup = groups.first { $0.name == "Table" }
         #expect(tableGroup?.count == 1)
+    }
+
+    @Test("Groups SKU-less items by matching name")
+    func groupWithoutSkuByName() {
+        let items = [
+            makeItem(name: "Chair"),
+            makeItem(name: "  chair  ", sku: "  "),
+            makeItem(name: "Table"),
+        ]
+
+        let groups = ListFilterSortCalculations.groupItems(items)
+
+        #expect(groups.count == 2)
+        #expect(groups.first { $0.name == "Chair" }?.count == 2)
+    }
+
+    @Test("Joins SKU-less name matches to an unambiguous SKU group")
+    func groupWithoutSkuIntoUnambiguousSkuGroup() {
+        let items = [
+            makeItem(name: "Chair"),
+            makeItem(name: "Chair", sku: "CH-1"),
+            makeItem(name: "Different catalog name", sku: "CH-1"),
+        ]
+
+        let groups = ListFilterSortCalculations.groupItems(items)
+
+        #expect(groups.count == 1)
+        #expect(groups[0].count == 3)
+        #expect(groups[0].sku == "CH-1")
+    }
+
+    @Test("Keeps SKU-less name matches separate when the name has multiple SKUs")
+    func groupWithoutSkuStaysSeparateFromAmbiguousSkuGroups() {
+        let items = [
+            makeItem(name: "Dining Chair", sku: "CH-1"),
+            makeItem(name: "Dining Chair"),
+            makeItem(name: "Dining Chair", sku: "CH-2"),
+        ]
+
+        let groups = ListFilterSortCalculations.groupItems(items)
+
+        #expect(groups.count == 3)
+        #expect(groups.allSatisfy { $0.count == 1 })
+        #expect(groups.filter { $0.sku == nil }.count == 1)
+    }
+
+    @Test("Uses the full resolution context when a filtered list hides an ambiguous SKU")
+    func groupFilteredItemsUsingFullResolutionContext() {
+        let skuOne = makeItem(name: "Dining Chair", sku: "CH-1")
+        let unresolved = makeItem(name: "Dining Chair")
+        let skuTwo = makeItem(name: "Dining Chair", sku: "CH-2")
+
+        let groups = ListFilterSortCalculations.groupItems(
+            [skuOne, unresolved],
+            resolutionContext: [skuOne, unresolved, skuTwo]
+        )
+
+        #expect(groups.count == 2)
+        #expect(groups.allSatisfy { $0.count == 1 })
     }
 
     @Test("All unique items produce groups of 1")

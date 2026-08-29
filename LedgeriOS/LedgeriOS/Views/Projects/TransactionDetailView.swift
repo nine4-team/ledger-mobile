@@ -1317,7 +1317,7 @@ struct TransactionDetailView: View {
                         thumbnailSmUrl: summaryImage?.thumbnailUrlSm,
                         countLabel: "×\(group.count)",
                         totalLabel: totalLabel,
-                        sku: summaryItem?.sku,
+                        sku: group.sku,
                         sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
                         spaceName: spaceName,
                         priceLabel: totalLabel,

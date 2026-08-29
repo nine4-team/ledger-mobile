@@ -201,7 +201,7 @@ struct SharedItemsList: View {
 
     private var groups: [ItemGroup] {
         PerformanceDiagnostics.shared.measureAggregate("ListDerivation", kind: "grouping") {
-            ListFilterSortCalculations.groupItems(processedItems)
+            ListFilterSortCalculations.groupItems(processedItems, resolutionContext: items)
         }
     }
 
@@ -833,7 +833,7 @@ struct SharedItemsList: View {
             thumbnailSmUrl: summaryImage?.thumbnailUrlSm,
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
-            sku: summaryItem?.sku,
+            sku: group.sku,
             sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
             spaceName: spaceName,
             priceLabel: displayedPriceLabel,
