@@ -87,7 +87,9 @@ See [sale-transactions.md](sale-transactions.md) for the full per-batch inventor
 
 ## Return to Project (Inventory → Project)
 
-Return to Project is the inventory-context action for sending an item back to its recorded source project. Ledger resolves the project, original budget category, and original movement amount from the item's current project-scoped Return or Sale-to-Inventory transaction and immutable inventory-entry snapshot; the user chooses none of them. The confirmation sheet only shows what will be restored. Ledger creates a new Purchase-from-inventory transaction, moves the item into the source project, removes it from its prior inventory transaction membership, and records destination lineage. The Purchase is intentional: it restores the exact project-budget charge that was removed when the item entered inventory. A bulk return spanning categories creates one Purchase per original category in one atomic batch.
+Return to Project is the inventory-context reversal for a project-originated item that the business acquired through Sale-to-Inventory. Ledger resolves the project, original budget category, and original movement amount from the item's current project-scoped Sale-to-Inventory transaction and immutable inventory-entry snapshot; the user chooses none of them. The confirmation sheet only shows what will be restored. Ledger creates a new Purchase-from-inventory transaction, moves the item into the source project, removes it from its prior inventory transaction membership, and records destination lineage. The Purchase is intentional: it restores the exact project-budget charge that was removed when the item entered inventory. A bulk return spanning categories creates one Purchase per original category in one atomic batch.
+
+An inventory-originated item that was sold to a project and then came home through a Return is not eligible for Return to Project. It is ordinary business inventory again, so its next inventory-to-project movement uses Sell with a chosen destination and category.
 
 If project provenance cannot be resolved, or a bulk selection contains items from different source projects, Ledger does not call the operation a return. The inventory action remains Sell and uses the normal destination picker.
 
@@ -153,7 +155,7 @@ The actions available to users depend on context.
 ### "Return to Project" is available when:
 
 - Item is in business inventory (`projectId == null`)
-- Its current inventory-entry transaction is an active, inventory-sourced, project-scoped Return or Sale-to-Inventory that still contains the item
+- Its current inventory-entry transaction is an active, inventory-sourced, project-scoped Sale-to-Inventory that still contains the item
 - Every item in a bulk selection resolves to the same source project
 - A project destination uses the single-hop or two-hop mechanics above
 

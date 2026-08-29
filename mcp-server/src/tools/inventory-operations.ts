@@ -199,7 +199,7 @@ function isInventoryEntryMovement(
   if (!transaction) return false;
   const type = normalizedString(transaction.type)?.toLowerCase();
   return (
-    (type === "return" || type === "sale") &&
+    type === "sale" &&
     normalizedString(transaction.status)?.toLowerCase() !== "canceled" &&
     isInventoryLabel(transaction.source) &&
     transaction.itemIds?.includes(item.id) === true
@@ -264,8 +264,8 @@ export function resolveReturnToProjectProvenance(
     if (!isInventoryEntryMovement(item, transaction)) {
       return {
         ok: false,
-        message: `Item ${item.id} is not an active member of a valid Return or Sale-to-Inventory transaction.`,
-        hint: "The current transaction must be active, inventory-labeled, uncanceled, and contain the item. Do not convert this into a configurable sale.",
+        message: `Item ${item.id} is not an active member of a valid Sale-to-Inventory transaction.`,
+        hint: "Return to Project is only for project-originated items acquired through an active, inventory-labeled Sale-to-Inventory transaction. Items that came home through Return are ordinary sellable inventory.",
       };
     }
 
@@ -288,7 +288,8 @@ export function resolveReturnToProjectProvenance(
         item.inventoryEntryProjectId === projectId &&
         item.inventoryEntryBudgetCategoryId === budgetCategoryId &&
         nonNegativeInteger(item.inventoryEntryPriceCents) &&
-        nonNegativeInteger(item.inventoryEntryAmountCents);
+        nonNegativeInteger(item.inventoryEntryAmountCents) &&
+        item.inventoryEntryAmountCents === item.inventoryEntryPriceCents;
       if (!snapshotMatches) {
         return {
           ok: false,
@@ -305,7 +306,8 @@ export function resolveReturnToProjectProvenance(
         activeItemIds.length !== 1 ||
         activeItemIds[0] !== item.id ||
         !nonNegativeInteger(transaction.subtotalCents) ||
-        !nonNegativeInteger(transaction.amountCents)
+        !nonNegativeInteger(transaction.amountCents) ||
+        transaction.amountCents !== transaction.subtotalCents
       ) {
         return {
           ok: false,
@@ -398,8 +400,7 @@ async function inventoryReturnCandidateIds(
   return items
     .filter((item) => {
       const transactionId = normalizedString(item.transactionId);
-      return inventoryEntrySnapshotIsPresent(item) ||
-        Boolean(transactionId && isInventoryEntryMovement(item, transactionsById.get(transactionId)));
+      return Boolean(transactionId && isInventoryEntryMovement(item, transactionsById.get(transactionId)));
     })
     .map((item) => item.id);
 }
@@ -802,7 +803,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     "[event] Return business-inventory items to the exact project, budget category, price, and " +
       "amount recorded when they most recently entered inventory. This is a locked reversal, not " +
       "a configurable sale: callers provide itemIds only; destination accounting fields are resolved " +
-      "from active Return or Sale-to-Inventory provenance. All items must resolve to one original " +
+      "from active Sale-to-Inventory provenance. Items that came home through Return are ordinary " +
+      "sellable inventory. All items must resolve to one original " +
       "project. Different original categories are grouped into separate Purchase transactions in one " +
       "atomic operation. Current item prices and tax rates are ignored.\n\n" +
       "LEGACY SAFETY: a pre-snapshot item is accepted only when its inventory-entry transaction has " +
@@ -1004,8 +1006,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         const returnCandidates = await inventoryReturnCandidateIds(db, items);
         if (returnCandidates.length > 0) {
           return validation(
-            `${returnCandidates.length} item(s) have inventory-entry provenance and must return to their original project: ${returnCandidates.join(", ")}.`,
-            "Use return_items_from_inventory_to_project. Its project, budget category, price, and amount are locked from the inventory-entry movement."
+            `${returnCandidates.length} item(s) are held through Sale-to-Inventory and must return to their original project: ${returnCandidates.join(", ")}.`,
+            "Use return_items_from_inventory_to_project. Its project, budget category, price, and amount are locked from the Sale-to-Inventory movement."
           );
         }
 

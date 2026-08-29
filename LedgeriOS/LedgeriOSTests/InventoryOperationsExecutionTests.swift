@@ -47,7 +47,7 @@ struct ReturnToProjectExecutionTests {
         transactionId: String,
         projectId: String = "project-home",
         categoryId: String = "furnishings",
-        type: TransactionType = .return
+        type: TransactionType = .sale
     ) throws -> ReturnToProjectProvenance {
         let itemId = try #require(item.id)
         var transaction = Transaction()
@@ -79,12 +79,12 @@ struct ReturnToProjectExecutionTests {
             id: "item-returning",
             projectId: nil,
             purchasePriceCents: 8_000,
-            transactionId: "inventory-return",
+            transactionId: "inventory-sale",
             projectPriceCents: 10_000
         )
         let returnProvenance = try provenance(
             item: item,
-            transactionId: "inventory-return"
+            transactionId: "inventory-sale"
         )
         try await service.returnToProject(
             items: [item],
@@ -97,7 +97,7 @@ struct ReturnToProjectExecutionTests {
         })
         #expect(purchase.fields["projectId"] as? String == "project-home")
         #expect(purchase.fields["budgetCategoryId"] as? String == "furnishings")
-        #expect(purchase.fields["amountCents"] as? Int == 10_000)
+        #expect(purchase.fields["amountCents"] as? Int == 8_000)
 
         let itemUpdate = try #require(
             batch.updatesForPath("accounts/\(acct)/items/item-returning").first
@@ -105,7 +105,7 @@ struct ReturnToProjectExecutionTests {
         #expect(itemUpdate.fields["projectId"] as? String == "project-home")
         #expect(itemUpdate.fields["budgetCategoryId"] as? String == "furnishings")
         #expect(itemUpdate.fields["status"] as? String == "purchased")
-        #expect(batch.updatesForPath("accounts/\(acct)/transactions/inventory-return").count == 1)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/inventory-sale").count == 1)
 
         let edge = try #require(batch.lineageEdges(accountId: acct).first)
         #expect(edge.fields["movementKind"] as? String == "sold")
@@ -215,47 +215,47 @@ struct ReturnToProjectExecutionTests {
             id: "snapshotted",
             projectId: nil,
             purchasePriceCents: 8_000,
-            transactionId: "inventory-return",
+            transactionId: "inventory-sale",
             projectPriceCents: 15_000,
             taxRatePct: 10
         )
-        item.inventoryEntryTransactionId = "inventory-return"
+        item.inventoryEntryTransactionId = "inventory-sale"
         item.inventoryEntryProjectId = "project-home"
         item.inventoryEntryBudgetCategoryId = "original-category"
-        item.inventoryEntryPriceCents = 10_000
-        item.inventoryEntryAmountCents = 10_825
+        item.inventoryEntryPriceCents = 8_000
+        item.inventoryEntryAmountCents = 8_000
         let returnProvenance = try provenance(
             item: item,
-            transactionId: "inventory-return",
+            transactionId: "inventory-sale",
             categoryId: "original-category"
         )
 
-        #expect(returnProvenance.subtotalCents == 10_000)
-        #expect(returnProvenance.amountCents == 10_825)
+        #expect(returnProvenance.subtotalCents == 8_000)
+        #expect(returnProvenance.amountCents == 8_000)
         try await service.returnToProject(items: [item], provenance: returnProvenance, accountId: acct)
 
         let purchase = try #require(batch.sets.first { ($0.fields["type"] as? String) == "Purchase" })
-        #expect(purchase.fields["subtotalCents"] as? Int == 10_000)
-        #expect(purchase.fields["amountCents"] as? Int == 10_825)
+        #expect(purchase.fields["subtotalCents"] as? Int == 8_000)
+        #expect(purchase.fields["amountCents"] as? Int == 8_000)
     }
 
     @Test("mixed original categories create separate atomic Purchase reversals")
     func mixedCategoriesSplitAtomically() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let itemA = makeItem(id: "a", projectId: nil, transactionId: "return-a", projectPriceCents: 2_000)
-        let itemB = makeItem(id: "b", projectId: nil, transactionId: "return-b", projectPriceCents: 3_000)
+        let itemA = makeItem(id: "a", projectId: nil, purchasePriceCents: 2_000, transactionId: "sale-a", projectPriceCents: 9_000)
+        let itemB = makeItem(id: "b", projectId: nil, purchasePriceCents: 3_000, transactionId: "sale-b", projectPriceCents: 8_000)
         var transactionA = Transaction()
-        transactionA.id = "return-a"
+        transactionA.id = "sale-a"
         transactionA.projectId = "project-home"
         transactionA.source = "Business Inventory"
-        transactionA.transactionType = .return
+        transactionA.transactionType = .sale
         transactionA.itemIds = ["a"]
         transactionA.budgetCategoryId = "lighting"
         transactionA.subtotalCents = 2_000
         transactionA.amountCents = 2_000
         var transactionB = transactionA
-        transactionB.id = "return-b"
+        transactionB.id = "sale-b"
         transactionB.itemIds = ["b"]
         transactionB.budgetCategoryId = "furniture"
         transactionB.subtotalCents = 3_000
@@ -274,6 +274,8 @@ struct ReturnToProjectExecutionTests {
         let purchases = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
         #expect(purchases.count == 2)
         #expect(Set(purchases.compactMap { $0.fields["budgetCategoryId"] as? String }) == Set(["lighting", "furniture"]))
+        #expect(Set(purchases.compactMap { $0.fields["subtotalCents"] as? Int }) == Set([2_000, 3_000]))
+        #expect(Set(purchases.compactMap { $0.fields["amountCents"] as? Int }) == Set([2_000, 3_000]))
         #expect(batch.commitCalled)
     }
 }

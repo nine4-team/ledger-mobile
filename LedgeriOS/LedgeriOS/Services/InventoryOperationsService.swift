@@ -255,7 +255,8 @@ struct InventoryOperationsService {
 
     /// Resolves the one project that all supplied inventory items most recently
     /// came from. A valid return source is the item's current project-scoped
-    /// inventory movement transaction (Return or Sale-to-Inventory).
+    /// Sale-to-Inventory transaction. An inventory-originated item that came
+    /// home through a Return is ordinary sellable inventory again.
     static func returnToProjectProvenance(
         for items: [Item],
         transactions: [Transaction]
@@ -277,7 +278,7 @@ struct InventoryOperationsService {
                   let rawProjectId = transaction.projectId,
                   let rawCategoryId = transaction.budgetCategoryId,
                   transaction.status != .canceled,
-                  transaction.transactionType == .return || transaction.transactionType == .sale,
+                  transaction.transactionType == .sale,
                   let transactionSource = transaction.source?.trimmingCharacters(in: .whitespacesAndNewlines),
                   transactionSource.hasSuffix(" Inventory"),
                   transaction.itemIds?.contains(itemId) == true else {
@@ -1487,7 +1488,7 @@ struct InventoryOperationsService {
                   let priceCents = item.inventoryEntryPriceCents,
                   let amountCents = item.inventoryEntryAmountCents,
                   priceCents >= max(item.purchasePriceCents ?? 0, 0),
-                  amountCents >= 0 else {
+                  amountCents == priceCents else {
                 return nil
             }
             return (priceCents, amountCents)
@@ -1499,7 +1500,7 @@ struct InventoryOperationsService {
               let priceCents = transaction.subtotalCents,
               let amountCents = transaction.amountCents,
               priceCents >= max(item.purchasePriceCents ?? 0, 0),
-              amountCents >= 0 else { return nil }
+              amountCents == priceCents else { return nil }
         return (priceCents, amountCents)
     }
 

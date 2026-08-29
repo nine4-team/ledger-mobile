@@ -56,14 +56,14 @@ function transaction(overrides: Partial<Transaction> & { id: string }): Transact
 describe("resolveReturnToProjectProvenance", () => {
   test("uses the frozen snapshot rather than mutable price and tax fields", () => {
     const source = transaction({
-      id: "return_1",
-      type: "Return",
+      id: "sale_1",
+      type: "Sale",
       status: "completed",
       source: "Business Inventory",
       projectId: "project_home",
       budgetCategoryId: "cat_original",
-      subtotalCents: 10_000,
-      amountCents: 10_825,
+      subtotalCents: 4_000,
+      amountCents: 4_000,
       itemIds: ["item_1"],
     });
     const selected = item({
@@ -76,23 +76,23 @@ describe("resolveReturnToProjectProvenance", () => {
       inventoryEntryTransactionId: source.id,
       inventoryEntryProjectId: "project_home",
       inventoryEntryBudgetCategoryId: "cat_original",
-      inventoryEntryPriceCents: 10_000,
-      inventoryEntryAmountCents: 10_825,
+      inventoryEntryPriceCents: 4_000,
+      inventoryEntryAmountCents: 4_000,
     });
 
     const result = resolveReturnToProjectProvenance([selected], new Map([[source.id, source]]));
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.lines[0].priceCents).toBe(10_000);
-    expect(result.lines[0].amountCents).toBe(10_825);
+    expect(result.lines[0].priceCents).toBe(4_000);
+    expect(result.lines[0].amountCents).toBe(4_000);
     expect(result.lines[0].budgetCategoryId).toBe("cat_original");
     expect(result.lines[0].evidence).toBe("snapshot");
   });
 
   test("rejects an inconsistent partial snapshot instead of falling back", () => {
     const source = transaction({
-      id: "return_1",
-      type: "Return",
+      id: "sale_1",
+      type: "Sale",
       source: "Business Inventory",
       projectId: "project_home",
       budgetCategoryId: "cat_original",
@@ -102,6 +102,61 @@ describe("resolveReturnToProjectProvenance", () => {
       id: "item_1",
       transactionId: source.id,
       inventoryEntryProjectId: "wrong_project",
+    });
+
+    const result = resolveReturnToProjectProvenance([selected], new Map([[source.id, source]]));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.message).toContain("incomplete or inconsistent");
+  });
+
+  test("rejects an inventory-originated item that came home through Return", () => {
+    const source = transaction({
+      id: "return_1",
+      type: "Return",
+      source: "Business Inventory",
+      projectId: "project_home",
+      budgetCategoryId: "cat_original",
+      subtotalCents: 10_000,
+      amountCents: 10_825,
+      itemIds: ["item_1"],
+    });
+    const selected = item({
+      id: "item_1",
+      transactionId: source.id,
+      inventoryEntryTransactionId: source.id,
+      inventoryEntryProjectId: "project_home",
+      inventoryEntryBudgetCategoryId: "cat_original",
+      inventoryEntryPriceCents: 10_000,
+      inventoryEntryAmountCents: 10_825,
+    });
+
+    const result = resolveReturnToProjectProvenance([selected], new Map([[source.id, source]]));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.message).toContain("Sale-to-Inventory");
+  });
+
+  test("rejects a Sale-to-Inventory snapshot that would restore more than purchase cost", () => {
+    const source = transaction({
+      id: "sale_1",
+      type: "Sale",
+      source: "Business Inventory",
+      projectId: "project_home",
+      budgetCategoryId: "cat_original",
+      subtotalCents: 10_000,
+      amountCents: 10_825,
+      itemIds: ["item_1"],
+    });
+    const selected = item({
+      id: "item_1",
+      transactionId: source.id,
+      purchasePriceCents: 10_000,
+      inventoryEntryTransactionId: source.id,
+      inventoryEntryProjectId: "project_home",
+      inventoryEntryBudgetCategoryId: "cat_original",
+      inventoryEntryPriceCents: 10_000,
+      inventoryEntryAmountCents: 10_825,
     });
 
     const result = resolveReturnToProjectProvenance([selected], new Map([[source.id, source]]));
@@ -137,10 +192,10 @@ describe("resolveReturnToProjectProvenance", () => {
 });
 
 describe("return_items_from_inventory_to_project", () => {
-  test("round-trips an MCP Return-to-Inventory at its newly frozen values", async () => {
+  test("an inventory sale returned home becomes ordinary sellable inventory", async () => {
     await seedProject(db, {
       id: "project_home",
-      budgetCategories: [{ id: "cat_original" }],
+      budgetCategories: [{ id: "cat_original" }, { id: "cat_other" }],
     });
     await seedTransaction(db, {
       id: "project_purchase",
@@ -157,7 +212,7 @@ describe("return_items_from_inventory_to_project", () => {
       projectId: "project_home",
       budgetCategoryId: "cat_original",
       transactionId: "project_purchase",
-      purchasePriceCents: 4_000,
+      purchasePriceCents: 10_000,
       projectPriceCents: 10_000,
       taxRatePct: 8.25,
       source: "Vendor",
@@ -186,26 +241,36 @@ describe("return_items_from_inventory_to_project", () => {
       projectPriceCents: 50_000,
       taxRatePct: 20,
     });
-    const toProject = await callTool("return_items_from_inventory_to_project", {
+    const invalidReturn = await callTool("return_items_from_inventory_to_project", {
       itemIds: ["item_1"],
       notes: "8/28 — Returned to original project",
       dryRun: false,
     });
-    expect(isError(toProject)).toBe(false);
+    expect(isError(invalidReturn)).toBe(true);
+    expect(responseJson(invalidReturn).error.message).toContain("Sale-to-Inventory");
+
+    const sale = await callTool("sell_items_from_inventory_to_project", {
+      itemIds: ["item_1"],
+      destinationProjectId: "project_home",
+      budgetCategoryId: "cat_other",
+      notes: "8/28 — Sold into project again",
+      dryRun: false,
+    });
+    expect(isError(sale)).toBe(false);
 
     const restored = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(restored).toMatchObject({
       projectId: "project_home",
-      budgetCategoryId: "cat_original",
-      projectPriceCents: 10_000,
+      budgetCategoryId: "cat_other",
+      projectPriceCents: 50_000,
     });
     const purchases = await listTransactionsOfType(db, "Purchase");
     const replacement = purchases.find((purchase) => purchase.id !== "project_purchase");
     expect(replacement?.data).toMatchObject({
       projectId: "project_home",
-      budgetCategoryId: "cat_original",
-      subtotalCents: 10_000,
-      amountCents: 10_825,
+      budgetCategoryId: "cat_other",
+      subtotalCents: 50_000,
+      amountCents: 60_000,
       itemIds: ["item_1"],
     });
   });
@@ -216,13 +281,13 @@ describe("return_items_from_inventory_to_project", () => {
       budgetCategories: [{ id: "cat_furniture" }, { id: "cat_lighting" }],
     });
     await seedTransaction(db, {
-      id: "inventory_return",
-      type: "Return",
+      id: "inventory_sale_furniture",
+      type: "Sale",
       source: "Business Inventory",
       projectId: "project_home",
       budgetCategoryId: "cat_furniture",
       subtotalCents: 10_000,
-      amountCents: 10_825,
+      amountCents: 10_000,
       itemIds: ["item_1"],
     });
     await seedTransaction(db, {
@@ -239,15 +304,15 @@ describe("return_items_from_inventory_to_project", () => {
       id: "item_1",
       projectId: null,
       budgetCategoryId: null,
-      transactionId: "inventory_return",
-      purchasePriceCents: 4_000,
+      transactionId: "inventory_sale_furniture",
+      purchasePriceCents: 10_000,
       projectPriceCents: 77_777,
       taxRatePct: 20,
-      inventoryEntryTransactionId: "inventory_return",
+      inventoryEntryTransactionId: "inventory_sale_furniture",
       inventoryEntryProjectId: "project_home",
       inventoryEntryBudgetCategoryId: "cat_furniture",
       inventoryEntryPriceCents: 10_000,
-      inventoryEntryAmountCents: 10_825,
+      inventoryEntryAmountCents: 10_000,
     });
     await seedItem(db, {
       id: "item_2",
@@ -279,7 +344,7 @@ describe("return_items_from_inventory_to_project", () => {
       subtotal: purchase.data.subtotalCents,
       amount: purchase.data.amountCents,
     }))).toEqual([
-      { category: "cat_furniture", subtotal: 10_000, amount: 10_825 },
+      { category: "cat_furniture", subtotal: 10_000, amount: 10_000 },
       { category: "cat_lighting", subtotal: 8_000, amount: 8_000 },
     ]);
 
@@ -297,13 +362,13 @@ describe("return_items_from_inventory_to_project", () => {
       projectPriceCents: 8_000,
       status: "purchased",
     });
-    expect((await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/inventory_return`))?.itemIds).toEqual([]);
+    expect((await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/inventory_sale_furniture`))?.itemIds).toEqual([]);
     expect((await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/inventory_sale`))?.itemIds).toEqual([]);
     expect((await listLineageEdges(db)).filter((edge) => edge.data.movementKind === "sold")).toHaveLength(2);
 
     const payload = responseJson(result);
     expect(payload.projectId).toBe("project_home");
-    expect(payload.totals).toMatchObject({ subtotalCents: 18_000, amountCents: 18_825 });
+    expect(payload.totals).toMatchObject({ subtotalCents: 18_000, amountCents: 18_000 });
   });
 
   test("generic Sell rejects a return candidate without writing", async () => {
@@ -312,27 +377,27 @@ describe("return_items_from_inventory_to_project", () => {
       budgetCategories: [{ id: "cat_original" }, { id: "cat_other" }],
     });
     await seedTransaction(db, {
-      id: "inventory_return",
-      type: "Return",
+      id: "inventory_sale",
+      type: "Sale",
       source: "Business Inventory",
       projectId: "project_home",
       budgetCategoryId: "cat_original",
-      subtotalCents: 10_000,
-      amountCents: 10_825,
+      subtotalCents: 4_000,
+      amountCents: 4_000,
       itemIds: ["item_1"],
     });
     await seedItem(db, {
       id: "item_1",
       projectId: null,
       budgetCategoryId: null,
-      transactionId: "inventory_return",
+      transactionId: "inventory_sale",
       purchasePriceCents: 4_000,
       projectPriceCents: 10_000,
-      inventoryEntryTransactionId: "inventory_return",
+      inventoryEntryTransactionId: "inventory_sale",
       inventoryEntryProjectId: "project_home",
       inventoryEntryBudgetCategoryId: "cat_original",
-      inventoryEntryPriceCents: 10_000,
-      inventoryEntryAmountCents: 10_825,
+      inventoryEntryPriceCents: 4_000,
+      inventoryEntryAmountCents: 4_000,
     });
 
     const result = await callTool("sell_items_from_inventory_to_project", {
@@ -346,7 +411,7 @@ describe("return_items_from_inventory_to_project", () => {
     expect(await listTransactionsOfType(db, "Purchase")).toHaveLength(0);
     expect(await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`)).toMatchObject({
       projectId: null,
-      transactionId: "inventory_return",
+      transactionId: "inventory_sale",
     });
   });
 
@@ -356,20 +421,20 @@ describe("return_items_from_inventory_to_project", () => {
       budgetCategories: [{ id: "cat_original" }],
     });
     await seedTransaction(db, {
-      id: "legacy_return",
-      type: "Return",
+      id: "legacy_sale",
+      type: "Sale",
       source: "Business Inventory",
       projectId: "project_home",
       budgetCategoryId: "cat_original",
       subtotalCents: 20_000,
-      amountCents: 21_650,
+      amountCents: 20_000,
       itemIds: ["item_1", "item_2"],
     });
     await seedItem(db, {
       id: "item_1",
       projectId: null,
       budgetCategoryId: null,
-      transactionId: "legacy_return",
+      transactionId: "legacy_sale",
       purchasePriceCents: 4_000,
       projectPriceCents: 10_000,
     });
@@ -381,7 +446,7 @@ describe("return_items_from_inventory_to_project", () => {
     expect(isError(result)).toBe(true);
     expect(responseJson(result).error.message).toContain("exact provable");
     expect(await listTransactionsOfType(db, "Purchase")).toHaveLength(0);
-    expect((await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/legacy_return`))?.itemIds)
+    expect((await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/transactions/legacy_sale`))?.itemIds)
       .toEqual(["item_1", "item_2"]);
   });
 
@@ -391,26 +456,26 @@ describe("return_items_from_inventory_to_project", () => {
       `accounts/${TEST_ACCOUNT_ID}/presets/default/budgetCategories/cat_original`
     ).set({ name: "Original", isArchived: false });
     await seedTransaction(db, {
-      id: "inventory_return",
-      type: "Return",
+      id: "inventory_sale",
+      type: "Sale",
       source: "Business Inventory",
       projectId: "project_home",
       budgetCategoryId: "cat_original",
-      subtotalCents: 10_000,
-      amountCents: 10_825,
+      subtotalCents: 4_000,
+      amountCents: 4_000,
       itemIds: ["item_1"],
     });
     await seedItem(db, {
       id: "item_1",
       projectId: null,
       budgetCategoryId: null,
-      transactionId: "inventory_return",
+      transactionId: "inventory_sale",
       purchasePriceCents: 4_000,
-      inventoryEntryTransactionId: "inventory_return",
+      inventoryEntryTransactionId: "inventory_sale",
       inventoryEntryProjectId: "project_home",
       inventoryEntryBudgetCategoryId: "cat_original",
-      inventoryEntryPriceCents: 10_000,
-      inventoryEntryAmountCents: 10_825,
+      inventoryEntryPriceCents: 4_000,
+      inventoryEntryAmountCents: 4_000,
     });
 
     const result = await callTool("return_items_from_inventory_to_project", {

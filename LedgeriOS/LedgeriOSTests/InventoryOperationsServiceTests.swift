@@ -51,8 +51,8 @@ struct InventoryOperationsServiceTests {
 
     // MARK: - Return project resolution
 
-    @Test("return project resolves from current project-scoped inventory movement")
-    func returnProjectResolvesFromCurrentMovement() {
+    @Test("inventory return does not resolve as return-to-project provenance")
+    func inventoryReturnIsOrdinarySellableInventory() {
         let item = makeInventoryItem(id: "item-1", transactionId: "return-1")
         let transaction = makeTransaction(
             id: "return-1",
@@ -65,7 +65,7 @@ struct InventoryOperationsServiceTests {
         #expect(InventoryOperationsService.returnProjectId(
             for: [item],
             transactions: [transaction]
-        ) == "project-home")
+        ) == nil)
     }
 
     @Test("return project does not resolve for ordinary inventory purchase")
@@ -90,8 +90,8 @@ struct InventoryOperationsServiceTests {
             makeInventoryItem(id: "item-2", transactionId: "return-2"),
         ]
         let transactions = [
-            makeTransaction(id: "return-1", projectId: "project-a", source: "Business Inventory", type: .return, itemIds: ["item-1"]),
-            makeTransaction(id: "return-2", projectId: "project-b", source: "Business Inventory", type: .return, itemIds: ["item-2"]),
+            makeTransaction(id: "return-1", projectId: "project-a", source: "Business Inventory", type: .sale, itemIds: ["item-1"]),
+            makeTransaction(id: "return-2", projectId: "project-b", source: "Business Inventory", type: .sale, itemIds: ["item-2"]),
         ]
 
         #expect(InventoryOperationsService.returnProjectId(
@@ -141,7 +141,7 @@ struct InventoryOperationsServiceTests {
             id: "return-1",
             projectId: "project-home",
             source: "Business Inventory",
-            type: .return,
+            type: .sale,
             itemIds: []
         )
 
@@ -158,7 +158,7 @@ struct InventoryOperationsServiceTests {
             id: "return-1",
             projectId: "project-home",
             source: "Business Inventory",
-            type: .return,
+            type: .sale,
             itemIds: ["item-1"]
         )
         transaction.status = .canceled
@@ -177,7 +177,32 @@ struct InventoryOperationsServiceTests {
             id: "return-1",
             projectId: "project-home",
             source: "Business Inventory",
-            type: .return,
+            type: .sale,
+            itemIds: ["item-1"]
+        )
+        transaction.subtotalCents = 10_000
+        transaction.amountCents = 10_825
+
+        #expect(InventoryOperationsService.returnProjectId(
+            for: [item],
+            transactions: [transaction]
+        ) == nil)
+    }
+
+    @Test("sale-to-inventory snapshot must reverse purchase cost without tax")
+    func taxedSaleSnapshotDoesNotResolve() {
+        var item = makeInventoryItem(id: "item-1", transactionId: "sale-1")
+        item.purchasePriceCents = 10_000
+        item.inventoryEntryTransactionId = "sale-1"
+        item.inventoryEntryProjectId = "project-home"
+        item.inventoryEntryBudgetCategoryId = "furnishings"
+        item.inventoryEntryPriceCents = 10_000
+        item.inventoryEntryAmountCents = 10_825
+        var transaction = makeTransaction(
+            id: "sale-1",
+            projectId: "project-home",
+            source: "Business Inventory",
+            type: .sale,
             itemIds: ["item-1"]
         )
         transaction.subtotalCents = 10_000
@@ -196,7 +221,7 @@ struct InventoryOperationsServiceTests {
             id: "return-1",
             projectId: "project-home",
             source: "Business Inventory",
-            type: .return,
+            type: .sale,
             itemIds: ["item-1", "item-2"]
         )
         transaction.subtotalCents = 20_000

@@ -221,8 +221,8 @@ struct ItemMenuBuilderTests {
         #expect(!ids(menu).contains("return-to-project"))
     }
 
-    @Test("Return presentation resolves only when the proven source project still exists")
-    func returnPresentationRequiresExistingSourceProject() {
+    @Test("Return presentation requires active Sale-to-Inventory and an existing source project")
+    func returnPresentationRequiresSaleToInventoryAndExistingProject() {
         var item = Item()
         item.id = "item-1"
         item.transactionId = "return-1"
@@ -231,7 +231,7 @@ struct ItemMenuBuilderTests {
         transaction.id = "return-1"
         transaction.projectId = "project-home"
         transaction.source = "Business Inventory"
-        transaction.transactionType = .return
+        transaction.transactionType = .sale
         transaction.itemIds = ["item-1"]
         transaction.budgetCategoryId = "furnishings"
         transaction.subtotalCents = 0
@@ -249,6 +249,13 @@ struct ItemMenuBuilderTests {
             for: [item],
             transactions: [transaction],
             projects: []
+        ) == .sell)
+
+        transaction.transactionType = .return
+        #expect(ProjectDestinationPresentation.resolve(
+            for: [item],
+            transactions: [transaction],
+            projects: [project]
         ) == .sell)
     }
 

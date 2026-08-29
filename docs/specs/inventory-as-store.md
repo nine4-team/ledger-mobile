@@ -83,7 +83,7 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 
 ### Moving out of inventory (Return to Project)
 
-- **Triggered by:** the user choosing **Return to Project** for inventory items whose current, active inventory-entry transaction proves one source project and still lists each item as an active member.
+- **Triggered by:** the user choosing **Return to Project** for project-originated inventory items whose current, active Sale-to-Inventory transaction proves one source project and still lists each item as an active member.
 - **Returns to the recorded project automatically.** The flow does not show a project picker. If the source project is missing or a bulk selection spans projects, the action remains Sell rather than presenting a false return.
 - **Restores the recorded budget category.** The user does not pick a category. A bulk return may span original categories; Ledger writes one Purchase per category in the same atomic batch.
 - **Restores the recorded amount.** When an item enters inventory from a project, Ledger stores an immutable per-item snapshot of the movement transaction, project, category, price, and tax-inclusive amount. Return to Project uses that snapshot even if mutable item pricing later changes.
@@ -91,6 +91,8 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 - **Creates destination Purchase transaction(s).** See [sale-transactions.md](sale-transactions.md). These restore the original project-budget charge; they are not user-configured sales.
 - **Sets `budgetCategoryId`** on each item to its recorded original category. The category is now part of the item's identity in the restored project.
 - **Sign convention:** budget impact is `+1 * amountCents` on the destination project.
+
+An inventory-originated item that was sold to a project and then returned home is ordinary inventory again. Its current Return transaction must not surface Return to Project; its next project movement uses the configurable Sell flow.
 
 Before collection, the entire Purchase may be reclassified to another project-enabled itemized category through a dedicated atomic correction. The Purchase and its currently attached items change together. Departed items, downstream movements, amounts, prices, and the original vendor Purchase do not change. Collection locks the normal correction because invoice settlement accounting has already been categorized.
 
@@ -121,7 +123,7 @@ What changes:
 - **Items in inventory have no category badge.** UI components that previously displayed a category for inventory items should hide the badge when `projectId == null`.
 - **Inventory item filters by category** are removed. There's no category to filter by.
 - **The project-context "Return to Inventory" action** is only for items that originally came from inventory. Project-originated items use **Sell → Business Inventory** and create a Sale-to-Inventory transaction.
-- **A proven inventory-context reverse action is "Return to Project," not "Sell."** It creates the same destination Purchase-from-inventory accounting record because the item and its charge are entering the project's budget again. The project, category, and amount are resolved from the current project-scoped Return or Sale-to-Inventory movement and cannot be changed in the return flow.
+- **A proven Sale-to-Inventory reverse action is "Return to Project," not "Sell."** It creates the same destination Purchase-from-inventory accounting record because the project-originated item and its charge are entering the source project's budget again. The project, category, and amount are resolved from the current project-scoped Sale-to-Inventory movement and cannot be changed in the return flow. A current Return indicates an inventory-originated item came home and should show Sell.
 - **Transaction lists group inventory movement records visually.** Inventory acquisitions, inventory-to-project Sales, Sale-to-Inventory records, and return-to-inventory records can render as expandable grouped rows. The grouped row is not a transaction and is never written to Firestore; it exists only to keep one-off inventory movements readable in the UI. Expanding the row reveals the underlying child transactions.
 
 ### Transaction List Grouping Rules

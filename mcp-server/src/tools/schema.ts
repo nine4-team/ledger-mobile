@@ -81,7 +81,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     notes: [
       "Invariant: (projectId == null) ↔ (budgetCategoryId == null). Enforced on write.",
       "Items in business inventory have no budget category.",
-      "Inventory items with active project-egress provenance must use return_items_from_inventory_to_project; generic inventory sale is rejected for them.",
+      "Project-originated inventory items held through an active Sale-to-Inventory acquisition must use return_items_from_inventory_to_project. Items that came home through Return use the ordinary inventory sale flow.",
       "Copy-name invariant: quantity expansion, receipt/inventory reconstruction, and duplication preserve the source name exactly on every physical item document. Do not append unit counts, copy/duplicate labels, parenthetical numbers, or any other differentiator. Different names require an explicit user name or source evidence for individually named units.",
       "Inventory movements update existing item documents in place and never rename them.",
       "An item may contain legacy/shared image URLs outside its own Storage namespace. Removing those references never deletes the source object.",
