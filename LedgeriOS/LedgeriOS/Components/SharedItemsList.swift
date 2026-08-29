@@ -34,7 +34,6 @@ struct SharedItemsList: View {
     var photoMatchActionTitle: ((Item) -> String?)?
     var photoMatchTargetItemId: String?
     var onPhotoMatchPress: ((Item) -> Void)?
-    var forceIndividualItems: Bool = false
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -197,7 +196,7 @@ struct SharedItemsList: View {
     }
 
     private var showGrouped: Bool {
-        !forceIndividualItems && ListFilterSortCalculations.shouldShowGrouped(groups)
+        ListFilterSortCalculations.shouldShowGrouped(groups)
     }
 
     private var allVisibleIds: [String] {

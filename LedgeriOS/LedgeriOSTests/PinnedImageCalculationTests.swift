@@ -81,6 +81,25 @@ struct PinnedImageCalculationTests {
         ])
     }
 
+    @Test("clear all removes marks without removing attachments")
+    func clearAllPreservesAttachments() {
+        let attachments = [
+            AttachmentRef(
+                url: "one",
+                checkmarks: [ImageCheckmark(id: "m1", x: 0.1, y: 0.2, itemId: "item1")]
+            ),
+            AttachmentRef(
+                url: "two",
+                checkmarks: [ImageCheckmark(id: "legacy", x: 0.3, y: 0.4)]
+            ),
+        ]
+
+        let updated = PinnedImageCalculations.clearingCheckmarks(from: attachments)
+
+        #expect(updated.map(\.url) == ["one", "two"])
+        #expect(updated.allSatisfy { $0.checkmarks == nil })
+    }
+
     // MARK: - Checkmark calibration
 
     @Test("Portrait image tap renders at the same point")
@@ -136,6 +155,41 @@ struct PinnedImageCalculationTests {
         )
 
         #expect(normalized == CGPoint(x: 0, y: 1))
+    }
+
+    @Test("zoom and pan transforms round-trip photo points")
+    func zoomPanPointRoundTrips() throws {
+        let imageRect = CGRect(x: 20, y: 60, width: 350, height: 200)
+        let original = CGPoint(x: 284, y: 127)
+        let offset = CGSize(width: -48, height: 35)
+        let rendered = PinnedImageCalculations.zoomedPoint(
+            for: original,
+            imageRect: imageRect,
+            scale: 3.25,
+            offset: offset
+        )
+        let recovered = try #require(PinnedImageCalculations.unzoomedPoint(
+            for: rendered,
+            imageRect: imageRect,
+            scale: 3.25,
+            offset: offset
+        ))
+
+        #expect(abs(recovered.x - original.x) < 0.001)
+        #expect(abs(recovered.y - original.y) < 0.001)
+    }
+
+    @Test("pan clamps to scaled photo bounds")
+    func panClampsToPhotoBounds() {
+        let imageRect = CGRect(x: 0, y: 50, width: 400, height: 200)
+        let result = PinnedImageCalculations.clampedPanOffset(
+            CGSize(width: 900, height: -900),
+            imageRect: imageRect,
+            containerSize: CGSize(width: 400, height: 300),
+            scale: 2
+        )
+
+        #expect(result == CGSize(width: 200, height: -50))
     }
 
     // MARK: - clampedFraction

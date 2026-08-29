@@ -16,12 +16,17 @@ struct PinnedImagePanel: View {
     var onToggleItemMatching: (() -> Void)?
     var onCancelPendingItemMatch: (() -> Void)?
     var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)?
+    var itemNameForId: ((String) -> String?)?
+    var onMoveItemCheckmark: ((String) -> Void)?
+    var onClearAllCheckmarks: (() -> Void)?
 
     @State private var zoomScale: CGFloat = 1.0
     @State private var currentIndex: Int = 0
     @State private var pdfDocument: PDFDocument?
     @State private var isPDFLoading = false
     @State private var localCheckmarksByURL: [String: [ImageCheckmark]] = [:]
+    @State private var selectedCheckmark: ImageCheckmark?
+    @State private var showClearAllConfirmation = false
 
     private var currentAttachment: AttachmentRef {
         allImages.indices.contains(currentIndex) ? allImages[currentIndex] : attachment
@@ -29,6 +34,12 @@ struct PinnedImagePanel: View {
 
     private var currentCheckmarks: [ImageCheckmark] {
         localCheckmarksByURL[currentAttachment.url] ?? currentAttachment.checkmarks ?? []
+    }
+
+    private var hasAnyCheckmarks: Bool {
+        allImages.contains { image in
+            !(localCheckmarksByURL[image.url] ?? image.checkmarks ?? []).isEmpty
+        }
     }
 
     var body: some View {
@@ -41,9 +52,8 @@ struct PinnedImagePanel: View {
                 ImageCheckmarkEditor(
                     attachment: currentAttachment,
                     checkmarks: currentCheckmarks,
-                    isEditing: isMatchingItems,
                     pendingItemId: pendingItemId,
-                    onChange: updateCheckmarks,
+                    onSelect: { selectedCheckmark = $0 },
                     onPlace: { itemId, point in
                         onPlaceItemCheckmark?(currentAttachment, itemId, point)
                     }
@@ -61,6 +71,9 @@ struct PinnedImagePanel: View {
                 HStack {
                     if currentAttachment.kind == .image, onToggleItemMatching != nil {
                         matchItemsButton
+                        if isMatchingItems, hasAnyCheckmarks {
+                            checkmarkActionsMenu
+                        }
                     }
                     Spacer()
                     closeButton
@@ -80,12 +93,25 @@ struct PinnedImagePanel: View {
                 .padding(.horizontal, Spacing.md)
             }
 
+            if let selectedCheckmark {
+                VStack {
+                    Spacer()
+                    checkmarkInspector(for: selectedCheckmark)
+                        .padding(.bottom, allImages.count > 1 ? 58 : Spacing.sm)
+                }
+                .padding(.horizontal, Spacing.md)
+            }
+
             // Image counter — bottom center
             if allImages.count > 1 {
                 VStack {
                     Spacer()
-                    imageCounter
-                        .padding(.bottom, Spacing.sm)
+                    HStack {
+                        imageCounter
+                        Spacer()
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.bottom, Spacing.sm)
                 }
             }
         }
@@ -98,6 +124,7 @@ struct PinnedImagePanel: View {
             currentIndex = allImages.firstIndex(where: { $0.url == newURL }) ?? 0
         }
         .onChange(of: currentAttachment.url) {
+            selectedCheckmark = nil
             if currentAttachment.kind == .pdf {
                 Task { await loadPDF() }
             }
@@ -110,8 +137,22 @@ struct PinnedImagePanel: View {
                 await loadPDF()
             }
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(currentAttachment.kind == .pdf ? "Pinned reference document" : "Pinned reference image")
+        .confirmationDialog(
+            "Clear all photo checkmarks?",
+            isPresented: $showClearAllConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Clear all checkmarks", role: .destructive) {
+                for image in allImages {
+                    localCheckmarksByURL[image.url] = []
+                }
+                selectedCheckmark = nil
+                onClearAllCheckmarks?()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes every checkmark from this space's photos. Items and space completion will not change.")
+        }
     }
 
     // MARK: - PDF Content
@@ -174,6 +215,22 @@ struct PinnedImagePanel: View {
             : "Show item matching controls")
     }
 
+    private var checkmarkActionsMenu: some View {
+        Menu {
+            Button("Clear all checkmarks", role: .destructive) {
+                showClearAllConfirmation = true
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.headline)
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(.black.opacity(0.6))
+                .clipShape(Circle())
+        }
+        .accessibilityLabel("Photo checkmark actions")
+    }
+
     private var matchingInstruction: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: pendingItemId == nil ? "list.bullet" : "hand.tap")
@@ -202,6 +259,55 @@ struct PinnedImagePanel: View {
     private func updateCheckmarks(_ checkmarks: [ImageCheckmark]) {
         localCheckmarksByURL[currentAttachment.url] = checkmarks
         onUpdateCheckmarks?(currentAttachment, checkmarks)
+    }
+
+    private func checkmarkInspector(for mark: ImageCheckmark) -> some View {
+        HStack(spacing: Spacing.sm) {
+            Image(systemName: "checkmark")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(.green)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Marked item")
+                    .font(Typography.caption)
+                    .foregroundStyle(.white.opacity(0.7))
+                Text(mark.itemId.flatMap { itemNameForId?($0) } ?? "Unlinked checkmark")
+                    .font(Typography.label)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 0)
+
+            if let itemId = mark.itemId, itemNameForId?(itemId) != nil {
+                Button("Move") {
+                    selectedCheckmark = nil
+                    onMoveItemCheckmark?(itemId)
+                }
+                .font(Typography.label)
+                .foregroundStyle(.white)
+            }
+
+            Button("Remove", role: .destructive) {
+                updateCheckmarks(currentCheckmarks.filter { $0.id != mark.id })
+                selectedCheckmark = nil
+            }
+            .font(Typography.label)
+            .foregroundStyle(.red)
+
+            Button {
+                selectedCheckmark = nil
+            } label: {
+                Image(systemName: "xmark")
+                    .foregroundStyle(.white.opacity(0.8))
+                    .frame(width: 28, height: 28)
+            }
+            .accessibilityLabel("Close checkmark details")
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(.black.opacity(0.86))
+        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
     }
 
     private var closeButton: some View {
@@ -259,16 +365,20 @@ struct PinnedImagePanel: View {
 private struct ImageCheckmarkEditor: View {
     let attachment: AttachmentRef
     let checkmarks: [ImageCheckmark]
-    let isEditing: Bool
     let pendingItemId: String?
-    let onChange: ([ImageCheckmark]) -> Void
+    let onSelect: (ImageCheckmark) -> Void
     let onPlace: (String, CGPoint) -> Void
 
     @State private var image: PlatformImage?
     @State private var isLoading = false
     @State private var loadFailed = false
+    @State private var zoomScale: CGFloat = 1
+    @State private var panOffset: CGSize = .zero
+    @GestureState private var gestureMagnification: CGFloat = 1
+    @GestureState private var gestureTranslation: CGSize = .zero
 
     private let coordinateSpaceName = "image-checkmark-editor"
+    private let maximumZoomScale: CGFloat = 5
 
     var body: some View {
         GeometryReader { geometry in
@@ -277,25 +387,40 @@ private struct ImageCheckmarkEditor: View {
                     imageSize: image.size,
                     in: geometry.size
                 )
+                let effectiveScale = clampedZoomScale(zoomScale * gestureMagnification)
+                let proposedOffset = CGSize(
+                    width: panOffset.width + gestureTranslation.width,
+                    height: panOffset.height + gestureTranslation.height
+                )
+                let effectiveOffset = PinnedImageCalculations.clampedPanOffset(
+                    proposedOffset,
+                    imageRect: imageRect,
+                    containerSize: geometry.size,
+                    scale: effectiveScale
+                )
                 ZStack(alignment: .topLeading) {
                     platformImage(image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: imageRect.width, height: imageRect.height)
                         .position(x: imageRect.midX, y: imageRect.midY)
+                        .scaleEffect(effectiveScale)
+                        .offset(effectiveOffset)
+                        .allowsHitTesting(false)
 
                     if let pendingItemId {
                         Color.clear
-                            .frame(width: imageRect.width, height: imageRect.height)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .contentShape(Rectangle())
-                            .position(x: imageRect.midX, y: imageRect.midY)
                             .gesture(
                                 SpatialTapGesture(coordinateSpace: .named(coordinateSpaceName))
                                     .onEnded { value in
                                         placeCheckmark(
                                             for: pendingItemId,
                                             at: value.location,
-                                            imageRect: imageRect
+                                            imageRect: imageRect,
+                                            scale: effectiveScale,
+                                            offset: effectiveOffset
                                         )
                                     }
                             )
@@ -303,29 +428,47 @@ private struct ImageCheckmarkEditor: View {
 
                     ForEach(checkmarks) { mark in
                         Button {
-                            guard isEditing else { return }
-                            onChange(checkmarks.filter { $0.id != mark.id })
+                            onSelect(mark)
                         } label: {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 26, weight: .bold))
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(.white, .green)
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 16, weight: .heavy))
+                                .foregroundStyle(.green)
                                 .shadow(color: .black.opacity(0.65), radius: 2)
                                 .frame(width: 44, height: 44)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .allowsHitTesting(isEditing)
                         .position(
-                            PinnedImageCalculations.renderedPoint(
-                                for: CGPoint(x: CGFloat(mark.x), y: CGFloat(mark.y)),
-                                in: imageRect
+                            PinnedImageCalculations.zoomedPoint(
+                                for: PinnedImageCalculations.renderedPoint(
+                                    for: CGPoint(x: CGFloat(mark.x), y: CGFloat(mark.y)),
+                                    in: imageRect
+                                ),
+                                imageRect: imageRect,
+                                scale: effectiveScale,
+                                offset: effectiveOffset
                             )
                         )
-                        .accessibilityLabel(isEditing ? "Remove checkmark" : "Checked item")
+                        .accessibilityLabel("Show checked item")
                     }
+
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            zoomControls(
+                                scale: effectiveScale,
+                                imageRect: imageRect,
+                                containerSize: geometry.size
+                            )
+                        }
+                    }
+                    .padding(Spacing.sm)
                 }
                 .coordinateSpace(name: coordinateSpaceName)
+                .clipped()
+                .simultaneousGesture(zoomGesture(imageRect: imageRect, containerSize: geometry.size))
+                .simultaneousGesture(panGesture(imageRect: imageRect, containerSize: geometry.size))
             } else if isLoading {
                 ProgressView().tint(.white)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -337,7 +480,10 @@ private struct ImageCheckmarkEditor: View {
             }
         }
         .task(id: attachment.url) { await loadImage() }
-        .accessibilityLabel(isEditing ? "Checkmark editor" : "Pinned image with checkmarks")
+        .onChange(of: attachment.url) {
+            zoomScale = 1
+            panOffset = .zero
+        }
     }
 
     @ViewBuilder
@@ -349,12 +495,114 @@ private struct ImageCheckmarkEditor: View {
         #endif
     }
 
-    private func placeCheckmark(for itemId: String, at point: CGPoint, imageRect: CGRect) {
-        guard let normalizedPoint = PinnedImageCalculations.normalizedImagePoint(
+    private func placeCheckmark(
+        for itemId: String,
+        at point: CGPoint,
+        imageRect: CGRect,
+        scale: CGFloat,
+        offset: CGSize
+    ) {
+        guard let unzoomedPoint = PinnedImageCalculations.unzoomedPoint(
             for: point,
+            imageRect: imageRect,
+            scale: scale,
+            offset: offset
+        ) else { return }
+        guard let normalizedPoint = PinnedImageCalculations.normalizedImagePoint(
+            for: unzoomedPoint,
             in: imageRect
         ) else { return }
         onPlace(itemId, normalizedPoint)
+    }
+
+    private func clampedZoomScale(_ scale: CGFloat) -> CGFloat {
+        Swift.min(maximumZoomScale, Swift.max(1, scale))
+    }
+
+    private func zoomGesture(imageRect: CGRect, containerSize: CGSize) -> some Gesture {
+        MagnificationGesture()
+            .updating($gestureMagnification) { value, state, _ in
+                state = value
+            }
+            .onEnded { value in
+                let nextScale = clampedZoomScale(zoomScale * value)
+                zoomScale = nextScale
+                panOffset = PinnedImageCalculations.clampedPanOffset(
+                    panOffset,
+                    imageRect: imageRect,
+                    containerSize: containerSize,
+                    scale: nextScale
+                )
+            }
+    }
+
+    private func panGesture(imageRect: CGRect, containerSize: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 8)
+            .updating($gestureTranslation) { value, state, _ in
+                guard zoomScale * gestureMagnification > 1 else { return }
+                state = value.translation
+            }
+            .onEnded { value in
+                guard zoomScale > 1 else {
+                    panOffset = .zero
+                    return
+                }
+                let proposed = CGSize(
+                    width: panOffset.width + value.translation.width,
+                    height: panOffset.height + value.translation.height
+                )
+                panOffset = PinnedImageCalculations.clampedPanOffset(
+                    proposed,
+                    imageRect: imageRect,
+                    containerSize: containerSize,
+                    scale: zoomScale
+                )
+            }
+    }
+
+    private func zoomControls(scale: CGFloat, imageRect: CGRect, containerSize: CGSize) -> some View {
+        HStack(spacing: 0) {
+            Button {
+                setZoom(scale - 0.75, imageRect: imageRect, containerSize: containerSize)
+            } label: {
+                Image(systemName: "minus")
+                    .frame(width: 40, height: 40)
+            }
+            .disabled(scale <= 1.01)
+            .accessibilityLabel("Zoom out")
+
+            Text("\(Int((scale * 100).rounded()))%")
+                .font(Typography.caption)
+                .frame(minWidth: 48)
+                .accessibilityLabel("Zoom level")
+
+            Button {
+                setZoom(scale + 0.75, imageRect: imageRect, containerSize: containerSize)
+            } label: {
+                Image(systemName: "plus")
+                    .frame(width: 40, height: 40)
+            }
+            .disabled(scale >= maximumZoomScale - 0.01)
+            .accessibilityLabel("Zoom in")
+        }
+        .foregroundStyle(.white)
+        .background(.black.opacity(0.68))
+        .clipShape(Capsule())
+    }
+
+    private func setZoom(_ requestedScale: CGFloat, imageRect: CGRect, containerSize: CGSize) {
+        let nextScale = clampedZoomScale(requestedScale)
+        withAnimation(.easeInOut(duration: 0.2)) {
+            zoomScale = nextScale
+            panOffset = nextScale == 1
+                ? .zero
+                : PinnedImageCalculations.clampedPanOffset(
+                    panOffset,
+                    imageRect: imageRect,
+                    containerSize: containerSize,
+                    scale: nextScale
+                )
+        }
     }
 
     @MainActor

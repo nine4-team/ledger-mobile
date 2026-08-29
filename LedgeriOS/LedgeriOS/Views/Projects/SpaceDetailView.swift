@@ -241,7 +241,10 @@ private struct SpaceDetailContentView: View {
             pendingItemName: pendingPhotoMatchItemName,
             onToggleItemMatching: toggleItemMatching,
             onCancelPendingItemMatch: { pendingPhotoMatchItemId = nil },
-            onPlaceItemCheckmark: placeItemCheckmark
+            onPlaceItemCheckmark: placeItemCheckmark,
+            itemNameForId: itemNameForPhotoCheckmark,
+            onMoveItemCheckmark: beginPhotoMatch,
+            onClearAllCheckmarks: clearAllPhotoCheckmarks
         ) {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -605,8 +608,7 @@ private struct SpaceDetailContentView: View {
                 return markedPhotoItemIds.contains(itemId) ? "Move checkmark" : "Mark in photo"
             },
             photoMatchTargetItemId: pendingPhotoMatchItemId,
-            onPhotoMatchPress: beginPhotoMatch,
-            forceIndividualItems: isMatchingItemsToPhoto
+            onPhotoMatchPress: beginPhotoMatch
         )
         .padding(.top, Spacing.xs)
     }
@@ -968,6 +970,17 @@ private struct SpaceDetailContentView: View {
         pendingPhotoMatchItemId = itemId
     }
 
+    private func beginPhotoMatch(itemId: String) {
+        guard isMatchingItemsToPhoto,
+              pinnedAttachment?.kind == .image,
+              spaceItems.contains(where: { $0.id == itemId }) else { return }
+        pendingPhotoMatchItemId = itemId
+    }
+
+    private func itemNameForPhotoCheckmark(itemId: String) -> String? {
+        spaceItems.first(where: { $0.id == itemId })?.displayName
+    }
+
     private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {
         ref.firestoreDictionary
     }
@@ -978,6 +991,16 @@ private struct SpaceDetailContentView: View {
         images[index].checkmarks = checkmarks.isEmpty ? nil : checkmarks
         pinnedImageSource = images.filter(PinnedImageCalculations.canPin)
         pinnedAttachment = images[index]
+        updateSpace(fields: ["images": images.map(attachmentDict)])
+    }
+
+    private func clearAllPhotoCheckmarks() {
+        let images = PinnedImageCalculations.clearingCheckmarks(from: liveSpace.images ?? [])
+        pinnedImageSource = images.filter(PinnedImageCalculations.canPin)
+        if let pinnedURL = pinnedAttachment?.url {
+            pinnedAttachment = images.first(where: { $0.url == pinnedURL })
+        }
+        pendingPhotoMatchItemId = nil
         updateSpace(fields: ["images": images.map(attachmentDict)])
     }
 

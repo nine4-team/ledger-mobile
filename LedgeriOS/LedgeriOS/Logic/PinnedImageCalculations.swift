@@ -53,6 +53,15 @@ enum PinnedImageCalculations {
         }
     }
 
+    /// Removes every photo checkmark while preserving the attachments themselves.
+    static func clearingCheckmarks(from attachments: [AttachmentRef]) -> [AttachmentRef] {
+        attachments.map { attachment in
+            var updated = attachment
+            updated.checkmarks = nil
+            return updated
+        }
+    }
+
     /// The image frame produced by aspect-fit inside a container.
     static func aspectFitRect(imageSize: CGSize, in containerSize: CGSize) -> CGRect {
         guard imageSize.width > 0, imageSize.height > 0,
@@ -90,6 +99,49 @@ enum PinnedImageCalculations {
         CGPoint(
             x: imageRect.minX + normalizedPoint.x * imageRect.width,
             y: imageRect.minY + normalizedPoint.y * imageRect.height
+        )
+    }
+
+    /// Applies the same center-based zoom and pan transform used by the photo editor.
+    static func zoomedPoint(
+        for point: CGPoint,
+        imageRect: CGRect,
+        scale: CGFloat,
+        offset: CGSize
+    ) -> CGPoint {
+        CGPoint(
+            x: imageRect.midX + (point.x - imageRect.midX) * scale + offset.width,
+            y: imageRect.midY + (point.y - imageRect.midY) * scale + offset.height
+        )
+    }
+
+    /// Reverses the photo editor's zoom and pan transform before normalizing a tap.
+    static func unzoomedPoint(
+        for point: CGPoint,
+        imageRect: CGRect,
+        scale: CGFloat,
+        offset: CGSize
+    ) -> CGPoint? {
+        guard scale > 0 else { return nil }
+        return CGPoint(
+            x: imageRect.midX + (point.x - imageRect.midX - offset.width) / scale,
+            y: imageRect.midY + (point.y - imageRect.midY - offset.height) / scale
+        )
+    }
+
+    /// Keeps the zoomed photo within reach while allowing free movement along an
+    /// axis only when the scaled image is larger than its viewport.
+    static func clampedPanOffset(
+        _ offset: CGSize,
+        imageRect: CGRect,
+        containerSize: CGSize,
+        scale: CGFloat
+    ) -> CGSize {
+        let maxX = Swift.max(0, (imageRect.width * scale - containerSize.width) / 2)
+        let maxY = Swift.max(0, (imageRect.height * scale - containerSize.height) / 2)
+        return CGSize(
+            width: Swift.min(Swift.max(offset.width, -maxX), maxX),
+            height: Swift.min(Swift.max(offset.height, -maxY), maxY)
         )
     }
 

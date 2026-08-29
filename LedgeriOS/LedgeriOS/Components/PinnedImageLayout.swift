@@ -17,6 +17,9 @@ struct PinnedImageLayout<Content: View>: View {
     var onToggleItemMatching: (() -> Void)? = nil
     var onCancelPendingItemMatch: (() -> Void)? = nil
     var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)? = nil
+    var itemNameForId: ((String) -> String?)? = nil
+    var onMoveItemCheckmark: ((String) -> Void)? = nil
+    var onClearAllCheckmarks: (() -> Void)? = nil
     @ViewBuilder let content: () -> Content
 
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -55,7 +58,10 @@ struct PinnedImageLayout<Content: View>: View {
                     pendingItemName: pendingItemName,
                     onToggleItemMatching: onToggleItemMatching,
                     onCancelPendingItemMatch: onCancelPendingItemMatch,
-                    onPlaceItemCheckmark: onPlaceItemCheckmark
+                    onPlaceItemCheckmark: onPlaceItemCheckmark,
+                    itemNameForId: itemNameForId,
+                    onMoveItemCheckmark: onMoveItemCheckmark,
+                    onClearAllCheckmarks: onClearAllCheckmarks
                 )
                 .frame(height: panelHeight)
                 .id(attachment.url)
@@ -89,7 +95,10 @@ struct PinnedImageLayout<Content: View>: View {
                     pendingItemName: pendingItemName,
                     onToggleItemMatching: onToggleItemMatching,
                     onCancelPendingItemMatch: onCancelPendingItemMatch,
-                    onPlaceItemCheckmark: onPlaceItemCheckmark
+                    onPlaceItemCheckmark: onPlaceItemCheckmark,
+                    itemNameForId: itemNameForId,
+                    onMoveItemCheckmark: onMoveItemCheckmark,
+                    onClearAllCheckmarks: onClearAllCheckmarks
                 )
                 .frame(width: sidebarWidth)
                 .id(attachment.url)
