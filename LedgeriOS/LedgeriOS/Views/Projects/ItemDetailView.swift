@@ -21,7 +21,7 @@ struct ItemDetailView: View {
     var body: some View {
         Group {
             if isContentReady {
-                ItemDetailContentView(
+                ItemDetailContextContainer(
                     itemId: itemId,
                     projectId: projectId,
                     initialItem: initialItem
@@ -37,6 +37,85 @@ struct ItemDetailView: View {
             guard !Task.isCancelled else { return }
             isContentReady = true
         }
+    }
+}
+
+/// Establishes the collection scope required by item detail.
+///
+/// A nested navigation destination can be resolved at the ancestor
+/// `NavigationStack`, outside a project context injected farther down the view
+/// tree. Reuse the ambient context when it matches the route; otherwise own and
+/// activate a context for the item's project. Inventory items use the session
+/// `InventoryContext` and do not need a project context.
+private struct ItemDetailContextContainer: View {
+    let itemId: String
+    let projectId: String?
+    let initialItem: Item?
+
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
+    @Environment(ProjectContext.self) private var ambientProjectContext
+    @State private var scopedProjectContext: ProjectContext
+
+    init(itemId: String, projectId: String?, initialItem: Item?) {
+        self.itemId = itemId
+        self.projectId = projectId
+        self.initialItem = initialItem
+        _scopedProjectContext = State(initialValue: ProjectContext(
+            projectService: ProjectService(),
+            transactionsService: TransactionsService(),
+            itemsService: ItemsService(),
+            protoItemsService: ProtoItemsService(),
+            spacesService: SpacesService(),
+            projectBudgetCategoriesService: ProjectBudgetCategoriesService()
+        ))
+    }
+
+    var body: some View {
+        if let projectId, ambientProjectContext.currentProjectId != projectId {
+            detail
+                .environment(scopedProjectContext)
+                .task(id: activationKey(projectId: projectId)) {
+                    guard let accountId = accountContext.currentAccountId else { return }
+                    scopedProjectContext.activate(
+                        accountId: accountId,
+                        projectId: projectId,
+                        userId: authManager.currentUser?.uid,
+                        member: accountContext.member,
+                        rawBudgetCategories: accountContext.rawAllBudgetCategories
+                    )
+                }
+                .onChange(of: accountContext.member) { _, member in
+                    scopedProjectContext.updateFinancialContext(
+                        member: member,
+                        rawBudgetCategories: accountContext.rawAllBudgetCategories
+                    )
+                }
+                .onChange(of: accountContext.rawAllBudgetCategories) { _, categories in
+                    scopedProjectContext.updateFinancialContext(
+                        member: accountContext.member,
+                        rawBudgetCategories: categories
+                    )
+                }
+        } else {
+            detail
+        }
+    }
+
+    private var detail: some View {
+        ItemDetailContentView(
+            itemId: itemId,
+            projectId: projectId,
+            initialItem: initialItem
+        )
+    }
+
+    private func activationKey(projectId: String) -> String {
+        [
+            accountContext.currentAccountId ?? "",
+            projectId,
+            authManager.currentUser?.uid ?? "",
+        ].joined(separator: "|")
     }
 }
 
@@ -224,7 +303,7 @@ private struct ItemDetailContentView: View {
         // Set Space
         .adaptivePresentation(isPresented: $showSetSpace, style: .picker) {
             SetSpaceModal(
-                spaces: projectContext.spaces,
+                spaces: scopedSpaces,
                 currentSpaceId: liveItem.spaceId,
                 onSelect: { space in
                     let fields: [String: Any] = space != nil ? ["spaceId": space!.id ?? ""] : ["spaceId": NSNull()]
@@ -785,17 +864,20 @@ private struct ItemDetailContentView: View {
 
     private var linkedSpace: Space? {
         guard let spaceId = liveItem.spaceId else { return nil }
-        let scopedSpaces = liveItem.projectId == nil ? inventoryContext.spaces : projectContext.spaces
         return scopedSpaces.first(where: { $0.id == spaceId })
             ?? accountContext.allSpaces.first(where: { $0.id == spaceId })
     }
 
     private var spaceName: String {
         guard let spaceId = liveItem.spaceId else { return "None" }
-        let scopedSpaces = liveItem.projectId == nil ? inventoryContext.spaces : projectContext.spaces
         return scopedSpaces.first(where: { $0.id == spaceId })?.name
             ?? accountContext.allSpaces.first(where: { $0.id == spaceId })?.name
             ?? "None"
+    }
+
+    private var scopedSpaces: [Space] {
+        let spaces = projectId == nil ? inventoryContext.spaces : projectContext.spaces
+        return spaces.filter { $0.projectId == projectId }
     }
 
     // MARK: - Image Management
