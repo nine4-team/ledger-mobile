@@ -249,8 +249,10 @@ private struct SpaceDetailContentView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     AdaptiveContentWidth {
-                        VStack(alignment: .leading, spacing: Spacing.lg) {
-                            sectionsArea
+                        LazyVStack(alignment: .leading, spacing: Spacing.lg, pinnedViews: [.sectionHeaders]) {
+                            spaceOverviewSection
+                            itemsSection
+                            checklistsSection
                         }
                         .padding(.horizontal, Spacing.screenPadding)
                         .padding(.vertical, Spacing.sm)
@@ -446,7 +448,7 @@ private struct SpaceDetailContentView: View {
 
     // MARK: - Collapsible Sections
 
-    private var sectionsArea: some View {
+    private var spaceOverviewSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             completionControl
 
@@ -454,10 +456,21 @@ private struct SpaceDetailContentView: View {
                 .padding(.vertical, Spacing.xs)
 
             mediaSection
+        }
+        .cardStyle()
+    }
 
-            Divider()
-                .padding(.vertical, Spacing.xs)
+    @ViewBuilder
+    private var itemsSection: some View {
+        if isItemsExpanded {
+            itemsContent
+        } else {
+            pinnedItemsHeader
+        }
+    }
 
+    private var pinnedItemsHeader: some View {
+        VStack(alignment: .leading, spacing: 0) {
             CollapsibleSection(
                 title: "NOTES",
                 isExpanded: $isNotesExpanded,
@@ -469,26 +482,47 @@ private struct SpaceDetailContentView: View {
             Divider()
                 .padding(.vertical, Spacing.xs)
 
-            CollapsibleSection(
-                title: "ITEMS",
-                isExpanded: $isItemsExpanded,
-                badge: "\(spaceItems.count)",
-                badgeColor: BrandColors.primary
-            ) {
-                itemsContent
-            }
+            itemsSectionHeader
+        }
+        .cardStyle()
+    }
 
-            Divider()
-                .padding(.vertical, Spacing.xs)
-
-            CollapsibleSection(
-                title: "CHECKLISTS",
-                isExpanded: $isChecklistsExpanded,
-                badge: "\(liveSpace.checklists?.count ?? 0)",
-                onEdit: { showEditChecklists = true }
-            ) {
-                checklistsContent
+    private var itemsSectionHeader: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                isItemsExpanded.toggle()
             }
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundStyle(BrandColors.textTertiary)
+                    .rotationEffect(.degrees(isItemsExpanded ? 90 : 0))
+                    .animation(.easeInOut(duration: 0.25), value: isItemsExpanded)
+
+                Text("ITEMS")
+                    .sectionLabelStyle()
+
+                Text("\(spaceItems.count)")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.primary)
+
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var checklistsSection: some View {
+        CollapsibleSection(
+            title: "CHECKLISTS",
+            isExpanded: $isChecklistsExpanded,
+            badge: "\(liveSpace.checklists?.count ?? 0)",
+            onEdit: { showEditChecklists = true }
+        ) {
+            checklistsContent
         }
         .cardStyle()
     }
@@ -597,6 +631,7 @@ private struct SpaceDetailContentView: View {
                 budgetCategories: projectId == nil ? [] : projectContext.budgetCategories
             ),
             inline: true,
+            inlineSectionHeader: AnyView(pinnedItemsHeader),
             isItemMarkedInPhoto: { item in
                 guard let itemId = item.id else { return false }
                 return markedPhotoItemIds.contains(itemId)
@@ -611,7 +646,6 @@ private struct SpaceDetailContentView: View {
             onPhotoMatchPress: beginPhotoMatch,
             showsGroupExpansionControl: isMatchingItemsToPhoto
         )
-        .padding(.top, Spacing.xs)
     }
 
     private func spaceItemMenuItems(for item: Item) -> [ActionMenuItem] {
