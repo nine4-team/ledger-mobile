@@ -400,6 +400,26 @@ struct ModelCodableTests {
         #expect(decoded.checkmarks == [ImageCheckmark(id: "mark1", x: 0.2, y: 0.8, itemId: "item1")])
     }
 
+    @Test("AttachmentRef multi-item checkmarks round-trip with a legacy item ID")
+    func attachmentRefMultiItemCheckmarks() throws {
+        let mark = ImageCheckmark(
+            id: "bouquet",
+            x: 0.2,
+            y: 0.8,
+            itemId: "stem1",
+            itemIds: ["stem1", "stem2", "stem3"]
+        )
+        let ref = AttachmentRef(url: "https://example.com/room.jpg", checkmarks: [mark])
+        let data = try JSONEncoder().encode(ref)
+        let decoded = try JSONDecoder().decode(AttachmentRef.self, from: data)
+
+        #expect(decoded.checkmarks?.first?.linkedItemIds == ["stem1", "stem2", "stem3"])
+        let dictionary = ref.firestoreDictionary
+        let marks = dictionary["checkmarks"] as? [[String: Any]]
+        #expect(marks?.first?["itemId"] as? String == "stem1")
+        #expect(marks?.first?["itemIds"] as? [String] == ["stem1", "stem2", "stem3"])
+    }
+
     // MARK: - Enums (JSON round-trip — no Firebase wrappers)
 
     @Test("InventorySaleDirection uses snake_case raw values")

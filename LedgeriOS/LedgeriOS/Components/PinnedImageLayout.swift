@@ -14,11 +14,16 @@ struct PinnedImageLayout<Content: View>: View {
     var isMatchingItems: Bool = false
     var pendingItemId: String? = nil
     var pendingItemName: String? = nil
+    var groupPlacementSession: PhotoCheckmarkPlacementSession? = nil
     var onToggleItemMatching: (() -> Void)? = nil
     var onCancelPendingItemMatch: (() -> Void)? = nil
     var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)? = nil
+    var onPlaceGroupCheckmark: ((AttachmentRef, CGPoint) -> Void)? = nil
+    var onSaveGroupCheckmarks: (() -> Void)? = nil
+    var onRedoGroupCheckmarks: (() -> Void)? = nil
     var itemNameForId: ((String) -> String?)? = nil
-    var onMoveItemCheckmark: ((String) -> Void)? = nil
+    var onMoveItemCheckmark: (([String]) -> Void)? = nil
+    var onReassignItemCheckmark: (([String]) -> Void)? = nil
     var onClearAllCheckmarks: (() -> Void)? = nil
     @ViewBuilder let content: () -> Content
 
@@ -56,11 +61,16 @@ struct PinnedImageLayout<Content: View>: View {
                     isMatchingItems: isMatchingItems,
                     pendingItemId: pendingItemId,
                     pendingItemName: pendingItemName,
+                    groupPlacementSession: groupPlacementSession,
                     onToggleItemMatching: onToggleItemMatching,
                     onCancelPendingItemMatch: onCancelPendingItemMatch,
                     onPlaceItemCheckmark: onPlaceItemCheckmark,
+                    onPlaceGroupCheckmark: onPlaceGroupCheckmark,
+                    onSaveGroupCheckmarks: onSaveGroupCheckmarks,
+                    onRedoGroupCheckmarks: onRedoGroupCheckmarks,
                     itemNameForId: itemNameForId,
                     onMoveItemCheckmark: onMoveItemCheckmark,
+                    onReassignItemCheckmark: onReassignItemCheckmark,
                     onClearAllCheckmarks: onClearAllCheckmarks
                 )
                 .frame(height: panelHeight)
@@ -93,11 +103,16 @@ struct PinnedImageLayout<Content: View>: View {
                     isMatchingItems: isMatchingItems,
                     pendingItemId: pendingItemId,
                     pendingItemName: pendingItemName,
+                    groupPlacementSession: groupPlacementSession,
                     onToggleItemMatching: onToggleItemMatching,
                     onCancelPendingItemMatch: onCancelPendingItemMatch,
                     onPlaceItemCheckmark: onPlaceItemCheckmark,
+                    onPlaceGroupCheckmark: onPlaceGroupCheckmark,
+                    onSaveGroupCheckmarks: onSaveGroupCheckmarks,
+                    onRedoGroupCheckmarks: onRedoGroupCheckmarks,
                     itemNameForId: itemNameForId,
                     onMoveItemCheckmark: onMoveItemCheckmark,
+                    onReassignItemCheckmark: onReassignItemCheckmark,
                     onClearAllCheckmarks: onClearAllCheckmarks
                 )
                 .frame(width: sidebarWidth)

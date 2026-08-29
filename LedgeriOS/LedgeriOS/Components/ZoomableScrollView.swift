@@ -6,6 +6,8 @@ struct ZoomableImageAnnotation: Equatable, Identifiable {
     let id: String
     let point: CGPoint
     var isHighlighted: Bool = false
+    var quantityLabel: String?
+    var accessibilityLabel: String = "Show checked item"
 }
 
 enum ZoomableImageLoader {
@@ -31,6 +33,21 @@ import UIKit
 private final class AccessibleAnnotationImageView: UIImageView {
     var annotationID = ""
     var onActivate: ((String) -> Void)?
+    let quantityBadge = UILabel()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        quantityBadge.textAlignment = .center
+        quantityBadge.textColor = .white
+        quantityBadge.backgroundColor = .systemGreen
+        quantityBadge.clipsToBounds = true
+        quantityBadge.isHidden = true
+        addSubview(quantityBadge)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func accessibilityActivate() -> Bool {
         onActivate?(annotationID)
@@ -283,9 +300,8 @@ struct ZoomableScrollView: UIViewRepresentable {
                     annotationView = existing
                 } else {
                     let configuration = UIImage.SymbolConfiguration(pointSize: 16, weight: .heavy)
-                    annotationView = AccessibleAnnotationImageView(
-                        image: UIImage(systemName: "checkmark", withConfiguration: configuration)
-                    )
+                    annotationView = AccessibleAnnotationImageView(frame: .zero)
+                    annotationView.image = UIImage(systemName: "checkmark", withConfiguration: configuration)
                     annotationView.contentMode = .scaleAspectFit
                     annotationView.isAccessibilityElement = true
                     annotationView.accessibilityLabel = "Show checked item"
@@ -299,6 +315,10 @@ struct ZoomableScrollView: UIViewRepresentable {
                     annotationViews[annotation.id] = annotationView
                 }
                 annotationView.tintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                annotationView.quantityBadge.text = annotation.quantityLabel
+                annotationView.quantityBadge.isHidden = annotation.quantityLabel == nil
+                annotationView.quantityBadge.backgroundColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                annotationView.accessibilityLabel = annotation.accessibilityLabel
                 annotationView.isAccessibilityElement = parent.annotationSelectionEnabled
             }
 
@@ -318,6 +338,18 @@ struct ZoomableScrollView: UIViewRepresentable {
                     for: annotation.point,
                     in: imageView.bounds
                 )
+                let badgeHeight = 18 / scrollView.zoomScale
+                annotationView.quantityBadge.font = .systemFont(
+                    ofSize: 11 / scrollView.zoomScale,
+                    weight: .bold
+                )
+                annotationView.quantityBadge.frame = CGRect(
+                    x: markerSize * 0.68,
+                    y: -1 / scrollView.zoomScale,
+                    width: 22 / scrollView.zoomScale,
+                    height: badgeHeight
+                )
+                annotationView.quantityBadge.layer.cornerRadius = badgeHeight / 2
             }
         }
 
@@ -467,6 +499,24 @@ import AppKit
 private final class AccessibleAnnotationNSImageView: NSImageView {
     var annotationID = ""
     var onActivate: ((String) -> Void)?
+    let quantityBadge = NSTextField(labelWithString: "")
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        quantityBadge.alignment = .center
+        quantityBadge.textColor = .white
+        quantityBadge.isBordered = false
+        quantityBadge.isEditable = false
+        quantityBadge.drawsBackground = true
+        quantityBadge.backgroundColor = .systemGreen
+        quantityBadge.wantsLayer = true
+        quantityBadge.isHidden = true
+        addSubview(quantityBadge)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func accessibilityPerformPress() -> Bool {
         onActivate?(annotationID)
@@ -716,7 +766,8 @@ struct ZoomableScrollView: NSViewRepresentable {
                     let configuration = NSImage.SymbolConfiguration(pointSize: 16, weight: .heavy)
                     let symbol = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Show checked item")?
                         .withSymbolConfiguration(configuration)
-                    annotationView = AccessibleAnnotationNSImageView(image: symbol ?? NSImage())
+                    annotationView = AccessibleAnnotationNSImageView(frame: .zero)
+                    annotationView.image = symbol ?? NSImage()
                     annotationView.imageScaling = .scaleProportionallyUpOrDown
                     annotationView.setAccessibilityElement(true)
                     annotationView.setAccessibilityRole(.button)
@@ -730,6 +781,10 @@ struct ZoomableScrollView: NSViewRepresentable {
                     annotationViews[annotation.id] = annotationView
                 }
                 annotationView.contentTintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                annotationView.quantityBadge.stringValue = annotation.quantityLabel ?? ""
+                annotationView.quantityBadge.isHidden = annotation.quantityLabel == nil
+                annotationView.quantityBadge.backgroundColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                annotationView.setAccessibilityLabel(annotation.accessibilityLabel)
                 annotationView.setAccessibilityElement(parent.annotationSelectionEnabled)
             }
 
@@ -754,6 +809,18 @@ struct ZoomableScrollView: NSViewRepresentable {
                     width: markerSize,
                     height: markerSize
                 )
+                let badgeHeight = 18 / scrollView.magnification
+                annotationView.quantityBadge.font = .systemFont(
+                    ofSize: 11 / scrollView.magnification,
+                    weight: .bold
+                )
+                annotationView.quantityBadge.frame = CGRect(
+                    x: markerSize * 0.68,
+                    y: markerSize - badgeHeight + (1 / scrollView.magnification),
+                    width: 22 / scrollView.magnification,
+                    height: badgeHeight
+                )
+                annotationView.quantityBadge.layer?.cornerRadius = badgeHeight / 2
             }
         }
 

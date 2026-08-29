@@ -96,6 +96,12 @@ private struct SpaceDetailContainerContent: View {
     }
 }
 
+private struct PhotoGroupAllocationRequest: Identifiable {
+    let id = UUID()
+    let itemName: String
+    let itemIds: [String]
+}
+
 private struct SpaceDetailContentView: View {
     let space: Space
     /// Navigation scope is immutable route context. Do not infer it from a
@@ -138,6 +144,8 @@ private struct SpaceDetailContentView: View {
     @State private var pinnedImageSource: [AttachmentRef] = []
     @State private var isMatchingItemsToPhoto = false
     @State private var pendingPhotoMatchItemId: String?
+    @State private var photoGroupAllocationRequest: PhotoGroupAllocationRequest?
+    @State private var photoPlacementSession: PhotoCheckmarkPlacementSession?
 
     // Items picker
     @State private var showAddExistingItems = false
@@ -195,6 +203,13 @@ private struct SpaceDetailContentView: View {
         PinnedImageCalculations.markedItemIds(in: liveSpace.images ?? [])
     }
 
+    private var photoCheckProgress: PhotoCheckProgress {
+        PinnedImageCalculations.photoCheckProgress(
+            itemIds: Set(spaceItems.compactMap(\.id)),
+            attachments: liveSpace.images ?? []
+        )
+    }
+
     private var pendingPhotoMatchItemName: String? {
         guard let pendingPhotoMatchItemId else { return nil }
         return spaceItems.first(where: { $0.id == pendingPhotoMatchItemId })?.displayName
@@ -239,11 +254,16 @@ private struct SpaceDetailContentView: View {
             isMatchingItems: isMatchingItemsToPhoto,
             pendingItemId: pendingPhotoMatchItemId,
             pendingItemName: pendingPhotoMatchItemName,
+            groupPlacementSession: photoPlacementSession,
             onToggleItemMatching: toggleItemMatching,
-            onCancelPendingItemMatch: { pendingPhotoMatchItemId = nil },
+            onCancelPendingItemMatch: cancelPendingPhotoPlacement,
             onPlaceItemCheckmark: placeItemCheckmark,
+            onPlaceGroupCheckmark: placeGroupCheckmarkDraft,
+            onSaveGroupCheckmarks: saveGroupCheckmarks,
+            onRedoGroupCheckmarks: redoGroupCheckmarks,
             itemNameForId: itemNameForPhotoCheckmark,
-            onMoveItemCheckmark: beginPhotoMatch,
+            onMoveItemCheckmark: movePhotoCheckmark,
+            onReassignItemCheckmark: reassignPhotoCheckmark,
             onClearAllCheckmarks: clearAllPhotoCheckmarks
         ) {
             ScrollViewReader { proxy in
@@ -314,6 +334,15 @@ private struct SpaceDetailContentView: View {
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditSpaceDetailsModal(space: liveSpace) { name, notes in
                 updateSpace(fields: ["name": name, "notes": notes ?? NSNull()])
+            }
+        }
+        .sheet(item: $photoGroupAllocationRequest) { request in
+            PhotoCheckmarkAllocationSheet(request: request) { locationCount, firstLocationCount in
+                startPhotoGroupPlacement(
+                    request,
+                    locationCount: locationCount,
+                    firstLocationCount: firstLocationCount
+                )
             }
         }
         .adaptivePresentation(isPresented: $showEditNotes, style: .form) {
@@ -482,9 +511,72 @@ private struct SpaceDetailContentView: View {
             Divider()
                 .padding(.vertical, Spacing.xs)
 
+            if isMatchingItemsToPhoto {
+                photoCheckProgressBar
+
+                Divider()
+                    .padding(.vertical, Spacing.xs)
+            }
+
             itemsSectionHeader
         }
         .cardStyle()
+    }
+
+    private var photoCheckProgressBar: some View {
+        let progress = photoCheckProgress
+        let isEmpty = progress.totalCount == 0
+        let statusColor = progress.isComplete
+            ? StatusColors.metBarComplete
+            : BrandColors.primary
+
+        return HStack(alignment: .top, spacing: Spacing.sm) {
+            Image(systemName: progress.isComplete ? "checkmark.circle.fill" : "checkmark.circle")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(statusColor)
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                HStack(spacing: Spacing.sm) {
+                    Text(progress.isComplete ? "All items checked" : "Photo check progress")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textPrimary)
+
+                    Spacer(minLength: 0)
+
+                    Text("\(progress.checkedCount) of \(progress.totalCount)")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .monospacedDigit()
+                }
+
+                ProgressBar(
+                    percentage: progress.percentage,
+                    fillColor: statusColor,
+                    height: 5
+                )
+
+                Text(photoCheckProgressDescription(progress))
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+        }
+        .padding(.vertical, Spacing.xs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isEmpty
+            ? "Photo check progress. No items in this space."
+            : "Photo check progress. \(progress.checkedCount) of \(progress.totalCount) items checked. \(photoCheckProgressDescription(progress))")
+    }
+
+    private func photoCheckProgressDescription(_ progress: PhotoCheckProgress) -> String {
+        if progress.totalCount == 0 {
+            return "No items in this space"
+        }
+        if progress.isComplete {
+            return "Every item in this space has a photo checkmark"
+        }
+        return progress.remainingCount == 1
+            ? "1 item remaining"
+            : "\(progress.remainingCount) items remaining"
     }
 
     private var itemsSectionHeader: some View {
@@ -644,6 +736,8 @@ private struct SpaceDetailContentView: View {
             },
             photoMatchTargetItemId: pendingPhotoMatchItemId,
             onPhotoMatchPress: beginPhotoMatch,
+            photoMatchGroupActionTitle: photoMatchGroupActionTitle,
+            onPhotoMatchGroupPress: beginPhotoGroupMatch,
             showsGroupExpansionControl: isMatchingItemsToPhoto
         )
     }
@@ -974,17 +1068,21 @@ private struct SpaceDetailContentView: View {
         pinnedImageSource = (liveSpace.images ?? []).filter(PinnedImageCalculations.canPin)
         pinnedAttachment = attachment
         pendingPhotoMatchItemId = nil
+        photoPlacementSession = nil
     }
 
     private func closePinnedImage() {
         pinnedAttachment = nil
         isMatchingItemsToPhoto = false
         pendingPhotoMatchItemId = nil
+        photoGroupAllocationRequest = nil
+        photoPlacementSession = nil
     }
 
     private func changePinnedImage(_ attachment: AttachmentRef) {
         pinnedAttachment = attachment
         pendingPhotoMatchItemId = nil
+        photoPlacementSession = nil
         if attachment.kind != .image {
             isMatchingItemsToPhoto = false
         }
@@ -993,6 +1091,8 @@ private struct SpaceDetailContentView: View {
     private func toggleItemMatching() {
         isMatchingItemsToPhoto.toggle()
         pendingPhotoMatchItemId = nil
+        photoGroupAllocationRequest = nil
+        photoPlacementSession = nil
         if isMatchingItemsToPhoto {
             isItemsExpanded = true
         }
@@ -1003,6 +1103,7 @@ private struct SpaceDetailContentView: View {
               pinnedAttachment?.kind == .image,
               let itemId = item.id else { return }
         pendingPhotoMatchItemId = itemId
+        photoPlacementSession = nil
     }
 
     private func beginPhotoMatch(itemId: String) {
@@ -1010,6 +1111,123 @@ private struct SpaceDetailContentView: View {
               pinnedAttachment?.kind == .image,
               spaceItems.contains(where: { $0.id == itemId }) else { return }
         pendingPhotoMatchItemId = itemId
+        photoPlacementSession = nil
+    }
+
+    private func photoMatchGroupActionTitle(_ group: ItemGroup) -> String? {
+        guard isMatchingItemsToPhoto,
+              pinnedAttachment?.kind == .image else { return nil }
+        let allItemIds = group.items.compactMap(\.id)
+        guard allItemIds.count > 1 else { return nil }
+        let remainingCount = allItemIds.filter { !markedPhotoItemIds.contains($0) }.count
+        if remainingCount == 0 {
+            return "Redo \(allItemIds.count) photo matches"
+        }
+        if remainingCount == allItemIds.count {
+            return "Mark \(allItemIds.count) in photo"
+        }
+        return "Mark remaining \(remainingCount) in photo"
+    }
+
+    private func beginPhotoGroupMatch(_ group: ItemGroup) {
+        guard isMatchingItemsToPhoto,
+              pinnedAttachment?.kind == .image else { return }
+        let allItemIds = group.items.compactMap(\.id)
+        let remainingItemIds = allItemIds.filter { !markedPhotoItemIds.contains($0) }
+        let targetItemIds = remainingItemIds.isEmpty ? allItemIds : remainingItemIds
+        guard !targetItemIds.isEmpty else { return }
+        pendingPhotoMatchItemId = nil
+        photoPlacementSession = nil
+        photoGroupAllocationRequest = PhotoGroupAllocationRequest(
+            itemName: group.name,
+            itemIds: targetItemIds
+        )
+    }
+
+    private func startPhotoGroupPlacement(
+        _ request: PhotoGroupAllocationRequest,
+        locationCount: Int,
+        firstLocationCount: Int?
+    ) {
+        guard let attachmentURL = pinnedAttachment?.url else { return }
+        let assignments = PinnedImageCalculations.placementAssignments(
+            itemIds: request.itemIds,
+            locationCount: locationCount,
+            firstLocationCount: firstLocationCount
+        )
+        guard !assignments.isEmpty else { return }
+        pendingPhotoMatchItemId = nil
+        photoPlacementSession = PhotoCheckmarkPlacementSession(
+            attachmentURL: attachmentURL,
+            itemName: request.itemName,
+            assignments: assignments
+        )
+    }
+
+    private func placeGroupCheckmarkDraft(_ attachment: AttachmentRef, _ normalizedPoint: CGPoint) {
+        guard var session = photoPlacementSession,
+              session.attachmentURL == attachment.url,
+              !session.isReadyToSave else { return }
+        session.place(at: normalizedPoint)
+        photoPlacementSession = session
+    }
+
+    private func redoGroupCheckmarks() {
+        guard var session = photoPlacementSession else { return }
+        session.redo()
+        photoPlacementSession = session
+    }
+
+    private func saveGroupCheckmarks() {
+        guard let session = photoPlacementSession, session.isReadyToSave else { return }
+        let images = PinnedImageCalculations.placingCheckmarks(
+            assignments: session.assignments,
+            at: session.points,
+            in: session.attachmentURL,
+            attachments: liveSpace.images ?? []
+        )
+        pinnedImageSource = images.filter(PinnedImageCalculations.canPin)
+        pinnedAttachment = images.first(where: { $0.url == session.attachmentURL })
+        photoPlacementSession = nil
+        updateSpace(fields: ["images": images.map(attachmentDict)])
+    }
+
+    private func cancelPendingPhotoPlacement() {
+        pendingPhotoMatchItemId = nil
+        photoPlacementSession = nil
+    }
+
+    private func movePhotoCheckmark(itemIds: [String]) {
+        guard isMatchingItemsToPhoto,
+              let attachmentURL = pinnedAttachment?.url else { return }
+        let validItemIds = itemIds.filter { id in spaceItems.contains(where: { $0.id == id }) }
+        guard !validItemIds.isEmpty else { return }
+        pendingPhotoMatchItemId = nil
+        photoPlacementSession = PhotoCheckmarkPlacementSession(
+            attachmentURL: attachmentURL,
+            itemName: photoCheckmarkGroupName(for: validItemIds),
+            assignments: [validItemIds]
+        )
+    }
+
+    private func reassignPhotoCheckmark(itemIds: [String]) {
+        guard let firstItemId = itemIds.first else { return }
+        let group = ListFilterSortCalculations.groupItems(spaceItems).first { group in
+            group.items.contains(where: { $0.id == firstItemId })
+        }
+        let groupItemIds = group?.items.compactMap(\.id) ?? itemIds
+        photoPlacementSession = nil
+        pendingPhotoMatchItemId = nil
+        photoGroupAllocationRequest = PhotoGroupAllocationRequest(
+            itemName: group?.name ?? photoCheckmarkGroupName(for: itemIds),
+            itemIds: groupItemIds
+        )
+    }
+
+    private func photoCheckmarkGroupName(for itemIds: [String]) -> String {
+        let names = itemIds.compactMap { id in spaceItems.first(where: { $0.id == id })?.displayName }
+        let uniqueNames = Array(Set(names))
+        return uniqueNames.count == 1 ? uniqueNames[0] : "selected items"
     }
 
     private func itemNameForPhotoCheckmark(itemId: String) -> String? {
@@ -1036,6 +1254,7 @@ private struct SpaceDetailContentView: View {
             pinnedAttachment = images.first(where: { $0.url == pinnedURL })
         }
         pendingPhotoMatchItemId = nil
+        photoPlacementSession = nil
         updateSpace(fields: ["images": images.map(attachmentDict)])
     }
 
@@ -1085,4 +1304,67 @@ private struct SpaceDetailContentView: View {
         selectedItemIds.removeAll()
     }
 
+}
+
+private struct PhotoCheckmarkAllocationSheet: View {
+    let request: PhotoGroupAllocationRequest
+    let onContinue: (_ locationCount: Int, _ firstLocationCount: Int?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var locationCount = 1
+    @State private var firstLocationCount: Int
+
+    init(
+        request: PhotoGroupAllocationRequest,
+        onContinue: @escaping (_ locationCount: Int, _ firstLocationCount: Int?) -> Void
+    ) {
+        self.request = request
+        self.onContinue = onContinue
+        _firstLocationCount = State(initialValue: max((request.itemIds.count + 1) / 2, 1))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Choose how \(request.itemIds.count) \(request.itemName) will be represented in the pinned photo.")
+                        .foregroundStyle(BrandColors.textSecondary)
+
+                    Picker("Photo locations", selection: $locationCount) {
+                        Text("One location").tag(1)
+                        if request.itemIds.count > 1 {
+                            Text("Two locations").tag(2)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                if locationCount == 2 {
+                    Section("Items per location") {
+                        Stepper(
+                            "First checkmark: \(firstLocationCount)",
+                            value: $firstLocationCount,
+                            in: 1...(request.itemIds.count - 1)
+                        )
+                        LabeledContent(
+                            "Second checkmark",
+                            value: "\(request.itemIds.count - firstLocationCount)"
+                        )
+                    }
+                }
+            }
+            .navigationTitle("Mark in Photo")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Continue") {
+                        onContinue(locationCount, locationCount == 2 ? firstLocationCount : nil)
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
 }

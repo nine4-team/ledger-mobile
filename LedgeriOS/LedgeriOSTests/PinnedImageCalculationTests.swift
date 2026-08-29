@@ -24,6 +24,129 @@ struct PinnedImageCalculationTests {
         #expect(PinnedImageCalculations.markedItemIds(in: attachments) == ["item1", "item2"])
     }
 
+    @Test("multi-item marks contribute every linked item exactly once")
+    func markedItemIdsIncludeMultiItemMarks() {
+        let attachments = [AttachmentRef(
+            url: "one",
+            checkmarks: [
+                ImageCheckmark(
+                    id: "group",
+                    x: 0.1,
+                    y: 0.2,
+                    itemId: "item1",
+                    itemIds: ["item1", "item2", "item2", "item3"]
+                ),
+            ]
+        )]
+
+        #expect(PinnedImageCalculations.markedItemIds(in: attachments) == ["item1", "item2", "item3"])
+    }
+
+    @Test("placement assignments split evenly and allow an adjusted first location")
+    func placementAssignmentsSplitConcreteItems() {
+        let ids = (1...5).map { "item\($0)" }
+
+        #expect(PinnedImageCalculations.placementAssignments(
+            itemIds: ids,
+            locationCount: 1
+        ).map(\.count) == [5])
+        #expect(PinnedImageCalculations.placementAssignments(
+            itemIds: ids,
+            locationCount: 2
+        ).map(\.count) == [3, 2])
+        #expect(PinnedImageCalculations.placementAssignments(
+            itemIds: ids,
+            locationCount: 2,
+            firstLocationCount: 1
+        ).map(\.count) == [1, 4])
+    }
+
+    @Test("bulk placement writes two marks and removes prior links atomically")
+    func bulkPlacementReplacesPriorLinks() throws {
+        let attachments = [
+            AttachmentRef(
+                url: "old-photo",
+                checkmarks: [
+                    ImageCheckmark(id: "old", x: 0.1, y: 0.2, itemId: "item1"),
+                    ImageCheckmark(
+                        id: "mixed",
+                        x: 0.3,
+                        y: 0.4,
+                        itemId: "item2",
+                        itemIds: ["item2", "unrelated"]
+                    ),
+                ]
+            ),
+            AttachmentRef(url: "new-photo"),
+        ]
+
+        let updated = PinnedImageCalculations.placingCheckmarks(
+            assignments: [["item1", "item2"], ["item3", "item4"]],
+            at: [CGPoint(x: 0.2, y: 0.3), CGPoint(x: 0.8, y: 0.7)],
+            in: "new-photo",
+            attachments: attachments,
+            checkmarkIds: ["bouquet1", "bouquet2"]
+        )
+
+        let preserved = try #require(updated[0].checkmarks?.first)
+        #expect(preserved.id == "mixed")
+        #expect(preserved.linkedItemIds == ["unrelated"])
+        let newMarks = try #require(updated[1].checkmarks)
+        #expect(newMarks.map(\.id) == ["bouquet1", "bouquet2"])
+        #expect(newMarks.map(\.linkedItemIds) == [["item1", "item2"], ["item3", "item4"]])
+    }
+
+    @Test("photo check progress counts only current space items")
+    func photoCheckProgressIgnoresStaleAndUnassignedMarks() {
+        let attachments = [AttachmentRef(
+            url: "one",
+            checkmarks: [
+                ImageCheckmark(id: "current", x: 0.1, y: 0.2, itemId: "item1"),
+                ImageCheckmark(id: "stale", x: 0.3, y: 0.4, itemId: "moved-item"),
+                ImageCheckmark(id: "legacy", x: 0.5, y: 0.6),
+            ]
+        )]
+
+        let progress = PinnedImageCalculations.photoCheckProgress(
+            itemIds: ["item1", "item2", "item3"],
+            attachments: attachments
+        )
+
+        #expect(progress.checkedCount == 1)
+        #expect(progress.totalCount == 3)
+        #expect(progress.remainingCount == 2)
+        #expect(abs(progress.percentage - (100.0 / 3.0)) < 0.000_001)
+        #expect(!progress.isComplete)
+    }
+
+    @Test("photo check progress completes only when a nonempty space is fully checked")
+    func photoCheckProgressCompletion() {
+        let attachments = [AttachmentRef(
+            url: "one",
+            checkmarks: [
+                ImageCheckmark(id: "one", x: 0.1, y: 0.2, itemId: "item1"),
+                ImageCheckmark(id: "two", x: 0.3, y: 0.4, itemId: "item2"),
+            ]
+        )]
+
+        let complete = PinnedImageCalculations.photoCheckProgress(
+            itemIds: ["item1", "item2"],
+            attachments: attachments
+        )
+        let empty = PinnedImageCalculations.photoCheckProgress(
+            itemIds: [],
+            attachments: attachments
+        )
+
+        #expect(complete.remainingCount == 0)
+        #expect(complete.percentage == 100)
+        #expect(complete.isComplete)
+        #expect(empty.checkedCount == 0)
+        #expect(empty.totalCount == 0)
+        #expect(empty.percentage == 0)
+        #expect(!empty.isComplete)
+    }
+
     @Test("placing a mark moves the item from another photo instead of duplicating it")
     func placingMarkEnforcesOnePhotoPerItem() throws {
         let attachments = [
@@ -79,6 +202,28 @@ struct PinnedImageCalculationTests {
             ImageCheckmark(id: "kept", x: 0.3, y: 0.4, itemId: "item2"),
             ImageCheckmark(id: "legacy", x: 0.5, y: 0.6),
         ])
+    }
+
+    @Test("cleanup removes only the moved item from a multi-item mark")
+    func cleanupPreservesRemainingMultiItemLinks() throws {
+        let attachments = [AttachmentRef(
+            url: "one",
+            checkmarks: [ImageCheckmark(
+                id: "group",
+                x: 0.1,
+                y: 0.2,
+                itemId: "item1",
+                itemIds: ["item1", "item2", "item3"]
+            )]
+        )]
+
+        let updated = PinnedImageCalculations.removingCheckmarks(
+            for: ["item2"],
+            from: attachments
+        )
+
+        let mark = try #require(updated[0].checkmarks?.first)
+        #expect(mark.linkedItemIds == ["item1", "item3"])
     }
 
     @Test("clear all removes marks without removing attachments")

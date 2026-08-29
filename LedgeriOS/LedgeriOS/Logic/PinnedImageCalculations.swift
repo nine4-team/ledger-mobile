@@ -1,13 +1,87 @@
 import Foundation
 import CoreGraphics
 
+struct PhotoCheckProgress: Equatable {
+    let checkedCount: Int
+    let totalCount: Int
+
+    var remainingCount: Int {
+        max(totalCount - checkedCount, 0)
+    }
+
+    var percentage: Double {
+        guard totalCount > 0 else { return 0 }
+        return Double(checkedCount) / Double(totalCount) * 100
+    }
+
+    var isComplete: Bool {
+        totalCount > 0 && remainingCount == 0
+    }
+}
+
+struct PhotoCheckmarkPlacementSession: Equatable {
+    let attachmentURL: String
+    let itemName: String
+    let assignments: [[String]]
+    var points: [CGPoint] = []
+
+    var totalItemCount: Int { assignments.reduce(0) { $0 + $1.count } }
+    var nextLocationIndex: Int? { points.count < assignments.count ? points.count : nil }
+    var isReadyToSave: Bool { !assignments.isEmpty && points.count == assignments.count }
+
+    mutating func place(at point: CGPoint) {
+        guard points.count < assignments.count else { return }
+        points.append(point)
+    }
+
+    mutating func redo() {
+        points.removeAll()
+    }
+}
+
 enum PinnedImageCalculations {
 
     /// Item IDs that have a linked checkmark in any of the supplied attachments.
     static func markedItemIds(in attachments: [AttachmentRef]) -> Set<String> {
         Set(attachments.flatMap { attachment in
-            (attachment.checkmarks ?? []).compactMap(\.itemId)
+            (attachment.checkmarks ?? []).flatMap(\.linkedItemIds)
         })
+    }
+
+    /// Splits concrete item IDs across one or two photo locations. The default
+    /// two-location split puts the extra item in the first location.
+    static func placementAssignments(
+        itemIds: [String],
+        locationCount: Int,
+        firstLocationCount: Int? = nil
+    ) -> [[String]] {
+        var seen: Set<String> = []
+        let uniqueIds = itemIds.filter { !$0.isEmpty && seen.insert($0).inserted }
+        guard !uniqueIds.isEmpty else { return [] }
+        guard locationCount == 2, uniqueIds.count > 1 else { return [uniqueIds] }
+
+        let defaultFirstCount = (uniqueIds.count + 1) / 2
+        let resolvedFirstCount = min(
+            max(firstLocationCount ?? defaultFirstCount, 1),
+            uniqueIds.count - 1
+        )
+        return [
+            Array(uniqueIds.prefix(resolvedFirstCount)),
+            Array(uniqueIds.dropFirst(resolvedFirstCount)),
+        ]
+    }
+
+    /// Progress for the items currently assigned to the space. Marks linked to
+    /// moved/deleted items and legacy unassigned marks do not count toward it.
+    static func photoCheckProgress(
+        itemIds: Set<String>,
+        attachments: [AttachmentRef]
+    ) -> PhotoCheckProgress {
+        let checkedItemIds = markedItemIds(in: attachments).intersection(itemIds)
+        return PhotoCheckProgress(
+            checkedCount: checkedItemIds.count,
+            totalCount: itemIds.count
+        )
     }
 
     /// Places or moves an item's single linked checkmark. Any previous mark for
@@ -21,7 +95,7 @@ enum PinnedImageCalculations {
     ) -> [AttachmentRef] {
         attachments.map { attachment in
             var updated = attachment
-            var marks = (attachment.checkmarks ?? []).filter { $0.itemId != itemId }
+            var marks = removingItemLinks([itemId], from: attachment.checkmarks ?? [])
             if attachment.url == attachmentURL {
                 marks.append(ImageCheckmark(
                     id: checkmarkId,
@@ -29,6 +103,41 @@ enum PinnedImageCalculations {
                     y: Double(normalizedPoint.y),
                     itemId: itemId
                 ))
+            }
+            updated.checkmarks = marks.isEmpty ? nil : marks
+            return updated
+        }
+    }
+
+    /// Atomically replaces every selected item's existing photo association and
+    /// writes one marker for each completed placement assignment.
+    static func placingCheckmarks(
+        assignments: [[String]],
+        at normalizedPoints: [CGPoint],
+        in attachmentURL: String,
+        attachments: [AttachmentRef],
+        checkmarkIds: [String]? = nil
+    ) -> [AttachmentRef] {
+        guard assignments.count == normalizedPoints.count, !assignments.isEmpty else {
+            return attachments
+        }
+        let selectedItemIds = Set(assignments.flatMap { $0 })
+        return attachments.map { attachment in
+            var updated = attachment
+            var marks = removingItemLinks(selectedItemIds, from: attachment.checkmarks ?? [])
+            if attachment.url == attachmentURL {
+                for (index, assignment) in assignments.enumerated() where !assignment.isEmpty {
+                    let markId = checkmarkIds?.indices.contains(index) == true
+                        ? checkmarkIds![index]
+                        : UUID().uuidString
+                    marks.append(ImageCheckmark(
+                        id: markId,
+                        x: Double(normalizedPoints[index].x),
+                        y: Double(normalizedPoints[index].y),
+                        itemId: assignment.first,
+                        itemIds: assignment.count > 1 ? assignment : nil
+                    ))
+                }
             }
             updated.checkmarks = marks.isEmpty ? nil : marks
             return updated
@@ -44,12 +153,22 @@ enum PinnedImageCalculations {
         guard !itemIds.isEmpty else { return attachments }
         return attachments.map { attachment in
             var updated = attachment
-            let marks = (attachment.checkmarks ?? []).filter { mark in
-                guard let itemId = mark.itemId else { return true }
-                return !itemIds.contains(itemId)
-            }
+            let marks = removingItemLinks(itemIds, from: attachment.checkmarks ?? [])
             updated.checkmarks = marks.isEmpty ? nil : marks
             return updated
+        }
+    }
+
+    private static func removingItemLinks(
+        _ itemIds: Set<String>,
+        from marks: [ImageCheckmark]
+    ) -> [ImageCheckmark] {
+        marks.compactMap { mark in
+            let linkedIds = mark.linkedItemIds
+            guard !linkedIds.isEmpty else { return mark }
+            let remainingIds = linkedIds.filter { !itemIds.contains($0) }
+            guard !remainingIds.isEmpty else { return nil }
+            return mark.linking(remainingIds)
         }
     }
 

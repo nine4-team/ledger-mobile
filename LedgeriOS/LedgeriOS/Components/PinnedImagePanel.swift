@@ -13,11 +13,16 @@ struct PinnedImagePanel: View {
     var isMatchingItems: Bool = false
     var pendingItemId: String?
     var pendingItemName: String?
+    var groupPlacementSession: PhotoCheckmarkPlacementSession?
     var onToggleItemMatching: (() -> Void)?
     var onCancelPendingItemMatch: (() -> Void)?
     var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)?
+    var onPlaceGroupCheckmark: ((AttachmentRef, CGPoint) -> Void)?
+    var onSaveGroupCheckmarks: (() -> Void)?
+    var onRedoGroupCheckmarks: (() -> Void)?
     var itemNameForId: ((String) -> String?)?
-    var onMoveItemCheckmark: ((String) -> Void)?
+    var onMoveItemCheckmark: (([String]) -> Void)?
+    var onReassignItemCheckmark: (([String]) -> Void)?
     var onClearAllCheckmarks: (() -> Void)?
 
     @State private var zoomScale: CGFloat = 1.0
@@ -46,19 +51,37 @@ struct PinnedImagePanel: View {
         guard let pendingItemId else { return false }
         return allImages.contains { image in
             (localCheckmarksByURL[image.url] ?? image.checkmarks ?? []).contains {
-                $0.itemId == pendingItemId
+                $0.linkedItemIds.contains(pendingItemId)
             }
         }
     }
 
+    private var hasActivePlacement: Bool {
+        pendingItemId != nil || groupPlacementSession != nil
+    }
+
     private var zoomAnnotations: [ZoomableImageAnnotation] {
-        currentCheckmarks.map { mark in
+        let persisted = currentCheckmarks.map { mark in
             ZoomableImageAnnotation(
                 id: mark.id,
                 point: CGPoint(x: mark.x, y: mark.y),
-                isHighlighted: mark.itemId == pendingItemId
+                isHighlighted: pendingItemId.map(mark.linkedItemIds.contains) ?? false,
+                quantityLabel: mark.linkedItemIds.count > 1 ? "\(mark.linkedItemIds.count)" : nil,
+                accessibilityLabel: checkmarkSummary(for: mark)
             )
         }
+        guard let session = groupPlacementSession,
+              session.attachmentURL == currentAttachment.url else { return persisted }
+        let drafts = session.points.enumerated().map { index, point in
+            ZoomableImageAnnotation(
+                id: "photo-placement-draft-\(index)",
+                point: point,
+                isHighlighted: true,
+                quantityLabel: "\(session.assignments[index].count)",
+                accessibilityLabel: "Draft checkmark for \(session.assignments[index].count) \(session.itemName)"
+            )
+        }
+        return persisted + drafts
     }
 
     var body: some View {
@@ -73,10 +96,15 @@ struct PinnedImagePanel: View {
                     zoomScale: $zoomScale,
                     onSingleTap: nil,
                     annotations: zoomAnnotations,
-                    annotationSelectionEnabled: pendingItemId == nil,
+                    annotationSelectionEnabled: !hasActivePlacement,
                     onImageTap: { point in
-                        guard let pendingItemId else { return }
-                        onPlaceItemCheckmark?(currentAttachment, pendingItemId, point)
+                        if let session = groupPlacementSession,
+                           session.attachmentURL == currentAttachment.url,
+                           !session.isReadyToSave {
+                            onPlaceGroupCheckmark?(currentAttachment, point)
+                        } else if let pendingItemId {
+                            onPlaceItemCheckmark?(currentAttachment, pendingItemId, point)
+                        }
                     },
                     onAnnotationTap: { annotationID in
                         selectedCheckmark = currentCheckmarks.first { $0.id == annotationID }
@@ -111,7 +139,7 @@ struct PinnedImagePanel: View {
                 VStack {
                     matchingInstruction
                         .padding(.top, 58)
-                        .allowsHitTesting(pendingItemId != nil)
+                        .allowsHitTesting(hasActivePlacement)
                     Spacer()
                 }
                 .padding(.horizontal, Spacing.md)
@@ -267,30 +295,68 @@ struct PinnedImagePanel: View {
     }
 
     private var matchingInstruction: some View {
-        HStack(spacing: Spacing.sm) {
-            Image(systemName: pendingItemId == nil ? "list.bullet" : "hand.tap")
-                .foregroundStyle(.green)
-            Text(pendingItemId == nil
-                 ? "Choose Mark in photo on an item card"
-                 : pendingItemIsAlreadyMarked
-                    ? "Moving \(pendingItemName ?? "item"). Tap its new location"
-                    : "Tap where \(pendingItemName ?? "the item") appears")
-                .font(Typography.small)
-                .foregroundStyle(.white)
-                .lineLimit(2)
-            Spacer(minLength: 0)
-            if pendingItemId != nil {
-                Button("Cancel") {
-                    onCancelPendingItemMatch?()
+        VStack(spacing: Spacing.xs) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: matchingInstructionIcon)
+                    .foregroundStyle(.green)
+                Text(matchingInstructionText)
+                    .font(Typography.small)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+
+                if hasActivePlacement, groupPlacementSession?.isReadyToSave != true {
+                    Button("Cancel") {
+                        onCancelPendingItemMatch?()
+                    }
+                    .font(Typography.label)
+                    .foregroundStyle(.white)
                 }
-                .font(Typography.label)
-                .foregroundStyle(.white)
+            }
+
+            if groupPlacementSession?.isReadyToSave == true {
+                HStack(spacing: Spacing.sm) {
+                    Spacer()
+                    Button("Redo") { onRedoGroupCheckmarks?() }
+                        .font(Typography.label)
+                        .foregroundStyle(.white)
+                    Button("Save") { onSaveGroupCheckmarks?() }
+                        .font(Typography.label)
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, Spacing.md)
+                        .frame(minHeight: 32)
+                        .background(.green)
+                        .clipShape(Capsule())
+                }
             }
         }
         .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs)
         .frame(minHeight: 44)
         .background(.black.opacity(0.78))
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+    }
+
+    private var matchingInstructionIcon: String {
+        if groupPlacementSession?.isReadyToSave == true { return "checkmark.circle" }
+        return hasActivePlacement ? "hand.tap" : "list.bullet"
+    }
+
+    private var matchingInstructionText: String {
+        if let session = groupPlacementSession {
+            if session.isReadyToSave {
+                return "Review \(session.assignments.count) checkmarks for \(session.totalItemCount) \(session.itemName)"
+            }
+            if let index = session.nextLocationIndex {
+                return "Tap location \(index + 1) of \(session.assignments.count) for \(session.assignments[index].count) \(session.itemName)"
+            }
+        }
+        if pendingItemId == nil {
+            return "Choose Mark in photo on an item card"
+        }
+        return pendingItemIsAlreadyMarked
+            ? "Moving \(pendingItemName ?? "item"). Tap its new location"
+            : "Tap where \(pendingItemName ?? "the item") appears"
     }
 
     private func updateCheckmarks(_ checkmarks: [ImageCheckmark]) {
@@ -299,16 +365,17 @@ struct PinnedImagePanel: View {
     }
 
     private func checkmarkInspector(for mark: ImageCheckmark) -> some View {
-        HStack(spacing: Spacing.sm) {
+        let linkedItemIds = mark.linkedItemIds
+        return HStack(spacing: Spacing.sm) {
             Image(systemName: "checkmark")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(.green)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Marked item")
+                Text(linkedItemIds.count == 1 ? "Marked item" : "Marked items")
                     .font(Typography.caption)
                     .foregroundStyle(.white.opacity(0.7))
-                Text(mark.itemId.flatMap { itemNameForId?($0) } ?? "Unlinked checkmark")
+                Text(checkmarkSummary(for: mark))
                     .font(Typography.label)
                     .foregroundStyle(.white)
                     .lineLimit(2)
@@ -316,13 +383,22 @@ struct PinnedImagePanel: View {
 
             Spacer(minLength: 0)
 
-            if let itemId = mark.itemId, itemNameForId?(itemId) != nil {
+            if !linkedItemIds.isEmpty {
                 Button("Move") {
                     selectedCheckmark = nil
-                    onMoveItemCheckmark?(itemId)
+                    onMoveItemCheckmark?(linkedItemIds)
                 }
                 .font(Typography.label)
                 .foregroundStyle(.white)
+
+                if linkedItemIds.count > 1 {
+                    Button("Reassign") {
+                        selectedCheckmark = nil
+                        onReassignItemCheckmark?(linkedItemIds)
+                    }
+                    .font(Typography.label)
+                    .foregroundStyle(.white)
+                }
             }
 
             Button("Remove", role: .destructive) {
@@ -345,6 +421,17 @@ struct PinnedImagePanel: View {
         .padding(.vertical, Spacing.sm)
         .background(.black.opacity(0.86))
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+    }
+
+    private func checkmarkSummary(for mark: ImageCheckmark) -> String {
+        let itemIds = mark.linkedItemIds
+        guard !itemIds.isEmpty else { return "Unlinked checkmark" }
+        let names = itemIds.compactMap { itemNameForId?($0) }
+        let uniqueNames = Array(Set(names))
+        if uniqueNames.count == 1, let name = uniqueNames.first {
+            return itemIds.count == 1 ? name : "\(itemIds.count) \(name)"
+        }
+        return "\(itemIds.count) linked items"
     }
 
     private var closeButton: some View {
@@ -430,6 +517,8 @@ struct PinnedImagePanel: View {
         .padding(.horizontal, Spacing.lg)
         .background(.black.opacity(0.7))
         .clipShape(Capsule())
+        .disabled(groupPlacementSession != nil)
+        .opacity(groupPlacementSession == nil ? 1 : 0.55)
     }
 }
 

@@ -23,6 +23,25 @@ struct ImageCheckmark: Codable, Hashable, Identifiable, Sendable {
     /// The item represented by this mark. Optional so checkmarks created before
     /// item matching was introduced remain visible and editable.
     var itemId: String?
+    /// All items represented by this mark. New multi-item marks also retain the
+    /// first ID in `itemId` so older app builds can still inspect the marker.
+    var itemIds: [String]? = nil
+
+    var linkedItemIds: [String] {
+        var seen: Set<String> = []
+        return ([itemId].compactMap { $0 } + (itemIds ?? [])).filter { id in
+            !id.isEmpty && seen.insert(id).inserted
+        }
+    }
+
+    func linking(_ ids: [String]) -> ImageCheckmark {
+        var copy = self
+        var seen: Set<String> = []
+        let uniqueIds = ids.filter { !$0.isEmpty && seen.insert($0).inserted }
+        copy.itemId = uniqueIds.first
+        copy.itemIds = uniqueIds.count > 1 ? uniqueIds : nil
+        return copy
+    }
 }
 
 extension AttachmentRef {
@@ -47,6 +66,7 @@ extension AttachmentRef {
                     "y": mark.y,
                 ]
                 if let itemId = mark.itemId { markFields["itemId"] = itemId }
+                if let itemIds = mark.itemIds, !itemIds.isEmpty { markFields["itemIds"] = itemIds }
                 return markFields
             }
         }

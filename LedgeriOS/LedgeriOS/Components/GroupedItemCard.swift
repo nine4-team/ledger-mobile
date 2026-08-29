@@ -33,6 +33,8 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     var locationLabel: String?
     var priceLabel: String?
     var isMarkedInPhoto: Bool = false
+    var photoMatchActionTitle: String?
+    var onPhotoMatchPress: (() -> Void)?
     var microcopyWhenCollapsed: String? = "View All"
     var isExpanded: Binding<Bool>?
     var defaultExpanded: Bool = false
@@ -56,6 +58,8 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         locationLabel: String? = nil,
         priceLabel: String? = nil,
         isMarkedInPhoto: Bool = false,
+        photoMatchActionTitle: String? = nil,
+        onPhotoMatchPress: (() -> Void)? = nil,
         microcopyWhenCollapsed: String? = "View All",
         isExpanded: Binding<Bool>? = nil,
         defaultExpanded: Bool = false,
@@ -76,6 +80,8 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         self.locationLabel = locationLabel
         self.priceLabel = priceLabel
         self.isMarkedInPhoto = isMarkedInPhoto
+        self.photoMatchActionTitle = photoMatchActionTitle
+        self.onPhotoMatchPress = onPhotoMatchPress
         self.microcopyWhenCollapsed = microcopyWhenCollapsed
         self.isExpanded = isExpanded
         self.defaultExpanded = defaultExpanded
@@ -129,6 +135,25 @@ struct GroupedItemCard<ExpandedContent: View>: View {
                     }
                     .padding(.horizontal, Spacing.cardPadding / 2)
                     .padding(.vertical, Spacing.sm)
+                }
+
+                if let photoMatchActionTitle, let onPhotoMatchPress {
+                    Button(action: onPhotoMatchPress) {
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: isMarkedInPhoto ? "arrow.triangle.2.circlepath" : "checkmark.circle")
+                            Text(photoMatchActionTitle)
+                        }
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.primary)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 40)
+                        .background(BrandColors.primary.opacity(0.10))
+                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.bottom, Spacing.lg)
+                    .accessibilityHint("Choose one or two locations, then place the group in the pinned photo")
                 }
             }
         }

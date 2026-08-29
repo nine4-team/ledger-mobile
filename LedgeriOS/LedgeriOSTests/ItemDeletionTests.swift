@@ -28,7 +28,13 @@ struct ItemsServiceBulkUpdateTests {
                         AttachmentRef(
                             url: "one",
                             checkmarks: [
-                                ImageCheckmark(id: "remove1", x: 0.1, y: 0.2, itemId: "i1"),
+                                ImageCheckmark(
+                                    id: "remove1",
+                                    x: 0.1,
+                                    y: 0.2,
+                                    itemId: "i1",
+                                    itemIds: ["i1", "i3"]
+                                ),
                                 ImageCheckmark(id: "keep", x: 0.3, y: 0.4, itemId: "i2"),
                             ]
                         ),
@@ -55,9 +61,11 @@ struct ItemsServiceBulkUpdateTests {
         let spaceUpdate = try #require(batch.updatesForPath("accounts/\(acct)/spaces/old-space").first)
         let images = try #require(spaceUpdate.fields["images"] as? [[String: Any]])
         let firstMarks = try #require(images[0]["checkmarks"] as? [[String: Any]])
-        #expect(firstMarks.count == 1)
-        #expect(firstMarks[0]["id"] as? String == "keep")
-        #expect(firstMarks[0]["itemId"] as? String == "i2")
+        #expect(firstMarks.count == 2)
+        #expect(firstMarks[0]["id"] as? String == "remove1")
+        #expect(firstMarks[0]["itemId"] as? String == "i3")
+        #expect(firstMarks[1]["id"] as? String == "keep")
+        #expect(firstMarks[1]["itemId"] as? String == "i2")
         #expect(images[1]["checkmarks"] == nil)
     }
 

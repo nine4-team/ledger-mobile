@@ -34,6 +34,8 @@ struct SharedItemsList: View {
     var photoMatchActionTitle: ((Item) -> String?)?
     var photoMatchTargetItemId: String?
     var onPhotoMatchPress: ((Item) -> Void)?
+    var photoMatchGroupActionTitle: ((ItemGroup) -> String?)?
+    var onPhotoMatchGroupPress: ((ItemGroup) -> Void)?
     var showsGroupExpansionControl: Bool = false
 
     // Firestore (standalone / picker mode)
@@ -808,6 +810,7 @@ struct SharedItemsList: View {
             completeGroup ?? group,
             markedItemIDs: photoMarkedItemIDs
         )
+        let groupPhotoMatchTitle = group.count > 1 ? photoMatchGroupActionTitle?(completeGroup ?? group) : nil
 
         let selectionBinding = Binding(
             get: { groupSelected },
@@ -838,6 +841,10 @@ struct SharedItemsList: View {
             spaceName: spaceName,
             priceLabel: displayedPriceLabel,
             isMarkedInPhoto: isGroupMarkedInPhoto,
+            photoMatchActionTitle: groupPhotoMatchTitle,
+            onPhotoMatchPress: groupPhotoMatchTitle == nil ? nil : {
+                onPhotoMatchGroupPress?(completeGroup ?? group)
+            },
             isExpanded: inlineGroupExpansionBinding(for: group),
             isSelected: selectionBinding,
             onSelectedChange: onSelectedChange,
