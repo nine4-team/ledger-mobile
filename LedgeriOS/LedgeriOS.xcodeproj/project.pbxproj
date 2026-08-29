@@ -324,6 +324,7 @@
 		S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP05F0000000000P0002 /* LedgerCommands.swift */; };
 		SCB00001B001000000000001 /* SearchControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCB00001F001000000000001 /* SearchControlBar.swift */; };
 		SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCT00F00100000000T0001 /* SearchCalculationsTests.swift */; };
+		IDCT00B0010000000T0001 /* ItemDetailCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = IDCT00F0010000000T0001 /* ItemDetailCalculationTests.swift */; };
 		STF00001B001 /* ScrollTopFade.swift in Sources */ = {isa = PBXBuildFile; fileRef = STF00001F001 /* ScrollTopFade.swift */; };
 		TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */; };
 		TFM00001B001 /* TransactionFilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFM00001F001 /* TransactionFilterMenu.swift */; };
@@ -710,6 +711,7 @@
 		S009WP05F0000000000P0002 /* LedgerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerCommands.swift; sourceTree = "<group>"; };
 		SCB00001F001000000000001 /* SearchControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchControlBar.swift; sourceTree = "<group>"; };
 		SCT00F00100000000T0001 /* SearchCalculationsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchCalculationsTests.swift; sourceTree = "<group>"; };
+		IDCT00F0010000000T0001 /* ItemDetailCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDetailCalculationTests.swift; sourceTree = "<group>"; };
 		STF00001F001 /* ScrollTopFade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollTopFade.swift; sourceTree = "<group>"; };
 		TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDisplayCalculationTests.swift; sourceTree = "<group>"; };
 		TFM00001F001 /* TransactionFilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionFilterMenu.swift; sourceTree = "<group>"; };
@@ -1058,6 +1060,7 @@
 				C48B0FF5FB9BE38F1A67838A /* ExportFieldConfigTests.swift */,
 				TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */,
 				SCT00F00100000000T0001 /* SearchCalculationsTests.swift */,
+				IDCT00F0010000000T0001 /* ItemDetailCalculationTests.swift */,
 				ITX000020000000000000003 /* ItemTagExtractionTests.swift */,
 				862F852843A06A4E1AD326AF /* IncompleteReturnDetectionTests.swift */,
 				60D3AB5696530B5D8E14D18D /* Helpers */,
@@ -1855,6 +1858,7 @@
 				770CC1EE918C82E1E33BA382 /* ExportFieldConfigTests.swift in Sources */,
 				TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */,
 				SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */,
+				IDCT00B0010000000T0001 /* ItemDetailCalculationTests.swift in Sources */,
 				ITX000010000000000000003 /* ItemTagExtractionTests.swift in Sources */,
 				41228B2CE8BCF5256643BCDA /* IncompleteReturnDetectionTests.swift in Sources */,
 				A5EF3AB43B882AF00C1BB869 /* RecordingBatch.swift in Sources */,

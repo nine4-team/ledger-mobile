@@ -72,7 +72,10 @@ private struct ItemDetailContextContainer: View {
     }
 
     var body: some View {
-        if let projectId, ambientProjectContext.currentProjectId != projectId {
+        if let projectId, ItemDetailCalculations.requiresScopedProjectContext(
+            itemProjectId: projectId,
+            ambientProjectId: ambientProjectContext.currentProjectId
+        ) {
             detail
                 .environment(scopedProjectContext)
                 .task(id: activationKey(projectId: projectId)) {

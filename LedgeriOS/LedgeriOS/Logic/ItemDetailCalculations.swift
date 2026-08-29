@@ -4,6 +4,16 @@ import Foundation
 /// Used by ItemDetailView and testable without SwiftUI.
 enum ItemDetailCalculations {
 
+    /// Nested item routes need their own project context when the route's project
+    /// is absent from, or differs from, the ambient navigation context.
+    static func requiresScopedProjectContext(
+        itemProjectId: String?,
+        ambientProjectId: String?
+    ) -> Bool {
+        guard let itemProjectId else { return false }
+        return ambientProjectId != itemProjectId
+    }
+
     /// Actions that can be performed on an item from its detail screen.
     enum ItemAction: String, CaseIterable {
         case changeStatus, setSpace, clearSpace, setTransaction, clearTransaction

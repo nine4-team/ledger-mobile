@@ -51,7 +51,7 @@ struct ItemDetailCalculationTests {
 
     @Test("to-purchase item gets full actions")
     func availableActionsToPurchase() {
-        let item = makeItem(status: .toPurchase)
+        let item = makeItem(status: .toPurchase, projectId: "project-1")
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -69,7 +69,7 @@ struct ItemDetailCalculationTests {
 
     @Test("purchased item gets full actions")
     func availableActionsPurchased() {
-        let item = makeItem(status: .purchased)
+        let item = makeItem(status: .purchased, projectId: "project-1")
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -79,7 +79,7 @@ struct ItemDetailCalculationTests {
 
     @Test("returned item gets full actions (no status is terminal)")
     func availableActionsReturned() {
-        let item = makeItem(status: .returned)
+        let item = makeItem(status: .returned, projectId: "project-1")
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -90,7 +90,7 @@ struct ItemDetailCalculationTests {
 
     @Test("nil status item gets full actions (treated as active)")
     func availableActionsNilStatus() {
-        let item = makeItem(status: nil)
+        let item = makeItem(status: nil, projectId: "project-1")
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -338,5 +338,35 @@ struct ItemDetailCalculationTests {
         let result = ItemDetailCalculations.resolveCategoryName(categoryId: "", categories: categories)
 
         #expect(result == nil)
+    }
+
+    // MARK: - Project context routing
+
+    @Test("Nested project item creates context when ambient context is empty")
+    func projectItemCreatesContextWhenAmbientIsEmpty() {
+        #expect(ItemDetailCalculations.requiresScopedProjectContext(
+            itemProjectId: "project-1",
+            ambientProjectId: nil
+        ))
+    }
+
+    @Test("Nested project item creates context when ambient context belongs to another project")
+    func projectItemCreatesContextWhenAmbientIsDifferent() {
+        #expect(ItemDetailCalculations.requiresScopedProjectContext(
+            itemProjectId: "project-1",
+            ambientProjectId: "project-2"
+        ))
+    }
+
+    @Test("Matching project context is reused and inventory needs no project context")
+    func matchingAndInventoryContextsAreReused() {
+        #expect(!ItemDetailCalculations.requiresScopedProjectContext(
+            itemProjectId: "project-1",
+            ambientProjectId: "project-1"
+        ))
+        #expect(!ItemDetailCalculations.requiresScopedProjectContext(
+            itemProjectId: nil,
+            ambientProjectId: nil
+        ))
     }
 }
