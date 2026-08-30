@@ -691,6 +691,7 @@ struct TransactionDetailView: View {
             NewItemView(
                 context: itemCreationContext,
                 initialTransactionId: currentTransaction.id,
+                initialSource: currentTransaction.source,
                 onCreated: { itemIds in mergeCreatedItemIds(itemIds) }
             )
         }
@@ -706,6 +707,9 @@ struct TransactionDetailView: View {
             NewItemView(
                 context: protoItem.projectId.map { .project($0, spaceId: nil) } ?? .inventory,
                 initialTransactionId: protoItem.transactionId,
+                initialSource: protoItem.transactionId == currentTransaction.id
+                    ? currentTransaction.source
+                    : nil,
                 initialName: protoItem.name,
                 initialSku: protoItem.sku,
                 initialSkuCandidates: protoItem.extracted?.skuCandidates ?? [],
@@ -1859,6 +1863,9 @@ struct TransactionDetailView: View {
             item.status = .purchased
             item.transactionId = transactionId
             item.budgetCategoryId = budgetCategoryId
+            let source = currentTransaction.source?.trimmingCharacters(in: .whitespacesAndNewlines)
+            item.source = source?.isEmpty == false ? source : nil
+            item.currentSource = item.source
             item.images = images
             return item
         }

@@ -26,6 +26,7 @@ struct NewItemView: View {
     init(
         context: ItemCreationContext? = nil,
         initialTransactionId: String? = nil,
+        initialSource: String? = nil,
         initialName: String? = nil,
         initialNotes: String? = nil,
         initialSku: String? = nil,
@@ -39,6 +40,7 @@ struct NewItemView: View {
     ) {
         self._resolvedContext = State(initialValue: context)
         self._selectedTransactionId = State(initialValue: initialTransactionId)
+        self._source = State(initialValue: initialSource ?? "")
         self._name = State(initialValue: initialName ?? "")
         self._notes = State(initialValue: initialNotes ?? "")
         self._sku = State(initialValue: initialSku ?? "")
@@ -907,6 +909,11 @@ struct NewItemView: View {
                 accountId: accountId,
                 transactionId: transactionId
             )
+            if source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               let transactionSource = loadedSelectedTransaction?.source?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !transactionSource.isEmpty {
+                source = transactionSource
+            }
             if let tx = loadedSelectedTransaction,
                tx.projectId == nil,
                selectedInventorySaleCategoryId == nil {
