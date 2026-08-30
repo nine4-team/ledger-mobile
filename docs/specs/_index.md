@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-08-25
+Last updated: 2026-08-30
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -18,6 +18,7 @@ Last updated: 2026-08-25
 - [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 
 ### Transactions & Item Entry
+- [shipped] [Correct Transaction and Its Items](2026-08-30-correct-transaction-and-its-items.md) — Atomically corrects one ordinary transaction and its complete active item set between projects or Business Inventory while preserving membership, detaching incompatible spaces, and writing correction lineage. Generated movements and referenced history fail closed. MCP shipped and production-smoke-verified 2026-08-30; iOS UI exposure is deferred.
 - [shipped] [Purchase Handling and Inventory Intent](purchase-handling-and-inventory-intent.md) — Separates business-paid resale acquisitions from direct project reimbursements, persists intended project/category across delayed inventory sales, defines the inventory follow-up queue and one-destination invariant, and normalizes quick-draft transaction association and inventory conversion. Shipped and runtime-verified 2026-08-19.
 - [new] [Vendor Credits](vendor-credits.md) — **Proposed.** A vendor-issued negative transaction, beginning with cancellation credits for selected lines on a mixed purchase. Distinct from physical returns; legacy returns remain unchanged pending separately approved evidence-backed migration.
 - [shipped] [Agent Transaction Taxonomy Guide](agent-transaction-taxonomy-guide.md) — Canonical short guide for AI/MCP clients: normal writes use `purchase`/`return`, system workflows create `sale`/`paymentToBusiness`, legacy `fee`/`expense`/`to inventory` are read-compatible only, and `metadata.categoryType` owns itemization/routing.

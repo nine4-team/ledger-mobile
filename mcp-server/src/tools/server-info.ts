@@ -9,7 +9,7 @@ import { withTelemetry } from "../util/telemetry.js";
  * without hard-coding assumptions.
  */
 
-export const SERVER_VERSION = "1.3.0";
+export const SERVER_VERSION = "1.4.0";
 
 export const SERVER_FEATURES = {
   bulkGetters: true,
@@ -21,6 +21,7 @@ export const SERVER_FEATURES = {
   transactionDeletionTombstones: true,
   transactionDeletionApproval: "mcp-form-elicitation" as const,
   atomicBatchTransactionDeletion: true,
+  wholeTransactionItemCorrections: true,
   compositeTools: true,
   invoiceTools: true,
   invoiceSettlementTransactions: true,
@@ -50,6 +51,8 @@ export function registerServerInfoTools(server: McpServer, db: Firestore) {
           auditNotes: "Every mutation requires a dated note in `notes`, e.g. '4/6 — short reason'.",
           transactionDeletion:
             "cancel_transaction requires a reason. delete_transaction and delete_transactions are only for fully superseded records, default to dry-run, display the exact scope, require one DELETE MCP form elicitation, and preserve full tombstones. Batches contain 2-20 unique IDs and are all-or-nothing.",
+          transactionAndItemCorrections:
+            "Use correct_transaction_and_its_items for a data correction that moves one ordinary transaction and its complete active item set together. Use Sell/Return for real business movements.",
           ids: "Opaque strings; never truncate.",
           money: "Integer cents.",
           transactionTaxonomy:

@@ -10,6 +10,7 @@ import { registerAnalyticsTools } from "./tools/analytics.js";
 import { registerAccountTools } from "./tools/accounts.js";
 import { registerInventoryOperationTools } from "./tools/inventory-operations.js";
 import { registerPurchaseIntentTools } from "./tools/purchase-intents.js";
+import { registerTransactionItemCorrectionTools } from "./tools/transaction-item-corrections.js";
 import { registerResources } from "./resources/index.js";
 import { registerBulkGetterTools } from "./tools/bulk-getters.js";
 import { registerSchemaTools } from "./tools/schema.js";
@@ -39,6 +40,7 @@ export const SERVER_INSTRUCTIONS =
   "If the entity already has notes, append your note on a new line so existing context is preserved. " +
   "This applies to every write operation, not just sales or moves.\n\n" +
   "TRANSACTION CANCELLATION / DELETION: cancel_transaction requires a non-empty reason and appends it durably while preserving existing user prose. delete_transaction and delete_transactions are destructive and are never substitutes for a return, reversal, movement, or correction. They are only for proven, fully superseded records. Always run the dry-run first. Execution requires every transaction to be canceled, budget-neutral, item-free, attachment-free, and unreferenced, followed by a separate MCP user elicitation displaying the exact single transaction or batch; the user enters DELETE once. Tool annotations or model-supplied authorization values are not approval. Batch deletion supports 2–20 unique IDs and is all-or-nothing. A full audit tombstone survives every successful deletion.\n\n" +
+  "WHOLE-TRANSACTION CORRECTIONS: Use correct_transaction_and_its_items when one ordinary transaction and every currently attached item were recorded in the wrong project or project/inventory scope. It defaults to dry-run, preserves both sides of item membership, and creates correction lineage without inventing a Sale or Return. Do not use it for real business movements or generated inventory-movement transactions.\n\n" +
   "INVENTORY MOVEMENTS: Ordinary inventory → project sales use sell_items_from_inventory_to_project and create one configurable Purchase. Only project-originated items currently held through an active Sale-to-Inventory acquisition MUST instead use return_items_from_inventory_to_project, which locks the original project, category, price, and amount and splits different original categories automatically. An inventory-originated item that came home through Return is ordinary sellable inventory again. The generic sale tool rejects only the Sale-to-Inventory return candidates. Project → inventory acquisition creates Sale transactions; returns to inventory create Return transactions. Structural fields (budgetCategoryId, projectId, type, source) are frozen at creation, and clients cannot edit movement totals directly. When an attached, unpaid sold item is repriced, the trusted server trigger adjusts the project-side Purchase amount/subtotal automatically. itemIds tracks current active membership and can change when items leave via returns/sales. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Project ↔ project movement uses sell_items_from_project_to_project.\n\n" +
   "TOKEN BUDGET: list_/search_/get_ tools default to `mode: 'summary'` — pass `mode: 'full'` or explicit `fields` only when you need more. Use `get_transactions` / `get_items` / `get_projects` for bulk ID lookups in one round-trip.\n\n" +
   "INVOICING: Invoices are demands for money; transactions are records of money movement. Use item, transaction, or feeInstallment lines for normal source-backed demands; manual is an invoice-only charge or credit. Manual lines automatically use the hidden Other Client Charges & Credits settlement category, while returned paid-item credits retain the original line category. Marking an invoice collected creates categorized paymentToBusiness transaction(s) linked by settlementInvoiceId. Never create synthetic Credit: returned transactions.\n\n" +
@@ -64,6 +66,7 @@ export function createLedgerServer(db: Firestore): McpServer {
   registerAccountTools(server, db);
   registerInventoryOperationTools(server, db);
   registerPurchaseIntentTools(server, db);
+  registerTransactionItemCorrectionTools(server, db);
   registerBulkGetterTools(server, db);
   registerSchemaTools(server, db);
   registerServerInfoTools(server, db);

@@ -913,7 +913,7 @@ describe("update_transaction", () => {
     expect(tx?.budgetCategoryId).toBeNull();
     expect(tx?.purchaseHandling).toBe("project_reimbursement");
     expect(tx?.reimbursementType).toBe("owed-to-company");
-    expect(tx?.itemIds).toEqual(["item_1"]);
+    expect(tx?.itemIds).toEqual([]);
 
     const item = await getDocData(
       db,
@@ -921,7 +921,7 @@ describe("update_transaction", () => {
     );
     expect(item?.projectId).toBe("proj_hal");
     expect(item?.budgetCategoryId).toBe("cat_furnishings");
-    expect(item?.transactionId).toBe("purchase_misfiled");
+    expect(item?.transactionId).toBeNull();
 
     const movementTransactions = [
       ...(await listTransactionsOfType(db, "Sale")),
@@ -932,7 +932,13 @@ describe("update_transaction", () => {
       .collection(`accounts/${TEST_ACCOUNT_ID}/transactions`)
       .get();
     expect(allTransactions.size).toBe(1);
-    expect(await listLineageEdges(db)).toHaveLength(0);
+    const correctionEdges = await listLineageEdges(db);
+    expect(correctionEdges).toHaveLength(1);
+    expect(correctionEdges[0].data).toMatchObject({
+      itemId: "item_1",
+      fromTransactionId: "purchase_misfiled",
+      movementKind: "correction",
+    });
   });
 
   test("M7b: generated inventory Purchase cannot be corrected in place", async () => {
