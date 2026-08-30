@@ -14,6 +14,7 @@ struct PinnedImagePanel: View {
     var pendingItemId: String?
     var pendingItemName: String?
     var groupPlacementSession: PhotoCheckmarkPlacementSession?
+    var onAddReviewNote: ((AttachmentRef) -> Void)?
     var onToggleItemMatching: (() -> Void)?
     var onCancelPendingItemMatch: (() -> Void)?
     var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)?
@@ -121,6 +122,9 @@ struct PinnedImagePanel: View {
             // Close button — top trailing
             VStack {
                 HStack {
+                    if currentAttachment.kind == .image, onAddReviewNote != nil {
+                        addReviewNoteButton
+                    }
                     if currentAttachment.kind == .image, onToggleItemMatching != nil {
                         matchItemsButton
                         if isMatchingItems, hasAnyCheckmarks {
@@ -257,6 +261,24 @@ struct PinnedImagePanel: View {
     }
 
     // MARK: - Close Button
+
+    private var addReviewNoteButton: some View {
+        Button {
+            onAddReviewNote?(currentAttachment)
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "note.text.badge.plus")
+                Text("Add note")
+            }
+            .font(Typography.label)
+            .foregroundStyle(.white)
+            .padding(.horizontal, Spacing.md)
+            .frame(height: 40)
+            .background(.black.opacity(0.6))
+            .clipShape(Capsule())
+        }
+        .accessibilityHint("Create a review note using this space photo")
+    }
 
     private var matchItemsButton: some View {
         Button {

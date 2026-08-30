@@ -15,6 +15,7 @@ struct PinnedImageLayout<Content: View>: View {
     var pendingItemId: String? = nil
     var pendingItemName: String? = nil
     var groupPlacementSession: PhotoCheckmarkPlacementSession? = nil
+    var onAddReviewNote: ((AttachmentRef) -> Void)? = nil
     var onToggleItemMatching: (() -> Void)? = nil
     var onCancelPendingItemMatch: (() -> Void)? = nil
     var onPlaceItemCheckmark: ((AttachmentRef, String, CGPoint) -> Void)? = nil
@@ -62,6 +63,7 @@ struct PinnedImageLayout<Content: View>: View {
                     pendingItemId: pendingItemId,
                     pendingItemName: pendingItemName,
                     groupPlacementSession: groupPlacementSession,
+                    onAddReviewNote: onAddReviewNote,
                     onToggleItemMatching: onToggleItemMatching,
                     onCancelPendingItemMatch: onCancelPendingItemMatch,
                     onPlaceItemCheckmark: onPlaceItemCheckmark,
@@ -104,6 +106,7 @@ struct PinnedImageLayout<Content: View>: View {
                     pendingItemId: pendingItemId,
                     pendingItemName: pendingItemName,
                     groupPlacementSession: groupPlacementSession,
+                    onAddReviewNote: onAddReviewNote,
                     onToggleItemMatching: onToggleItemMatching,
                     onCancelPendingItemMatch: onCancelPendingItemMatch,
                     onPlaceItemCheckmark: onPlaceItemCheckmark,

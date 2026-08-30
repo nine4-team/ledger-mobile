@@ -347,6 +347,31 @@ A design project, job, or client engagement.
 
 ---
 
+### SpaceReviewNote (Space Subcollection)
+
+**Path:** `accounts/{accountId}/spaces/{spaceId}/reviewNotes/{noteId}`
+
+One observation made while reconciling a physical Space with Ledger. Review
+notes remain valid with text only; a visual reference may use one existing image
+from the same Space.
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | string | Document ID |
+| text | string | Required, non-empty note text |
+| createdBy | string | Firebase Auth UID, or a trusted tool identifier |
+| createdByName | string | Display name |
+| visualReference | SpaceNoteVisualReference, nullable | At most one photo from the parent Space, with an optional red mark |
+| createdAt | timestamp | |
+| updatedAt | timestamp, nullable | |
+
+The visual reference does not modify the source attachment. Its red marker is
+independent from green item-linked `AttachmentRef.checkmarks`. The note stores a
+URL/thumbnail snapshot but does not duplicate image bytes. Space review notes do
+not participate in Project Notes, Quick Note, item, transaction, or receipt flows.
+
+---
+
 ### 7. BudgetCategory (Account-Scoped Preset)
 
 **Path:** `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
@@ -497,15 +522,36 @@ These are not Firestore collections. They are nested objects/arrays within paren
 
 ### AttachmentRef
 
-Embedded within Transaction, Item, ProtoItem, and Space documents.
+Embedded within Transaction, Item, ProtoItem, Space, and Space review-note visual references.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
 | url | string | Required. Storage download URL or path |
+| thumbnailUrlSm | string, nullable | Small generated preview |
+| thumbnailUrlMd | string, nullable | Medium generated preview |
 | kind | string | One of: "image", "pdf", "file". Defaults to "image" |
 | fileName | string, nullable | Original file name |
 | contentType | string, nullable | MIME type |
 | isPrimary | boolean, nullable | Whether this is the primary/hero image |
+| checkmarks | array of ImageCheckmark, nullable | Item-linked normalized coordinates. Removed from snapshots embedded in Space review notes |
+| isUploading | boolean, nullable | True while upload bytes are pending |
+
+### SpaceNoteVisualReference
+
+Embedded within a SpaceReviewNote.
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| spaceId | string | Must equal the parent review note's Space ID |
+| image | AttachmentRef | Snapshot of the selected image reference; item checkmarks and upload state are omitted |
+| marker | SpaceNoteMarker, nullable | Optional spot referenced by the note |
+
+### SpaceNoteMarker
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| x | number | Horizontal coordinate normalized to `0...1` |
+| y | number | Vertical coordinate normalized to `0...1` |
 
 ### IngestionMeta
 

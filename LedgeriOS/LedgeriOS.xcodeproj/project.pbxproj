@@ -311,8 +311,12 @@
 		PIN00002000000000000B001 /* PinnedImageLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00002000000000000F001 /* PinnedImageLayout.swift */; };
 		PIN00003000000000000B001 /* PinnedImageCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00003000000000000F001 /* PinnedImageCalculations.swift */; };
 		PIN00004000000000000B001 /* PinnedImageCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */; };
+		A9EBA01129DA460BA2880301 /* SpaceReviewNoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBA01129DA460BA2880302 /* SpaceReviewNoteTests.swift */; };
 		PIN00B00100000000000C0001 /* PinnedBudgetsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */; };
 		PN00000000000000000B0001 /* ProjectNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = PN00000000000000000F0001 /* ProjectNote.swift */; };
+		A9EBA01129DA460BA2880101 /* NoteVisualReferenceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBA01129DA460BA2880102 /* NoteVisualReferenceViews.swift */; };
+		A9EBA01129DA460BA2880201 /* SpaceReviewNotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBA01129DA460BA2880202 /* SpaceReviewNotesService.swift */; };
+		A9EBA01129DA460BA2880401 /* SpaceReviewNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBA01129DA460BA2880402 /* SpaceReviewNote.swift */; };
 		PN00000000000000000B0002 /* ProjectNotesServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = PN00000000000000000F0002 /* ProjectNotesServiceProtocol.swift */; };
 		PN00000000000000000B0003 /* ProjectNotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PN00000000000000000F0003 /* ProjectNotesService.swift */; };
 		RTPM000200000000000M0001 /* ReassignTransactionToProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = RTPM000100000000000M0001 /* ReassignTransactionToProjectModal.swift */; };
@@ -698,8 +702,12 @@
 		PIN00002000000000000F001 /* PinnedImageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageLayout.swift; sourceTree = "<group>"; };
 		PIN00003000000000000F001 /* PinnedImageCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculations.swift; sourceTree = "<group>"; };
 		PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculationTests.swift; sourceTree = "<group>"; };
+		A9EBA01129DA460BA2880302 /* SpaceReviewNoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceReviewNoteTests.swift; sourceTree = "<group>"; };
 		PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedBudgetsSection.swift; sourceTree = "<group>"; };
 		PN00000000000000000F0001 /* ProjectNote.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectNote.swift; sourceTree = "<group>"; };
+		A9EBA01129DA460BA2880102 /* NoteVisualReferenceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteVisualReferenceViews.swift; sourceTree = "<group>"; };
+		A9EBA01129DA460BA2880202 /* SpaceReviewNotesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceReviewNotesService.swift; sourceTree = "<group>"; };
+		A9EBA01129DA460BA2880402 /* SpaceReviewNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceReviewNote.swift; sourceTree = "<group>"; };
 		PN00000000000000000F0002 /* ProjectNotesServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectNotesServiceProtocol.swift; sourceTree = "<group>"; };
 		PN00000000000000000F0003 /* ProjectNotesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectNotesService.swift; sourceTree = "<group>"; };
 		RTPM000100000000000M0001 /* ReassignTransactionToProjectModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReassignTransactionToProjectModal.swift; sourceTree = "<group>"; };
@@ -934,6 +942,7 @@
 				7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */,
 				BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */,
 				PN00000000000000000F0001 /* ProjectNote.swift */,
+				A9EBA01129DA460BA2880402 /* SpaceReviewNote.swift */,
 				857F2893750ABBED0530AF4C /* BudgetProgress.swift */,
 				A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */,
 				F923BE246BDFE7441513642E /* Invite.swift */,
@@ -974,6 +983,7 @@
 				B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */,
 				D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */,
 				PN00000000000000000F0003 /* ProjectNotesService.swift */,
+				A9EBA01129DA460BA2880202 /* SpaceReviewNotesService.swift */,
 				C18788219656392644ADD4F3 /* BudgetProgressService.swift */,
 				CFFD7C48C59A953E37ACAF5D /* AccountMembersService.swift */,
 				5CE461E5CE01EC26784E658E /* ProjectPreferencesService.swift */,
@@ -1038,6 +1048,7 @@
 				A320503375E44CA2BE691D04 /* ItemCardCalculationTests.swift */,
 				FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */,
 				PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */,
+				A9EBA01129DA460BA2880302 /* SpaceReviewNoteTests.swift */,
 				9DBDFE9FA8544210AF2DDE46 /* MediaServiceTests.swift */,
 				F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */,
 				IMB00300000000000T0001 /* ItemMenuBuilderTests.swift */,
@@ -1230,6 +1241,7 @@
 				C5A0020100000000000C0002 /* AppButton.swift */,
 				5943A53A02D94A45B1D7271E /* FindableText.swift */,
 				7C99960DF24F46D1BBBB3679 /* NotesContent.swift */,
+				A9EBA01129DA460BA2880102 /* NoteVisualReferenceViews.swift */,
 				8F2B9C4D1E6A47B8A3C59101 /* SelectableNoteText.swift */,
 				BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */,
 				0CC03F3F9EB74C1994BF6F3C /* FindMatchHighlight.swift */,
@@ -1563,6 +1575,9 @@
 				8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */,
 				EA6D5CA590F641D012BC5AC8 /* ProjectBudgetCategory.swift in Sources */,
 				PN00000000000000000B0001 /* ProjectNote.swift in Sources */,
+				A9EBA01129DA460BA2880101 /* NoteVisualReferenceViews.swift in Sources */,
+				A9EBA01129DA460BA2880401 /* SpaceReviewNote.swift in Sources */,
+				A9EBA01129DA460BA2880201 /* SpaceReviewNotesService.swift in Sources */,
 				C1D89C99D303AB6FA6612474 /* BudgetProgress.swift in Sources */,
 				41B2552FC78E15C5FCD73414 /* RepositoryProtocol.swift in Sources */,
 				F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */,
@@ -1836,6 +1851,7 @@
 				536AE658682D45DB9E6984E7 /* ItemCardCalculationTests.swift in Sources */,
 				88772B4F5BE64E24BB202980 /* MediaGalleryCalculationTests.swift in Sources */,
 				PIN00004000000000000B001 /* PinnedImageCalculationTests.swift in Sources */,
+				A9EBA01129DA460BA2880301 /* SpaceReviewNoteTests.swift in Sources */,
 				0BE4F226EBCD44DAA206A6C5 /* MediaServiceTests.swift in Sources */,
 				C2EE9D45E7FF4C91AF3CD35C /* ActionMenuCalculationTests.swift in Sources */,
 				IMB00400000000000T0001 /* ItemMenuBuilderTests.swift in Sources */,

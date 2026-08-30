@@ -1,6 +1,7 @@
 import Foundation
+import SwiftUI
 
-/// An item-linked marker rendered by the existing native image zoom surface.
+/// A non-destructive marker rendered by the native image zoom surface.
 /// The point is normalized to the image bounds (0...1 on each axis).
 struct ZoomableImageAnnotation: Equatable, Identifiable {
     let id: String
@@ -8,6 +9,32 @@ struct ZoomableImageAnnotation: Equatable, Identifiable {
     var isHighlighted: Bool = false
     var quantityLabel: String?
     var accessibilityLabel: String = "Show checked item"
+    var style: Style = .itemCheckmark
+
+    enum Style {
+        case itemCheckmark, noteReference
+
+        var symbolName: String { self == .noteReference ? "record.circle" : "checkmark" }
+    }
+}
+
+/// Matches the native viewer's note marker in non-interactive thumbnails.
+struct ImageAnnotationSymbol: View {
+    let annotation: ZoomableImageAnnotation
+
+    var body: some View {
+        Image(systemName: annotation.style.symbolName)
+            .font(.system(size: 24, weight: .heavy))
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(
+                annotation.style == .noteReference
+                    ? Color.red
+                    : (annotation.isHighlighted ? .yellow : .green),
+                .white
+            )
+            .shadow(color: .black.opacity(0.45), radius: 1)
+            .accessibilityLabel(annotation.accessibilityLabel)
+    }
 }
 
 enum ZoomableImageLoader {
@@ -301,7 +328,7 @@ struct ZoomableScrollView: UIViewRepresentable {
                 } else {
                     let configuration = UIImage.SymbolConfiguration(pointSize: 16, weight: .heavy)
                     annotationView = AccessibleAnnotationImageView(frame: .zero)
-                    annotationView.image = UIImage(systemName: "checkmark", withConfiguration: configuration)
+                    annotationView.image = UIImage(systemName: annotation.style.symbolName, withConfiguration: configuration)
                     annotationView.contentMode = .scaleAspectFit
                     annotationView.isAccessibilityElement = true
                     annotationView.accessibilityLabel = "Show checked item"
@@ -314,7 +341,16 @@ struct ZoomableScrollView: UIViewRepresentable {
                     imageView?.addSubview(annotationView)
                     annotationViews[annotation.id] = annotationView
                 }
-                annotationView.tintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                if annotation.style == .noteReference {
+                    annotationView.image = UIImage(
+                        systemName: annotation.style.symbolName,
+                        withConfiguration: UIImage.SymbolConfiguration(paletteColors: [.systemRed, .white])
+                    )
+                    annotationView.tintColor = .systemRed
+                } else {
+                    annotationView.tintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                }
+                annotationView.accessibilityLabel = annotation.accessibilityLabel
                 annotationView.quantityBadge.text = annotation.quantityLabel
                 annotationView.quantityBadge.isHidden = annotation.quantityLabel == nil
                 annotationView.quantityBadge.backgroundColor = annotation.isHighlighted ? .systemYellow : .systemGreen
@@ -764,7 +800,7 @@ struct ZoomableScrollView: NSViewRepresentable {
                     annotationView = existing
                 } else {
                     let configuration = NSImage.SymbolConfiguration(pointSize: 16, weight: .heavy)
-                    let symbol = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Show checked item")?
+                    let symbol = NSImage(systemSymbolName: annotation.style.symbolName, accessibilityDescription: annotation.accessibilityLabel)?
                         .withSymbolConfiguration(configuration)
                     annotationView = AccessibleAnnotationNSImageView(frame: .zero)
                     annotationView.image = symbol ?? NSImage()
@@ -780,7 +816,14 @@ struct ZoomableScrollView: NSViewRepresentable {
                     imageView?.addSubview(annotationView)
                     annotationViews[annotation.id] = annotationView
                 }
-                annotationView.contentTintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                if annotation.style == .noteReference {
+                    annotationView.image = NSImage(systemSymbolName: annotation.style.symbolName, accessibilityDescription: annotation.accessibilityLabel)?
+                        .withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [.systemRed, .white]))
+                    annotationView.contentTintColor = nil
+                } else {
+                    annotationView.contentTintColor = annotation.isHighlighted ? .systemYellow : .systemGreen
+                }
+                annotationView.setAccessibilityLabel(annotation.accessibilityLabel)
                 annotationView.quantityBadge.stringValue = annotation.quantityLabel ?? ""
                 annotationView.quantityBadge.isHidden = annotation.quantityLabel == nil
                 annotationView.quantityBadge.backgroundColor = annotation.isHighlighted ? .systemYellow : .systemGreen

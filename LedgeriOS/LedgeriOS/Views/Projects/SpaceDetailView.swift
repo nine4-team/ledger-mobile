@@ -102,6 +102,11 @@ private struct PhotoGroupAllocationRequest: Identifiable {
     let itemIds: [String]
 }
 
+private struct NewSpaceReviewNoteDraft: Identifiable {
+    let id = UUID()
+    let initialPhoto: AttachmentRef?
+}
+
 private struct SpaceDetailContentView: View {
     let space: Space
     /// Navigation scope is immutable route context. Do not infer it from a
@@ -117,6 +122,7 @@ private struct SpaceDetailContentView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(InventoryContext.self) private var inventoryContext
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
     @Environment(MediaService.self) private var mediaService
     @Environment(FindStateManager.self) private var findState
     @Environment(\.dismiss) private var dismiss
@@ -131,6 +137,10 @@ private struct SpaceDetailContentView: View {
     @State private var showActionMenu = false
     @State private var showEditDetails = false
     @State private var showEditNotes = false
+    @State private var newReviewNoteDraft: NewSpaceReviewNoteDraft?
+    @State private var editingReviewNote: SpaceReviewNote?
+    @State private var viewingReviewNote: SpaceReviewNote?
+    @State private var reviewNotePendingDelete: SpaceReviewNote?
     @State private var showEditChecklists = false
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
@@ -167,11 +177,19 @@ private struct SpaceDetailContentView: View {
     // Live document subscription
     @State private var liveSpaceData: Space?
     @State private var spaceListener: ListenerRegistration?
+    @State private var reviewNotes: [SpaceReviewNote] = []
+    @State private var reviewNotesListener: ListenerRegistration?
 
     // MARK: - Computed
 
     private var liveSpace: Space {
         liveSpaceData ?? space
+    }
+
+    private var sortedReviewNotes: [SpaceReviewNote] {
+        reviewNotes.sorted {
+            ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast)
+        }
     }
 
     private var isInventorySpace: Bool {
@@ -255,6 +273,7 @@ private struct SpaceDetailContentView: View {
             pendingItemId: pendingPhotoMatchItemId,
             pendingItemName: pendingPhotoMatchItemName,
             groupPlacementSession: photoPlacementSession,
+            onAddReviewNote: beginReviewNoteFromPinnedPhoto,
             onToggleItemMatching: toggleItemMatching,
             onCancelPendingItemMatch: cancelPendingPhotoPlacement,
             onPlaceItemCheckmark: placeItemCheckmark,
@@ -349,6 +368,37 @@ private struct SpaceDetailContentView: View {
             EditNotesModal(notes: liveSpace.notes ?? "") { newNotes in
                 updateSpace(fields: ["notes": newNotes])
             }
+        }
+        .adaptivePresentation(item: $newReviewNoteDraft, style: .form) { draft in
+            if let spaceId = liveSpace.id {
+                SpaceReviewNoteEditor(
+                    spaceId: spaceId,
+                    photos: liveSpace.images ?? [],
+                    initialPhoto: draft.initialPhoto,
+                    onSave: addReviewNote
+                )
+            }
+        }
+        .adaptivePresentation(item: $editingReviewNote, style: .form) { note in
+            if let spaceId = liveSpace.id {
+                SpaceReviewNoteEditor(
+                    spaceId: spaceId,
+                    photos: liveSpace.images ?? [],
+                    note: note
+                ) { text, reference in
+                    try await updateReviewNote(note, text: text, reference: reference)
+                }
+            }
+        }
+        .adaptivePresentation(item: $viewingReviewNote, style: .viewer) { note in
+            if let reference = note.visualReference {
+                SpaceNoteReferenceViewer(reference: reference, noteText: note.text)
+            }
+        }
+        .confirmationDialog("Delete Review Note?", isPresented: reviewNoteDeleteBinding) {
+            Button("Delete", role: .destructive) { deletePendingReviewNote() }
+        } message: {
+            Text("This action cannot be undone.")
         }
         .adaptivePresentation(isPresented: $showEditChecklists, style: .form) {
             EditChecklistModal(space: liveSpace) { updatedChecklists in
@@ -470,8 +520,14 @@ private struct SpaceDetailContentView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .task { startSpaceListener() }
-        .onDisappear { spaceListener?.remove() }
+        .task {
+            startSpaceListener()
+            startReviewNotesListener()
+        }
+        .onDisappear {
+            spaceListener?.remove()
+            reviewNotesListener?.remove()
+        }
         .background(BrandColors.background)
     }
 
@@ -692,14 +748,91 @@ private struct SpaceDetailContentView: View {
 
     @ViewBuilder
     private var notesContent: some View {
-        if let notes = liveSpace.notes, !notes.isEmpty {
-            SelectableNoteText(text: notes, style: .body)
-                .padding(.top, Spacing.xs)
-        } else {
-            Text("No notes")
-                .font(Typography.small)
-                .foregroundStyle(BrandColors.textSecondary)
-                .padding(.top, Spacing.xs)
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            if let notes = liveSpace.notes, !notes.isEmpty {
+                SelectableNoteText(text: notes, style: .body)
+            }
+
+            if !sortedReviewNotes.isEmpty {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    Text("SPACE REVIEW")
+                        .sectionLabelStyle()
+
+                    ForEach(sortedReviewNotes) { note in
+                        reviewNoteCard(note)
+                    }
+                }
+            } else if liveSpace.notes?.isEmpty != false {
+                Text("No notes")
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+
+            Button {
+                newReviewNoteDraft = NewSpaceReviewNoteDraft(initialPhoto: nil)
+            } label: {
+                Label("Add review note", systemImage: "note.text.badge.plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(.top, Spacing.xs)
+    }
+
+    private func reviewNoteCard(_ note: SpaceReviewNote) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                SelectableNoteText(text: note.text, style: .small)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if note.id != nil {
+                    Menu {
+                        Button {
+                            editingReviewNote = note
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            reviewNotePendingDelete = note
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title3)
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            if let reference = note.visualReference {
+                Button { viewingReviewNote = note } label: {
+                    SpaceNoteReferenceThumbnail(reference: reference, height: 120)
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(spacing: Spacing.sm) {
+                if !note.createdByName.isEmpty {
+                    Text(note.createdByName)
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+                if let date = note.createdAt {
+                    Text(date, style: .relative)
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textTertiary)
+                }
+            }
+        }
+        .padding(Spacing.sm)
+        .background(BrandColors.background)
+        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+        .overlay {
+            RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
         }
     }
 
@@ -905,6 +1038,80 @@ private struct SpaceDetailContentView: View {
             .subscribeToSpace(accountId: accountId, spaceId: spaceId) { updatedSpace in
                 self.liveSpaceData = updatedSpace
             }
+    }
+
+    private func startReviewNotesListener() {
+        guard reviewNotesListener == nil,
+              let accountId = accountContext.currentAccountId,
+              let spaceId = space.id else { return }
+        reviewNotesListener = SpaceReviewNotesService().subscribe(
+            accountId: accountId,
+            spaceId: spaceId
+        ) { notes in
+            self.reviewNotes = notes
+        }
+    }
+
+    private func beginReviewNoteFromPinnedPhoto(_ photo: AttachmentRef) {
+        newReviewNoteDraft = NewSpaceReviewNoteDraft(initialPhoto: photo)
+    }
+
+    private func addReviewNote(
+        _ text: String,
+        _ reference: SpaceNoteVisualReference?
+    ) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let spaceId = liveSpace.id else { return }
+        var note = SpaceReviewNote()
+        note.text = text
+        note.createdBy = authManager.currentUser?.uid ?? ""
+        note.createdByName = accountContext.member?.name ?? ""
+        note.createdAt = Date()
+        note.visualReference = reference
+        try SpaceReviewNotesService().add(accountId: accountId, spaceId: spaceId, note: note)
+    }
+
+    private func updateReviewNote(
+        _ note: SpaceReviewNote,
+        text: String,
+        reference: SpaceNoteVisualReference?
+    ) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let spaceId = liveSpace.id,
+              let noteId = note.id else { return }
+        try await SpaceReviewNotesService().update(
+            accountId: accountId,
+            spaceId: spaceId,
+            noteId: noteId,
+            text: text,
+            visualReference: reference
+        )
+    }
+
+    private var reviewNoteDeleteBinding: Binding<Bool> {
+        Binding(
+            get: { reviewNotePendingDelete != nil },
+            set: { if !$0 { reviewNotePendingDelete = nil } }
+        )
+    }
+
+    private func deletePendingReviewNote() {
+        guard let note = reviewNotePendingDelete,
+              let noteId = note.id,
+              let accountId = accountContext.currentAccountId,
+              let spaceId = liveSpace.id else { return }
+        reviewNotePendingDelete = nil
+        Task {
+            do {
+                try await SpaceReviewNotesService().delete(
+                    accountId: accountId,
+                    spaceId: spaceId,
+                    noteId: noteId
+                )
+            } catch {
+                errorMessage = "Failed to delete the review note. Please try again."
+            }
+        }
     }
 
     private func updateStatusForSelected(_ status: ItemStatus) {

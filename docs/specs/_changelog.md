@@ -1,5 +1,9 @@
 # Ledger Specs — Changelog
 
+## 2026-08-29
+- **Added Space review notes.** While reconciling a physical Space with Ledger, members may record a text observation and optionally attach one photo from that Space with a non-destructive red marker.
+- **Kept the feature Space-scoped.** Review notes do not interact with Project Notes or Quick Note. Their red markers are independent from the green item-linked checkmarks on the source Space photo.
+
 ## 2026-08-25
 - **Approved whole-Purchase inventory category reclassification.** A non-legacy, uncollected project Purchase from Business Inventory may move to another active, non-system, project-enabled itemized category through a dedicated trusted operation. The Purchase and all currently attached items change atomically; amounts, prices, structural identity, departed item placement, downstream movements, and the original vendor Purchase remain unchanged.
 - **Defined the collection boundary.** Created/sent uncollected invoice line category snapshots follow the correction. Paid invoices or active settlement/payment transactions on affected lines block the normal correction; collected accounting requires a separate explicit workflow.

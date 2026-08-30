@@ -207,6 +207,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    match /accounts/{accountId}/spaces/{spaceId}/reviewNotes/{noteId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
     // Inventory movement transaction immutability.
     // New per-batch inventory movement transactions keep their accounting
     // shape frozen against direct client edits after creation: `amountCents`,

@@ -9,6 +9,7 @@ struct FirebaseImage<Placeholder: View>: View {
     let urlString: String?
     let thumbnailUrl: String?
     let contentMode: ContentMode
+    let annotations: [ZoomableImageAnnotation]
     @ViewBuilder let placeholder: () -> Placeholder
 
     @State private var loadedImage: PlatformImage?
@@ -23,11 +24,13 @@ struct FirebaseImage<Placeholder: View>: View {
         url urlString: String?,
         thumbnailUrl: String? = nil,
         contentMode: ContentMode = .fill,
+        annotations: [ZoomableImageAnnotation] = [],
         @ViewBuilder placeholder: @escaping () -> Placeholder = { ProgressView() }
     ) {
         self.urlString = urlString
         self.thumbnailUrl = thumbnailUrl
         self.contentMode = contentMode
+        self.annotations = annotations
         self.placeholder = placeholder
     }
 
@@ -38,10 +41,12 @@ struct FirebaseImage<Placeholder: View>: View {
                 Image(uiImage: loadedImage)
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
+                    .overlay { annotationOverlay(imageSize: loadedImage.size) }
                 #elseif canImport(AppKit)
                 Image(nsImage: loadedImage)
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
+                    .overlay { annotationOverlay(imageSize: loadedImage.size) }
                 #endif
             } else if loadFailed {
                 failureView
@@ -54,6 +59,47 @@ struct FirebaseImage<Placeholder: View>: View {
             defer { PerformanceDiagnostics.shared.adjustCounter("active-image-requests", delta: -1) }
             await resolveAndLoadWithFallback(for: loadKey)
         }
+    }
+
+    @ViewBuilder
+    private func annotationOverlay(imageSize: CGSize) -> some View {
+        if !annotations.isEmpty {
+            GeometryReader { geometry in
+                ForEach(annotations) { annotation in
+                    ImageAnnotationSymbol(annotation: annotation)
+                        .position(annotationPosition(
+                            annotation.point,
+                            imageSize: imageSize,
+                            containerSize: geometry.size
+                        ))
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    private func annotationPosition(
+        _ point: CGPoint,
+        imageSize: CGSize,
+        containerSize: CGSize
+    ) -> CGPoint {
+        guard imageSize.width > 0, imageSize.height > 0 else {
+            return CGPoint(x: point.x * containerSize.width, y: point.y * containerSize.height)
+        }
+        let widthScale = containerSize.width / imageSize.width
+        let heightScale = containerSize.height / imageSize.height
+        let scale = contentMode == .fit
+            ? min(widthScale, heightScale)
+            : max(widthScale, heightScale)
+        let displayedSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        let origin = CGPoint(
+            x: (containerSize.width - displayedSize.width) / 2,
+            y: (containerSize.height - displayedSize.height) / 2
+        )
+        return CGPoint(
+            x: origin.x + point.x * displayedSize.width,
+            y: origin.y + point.y * displayedSize.height
+        )
     }
 
     private var failureView: some View {
