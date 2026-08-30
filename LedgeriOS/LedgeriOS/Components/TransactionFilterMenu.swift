@@ -9,14 +9,20 @@ struct TransactionFilterMenu: View {
     @Binding var filterState: TransactionFilterState
     var budgetCategories: [(id: String, name: String)] = []
     var sources: [String] = []
+    @State private var expandedFilterGroup: String?
 
     var body: some View {
         EmptyView()
-            .adaptivePresentation(isPresented: $isPresented, style: .selectionMenu) {
+            .adaptivePresentation(
+                isPresented: $isPresented,
+                style: .selectionMenu,
+                onDismiss: { expandedFilterGroup = nil }
+            ) {
                 ActionMenuSheet(
                     title: "Filter",
                     items: buildMenuItems(),
-                    closeOnItemPress: false
+                    closeOnItemPress: false,
+                    persistentExpandedItemKey: $expandedFilterGroup
                 )
             }
     }

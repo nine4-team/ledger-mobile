@@ -5,9 +5,22 @@ struct ActionMenuSheet: View {
     let items: [ActionMenuItem]
     var closeOnItemPress: Bool = true
     var onSelectAction: ((@escaping () -> Void) -> Void)?
+    var persistentExpandedItemKey: Binding<String?>?
 
-    @State private var expandedItemKey: String?
+    @State private var localExpandedItemKey: String?
     @Environment(\.dismiss) private var dismiss
+
+    private var expandedItemKey: String? {
+        persistentExpandedItemKey?.wrappedValue ?? localExpandedItemKey
+    }
+
+    private func setExpandedItemKey(_ key: String?) {
+        if let persistentExpandedItemKey {
+            persistentExpandedItemKey.wrappedValue = key
+        } else {
+            localExpandedItemKey = key
+        }
+    }
 
     // MARK: - Flattened Row Model
 
@@ -227,11 +240,11 @@ struct ActionMenuSheet: View {
         switch result {
         case .expand(let key):
             withAnimation(.easeInOut(duration: 0.25)) {
-                expandedItemKey = key
+                setExpandedItemKey(key)
             }
         case .collapse:
             withAnimation(.easeInOut(duration: 0.25)) {
-                expandedItemKey = nil
+                setExpandedItemKey(nil)
             }
         case .executeAction:
             if closeOnItemPress {
