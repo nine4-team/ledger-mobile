@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { type Firestore, FieldValue } from "firebase-admin/firestore";
+import { type Firestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import type { Transaction, Item, AttachmentRef, LineageEdge, BudgetCategory } from "../types.js";
 import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
@@ -15,14 +15,22 @@ import {
   asToolResponse,
   pickFields,
 } from "../util/projections.js";
-import { notFound, validation } from "../util/errors.js";
-import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
+import { notFound, requireNonEmptyNote, toolError, validation } from "../util/errors.js";
+import { appendDurableAiAuditLine, appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 import { resolveCategoryType } from "../util/budget.js";
 import { normalizeTransactionType } from "../util/enums.js";
 import { applyItemPriceFloorToUpdate, normalizedProjectPriceCents } from "../util/item-pricing.js";
 import { normalizePrimaryAttachments } from "../util/attachment-primary.js";
+import { getAccountId, getUid } from "../context.js";
+import {
+  MAX_TRANSACTION_DELETION_BATCH_SIZE,
+  publicDeletionPreflight,
+  readTransactionDeletionPreflight,
+  readTransactionDeletionPreflights,
+  type TransactionDeletionPreflight,
+} from "../util/transaction-deletion.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -127,6 +135,131 @@ function formatTransaction(tx: Transaction & { id: string }) {
     ingestionStatus: tx.ingestionStatus ?? null,
     ingestionMeta: tx.ingestionMeta ?? null,
   };
+}
+
+function deletionReceipt(tombstone: Record<string, unknown>, alreadyDeleted: boolean) {
+  return {
+    deleted: true,
+    alreadyDeleted,
+    transactionId: tombstone.transactionId,
+    tombstoneId: tombstone.transactionId,
+    deletionNote: tombstone.deletionNote,
+    actor: tombstone.actor,
+    deletedAt: tombstone.deletedAt,
+    checks: tombstone.checks,
+  };
+}
+
+function batchDeletionReceipt(
+  transactionIds: string[],
+  entries: Array<{ tombstone: Record<string, unknown>; alreadyDeleted: boolean }>
+) {
+  const receipts = entries.map(({ tombstone, alreadyDeleted }) =>
+    deletionReceipt(tombstone, alreadyDeleted)
+  );
+  return {
+    deleted: true,
+    batch: true,
+    transactionIds,
+    requestedCount: transactionIds.length,
+    deletedCount: entries.filter((entry) => !entry.alreadyDeleted).length,
+    alreadyDeletedCount: entries.filter((entry) => entry.alreadyDeleted).length,
+    receipts,
+  };
+}
+
+function deletionPreflightIsReady(preflight: TransactionDeletionPreflight): boolean {
+  return preflight.alreadyDeleted || (preflight.found && preflight.eligible);
+}
+
+function publicBatchDeletionPreflight(preflights: TransactionDeletionPreflight[]) {
+  return {
+    transactionIds: preflights.map((preflight) => preflight.transactionId),
+    requestedCount: preflights.length,
+    eligibleCount: preflights.filter((preflight) => preflight.found && preflight.eligible).length,
+    alreadyDeletedCount: preflights.filter((preflight) => preflight.alreadyDeleted).length,
+    allEligible: preflights.every(deletionPreflightIsReady),
+    transactions: preflights.map(publicDeletionPreflight),
+  };
+}
+
+function deletionApprovalSummary(preflight: TransactionDeletionPreflight): string {
+  const transaction = preflight.transactionSummary ?? {};
+  const source = typeof transaction.source === "string" && transaction.source.trim()
+    ? transaction.source.trim()
+    : "Unknown source";
+  const date = typeof transaction.transactionDate === "string" && transaction.transactionDate.trim()
+    ? transaction.transactionDate.trim()
+    : "No date";
+  const amount = typeof transaction.amountCents === "number"
+    ? formatCents(transaction.amountCents)
+    : "Unknown amount";
+  return `${preflight.transactionId} — ${source} — ${date} — ${amount}`;
+}
+
+async function requestTransactionDeletionApproval(
+  server: McpServer,
+  preflights: TransactionDeletionPreflight[],
+  note: string
+) {
+  const confirmationPhrase = "DELETE";
+  const transactionIds = preflights.map((preflight) => preflight.transactionId);
+  const transactionList = preflights
+    .map((preflight) => `• ${deletionApprovalSummary(preflight)}`)
+    .join("\n");
+  const isBatch = preflights.length > 1;
+  try {
+    const result = await server.server.elicitInput({
+      mode: "form",
+      message:
+        `Permanently delete ${isBatch ? `${preflights.length} canceled transactions` : "this canceled transaction"}?\n\n` +
+        `${transactionList}\n\n` +
+        `Reason: ${note}\n\n` +
+        `This will preserve ${isBatch ? "full audit tombstones" : "a full audit tombstone"} but remove the live ${isBatch ? "transactions" : "transaction"}. ` +
+        `Type ${confirmationPhrase} to authorize this destructive action.`,
+      requestedSchema: {
+        type: "object",
+        properties: {
+          confirmation: {
+            type: "string",
+            title: "Deletion confirmation",
+            description: `Type exactly: ${confirmationPhrase}`,
+            minLength: confirmationPhrase.length,
+            maxLength: confirmationPhrase.length,
+          },
+        },
+        required: ["confirmation"],
+      },
+    });
+
+    if (
+      result.action !== "accept" ||
+      result.content?.confirmation !== confirmationPhrase
+    ) {
+      return toolError({
+        code: "PERMISSION",
+        message: "Transaction deletion was not explicitly approved by the user.",
+        hint: `Review the dry-run and authorize by entering the exact confirmation phrase in the MCP approval prompt: ${confirmationPhrase}`,
+        retryable: true,
+        details: { transactionIds, action: result.action },
+      });
+    }
+    return null;
+  } catch (error) {
+    return toolError({
+      code: "PERMISSION",
+      message: "The MCP client did not provide an enforceable user-approval interaction, so deletion was denied.",
+      hint:
+        "Use a client that supports MCP form elicitation and allows MCP elicitation prompts. " +
+        "Tool annotations are hints only and cannot substitute for this approval handshake.",
+      retryable: true,
+      details: {
+        transactionIds,
+        approvalMechanism: "mcp-form-elicitation",
+        clientError: error instanceof Error ? error.message : String(error),
+      },
+    });
+  }
 }
 
 export function registerTransactionTools(server: McpServer, db: Firestore) {
@@ -752,16 +885,316 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── cancel_transaction ─────────────────────────────────────────────────────
   server.tool(
     "cancel_transaction",
-    "Mark a transaction as canceled. Canceled transactions contribute $0 to budget calculations. " +
+    "[mutating] Mark a transaction as canceled. A non-empty note explaining why is required and is durably appended without replacing existing user prose. Canceled transactions contribute $0 to budget calculations. " +
       "Per-batch inventory movement transactions cancel cleanly with just a status flip — no item shuffling, no " +
       "amount recomputation. Legacy canonical sales also cancel via status.",
-    { transactionId: z.string().describe("Transaction document ID") },
-    async ({ transactionId }) => {
-      await accountCollection(db, "transactions").doc(transactionId).update({
-        status: "canceled",
-        updatedAt: new Date(),
+    {
+      transactionId: z.string().describe("Transaction document ID"),
+      note: z.string().trim().min(3).max(1000).describe("Required durable explanation for canceling this transaction."),
+    },
+    async ({ transactionId, note }) => {
+      const noteError = requireNonEmptyNote(note, "cancel_transaction");
+      if (noteError) return noteError;
+      const reason = note.trim();
+      const ref = accountCollection(db, "transactions").doc(transactionId);
+      const result = await db.runTransaction(async (firestoreTransaction) => {
+        const snapshot = await firestoreTransaction.get(ref);
+        if (!snapshot.exists) return null;
+        const existing = snapshot.data() as Transaction;
+        const notes = appendDurableAiAuditLine(
+          existing.notes,
+          `Canceled transaction — ${reason}`
+        );
+        firestoreTransaction.update(ref, {
+          status: "canceled",
+          notes,
+          updatedAt: FieldValue.serverTimestamp(),
+          updatedBy: getUid(),
+        });
+        return notes;
       });
-      return { content: [{ type: "text", text: `Canceled transaction ${transactionId}` }] };
+      if (result == null) return notFound("Transaction", transactionId, "list_transactions");
+      return asToolResponse({
+        canceled: true,
+        transactionId,
+        note: reason,
+        notes: result,
+      });
+    }
+  );
+
+  // ── delete_transaction ─────────────────────────────────────────────────────
+  server.tool(
+    "delete_transaction",
+    "[DESTRUCTIVE] Permanently delete one proven, fully superseded transaction. This is not a substitute for a return, reversal, or correction. A non-empty deletion note is required. Start with dryRun: true. Execution default-denies unless the transaction is canceled, budget-neutral, item-free, attachment-free, and unreferenced by invoices, settlements, lineage, inventory provenance, quick drafts, related ingestion records, or repricing audit events. The server displays the exact transaction and requires the user to enter DELETE in an MCP elicitation; a model-supplied boolean cannot authorize deletion. A full immutable audit tombstone is created atomically with deletion. Use delete_transactions for an all-or-nothing batch.",
+    {
+      transactionId: z.string().describe("Transaction document ID"),
+      note: z.string().trim().min(3).max(1000).describe("Required durable explanation of why permanent deletion is appropriate."),
+      dryRun: z.boolean().default(true).describe("Defaults true. Return safety checks without deleting or requesting approval. Set false only after the user reviews the preflight."),
+    },
+    {
+      title: "Delete Ledger transaction",
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    async ({ transactionId, note, dryRun }) => {
+      const noteError = requireNonEmptyNote(note, "delete_transaction");
+      if (noteError) return noteError;
+      const deletionNote = note.trim();
+      const preflight = await readTransactionDeletionPreflight(db, transactionId);
+
+      if (preflight.alreadyDeleted && preflight.existingTombstone) {
+        return asToolResponse(deletionReceipt(preflight.existingTombstone, true));
+      }
+      if (!preflight.found) {
+        return notFound("Transaction", transactionId, "list_transactions");
+      }
+      if (dryRun) {
+        return asToolResponse({
+          dryRun: true,
+          ...publicDeletionPreflight(preflight),
+          nextStep: preflight.eligible
+            ? "After the user reviews this preflight, call delete_transaction again with dryRun: false. The server will present a separate human approval prompt."
+            : "Resolve every blocker through the appropriate return, reversal, correction, attachment, or reference workflow. Do not force deletion.",
+        });
+      }
+      if (!preflight.eligible) {
+        return toolError({
+          code: "CONFLICT",
+          message: "Transaction deletion safety checks failed.",
+          hint: "Use the blocker list to resolve references. Deletion is only for canceled, budget-neutral, fully superseded records.",
+          retryable: true,
+          details: publicDeletionPreflight(preflight),
+        });
+      }
+
+      const approvalError = await requestTransactionDeletionApproval(
+        server,
+        [preflight],
+        deletionNote
+      );
+      if (approvalError) return approvalError;
+
+      const accountId = getAccountId();
+      const uid = getUid();
+      const commitResult = await db.runTransaction(async (firestoreTransaction) => {
+        const current = await readTransactionDeletionPreflight(
+          db,
+          transactionId,
+          firestoreTransaction
+        );
+        if (current.alreadyDeleted && current.existingTombstone) {
+          return { kind: "alreadyDeleted" as const, tombstone: current.existingTombstone };
+        }
+        if (!current.found) return { kind: "notFound" as const };
+        if (!current.eligible || !current.transactionSnapshot || !current.checks) {
+          return { kind: "blocked" as const, preflight: current };
+        }
+
+        const deletedAt = Timestamp.now();
+        const tombstone = {
+          schemaVersion: 1,
+          kind: "transaction-deletion",
+          transactionId,
+          accountId,
+          deletionNote,
+          actor: { uid, accountId },
+          approval: {
+            mechanism: "mcp-form-elicitation",
+            scope: "single",
+            confirmationPhrase: "DELETE",
+            displayedTransactionIds: [transactionId],
+            displayedTransactionCount: 1,
+            approvedByUid: uid,
+            approvedAt: deletedAt,
+          },
+          checks: current.checks,
+          transactionSnapshot: current.transactionSnapshot,
+          deletedAt,
+        };
+        const transactionRef = accountCollection(db, "transactions").doc(transactionId);
+        const tombstoneRef = accountCollection(db, "transactionDeletionTombstones").doc(transactionId);
+        firestoreTransaction.create(tombstoneRef, tombstone);
+        firestoreTransaction.delete(transactionRef);
+        return { kind: "deleted" as const, tombstone };
+      });
+
+      if (commitResult.kind === "notFound") {
+        return notFound("Transaction", transactionId, "list_transactions");
+      }
+      if (commitResult.kind === "blocked") {
+        return toolError({
+          code: "CONFLICT",
+          message: "Transaction changed after approval; deletion was not performed.",
+          hint: "Run dryRun: true again and review the new blockers before requesting fresh approval.",
+          retryable: true,
+          details: publicDeletionPreflight(commitResult.preflight),
+        });
+      }
+      return asToolResponse(
+        deletionReceipt(
+          commitResult.tombstone,
+          commitResult.kind === "alreadyDeleted"
+        )
+      );
+    }
+  );
+
+  // ── delete_transactions ───────────────────────────────────────────────────
+  server.tool(
+    "delete_transactions",
+    `[DESTRUCTIVE] Permanently delete an exact batch of 2-${MAX_TRANSACTION_DELETION_BATCH_SIZE} proven, fully superseded transactions in one all-or-nothing Firestore transaction. This is not a substitute for returns, reversals, movements, or corrections. One non-empty note must explain the batch. Start with dryRun: true. Every live transaction must independently pass the same default-deny checks as delete_transaction. The server displays the exact batch once and requires the user to enter DELETE in an MCP elicitation; a model-supplied boolean cannot authorize deletion. Each deleted transaction receives its own full tombstone containing the batch approval scope.`,
+    {
+      transactionIds: z.array(z.string().trim().min(1))
+        .min(2)
+        .max(MAX_TRANSACTION_DELETION_BATCH_SIZE)
+        .describe(`Exact unique transaction document IDs to delete together (2-${MAX_TRANSACTION_DELETION_BATCH_SIZE}).`),
+      note: z.string().trim().min(3).max(1000).describe("Required durable explanation of why every transaction in this batch is appropriate for permanent deletion."),
+      dryRun: z.boolean().default(true).describe("Defaults true. Return the exact batch and every safety check without deleting or requesting approval."),
+    },
+    {
+      title: "Delete Ledger transactions",
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    async ({ transactionIds, note, dryRun }) => {
+      const noteError = requireNonEmptyNote(note, "delete_transactions");
+      if (noteError) return noteError;
+      const deletionNote = note.trim();
+      const ids = transactionIds.map((id) => id.trim());
+
+      if (
+        ids.length < 2 ||
+        ids.length > MAX_TRANSACTION_DELETION_BATCH_SIZE ||
+        ids.some((id) => id.length === 0)
+      ) {
+        return validation(
+          `delete_transactions requires 2-${MAX_TRANSACTION_DELETION_BATCH_SIZE} non-empty transaction IDs.`,
+          "Use delete_transaction for one transaction. Split larger cleanups into separately reviewed batches."
+        );
+      }
+      if (new Set(ids).size !== ids.length) {
+        return validation(
+          "delete_transactions does not accept duplicate transaction IDs.",
+          "Pass each exact transaction ID once so the displayed approval batch is unambiguous."
+        );
+      }
+
+      const preflights = await readTransactionDeletionPreflights(db, ids);
+      const alreadyDeletedEntries = preflights
+        .filter((preflight) => preflight.alreadyDeleted && preflight.existingTombstone)
+        .map((preflight) => ({
+          tombstone: preflight.existingTombstone as Record<string, unknown>,
+          alreadyDeleted: true,
+        }));
+
+      if (alreadyDeletedEntries.length === ids.length) {
+        return asToolResponse(batchDeletionReceipt(ids, alreadyDeletedEntries));
+      }
+
+      const batchPreflight = publicBatchDeletionPreflight(preflights);
+      if (dryRun) {
+        return asToolResponse({
+          dryRun: true,
+          ...batchPreflight,
+          nextStep: batchPreflight.allEligible
+            ? "After reviewing this exact batch, call delete_transactions again with dryRun: false. The server will present one human approval prompt for all remaining live transactions."
+            : "Resolve every blocker through the appropriate return, reversal, correction, attachment, or reference workflow. The batch will not be partially deleted.",
+        });
+      }
+      if (!batchPreflight.allEligible) {
+        return toolError({
+          code: "CONFLICT",
+          message: "Batch transaction deletion safety checks failed; nothing was deleted.",
+          hint: "Every transaction must be canceled, budget-neutral, fully superseded, and unreferenced. Run dryRun: true and inspect each transaction.",
+          retryable: true,
+          details: batchPreflight,
+        });
+      }
+
+      const approvalPreflights = preflights.filter((preflight) => !preflight.alreadyDeleted);
+      const approvalTransactionIds = approvalPreflights.map((preflight) => preflight.transactionId);
+      const approvalError = await requestTransactionDeletionApproval(
+        server,
+        approvalPreflights,
+        deletionNote
+      );
+      if (approvalError) return approvalError;
+
+      const accountId = getAccountId();
+      const uid = getUid();
+      const commitResult = await db.runTransaction(async (firestoreTransaction) => {
+        const current = await readTransactionDeletionPreflights(
+          db,
+          ids,
+          firestoreTransaction
+        );
+        const blocked = current.filter((preflight) => !deletionPreflightIsReady(preflight));
+        if (blocked.length > 0) {
+          return { kind: "blocked" as const, preflights: current };
+        }
+
+        const deletedAt = Timestamp.now();
+        const entries: Array<{
+          tombstone: Record<string, unknown>;
+          alreadyDeleted: boolean;
+        }> = [];
+
+        for (const preflight of current) {
+          if (preflight.alreadyDeleted && preflight.existingTombstone) {
+            entries.push({
+              tombstone: preflight.existingTombstone as Record<string, unknown>,
+              alreadyDeleted: true,
+            });
+            continue;
+          }
+          if (!preflight.transactionSnapshot || !preflight.checks) {
+            return { kind: "blocked" as const, preflights: current };
+          }
+
+          const tombstone = {
+            schemaVersion: 1,
+            kind: "transaction-deletion",
+            transactionId: preflight.transactionId,
+            accountId,
+            deletionNote,
+            actor: { uid, accountId },
+            approval: {
+              mechanism: "mcp-form-elicitation",
+              scope: "batch",
+              confirmationPhrase: "DELETE",
+              displayedTransactionIds: approvalTransactionIds,
+              displayedTransactionCount: approvalTransactionIds.length,
+              approvedByUid: uid,
+              approvedAt: deletedAt,
+            },
+            checks: preflight.checks,
+            transactionSnapshot: preflight.transactionSnapshot,
+            deletedAt,
+          };
+          const transactionRef = accountCollection(db, "transactions").doc(preflight.transactionId);
+          const tombstoneRef = accountCollection(db, "transactionDeletionTombstones").doc(preflight.transactionId);
+          firestoreTransaction.create(tombstoneRef, tombstone);
+          firestoreTransaction.delete(transactionRef);
+          entries.push({ tombstone, alreadyDeleted: false });
+        }
+        return { kind: "deleted" as const, entries };
+      });
+
+      if (commitResult.kind === "blocked") {
+        return toolError({
+          code: "CONFLICT",
+          message: "The batch changed after approval; nothing was deleted.",
+          hint: "Run dryRun: true again and review the entire exact batch before requesting fresh approval.",
+          retryable: true,
+          details: publicBatchDeletionPreflight(commitResult.preflights),
+        });
+      }
+      return asToolResponse(batchDeletionReceipt(ids, commitResult.entries));
     }
   );
 

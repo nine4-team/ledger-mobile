@@ -18,6 +18,9 @@ export const SERVER_FEATURES = {
   structuredErrors: true,
   requiredAuditNotes: true,
   dryRun: true,
+  transactionDeletionTombstones: true,
+  transactionDeletionApproval: "mcp-form-elicitation" as const,
+  atomicBatchTransactionDeletion: true,
   compositeTools: true,
   invoiceTools: true,
   invoiceSettlementTransactions: true,
@@ -45,6 +48,8 @@ export function registerServerInfoTools(server: McpServer, db: Firestore) {
         deprecations: SERVER_DEPRECATIONS,
         conventions: {
           auditNotes: "Every mutation requires a dated note in `notes`, e.g. '4/6 — short reason'.",
+          transactionDeletion:
+            "cancel_transaction requires a reason. delete_transaction and delete_transactions are only for fully superseded records, default to dry-run, display the exact scope, require one DELETE MCP form elicitation, and preserve full tombstones. Batches contain 2-20 unique IDs and are all-or-nothing.",
           ids: "Opaque strings; never truncate.",
           money: "Integer cents.",
           transactionTaxonomy:

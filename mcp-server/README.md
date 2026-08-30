@@ -78,9 +78,16 @@ For write-path changes, run a disposable smoke against real Firestore using a se
 
 ### Write
 - `create_project`, `update_project`, `archive_project`
-- `create_transaction`, `update_transaction`, `cancel_transaction`
+- `create_transaction`, `update_transaction`, `cancel_transaction`, `delete_transaction`, `delete_transactions`
   - Note: `create_transaction` rejects `type: "Sale"` — use `sell_items_from_project_to_inventory` instead
   - `update_transaction` accepts `projectId: null` to correct an ordinary transaction into business inventory; it clears `budgetCategoryId` and does not move linked items or create an inventory movement
+  - `cancel_transaction` requires a non-empty reason. Status and the durable appended audit line are committed atomically; existing user prose is preserved.
+  - `delete_transaction` is **destructive** and only for proven, fully superseded records. It is not a substitute for a return, reversal, inventory movement, or accounting correction.
+    - Start with `dryRun: true`. Execution is default-denied unless the transaction is canceled, budget-neutral, item-free, attachment-free, and has no invoice, settlement, lineage, inventory-provenance, Quick Draft, related-ingestion, or repricing-audit references.
+    - The MCP SDK's `destructiveHint` annotation is published for compatible clients, but MCP annotations are advisory. Ledger therefore does not accept an `authorized: true` argument or any other model-supplied approval flag.
+    - `dryRun: false` makes the server display the exact transaction and request MCP form elicitation. The authenticated user enters `DELETE`; the approval is bound to that one in-flight request. Clients that do not support or permit elicitation cannot delete transactions.
+    - Successful deletion atomically creates `accounts/{accountId}/transactionDeletionTombstones/{transactionId}` with the complete pre-delete snapshot, note, actor/account, approval evidence, reference checks, and timestamp. Retries return the original receipt without deleting again.
+  - `delete_transactions` applies the same safeguards to an exact batch of 2–20 unique IDs. One dry-run shows every transaction and blocker; one `DELETE` approval authorizes the displayed batch; then all eligible live transactions are rechecked, tombstoned, and deleted in one all-or-nothing Firestore transaction. A failed member prevents every deletion.
 - `create_item`, `update_item`, `delete_item`
 - `attach_item_image({ itemId, fileData|fileUrl, fileName, contentType?, isPrimary?, position? })` — upload an item-owned attachment; the first image becomes primary
 - `set_primary_item_image({ itemId, imageUrl })` — atomically choose the primary and move it to index 0; never touches Storage

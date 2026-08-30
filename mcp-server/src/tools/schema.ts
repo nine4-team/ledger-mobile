@@ -49,6 +49,8 @@ const ENTITIES: Record<string, EntitySchema> = {
       "Every mutation must include a dated audit note in `notes`.",
       "Client payments are paymentToBusiness transactions with categoryType == fee, no source/vendor, no item/tax/subtotal/discount fields, and no purchaser/reimbursement fields.",
       "Canceled transactions contribute $0 to budget calculations.",
+      "cancel_transaction requires a non-empty reason and appends it without replacing existing user prose.",
+      "delete_transaction and delete_transactions are destructive and only for proven, fully superseded records. They default to dry-run, display the exact single transaction or 2–20 transaction batch, require one server-enforced DELETE form-elicitation confirmation, and atomically preserve full transactionDeletionTombstones records. Batch deletion is all-or-nothing. Never use deletion instead of a return, reversal, or correction.",
       "Inventory movement structural fields (budgetCategoryId, type, source, projectId) are frozen after creation. Direct amountCents/subtotalCents edits are also blocked; eligible project Purchase totals are maintained only by the sold-item repricing trigger. itemIds, notes, status, and updatedAt are mutable.",
       "Legacy canonical sales (isCanonicalInventorySale == true) are exempt from Sale immutability for backwards compatibility.",
     ],

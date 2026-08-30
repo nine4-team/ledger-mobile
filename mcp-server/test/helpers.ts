@@ -46,30 +46,57 @@ export function getTestDb(): Firestore {
  * The MCP SDK treats `handler` as an async (args) => Promise<ToolResponse>.
  */
 export interface CapturedServer {
-  tool: (
-    name: string,
-    desc: string,
-    schema: Record<string, unknown>,
-    handler: (args: any) => Promise<any>
-  ) => void;
+  tool: (...args: any[]) => void;
+  server: {
+    elicitInput: (params: Record<string, unknown>) => Promise<any>;
+  };
   resource?: (...args: unknown[]) => void;
   handlers: Map<string, (args: any) => Promise<any>>;
   schemas: Map<string, Record<string, unknown>>;
+  descriptions: Map<string, string>;
+  annotations: Map<string, Record<string, unknown>>;
+  elicitations: Record<string, unknown>[];
+  setElicitationHandler: (
+    handler: (params: Record<string, unknown>) => Promise<any>
+  ) => void;
 }
 
 export function makeCapturedServer(): CapturedServer {
   const handlers = new Map<string, (args: any) => Promise<any>>();
   const schemas = new Map<string, Record<string, unknown>>();
+  const descriptions = new Map<string, string>();
+  const annotations = new Map<string, Record<string, unknown>>();
+  const elicitations: Record<string, unknown>[] = [];
+  let elicitationHandler = async () => ({ action: "decline" });
   return {
-    tool(name, _desc, schema, handler) {
+    tool(...args: any[]) {
+      const [name, desc, schema] = args as [string, string, Record<string, unknown>];
+      const handler = args[args.length - 1] as (input: any) => Promise<any>;
+      const toolAnnotations = args.length === 5
+        ? args[3] as Record<string, unknown>
+        : undefined;
       handlers.set(name, handler);
       schemas.set(name, schema);
+      descriptions.set(name, desc);
+      if (toolAnnotations) annotations.set(name, toolAnnotations);
+    },
+    server: {
+      async elicitInput(params) {
+        elicitations.push(params);
+        return elicitationHandler(params);
+      },
     },
     resource() {
       /* no-op for tests */
     },
     handlers,
     schemas,
+    descriptions,
+    annotations,
+    elicitations,
+    setElicitationHandler(handler) {
+      elicitationHandler = handler;
+    },
   };
 }
 
@@ -86,7 +113,11 @@ export async function wipeAccount(db: Firestore): Promise<void> {
   const collections = [
     "items",
     "transactions",
+    "transactionDeletionTombstones",
+    "transactionRepricingEvents",
     "lineageEdges",
+    "invoices",
+    "protoItems",
     "projects",
     "spaces",
   ];

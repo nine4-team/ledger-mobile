@@ -83,6 +83,29 @@ export function appendOrReviseAiAuditLine(
 }
 
 /**
+ * Append a durable AI audit line without replacing another same-day entry.
+ *
+ * Cancellation and other terminal accounting actions need every supplied
+ * reason to remain visible. Repeating the exact same operation is idempotent:
+ * if the tagged line already exists, the notes value is returned unchanged.
+ */
+export function appendDurableAiAuditLine(
+  existingNotes: string | undefined,
+  auditLine: string,
+  date: string = todayString()
+): string {
+  const tagged = `[AI ${date}] ${auditLine.trim()}`;
+  const prev = (existingNotes ?? "").trimEnd();
+  if (!prev) return tagged;
+
+  if (prev.split("\n").some((line) => line.trim() === tagged)) {
+    return prev;
+  }
+
+  return `${prev}\n\n${tagged}`;
+}
+
+/**
  * Tag a fresh notes value as AI-authored. Used by tools that create entirely
  * AI-written records (sell_items_from_*, return_items)
  * so the human reader can tell the line came from the MCP side, not an app
