@@ -11,10 +11,12 @@ final class CameraEngine: NSObject, @unchecked Sendable {
     private let sessionQueue = DispatchQueue(label: "camera.session")
     private let videoQueue = DispatchQueue(label: "camera.video")
     private var focusObservation: NSKeyValueObservation?
-    private var captureCompletion: (@MainActor (UIImage, Data) -> Void)?
+    /// AVCapturePhotoOutput may process multiple requests concurrently. Each request
+    /// needs its own delegate/completion and must stay retained until capture finishes.
+    private var captureProcessors: [Int64: PhotoCaptureProcessor] = [:]
 
     var onSessionStarted: (@MainActor () -> Void)?
-    var onCapture: (@MainActor (UIImage, Data) -> Void)?
+    var onWillCapture: (@MainActor () -> Void)?
     var onFocusStateChanged: (@MainActor (Bool) -> Void)?
     var onZoomCapabilities: (@MainActor (ZoomCapabilities) -> Void)?
 
@@ -55,6 +57,18 @@ final class CameraEngine: NSObject, @unchecked Sendable {
             }
             session.addOutput(photoOutput)
             photoOutput.maxPhotoQualityPrioritization = .speed
+
+            // Opt into Apple's low-latency capture pipeline when the active device
+            // supports it. These must be configured before the session starts.
+            if photoOutput.isZeroShutterLagSupported {
+                photoOutput.isZeroShutterLagEnabled = true
+            }
+            if photoOutput.isResponsiveCaptureSupported {
+                photoOutput.isResponsiveCaptureEnabled = true
+            }
+            if photoOutput.isFastCapturePrioritizationSupported {
+                photoOutput.isFastCapturePrioritizationEnabled = true
+            }
 
             // Video output with active delegate — provides the continuous frame
             // pipeline that the AF system needs on this hardware.
@@ -114,10 +128,20 @@ final class CameraEngine: NSObject, @unchecked Sendable {
 
     func capturePhoto(completion: @escaping @MainActor (UIImage, Data) -> Void) {
         sessionQueue.async { [self] in
-            captureCompletion = completion
             let settings = AVCapturePhotoSettings()
             settings.photoQualityPrioritization = .speed
-            photoOutput.capturePhoto(with: settings, delegate: self)
+            let processor = PhotoCaptureProcessor(
+                settings: settings,
+                onWillCapture: { [weak self] in self?.onWillCapture?() },
+                completion: completion,
+                onFinished: { [weak self] uniqueID in
+                    self?.sessionQueue.async { [weak self] in
+                        self?.captureProcessors[uniqueID] = nil
+                    }
+                }
+            )
+            captureProcessors[settings.uniqueID] = processor
+            photoOutput.capturePhoto(with: settings, delegate: processor)
         }
     }
 
@@ -206,17 +230,38 @@ final class CameraEngine: NSObject, @unchecked Sendable {
     }
 }
 
-// MARK: - CameraEngine + AVCaptureVideoDataOutputSampleBufferDelegate
+// MARK: - PhotoCaptureProcessor
 
-extension CameraEngine: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // No-op — frame pipeline activation only
+/// Per-request delegate. A single shared completion is unsafe because photo output
+/// can have several captures in flight at once (especially with responsive capture).
+private final class PhotoCaptureProcessor: NSObject, AVCapturePhotoCaptureDelegate, @unchecked Sendable {
+    private let uniqueID: Int64
+    private let requestTime = ProcessInfo.processInfo.systemUptime
+    private let onWillCapture: @MainActor () -> Void
+    private let completion: @MainActor (UIImage, Data) -> Void
+    private let onFinished: @Sendable (Int64) -> Void
+
+    init(
+        settings: AVCapturePhotoSettings,
+        onWillCapture: @escaping @MainActor () -> Void,
+        completion: @escaping @MainActor (UIImage, Data) -> Void,
+        onFinished: @escaping @Sendable (Int64) -> Void
+    ) {
+        uniqueID = settings.uniqueID
+        self.onWillCapture = onWillCapture
+        self.completion = completion
+        self.onFinished = onFinished
     }
-}
 
-// MARK: - CameraEngine + AVCapturePhotoCaptureDelegate
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        willCapturePhotoFor resolvedSettings: AVCaptureResolvedPhotoSettings
+    ) {
+        let latency = Int((ProcessInfo.processInfo.systemUptime - requestTime) * 1_000)
+        print("[Camera] shutter latency=\(latency)ms id=\(uniqueID)")
+        Task { @MainActor [onWillCapture] in onWillCapture() }
+    }
 
-extension CameraEngine: AVCapturePhotoCaptureDelegate {
     func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
@@ -225,19 +270,35 @@ extension CameraEngine: AVCapturePhotoCaptureDelegate {
         guard error == nil,
               let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data),
-              let jpegData = image.jpegData(compressionQuality: 0.85) else { return }
+              let jpegData = image.jpegData(compressionQuality: 0.85) else {
+            if let error { print("[Camera] processing failed id=\(uniqueID): \(error)") }
+            return
+        }
 
         let thumbSize = CGSize(width: 120, height: 120)
         let renderer = UIGraphicsImageRenderer(size: thumbSize)
         let thumbnail = renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: thumbSize)) }
+        let latency = Int((ProcessInfo.processInfo.systemUptime - requestTime) * 1_000)
+        print("[Camera] processing latency=\(latency)ms id=\(uniqueID)")
 
-        let perCaptureCompletion = captureCompletion
-        captureCompletion = nil
+        Task { @MainActor [completion] in completion(thumbnail, jpegData) }
+    }
 
-        Task { @MainActor [weak self] in
-            perCaptureCompletion?(thumbnail, jpegData)
-            self?.onCapture?(thumbnail, jpegData)
-        }
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings,
+        error: Error?
+    ) {
+        if let error { print("[Camera] capture failed id=\(uniqueID): \(error)") }
+        onFinished(uniqueID)
+    }
+}
+
+// MARK: - CameraEngine + AVCaptureVideoDataOutputSampleBufferDelegate
+
+extension CameraEngine: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        // No-op — frame pipeline activation only
     }
 }
 
@@ -260,6 +321,7 @@ final class CameraManager {
     var maxDisplayZoom: CGFloat = 1.0
 
     private let engine = CameraEngine()
+    private var flashSequence = 0
 
     var session: AVCaptureSession { engine.session }
 
@@ -267,15 +329,8 @@ final class CameraManager {
         engine.onSessionStarted = { [weak self] in
             self?.isSessionRunning = true
         }
-        engine.onCapture = { [weak self] thumbnail, _ in
-            guard let self else { return }
-            lastThumbnail = thumbnail
-            captureCount += 1
-            withAnimation(.easeIn(duration: 0.05)) { showFlash = true }
-            Task {
-                try? await Task.sleep(for: .milliseconds(100))
-                withAnimation(.easeOut(duration: 0.15)) { self.showFlash = false }
-            }
+        engine.onWillCapture = { [weak self] in
+            self?.showShutterFlash()
         }
         engine.onFocusStateChanged = { [weak self] isAdjusting in
             self?.isAdjustingFocus = isAdjusting
@@ -286,6 +341,17 @@ final class CameraManager {
             minDisplayZoom = caps.minDisplayZoom
             maxDisplayZoom = caps.maxDisplayZoom
             displayZoom = 1.0
+        }
+    }
+
+    private func showShutterFlash() {
+        flashSequence += 1
+        let sequence = flashSequence
+        withAnimation(.easeIn(duration: 0.05)) { showFlash = true }
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(100))
+            guard let self, sequence == flashSequence else { return }
+            withAnimation(.easeOut(duration: 0.15)) { showFlash = false }
         }
     }
 
@@ -309,7 +375,12 @@ final class CameraManager {
     }
 
     func capturePhoto(onCapture: @escaping (Data) -> Void) {
-        engine.capturePhoto { _, data in onCapture(data) }
+        engine.capturePhoto { [weak self] thumbnail, data in
+            guard let self else { return }
+            lastThumbnail = thumbnail
+            captureCount += 1
+            onCapture(data)
+        }
     }
 
     func focus(at devicePoint: CGPoint) {
@@ -577,15 +648,10 @@ struct CameraCapture: View {
 
             Spacer()
 
-            Button {
+            ShutterButton {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 manager.capturePhoto { data in onCapture(data) }
-            } label: {
-                ZStack {
-                    Circle().stroke(.white, lineWidth: 4).frame(width: 72, height: 72)
-                    Circle().fill(.white).frame(width: 64, height: 64)
-                }
             }
-            .buttonStyle(ShutterButtonStyle())
 
             Spacer()
 
@@ -627,13 +693,34 @@ struct CameraCapture: View {
     }
 }
 
-// MARK: - ShutterButtonStyle
+// MARK: - ShutterButton
 
-private struct ShutterButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.85 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
+/// Fires on touch-down rather than touch-up. Apple recommends issuing photo capture
+/// as early as possible to reduce shutter lag and camera shake from the tap itself.
+private struct ShutterButton: View {
+    let action: () -> Void
+
+    @GestureState private var isPressed = false
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(.white, lineWidth: 4).frame(width: 72, height: 72)
+            Circle().fill(.white).frame(width: 64, height: 64)
+        }
+        .contentShape(Circle())
+        .scaleEffect(isPressed ? 0.85 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .updating($isPressed) { _, pressed, _ in pressed = true }
+        )
+        .onChange(of: isPressed) { wasPressed, isPressed in
+            if isPressed && !wasPressed { action() }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Take Photo")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
     }
 }
 #endif
