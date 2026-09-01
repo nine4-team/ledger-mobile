@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 36
+State version: 38
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TYPED-EDIT-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: TELEMETRY-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -453,6 +453,24 @@ modifying the running Firebase application before hard cutover.
   macOS and generic iOS Simulator builds, and clean tracked artifacts. All five
   typed-edit obligations and exactly its two target-only surfaces are now
   `verified`; current editors and feature commands remain unadvanced.
+- Created and passed the ready gate for
+  `privacy-safe-telemetry-and-correlation`. Exactly two comment-only target
+  scaffolds are mapped to stable signal IDs, validated environment/build scope,
+  domain-separated opaque correlation, exact allowlisted bounded values,
+  canonical offline representation, and deterministic redaction/refusal.
+  Current app/MCP logging remains unadvanced; no sink, emission, provider,
+  hosted resource, credential, product event, migration or production action
+  exists. See `EVID-TELEMETRY-001`.
+- Implemented the ready telemetry slice with closed target signal and dimension
+  IDs, generated telemetry-class validation, validated environment/build/
+  contract scope, typed domain-separated HMAC-SHA256 correlation, exact
+  dimension/correlation/unit/range allowlists, deterministic canonical bytes,
+  a 1,536-byte envelope ceiling, and stable redaction/refusal by data class.
+  Four focused tests and all 43 target tests pass, as do target boundary and
+  generated-contract checks, macOS/iOS Simulator target builds, clean source-
+  project isolation and diff formatting. Exactly the two target-only telemetry
+  surfaces are `implemented`; current logging/telemetry surfaces remain
+  `target_mapped`. Exact-commit CI is still required before verification.
 
 ## Next Action
 
@@ -462,15 +480,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Create and pass the ready gate for the next decision-independent technical
-   slice, `privacy-safe-telemetry-and-correlation`. Derive it from the platform
-   dossier and architecture observability/logging contracts; implement only
-   target-owned stable event/metric IDs, environment/build scope, opaque
-   correlation, allowlisted non-sensitive dimensions, bounded values, and
-   deterministic redaction/refusal. Do not add a hosted telemetry adapter,
-   identifiers/payload values, Auth, provider resources, product behavior, or
-   production emission, and do not advance current logging surfaces merely
-   from shared-contract proof.
+2. Commit and push the implemented `privacy-safe-telemetry-and-correlation`
+   checkpoint, require the exact-commit pull-request conversion and isolated-
+   target jobs to pass, and record the immutable run in `EVID-TELEMETRY-001`.
+   Only then mark `TELEMETRY-TEST-004`, the dossier, and its two target-only
+   surfaces `verified`; do not advance current logging/telemetry surfaces.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

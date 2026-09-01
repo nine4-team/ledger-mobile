@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "privacy-safe-telemetry-and-correlation",
+  "title": "Make operational signals useful without exposing Ledger data",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Privacy-Safe Telemetry and Correlation",
+  "surfaceIds": [
+    "SWIFT-C1EC0E1D9BE6",
+    "TEST-BDC6ADC6F366"
+  ],
+  "requirements": [
+    {
+      "id": "TELEMETRY-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Observability Model",
+      "invariant": "Every target event and metric has a stable registered identity, registered telemetry class, validated environment/build/contract scope, bounded dimensions or measurement, and a deterministic canonical representation before any adapter may emit it.",
+      "decisionIds": [],
+      "verificationIds": ["TELEMETRY-TEST-001", "TELEMETRY-TEST-002", "TELEMETRY-TEST-003", "TELEMETRY-TEST-004"]
+    },
+    {
+      "id": "TELEMETRY-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Logging and Correlation",
+      "invariant": "Session, Principal, Account, operation, and entity linkage uses typed domain-separated one-way correlation; emittable values contain no raw identifiers, credentials, URLs, notes, media, financial values, command payloads, provider messages, or unclassified text.",
+      "decisionIds": [],
+      "verificationIds": ["TELEMETRY-TEST-002", "TELEMETRY-TEST-003", "TELEMETRY-TEST-004"]
+    },
+    {
+      "id": "TELEMETRY-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Operability",
+      "invariant": "Environment/build scope and stable low-cardinality outcomes make queue age, sync lag, command rejection, decode failure, and reconciliation drift measurable without allowing environment confusion or user-content cardinality.",
+      "decisionIds": [],
+      "verificationIds": ["TELEMETRY-TEST-001", "TELEMETRY-TEST-002", "TELEMETRY-TEST-003", "TELEMETRY-TEST-004"]
+    },
+    {
+      "id": "TELEMETRY-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "Telemetry contracts contain only Ledger and standard Swift values; provider SDK values, dynamic dictionaries, arbitrary field names, raw log messages, database paths, and transport errors cannot cross the target boundary.",
+      "decisionIds": [],
+      "verificationIds": ["TELEMETRY-TEST-001", "TELEMETRY-TEST-002", "TELEMETRY-TEST-003", "TELEMETRY-TEST-004"]
+    },
+    {
+      "id": "TELEMETRY-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Adapter contract tests",
+      "invariant": "Provider-free deterministic fixtures prove signal registration, exact allowlists, scope and correlation separation, canonical encoding, value bounds, and sensitive/unclassified refusal before a hosted adapter or production emitter exists.",
+      "decisionIds": [],
+      "verificationIds": ["TELEMETRY-TEST-001", "TELEMETRY-TEST-002", "TELEMETRY-TEST-003", "TELEMETRY-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "TelemetryEventID, TelemetryMetricID, TelemetryDimensionKey and TelemetryDimensionCode are stable codes; signal definitions resolve one generated TelemetryClassID and exact allowed dimension/correlation sets.",
+        "TelemetryBuildScope is derived from a ValidatedLedgerEnvironment plus validated app version, build number and source revision; it contains environment/profile/contract versions but no endpoint, bundle resource, credential or user identifier.",
+        "TelemetryCorrelationFactory accepts only typed session, Principal, Account, operation or entity identity and produces a domain-separated HMAC-SHA256 digest; no raw identity is retained in TelemetryCorrelation.",
+        "TelemetryEvent and TelemetryMetricSample can be created only through TelemetrySignalCatalog validation, with sorted unique dimensions/correlations, registered values/units, bounded counts/ranges and a canonical-size ceiling.",
+        "TelemetryRedactionPolicy maps only explicitly safe classes to inclusion, protected classes to stable redaction, and identifiers/unclassified material to stable refusal without carrying the source value into a result."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free value/validation slice creates no Postgres table, view, function, constraint, index, telemetry sink, or retention schema."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No command/query handler or telemetry transport executes; later adapters may accept only validated envelopes."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, view, or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row or privileged function exists; future telemetry storage/retention requires a separate security slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The catalog can describe Sync-health signals but defines no PowerSync Stream, subscription, row visibility, checkpoint authority, or local telemetry upload."
+    },
+    "localOffline": {
+      "items": [
+        "Validated event and metric values encode to canonical sorted bytes and reconstruct identically without a network, hosted destination, provider SDK or credential.",
+        "Equivalent reordered dimensions/correlations normalize identically; unregistered signals/classes, duplicate/disallowed keys, disallowed correlation kinds, out-of-range measurements, excessive fields and oversized envelopes fail atomically without a partial emittable value.",
+        "Correlation output is stable for the same key/scope/kind/typed identity but changes across environment/build/kind/key; no raw typed identity is encoded or displayed."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No attachment identity, byte, object, URL, media diagnostic, or upload/download behavior is introduced."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This slice defines the target value contract only. App/MCP/handler emitters and parity tests opt in through later owning slices; current Firebase app/MCP logging remains unchanged and unadvanced."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No current Firebase/MCP log or production telemetry value is migrated; source logs are not target authority."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "The initial technical catalog names stable platform-environment, contract-read, operation-status and sync-health events plus bounded duration/lag/count metrics under the generated telemetry classes.",
+        "Every validation/redaction/refusal failure is represented only by a stable safe contract code. No sink, retention policy, alert threshold, dashboard, runbook activation or production emission is created in this slice."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The contracts are additive target-only Swift code and tests, import no provider SDK, alter no current app project, contact no hosted service, and activate no telemetry emission or production behavior.",
+        "Future emitters opt in only after their owning slice and operational policy pass; reverting this foundation before cutover removes only target-only types/tests and no recorded user or operational data."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "TELEMETRY-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/PrivacySafeTelemetryTests.swift",
+      "covers": ["TELEMETRY-REQ-001", "TELEMETRY-REQ-003", "TELEMETRY-REQ-004", "TELEMETRY-REQ-005"],
+      "expected": "The initial event/metric catalog resolves only generated telemetry classes, rejects duplicate/unknown definitions, enforces exact dimension values/correlation kinds/units/ranges, and creates deterministically sorted bounded envelopes.",
+      "status": "passed",
+      "evidence": ["EVID-TELEMETRY-001"]
+    },
+    {
+      "id": "TELEMETRY-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/PrivacySafeTelemetryTests.swift",
+      "covers": ["TELEMETRY-REQ-001", "TELEMETRY-REQ-002", "TELEMETRY-REQ-003", "TELEMETRY-REQ-004", "TELEMETRY-REQ-005"],
+      "expected": "Canonical event/metric bytes round-trip offline; reordered safe fields normalize identically; opaque correlations are deterministic within and separated across environment/build/kind/key without encoding raw identity.",
+      "status": "passed",
+      "evidence": ["EVID-TELEMETRY-001"]
+    },
+    {
+      "id": "TELEMETRY-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/PrivacySafeTelemetryTests.swift",
+      "covers": ["TELEMETRY-REQ-001", "TELEMETRY-REQ-002", "TELEMETRY-REQ-003", "TELEMETRY-REQ-004", "TELEMETRY-REQ-005"],
+      "expected": "Credentials, URLs, notes, media, financial values, payloads and provider messages redact; identifiers and unclassified data refuse; unregistered/disallowed/duplicate/out-of-range/oversized candidates fail with stable codes and no partial envelope.",
+      "status": "passed",
+      "evidence": ["EVID-TELEMETRY-001"]
+    },
+    {
+      "id": "TELEMETRY-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["TELEMETRY-REQ-001", "TELEMETRY-REQ-002", "TELEMETRY-REQ-003", "TELEMETRY-REQ-004", "TELEMETRY-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-TELEMETRY-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent technical-control foundation derived from the platform capability dossier. It stops before any telemetry SDK/sink, file/network persistence, Auth/provider resource, app/MCP/handler wiring, user/product event, alert/dashboard/runbook activation, migration, deployment, release, production emission, or cutover authority."
+}

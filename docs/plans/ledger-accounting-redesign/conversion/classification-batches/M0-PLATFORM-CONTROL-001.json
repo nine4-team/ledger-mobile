@@ -3119,6 +3119,98 @@
       }
     },
     {
+      "id": "SWIFT-C1EC0E1D9BE6",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "87056de825659a1ea5bca55fc3b5e12fb668d74b67cd0e2c70e06cadd5bea776",
+      "currentBehavior": "Defines the target-only closed event/metric/dimension/correlation registry, validated environment/build/contract scope, typed domain-separated HMAC correlations, allowlisted bounded canonical envelopes, and stable sensitive-data redaction/refusal decisions.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TELEMETRY-001"
+      ],
+      "notes": "Target-only technical-control surface. It will contain provider-free values and validation only; it does not replace or advance current app/MCP logging surfaces and creates no telemetry sink or emission.",
+      "target": {
+        "owner": "Privacy-Safe Telemetry and Correlation",
+        "surfaces": [
+          "stable target event and metric identifiers",
+          "validated environment/build telemetry scope",
+          "one-way opaque correlation values",
+          "allowlisted bounded dimensions and measurements",
+          "deterministic sensitive-data redaction and refusal"
+        ],
+        "securityRequirements": [
+          "Emittable envelopes cannot contain raw Principal, Account, entity, operation, session, credential, URL, note, media, financial, command-payload or provider-message values",
+          "Every signal, telemetry class, dimension key/value, correlation kind, unit and numeric bound is registered and validated before an envelope exists"
+        ],
+        "syncRequirements": [
+          "Canonical telemetry values remain deterministic without network access and preserve environment/build/contract scope across process restart",
+          "The shared operation/readiness contracts may supply only stable categories and opaque correlations; this surface defines no PowerSync Stream or readiness authority"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no current Firebase or MCP log line as target authority; future emitters use only reviewed target signal definitions and opaque source correlation where explicitly approved.",
+        "reconciliation": [
+          "Every emitted signal resolves one registered ID/class, contains only allowed bounded fields, and either redacts or refuses every protected/unclassified data class deterministically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "PrivacySafeTelemetryTests"
+        ],
+        "acceptance": [
+          "Provider-free fixtures prove stable registration, canonical encoding, one-way scope-separated correlation, bounded values, and fail-closed redaction/refusal without a telemetry destination"
+        ]
+      }
+    },
+    {
+      "id": "TEST-BDC6ADC6F366",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "8d5612d98a8858fd82f8167eed1aa047ed360c1c0563b335934adcdd65e7c340",
+      "currentBehavior": "Exercises stable signal/class registration, exact allowlists/ranges/units, canonical restart bytes, build/key/kind/environment-separated opaque correlation, raw-identity absence, deterministic protected-data redaction, unclassified/identifier refusal, and duplicate/disallowed/out-of-range/oversized failure.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TELEMETRY-001"
+      ],
+      "notes": "Target-only provider-free test surface; it uses synthetic identifiers/keys and no hosted SDK, credential, destination, production record or current Firebase test host.",
+      "target": {
+        "owner": "Privacy-Safe Telemetry and Correlation",
+        "surfaces": [
+          "PrivacySafeTelemetryTests",
+          "signal registry and bound fixtures",
+          "opaque correlation separation fixtures",
+          "redaction/refusal and canonical-byte fixtures"
+        ],
+        "securityRequirements": [
+          "Negative fixtures prove raw identifiers and protected/unclassified values cannot become emittable envelope fields",
+          "Synthetic correlation material never contains a production identifier or credential"
+        ],
+        "syncRequirements": [
+          "Encoding/order/restart fixtures run without a network and preserve only safe scoped telemetry values"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only fixtures and do not load source logs or production-derived telemetry.",
+        "reconciliation": [
+          "Equivalent inputs produce identical canonical bytes while reordered, disallowed, oversized and out-of-range candidates are accepted or refused exactly as registered"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter PrivacySafeTelemetryTests"
+        ],
+        "acceptance": [
+          "All privacy, correlation, bound, restart and refusal obligations pass deterministically in LedgerTargetCore"
+        ]
+      }
+    },
+    {
       "id": "TEST-B2C120C177D5",
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Configures Firebase emulator integration tests and cleanup.",

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:57:52.959Z",
+  "generatedFromManifestSync": "2026-09-01T22:17:25.092Z",
   "totals": {
-    "slices": 6,
-    "claimedTargetSurfaces": 36,
+    "slices": 7,
+    "claimedTargetSurfaces": 38,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 21
+    "implementationAdvancedTargetSurfaces": 23
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 5,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -34,6 +34,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json"
+    },
+    {
+      "sliceId": "privacy-safe-telemetry-and-correlation",
+      "title": "Make operational signals useful without exposing Ledger data",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Privacy-Safe Telemetry and Correlation",
+      "surfaceIds": [
+        "SWIFT-C1EC0E1D9BE6",
+        "TEST-BDC6ADC6F366"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/privacy-safe-telemetry-and-correlation.json"
     },
     {
       "sliceId": "scoped-route-resolution-and-restoration",
