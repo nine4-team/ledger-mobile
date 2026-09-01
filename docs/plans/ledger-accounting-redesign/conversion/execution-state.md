@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 26
+State version: 27
 
 ## Objective
 
@@ -11,13 +11,13 @@ modifying the running Firebase application before hard cutover.
 
 ## Current Checkpoint
 
-- Phase: M1 evidence-gated current-behavior closure; bounded M2 target mapping
-  may proceed for ready capabilities
-- Checkpoint: GIT-BASELINE-PREPARED
+- Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
+  decision-independent Phase 1 target foundations are now in progress
+- Checkpoint: TARGET-ENVIRONMENT-ISOLATION-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
-  baseline is committed and shared by `dev` and `main`; conversion planning,
+  baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
 - Production export: profilers and artifact format are ready; execution is
   blocked on an acceptable external project-matching service-account key or a
@@ -25,15 +25,17 @@ modifying the running Firebase application before hard cutover.
   `firebase-export*` directories do not have sufficient recorded provenance to
   promote silently.
 - Production mutations authorized: no.
-- Supabase/PowerSync implementation authorized: architecture and isolated test
-  infrastructure only; product/schema blockers still apply.
+- Supabase/PowerSync implementation authorized: decision-independent target
+  environment contracts, isolated build/test infrastructure, and unprovisioned
+  staging shell only; hosted resources, provider adapters, product/schema
+  decisions, migration, and production authority remain gated.
 
 ## Completed at This Checkpoint
 
 - Separated the supplied 197-path dirty snapshot into an independently verified
   16-path current Firebase implementation commit, a 64-path product-authority
   package with four supporting non-item audit/evidence paths, and the remaining
-  conversion architecture/control/generated-evidence package. `dev` and `main`
+  conversion architecture/control/generated-evidence package. `firebase` and `main`
   now share exact source baseline `fe018501`; no conversion file was placed on
   either shared branch. See `EVID-GIT-BASELINE-001`.
 - Established a machine-readable conversion manifest and objective milestone
@@ -303,33 +305,72 @@ modifying the running Firebase application before hard cutover.
   rewrites. The first workflow run and repository branch-protection requirement
   remain external verification/administration steps; no merge-enforcement claim
   is made yet.
+- Started the first machine-enforced technical slice,
+  `target-environment-isolation`, with exact architecture/conversion
+  requirements, complete contract applicability, reciprocal verification, and
+  explicit non-authority limits.
+- Added the public, dependency-free `LedgerTargetCore` package. Its closed
+  target environment manifest, exact contract/resource allowlists, safe
+  diagnostics, deterministic per-Principal/Account local namespaces, persisted
+  environment binding, PowerSync descriptor, and pre-dependency/local-state
+  bootstrap gates import no provider SDK.
+- Added 12 deterministic package tests. They pass for manifest validation,
+  Firebase-kind refusal, mixed/production resource refusal, contract mismatch,
+  safe diagnostics, pre-bootstrap refusal, restart-stable namespace isolation,
+  required identity inputs, stale persisted-binding byte preservation, and
+  matching-binding reopen.
+- Added a separate reproducible `LedgerTarget.xcodeproj`, generated from
+  `LedgerTargetProject.yml`; the source Firebase `LedgeriOS.xcodeproj`
+  remains unchanged. The target project builds a fixed
+  `apps.nine4.ledger.staging` / `Ledger STAGING` shell for macOS and iOS
+  Simulator, links only the local target core, shows permanent staging/no-hosted-
+  services banner code, and contains only unprovisioned synthetic identifiers.
+- Added a fail-closed graph/import/source-contamination check and root commands
+  for target checks, tests, generation, and both platform builds. Repeated
+  XcodeGen output is byte-stable on this host.
+- Extended the pull-request workflow with a separate macOS target job for the
+  boundary check, 12 tests, both builds, and clean-diff verification. Its first
+  external run remains pending; the slice therefore stays `in_progress` and
+  `TARGET-ENV-TEST-005` remains planned.
+- Recorded partial implementation evidence in
+  `EVID-TARGET-ENVIRONMENT-001`. No hosted resource, credential, network
+  backend, source Firebase implementation, production read/mutation, deployment,
+  migration, release, or cutover was used.
 
 ## Next Action
 
 Continue without waiting on the two M1 evidence blockers:
 
-1. Before any implementation begins, copy `implementation-slices/_template.json`
-   to the bounded slice ID and make its `ready` gate pass under
-   `vertical-slice-implementation-method.md`. Use the authority audit to select
-   the owning canonical target spec, then trace exact stories/invariants and
-   confirmed decisions to contracts and verification. Batch-level authority
-   coverage does not replace requirement-level implementation evidence.
-2. Preserve the decision-packet queue as proposals until product approval. Every
+1. Resume `target-environment-isolation` from its dossier and
+   `EVID-TARGET-ENVIRONMENT-001`. Reconcile the live diff, rerun
+   `npm run target:environment:check`,
+   `npm run target:environment:test`, both target staging builds, and
+   `npm run conversion:check`. Do not reattach target files to
+   `LedgeriOS.xcodeproj`.
+2. Obtain the first external run of the configured target CI job only through
+   the ordinary reviewed branch/PR workflow. Record its immutable run reference
+   before passing `TARGET-ENV-TEST-005`; do not treat the workflow file or
+   local compilation as external CI evidence.
+3. Keep the target projection explicitly `unprovisioned` until isolated hosted
+   resource IDs, staging-only credentials, maximum spend/run-rate, cleanup
+   owner, and the applicable spike authorization are explicit. Do not replace
+   synthetic IDs with guesses or production identifiers.
+4. Preserve the decision-packet queue as proposals until product approval. Every
    generated product blocker now has a packet; O-021 remains an explicit UI-only
    UX experiment rather than a schema gate.
-3. Do not execute the prepared vertical-spike protocol until isolated hosted
+5. Do not execute the prepared vertical-spike protocol until isolated hosted
    resources, staging-only credentials, maximum spend/run-rate, cleanup owner,
    device matrix, and pre-measurement hard caps are explicitly authorized. When
    authorized, begin at S0 and stop fail-closed on any unknown/production ID.
-4. When the user approves a product decision, update its canonical spec and
+6. When the user approves a product decision, update its canonical spec and
    decision log first, then traceability, architecture, affected batch mappings/
    evidence and this state. Keep one target operation/query authority across app
    and MCP and do not create a Firebase application adapter.
-5. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
+7. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
    may use synthetic staging only and must prove encrypted local durability,
    scoped Sync Streams, idempotent operations/rejection, media restart, RLS, and
    offline provenance before provider-specific architecture is approved.
-6. When an external chmod-600 service-account JSON whose `project_id` is exactly
+8. When an external chmod-600 service-account JSON whose `project_id` is exactly
    `ledger-nine4`, or a separately proven canonical immutable production export,
    becomes available, run the fail-closed read-only profiling/reconciliation
    flow. Do not copy credentials into the repository, substitute authorized-user
@@ -382,6 +423,10 @@ git status --short
 node scripts/supabase-conversion-ledger.mjs report
 npm run conversion:gate:m0
 npm run conversion:gate:m1
+npm run target:environment:check
+npm run target:environment:test
+npm run target:staging:build:macos
+npm run target:staging:build:ios
 ```
 
 If `check` reports new or missing surfaces, resolve discovery drift before
@@ -731,3 +776,22 @@ Vertical-slice implementation-method checkpoint verified on 2026-09-01:
   686 recorded / 674 discovered surfaces with zero errors and warnings; and
 - no production read/mutation, Firebase application implementation, target DDL/
   implementation/deployment, migration, release or cutover occurred.
+
+Target-environment isolation checkpoint verified later on 2026-09-01:
+
+- `target-environment-isolation` is the first active implementation dossier;
+  four of five verification obligations pass and the external-CI/complete
+  operational obligation remains planned;
+- the provider-free `LedgerTargetCore` graph check passes and all 12 package
+  tests pass;
+- repeated XcodeGen generation produced stable target project/scheme hashes;
+- the separate `LedgerTargetStaging` application builds for macOS and generic
+  iOS Simulator with bundle `apps.nine4.ledger.staging`, product/display name
+  `Ledger STAGING`, and no signing;
+- the source Firebase `LedgeriOS.xcodeproj` has no checkpoint diff and the
+  target graph contains no Firebase, Google Sign-In, Supabase, or PowerSync SDK;
+- conversion sync/check pass at 699 recorded / 684 discovered surfaces with
+  zero errors and three explained retired-path warnings;
+- the target CI job is defined but has no external run evidence yet; and
+- no hosted resource, credential, network backend, production read/mutation,
+  deployment, migration, release, branch/ref operation, or cutover occurred.

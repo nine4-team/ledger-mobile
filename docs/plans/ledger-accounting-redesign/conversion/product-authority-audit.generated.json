@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T19:36:59.510Z",
+  "generatedFromManifestSync": "2026-09-01T20:19:07.678Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 687,
-    "targetRelevantSurfaces": 427,
+    "surfaces": 699,
+    "targetRelevantSurfaces": 437,
     "batches": 18,
     "productScopeSurfaces": 573,
-    "technicalControlSurfaces": 114
+    "technicalControlSurfaces": 126
   },
   "canonicalTargetCoverage": [
     {
@@ -993,8 +993,8 @@
       "title": "Platform, transport, release, and migration control",
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
-      "surfaceCount": 102,
-      "targetRelevantSurfaceCount": 41,
+      "surfaceCount": 114,
+      "targetRelevantSurfaceCount": 51,
       "authorities": [
         {
           "path": "docs/architecture/redesign/README.md",
@@ -1026,7 +1026,10 @@
         }
       ],
       "surfaceIds": [
+        "CONFIG-031396750B85",
+        "CONFIG-1FC6F8A5DFA5",
         "CONFIG-2439DF7AA062",
+        "CONFIG-2EBA890AF767",
         "CONFIG-2F4D7DBFD096",
         "CONFIG-324443A09D94",
         "CONFIG-3C679B93A305",
@@ -1034,8 +1037,11 @@
         "CONFIG-3FB361C7F0E9",
         "CONFIG-50FA673297B2",
         "CONFIG-5C0EE6600D97",
+        "CONFIG-634171BE50F3",
         "CONFIG-6899B0DB9A09",
         "CONFIG-6E140F8E16C0",
+        "CONFIG-77D38BB6819B",
+        "CONFIG-81235587F306",
         "CONFIG-91C9B311D005",
         "CONFIG-B903A5D5110D",
         "CONFIG-B982A17793ED",
@@ -1072,6 +1078,7 @@
         "FILE-95B4631C73CD",
         "FILE-9F65BB694716",
         "FILE-A5E6C90AFA0E",
+        "FILE-A6E49E3815F4",
         "FILE-A9F4A74ED736",
         "FILE-AA3F04FDF7E2",
         "FILE-BC248DD1D0EF",
@@ -1109,10 +1116,12 @@
         "MCPTOOL-7816E5307ACC",
         "MCPTOOL-7A42BC7172C1",
         "MCPTOOL-84506A435FA5",
+        "SWIFT-061553E63650",
         "SWIFT-17DA4D1C0ADF",
         "SWIFT-1928FD01B8A1",
         "SWIFT-2208AFCA9830",
         "SWIFT-2703ADAB66C5",
+        "SWIFT-481A2D09BC68",
         "SWIFT-584D99BC1062",
         "SWIFT-6DA0525DFD44",
         "SWIFT-6E5F6EAFF883",
@@ -1124,6 +1133,9 @@
         "SWIFT-D861839CD17D",
         "SWIFT-E9529E2899CF",
         "SWIFT-F26052171FEB",
+        "SWIFT-FE0D03920D59",
+        "TEST-0AD8A0619179",
+        "TEST-16A01A0FF3D5",
         "TEST-6A6B0926E2EE",
         "TEST-B2C120C177D5",
         "TEST-DE986CFD8624",

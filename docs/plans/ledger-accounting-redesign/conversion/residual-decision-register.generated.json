@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "generatedAt": null,
   "sourceBaseline": {
-    "branch": "dev",
+    "branch": "firebase",
     "commit": "fe018501d67cc84b6f140b2645b8a8149ea5c4f6",
     "workingTree": "clean-committed-baseline",
     "productionExportId": null
   },
   "summary": {
-    "targetRelevant": 427,
-    "targetMapped": 263,
+    "targetRelevant": 437,
+    "targetMapped": 273,
     "residualSurfaces": 164,
     "distinctBlockers": 43
   },

@@ -54,3 +54,4 @@ tmp/
 
 # Fastlane run artifacts
 fastlane/report.xml
+LedgeriOS/.build/

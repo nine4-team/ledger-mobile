@@ -168,6 +168,7 @@ function lineNumber(text, offset) {
 
 function swiftKind(filePath) {
   const rel = relative(filePath);
+  if (rel.includes("/LedgerTargetCore/")) return "swift_platform";
   if (rel.includes("/Auth/")) return "swift_auth";
   if (rel.includes("/Services/")) return "swift_service";
   if (rel.includes("/Views/")) return "swift_view";
@@ -1098,8 +1099,14 @@ function applyClassificationBatches(manifest, batches) {
 }
 
 function discoverSwiftApplication() {
-  const directory = path.join(ROOT, "LedgeriOS/LedgeriOS");
-  return walk(directory, (filePath) => filePath.endsWith(".swift")).map(
+  const directories = [
+    path.join(ROOT, "LedgeriOS/LedgeriOS"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetApp"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetCore"),
+  ];
+  return directories.flatMap((directory) =>
+    walk(directory, (filePath) => filePath.endsWith(".swift")),
+  ).map(
     (filePath) => {
       const rel = relative(filePath);
       const text = read(filePath);
@@ -1126,8 +1133,13 @@ function discoverSwiftApplication() {
 }
 
 function discoverSwiftTests() {
-  const directory = path.join(ROOT, "LedgeriOS/LedgeriOSTests");
-  return walk(directory, (filePath) => filePath.endsWith(".swift")).map(
+  const directories = [
+    path.join(ROOT, "LedgeriOS/LedgeriOSTests"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetCoreTests"),
+  ];
+  return directories.flatMap((directory) =>
+    walk(directory, (filePath) => filePath.endsWith(".swift")),
+  ).map(
     (filePath) => {
       const rel = relative(filePath);
       const text = read(filePath);
@@ -1311,7 +1323,12 @@ function discoverTooling() {
 function discoverConfiguration() {
   const candidates = [
     ".firebaserc",
+    ".github/workflows/supabase-conversion-control.yml",
     "firebase.json",
+    "LedgeriOS/Package.swift",
+    "LedgeriOS/LedgerTargetProject.yml",
+    "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+    "LedgeriOS/LedgerTarget.xcodeproj/xcshareddata/xcschemes/LedgerTargetStaging.xcscheme",
     "LedgeriOS/LedgeriOS.xcodeproj/project.pbxproj",
     "LedgeriOS/LedgeriOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
     "LedgeriOS/LedgeriOS.xcodeproj/xcshareddata/xcschemes/LedgeriOS (Archive).xcscheme",
@@ -1330,6 +1347,7 @@ function discoverConfiguration() {
     "scripts/build-macos-dmg.sh",
     "scripts/build-macos-sparkle-update.sh",
     "scripts/build-testflight.sh",
+    "scripts/check-target-environment.mjs",
     "scripts/distribute-testflight-external.sh",
     "scripts/release-testflight.sh",
   ];

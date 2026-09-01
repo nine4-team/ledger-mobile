@@ -178,8 +178,8 @@
     },
     {
       "id": "CONFIG-7AE45AD102EA",
-      "acknowledgeSourceHash": "e9431b0917f4bcb7090cfba1cbf56982584e2b2204965a44c7f0ae6eb14715fd",
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, and M2 residual decision-queue generation/checking; and fail-closed Firebase source profiler checking and entry points. Vitest remains the root development test dependency.",
+      "acknowledgeSourceHash": "eb3c2cf9a765d384f51d62a811f0fdaecc9b453ae4f1305a350bb641a7390a52",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, and M2 residual decision-queue generation/checking; fail-closed Firebase source profiler checking and entry points; and the isolated target-environment graph check and test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "status": "characterized",
       "blockers": [],

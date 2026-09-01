@@ -8,14 +8,14 @@
     "rule": "Product authority wins over this manifest; this manifest owns conversion coverage and evidence status."
   },
   "sourceBaseline": {
-    "branch": "dev",
+    "branch": "firebase",
     "commit": "fe018501d67cc84b6f140b2645b8a8149ea5c4f6",
     "workingTree": "clean-committed-baseline",
     "productionExportId": null
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T19:36:59.510Z",
+    "lastSynchronizedAt": "2026-09-01T20:19:07.678Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -80,6 +80,114 @@
   ],
   "surfaces": [
     {
+      "id": "CONFIG-031396750B85",
+      "kind": "application_or_backend_configuration",
+      "name": "LedgeriOS/Package.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/Package.swift"
+        }
+      ],
+      "observedSourceHash": "73a49da42b3dc27b1f4d5fa03b9eed433dc63c3878b635abba2d2e97522e8986",
+      "acknowledgedSourceHash": "73a49da42b3dc27b1f4d5fa03b9eed433dc63c3878b635abba2d2e97522e8986",
+      "metadata": {},
+      "currentBehavior": "Defines the standalone LedgerTargetCore library and its tests as a Swift package with no external package dependencies.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerTargetCore package product",
+          "LedgerTargetCoreTests package test target",
+          "future target application dependency boundary"
+        ],
+        "securityRequirements": [
+          "The foundation package has no vendor dependency and cannot acquire credentials or open infrastructure",
+          "The current Firebase app project does not compile or link target-only foundation paths"
+        ],
+        "syncRequirements": [
+          "PowerSync remains a descriptor behind validated target contracts until the separately gated adapter is introduced"
+        ]
+      },
+      "migration": {
+        "rule": "Build target foundations in the isolated package; migrate no source runtime dependency and change no Firebase application target.",
+        "reconciliation": [
+          "Package graph and source-project inspection prove target/source separation at every checkpoint"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:environment:check",
+          "npm run target:environment:test"
+        ],
+        "acceptance": [
+          "The target contracts compile and test without resolving or linking Firebase, Supabase, PowerSync, or Google Sign-In"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "New target-only build graph claimed by target-environment-isolation; it is intentionally separate from the Firebase application Xcode project.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-1FC6F8A5DFA5",
+      "kind": "application_or_backend_configuration",
+      "name": ".github/workflows/supabase-conversion-control.yml",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": ".github/workflows/supabase-conversion-control.yml"
+        }
+      ],
+      "observedSourceHash": "91985c3a72df70100625abbfa5153cb55f8be64687ea0c28a0f361acf260c145",
+      "acknowledgedSourceHash": "91985c3a72df70100625abbfa5153cb55f8be64687ea0c28a0f361acf260c145",
+      "metadata": {},
+      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, executes target contract tests, builds the staging app for macOS and iOS Simulator, and rejects tracked rewrites.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "conversion-control CI job",
+          "isolated target-environment CI job"
+        ],
+        "securityRequirements": [
+          "The target job uses no repository secret, production credential, signing identity, deployment step, or hosted environment"
+        ],
+        "syncRequirements": [
+          "CI compiles the unprovisioned descriptor only and opens no PowerSync client or local target database"
+        ]
+      },
+      "migration": {
+        "rule": "Use as pre-merge verification only; the workflow performs no export, import, deployment, cutover, or source mutation.",
+        "reconciliation": [
+          "A successful job must leave the tracked worktree unchanged after all controls and builds"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "GitHub Actions Isolated target environment job"
+        ],
+        "acceptance": [
+          "Boundary check, 12 target tests, macOS build, iOS Simulator build, and clean-diff check all pass on the hosted runner"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CONTINUITY-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "CI definition is implemented and claimed by target-environment-isolation; an actual successful GitHub Actions run remains external evidence before TARGET-ENV-TEST-005 can pass.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "CONFIG-2439DF7AA062",
       "kind": "application_or_backend_configuration",
       "name": "LedgeriOS/LedgeriOS/Info.plist",
@@ -132,6 +240,61 @@
         "EVID-M2-PLATFORM-001"
       ],
       "notes": "Preserve product permissions/update outcomes while removing provider-mixed hard-coding. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-2EBA890AF767",
+      "kind": "application_or_backend_configuration",
+      "name": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
+        }
+      ],
+      "observedSourceHash": "0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53",
+      "acknowledgedSourceHash": "0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53",
+      "metadata": {},
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target and one local LedgerTargetCore package-product dependency.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerTargetStaging iOS/macOS application target",
+          "local LedgerTargetCore product edge"
+        ],
+        "securityRequirements": [
+          "The project contains no Firebase, Google Sign-In, remote package, credential, or production target dependency"
+        ],
+        "syncRequirements": [
+          "No Sync SDK is linked until the environment-scoped PowerSync adapter slice is separately ready"
+        ]
+      },
+      "migration": {
+        "rule": "Generate and build the target app independently; import no source app target or source provider configuration.",
+        "reconciliation": [
+          "Regeneration is byte-stable and macOS/iOS Simulator builds use only the local target core"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:project:generate",
+          "npm run target:staging:build:macos",
+          "npm run target:staging:build:ios"
+        ],
+        "acceptance": [
+          "Both supported destinations compile a Ledger STAGING app with bundle apps.nine4.ledger.staging"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -438,6 +601,59 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-634171BE50F3",
+      "kind": "application_or_backend_configuration",
+      "name": "LedgeriOS/LedgerTarget.xcodeproj/xcshareddata/xcschemes/LedgerTargetStaging.xcscheme",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTarget.xcodeproj/xcshareddata/xcschemes/LedgerTargetStaging.xcscheme"
+        }
+      ],
+      "observedSourceHash": "388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8",
+      "acknowledgedSourceHash": "388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8",
+      "metadata": {},
+      "currentBehavior": "Defines the shared LedgerTargetStaging build/run/archive scheme for the separate target application project.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerTargetStaging build/run/archive actions"
+        ],
+        "securityRequirements": [
+          "The scheme has no environment variable, launch argument, or runtime switch capable of selecting production or Firebase"
+        ],
+        "syncRequirements": [
+          "The scheme fixes target staging at compilation and cannot redirect a local queue or Sync client at launch"
+        ]
+      },
+      "migration": {
+        "rule": "Use only for isolated target development and staging evidence; the source scheme remains rollback authority before cutover.",
+        "reconciliation": [
+          "Scheme inspection and project build settings agree on the target-only blueprint"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:environment:check",
+          "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -list"
+        ],
+        "acceptance": [
+          "The shared scheme selects only LedgerTargetStaging"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "Target-only scheme; it neither replaces nor mutates any Firebase application scheme.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "CONFIG-6899B0DB9A09",
       "kind": "application_or_backend_configuration",
       "name": ".firebaserc",
@@ -531,6 +747,61 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-77D38BB6819B",
+      "kind": "application_or_backend_configuration",
+      "name": "LedgeriOS/LedgerTargetProject.yml",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetProject.yml"
+        }
+      ],
+      "observedSourceHash": "453e8f0ee1d1d3196c9a0843651ae5773ed2106ec2d2982a76bd942e7ad09d85",
+      "acknowledgedSourceHash": "453e8f0ee1d1d3196c9a0843651ae5773ed2106ec2d2982a76bd942e7ad09d85",
+      "metadata": {},
+      "currentBehavior": "Declares a reproducible multi-destination LedgerTargetStaging application project with fixed staging identity, generated Info.plist, no signing authority, and a local LedgerTargetCore dependency.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "target XcodeGen source specification",
+          "fixed target identity build settings",
+          "iOS/macOS supported destinations"
+        ],
+        "securityRequirements": [
+          "Signing is disabled for this bootstrap shell and no secret or hosted endpoint appears in the project specification"
+        ],
+        "syncRequirements": [
+          "The only dependency is the provider-free local target core"
+        ]
+      },
+      "migration": {
+        "rule": "Evolve the target project from this spec and review generated diffs; never generate into the source Firebase project.",
+        "reconciliation": [
+          "Repeated generation produces identical project and scheme hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:project:generate",
+          "npm run target:environment:check"
+        ],
+        "acceptance": [
+          "Generated project and spec agree on identity, destinations, dependency boundary, and scheme"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "The committed generated project is byte-stable across repeated XcodeGen generation on this host.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "CONFIG-7AE45AD102EA",
       "kind": "application_or_backend_configuration",
       "name": "package.json",
@@ -541,10 +812,10 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "e9431b0917f4bcb7090cfba1cbf56982584e2b2204965a44c7f0ae6eb14715fd",
-      "acknowledgedSourceHash": "e9431b0917f4bcb7090cfba1cbf56982584e2b2204965a44c7f0ae6eb14715fd",
+      "observedSourceHash": "eb3c2cf9a765d384f51d62a811f0fdaecc9b453ae4f1305a350bb641a7390a52",
+      "acknowledgedSourceHash": "eb3c2cf9a765d384f51d62a811f0fdaecc9b453ae4f1305a350bb641a7390a52",
       "metadata": {},
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, and M2 residual decision-queue generation/checking; and fail-closed Firebase source profiler checking and entry points. Vitest remains the root development test dependency.",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, and M2 residual decision-queue generation/checking; fail-closed Firebase source profiler checking and entry points; and the isolated target-environment graph check and test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -570,6 +841,61 @@
       ],
       "notes": "These are operator commands, not product runtime dependencies.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
+    },
+    {
+      "id": "CONFIG-81235587F306",
+      "kind": "release_or_build_tool",
+      "name": "scripts/check-target-environment.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/check-target-environment.mjs"
+        }
+      ],
+      "observedSourceHash": "693b95f16764121fafb6831db6ee2a558db5e5fa404f40885df690e68fe2ef2d",
+      "acknowledgedSourceHash": "693b95f16764121fafb6831db6ee2a558db5e5fa404f40885df690e68fe2ef2d",
+      "metadata": {},
+      "currentBehavior": "Fails closed unless the LedgerTargetCore package graph is dependency-free, its tests depend only on that core, target files contain no provider SDK imports, and the source Firebase Xcode project does not reference target-only paths.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "target environment build-graph guard",
+          "provider import guard",
+          "source-project contamination guard"
+        ],
+        "securityRequirements": [
+          "The check reports stable categories and repository paths only, never credentials or runtime secrets"
+        ],
+        "syncRequirements": [
+          "A PowerSync SDK dependency is forbidden from the pure target foundation and will be admitted only in the later environment-scoped adapter target"
+        ]
+      },
+      "migration": {
+        "rule": "Run locally and in CI before target slice evidence is accepted; it reads configuration only and performs no migration.",
+        "reconciliation": [
+          "Swift package description and lexical import inspection agree that the foundation is provider-free"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/check-target-environment.mjs",
+          "npm run target:environment:check"
+        ],
+        "acceptance": [
+          "Any external package dependency, provider import, missing target, wrong test edge, or source-project path contamination exits nonzero"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "CONFIG-91C9B311D005",
@@ -1531,10 +1857,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "d290614f3ef9328f8f83f5e1529d74cb73582435c3a56a3192b7a0a8a19895d0",
-      "acknowledgedSourceHash": "d290614f3ef9328f8f83f5e1529d74cb73582435c3a56a3192b7a0a8a19895d0",
+      "observedSourceHash": "a0f999d936ba6058b2acc3f71c7783fabcbc0d02180367fb97a3b02e9b28a639",
+      "acknowledgedSourceHash": "a0f999d936ba6058b2acc3f71c7783fabcbc0d02180367fb97a3b02e9b28a639",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, applies bounded classification batches, detects disappearance and live source drift, validates evidence requirements, product authority and vertical-slice implementation dossiers, emits coverage/authority/slice audits, and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target package and tests; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3666,6 +3992,56 @@
         "EVID-CAPABILITY-PLATFORM-CONTROL-001"
       ],
       "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "FILE-A6E49E3815F4",
+      "kind": "firebase_audit_repair_script",
+      "name": "scripts/check-target-environment.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/check-target-environment.mjs"
+        }
+      ],
+      "observedSourceHash": "693b95f16764121fafb6831db6ee2a558db5e5fa404f40885df690e68fe2ef2d",
+      "acknowledgedSourceHash": "693b95f16764121fafb6831db6ee2a558db5e5fa404f40885df690e68fe2ef2d",
+      "metadata": {},
+      "currentBehavior": "Provides the same target environment guard classified through tooling discovery because it explicitly rejects the known Firebase production source identifiers from the compiled staging projection.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "known source-production identifier contamination guard"
+        ],
+        "securityRequirements": [
+          "The target staging application source and generated project contain no source-production identifier or provider dependency"
+        ],
+        "syncRequirements": [
+          "Production PowerSync identifiers are absent from the compiled staging projection; exact staging allowlists fail closed"
+        ]
+      },
+      "migration": {
+        "rule": "Use production identifiers only as repository-side rejection evidence; never compile them into the staging application.",
+        "reconciliation": [
+          "The guard scans the target application projection and exits nonzero on a known production identifier"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:environment:check"
+        ],
+        "acceptance": [
+          "Known Firebase and target production identifiers are absent from the compiled staging projection"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -15114,6 +15490,64 @@
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
+      "id": "SWIFT-061553E63650",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
+        }
+      ],
+      "observedSourceHash": "e9f20c5dae7c702ac8d5c85581b8e5c093b87e7134eff6129bebf35714041aff",
+      "acknowledgedSourceHash": "e9f20c5dae7c702ac8d5c85581b8e5c093b87e7134eff6129bebf35714041aff",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging bootstrap shell, validates a fixed unprovisioned manifest before creating pure dependencies, and permanently displays a red STAGING / NO HOSTED SERVICES banner.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerTargetStagingApp",
+          "TargetStagingProjection",
+          "TargetStagingRootView"
+        ],
+        "securityRequirements": [
+          "Only fixed unprovisioned staging identifiers appear; startup failure renders a stable non-secret code",
+          "The permanent banner and distinct bundle/display name cannot be changed by user defaults or process environment"
+        ],
+        "syncRequirements": [
+          "The shell constructs a descriptor only and cannot open PowerSync or local state"
+        ]
+      },
+      "migration": {
+        "rule": "Use the shell to grow target slices behind validated ports; do not copy the Firebase app initializer or provider services.",
+        "reconciliation": [
+          "Compiled diagnostics match the fixed manifest and no production/provider dependency exists in the target graph"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:environment:check",
+          "macOS and iOS Simulator target builds"
+        ],
+        "acceptance": [
+          "Both app bundles compile with the staging identity and cannot authenticate, sync, upload, migrate, or contact production"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-ENVIRONMENT-001"
+      ],
+      "notes": "This is an intentionally non-networked bootstrap shell, not Supabase/PowerSync provisioning or production migration authority.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "SWIFT-06586B87FCA4",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/ImageCache.swift",
@@ -18446,6 +18880,66 @@
       ],
       "notes": "Replace with local read ports and typed Item commands; do not wrap this protocol in a Firebase adapter. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "SWIFT-481A2D09BC68",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/TargetEnvironment.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/TargetEnvironment.swift"
+        }
+      ],
+      "observedSourceHash": "a96572c7a0248f14737a3eb836510157898d9f0e32c959a043ef5810f010dd41",
+      "acknowledgedSourceHash": "a96572c7a0248f14737a3eb836510157898d9f0e32c959a043ef5810f010dd41",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Introduces the target-only environment manifest, closed target environment kinds, allowlisted resource validation, safe rejection codes, deterministic local-data namespaces, PowerSync descriptor, and dependency bootstrap gate without importing a backend SDK.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerEnvironmentManifest",
+          "ValidatedLedgerEnvironment",
+          "LocalDataNamespace",
+          "PowerSyncEnvironmentDescriptor",
+          "TargetAppBootstrap",
+          "TargetAppDependencies"
+        ],
+        "securityRequirements": [
+          "The target manifest contains allowlisted public identifiers and compatible versions only; unsafe or production-forbidden identifiers fail with stable non-secret codes before dependency construction",
+          "Firebase is not a target runtime environment kind and no backend SDK type crosses the target bootstrap contract"
+        ],
+        "syncRequirements": [
+          "PowerSync environment and sync-contract version derive only from a validated same-environment manifest before local state or sync infrastructure opens",
+          "Database, key, queue, attachment-cache and keychain namespaces are stable across restart and isolated by bundle, target environment, Principal and Account"
+        ]
+      },
+      "migration": {
+        "rule": "Create a target-only environment boundary; retain the released Firebase composition unchanged on the Firebase branch and import no Firebase runtime configuration into this contract.",
+        "reconciliation": [
+          "The compiled target environment projection must match every allowlisted resource, contract version and local namespace input before infrastructure opens"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Manifest completeness/mixing/allowlist/secret rejection, closed Firebase-kind decoding, pre-bootstrap refusal, contract-version and deterministic namespace isolation tests"
+        ],
+        "acceptance": [
+          "Invalid or mixed target configuration cannot construct dependencies, expose a secret in diagnostics, fall back to Firebase, or share local state across environments, Principals or Accounts"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "New public target-package contract surface claimed by target-environment-isolation; status remains target_mapped until the complete slice, including the compiled staging app projection and operational gates, is honestly implemented and verified.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "SWIFT-48DE39470AF0",
@@ -29389,6 +29883,65 @@
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
+      "id": "SWIFT-FE0D03920D59",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgeriOS/Platform/TargetEnvironment.swift",
+      "discovery": "automatic",
+      "sourcePresence": "missing",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOS/Platform/TargetEnvironment.swift"
+        }
+      ],
+      "observedSourceHash": "7705aacc0bd00b2d749bd4b0144090a0a0c1da0677fd5ee35d3e7acfbe909cb4",
+      "acknowledgedSourceHash": "7705aacc0bd00b2d749bd4b0144090a0a0c1da0677fd5ee35d3e7acfbe909cb4",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Briefly hosted the new target environment contracts inside the source application Platform directory before the isolated target package boundary was established.",
+      "disposition": "retire",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerEnvironmentManifest",
+          "ValidatedLedgerEnvironment",
+          "LocalDataNamespace",
+          "PowerSyncEnvironmentDescriptor",
+          "TargetAppBootstrap",
+          "TargetAppDependencies"
+        ],
+        "securityRequirements": [
+          "The target manifest contains allowlisted public identifiers and compatible versions only; unsafe or production-forbidden identifiers fail with stable non-secret codes before dependency construction",
+          "Firebase is not a target runtime environment kind and no backend SDK type crosses the target bootstrap contract"
+        ],
+        "syncRequirements": [
+          "PowerSync environment and sync-contract version derive only from a validated same-environment manifest before local state or sync infrastructure opens",
+          "Database, key, queue, attachment-cache and keychain namespaces are stable across restart and isolated by bundle, target environment, Principal and Account"
+        ]
+      },
+      "migration": {
+        "rule": "Create a target-only environment boundary; retain the released Firebase composition unchanged on the Firebase branch and import no Firebase runtime configuration into this contract.",
+        "reconciliation": [
+          "The compiled target environment projection must match every allowlisted resource, contract version and local namespace input before infrastructure opens"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Manifest completeness/mixing/allowlist/secret rejection, closed Firebase-kind decoding, pre-bootstrap refusal, contract-version and deterministic namespace isolation tests"
+        ],
+        "acceptance": [
+          "Invalid or mixed target configuration cannot construct dependencies, expose a secret in diagnostics, fall back to Firebase, or share local state across environments, Principals or Accounts"
+        ]
+      },
+      "status": "retired",
+      "blockers": [],
+      "evidence": [
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Retired in the same implementation checkpoint by moving the unchanged contract into LedgeriOS/LedgerTargetCore; no committed Firebase application release ever contained this path.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "SWIFT-FE44BBB4D35B",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/InvitesService.swift",
@@ -29499,6 +30052,62 @@
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
+      "id": "TEST-0AD8A0619179",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift"
+        }
+      ],
+      "observedSourceHash": "f0d31971dfb15395a1d943495eddbc270b39451688badc7273a5bf95f68f68df",
+      "acknowledgedSourceHash": "f0d31971dfb15395a1d943495eddbc270b39451688badc7273a5bf95f68f68df",
+      "metadata": {
+        "firebaseCoupled": true
+      },
+      "currentBehavior": "Exercises the target environment manifest, closed runtime-kind decoding, resource and bundle allowlists, safe rejection codes, pre-bootstrap refusal, contract compatibility, and deterministic local namespace isolation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerEnvironmentManifestTests",
+          "PowerSyncEnvironmentIsolationTests",
+          "LocalDataNamespaceRestartTests",
+          "EnvironmentRejectionPersistenceTests"
+        ],
+        "securityRequirements": [
+          "Synthetic allowlists include explicit production denials and assertions that stable diagnostics never echo rejected identifiers or credential-like values"
+        ],
+        "syncRequirements": [
+          "Tests prove a mismatched PowerSync environment is rejected before dependency construction and local namespaces are stable across restart but distinct across environment ownership inputs"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target identities only; do not load Firebase exports, production credentials or production endpoints.",
+        "reconciliation": [
+          "Every closed target component appears exactly once in the positive fixture and each rejection fixture changes only the intended dimension"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target environment contract unit suite in the standalone LedgerTargetCore Swift package"
+        ],
+        "acceptance": [
+          "The suite deterministically proves the pure target validation and namespace boundary without network or production access"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "New target package test surface claimed by target-environment-isolation; it compiles against LedgerTargetCore only, while a passing unit suite still does not close the compiled staging-app projection or all operational obligations.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "TEST-0F5D4C2D5F32",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgeriOSTests/MediaServiceTests.swift",
@@ -29607,6 +30216,61 @@
       ],
       "notes": "Retain field-selection tests against approved target and legacy-audit profiles. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
       "classificationBatch": "M0-REPORTING-SEARCH-001"
+    },
+    {
+      "id": "TEST-16A01A0FF3D5",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgeriOSTests/TargetEnvironmentManifestTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "missing",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgeriOSTests/TargetEnvironmentManifestTests.swift"
+        }
+      ],
+      "observedSourceHash": "a17ee4518e6a002229b32476113670511ee4ec73a193e28acde0252bebe6799c",
+      "acknowledgedSourceHash": "a17ee4518e6a002229b32476113670511ee4ec73a193e28acde0252bebe6799c",
+      "metadata": {
+        "firebaseCoupled": true
+      },
+      "currentBehavior": "Briefly hosted target environment tests inside the source application test directory before a dependency-free target package test graph was established.",
+      "disposition": "retire",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerEnvironmentManifestTests",
+          "PowerSyncEnvironmentIsolationTests",
+          "LocalDataNamespaceRestartTests",
+          "EnvironmentRejectionPersistenceTests"
+        ],
+        "securityRequirements": [
+          "Synthetic allowlists include explicit production denials and assertions that stable diagnostics never echo rejected identifiers or credential-like values"
+        ],
+        "syncRequirements": [
+          "Tests prove a mismatched PowerSync environment is rejected before dependency construction and local namespaces are stable across restart but distinct across environment ownership inputs"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target identities only; do not load Firebase exports, production credentials or production endpoints.",
+        "reconciliation": [
+          "Every closed target component appears exactly once in the positive fixture and each rejection fixture changes only the intended dimension"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target environment contract unit suite on an isolated simulator destination"
+        ],
+        "acceptance": [
+          "The suite deterministically proves the pure target validation and namespace boundary without network or production access"
+        ]
+      },
+      "status": "retired",
+      "blockers": [],
+      "evidence": [
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Retired in the same implementation checkpoint by moving the suite to LedgeriOS/LedgerTargetCoreTests; the source Firebase app test graph remains unchanged.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "TEST-19253AF594CF",

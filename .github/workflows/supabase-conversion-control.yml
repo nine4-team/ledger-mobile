@@ -32,3 +32,34 @@ jobs:
 
       - name: Confirm checks did not rewrite tracked artifacts
         run: git diff --exit-code
+
+  target-environment:
+    name: Isolated target environment
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate target dependency and environment boundaries
+        run: |
+          node --check scripts/check-target-environment.mjs
+          npm run target:environment:check
+
+      - name: Test isolated target contracts
+        run: npm run target:environment:test
+
+      - name: Build target staging for macOS
+        run: npm run target:staging:build:macos
+
+      - name: Build target staging for iOS Simulator
+        run: npm run target:staging:build:ios
+
+      - name: Confirm target checks did not rewrite tracked artifacts
+        run: git diff --exit-code

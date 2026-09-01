@@ -4,6 +4,7 @@ Date: 2026-09-01
 Preparation worktree: /Users/benjaminmackenzie/.codex/worktrees/1715/ledger_mobile
 Supplied snapshot HEAD: d83c64724fe4e92be27c62f425979bd30fcfc9bb
 Current Firebase baseline: fe018501d67cc84b6f140b2645b8a8149ea5c4f6
+Current Firebase branch: firebase
 Dedicated redesign branch: codex/supabase-powersync-implementation
 Production changes performed: none
 History rewrites, releases, deployments, cutovers, or production mutations: none
@@ -14,15 +15,17 @@ not one of the 197 pre-existing dirty paths counted below.
 ## Executive Result
 
 Git preparation is complete under the branch policy confirmed by the owner:
-`dev` and `main` represent the latest current Firebase application, while the
+`firebase` and `main` represent the latest current Firebase application, while the
 accounting redesign and Supabase/PowerSync program stay on a dedicated branch.
 
-- Local and remote `dev` and `main` all resolve to
+- Local and remote `firebase` and local/remote `main` all resolve to
   `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`.
+- GitHub's default branch and `origin/HEAD` point to `firebase`; remote `dev` is
+  absent after the coordinated rename.
 - The shared branches were advanced only by fast-forward. No merge commit,
   force-push, reset, rebase, or history rewrite was used.
 - The original shared checkout at `/Users/benjaminmackenzie/Dev/ledger_mobile`
-  is clean on `dev` at `fe018501`.
+  is clean on local `firebase`, tracking `origin/firebase`, at `fe018501`.
 - Its exact 197-path pre-cleanup state remains recoverable as stash
   `beab1eef154623ac38ad28accd4d87e354360904` with message
   `pre-supabase-branch-cleanup-2026-09-01`.
@@ -32,7 +35,7 @@ accounting redesign and Supabase/PowerSync program stay on a dedicated branch.
 - The 69 conversion architecture/control paths and 44 generated-evidence paths
   are commit `3e1d435b` on the dedicated redesign branch.
 - No accounting-redesign, Supabase, PowerSync, conversion-control, or generated
-  evidence path is present on `dev` or `main`.
+  evidence path is present on `firebase` or `main`.
 - The live production Sparkle feed and release notes still match the build 83
   files inherited from the prior `origin/dev` tip. This preparation did not
   release or deploy the new Firebase implementation commit.
@@ -54,13 +57,15 @@ accounting redesign and Supabase/PowerSync program stay on a dedicated branch.
 
 | Ref | SHA | Purpose |
 | --- | --- | --- |
-| local/remote `dev` | `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` | current Firebase application baseline |
+| local/remote `firebase` | `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` | current and GitHub-default Firebase application baseline |
 | local/remote `main` | `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` | same current Firebase application baseline |
 | `origin/codex/supabase-powersync-implementation` | `3e1d435ba0205cfc0705ef242dc64a4250fb7aa5` before this final audit commit | dedicated redesign program |
 
-The requested possible rename from `dev` to `firebase` was not performed. A
-remote rename is a create/change-default/delete sequence and requires a focused
-reference audit and coordination with the other agent and any automation.
+The requested rename from `dev` to `firebase` was completed after the baseline
+preparation through a coordinated create/change-default/delete sequence. The
+Firebase commit did not change: `firebase` and `main` remain at `fe018501`.
+GitHub's default branch and `origin/HEAD` now resolve to `firebase`, remote
+`dev` was removed, and the dedicated Supabase branch/worktree was not modified.
 
 ## Pre-execution Git Topology After Fetch
 
@@ -309,19 +314,20 @@ change the lock graph beyond this preparation task.
    their baseline/control metadata and generated derivatives. Preserved the
    exact original state in recoverable stash `beab1eef`, then fast-forwarded the
    original checkout and local `main` to `fe018501`.
+7. Coordinated the shared-branch rename after preparation: created/preserved
+   `firebase` at `fe018501`, changed the GitHub default and `origin/HEAD` to
+   `firebase`, moved the original checkout to local `firebase` tracking
+   `origin/firebase`, and removed remote `dev`. The Supabase branch/worktree was
+   left unchanged.
 
 ## Remaining Decisions and Coordination
 
-1. Decide whether to perform the proposed `dev` to `firebase` rename. Audit all
-   workflow, hosting/release, documentation, saved-project, and active-agent
-   references first; create `firebase`, change the GitHub default, update local
-   tracking, and delete `dev` only after those checks pass.
-2. Add the conversion workflow as a required check before any redesign branch
+1. Add the conversion workflow as a required check before any redesign branch
    is merged. The repository currently has no protection/ruleset enforcement.
-3. Query App Store Connect read-only if exact TestFlight build/external-tester
+2. Query App Store Connect read-only if exact TestFlight build/external-tester
    correspondence is needed; Git and the Sparkle feed prove only the macOS
    build-83 lineage.
-4. Product, hosted-resource/spend, migration, release, deployment, and cutover
+3. Product, hosted-resource/spend, migration, release, deployment, and cutover
    approvals remain separate. This preparation grants none of them.
 
 ## Complete Supplied-Snapshot Inventory
