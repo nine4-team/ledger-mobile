@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T22:53:27.745Z",
+    "lastSynchronizedAt": "2026-09-01T23:10:59.072Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -21963,12 +21963,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProtectedArtifactExport.swift"
         }
       ],
-      "observedSourceHash": "d7bdc00027c23b7aeb370df379182eefbb946d30ee4f042468557011887e999e",
-      "acknowledgedSourceHash": "d7bdc00027c23b7aeb370df379182eefbb946d30ee4f042468557011887e999e",
+      "observedSourceHash": "3f5857c2754b66e68920cdefefc54818b64b70c63ee0a499c055693b6c3fc94f",
+      "acknowledgedSourceHash": "3f5857c2754b66e68920cdefefc54818b64b70c63ee0a499c055693b6c3fc94f",
       "metadata": {
-        "firebaseCoupling": "none_detected"
+        "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Contains a target-only comment scaffold reserving the provider-free protected artifact export contract boundary; it implements no behavior yet.",
+      "currentBehavior": "Defines target-only provider-free opaque export/snapshot/scope identity, immutable snapshot/profile/authority binding, policy-bounded request fingerprints and leases, a restart-safe lifecycle, canonical tamper evidence, stable failures and evidence-only destination/cleanup receipts.",
       "disposition": "redesign",
       "target": {
         "owner": "Protected Artifact Lifecycle",
@@ -22001,14 +22001,14 @@
           "Provider-free fixtures prove scope-preserving request validation, deterministic restart evidence, exact lifecycle transitions and fail-closed mismatch/expiry/tamper handling without file or destination access"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-PROTECTED-ARTIFACT-001"
       ],
-      "notes": "Target-only technical-control scaffold. The slice may validate already-authorized immutable snapshot identity, protected short-lived local lease evidence and destination handoff/cleanup state; it cannot choose report fields, client delivery eligibility, attachment retention, filesystem behavior or an adapter. O-023 and O-036 therefore remain untouched.",
+      "notes": "Target-only technical-control surface. It validates already-authorized immutable snapshot identity, opaque visibility scope, protected short-lived local lease evidence and destination handoff/cleanup state; it cannot choose report fields, client delivery eligibility, attachment retention, filesystem behavior or an adapter. O-023 and O-036 remain untouched; exact-commit CI is still required for verification.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -31330,12 +31330,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift"
         }
       ],
-      "observedSourceHash": "accf1ebbb43cf7be1ea936ac178658426fb23cc95bc22b55a19174406829ae60",
-      "acknowledgedSourceHash": "accf1ebbb43cf7be1ea936ac178658426fb23cc95bc22b55a19174406829ae60",
+      "observedSourceHash": "6851777b8a9e813416e7da94545ca60c44503ef29912f41d535ae9fcb00d1ac6",
+      "acknowledgedSourceHash": "6851777b8a9e813416e7da94545ca60c44503ef29912f41d535ae9fcb00d1ac6",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains a target-only comment scaffold reserving protected artifact lifecycle contract tests; it executes no tests yet.",
+      "currentBehavior": "Exercises authorized snapshot-to-receipt lifecycle, opaque scope and non-authority, deterministic request/lifecycle/receipt restart, post-expiry cleanup recovery, policy/scope/version/fingerprint/hash/transition/expiry/canonical tamper refusal, cancellation and expiry terminal evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Protected Artifact Lifecycle",
@@ -31367,14 +31367,14 @@
           "All request, lifecycle, restart, mismatch, expiry, tamper and non-authority obligations pass in LedgerTargetCore"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-PROTECTED-ARTIFACT-001"
       ],
-      "notes": "Target-only provider-free test scaffold. Fixtures will use synthetic hashes, IDs, versions and timestamps and will not create files, invoke share/print/download UI, select client-visible report contents, inspect attachments or contact a provider.",
+      "notes": "Target-only provider-free tests use synthetic hashes, IDs, versions and timestamps and do not create files, invoke share/print/download UI, select client-visible report contents, inspect attachments or contact a provider. Four focused tests pass locally; exact-commit CI remains required.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {

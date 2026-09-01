@@ -3,7 +3,7 @@
   "sliceId": "protected-artifact-export-lifecycle",
   "title": "Prepare an authorized snapshot for a protected time-bounded local handoff",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Protected Artifact Lifecycle",
   "surfaceIds": [
     "SWIFT-7452FE59FE81",
@@ -59,8 +59,8 @@
   "contracts": {
     "domain": {
       "items": [
-        "ProtectedArtifactExportID, ProtectedArtifactSnapshotID, ProtectedArtifactVisibilityScopeID, ProtectedArtifactProfileVersion and ProtectedArtifactSHA256 are bounded validated values; content kind, destination intent, destination outcome, lifecycle phase and cleanup disposition are closed enums.",
-        "ProtectedArtifactSnapshotReference binds stable snapshot identity, exact immutable snapshot hash, visibility scope, projection/profile version and authority version without carrying entity, Account, Principal, path, URL or provider values.",
+        "ProtectedArtifactExportID and ProtectedArtifactSnapshotID are fixed opaque IDs; ProtectedArtifactVisibilityScopeID and ProtectedArtifactSHA256 are fixed opaque digests; profile/authority versions are bounded values; content kind, destination intent, destination outcome, lifecycle phase and cleanup disposition are closed enums.",
+        "ProtectedArtifactSnapshotReference binds stable opaque snapshot identity, exact immutable snapshot hash, opaque visibility-scope digest, projection/profile version and authority version without carrying entity, Account, Principal, path, URL or provider values.",
         "ProtectedArtifactExportRequest is created only through a policy that constrains format, destination intent, positive output ceiling, lease duration and canonical evidence size, and derives one request fingerprint.",
         "ProtectedArtifactLifecycle validates a monotonic requested/materialized/handoff-recorded/cleanup-required/cleaned or terminal failure/cancellation transition path using exact request/snapshot/output identity.",
         "ProtectedArtifactExportReceipt binds request fingerprint, snapshot/profile/authority scope, output byte count/hash, lease expiry, destination outcome and cleanup disposition while explicitly remaining evidence-only and not proof of filesystem protection/deletion or client delivery authorization."
@@ -129,8 +129,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift",
       "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-003", "PROTECTED-ARTIFACT-REQ-004"],
       "expected": "Closed values, exact already-authorized snapshot scope, policy-bounded request, request fingerprint, legal lifecycle and evidence-only receipt validate deterministically without recalculation or provider values.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROTECTED-ARTIFACT-001"]
     },
     {
       "id": "PROTECTED-ARTIFACT-TEST-002",
@@ -138,8 +138,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift",
       "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-004"],
       "expected": "Equivalent request/lifecycle/receipt evidence normalizes to identical bytes and hashes, decodes and revalidates offline, and preserves expiry, destination outcome and cleanup-required state across restart.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROTECTED-ARTIFACT-001"]
     },
     {
       "id": "PROTECTED-ARTIFACT-TEST-003",
@@ -147,8 +147,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift",
       "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-003", "PROTECTED-ARTIFACT-REQ-004"],
       "expected": "Unsafe values, scope/profile/authority/request/output mismatches, disallowed formats/intents, invalid bounds, expiry, illegal/reordered transitions, changed hashes, noncanonical bytes and oversized evidence fail with stable codes and no partial accepted receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROTECTED-ARTIFACT-001"]
     },
     {
       "id": "PROTECTED-ARTIFACT-TEST-004",
@@ -160,7 +160,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROTECTED-ARTIFACT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent target technical-control foundation. It stops before snapshot preparation, report/export semantics, O-036 client-delivery policy, O-023 attachment retention, filesystem/data-protection APIs, renderer bytes, destination adapters, app/MCP wiring, hosted resources, migration, production release or cutover."

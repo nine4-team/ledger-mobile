@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 43
+State version: 44
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROTECTED-ARTIFACT-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: PROTECTED-ARTIFACT-IMPLEMENTED-EXACT-CI-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -528,6 +528,16 @@ modifying the running Firebase application before hard cutover.
   delivery, prove filesystem protection/deletion or settle O-023/O-036. No
   bytes, files, renderer, destination adapter, provider, migration or production
   action exists; see `EVID-PROTECTED-ARTIFACT-001`.
+- Implemented the ready protected-artifact slice with fixed opaque export/
+  snapshot IDs and visibility-scope digest, exact immutable snapshot/profile/
+  authority binding, policy and request fingerprints, a path-free short-lived
+  lease, replay-validated lifecycle, canonical restart evidence and evidence-
+  only terminal receipts. Four focused tests and all 51 target tests pass, as do
+  target boundary and generated-contract checks, macOS/iOS Simulator target
+  builds, clean source-project isolation and diff formatting. Exactly the two
+  target-only surfaces are `implemented`; current report/export/PDF/share/
+  platform destination surfaces remain `target_mapped`. Exact-commit CI is
+  still required before verification.
 
 ## Next Action
 
@@ -537,14 +547,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the active `protected-artifact-export-lifecycle` ready
-   dossier: provider-free validated values, exact snapshot/scope/version/hash
-   binding, policy-bounded request fingerprint, restart-safe lifecycle and
-   evidence-only receipt, plus its domain/restart/rejection tests. Do not add
-   filesystem or destination adapters, report/export semantics, attachment
-   retention, app/MCP wiring or any O-023/O-036-dependent behavior. Advance
-   only its two target-only surfaces after local proof and exact-commit CI; leave
-   all current report/export/platform surfaces `target_mapped`.
+2. Commit and push only the implemented
+   `protected-artifact-export-lifecycle` checkpoint, then require both jobs from
+   the immutable exact-implementation GitHub Actions run. If they pass, record
+   that run, advance only `SWIFT-7452FE59FE81` and `TEST-1FC8EF92E971` plus the
+   slice to `verified`, rerun all conversion controls and commit the evidence
+   checkpoint. If either job fails, repair this slice without selecting another.
+   Do not add filesystem/destination adapters, report/export semantics,
+   attachment retention, app/MCP wiring or O-023/O-036-dependent behavior.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
