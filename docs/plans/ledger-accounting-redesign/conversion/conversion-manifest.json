@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T21:40:43.199Z",
+    "lastSynchronizedAt": "2026-09-01T21:51:26.160Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18796,6 +18796,66 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-3E0BAFEF6955",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/TypedEditDraft.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/TypedEditDraft.swift"
+        }
+      ],
+      "observedSourceHash": "8c38477fadf92bb82a227e7e1bdf1f2e320df9463230148f9dc4358970b41904",
+      "acknowledgedSourceHash": "8c38477fadf92bb82a227e7e1bdf1f2e320df9463230148f9dc4358970b41904",
+      "metadata": {
+        "firebaseCoupling": "api_reference"
+      },
+      "currentBehavior": "Defines target-only typed unchanged/set/clear fields, Account/actor/contract/entity/revision-bound drafts, stable validation results, non-decodable operation bindings recreated through validation, and monotonic provider-free submission presentation over the shared operation lifecycle.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Typed Edit Draft and Submission",
+        "surfaces": [
+          "typed unchanged/set/clear field intent",
+          "versioned Account/entity/revision-bound edit draft",
+          "stable field-validation result",
+          "operation-envelope submission binding and safe result presentation"
+        ],
+        "securityRequirements": [
+          "Edit binding requires exact Account, subject revision precondition, operation identity, and fingerprint",
+          "Authorization/invariant failures expose stable presentation categories without vendor errors, raw fields, or inaccessible entity detail"
+        ],
+        "syncRequirements": [
+          "Draft and accepted-operation binding survive restart without inferring server commitment",
+          "Mismatched or stale operation receipts/snapshots cannot update another draft submission"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient source form state; feature slices construct typed target drafts and commands rather than importing raw Firebase patch dictionaries or NSNull sentinels.",
+        "reconciliation": [
+          "Unchanged, explicit set, and explicit clear remain distinguishable after target draft encoding",
+          "Every accepted edit submission carries the exact subject revision precondition and operation fingerprint"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "TypedEditDraftTests field-intent, restart, operation-binding, and result-presentation suite"
+        ],
+        "acceptance": [
+          "Typed drafts and submission results remain deterministic and scope-safe without dynamic dictionaries, provider SDKs, or network availability"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-TYPED-EDIT-001"
+      ],
+      "notes": "Target-only technical-control surface. It does not decide which product fields are editable, implement a command handler, or activate a concrete form.",
+      "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
       "id": "SWIFT-4003332541C1",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/EditTransactionDetailsModal.swift",
@@ -33820,6 +33880,63 @@
       ],
       "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
+    },
+    {
+      "id": "TEST-F9037F34FAF9",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/TypedEditDraftTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/TypedEditDraftTests.swift"
+        }
+      ],
+      "observedSourceHash": "a79f84c605e01208c8e618713936d6f98430a28f1c14b5ba36bea17ebdb37979",
+      "acknowledgedSourceHash": "a79f84c605e01208c8e618713936d6f98430a28f1c14b5ba36bea17ebdb37979",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Exercises target-only typed field intent, validation sorting/deduplication, offline draft and queued-envelope reconstruction, exact submission binding, mismatch/stale/nonmonotonic refusal, and stable operation receipt/result presentation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Typed Edit Draft and Submission",
+        "surfaces": [
+          "TypedEditDraftTests",
+          "field-intent and validation fixtures",
+          "restart and exact operation-binding fixtures",
+          "queued/retry/applied/rejected/conflict/update presentation fixtures"
+        ],
+        "securityRequirements": [
+          "Tests prove Account/revision/operation mismatch refusal and stable non-provider failure presentation"
+        ],
+        "syncRequirements": [
+          "Tests prove restart preservation, local acceptance versus server commitment, retry state, conflict, and stale snapshot refusal"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target drafts and operation records only; import no Firebase patch dictionary, document path, listener, or transient view state.",
+        "reconciliation": [
+          "Every typed-edit requirement has reciprocal executable coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TypedEditDraftTests"
+        ],
+        "acceptance": [
+          "All field, validation, restart, binding, and presentation fixtures pass without a network, provider SDK, credential, or hosted resource"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-TYPED-EDIT-001"
+      ],
+      "notes": "Synthetic provider-free test surface; concrete editor UI, field policies, business validation, and handlers remain in owning feature slices.",
+      "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
       "id": "TEST-FCBA68605B98",

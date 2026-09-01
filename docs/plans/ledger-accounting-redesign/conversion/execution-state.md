@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 34
+State version: 35
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCOPED-ROUTE-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: TYPED-EDIT-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -435,6 +435,18 @@ modifying the running Firebase application before hard cutover.
   macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
   scoped-route obligations and exactly its two target-only surfaces are now
   `verified`; current Firebase-era route/view surfaces remain unadvanced.
+- Created and passed the ready gate for `typed-edit-draft-and-submission`, then
+  implemented target-only unchanged/set/clear field values, typed Account/
+  actor/contract/entity/revision-bound drafts, stable validation results,
+  exact operation-envelope binding, and provider-free receipt/result
+  presentation. Binding cannot be directly constructed or decoded; restart
+  recreates it by revalidating the typed draft and queued envelope.
+- Added four deterministic domain/restart/rejection/presentation tests; all 39
+  target tests, target boundary and contract checks, macOS build, generic iOS
+  Simulator build, clean source-project diff, and diff formatting pass locally.
+  Only the two new target code/test surfaces are `implemented`; current editors,
+  product field rules, commands/handlers, concrete UI, and MCP remain
+  unadvanced. See `EVID-TYPED-EDIT-001`.
 
 ## Next Action
 
@@ -444,15 +456,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Create and pass the ready gate for the next decision-independent technical
-   slice, `typed-edit-draft-and-submission`. Derive it from the app-shell
-   dossier's `Menus, forms, and operations` contract and implement only target-
-   owned typed unchanged/set/clear field intent, expected-revision binding,
-   validation-safe draft state, and submission/result presentation that reuses
-   the shared operation lifecycle. Do not select product field mutability,
-   money/accounting rules, Auth, provider adapters, hosted resources, or
-   concrete UI, and do not advance current editors merely from shared-contract
-   proof.
+2. Commit and push the implemented `typed-edit-draft-and-submission`
+   checkpoint, require the exact-commit pull-request conversion and isolated-
+   target jobs to pass, and record the immutable run in
+   `EVID-TYPED-EDIT-001`. Only then mark `TYPED-EDIT-TEST-005`, the dossier, and
+   its two target-only surfaces `verified`; do not advance current editors or
+   feature command surfaces.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:40:43.199Z",
+  "generatedFromManifestSync": "2026-09-01T21:51:26.160Z",
   "totals": {
-    "slices": 5,
-    "claimedTargetSurfaces": 34,
+    "slices": 6,
+    "claimedTargetSurfaces": 36,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 19
+    "implementationAdvancedTargetSurfaces": 21
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 4,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -92,6 +92,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-environment-isolation.json"
+    },
+    {
+      "sliceId": "typed-edit-draft-and-submission",
+      "title": "Preserve typed edit intent through durable operation results",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Typed Edit Draft and Submission",
+      "surfaceIds": [
+        "SWIFT-3E0BAFEF6955",
+        "TEST-F9037F34FAF9"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/typed-edit-draft-and-submission.json"
     },
     {
       "sliceId": "versioned-contract-catalog",
