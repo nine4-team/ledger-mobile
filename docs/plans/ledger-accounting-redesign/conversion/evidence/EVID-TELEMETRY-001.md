@@ -2,9 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / observability contract / privacy control
-- Repository baseline: `ca7e062d` on
-  `codex/supabase-powersync-implementation`; implementation is in the current
-  bounded diff pending its exact commit
+- Repository implementation commit:
+  `4277afc5b7046a77fc4b0af2e39d1da3a3d9b2cc` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current application are not modified
 - Claimed target surfaces: `SWIFT-C1EC0E1D9BE6`, `TEST-BDC6ADC6F366`
@@ -73,6 +73,14 @@ Local results on 2026-09-01:
 - source `LedgeriOS.xcodeproj` diff from `fe018501`: empty; and
 - tracked diff formatting check: pass.
 
+Immutable GitHub Actions run
+[`33565583450`](https://github.com/nine4-team/ledger-mobile/actions/runs/33565583450)
+passed on the exact implementation commit. Its `Conversion state and
+traceability` and `Isolated target environment` jobs both passed, including
+conversion coverage, generated-artifact cleanliness, target dependency and
+environment boundaries, generated app/MCP contracts, all target tests, the
+macOS build, and the generic iOS Simulator build.
+
 ## Verification Status
 
 - `TELEMETRY-TEST-001`: passed locally. Registration, generated-class
@@ -85,8 +93,13 @@ Local results on 2026-09-01:
 - `TELEMETRY-TEST-003`: passed locally. Protected classes redact, raw identifiers
   and unclassified material refuse, and duplicate/disallowed/mismatched/invalid/
   oversized candidates produce stable failures without a partial envelope.
-- `TELEMETRY-TEST-004`: exact-commit pull-request CI is pending, so the slice
-  remains `implemented`, not `verified`.
+- `TELEMETRY-TEST-004`: passed in immutable GitHub Actions run `33565583450`
+  on exact implementation commit
+  `4277afc5b7046a77fc4b0af2e39d1da3a3d9b2cc`.
+
+All four obligations pass, so the slice and its two target-only surfaces are
+`verified`. Current `NavLifecycleLog`, performance diagnostics and MCP telemetry
+surfaces remain at their prior honest `target_mapped` status.
 
 ## Explicit Limits
 

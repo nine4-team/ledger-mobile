@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 38
+State version: 39
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TELEMETRY-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: TELEMETRY-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -471,6 +471,12 @@ modifying the running Firebase application before hard cutover.
   project isolation and diff formatting. Exactly the two target-only telemetry
   surfaces are `implemented`; current logging/telemetry surfaces remain
   `target_mapped`. Exact-commit CI is still required before verification.
+- Exact implementation commit `4277afc5` passed immutable GitHub Actions run
+  `33565583450`: both conversion traceability and isolated-target jobs passed,
+  including all target tests, generated contracts, target boundary checks,
+  macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
+  telemetry obligations and exactly its two target-only surfaces are now
+  `verified`; current app/MCP/performance logging remains unadvanced.
 
 ## Next Action
 
@@ -480,11 +486,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented `privacy-safe-telemetry-and-correlation`
-   checkpoint, require the exact-commit pull-request conversion and isolated-
-   target jobs to pass, and record the immutable run in `EVID-TELEMETRY-001`.
-   Only then mark `TELEMETRY-TEST-004`, the dossier, and its two target-only
-   surfaces `verified`; do not advance current logging/telemetry surfaces.
+2. Create and pass the ready gate for the next decision-independent technical
+   slice, `reproducible-release-manifest-and-artifact-integrity`. Derive it from
+   the platform dossier and architecture release/operations contracts; implement
+   only target-owned release/build/channel/contract/dependency-lock identities,
+   immutable artifact hashes, deterministic canonical manifests, compatibility
+   validation and fail-closed environment/channel binding. Do not add signing
+   keys, notarization, TestFlight/Sparkle upload, deployment, provider resources,
+   production activation or release authorization, and do not advance current
+   release scripts merely from shared-contract proof.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T22:17:25.092Z",
+    "lastSynchronizedAt": "2026-09-01T22:21:07.917Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -26878,7 +26878,7 @@
           "Provider-free fixtures prove stable registration, canonical encoding, one-way scope-separated correlation, bounded values, and fail-closed redaction/refusal without a telemetry destination"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
@@ -33376,7 +33376,7 @@
           "All privacy, correlation, bound, restart and refusal obligations pass deterministically in LedgerTargetCore"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",

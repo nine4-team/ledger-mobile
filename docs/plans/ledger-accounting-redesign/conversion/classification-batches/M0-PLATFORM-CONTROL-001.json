@@ -3124,7 +3124,7 @@
       "acknowledgeSourceHash": "87056de825659a1ea5bca55fc3b5e12fb668d74b67cd0e2c70e06cadd5bea776",
       "currentBehavior": "Defines the target-only closed event/metric/dimension/correlation registry, validated environment/build/contract scope, typed domain-separated HMAC correlations, allowlisted bounded canonical envelopes, and stable sensitive-data redaction/refusal decisions.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
@@ -3171,7 +3171,7 @@
       "acknowledgeSourceHash": "8d5612d98a8858fd82f8167eed1aa047ed360c1c0563b335934adcdd65e7c340",
       "currentBehavior": "Exercises stable signal/class registration, exact allowlists/ranges/units, canonical restart bytes, build/key/kind/environment-separated opaque correlation, raw-identity absence, deterministic protected-data redaction, unclassified/identifier refusal, and duplicate/disallowed/out-of-range/oversized failure.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
