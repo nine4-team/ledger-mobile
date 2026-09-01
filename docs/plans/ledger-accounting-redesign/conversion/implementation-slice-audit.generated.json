@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:37:26.692Z",
+  "generatedFromManifestSync": "2026-09-01T21:40:43.199Z",
   "totals": {
     "slices": 5,
     "claimedTargetSurfaces": 34,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 3,
+    "implemented": 0,
+    "verified": 4,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -39,7 +39,7 @@
       "sliceId": "scoped-route-resolution-and-restoration",
       "title": "Restore and resolve routes only inside the active workspace",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Scoped Route Resolution",
       "surfaceIds": [
         "SWIFT-D0BC2109537E",

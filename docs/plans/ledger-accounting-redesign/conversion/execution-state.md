@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 33
+State version: 34
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCOPED-ROUTE-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: SCOPED-ROUTE-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -429,6 +429,12 @@ modifying the running Firebase application before hard cutover.
   two new target code/test surfaces are `implemented`; concrete current routes,
   views, workspace/Auth lifecycle, and accessibility remain unadvanced. See
   `EVID-SCOPED-ROUTE-001`.
+- Exact implementation commit `bb978212` passed immutable GitHub Actions run
+  `33562117852`: both conversion traceability and isolated-target jobs passed,
+  including all target tests, generated contracts, target boundary checks,
+  macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
+  scoped-route obligations and exactly its two target-only surfaces are now
+  `verified`; current Firebase-era route/view surfaces remain unadvanced.
 
 ## Next Action
 
@@ -438,12 +444,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented
-   `scoped-route-resolution-and-restoration` checkpoint, require the exact-
-   commit pull-request conversion and isolated-target jobs to pass, and record
-   the immutable run in `EVID-SCOPED-ROUTE-001`. Only then mark
-   `SCOPED-ROUTE-TEST-004`, the dossier, and its two target-only surfaces
-   `verified`; do not advance concrete current routes or views.
+2. Create and pass the ready gate for the next decision-independent technical
+   slice, `typed-edit-draft-and-submission`. Derive it from the app-shell
+   dossier's `Menus, forms, and operations` contract and implement only target-
+   owned typed unchanged/set/clear field intent, expected-revision binding,
+   validation-safe draft state, and submission/result presentation that reuses
+   the shared operation lifecycle. Do not select product field mutability,
+   money/accounting rules, Auth, provider adapters, hosted resources, or
+   concrete UI, and do not advance current editors merely from shared-contract
+   proof.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

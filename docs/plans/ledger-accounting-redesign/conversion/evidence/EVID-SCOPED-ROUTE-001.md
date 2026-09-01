@@ -2,9 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / offline restoration / workspace isolation
-- Repository baseline: `233d50eb` on
-  `codex/supabase-powersync-implementation`; implementation is in the current
-  bounded diff pending its exact commit
+- Repository implementation commit:
+  `bb9782126900f5d3099186f0571e1b5503445db7` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current application project were not
   modified
@@ -98,6 +98,14 @@ Local results on 2026-09-01:
 - source `LedgeriOS.xcodeproj` diff: empty; and
 - tracked diff formatting check: pass.
 
+Immutable GitHub Actions run
+[`33562117852`](https://github.com/nine4-team/ledger-mobile/actions/runs/33562117852)
+passed on the exact implementation commit. Its `Conversion state and
+traceability` and `Isolated target environment` jobs both passed, including
+conversion coverage, generated-artifact cleanliness, target dependency and
+environment boundaries, generated app/MCP contracts, all target tests, the
+macOS build, and the generic iOS Simulator build.
+
 ## Verification Status
 
 - `SCOPED-ROUTE-TEST-001`: passed locally. The route registry and restoration
@@ -107,8 +115,13 @@ Local results on 2026-09-01:
 - `SCOPED-ROUTE-TEST-003`: passed locally. Inaccessible causes are publicly
   indistinguishable; not-synced/retry are explicit; stale workspace work cannot
   mutate active route state.
-- `SCOPED-ROUTE-TEST-004`: exact-commit pull-request CI is pending, so the slice
-  remains `implemented`, not `verified`.
+- `SCOPED-ROUTE-TEST-004`: passed in immutable GitHub Actions run `33562117852`
+  on exact implementation commit
+  `bb9782126900f5d3099186f0571e1b5503445db7`.
+
+All four obligations pass, so the slice and its two target-only surfaces are
+`verified`. Current Firebase-era route/view surfaces remain at their prior
+honest statuses.
 
 ## Explicit Limits
 

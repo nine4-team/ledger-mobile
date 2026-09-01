@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T21:37:26.692Z",
+    "lastSynchronizedAt": "2026-09-01T21:40:43.199Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27684,7 +27684,7 @@
           "Cached target routes restore deterministically inside one workspace and fail closed across workspace or authorization boundaries"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
@@ -33466,7 +33466,7 @@
           "All domain, restart and rejection fixtures pass without a network, provider SDK, credential, or hosted resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",

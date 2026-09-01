@@ -3,7 +3,7 @@
   "sliceId": "scoped-route-resolution-and-restoration",
   "title": "Restore and resolve routes only inside the active workspace",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Scoped Route Resolution",
   "surfaceIds": [
     "SWIFT-D0BC2109537E",
@@ -153,8 +153,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SCOPED-ROUTE-REQ-001", "SCOPED-ROUTE-REQ-002", "SCOPED-ROUTE-REQ-003", "SCOPED-ROUTE-REQ-004", "SCOPED-ROUTE-REQ-005"],
       "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SCOPED-ROUTE-001"]
     }
   ],
   "implementationEvidence": ["EVID-SCOPED-ROUTE-001"],

@@ -2793,7 +2793,7 @@
       "acknowledgeSourceHash": "6df4df33bd4f8458940913fb5f17834d906e7eea369552d569972e21bb8747e3",
       "currentBehavior": "Defines target-only registered routes, environment/Principal/Account-scoped restoration, deterministic opaque keys, activation-bound resolution requests, non-enumerating failures, explicit not-synced state, safe cached retry, and late-result rejection.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
@@ -2840,7 +2840,7 @@
       "acknowledgeSourceHash": "0eecc6ad75579c0f4c0cb9edeb4b4bd77abb1b5f99f0e3b15a171a6312788c01",
       "currentBehavior": "Exercises target-only route-registry validation, offline restoration, every workspace-scope mismatch, contract/version refusal, non-enumerating failure collapse, explicit not-synced/cached state, retry state, and late-result rejection without mutation.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
