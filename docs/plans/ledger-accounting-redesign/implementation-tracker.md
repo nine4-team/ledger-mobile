@@ -23,10 +23,10 @@ Conversion coverage and resume state: [conversion/README.md](conversion/README.m
 |---|---|---|
 | G0 — Product boundary | design | Open decisions that change schemas/writers are resolved |
 | G0.5 — Capability synthesis | done | All 686 source-baseline surfaces have one reviewed disposition, behavior, evidence owner and dossier/control contract; new target implementation surfaces enter the same manifest and deterministic M0 audit |
-| G0.75 — Target mapping | design | 285 of 449 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
+| G0.75 — Target mapping | design | 289 of 453 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
 | G1 — Target schema | not started | Postgres entities, relationships, IDs, locks, invariants, RLS, and Sync Streams approved |
 | G2 — Source migration/cutover | not started | Firebase export coverage, final-write freeze, pending-write disposition, and rejected-write recovery designed without refactoring the old app |
-| G3 — Implementation | in progress | Decision-independent environment foundations are active; 17 target surfaces are verified across operation, catalog, and shared-list slices. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
+| G3 — Implementation | in progress | Decision-independent environment foundations are active; 17 target surfaces are verified across operation, catalog, and shared-list slices, and 2 scoped-route surfaces are implemented pending exact-commit CI. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
 | G4 — Migration rehearsal | not started | Read-only audit, backups, dry run, reconciliation, and rollback pass |
 | G5 — Authority cutover | not started | Supabase/PowerSync writers enabled; Firebase source frozen; stale writers rejected; monitoring active |
 | G6 — Release completion | not started | Production target, macOS/iOS distribution, MCP, and post-release reconciliation complete |
@@ -58,7 +58,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 | Adopt capability evolution method | done | [Capability Evolution Method](conversion/capability-evolution-method.md) |
 | Build complete current capability/surface catalog | done | 686 surfaces: 674 repository-discovered plus 12 manual cross-cutting; zero unclassified/missing-source/drift/validation gaps; `EVID-M0-COVERAGE-001` |
 | Create reviewed capability dossiers | done | Identity/session, media, Projects/Clients/reference, unified Item/Link, Inventory/Transactions/provenance, Invoicing/budget, reporting/search, Spaces/review, platform/control, and app-shell/presentation/test-support dossiers complete |
-| Map stable target responsibilities | done | 285 target mappings or later across source and target implementation surfaces; zero incomplete mapped records; 164 unresolved surfaces remain blocked rather than guessed |
+| Map stable target responsibilities | done | 289 target mappings or later across source and target implementation surfaces; zero incomplete mapped records; 164 unresolved surfaces remain blocked rather than guessed |
 | Generate exact residual decision queue | done | 164 residual surfaces grouped under 43 validated blockers; `npm run conversion:residuals:check` |
 | Draft product decision packets | done | Sixteen proposed packets cover all 35 product blockers and all 157 product-dependent residual surfaces; O-021 is UI-only; none is approved by documentation alone |
 | Register canonical target specs | done | [Program index](README.md#canonical-target-state-specs) |
@@ -119,6 +119,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 | Define shared operation lifecycle/readiness | done | Typed envelope/receipt/result/rejection, exact replay, Account-isolated restart journal, stable errors and readiness; 11 focused tests; `EVID-OPERATION-CORE-001` |
 | Generate versioned app/MCP contract catalog | done | Canonical JSON to Swift/TypeScript/MCP resource, strict registration/leakage/deprecation controls, 6 tests, 19 negative mutations, both target builds and exact-commit Actions run `33559241558` pass; `EVID-CONTRACT-CATALOG-001` |
 | Define shared list/query presentation truth | done | Named profiles/sorts/filters/actions, stable cursors/ties, cached-first readiness/empty/failure reducer, structural non-enumeration, 3 focused/32 total target tests and both target builds pass locally and in exact-commit Actions run `33560578730`; `EVID-SHARED-LIST-001` |
+| Define scoped route resolution/restoration | verify | Registered stable routes, environment/Principal/Account restoration, opaque keys, activation-bound resolution, non-enumerating failures, explicit not-synced/retry states, and late-result refusal; 3 focused/35 total target tests and both target builds pass locally; exact-commit CI pending; `EVID-SCOPED-ROUTE-001` |
 | Provision dedicated target staging | blocked | Supabase project, PowerSync instance, Storage, identities, and no production IAM |
 | Approve spike budget, lifecycle and hard caps | blocked | Product owner records maximum hosted run-rate/spend, cleanup owner/time, supported devices and pre-measurement performance/cost caps |
 | S0 isolation/reset proof | not started | `SPIKE-ISO-001`; fail before Auth/network I/O on unknown/production resources; deterministic reset and cleanup |

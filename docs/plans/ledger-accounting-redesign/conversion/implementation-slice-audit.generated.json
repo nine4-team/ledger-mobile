@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:24:59.992Z",
+  "generatedFromManifestSync": "2026-09-01T21:37:26.692Z",
   "totals": {
-    "slices": 4,
-    "claimedTargetSurfaces": 32,
+    "slices": 5,
+    "claimedTargetSurfaces": 34,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 17
+    "implementationAdvancedTargetSurfaces": 19
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 3,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -34,6 +34,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json"
+    },
+    {
+      "sliceId": "scoped-route-resolution-and-restoration",
+      "title": "Restore and resolve routes only inside the active workspace",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Scoped Route Resolution",
+      "surfaceIds": [
+        "SWIFT-D0BC2109537E",
+        "TEST-E106594B9EF3"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/scoped-route-resolution-and-restoration.json"
     },
     {
       "sliceId": "shared-list-query-presentation",

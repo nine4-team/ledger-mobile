@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 32
+State version: 33
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SHARED-LIST-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: SCOPED-ROUTE-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -416,6 +416,19 @@ modifying the running Firebase application before hard cutover.
   macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
   shared-list obligations and exactly its two target-only surfaces are now
   `verified`; the four concrete source UI replacements remain `target_mapped`.
+- Created and passed the ready gate for
+  `scoped-route-resolution-and-restoration`, then implemented target-only
+  registered stable routes, bounded subject/parent scope, environment/
+  Principal/Account restoration, opaque deterministic keys, activation-bound
+  resolution, explicit not-synced/retry states, structural non-enumeration, and
+  late-workspace-result refusal. Live resolution requests are intentionally not
+  decodable without registry validation.
+- Added three deterministic domain/restart/rejection tests; all 35 target tests,
+  the target boundary and contract checks, macOS build, generic iOS Simulator
+  build, clean source-project diff, and diff formatting pass locally. Only the
+  two new target code/test surfaces are `implemented`; concrete current routes,
+  views, workspace/Auth lifecycle, and accessibility remain unadvanced. See
+  `EVID-SCOPED-ROUTE-001`.
 
 ## Next Action
 
@@ -425,13 +438,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Create and pass the ready gate for the next decision-independent technical
-   slice, `scoped-route-resolution-and-restoration`. Derive it from the app-
-   shell dossier's `Navigation and restoration` contract and implement only
-   target-owned stable route/scope/restoration keys, non-enumerating resolution
-   outcomes, and late-workspace-result rejection. Do not activate Auth,
-   workspace lifecycle, provider adapters, hosted resources, or concrete UI,
-   and do not advance current source routes merely from shared-contract proof.
+2. Commit and push the implemented
+   `scoped-route-resolution-and-restoration` checkpoint, require the exact-
+   commit pull-request conversion and isolated-target jobs to pass, and record
+   the immutable run in `EVID-SCOPED-ROUTE-001`. Only then mark
+   `SCOPED-ROUTE-TEST-004`, the dossier, and its two target-only surfaces
+   `verified`; do not advance concrete current routes or views.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

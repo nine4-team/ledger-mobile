@@ -2786,6 +2786,96 @@
           "All domain, restart and safe-failure fixtures pass without network, provider SDK, credential or hosted resource"
         ]
       }
+    },
+    {
+      "id": "SWIFT-D0BC2109537E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "6df4df33bd4f8458940913fb5f17834d906e7eea369552d569972e21bb8747e3",
+      "currentBehavior": "Defines target-only registered routes, environment/Principal/Account-scoped restoration, deterministic opaque keys, activation-bound resolution requests, non-enumerating failures, explicit not-synced state, safe cached retry, and late-result rejection.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SCOPED-ROUTE-001"
+      ],
+      "notes": "Target-only technical-control surface. It does not activate Auth, a workspace, Sync Streams, hosted resources, or concrete navigation UI.",
+      "target": {
+        "owner": "Scoped Route Resolution",
+        "surfaces": [
+          "workspace-scoped route identity and activation token",
+          "registered route kind and bounded parent scope",
+          "versioned restoration record and deterministic namespaced key",
+          "non-enumerating route resolution state and late-result rejection"
+        ],
+        "securityRequirements": [
+          "Restoration refuses environment, Principal, Account, activation, contract-version, and route-registry mismatches",
+          "Missing, unauthorized, unauthenticated, and revoked causes collapse before public route presentation"
+        ],
+        "syncRequirements": [
+          "Not-yet-synchronized remains distinct from missing or failed",
+          "Resolution updates from an old request or workspace activation cannot enter the active route state"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient navigation stack; restore only validated target route records in the exact active environment, Principal, and Account scope.",
+        "reconciliation": [
+          "Every accepted restoration record resolves through the current route registry and contract version",
+          "Cross-workspace and stale-activation fixtures are rejected without displaying cached inaccessible content"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ScopedRouteResolutionTests domain, restart, scope-isolation and late-result suite"
+        ],
+        "acceptance": [
+          "Cached target routes restore deterministically inside one workspace and fail closed across workspace or authorization boundaries"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E106594B9EF3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0eecc6ad75579c0f4c0cb9edeb4b4bd77abb1b5f99f0e3b15a171a6312788c01",
+      "currentBehavior": "Exercises target-only route-registry validation, offline restoration, every workspace-scope mismatch, contract/version refusal, non-enumerating failure collapse, explicit not-synced/cached state, retry state, and late-result rejection without mutation.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SCOPED-ROUTE-001"
+      ],
+      "notes": "Synthetic provider-free test surface; it does not claim concrete iOS/macOS navigation, visual, accessibility, Auth, or Sync evidence.",
+      "target": {
+        "owner": "Scoped Route Resolution",
+        "surfaces": [
+          "ScopedRouteResolutionTests",
+          "route registry and restoration fixtures",
+          "workspace-switch, authorization-collapse and late-update fixtures"
+        ],
+        "securityRequirements": [
+          "Tests prove the public state cannot distinguish inaccessible existence and no old-workspace snapshot survives a scope transition"
+        ],
+        "syncRequirements": [
+          "Tests prove not-synced is explicit, cached restoration is network-independent, and mismatched updates fail closed"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target route records only; import no Firebase navigation state, listener handle, document path, or cached view model.",
+        "reconciliation": [
+          "Every scoped-route requirement has reciprocal executable coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ScopedRouteResolutionTests"
+        ],
+        "acceptance": [
+          "All domain, restart and rejection fixtures pass without a network, provider SDK, credential, or hosted resource"
+        ]
+      }
     }
   ]
 }

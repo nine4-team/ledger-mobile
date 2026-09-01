@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:24:59.992Z",
+  "generatedFromManifestSync": "2026-09-01T21:37:26.692Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 713,
-    "targetRelevantSurfaces": 451,
+    "surfaces": 715,
+    "targetRelevantSurfaces": 453,
     "batches": 18,
-    "productScopeSurfaces": 575,
+    "productScopeSurfaces": 577,
     "technicalControlSurfaces": 138
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 465,
-      "targetRelevantSurfaceCount": 313
+      "surfaceCount": 467,
+      "targetRelevantSurfaceCount": 315
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 444,
-      "targetRelevantSurfaceCount": 288
+      "surfaceCount": 446,
+      "targetRelevantSurfaceCount": 290
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 501,
-      "targetRelevantSurfaceCount": 316
+      "surfaceCount": 503,
+      "targetRelevantSurfaceCount": 318
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 372,
-      "targetRelevantSurfaceCount": 256
+      "surfaceCount": 374,
+      "targetRelevantSurfaceCount": 258
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -84,8 +84,8 @@
         "M0-ITEM-CREATION-LINK-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 411,
-      "targetRelevantSurfaceCount": 261
+      "surfaceCount": 413,
+      "targetRelevantSurfaceCount": 263
     }
   ],
   "batches": [
@@ -94,8 +94,8 @@
       "title": "App shell, shared presentation, and test support",
       "scope": "product",
       "rationale": "Presentation and test surfaces must render and exercise the redesigned accounting, Item, Client, Transfer, receipt-line, security, and offline contracts without preserving Firebase mechanics.",
-      "surfaceCount": 117,
-      "targetRelevantSurfaceCount": 41,
+      "surfaceCount": 119,
+      "targetRelevantSurfaceCount": 43,
       "authorities": [
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
@@ -223,6 +223,7 @@
         "SWIFT-CDADEAA08764",
         "SWIFT-CEABE6DC1587",
         "SWIFT-CFE74F51AD82",
+        "SWIFT-D0BC2109537E",
         "SWIFT-D21A4FBB69CA",
         "SWIFT-D2E27E81511F",
         "SWIFT-D49180285F84",
@@ -263,7 +264,8 @@
         "TEST-84999BA9BBBE",
         "TEST-B200C7C263E7",
         "TEST-BB924134BF8E",
-        "TEST-C1A3D3DA5E75"
+        "TEST-C1A3D3DA5E75",
+        "TEST-E106594B9EF3"
       ]
     },
     {

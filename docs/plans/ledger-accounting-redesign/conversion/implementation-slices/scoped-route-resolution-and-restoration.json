@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "scoped-route-resolution-and-restoration",
+  "title": "Restore and resolve routes only inside the active workspace",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Scoped Route Resolution",
+  "surfaceIds": [
+    "SWIFT-D0BC2109537E",
+    "TEST-E106594B9EF3"
+  ],
+  "requirements": [
+    {
+      "id": "SCOPED-ROUTE-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "Navigation consumes typed route-resolution state and emits route intent without constructing provider paths, authorizing access, retaining infrastructure values, or inferring server truth from local availability.",
+      "decisionIds": [],
+      "verificationIds": ["SCOPED-ROUTE-TEST-001", "SCOPED-ROUTE-TEST-003", "SCOPED-ROUTE-TEST-004"]
+    },
+    {
+      "id": "SCOPED-ROUTE-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Availability and responsiveness",
+      "invariant": "A route can resolve from authorized cached local state without a server round trip, while not-yet-synchronized remains explicit and a stale or unavailable server does not become false absence.",
+      "decisionIds": [],
+      "verificationIds": ["SCOPED-ROUTE-TEST-002", "SCOPED-ROUTE-TEST-003", "SCOPED-ROUTE-TEST-004"]
+    },
+    {
+      "id": "SCOPED-ROUTE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Security",
+      "invariant": "Environment, Principal, Account, activation, and route scope fail closed; inaccessible, missing, unauthenticated, and revoked entity causes cannot be distinguished through the public presentation state.",
+      "decisionIds": [],
+      "verificationIds": ["SCOPED-ROUTE-TEST-001", "SCOPED-ROUTE-TEST-002", "SCOPED-ROUTE-TEST-003", "SCOPED-ROUTE-TEST-004"]
+    },
+    {
+      "id": "SCOPED-ROUTE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Composition and Feature Activation",
+      "invariant": "Restoration and resolution are namespaced to one coherent target environment and active workspace; switching or re-entering a workspace rejects late results from the prior activation even when the route IDs match.",
+      "decisionIds": [],
+      "verificationIds": ["SCOPED-ROUTE-TEST-002", "SCOPED-ROUTE-TEST-003", "SCOPED-ROUTE-TEST-004"]
+    },
+    {
+      "id": "SCOPED-ROUTE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Application use-case tests",
+      "invariant": "Deterministic provider-free fixtures prove cached restoration, context switching, cancellation-equivalent late-result rejection, not-synced state, non-enumerating failure, and contract-version refusal.",
+      "decisionIds": [],
+      "verificationIds": ["SCOPED-ROUTE-TEST-001", "SCOPED-ROUTE-TEST-002", "SCOPED-ROUTE-TEST-003", "SCOPED-ROUTE-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "WorkspaceRouteScope contains exactly one Ledger target environment, PrincipalID, and AccountID; WorkspaceActivationID distinguishes successive entries into the same scope.",
+        "RouteKindID and RouteDefinition form a closed registry that validates whether a route requires a subject and which bounded parent entity kinds it may carry; raw paths, URLs, table names, document paths, and arbitrary payload dictionaries are excluded.",
+        "ScopedRoute contains one registered route kind plus only its validated stable subject and optional parent reference.",
+        "RouteRestorationRecord is contract-versioned and produces a deterministic SHA-256 key over the exact environment/Principal/Account scope and route value.",
+        "RouteResolutionRequest binds scope, activation, request identity, and route; public RouteResolutionState is closed over loading, ready, notSynced, unavailable, retryable failure, and required-update failure."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "Transient route state introduces no target relation, view, function, constraint, or index."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "The slice executes no server query or business command; owning feature query slices later resolve registered routes."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row is introduced; owning projections remain responsible for authorization before download."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "This slice represents local resolution readiness but defines no PowerSync Stream, subscription, or row visibility policy."
+    },
+    "localOffline": {
+      "items": [
+        "A validated restoration record is serializable and can reconstruct the same route and key without a network, but only when environment, Principal, Account, route registry, and contract version all match.",
+        "RouteResolutionReducer accepts only updates matching the active scope, activation, request identity, and route; old-account, prior-activation, old-request, and wrong-route results fail without mutating current state.",
+        "Internal missing, authorization, authentication, and revocation causes collapse to public unavailable and clear any cached destination snapshot; notSynced remains distinct and retryable infrastructure failure may retain only the explicitly supplied safe cached snapshot."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No attachment identity, byte, object, URL, or display-source behavior is introduced."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This is app navigation state; MCP uses the owning typed queries and never consumes or publishes UI restoration records."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase navigation stack or transient view state is migrated."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "The shared value/reducer layer emits no telemetry; a later shell slice may record bounded route categories without entity IDs."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The contracts are additive target-only Swift code, import no provider SDK, alter no current app project, contact no hosted service, and activate no production behavior.",
+        "Concrete screens and feature route definitions opt in later; reverting this foundation before cutover removes only target-only code, tests, and transient target restoration values."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SCOPED-ROUTE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ScopedRouteResolutionTests.swift",
+      "covers": ["SCOPED-ROUTE-REQ-001", "SCOPED-ROUTE-REQ-003", "SCOPED-ROUTE-REQ-005"],
+      "expected": "The closed route registry accepts only valid stable kinds, subject requirements, and parent scopes; restoration keys are deterministic and contain no raw identifier or provider path.",
+      "status": "passed",
+      "evidence": ["EVID-SCOPED-ROUTE-001"]
+    },
+    {
+      "id": "SCOPED-ROUTE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ScopedRouteResolutionTests.swift",
+      "covers": ["SCOPED-ROUTE-REQ-002", "SCOPED-ROUTE-REQ-003", "SCOPED-ROUTE-REQ-004", "SCOPED-ROUTE-REQ-005"],
+      "expected": "Encoding and decoding an accepted record reconstructs the same route and key offline, while environment, Principal, Account, registry, and contract-version mismatches are rejected.",
+      "status": "passed",
+      "evidence": ["EVID-SCOPED-ROUTE-001"]
+    },
+    {
+      "id": "SCOPED-ROUTE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ScopedRouteResolutionTests.swift",
+      "covers": ["SCOPED-ROUTE-REQ-001", "SCOPED-ROUTE-REQ-002", "SCOPED-ROUTE-REQ-003", "SCOPED-ROUTE-REQ-004", "SCOPED-ROUTE-REQ-005"],
+      "expected": "Missing/unauthorized/unauthenticated/revoked updates are publicly identical and clear cached data; notSynced is distinct; prior workspace, activation, request, and route updates are rejected without changing active state.",
+      "status": "passed",
+      "evidence": ["EVID-SCOPED-ROUTE-001"]
+    },
+    {
+      "id": "SCOPED-ROUTE-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SCOPED-ROUTE-REQ-001", "SCOPED-ROUTE-REQ-002", "SCOPED-ROUTE-REQ-003", "SCOPED-ROUTE-REQ-004", "SCOPED-ROUTE-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-SCOPED-ROUTE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent technical-control foundation derived from the app-shell capability dossier. It stops before Auth/session policy, workspace lifecycle, local database/Sync implementation, feature query ports, concrete iOS/macOS navigation, accessibility/visual evidence, hosted resources, migration, release, or cutover authority."
+}
