@@ -1,7 +1,10 @@
 # EVID-MIGRATION-RUN-INTEGRITY-001 — Migration Run Plan and Journal Integrity
 
 - Timestamp: 2026-09-01
-- Class: implementation planning / migration evidence integrity / operational control
+- Class: implementation / migration evidence integrity / operational control
+- Exact implementation commit: pending this bounded checkpoint on
+  `codex/supabase-powersync-implementation`; immutable hosted CI is still
+  required before verification
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree, current application, reverse migration
   package, profilers and release scripts are not modified or invoked
@@ -27,10 +30,49 @@ into a separate target tooling contract for:
 - an evidence-only disposition that cannot represent signing, operator
   approval, migration execution, production apply, rollback or cutover.
 
-The implementation and test files are comment-only scaffolds. The separate
-module is not yet declared in the Swift package and is not linked into the
-target application. No behavioral implementation starts until the dossier and
-conversion controls pass `ready`.
+The implementation and test files were comment-only scaffolds when this gate
+passed. Only then was the separate package product and behavior added.
+
+## Implemented Contract
+
+`LedgerTargetMigrationCore/MigrationRunIntegrity.swift` now provides:
+
+- closed source-environment, run-mode, stage, journal-state, reconciliation,
+  terminal-disposition and permanently evidence-only authority values;
+- bounded opaque run/export identity, stable entity/artifact/rule/reason codes,
+  safe versions, 40/64-character repository revisions and exact SHA-256 values;
+- an immutable source snapshot plus a target binding derived from an already
+  validated `LedgerEnvironmentManifest`, exposing only target kind and hashes
+  of the environment/structured-data/Storage resources;
+- a policy-validated `MigrationRunPlan` that binds opaque Account scope, exact
+  contracts, migration/mapping artifacts and unique sorted per-entity expected
+  counts/source hashes/transform versions;
+- deterministic canonical plan bytes and content digest with fixed entity,
+  mapping and byte ceilings;
+- `MigrationRunJournal` events bound to the exact plan and its validator
+  policy, with every public start/append/encode/decode boundary revalidating
+  target, contract and artifact identity before accepting evidence, contiguous
+  sequence, legal stage transitions, nondecreasing timestamps and counts,
+  exact entity coverage, replay-idempotency, conflicting-replay refusal,
+  interruption/resume semantics and a restart-stable resume fingerprint;
+- overflow-safe examined/applied/skipped/blocked/failed counts constrained by
+  each planned entity total;
+- a terminal `MigrationRunManifest` that embeds the exact plan and journal,
+  requires the complete named reconciliation rule set and distinguishes
+  completed, interrupted, blocked and aborted evidence; and
+- canonical plan/journal/manifest decode-and-revalidate boundaries with stable
+  wrong-target, version/artifact, sequence/stage/time/count, reconciliation,
+  digest, noncanonical and size failures.
+
+Dry-run completion requires every planned entity to be examined with zero
+applied writes. Apply-shaped completion requires applied plus skipped counts to
+close the plan. In both cases the manifest remains `evidenceOnly`; no type in
+this module can authorize or perform the run.
+
+The Swift package exports this as `LedgerTargetMigrationCore`, depending only
+on `LedgerTargetCore`. `LedgerTargetStaging` still links only
+`LedgerTargetCore`, and the source Firebase Xcode project links neither target
+module.
 
 ## Ready-Gate Verification
 
@@ -40,7 +82,47 @@ obligations pass `npm run conversion:sync`, `npm run conversion:check`,
 `npm run conversion:report` and the M0 gate with 725 recorded / 710 currently
 discovered surfaces, zero errors and only the three documented retired-path
 warnings. Behavioral verification remains planned and no implementation status
-is claimed at this checkpoint.
+was claimed at that checkpoint.
+
+## Local Verification
+
+Local results on 2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter MigrationRunIntegrityTests`:
+  pass, four tests;
+- `swift test --package-path LedgeriOS`: pass, 55 tests across ten suites;
+- `npm run target:environment:check`: pass, including explicit package-edge,
+  provider-import and application-link isolation for migration tooling;
+- `npm run target:contracts:check`: pass, including strict target TypeScript;
+- `npm run target:project:generate`: pass with no tracked project rewrite;
+- `npm run target:staging:build:macos`: pass;
+- `npm run target:staging:build:ios`: pass for generic iOS Simulator; and
+- conversion synchronization/checking passes at 725 recorded / 710 discovered
+  surfaces with zero errors and the same three documented retired-path
+  warnings.
+
+## Verification Status
+
+- `MIGRATION-RUN-TEST-001`: passed locally. Closed values, exact plan identity,
+  legal journal state and terminal evidence are deterministic and evidence-
+  only.
+- `MIGRATION-RUN-TEST-002`: passed locally. Canonical journal evidence restores
+  offline, identical replay is idempotent, and interruption resumes from the
+  same fingerprint without duplicate counts.
+- `MIGRATION-RUN-TEST-003`: passed locally. Wrong target, direct-decoded plan
+  policy bypass, conflicting replay, count/stage regression, unsafe values,
+  digest tamper, noncanonical bytes and oversize fail closed.
+- `MIGRATION-RUN-TEST-004`: passed locally using synthetic dry-run/apply,
+  interruption/resume and idempotent evidence without provider or file access.
+- `MIGRATION-RUN-TEST-005`: passed locally. Completed evidence requires exact
+  entity closure and the complete named reconciliation set with no unexplained
+  or failed result.
+- `MIGRATION-RUN-TEST-006`: planned until an immutable GitHub Actions run passes
+  on the exact implementation commit, including the full package suite, graph
+  guard, both target builds and clean tracked artifacts.
+
+The slice and its two target-only surfaces are `implemented`, not `verified`,
+until the operational obligation passes externally.
 
 ## Explicit Limits
 

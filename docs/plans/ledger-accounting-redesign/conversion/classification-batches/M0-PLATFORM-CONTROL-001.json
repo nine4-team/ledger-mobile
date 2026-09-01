@@ -52,26 +52,30 @@
     {
       "id": "CONFIG-031396750B85",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Defines the standalone LedgerTargetCore library and its tests as a Swift package with no external package dependencies.",
+      "acknowledgeSourceHash": "f18e6359b59d032d7d2130da456328d49b2e3c3c8366646604be5c117031380e",
+      "currentBehavior": "Defines the standalone LedgerTargetCore library/tests plus a separately exported LedgerTargetMigrationCore library/test target that depends only on the provider-free core; the package has no external dependencies and the staging app links only LedgerTargetCore.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "New target-only build graph claimed by target-environment-isolation; it is intentionally separate from the Firebase application Xcode project.",
+      "notes": "Target package graph remains claimed by target-environment-isolation. Migration integrity is compiled and tested in a separate library product but intentionally absent from both application Xcode projects.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
           "LedgerTargetCore package product",
           "LedgerTargetCoreTests package test target",
+          "LedgerTargetMigrationCore separate tooling product and test target",
           "future target application dependency boundary"
         ],
         "securityRequirements": [
           "The foundation package has no vendor dependency and cannot acquire credentials or open infrastructure",
-          "The current Firebase app project does not compile or link target-only foundation paths"
+          "The current Firebase app project does not compile or link target-only foundation paths",
+          "Neither application project compiles or links LedgerTargetMigrationCore"
         ],
         "syncRequirements": [
           "PowerSync remains a descriptor behind validated target contracts until the separately gated adapter is introduced"
@@ -96,15 +100,16 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "693b95f16764121fafb6831db6ee2a558db5e5fa404f40885df690e68fe2ef2d",
-      "currentBehavior": "Fails closed unless the LedgerTargetCore package graph is dependency-free, its tests depend only on that core, target files contain no provider SDK imports, and the source Firebase Xcode project does not reference target-only paths.",
+      "acknowledgeSourceHash": "5eaf3a5c943f48d9cc7c0bd7cb6321599fd5bf5189b525ee299101dbefd4408f",
+      "currentBehavior": "Fails closed unless LedgerTargetCore remains dependency-free, LedgerTargetMigrationCore depends only on that core, each test target has only its reviewed edges, all target/tooling files contain no provider SDK imports, neither application project links migration tooling, and the source Firebase Xcode project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "target": {
@@ -112,6 +117,7 @@
         "surfaces": [
           "target environment build-graph guard",
           "provider import guard",
+          "migration-tooling application-link guard",
           "source-project contamination guard"
         ],
         "securityRequirements": [
@@ -124,7 +130,7 @@
       "migration": {
         "rule": "Run locally and in CI before target slice evidence is accepted; it reads configuration only and performs no migration.",
         "reconciliation": [
-          "Swift package description and lexical import inspection agree that the foundation is provider-free"
+        "Swift package description, application graphs and lexical import inspection agree that the app foundation and separate migration tooling are provider-free and isolated"
         ]
       },
       "verification": {
@@ -133,7 +139,7 @@
           "npm run target:environment:check"
         ],
         "acceptance": [
-          "Any external package dependency, provider import, missing target, wrong test edge, or source-project path contamination exits nonzero"
+        "Any external package dependency, provider import, missing target, wrong package edge, application link to migration tooling, or source-project path contamination exits nonzero"
         ]
       }
     },
@@ -312,18 +318,21 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Provides the same target environment guard classified through tooling discovery because it explicitly rejects the known Firebase production source identifiers from the compiled staging projection.",
+      "acknowledgeSourceHash": "5eaf3a5c943f48d9cc7c0bd7cb6321599fd5bf5189b525ee299101dbefd4408f",
+      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers and provider imports, enforces the separate migration-tooling dependency graph, and refuses migration-tooling links from either application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": [
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
-          "known source-production identifier contamination guard"
+          "known source-production identifier contamination guard",
+          "migration-tooling application-contamination guard"
         ],
         "securityRequirements": [
           "The target staging application source and generated project contain no source-production identifier or provider dependency"
@@ -3463,16 +3472,17 @@
     {
       "id": "SWIFT-CBE990F49610",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Provides a comment-only target migration-control scaffold outside LedgerTargetCore and the target application runtime; no migration plan, journal, manifest, source reader, target writer or execution behavior exists yet.",
+      "acknowledgeSourceHash": "373be5b74a57e14409db8734e6d96cbe86b36dd37c3b0908a72a2aa332770d72",
+      "currentBehavior": "Defines provider-free policy-validated migration plan/source/target/artifact/entity identity, canonical evidence-only plan bytes, monotonic replay-safe journal events and resume fingerprints, exact terminal entity/reconciliation manifests including honest not-run evidence, bounded canonical restart decoding and stable fail-closed results in a separate non-app module. Every public journal boundary revalidates the supplied plan under the same exact target/artifact/version policy before accepting evidence.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "Target-only technical-control scaffold. The ready dossier authorizes provider-free plan/journal/manifest integrity values only; it cannot read Firebase, connect to Supabase, load data, sign a plan, approve apply mode, execute a migration or alter authority.",
+      "notes": "Target-only separate tooling contract. It contains values and validators only: no source/file/provider reader, target/database writer, durable journal store, signer, operator approval, migration executor or authority switch. Exact-commit external CI remains before verification.",
       "target": {
         "owner": "Migration Run Plan and Journal Integrity",
         "surfaces": [
@@ -3493,7 +3503,7 @@
       "migration": {
         "rule": "Define only provider-free integrity values for an already-created immutable export and explicitly identified target; do not implement extraction, transformation, load, provider adapters, apply authorization or migration execution.",
         "reconciliation": [
-          "Exact plan identity, monotonic journal checkpoints, per-entity planned/applied/skipped/blocked/failed counts, artifact hashes and reconciliation results must close without unexplained differences before a completed evidence manifest can exist"
+          "Exact plan identity, monotonic journal checkpoints, per-entity planned/examined/applied/skipped/blocked/failed counts, artifact hashes and the complete named reconciliation set must close without unexplained, failed or not-run results before a completed evidence manifest can exist"
         ]
       },
       "verification": {
@@ -3508,16 +3518,17 @@
     {
       "id": "TEST-05A1A0F4E72C",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Provides a comment-only executable-test scaffold for the separate target migration-control module; no test behavior or provider fixture exists yet.",
+      "acknowledgeSourceHash": "fd06cf71f11cec245fad30a31f03cb83c2b4ad3e1a6c8051ba713940120cb39f",
+      "currentBehavior": "Exercises canonical dry-run/apply evidence, sorted plan identity, offline plan/journal/manifest reconstruction, interruption/replay/resume, wrong target, conflicting replay, count/stage regression, direct-decode policy bypass, digest/canonical/size tamper, exact reconciliation closure, honest not-run blocked evidence and production-shaped evidence-only non-authority with synthetic values only.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "Target-only test scaffold. Future tests use synthetic hashes, counts, versions and timestamps only and may not open source exports, databases, files, hosted resources or migration providers.",
+      "notes": "Four provider-free focused tests pass locally with synthetic hashes, counts, versions and timestamps only; they open no export, database, file, hosted resource or provider. Exact-commit external CI remains before verification.",
       "target": {
         "owner": "Migration Run Plan and Journal Integrity",
         "surfaces": [

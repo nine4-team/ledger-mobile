@@ -135,6 +135,7 @@
       "items": [
         "The ordinary LedgeriOS scheme remains the Firebase production app while a distinct target-staging scheme/profile is introduced on the isolated conversion branch.",
         "There is no in-app runtime switch between Firebase and Supabase/PowerSync, and no Firebase target adapter is added.",
+        "LedgerTargetMigrationCore is a separate provider-free tooling product with reviewed dependency/test edges and is absent from both the target staging and Firebase application graphs.",
         "A build/deployment manifest records the environment and contract versions without granting production authority; rollback before cutover remains the unchanged Firebase release."
       ],
       "notApplicable": ""
@@ -182,7 +183,7 @@
       "kind": "operational",
       "owner": "scripts/check-target-environment.mjs and future target application build-configuration tests",
       "covers": ["TARGET-ENV-REQ-001", "TARGET-ENV-REQ-002", "TARGET-ENV-REQ-003", "TARGET-ENV-REQ-005"],
-      "expected": "CI proves that staging identity is visually distinct, contains no production identifiers or production routes, has no runtime environment toggle, emits only safe diagnostics, and leaves the ordinary Firebase LedgeriOS scheme unchanged.",
+      "expected": "CI proves that staging identity is visually distinct, contains no production identifiers or production routes, has no runtime environment toggle, emits only safe diagnostics, links no migration-control tooling, and leaves the ordinary Firebase LedgeriOS scheme unchanged.",
       "status": "planned",
       "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
     }

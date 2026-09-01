@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 46
+State version: 47
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: MIGRATION-RUN-INTEGRITY-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: MIGRATION-RUN-INTEGRITY-IMPLEMENTED-EXACT-CI-PENDING-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -561,6 +561,25 @@ modifying the running Firebase application before hard cutover.
   Sync/check/report pass at 725 recorded / 710 discovered surfaces with zero
   errors and the same three documented retired-path warnings. The existing
   reverse Supabase-to-Firebase package remains source-only and untouched.
+- Implemented `LedgerTargetMigrationCore` as a second provider-free Swift
+  package product that depends only on `LedgerTargetCore` and is linked by
+  neither application project. The graph guard now validates the separate
+  tooling/test edges, provider-import coverage and app/source-project exclusion.
+- Added immutable source/target/Account/artifact/entity plan identity,
+  canonical evidence-only plan bytes, monotonic replay-safe journal events,
+  interruption/resume fingerprints, overflow-safe exact counts, terminal
+  manifest/reconciliation closure and canonical restart/tamper refusal. No
+  exporter, transform, loader, database/file/provider adapter, journal store,
+  signer, operator authorization or executor exists.
+- Bound every public journal boundary to the same exact plan policy and added a
+  negative direct-decoding bypass fixture, so a structurally decodable but
+  changed plan cannot start, append, encode or restore journal evidence.
+- Four focused migration-integrity tests and all 55 target package tests pass
+  locally, as do target boundary/contract checks, reproducible project
+  generation and macOS/generic-iOS-Simulator staging builds. Five of six slice
+  obligations pass locally; the exact-commit operational CI obligation remains
+  planned, so exactly its two target-only surfaces are `implemented` rather
+  than `verified`.
 
 ## Next Action
 
@@ -570,14 +589,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready
-   `migration-run-plan-and-journal-integrity` provider-free contract in the
-   separate `LedgerTargetMigrationCore` package target. Keep it absent from the
-   target and Firebase application graphs; add pure synthetic tests for
-   canonical plan/journal/manifest evidence, replay/resume, exact count and
-   reconciliation closure, tamper/wrong-target refusal and production-shaped
-   non-authority. Never read an export, open a provider/database/file, persist a
-   journal, execute a migration or advance current migration/release scripts.
+2. Commit and push the implemented
+   `migration-run-plan-and-journal-integrity` checkpoint, then require an
+   immutable GitHub Actions run on that exact implementation commit. Advance
+   the slice and exactly its two target-only surfaces to `verified` only if both
+   conversion and isolated-target jobs pass the complete 55-test suite, graph/
+   generated-contract guards, both builds and clean artifacts. Never read an
+   export, open a provider/database/file, persist a journal, execute a migration
+   or advance current migration/release scripts from this evidence.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

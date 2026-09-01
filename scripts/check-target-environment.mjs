@@ -10,6 +10,11 @@ const repositoryRoot = path.resolve(scriptDirectory, "..");
 const packageRoot = path.join(repositoryRoot, "LedgeriOS");
 const coreRoot = path.join(packageRoot, "LedgerTargetCore");
 const testRoot = path.join(packageRoot, "LedgerTargetCoreTests");
+const migrationCoreRoot = path.join(packageRoot, "LedgerTargetMigrationCore");
+const migrationTestRoot = path.join(
+  packageRoot,
+  "LedgerTargetMigrationCoreTests",
+);
 const targetAppRoot = path.join(packageRoot, "LedgerTargetApp");
 const targetProject = path.join(
   packageRoot,
@@ -82,6 +87,8 @@ if (description) {
   );
   const core = targets.get("LedgerTargetCore");
   const tests = targets.get("LedgerTargetCoreTests");
+  const migrationCore = targets.get("LedgerTargetMigrationCore");
+  const migrationTests = targets.get("LedgerTargetMigrationCoreTests");
   if (!core) {
     fail("target_core_missing", "LedgerTargetCore");
   } else if ((core.target_dependencies ?? []).length !== 0) {
@@ -101,6 +108,35 @@ if (description) {
       );
     }
   }
+  if (!migrationCore) {
+    fail("target_migration_core_missing", "LedgerTargetMigrationCore");
+  } else {
+    const dependencies = new Set(migrationCore.target_dependencies ?? []);
+    if (dependencies.size !== 1 || !dependencies.has("LedgerTargetCore")) {
+      fail(
+        "target_migration_core_dependency_boundary",
+        "LedgerTargetMigrationCore may depend only on LedgerTargetCore.",
+      );
+    }
+  }
+  if (!migrationTests) {
+    fail(
+      "target_migration_core_tests_missing",
+      "LedgerTargetMigrationCoreTests",
+    );
+  } else {
+    const dependencies = new Set(migrationTests.target_dependencies ?? []);
+    if (
+      dependencies.size !== 2 ||
+      !dependencies.has("LedgerTargetCore") ||
+      !dependencies.has("LedgerTargetMigrationCore")
+    ) {
+      fail(
+        "target_migration_core_test_dependency_boundary",
+        "LedgerTargetMigrationCoreTests may depend only on LedgerTargetCore and LedgerTargetMigrationCore.",
+      );
+    }
+  }
 }
 
 const forbiddenImport =
@@ -108,6 +144,8 @@ const forbiddenImport =
 for (const filePath of [
   ...swiftFiles(coreRoot),
   ...swiftFiles(testRoot),
+  ...swiftFiles(migrationCoreRoot),
+  ...swiftFiles(migrationTestRoot),
   ...swiftFiles(targetAppRoot),
 ]) {
   const match = fs.readFileSync(filePath, "utf8").match(forbiddenImport);
@@ -202,6 +240,12 @@ if (
       "The target staging project contains a source-provider dependency.",
     );
   }
+  if (/LedgerTargetMigrationCore/.test(project)) {
+    fail(
+      "target_app_migration_tooling_contamination",
+      "The target staging application must not link migration-control tooling.",
+    );
+  }
 }
 
 if (!fs.existsSync(sourceProject)) {
@@ -211,6 +255,8 @@ if (!fs.existsSync(sourceProject)) {
   for (const targetOnlyPath of [
     "LedgerTargetCore/TargetEnvironment.swift",
     "LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+    "LedgerTargetMigrationCore",
+    "LedgerTargetMigrationCoreTests",
   ]) {
     if (project.includes(targetOnlyPath)) {
       fail(
@@ -229,5 +275,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  "target-environment: isolated LedgerTargetCore and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, or source-project contamination detected\n",
+  "target-environment: isolated LedgerTargetCore, separate migration-control tooling, and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, migration-tooling app link, or source-project contamination detected\n",
 );

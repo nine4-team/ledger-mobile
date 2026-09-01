@@ -9,7 +9,11 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
-        .library(name: "LedgerTargetCore", targets: ["LedgerTargetCore"])
+        .library(name: "LedgerTargetCore", targets: ["LedgerTargetCore"]),
+        .library(
+            name: "LedgerTargetMigrationCore",
+            targets: ["LedgerTargetMigrationCore"]
+        )
     ],
     targets: [
         .target(
@@ -20,6 +24,16 @@ let package = Package(
             name: "LedgerTargetCoreTests",
             dependencies: ["LedgerTargetCore"],
             path: "LedgerTargetCoreTests"
+        ),
+        .target(
+            name: "LedgerTargetMigrationCore",
+            dependencies: ["LedgerTargetCore"],
+            path: "LedgerTargetMigrationCore"
+        ),
+        .testTarget(
+            name: "LedgerTargetMigrationCoreTests",
+            dependencies: ["LedgerTargetCore", "LedgerTargetMigrationCore"],
+            path: "LedgerTargetMigrationCoreTests"
         )
     ]
 )

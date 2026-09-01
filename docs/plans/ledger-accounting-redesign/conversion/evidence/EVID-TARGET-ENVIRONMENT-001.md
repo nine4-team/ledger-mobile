@@ -138,3 +138,15 @@ does not prove:
 - Supabase Auth, Postgres, RLS, Storage, PowerSync Sync Streams, or the
   A-003/A-004 vertical spike; or
 - deployment, migration, cutover, or production authority.
+
+## Separate Migration-Tooling Graph Extension
+
+On 2026-09-01 the package gained a separate provider-free
+`LedgerTargetMigrationCore` library and test target after its own migration-
+integrity dossier passed `ready`. The environment guard now proves that module
+depends only on `LedgerTargetCore`, its tests have only the two reviewed local
+edges, all tooling source is covered by the provider-import scan, and neither
+`LedgerTargetStaging` nor the source Firebase Xcode project links the tooling.
+The full 55-test package suite and both existing app builds pass locally. This
+extends isolation evidence only; it does not make migration tooling part of the
+app or authorize a migration.

@@ -3,7 +3,7 @@
   "sliceId": "migration-run-plan-and-journal-integrity",
   "title": "Prove a migration run plan, interruption journal, and reconciliation manifest without executing it",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Migration Run Plan and Journal Integrity",
   "surfaceIds": [
     "SWIFT-CBE990F49610",
@@ -33,7 +33,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
       "section": "Migration Manifest",
-      "invariant": "A terminal manifest closes every planned entity count into applied, skipped, blocked or failed outcomes, binds the final journal and named reconciliation rules, records completion or a stable abort reason and remains deterministic evidence rather than migration or cutover authority.",
+      "invariant": "A terminal manifest records exact examined, applied, skipped, blocked and failed counts for every planned entity, binds the final journal and complete named reconciliation rule set, records completion or a stable non-complete reason and remains deterministic evidence rather than migration or cutover authority.",
       "decisionIds": [],
       "verificationIds": ["MIGRATION-RUN-TEST-001", "MIGRATION-RUN-TEST-003", "MIGRATION-RUN-TEST-005", "MIGRATION-RUN-TEST-006"]
     },
@@ -62,7 +62,7 @@
         "Closed bounded run/export/entity/rule/version values and exact SHA-256 digests identify one immutable source snapshot, migration artifact, mapping set, target environment binding and opaque Account scope without raw provider identifiers.",
         "MigrationRunPlan validates one mode, explicit source/target identities, repository and artifact versions, exact schema/query/operation/Sync versions and a unique sorted expected-entity set; it carries a canonical plan digest and evidenceOnly disposition.",
         "MigrationRunJournal accepts only replay-identical or next-sequence events for the exact plan, enforces ordered stages and monotonic time/counts, and derives a deterministic resume fingerprint from the last accepted checkpoint.",
-        "MigrationRunManifest binds the exact plan and terminal journal, closes every expected entity into planned/applied/skipped/blocked/failed counts, records unique named reconciliation results and exposes only completed, interrupted, blocked or aborted evidence dispositions."
+        "MigrationRunManifest binds the exact plan and terminal journal, records examined/applied/skipped/blocked/failed counts for every expected entity, records unique named passed/explained/unexplained/failed/not-run reconciliation results and exposes only completed, interrupted, blocked or aborted evidence dispositions."
       ],
       "notApplicable": ""
     },
@@ -105,8 +105,8 @@
     "migrationReconciliation": {
       "items": [
         "Expected entity plans and journal outcomes reconcile exact nonnegative counts with no duplicate entity or mapping identity and no outcome sum beyond the planned total.",
-        "A completed manifest requires all planned counts closed, no blocked/failed/unexplained results, every required reconciliation rule passed or explicitly explained under its reviewed rule identity, and exact plan/journal/artifact hashes.",
-        "Interrupted, blocked and aborted manifests preserve the last checkpoint, incomplete counts and stable reason evidence and cannot be represented as completed."
+        "A completed manifest requires every planned entity examined, no blocked/failed/unexplained/not-run result, mode-correct applied/skipped counts, every required reconciliation rule passed or explicitly explained under its reviewed rule identity, and exact plan/journal/artifact hashes.",
+        "Interrupted, blocked and aborted manifests preserve the last checkpoint, incomplete counts, not-run reconciliation evidence and a stable reason and cannot be represented as completed."
       ],
       "notApplicable": ""
     },
@@ -133,8 +133,8 @@
       "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
       "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-005"],
       "expected": "Closed source/target/artifact/entity/rule identities, sorted unique plan work, legal journal progression, exact terminal outcomes, canonical digests and evidence-only authority validate deterministically.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"]
     },
     {
       "id": "MIGRATION-RUN-TEST-002",
@@ -142,17 +142,17 @@
       "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
       "covers": ["MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-004"],
       "expected": "Canonical plan/journal evidence reconstructs offline, equivalent replay returns the prior checkpoint, interruption preserves an identical resume fingerprint and a resumed sequence closes without duplicated counts.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"]
     },
     {
       "id": "MIGRATION-RUN-TEST-003",
       "kind": "offline_rejection",
       "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
       "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-004", "MIGRATION-RUN-REQ-005"],
-      "expected": "Wrong target/plan, unsafe values, duplicates, replay conflict, event sequence/stage/time/count regression, digest tamper, noncanonical bytes and oversized evidence fail with stable codes and no accepted partial state.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Wrong target/plan, direct-decoded plan policy bypass, unsafe values, duplicates, replay conflict, event sequence/stage/time/count regression, digest tamper, noncanonical bytes and oversized evidence fail with stable codes and no accepted partial state.",
+      "status": "passed",
+      "evidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"]
     },
     {
       "id": "MIGRATION-RUN-TEST-004",
@@ -160,8 +160,8 @@
       "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
       "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-004"],
       "expected": "Synthetic dry-run, interruption, resume and idempotent reapply evidence stays bound to one immutable plan and exact source/target/artifact versions without provider, filesystem or database access.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"]
     },
     {
       "id": "MIGRATION-RUN-TEST-005",
@@ -169,8 +169,8 @@
       "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
       "covers": ["MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-004"],
       "expected": "Per-entity outcome totals, required named reconciliation rules and exact hashes must close with zero unexplained differences before completed evidence exists; incomplete, blocked or failed evidence remains non-complete.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"]
     },
     {
       "id": "MIGRATION-RUN-TEST-006",
@@ -182,7 +182,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent technical-control foundation derived from the reviewed platform capability dossier. It stops before exporter, transformer, loader, reconciler or provider adapters, journal persistence, signatures, operator identity or approval, hosted resources, Firebase source access, Supabase target access, migration execution, production apply, rollback execution, release or cutover."
