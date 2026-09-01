@@ -2883,7 +2883,7 @@
       "acknowledgeSourceHash": "8c38477fadf92bb82a227e7e1bdf1f2e320df9463230148f9dc4358970b41904",
       "currentBehavior": "Defines target-only typed unchanged/set/clear fields, Account/actor/contract/entity/revision-bound drafts, stable validation results, non-decodable operation bindings recreated through validation, and monotonic provider-free submission presentation over the shared operation lifecycle.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
@@ -2930,7 +2930,7 @@
       "acknowledgeSourceHash": "a79f84c605e01208c8e618713936d6f98430a28f1c14b5ba36bea17ebdb37979",
       "currentBehavior": "Exercises target-only typed field intent, validation sorting/deduplication, offline draft and queued-envelope reconstruction, exact submission binding, mismatch/stale/nonmonotonic refusal, and stable operation receipt/result presentation.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",

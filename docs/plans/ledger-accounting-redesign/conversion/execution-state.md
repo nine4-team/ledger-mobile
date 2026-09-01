@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 35
+State version: 36
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TYPED-EDIT-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: TYPED-EDIT-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -447,6 +447,12 @@ modifying the running Firebase application before hard cutover.
   Only the two new target code/test surfaces are `implemented`; current editors,
   product field rules, commands/handlers, concrete UI, and MCP remain
   unadvanced. See `EVID-TYPED-EDIT-001`.
+- Exact implementation commit `10a7db79` passed immutable GitHub Actions run
+  `33563347569`: both conversion traceability and isolated-target jobs passed,
+  including all target tests, generated contracts, target boundary checks,
+  macOS and generic iOS Simulator builds, and clean tracked artifacts. All five
+  typed-edit obligations and exactly its two target-only surfaces are now
+  `verified`; current editors and feature commands remain unadvanced.
 
 ## Next Action
 
@@ -456,12 +462,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented `typed-edit-draft-and-submission`
-   checkpoint, require the exact-commit pull-request conversion and isolated-
-   target jobs to pass, and record the immutable run in
-   `EVID-TYPED-EDIT-001`. Only then mark `TYPED-EDIT-TEST-005`, the dossier, and
-   its two target-only surfaces `verified`; do not advance current editors or
-   feature command surfaces.
+2. Create and pass the ready gate for the next decision-independent technical
+   slice, `privacy-safe-telemetry-and-correlation`. Derive it from the platform
+   dossier and architecture observability/logging contracts; implement only
+   target-owned stable event/metric IDs, environment/build scope, opaque
+   correlation, allowlisted non-sensitive dimensions, bounded values, and
+   deterministic redaction/refusal. Do not add a hosted telemetry adapter,
+   identifiers/payload values, Auth, provider resources, product behavior, or
+   production emission, and do not advance current logging surfaces merely
+   from shared-contract proof.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
