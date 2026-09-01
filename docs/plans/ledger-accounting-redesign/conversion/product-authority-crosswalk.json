@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
+  "canonicalTargetSpecs": [
+    "docs/specs/invoice-centered-project-accounting.md",
+    "docs/specs/inventory-item-invoicing-lifecycle.md",
+    "docs/specs/proto-item-capture.md",
+    "docs/specs/client-identity-and-project-transfers.md",
+    "docs/plans/non-item-receipt-lines/design.md"
+  ],
+  "batches": {
+    "M0-APP-SHELL-PRESENTATION-001": {
+      "scope": "product",
+      "rationale": "Presentation and test surfaces must render and exercise the redesigned accounting, Item, Client, Transfer, receipt-line, security, and offline contracts without preserving Firebase mechanics.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-BACKEND-AUTH-001": {
+      "scope": "product",
+      "rationale": "Identity, membership, invite, and MCP principal surfaces support authoritative Client relationships and approved offline/security behavior.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-FUNCTIONS-001": {
+      "scope": "product",
+      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the five canonical target specs.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-RULES-001": {
+      "scope": "product",
+      "rationale": "Firestore paths and rules reveal current entity and authorization boundaries, but target tables, RLS, and Sync Streams must enforce the redesigned product model.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-BACKEND-STORAGE-001": {
+      "scope": "product",
+      "rationale": "Media references and upload durability support the unified Item flow and accounting evidence while target object policy remains private and offline durable.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CAPABILITY-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "Coverage tooling governs how source and target obligations are tracked; it does not define product behavior.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/README.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-evolution-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-CUTOVER-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "The final source freeze, late-writer recovery, and hard cutover are migration controls; they must preserve approved target behavior without implementing it in Firebase.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/production-compatibility-plan.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-IDENTITY-LIFECYCLE-001": {
+      "scope": "product",
+      "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-INVENTORY-TRANSACTION-001": {
+      "scope": "product",
+      "rationale": "Inventory, money, provenance, correction, and receipt surfaces are governed by the new story-specific accounting and Item lifecycle specs, not legacy movement Transaction mechanics.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/2026-08-30-correct-transaction-and-its-items.md", "role": "current_product" },
+        { "path": "docs/specs/inventory-as-store.md", "role": "current_product" },
+        { "path": "docs/specs/lineage-tracking.md", "role": "current_product" },
+        { "path": "docs/specs/vendor-credits.md", "role": "historical_evidence" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-INVOICING-BUDGET-001": {
+      "scope": "product",
+      "rationale": "Invoice, collection, source membership, Expense/Fee, and budget surfaces are governed by the invoice-centered model and the related Item/receipt lifecycle.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/billing-invoicing.md", "role": "current_product" },
+        { "path": "docs/specs/budget-management.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-ITEM-CREATION-LINK-001": {
+      "scope": "product",
+      "rationale": "All current Item/proto creation surfaces are reconciled with the one-Item target wizard, accounting Link, occurrence, Invoice, and receipt-line model.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/item-entry-flow.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-MEDIA-LIFECYCLE-001": {
+      "scope": "product",
+      "rationale": "Attachment and offline-byte surfaces preserve media-heavy field workflows for the real-Item target and accounting evidence while changing storage mechanics.",
+      "authorities": [
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-PLATFORM-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
+      "authorities": [
+        { "path": "docs/architecture/redesign/README.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-PROJECT-CLIENT-REFERENCE-001": {
+      "scope": "product",
+      "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/projects.md", "role": "current_product" },
+        { "path": "docs/specs/budget-management.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-QUERY-PROFILE-001": {
+      "scope": "technical_control",
+      "rationale": "Query extraction and production shape profiling prove source behavior and migration completeness; they do not establish target product semantics.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-REPORTING-SEARCH-001": {
+      "scope": "product",
+      "rationale": "Reports, search, exports, and cross-domain projections must consume the redesigned accounting/Item/Client authorities and preserve only approved report/search outcomes.",
+      "authorities": [
+        { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/reports.md", "role": "current_product" },
+        { "path": "docs/specs/search-results.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    },
+    "M0-RESIDUAL-CONTROL-001": {
+      "scope": "technical_control",
+      "rationale": "Residual generation ensures every unmapped target surface remains tied to an explicit product, architecture, spike, or production-evidence blocker.",
+      "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/product-decision-traceability.md", "role": "architecture_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" }
+      ]
+    },
+    "M0-SPACES-REVIEW-001": {
+      "scope": "product",
+      "rationale": "Space, assignment, review, and work-queue behavior is governed by the Space/Item specs and must remain compatible with the new one-Item provenance and accounting lifecycle.",
+      "authorities": [
+        { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
+        { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
+        { "path": "docs/specs/spaces.md", "role": "current_product" },
+        { "path": "docs/specs/items.md", "role": "current_product" },
+        { "path": "docs/specs/data-model.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+      ]
+    }
+  }
+}

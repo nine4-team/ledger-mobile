@@ -1,0 +1,1901 @@
+{
+  "batchId": "M0-INVENTORY-TRANSACTION-001",
+  "title": "Inventory provenance, Transactions, receipts, and corrections",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-1DCA8A4ADE51",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Composes Inventory/Project/vendor movement as Firestore Transaction, Item, lineage and paid-credit writes, with origin-aware price logic and fixed batch limits.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-007",
+        "O-011",
+        "O-012",
+        "O-013",
+        "O-014",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-002/O-003/O-004/O-005/O-007/O-011/O-012/O-013/O-014/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-1178D1E9F474",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides generic Firestore Transaction CRUD/listeners and untyped updates that can cascade scope/category changes to active Items or hard-delete after an itemIds-only check.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-57FFA664E36B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes Firebase listener registrations, Firestore-shaped Transaction CRUD and arbitrary field dictionaries as the app service protocol.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Do not wrap this protocol as a Firebase adapter; derive bounded target query/command ports from the dossier. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement",
+        "surfaces": [
+          "TransactionQuerying",
+          "PurchaseOperations",
+          "MoneyReturnOperations",
+          "TransferOperations",
+          "CorrectionOperations"
+        ],
+        "securityRequirements": [
+          "Each typed query/command derives Principal, Account, scope-owner and financial capability from trusted authority; caller fields cannot widen scope",
+          "No generic patch/delete/association method can mutate Transaction type, money scope, paid history, Item membership or provenance"
+        ],
+        "syncRequirements": [
+          "Query ports return versioned local Transaction snapshots/readiness; story commands return durable operation receipts and authoritative applied/rejected/conflict results"
+        ]
+      },
+      "migration": {
+        "rule": "Retire the Firebase CRUD/listener protocol and map each supported outcome to typed Transaction queries and Purchase/Return/Transfer/correction operations; generic updates and deletes remain unavailable pending their decisions.",
+        "reconciliation": [
+          "Contract registry assigns every source Transaction responsibility to one story/query/import owner or named hold with no app/MCP alternate writer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "No-vendor-type/field-dictionary, command registration, scope-owner authorization, durable receipt and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Clients express real money and correction stories without arbitrary Transaction mutation or Firebase-shaped membership mechanics"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-089405BED5D8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates loose optional LineageEdges directly and fetches on-demand Item/Transaction history while silently dropping decode failures and sorting optional timestamps client-side.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-01C928A8B707",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Represents a Firestore Transaction with legacy/current types, overloaded active itemIds, routing flags, receipt subtotal/tax/discount, ingestion, completeness audit and settlement links.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-030/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-A7915475818E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates Purchase/Return records from a multi-step form, permits type-only submission, derives subtotal/tax, routes business-paid purchases and dismisses after local Firestore submission.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-008",
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-008/O-030/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-BDF8928A5FC7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Combines Transaction detail, active and lineage-reconstructed Items, proto review, receipt media, completeness, generic association, movement, correction and deletion in one Firebase-driven view.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-023",
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015/O-023/O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-04CC0C101EA4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Project Transactions with local filters/groups/selection/totals and exposes single or bulk deletion through the weak iOS dependency check.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-674F92BED6F7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Inventory Transactions and intended-project groups with local filters/selection/totals and broad deletion.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-30289B39B988",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders current Transaction identity, amount, type/status/category/source, assignment, item count and action menu.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Keep presentation capability with three-type taxonomy, pending state and visibility-safe summaries. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "TransactionSummarySnapshot",
+          "TransactionActionCapabilities",
+          "AttachmentSummary"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-19D2C873E96F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds current type/status/completeness/category/source filters from locally available values.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target filters expose Purchase/Return/Transfer and explicit legacy/import-review categories without writable legacy types. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "TransactionFilterCatalog",
+          "legacy value decode-only mapping",
+          "visibility-safe filter facets"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5BCE896008A3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides shared Transaction search/filter/group/select list behavior over caller-supplied Firebase-derived arrays.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve list UX over indexed local read models with deterministic ordering. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "TransactionQuerying",
+          "TransactionListRequest",
+          "TransactionListSnapshot",
+          "selection/group presentation state"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-736B5D34BF46",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes card grouping, labels, signs and item counts from current types and movement flags.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Retain pure display helpers after mapping to scope-relative three-type results. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "TransactionSummarySnapshot",
+          "scope-aware sign/label projection",
+          "canonical Item count"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-9226674CC889",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Maps current/legacy Transaction values, movement direction and status into display labels, colors and badges.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target user UI hides occurrence movement vocabulary while migration review can display exact legacy evidence. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "TransactionDisplaySnapshot",
+          "legacy type decode mapping",
+          "scope/money direction labels"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3348465E2026",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Validates the current Transaction wizard primarily by selected type and explicit inventory-resale handling, leaving detail fields optional.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-34855F53F580",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Derives a current completeness checklist from category, amount, receipt, Items, payer and positive tax-rate fields plus inventory-purchase intent state.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-030/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-E73BF270D7A4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays persisted source audit totals, percentage variance and returned/sold historical aggregates.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target audit derives exact line equation and integrity/readiness from stable historical relationships. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transaction Receipt Completeness",
+        "surfaces": [
+          "ReceiptAuditSnapshot",
+          "D-016 exact-cent equation",
+          "authoritative historical aggregate projection"
+        ],
+        "securityRequirements": [
+          "Receipt and financial audit fields require Transaction visibility and financial capability; private media is referenced by stable authorized AttachmentID"
+        ],
+        "syncRequirements": [
+          "Transaction detail stream includes versioned receipt-line completeness and authorized historical aggregate evidence with explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Map persisted receipt lines and source audit values to the D-016 exact-cent equation, preserve source totals/variance evidence and derive returned/sold history from authoritative target facts rather than mutable Item arrays.",
+        "reconciliation": [
+          "Receipt line sum, subtotal, discount, tax, total and historical returned/sold aggregates balance exactly in cents or report a named source discrepancy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Exact-cent receipt equation, historical aggregate, partial-readiness, restricted visibility and source discrepancy migration tests"
+        ],
+        "acceptance": [
+          "Receipt completeness and historical totals are explainable from stable evidence and never use percentage tolerance or mutable membership as authority"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4003332541C1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits Transaction fields through an untyped dictionary, including cancellation; submits transactionType/hasEmailReceipt keys that differ from persisted type/receiptEmailed names.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-582C58D417AA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds Transaction menus that broadly expose delete and generic whole-Transaction Correct/Move while freezing selected generated movements.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-CE425FC823BE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Moves a whole current Transaction to a selected Project/category through generic update, with service-side Item cascade.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve proven data-entry correction only behind dry-run, dependency and history validation. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Accounting and Placement Corrections",
+        "surfaces": [
+          "CorrectTransactionScopeCommand",
+          "CorrectionPlan",
+          "OperationReceipt",
+          "correction_events"
+        ],
+        "securityRequirements": [
+          "Correction capability is explicit, re-authorizes both existing and resulting scope, requires expected revisions and records actor/reason/source evidence"
+        ],
+        "syncRequirements": [
+          "One durable correction operation projects pending state and synchronizes its authoritative all-or-nothing result plus immutable correction evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Classify source generic move/update actions into typed scope or placement corrections, preserve before/after/source evidence and quarantine cases that are actually sale/return/Transfer stories.",
+        "reconciliation": [
+          "Corrected Transaction/Item IDs, before/after scope/category/placement, revisions, actor/reason and relationship totals reconcile atomically with no invented cash event"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Dry-run/preflight, cross-account, stale revision, partial-failure, story-misclassification, retry/idempotency and immutable audit tests"
+        ],
+        "acceptance": [
+          "An authorized correction fixes mistaken metadata/placement without fabricating a Purchase, Return, Transfer or physical movement"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-CD04095425B1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Adds existing Items through generic same-scope association, cross-scope reassignment, return-to-Transaction or sell-to-Project operations and often dismisses before asynchronous outcome.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "A-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015/A-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-5E15CB2D9DF7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Selects an existing Return Transaction so Items can be attached to it as a physical/vendor return.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target separates physical vendor custody from the later actual-money Return and links exact evidence. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Vendor Disposition and Money Return",
+        "surfaces": [
+          "RecordItemVendorDispositionCommand",
+          "EligibleMoneyReturnQuery",
+          "actual refund linkage"
+        ],
+        "securityRequirements": [
+          "Physical vendor disposition and actual refund Return each require Account/scope authorization and cannot be combined by attaching an Item to an arbitrary Transaction"
+        ],
+        "syncRequirements": [
+          "Custody/disposition evidence and actual money Return result synchronize as separately typed facts with explicit linkage/readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Separate source Item-to-Return attachment into physical `RecordItemVendorDisposition` evidence and, only where money actually moved, the correct scope-owned Return; preserve source correlation and quarantine non-cash ambiguity.",
+        "reconciliation": [
+          "Every source vendor-return association classifies as custody evidence, actual money Return linkage or quarantine, with Item/scope/amount/source IDs balanced"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Physical-only disposition, later actual refund, wrong-scope/type, retry, non-cash ambiguity and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Returning an Item physically does not invent cash, and a later actual refund remains traceable to the disposition and correct money owner"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-E613F00C92A4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Presents current Transactions for generic Item association without encoding payer, movement, correction or historical-lock semantics.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Replace generic association with command-specific eligible-record pickers. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Story-Specific Eligible Relationship Queries",
+        "surfaces": [
+          "EligibleClientPaidPurchaseQuery",
+          "EligibleVendorRefundQuery",
+          "EligibleCorrectionTargetQuery"
+        ],
+        "securityRequirements": [
+          "Eligibility queries re-authorize Item, Project/Inventory scope, financial visibility and candidate relationship state; inaccessible candidates are absent and non-enumerating"
+        ],
+        "syncRequirements": [
+          "Local streams contain bounded eligible Purchases/Returns/placements with readiness; absence before readiness cannot be interpreted as no eligible route"
+        ]
+      },
+      "migration": {
+        "rule": "Replace generic Transaction association candidates with story-specific eligibility derived from classified source Purchases/Returns and authoritative Item state; ambiguous candidates quarantine.",
+        "reconciliation": [
+          "For semantic source fixtures, eligible candidate IDs and exclusion reasons match target story preconditions with every ambiguity classified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client-paid Purchase, vendor-refund, correction and placement eligibility; stale/cross-scope/frozen/restricted and readiness tests"
+        ],
+        "acceptance": [
+          "The UI/MCP offers only candidates valid for the named story and never asks users to attach an Item to a generic Transaction"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-967F1C133CF5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Routes Inventory Items either back to proven source Project or as a sale to a selected Project using current movement Transactions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-E29B4124133A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Splits Project Items by inferred origin into current Return-to-Inventory or Sale-to-Inventory operations and previews current budget effects.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-99F937C57A47",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Corrects selected Items into a destination Project and Transaction without representing a real sale/return.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Retain correction intent with dependency/history validation and no generic destination Transaction mutation. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Accounting and Placement Corrections",
+        "surfaces": [
+          "CorrectItemPlacementCommand",
+          "CorrectionPlan",
+          "OperationReceipt",
+          "correction_events"
+        ],
+        "securityRequirements": [
+          "Correction capability is explicit, re-authorizes both existing and resulting scope, requires expected revisions and records actor/reason/source evidence"
+        ],
+        "syncRequirements": [
+          "One durable correction operation projects pending state and synchronizes its authoritative all-or-nothing result plus immutable correction evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Classify source generic move/update actions into typed scope or placement corrections, preserve before/after/source evidence and quarantine cases that are actually sale/return/Transfer stories.",
+        "reconciliation": [
+          "Corrected Transaction/Item IDs, before/after scope/category/placement, revisions, actor/reason and relationship totals reconcile atomically with no invented cash event"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Dry-run/preflight, cross-account, stale revision, partial-failure, story-misclassification, retry/idempotency and immutable audit tests"
+        ],
+        "acceptance": [
+          "An authorized correction fixes mistaken metadata/placement without fabricating a Purchase, Return, Transfer or physical movement"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D8ADF0266301",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Maintains Inventory Items, proto records, Transactions and Spaces through independent Firebase listeners and cached arrays.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target Inventory workspace includes current Items plus locally complete origin/provenance evidence and explicit readiness. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory Workspace and Provenance Read Models",
+        "surfaces": [
+          "InventoryWorkspaceQuerying",
+          "InventoryWorkspaceSnapshot",
+          "InventoryReadinessState"
+        ],
+        "securityRequirements": [
+          "Inventory rows and provenance are Account scoped; financial acquisition/basis evidence follows the approved visibility grant before download"
+        ],
+        "syncRequirements": [
+          "Inventory stream includes Items, current placement, Transactions, Spaces and visibility-safe occurrence/lineage evidence sufficient to explain sale/return/resale history offline; readiness states partial history explicitly"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Inventory Items/Transactions/Spaces by stable IDs, exclude proto runtime rows, and correlate lineage/movement evidence without copying independent listener completeness assumptions.",
+        "reconciliation": [
+          "Inventory workspace counts and stable relationships reconcile by stream version; every Item history is complete, explicitly partial or quarantined with source correlation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Inventory cold-start/restart/readiness, restricted financial evidence, placement/history explanation, proto exclusion and source migration tests"
+        ],
+        "acceptance": [
+          "Inventory remains usable offline and can explain authorized Item provenance without treating a missing not-yet-synced row as history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4C47C0D715F5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Infers incomplete physical returns from Item status, current Transaction type and missing returned lineage.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-7792F727AA52",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Resolves bulk Project movement routes and current origin-dependent return/sale groupings for UI previews.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-002",
+        "O-011",
+        "O-012",
+        "O-013",
+        "O-014",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-002/O-011/O-012/O-013/O-014/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-4C8A8E236450",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays current Inventory Items and invokes current sell/return/reassign actions over Firebase context arrays.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "SWIFT-A17130583CB1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Composes current Inventory Items, Transactions and Spaces tabs around an account-scoped Firebase context.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target preserves workspace navigation over an encrypted local read model with stream/history readiness. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory Workspace and Provenance Read Models",
+        "surfaces": [
+          "InventoryWorkspaceQuerying",
+          "Inventory workspace/tab snapshots",
+          "capability/readiness presentation"
+        ],
+        "securityRequirements": [
+          "Inventory rows and provenance are Account scoped; financial acquisition/basis evidence follows the approved visibility grant before download"
+        ],
+        "syncRequirements": [
+          "Inventory stream includes Items, current placement, Transactions, Spaces and visibility-safe occurrence/lineage evidence sufficient to explain sale/return/resale history offline; readiness states partial history explicitly"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Inventory Items/Transactions/Spaces by stable IDs, exclude proto runtime rows, and correlate lineage/movement evidence without copying independent listener completeness assumptions.",
+        "reconciliation": [
+          "Inventory workspace counts and stable relationships reconcile by stream version; every Item history is complete, explicitly partial or quarantined with source correlation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Inventory cold-start/restart/readiness, restricted financial evidence, placement/history explanation, proto exclusion and source migration tests"
+        ],
+        "acceptance": [
+          "Inventory remains usable offline and can explain authorized Item provenance without treating a missing not-yet-synced row as history"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-868A3F35EBC3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers Admin-SDK Transaction list/detail/search/create/update/bulk/cancel/delete/media tools with current Firestore taxonomy and relationships.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPMOD-F5D411967411",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements five Firestore movement tools with origin resolution, per-batch Transactions, price snapshots, lineage, dry-run and atomic commits.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-002",
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-011",
+        "O-012",
+        "O-013",
+        "O-014",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-002/O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-011/O-012/O-013/O-014/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPMOD-DFECB1787DB7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Plans and atomically corrects one ordinary Transaction with exact two-sided active Item membership, dependency blockers and per-Item correction lineage.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPMOD-D14DD1E83CFE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reads/updates Inventory Purchase planning intent and corrects an acquisition into the current project-reimbursement model.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-016 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPMOD-A34D9491FE4F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Queries LineageEdges by Item or Project and resolves Project/Transaction labels through Admin reads.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target history reads use authorized deterministic projections with explicit completeness/readiness. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Item Provenance and History",
+        "surfaces": [
+          "ItemHistoryQuerying MCP registry",
+          "ProjectHistory query registry",
+          "versioned provenance projection"
+        ],
+        "securityRequirements": [
+          "History queries require visibility to the Item/Project and filter restricted money/vendor evidence before local download or MCP response"
+        ],
+        "syncRequirements": [
+          "Inventory/Project streams include bounded current provenance evidence; on-demand historical streams expose explicit completeness, version and stable chronological cursor"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source lineage IDs/edges as migration evidence, rebuild target history from authoritative acquisitions/placements/occurrences/Transfers/corrections, and quarantine loose or contradictory edges instead of silently dropping them.",
+        "reconciliation": [
+          "Each source history edge is correlated to target fact/evidence or quarantine, and authorized chronological Item/Project histories explain current placement and accounting provenance with zero unexplained gaps"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline complete/partial Item history, Project history cursor, cross-account/restricted evidence, loose-edge quarantine and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A user can distinguish complete from partial history and trace current placement/accounting provenance without optional timestamps or latest-edge inference"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-B5A85B82D135",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Performs broad Transaction deletion dependency preflight across Items, provenance, Invoices, lineage, drafts, attachments, repricing and ingestion evidence.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-023/O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPMOD-4305DCB6FD6B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Infers Inventory labels, movement directions and price/audit basis from current Transaction shape and source strings.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-044AFFA1EEFB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Either attaches Items to an existing vendor Return or moves proven Inventory-origin Items back to Inventory while creating per-batch project Returns and credits.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-137430AF9A3B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Moves Inventory Items into a Project and creates one Project Purchase from Inventory at project-price basis.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-1E36059850BA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Moves Project Items to another Project via an origin-aware Inventory two-hop with source Return/Sale and destination Purchase.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-002",
+        "O-011",
+        "O-012",
+        "O-013",
+        "O-014",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-002/O-011/O-012/O-013/O-014/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-3517FF5089A3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Acquires project-origin Items into Inventory using a project Sale Transaction at purchase-cost basis.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-BE6AD578A5CD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns proven project-origin Inventory Items to their exact source and creates Project Purchases from immutable entry snapshots.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-34FE2AE71BFF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists current Transactions with many exact Firestore filters, unstable offset pagination and optional client-side hasItems filtering.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target lists authorized local/server projections in stable event-date/time/ID order. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "ListTransactionsQuery",
+          "TransactionListPage",
+          "stable cursor/indexed filters"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-8FA709BDF790",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns one Transaction and reconstructs active/returned/sold Items from mutable itemIds, audit counts and latest lineage edges.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target detail reads stable historical lines/occurrences and reports incomplete evidence rather than guessing latest edges. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "GetTransactionQuery",
+          "TransactionDetailSnapshot",
+          "authoritative relationship/history summary"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-E21155FFADEA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Searches Transaction source/type/notes/payer/amount after a broad Firestore fetch and client-side substring filtering.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target uses authorized indexed search with stable pagination and no broad Admin scan. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Transactions and Money Movement Read Models",
+        "surfaces": [
+          "SearchTransactionsQuery",
+          "TransactionSearchPage",
+          "bounded indexed search projection"
+        ],
+        "securityRequirements": [
+          "Transaction rows, counts, amounts, payer and receipt/completeness fields require authorized Account/scope and financial visibility; denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Authorized Project/Inventory streams carry bounded Transaction summaries/details plus source/contract/readiness versions; list/search use stable indexed cursors"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Transaction IDs and real Purchase/Return/payment evidence, classify legacy/superseded values by source semantics, quarantine ambiguous money scope and never promote mutable Item arrays or movement flags to target authority.",
+        "reconciliation": [
+          "Every source Transaction maps once or quarantines with type, money scope, amount, payer, category, receipt/evidence and relationship hashes; target summaries derive from canonical facts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Transaction list/detail/search/filter/card projection, stable cursor, financial visibility, legacy classification and migration reconciliation tests"
+        ],
+        "acceptance": [
+          "Authorized users can find and understand real money records offline without legacy Sale/vendor-credit types or client-reconstructed membership becoming authority"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-88CE4407A0B9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Generically creates current Purchase/Return/paymentToBusiness records and can directly link Items under Admin access.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-2182ACB9E363",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Applies generic Transaction field patches and can cascade scope/category changes or clear Item membership with correction lineage.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-015/O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-5A34CC142307",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Bulk patches current Transaction payer/source/status/reimbursement/payment fields in independent Firestore batches after limited movement immutability checks.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Target bulk correction policy"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "No target arbitrary bulk financial patch; reviewed administrative corrections are separate dry-run commands."
+    },
+    {
+      "id": "MCPTOOL-DFCD5082BE2F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Sets canceled with a durable note in a Firestore transaction but does not preflight Item/Invoice/lineage/attachment dependencies.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-282034D0C8AF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Dry-runs and default-denies permanent deletion unless one Transaction is canceled, budget-neutral, item/attachment/reference-free, then requires server human confirmation and writes a tombstone atomically.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-023/O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-BBB9B61F2EE8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Applies the same deletion preflight/confirmation/tombstone contract to an exact all-or-nothing batch of current Transactions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-023/O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-9D1270611686",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Dry-runs and transactionally corrects one ordinary current Transaction and its exact active Item aggregate, blocking movement, Invoice, provenance and inconsistent-membership cases.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-42E5CABFC6F6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Inventory resale Purchases with intended Project/category and derives follow-up state from Items and lineage.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve optional nonfinancial planning intent without using it as acquisition or billing authority. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory Purchase Planning",
+        "surfaces": [
+          "InventoryPlanningQuerying",
+          "InventoryPlanningSnapshot",
+          "derived follow-up state"
+        ],
+        "securityRequirements": [
+          "Planning read/write requires authorized Inventory access and validates intended Project/category within the same Account; it cannot create money, Link or movement evidence"
+        ],
+        "syncRequirements": [
+          "Revisioned planning intent and derived follow-up state synchronize with Inventory workspace and support durable offline set/clear operations"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source intended Project/category metadata on real Inventory Purchases, preserve unresolved intent as nonfinancial planning state and report invalid/cross-account references.",
+        "reconciliation": [
+          "Each source intent maps once with Purchase/Project/category IDs, revision/resolution state and follow-up derivation or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline set/clear/replay/revision conflict, invalid/cross-account destination, no-accounting-effect and derived follow-up parity tests"
+        ],
+        "acceptance": [
+          "Users can plan Inventory for a Project offline without planning metadata masquerading as acquisition, placement, reimbursement or sale"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-4FF3862CBCD5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Sets, clears or resolves intended Project/category metadata on current Inventory resale Purchases.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Keep as typed planning metadata mutation, never a sale or accounting write. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory Purchase Planning",
+        "surfaces": [
+          "SetInventoryPurchaseIntentCommand",
+          "ClearInventoryPurchaseIntentCommand",
+          "ExpectedPlanningRevision",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Planning read/write requires authorized Inventory access and validates intended Project/category within the same Account; it cannot create money, Link or movement evidence"
+        ],
+        "syncRequirements": [
+          "Revisioned planning intent and derived follow-up state synchronize with Inventory workspace and support durable offline set/clear operations"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source intended Project/category metadata on real Inventory Purchases, preserve unresolved intent as nonfinancial planning state and report invalid/cross-account references.",
+        "reconciliation": [
+          "Each source intent maps once with Purchase/Project/category IDs, revision/resolution state and follow-up derivation or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline set/clear/replay/revision conflict, invalid/cross-account destination, no-accounting-effect and derived follow-up parity tests"
+        ],
+        "acceptance": [
+          "Users can plan Inventory for a Project offline without planning metadata masquerading as acquisition, placement, reimbursement or sale"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-6E3CE3C31743",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Corrects a current Inventory Purchase and Items into a Project reimbursement shape when no sold lineage exists.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-522654D35421",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns chronological current LineageEdges for one Item with Project/Transaction labels resolved online.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target history is authorized, deterministic and exposes readiness/integrity. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Item Provenance and History",
+        "surfaces": [
+          "GetItemHistoryQuery",
+          "ItemHistorySnapshot",
+          "chronological stable cursor/readiness"
+        ],
+        "securityRequirements": [
+          "History queries require visibility to the Item/Project and filter restricted money/vendor evidence before local download or MCP response"
+        ],
+        "syncRequirements": [
+          "Inventory/Project streams include bounded current provenance evidence; on-demand historical streams expose explicit completeness, version and stable chronological cursor"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source lineage IDs/edges as migration evidence, rebuild target history from authoritative acquisitions/placements/occurrences/Transfers/corrections, and quarantine loose or contradictory edges instead of silently dropping them.",
+        "reconciliation": [
+          "Each source history edge is correlated to target fact/evidence or quarantine, and authorized chronological Item/Project histories explain current placement and accounting provenance with zero unexplained gaps"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline complete/partial Item history, Project history cursor, cross-account/restricted evidence, loose-edge quarantine and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A user can distinguish complete from partial history and trace current placement/accounting provenance without optional timestamps or latest-edge inference"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-B1DC0447215A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns all current LineageEdges whose from/to Project matches, with optional movement-kind filter and online label resolution.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Target Project history queries use indexed authorized projections and stable cursor ordering. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Item Provenance and History",
+        "surfaces": [
+          "GetProjectHistoryQuery",
+          "ProjectHistoryPage",
+          "movement-kind filter/stable cursor"
+        ],
+        "securityRequirements": [
+          "History queries require visibility to the Item/Project and filter restricted money/vendor evidence before local download or MCP response"
+        ],
+        "syncRequirements": [
+          "Inventory/Project streams include bounded current provenance evidence; on-demand historical streams expose explicit completeness, version and stable chronological cursor"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source lineage IDs/edges as migration evidence, rebuild target history from authoritative acquisitions/placements/occurrences/Transfers/corrections, and quarantine loose or contradictory edges instead of silently dropping them.",
+        "reconciliation": [
+          "Each source history edge is correlated to target fact/evidence or quarantine, and authorized chronological Item/Project histories explain current placement and accounting provenance with zero unexplained gaps"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline complete/partial Item history, Project history cursor, cross-account/restricted evidence, loose-edge quarantine and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A user can distinguish complete from partial history and trace current placement/accounting provenance without optional timestamps or latest-edge inference"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-188AF292FAFF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Atomically creates a current itemized Transaction and multiple Item documents, can route Inventory source into an additional Project Purchase, inherit tax rate and write lineage.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-027",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-027/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "MCPTOOL-34265DD4542A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reports current Transaction subtotal/discount/item variance and suggests generic field/Item fixes using percentage tolerance.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-030",
+        "O-031"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-030/O-031 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "FILE-16D8E1ED963D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises current whole-Transaction correction success paths and blockers against Firestore.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Target correction fixture translation"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Translate safety stories to target handler/SQL concurrency tests; current SDK assertions remain source-only."
+    },
+    {
+      "id": "FILE-D4ED913747C9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises current Transaction deletion dependency preflight, approval and tombstone safety.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "O-029 Transaction lifecycle"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Retain as policy evidence and translate only if target deletion is approved."
+    },
+    {
+      "id": "FILE-50BB777A34AB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Inventory movement price-basis rules across Project/Inventory origin paths.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "O-007/O-015 target occurrence mapping"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Translate origin-aware amount stories to target occurrence/credit/placement tests."
+    },
+    {
+      "id": "FILE-5C3B617CC80C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current MCP inventory sell/move operations, validation and Firestore effects.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve intent fixtures; replace expected movement Transactions with target placement/occurrence/Transfer effects. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory and Transaction Story Contract Tests",
+        "surfaces": [
+          "InventoryStoryBehaviorSuite",
+          "MCP/app command parity",
+          "confirmed story migration fixtures"
+        ],
+        "securityRequirements": [
+          "Story fixtures cover authorized/restricted/cross-account actors and assert scope owner plus resulting-row authorization for every operation"
+        ],
+        "syncRequirements": [
+          "Tests exercise durable offline operation IDs, restart/replay, pending/result projection, readiness and authoritative conflict/rejection"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase movement-document assertions with approved story commands and semantic source migration fixtures; open decision variants remain disabled/parameterized rather than silently selected.",
+        "reconciliation": [
+          "Fixture catalog covers each confirmed Purchase/Return/Transfer/custody/correction invariant and every source variant with exact IDs, cents and provenance outcomes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "App/MCP story parity, idempotency, atomicity, scope-owner, no-invented-cash, provenance and migration suites"
+        ],
+        "acceptance": [
+          "Tests describe user/business stories and fail if target code recreates current two-hop, Sale-type or generic-association mechanics"
+        ]
+      }
+    },
+    {
+      "id": "FILE-7721AD229D9E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests fail-closed current return-to-source Project provenance and immutable amount restoration.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "O-007/O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Retain provenance/amount invariants while replacing expected Project Purchase with open occurrence."
+    },
+    {
+      "id": "FILE-F6414EB170B6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Transaction type case/legacy normalization behavior.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Legacy import/read mapping"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve tolerant source decoding; target writers accept only Purchase/Return/Transfer."
+    },
+    {
+      "id": "TEST-1EA750C216D5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Unit-tests current Swift Inventory operation documents, origin routing, amounts and batch effects.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Keep fixtures/calculations that express approved amount basis; replace Firestore and retired movement expectations. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory and Transaction Story Contract Tests",
+        "surfaces": [
+          "InventoryStoryDomainTests",
+          "scope/amount/provenance invariants",
+          "idempotent result fixtures"
+        ],
+        "securityRequirements": [
+          "Story fixtures cover authorized/restricted/cross-account actors and assert scope owner plus resulting-row authorization for every operation"
+        ],
+        "syncRequirements": [
+          "Tests exercise durable offline operation IDs, restart/replay, pending/result projection, readiness and authoritative conflict/rejection"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase movement-document assertions with approved story commands and semantic source migration fixtures; open decision variants remain disabled/parameterized rather than silently selected.",
+        "reconciliation": [
+          "Fixture catalog covers each confirmed Purchase/Return/Transfer/custody/correction invariant and every source variant with exact IDs, cents and provenance outcomes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "App/MCP story parity, idempotency, atomicity, scope-owner, no-invented-cash, provenance and migration suites"
+        ],
+        "acceptance": [
+          "Tests describe user/business stories and fail if target code recreates current two-hop, Sale-type or generic-association mechanics"
+        ]
+      }
+    },
+    {
+      "id": "TEST-7E9C05E9E5D7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Integration-tests current Firebase Inventory operation workflows.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Replace with isolated target handler, RLS, sync and offline story tests; no Firebase adapter suite. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory and Transaction Target Integration Tests",
+        "surfaces": [
+          "InventoryTargetIntegrationSuite",
+          "local/cloud-staging adapters",
+          "offline/fault/source-import fixtures"
+        ],
+        "securityRequirements": [
+          "Harness uses isolated synthetic identities/Accounts and target RLS/Sync policies; production and Firebase-emulator endpoints are rejected"
+        ],
+        "syncRequirements": [
+          "Harness controls encrypted local DB, streams, offline restart, command replay and authoritative outcomes with production-scale semantic fixtures"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase CRUD/movement integration fixtures with target query/typed-operation/security/offline contracts and immutable source-import fixtures.",
+        "reconciliation": [
+          "Fixture counts/hashes cover Transactions, Items, occurrences/provenance, operation results and source correlations with no unexplained differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/cloud-staging adapter, RLS/Sync, offline/restart/replay, failure injection, migration and environment-refusal self-tests"
+        ],
+        "acceptance": [
+          "Integration evidence proves target behavior without using or modifying the running Firebase backend"
+        ]
+      }
+    },
+    {
+      "id": "TEST-B9672080328D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Inventory operation execution atomicity and failure behavior through batch-writing fakes.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Target operation adapter mapping"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve atomic/rejection outcomes in target operation and fault-injection contracts."
+    },
+    {
+      "id": "TEST-AB7FBFCBDFD4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current type-only Transaction form validation and inventory-resale routing decisions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "TEST-82FAD193C51B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Integration-tests current Firebase Transaction create/update/delete/listener behavior and category constraints.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Replace CRUD parity with typed command, local query, RLS, offline retry and lifecycle tests. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "target": {
+        "owner": "Inventory and Transaction Target Integration Tests",
+        "surfaces": [
+          "TransactionTargetContractSuite",
+          "typed command/query adapters",
+          "RLS/Sync/migration fixtures"
+        ],
+        "securityRequirements": [
+          "Harness uses isolated synthetic identities/Accounts and target RLS/Sync policies; production and Firebase-emulator endpoints are rejected"
+        ],
+        "syncRequirements": [
+          "Harness controls encrypted local DB, streams, offline restart, command replay and authoritative outcomes with production-scale semantic fixtures"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase CRUD/movement integration fixtures with target query/typed-operation/security/offline contracts and immutable source-import fixtures.",
+        "reconciliation": [
+          "Fixture counts/hashes cover Transactions, Items, occurrences/provenance, operation results and source correlations with no unexplained differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/cloud-staging adapter, RLS/Sync, offline/restart/replay, failure injection, migration and environment-refusal self-tests"
+        ],
+        "acceptance": [
+          "Integration evidence proves target behavior without using or modifying the running Firebase backend"
+        ]
+      }
+    },
+    {
+      "id": "TEST-7335FA7381B4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests negative inference for current incomplete returned Item processing.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "TEST-86F344E55403",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Transaction action-menu exposure for movement, correction and deletion states.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-029"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema."
+    },
+    {
+      "id": "FILE-008C2AF1A269",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits current Firebase Transaction taxonomy impact and legacy value distribution assumptions.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Approved read-only production profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Use as source-profiler evidence; target migration transformer independently maps every row."
+    },
+    {
+      "id": "FILE-2A0F5EACA247",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits current synthetic returned-paid-Item credit Transactions and related Invoice evidence.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "O-003–O-005 target credit settlement",
+        "Approved source profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Use to detect and quarantine legacy synthetic credits; never recreate them as target Transactions."
+    },
+    {
+      "id": "FILE-7276A7F79405",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Mutates current Firebase Transaction taxonomy during the legacy release path.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Final source freeze/export"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Do not run for target conversion; source history informs the isolated Firebase-to-target transformer."
+    },
+    {
+      "id": "FILE-87943575B4AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits current Firebase receipts for nonphysical Item lines, subtotal/tax/discount shapes and candidate exact-cent reconstruction.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "O-030/O-031",
+        "Approved read-only source profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Retain as migration-fixture evidence; target import never infers semantic receipt labels from residual arithmetic alone."
+    },
+    {
+      "id": "FILE-8F9B6867A7A9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Repairs one current Firebase Project/Inventory lineage case using known record-specific evidence.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Migration fixture capture"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Preserve before/after evidence as an importer regression fixture; do not generalize record-specific mutation logic."
+    },
+    {
+      "id": "FILE-9B76F11BD883",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits/repairs current Firebase Inventory null scope and dangling Transaction/Item links for known data.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Migration fixture capture"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Use anomalies as target import/reconciliation tests; no target runtime repair dependency."
+    },
+    {
+      "id": "FILE-BD14FF765DF6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits/repairs current 1584 category and Transaction/Item integrity for known records.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Migration fixture capture"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Retain anomaly mappings and verify target importer reports rather than silently normalizes them."
+    },
+    {
+      "id": "FILE-E2260562EE79",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Backfills current Firebase Return itemIds from legacy relationship evidence.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "O-007/O-015 target history mapping"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+      ],
+      "notes": "Use as source-shape evidence; target import correlates both directions and quarantines disagreement."
+    }
+  ]
+}

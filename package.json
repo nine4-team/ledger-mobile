@@ -1,4 +1,24 @@
 {
+  "scripts": {
+    "conversion:sync": "node scripts/supabase-conversion-ledger.mjs sync",
+    "conversion:check": "node scripts/supabase-conversion-ledger.mjs check",
+    "conversion:report": "node scripts/supabase-conversion-ledger.mjs report",
+    "conversion:queries:generate": "node scripts/extract-firestore-query-contract.mjs generate",
+    "conversion:queries:check": "node scripts/extract-firestore-query-contract.mjs check",
+    "conversion:capabilities:generate": "node scripts/extract-current-capability-surfaces.mjs generate",
+    "conversion:capabilities:check": "node scripts/extract-current-capability-surfaces.mjs check",
+    "conversion:residuals:generate": "node scripts/generate-m2-residual-register.mjs generate",
+    "conversion:residuals:check": "node scripts/generate-m2-residual-register.mjs check",
+    "conversion:profiles:check-readonly": "node scripts/check-firebase-readonly-profilers.mjs",
+    "conversion:profile:firestore-auth": "node scripts/profile-firebase-firestore-auth-readonly.mjs",
+    "conversion:profile:storage": "node scripts/profile-firebase-storage-readonly.mjs",
+    "conversion:gate:m0": "node scripts/supabase-conversion-ledger.mjs gate M0",
+    "conversion:gate:m1": "node scripts/supabase-conversion-ledger.mjs gate M1",
+    "conversion:gate:m2": "node scripts/supabase-conversion-ledger.mjs gate M2",
+    "conversion:gate:m3": "node scripts/supabase-conversion-ledger.mjs gate M3",
+    "conversion:gate:m4": "node scripts/supabase-conversion-ledger.mjs gate M4",
+    "conversion:gate:m5": "node scripts/supabase-conversion-ledger.mjs gate M5"
+  },
   "devDependencies": {
     "vitest": "^2.1.9"
   }

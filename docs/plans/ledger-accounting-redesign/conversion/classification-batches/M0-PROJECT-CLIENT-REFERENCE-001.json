@@ -1,0 +1,1754 @@
+{
+  "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+  "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-E1A771F6A409",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides generic Firestore Project get/create/update/delete and unfiltered account listeners. Creation generates a Project with free-text clientName; update accepts arbitrary field dictionaries; delete removes only the Project document.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-024",
+        "O-025"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-024/O-025 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-27CA6EAC7092",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines the Project service seam in Firebase ListenerRegistration and untyped field dictionaries, including free-text clientName creation and unconditional delete.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-024",
+        "O-025"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-024/O-025 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-A3AB0F29E150",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Subscribes to and directly creates, updates and deletes nested Project note documents through the generic repository.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve note outcomes with stable IDs, deterministic ordering, idempotency and authorization. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "ProjectNoteQuerying",
+          "ProjectNoteOperations",
+          "project_notes"
+        ],
+        "securityRequirements": [
+          "Project membership authorizes note visibility; creator/time evidence is server-owned and note edit/remove follows explicit role and revision policy"
+        ],
+        "syncRequirements": [
+          "Bounded Project notes synchronize with deterministic `(createdAt, id)` order, revision/tombstone state and explicit complete/partial history readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Merge legacy embedded and nested Project notes into stable note IDs with immutable source/creator/creation evidence; quarantine missing parent/actor variants and never trust caller timestamps as audit authority.",
+        "reconciliation": [
+          "Every non-empty legacy/nested note maps once or quarantines, with parent, text hash, source, author, timestamps, revision/tombstone and deterministic order verified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline add/edit/remove/replay, stale-revision conflict, deterministic paging/search, tombstone, cross-account and legacy-note migration tests"
+        ],
+        "acceptance": [
+          "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5B59D74F6B13",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firebase-shaped Project note subscribe/create/update/delete methods with untyped update fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Replace transport-shaped CRUD with note queries and story-specific operations. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "ProjectNoteQuerying",
+          "ProjectNoteOperations",
+          "ProjectNoteSnapshot"
+        ],
+        "securityRequirements": [
+          "Project membership authorizes note visibility; creator/time evidence is server-owned and note edit/remove follows explicit role and revision policy"
+        ],
+        "syncRequirements": [
+          "Bounded Project notes synchronize with deterministic `(createdAt, id)` order, revision/tombstone state and explicit complete/partial history readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Merge legacy embedded and nested Project notes into stable note IDs with immutable source/creator/creation evidence; quarantine missing parent/actor variants and never trust caller timestamps as audit authority.",
+        "reconciliation": [
+          "Every non-empty legacy/nested note maps once or quarantines, with parent, text hash, source, author, timestamps, revision/tombstone and deterministic order verified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline add/edit/remove/replay, stale-revision conflict, deterministic paging/search, tombstone, cross-account and legacy-note migration tests"
+        ],
+        "acceptance": [
+          "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-7500FDB4FDB6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines a Firestore-Codable Project with free-text clientName, URL-shaped hero media, archive state, legacy notes and a denormalized budgetSummary; timestamps are omitted from explicit Codable keys.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target requires ClientID, stable attachment identity and explicit audit/revision fields; imported budgetSummary is not accounting authority. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ProjectID",
+          "ClientID",
+          "ProjectSnapshot",
+          "projects/client relation",
+          "ProjectBudgetSnapshot reference"
+        ],
+        "securityRequirements": [
+          "Trusted membership scopes every Client/Project row to one immutable Account; financial fields require the approved financial grant",
+          "Client and Project names are display/search values and never relationship or authorization keys"
+        ],
+        "syncRequirements": [
+          "Bootstrap/account streams include authorized Client and Project directories; Project workspace streams expose explicit readiness and required child/projection versions"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Project IDs and archive/display fields, correlate free-text Client names to reviewed stable Client IDs, quarantine ambiguous clusters and never import cached budgetSummary as authority.",
+        "reconciliation": [
+          "Every source Project maps once to one target Account and reviewed Client or quarantine, with child/reference counts, archive state and source correlation intact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project directory and detail query contracts, cross-account/financial-visibility RLS and Sync Stream readiness/migration fixtures"
+        ],
+        "acceptance": [
+          "Authorized users can identify and open the same Project offline through a stable Client relation without copied-name authority or hidden partial history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3D3C4156BE8B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Project notes with text, creator ID/name, source and optional createdAt but no revision, updatedAt or deletion/audit state.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve attribution and source while adding stable ordering/conflict evidence. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "ProjectNoteID",
+          "ProjectNoteSnapshot",
+          "project_notes revision/tombstone"
+        ],
+        "securityRequirements": [
+          "Project membership authorizes note visibility; creator/time evidence is server-owned and note edit/remove follows explicit role and revision policy"
+        ],
+        "syncRequirements": [
+          "Bounded Project notes synchronize with deterministic `(createdAt, id)` order, revision/tombstone state and explicit complete/partial history readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Merge legacy embedded and nested Project notes into stable note IDs with immutable source/creator/creation evidence; quarantine missing parent/actor variants and never trust caller timestamps as audit authority.",
+        "reconciliation": [
+          "Every non-empty legacy/nested note maps once or quarantines, with parent, text hash, source, author, timestamps, revision/tombstone and deterministic order verified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline add/edit/remove/replay, stale-revision conflict, deterministic paging/search, tombstone, cross-account and legacy-note migration tests"
+        ],
+        "acceptance": [
+          "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-1DA3D2CE9B31",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Activates nine independent Project-scoped listeners, stores partial results in memory, applies financial filtering locally, derives budget state, and exposes Project archive/delete and note CRUD. It does not expose a complete-history or durable operation state.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-024"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-024 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-58A14BD25578",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates a Project from name and free-text clientName, dismisses after the first local Firestore write, then independently and silently writes selected category allocations and enqueues hero media. Missing allocation input becomes explicit zero.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target selects/creates Client and durably accepts Project plus exact nullable allocations as one operation; media state remains explicit. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "CreateClientCommand",
+          "CreateProjectCommand",
+          "ProjectSetupDraft",
+          "OperationReceipt",
+          "AttachmentReceipt"
+        ],
+        "securityRequirements": [
+          "Create requires trusted Account membership, an authorized existing/new Client and capability to configure the selected Project categories"
+        ],
+        "syncRequirements": [
+          "One locally durable operation projects stable Client/Project IDs and the exact selected-category nullable allocations; media has a separate durable AttachmentReceipt"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Project creation variants into one stable Client relation and one idempotent setup operation; retain partial source category/media outcomes as explicit migration findings rather than pretending atomic success.",
+        "reconciliation": [
+          "Project, Client, selected category set, absent/null/zero allocations, operation ID and media handoff reconcile together without duplicate or silent partial setup"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline existing/new-Client Project creation, restart/replay/idempotency, nullable allocation, rejected category, media failure and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A saved Project has one durable identity and Client relation, and every intended configuration/media exception remains visible and recoverable"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-CF459111B7BB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits Project name, free-text clientName, description, category selection/allocation and hero image, dismissing before independent Project, per-category and media tasks finish while suppressing their errors.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-025"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-025 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-E23DAF7A18FA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Shows active/archived Project cards from the account cache, sorted by Project name, and independently subscribes to every current user's Project preferences for denormalized budget previews.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve list UX from local read models while using Client identity and own-principal preferences. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ClientProjectDirectoryQuerying",
+          "ProjectListSnapshot",
+          "ProjectPreferenceSnapshot",
+          "ProjectBudgetSnapshot"
+        ],
+        "securityRequirements": [
+          "Trusted membership scopes every Client/Project row to one immutable Account; financial fields require the approved financial grant",
+          "Client and Project names are display/search values and never relationship or authorization keys"
+        ],
+        "syncRequirements": [
+          "Bootstrap/account streams include authorized Client and Project directories; Project workspace streams expose explicit readiness and required child/projection versions"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Project IDs and archive/display fields, correlate free-text Client names to reviewed stable Client IDs, quarantine ambiguous clusters and never import cached budgetSummary as authority.",
+        "reconciliation": [
+          "Every source Project maps once to one target Account and reviewed Client or quarantine, with child/reference counts, archive state and source correlation intact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project directory and detail query contracts, cross-account/financial-visibility RLS and Sync Stream readiness/migration fixtures"
+        ],
+        "acceptance": [
+          "Authorized users can identify and open the same Project offline through a stable Client relation without copied-name authority or hidden partial history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A9748507A27A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates an independent ProjectContext per detail route, resolves by immutable Project ID with cached snapshot fallback, and reactivates broad listeners by account/project/user key.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve ID-based routing and independent windows; replace Firebase listener composition. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ProjectWorkspaceQuerying",
+          "ProjectWorkspaceSnapshot",
+          "CapabilityReadinessState"
+        ],
+        "securityRequirements": [
+          "Trusted membership scopes every Client/Project row to one immutable Account; financial fields require the approved financial grant",
+          "Client and Project names are display/search values and never relationship or authorization keys"
+        ],
+        "syncRequirements": [
+          "Bootstrap/account streams include authorized Client and Project directories; Project workspace streams expose explicit readiness and required child/projection versions"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Project IDs and archive/display fields, correlate free-text Client names to reviewed stable Client IDs, quarantine ambiguous clusters and never import cached budgetSummary as authority.",
+        "reconciliation": [
+          "Every source Project maps once to one target Account and reviewed Client or quarantine, with child/reference counts, archive state and source correlation intact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project directory and detail query contracts, cross-account/financial-visibility RLS and Sync Stream readiness/migration fixtures"
+        ],
+        "acceptance": [
+          "Authorized users can identify and open the same Project offline through a stable Client relation without copied-name authority or hidden partial history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D73C92887393",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Project and free-text Client name, owns tabs/export/quick note/edit/archive, and offers destructive Project deletion that warns only about Items while leaving all children orphaned.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-024"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-024 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-7DC1AEC51D21",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays legacy Project.notes plus nested notes sorted newest-first by optional client timestamp and permits add/edit/delete with generic errors.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve authoring UX with deterministic order, offline receipts and explicit conflict/rejection state. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "ProjectNotePage",
+          "ProjectNoteOperations",
+          "ProjectNoteIntent presentation"
+        ],
+        "securityRequirements": [
+          "Project membership authorizes note visibility; creator/time evidence is server-owned and note edit/remove follows explicit role and revision policy"
+        ],
+        "syncRequirements": [
+          "Bounded Project notes synchronize with deterministic `(createdAt, id)` order, revision/tombstone state and explicit complete/partial history readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Merge legacy embedded and nested Project notes into stable note IDs with immutable source/creator/creation evidence; quarantine missing parent/actor variants and never trust caller timestamps as audit authority.",
+        "reconciliation": [
+          "Every non-empty legacy/nested note maps once or quarantines, with parent, text hash, source, author, timestamps, revision/tombstone and deterministic order verified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline add/edit/remove/replay, stale-revision conflict, deterministic paging/search, tombstone, cross-account and legacy-note migration tests"
+        ],
+        "acceptance": [
+          "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-DCB56234B246",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders hero media, Project name, copied clientName and denormalized budget preview bars.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve card outcome using Client relation, stable attachment identity and canonical projection readiness. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ProjectCardSnapshot",
+          "ClientSummary",
+          "ProjectBudgetSnapshot",
+          "AttachmentDisplaySource"
+        ],
+        "securityRequirements": [
+          "Trusted membership scopes every Client/Project row to one immutable Account; financial fields require the approved financial grant",
+          "Client and Project names are display/search values and never relationship or authorization keys"
+        ],
+        "syncRequirements": [
+          "Bootstrap/account streams include authorized Client and Project directories; Project workspace streams expose explicit readiness and required child/projection versions"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Project IDs and archive/display fields, correlate free-text Client names to reviewed stable Client IDs, quarantine ambiguous clusters and never import cached budgetSummary as authority.",
+        "reconciliation": [
+          "Every source Project maps once to one target Account and reviewed Client or quarantine, with child/reference counts, archive state and source correlation intact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project directory and detail query contracts, cross-account/financial-visibility RLS and Sync Stream readiness/migration fixtures"
+        ],
+        "acceptance": [
+          "Authorized users can identify and open the same Project offline through a stable Client relation without copied-name authority or hidden partial history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4F3C3856E659",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists all cached Projects alphabetically, including archived Projects, and displays free-text clientName as a subtitle before returning the selected Project.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Each consuming story supplies eligibility; picker labels resolve Client by ID. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ProjectSelectionSnapshot",
+          "ClientSummary",
+          "ProjectEligibility"
+        ],
+        "securityRequirements": [
+          "Trusted membership scopes every Client/Project row to one immutable Account; financial fields require the approved financial grant",
+          "Client and Project names are display/search values and never relationship or authorization keys"
+        ],
+        "syncRequirements": [
+          "Bootstrap/account streams include authorized Client and Project directories; Project workspace streams expose explicit readiness and required child/projection versions"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Project IDs and archive/display fields, correlate free-text Client names to reviewed stable Client IDs, quarantine ambiguous clusters and never import cached budgetSummary as authority.",
+        "reconciliation": [
+          "Every source Project maps once to one target Account and reviewed Client or quarantine, with child/reference counts, archive state and source correlation intact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project directory and detail query contracts, cross-account/financial-visibility RLS and Sync Stream readiness/migration fixtures"
+        ],
+        "acceptance": [
+          "Authorized users can identify and open the same Project offline through a stable Client relation without copied-name authority or hidden partial history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-42B77ABFD098",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Offers Business Inventory or any active cached Project as an Item creation destination and displays copied clientName; it has no authoritative Client identity or same-Client Transfer semantics.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "General creation destination and same-Client Transfer destination remain separate stories. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ItemDestinationSnapshot",
+          "ProjectID/ClientID eligibility",
+          "Inventory destination"
+        ],
+        "securityRequirements": [
+          "Trusted membership scopes every Client/Project row to one immutable Account; financial fields require the approved financial grant",
+          "Client and Project names are display/search values and never relationship or authorization keys"
+        ],
+        "syncRequirements": [
+          "Bootstrap/account streams include authorized Client and Project directories; Project workspace streams expose explicit readiness and required child/projection versions"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Project IDs and archive/display fields, correlate free-text Client names to reviewed stable Client IDs, quarantine ambiguous clusters and never import cached budgetSummary as authority.",
+        "reconciliation": [
+          "Every source Project maps once to one target Account and reviewed Client or quarantine, with child/reference counts, archive state and source correlation intact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project directory and detail query contracts, cross-account/financial-visibility RLS and Sync Stream readiness/migration fixtures"
+        ],
+        "acceptance": [
+          "Authorized users can identify and open the same Project offline through a stable Client relation without copied-name authority or hidden partial history"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-038E6D4248AF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure Project form validation requires non-empty Project name and free-text clientName and rejects negative integer allocation values.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve Project-name/allocation validation while replacing Client text with a valid ClientID or nested CreateClient input. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ProjectSetupDraft.validate",
+          "ClientSelectionInput",
+          "NullableCategoryAllocation"
+        ],
+        "securityRequirements": [
+          "Create requires trusted Account membership, an authorized existing/new Client and capability to configure the selected Project categories"
+        ],
+        "syncRequirements": [
+          "One locally durable operation projects stable Client/Project IDs and the exact selected-category nullable allocations; media has a separate durable AttachmentReceipt"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Project creation variants into one stable Client relation and one idempotent setup operation; retain partial source category/media outcomes as explicit migration findings rather than pretending atomic success.",
+        "reconciliation": [
+          "Project, Client, selected category set, absent/null/zero allocations, operation ID and media handoff reconcile together without duplicate or silent partial setup"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline existing/new-Client Project creation, restart/replay/idempotency, nullable allocation, rejected category, media failure and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A saved Project has one durable identity and Client relation, and every intended configuration/media exception remains visible and recoverable"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-48DE39470AF0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure functions filter active/archived Projects, search Project and clientName text, sort names, choose empty-state copy and order budget preview categories.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Adapt search input to resolved Client display",
+        "Target budget projection ownership"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve visible filtering/sorting where still product-correct; do not preserve copied Client identity or cached-summary authority."
+    },
+    {
+      "id": "TEST-E591BE8A4B58",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests required Project/free-text Client names and non-negative allocations in the current form validator.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Retain useful Project/allocation cases and replace clientName identity assertions. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project Contract Tests",
+        "surfaces": [
+          "ProjectSetupValidationTests",
+          "ClientSelectionFixtures",
+          "NullableAllocationFixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures cover standard/admin/restricted/cross-account Principals and never infer authority from Client/Project display names"
+        ],
+        "syncRequirements": [
+          "Tests exercise versioned local Client/Project/reference snapshots, partial readiness, offline operations and authoritative rejection/conflict"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/free-text/denormalized fixtures with semantic stable-ID Client/Project/reference and source-migration variants while retaining approved presentation outcomes.",
+        "reconciliation": [
+          "Fixture inventory covers every approved source variant and target invariant including ambiguous Client clusters, absent/null/zero allocations and stale references"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project form, list/detail/search/sort/budget-card semantic suites plus migration, security, offline and app/MCP contract tests"
+        ],
+        "acceptance": [
+          "Tests fail on copied source defects while proving the intended Client/Project/reference user outcomes remain available"
+        ]
+      }
+    },
+    {
+      "id": "TEST-3D0D949763A1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests Project archive filters, Project/clientName search, name sorting, empty copy and budget preview ordering.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve visible list behavior while changing fixtures from copied identity text and source summary shapes. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project Contract Tests",
+        "surfaces": [
+          "ProjectDirectoryPresentationTests",
+          "ClientRelationFixtures",
+          "CanonicalBudgetCardFixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures cover standard/admin/restricted/cross-account Principals and never infer authority from Client/Project display names"
+        ],
+        "syncRequirements": [
+          "Tests exercise versioned local Client/Project/reference snapshots, partial readiness, offline operations and authoritative rejection/conflict"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/free-text/denormalized fixtures with semantic stable-ID Client/Project/reference and source-migration variants while retaining approved presentation outcomes.",
+        "reconciliation": [
+          "Fixture inventory covers every approved source variant and target invariant including ambiguous Client clusters, absent/null/zero allocations and stale references"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Client/Project form, list/detail/search/sort/budget-card semantic suites plus migration, security, offline and app/MCP contract tests"
+        ],
+        "acceptance": [
+          "Tests fail on copied source defects while proving the intended Client/Project/reference user outcomes remain available"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-AFBB07058144",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides generic account budget-category subscribe/create/update/delete against the default presets subcollection.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-8926C720D04A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firestore-shaped category identity, name/slug/archive/system/order/type metadata plus current transaction-taxonomy and display helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Reference definition and accounting/display projections are separated; legacy taxonomy helpers remain source evidence. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Shared Reference Data",
+        "surfaces": [
+          "CategoryID",
+          "CategoryDefinitionSnapshot",
+          "budget_categories"
+        ],
+        "securityRequirements": [
+          "Account membership and field visibility govern reference-data reads; mutation capability is separate and remains policy-gated by O-026"
+        ],
+        "syncRequirements": [
+          "Authorized active/archive category, vendor-suggestion and Space-template rows synchronize with stable IDs, order, revision and readiness for offline forms"
+        ]
+      },
+      "migration": {
+        "rule": "Normalize source categories, ordered vendor strings and Space templates into stable revisioned rows; preserve source IDs/order/text and report duplicates/invalid types/check states instead of silently repairing authority.",
+        "reconciliation": [
+          "Reference entry counts, normalized-value hashes, order, archive/system/type state, template checklist content and source correlation reconcile with every anomaly classified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline reference query/readiness, stable order, duplicate normalization, archive visibility, restricted-field and migration-variant tests"
+        ],
+        "acceptance": [
+          "Forms use one consistent offline reference snapshot without gaining write authority or turning a suggestion label into accounting identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-BAFED6656104",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Subscribes/sets/deletes Project category allocation documents and also implements Fee installment validation and batch writes in the same source file. Project allocation writes merge budgetCents and optional actor fields.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-51D84FD65ADE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Project category allocation by category document ID plus Fee installment identity, amount/order/audit fields and pure total/can-save calculations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target relationship uses stable IDs/FKs; Fee value behavior is finalized in the Invoicing dossier. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Configuration and Budget Projection",
+        "surfaces": [
+          "ProjectCategoryAllocationSnapshot",
+          "project_category_allocations",
+          "FeeInstallmentSnapshot split to Invoicing"
+        ],
+        "securityRequirements": [
+          "Project/category rows require Account membership; allocation amounts and spend projections require the approved financial visibility grant"
+        ],
+        "syncRequirements": [
+          "Project stream contains category definitions, enablement and nullable allocation rows plus versioned canonical budget projections required for offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Project-category rows by stable Project/category IDs, preserve absent versus null versus explicit zero and ignore cached/Transaction-only spend as target authority.",
+        "reconciliation": [
+          "Per Project, category relationship IDs, enabled set, nullable allocations and canonical contribution totals reconcile with source anomalies and semantic differences explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Absent/null/zero allocation, financial-visibility, local readiness, stable ordering and source mapping tests"
+        ],
+        "acceptance": [
+          "Project configuration and budget previews show one complete authorized value set and never derive authority from cached Firebase summaries"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-093E5E4F8D20",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Directly listens to one/all Project preference documents under a supplied user path and merge-writes pinned IDs. Listener errors become nil/empty and no caller/path principal equality is enforced in this service.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target read/write scope is bound to authenticated principal and exposes readiness/errors. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Personal Project Preferences",
+        "surfaces": [
+          "ProjectPreferenceQuerying",
+          "ProjectPreferenceOperations",
+          "project_preferences"
+        ],
+        "securityRequirements": [
+          "Read/write requires the authenticated Principal to own the preference row in the authorized Account; caller-supplied user paths never determine access"
+        ],
+        "syncRequirements": [
+          "Only the current Principal's revisioned Project preferences synchronize, partitioned by Account/environment with explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source preference paths to stable Principal/Account/Project IDs, deduplicate pins, retain valid stable references and report stale or cross-user variants.",
+        "reconciliation": [
+          "Preference row and pin counts/hashes reconcile per Principal/Account/Project, with stale IDs and unauthorized source-path variants explicitly reported"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Own-principal RLS/Sync, cross-user denial, offline update/revision conflict, archived reference and preference migration tests"
+        ],
+        "acceptance": [
+          "Personal Project presentation remains offline-capable and no Account member can observe or mutate another member's preferences"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-B6C3B72884E1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines a Firestore-Codable Project preference with redundant account/user/Project IDs and pinned category IDs while omitting timestamps from explicit Codable keys.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve personal pins with immutable scope, revision and stale-reference policy. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Personal Project Preferences",
+        "surfaces": [
+          "ProjectPreferenceSnapshot",
+          "PreferenceRevision",
+          "project_preferences"
+        ],
+        "securityRequirements": [
+          "Read/write requires the authenticated Principal to own the preference row in the authorized Account; caller-supplied user paths never determine access"
+        ],
+        "syncRequirements": [
+          "Only the current Principal's revisioned Project preferences synchronize, partitioned by Account/environment with explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source preference paths to stable Principal/Account/Project IDs, deduplicate pins, retain valid stable references and report stale or cross-user variants.",
+        "reconciliation": [
+          "Preference row and pin counts/hashes reconcile per Principal/Account/Project, with stale IDs and unauthorized source-path variants explicitly reported"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Own-principal RLS/Sync, cross-user denial, offline update/revision conflict, archived reference and preference migration tests"
+        ],
+        "acceptance": [
+          "Personal Project presentation remains offline-capable and no Account member can observe or mutate another member's preferences"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-17BB6ABA1400",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Stores vendor suggestions as one ordered string array, seeds a hardcoded default set, listens to the document and performs non-transactional read-modify-write add-if-missing with whitespace/lowercase normalization.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-87F9C321FCB3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines one vendors string array and drops updatedAt during explicit decoding.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve spelling/order as migration evidence while adding stable identity/revision or equivalent conflict safety. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Shared Reference Data",
+        "surfaces": [
+          "VendorSuggestionID",
+          "OrderedVendorSuggestionSnapshot",
+          "vendor_suggestions"
+        ],
+        "securityRequirements": [
+          "Account membership and field visibility govern reference-data reads; mutation capability is separate and remains policy-gated by O-026"
+        ],
+        "syncRequirements": [
+          "Authorized active/archive category, vendor-suggestion and Space-template rows synchronize with stable IDs, order, revision and readiness for offline forms"
+        ]
+      },
+      "migration": {
+        "rule": "Normalize source categories, ordered vendor strings and Space templates into stable revisioned rows; preserve source IDs/order/text and report duplicates/invalid types/check states instead of silently repairing authority.",
+        "reconciliation": [
+          "Reference entry counts, normalized-value hashes, order, archive/system/type state, template checklist content and source correlation reconcile with every anomaly classified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline reference query/readiness, stable order, duplicate normalization, archive visibility, restricted-field and migration-variant tests"
+        ],
+        "acceptance": [
+          "Forms use one consistent offline reference snapshot without gaining write authority or turning a suggestion label into accounting identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4637466F7F73",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides generic Space-template subscribe/create/update/delete and create-from-Space by copying name, notes and checklist state without resetting checked items.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-3875BEEAD657",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firestore-shaped template name, notes, embedded checklists, archive/order and timestamps omitted from explicit Codable keys.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve reusable structure with audit/revision and normalized unchecked state. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Shared Reference Data",
+        "surfaces": [
+          "SpaceTemplateID",
+          "SpaceTemplateSnapshot",
+          "SpaceTemplateChecklist",
+          "space_templates"
+        ],
+        "securityRequirements": [
+          "Account membership and field visibility govern reference-data reads; mutation capability is separate and remains policy-gated by O-026"
+        ],
+        "syncRequirements": [
+          "Authorized active/archive category, vendor-suggestion and Space-template rows synchronize with stable IDs, order, revision and readiness for offline forms"
+        ]
+      },
+      "migration": {
+        "rule": "Normalize source categories, ordered vendor strings and Space templates into stable revisioned rows; preserve source IDs/order/text and report duplicates/invalid types/check states instead of silently repairing authority.",
+        "reconciliation": [
+          "Reference entry counts, normalized-value hashes, order, archive/system/type state, template checklist content and source correlation reconcile with every anomaly classified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline reference query/readiness, stable order, duplicate normalization, archive visibility, restricted-field and migration-variant tests"
+        ],
+        "acceptance": [
+          "Forms use one consistent offline reference snapshot without gaining write authority or turning a suggestion label into accounting identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-850F643150CE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines an AccountPresets wrapper whose only action delegates vendor default initialization; repository search finds no production caller.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target bootstrap/reference commands do not retain an unused wrapper."
+    },
+    {
+      "id": "SWIFT-2E174120940E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Groups template, vendor, invite and preset protocols around Firebase ListenerRegistration and untyped field dictionaries.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Split unrelated capabilities and remove Firebase/CRUD-shaped types. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client, Project, and Reference Application Contracts",
+        "surfaces": [
+          "ReferenceDataQuerying",
+          "ReferenceDataOperations capability families",
+          "InviteOperations"
+        ],
+        "securityRequirements": [
+          "Each bounded port declares Account/Principal/capability requirements; no listener handle, path, untyped field dictionary or service credential crosses the boundary"
+        ],
+        "syncRequirements": [
+          "Query ports return versioned local snapshots/readiness; operation ports return durable receipts and stable conflict/rejection results"
+        ]
+      },
+      "migration": {
+        "rule": "Retire Firebase-shaped combined service seams and map each supported source outcome to the owning Client/Project/note/preference/reference/Fee/identity contract; do not migrate protocol mechanics.",
+        "reconciliation": [
+          "Contract registry proves every source responsibility has one target owner or named product hold and no app/MCP duplicate writer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Port boundary/no-vendor-type, contract registration, app/MCP parity, offline receipt and split-owner tests"
+        ],
+        "acceptance": [
+          "Feature code invokes typed Ledger capabilities and cannot perform arbitrary Project/reference writes or bypass another bounded context"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-9CF3A4F84903",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Combines account identity/member, category, Project allocation and Fee installment protocols, all exposing Firebase listener or current writer shapes.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Identity, reference configuration, Project budget setup and Fee accounting receive separate contracts. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client, Project, and Reference Application Contracts",
+        "surfaces": [
+          "AccountQuerying",
+          "MembershipOperations",
+          "ReferenceDataQuerying",
+          "ProjectOperations",
+          "FeeOperations"
+        ],
+        "securityRequirements": [
+          "Each bounded port declares Account/Principal/capability requirements; no listener handle, path, untyped field dictionary or service credential crosses the boundary"
+        ],
+        "syncRequirements": [
+          "Query ports return versioned local snapshots/readiness; operation ports return durable receipts and stable conflict/rejection results"
+        ]
+      },
+      "migration": {
+        "rule": "Retire Firebase-shaped combined service seams and map each supported source outcome to the owning Client/Project/note/preference/reference/Fee/identity contract; do not migrate protocol mechanics.",
+        "reconciliation": [
+          "Contract registry proves every source responsibility has one target owner or named product hold and no app/MCP duplicate writer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Port boundary/no-vendor-type, contract registration, app/MCP parity, offline receipt and split-owner tests"
+        ],
+        "acceptance": [
+          "Feature code invokes typed Ledger capabilities and cannot perform arbitrary Project/reference writes or bypass another bounded context"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8375C283D4E5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Shows local appearance, preset, user/account and debug settings using UI role checks; Presets are visible to every member, and General Settings directly signs out through AuthManager without pending-work lifecycle handling.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "UI capability checks mirror server authority and all signout paths invoke AccountSessionEnding. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Settings and Session Presentation",
+        "surfaces": [
+          "SettingsCapabilitySnapshot",
+          "LocalAppearancePreferences",
+          "AccountSessionEnding",
+          "typed settings intents"
+        ],
+        "securityRequirements": [
+          "Visible actions derive from server-authoritative capability snapshots; debug/source controls are absent from production target builds"
+        ],
+        "syncRequirements": [
+          "Settings consumes local preference/reference/capability snapshots and routes signout through AccountSessionEnding with pending-work/media disposition"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve local appearance settings, map server settings to typed capability-owned intents and retire direct Auth signout/Firebase debug behavior from the target.",
+        "reconciliation": [
+          "Settings action inventory maps every source control to local-only, authorized target intent, source-only diagnostic or retirement with no hidden writer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Capability-gated settings, standard/admin/restricted member, pending-work logout, production debug-control absence and offline readiness tests"
+        ],
+        "acceptance": [
+          "Settings cannot advertise an unauthorized action or silently discard pending work during signout"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8D312DD816C5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates, edits, archives/unarchives and reorders categories. Reorder launches an independent silent write per row; UI validation is not backed by trusted system/reference checks.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-58AED31D6D0B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collects category name, type and overall-budget exclusion with caller-supplied existing-name checks and no trusted dependency/type-change preflight.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve clear form intent; trusted command owns uniqueness, system and dependency validation. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Shared Reference Data",
+        "surfaces": [
+          "CategoryDefinitionDraft",
+          "CategoryDefinitionPreflight",
+          "UpdateCategoryDefinitionCommand presentation"
+        ],
+        "securityRequirements": [
+          "Submission requires the O-026 capability at the authoritative handler; client validation cannot override system-category/dependency checks"
+        ],
+        "syncRequirements": [
+          "Form uses the local reference snapshot and submits one revisioned typed operation when the capability is available"
+        ]
+      },
+      "migration": {
+        "rule": "Map source category form values to stable definition/type/archive fields and classify invalid/duplicate/system/dependency variants during migration; do not copy client-only preflight as authority.",
+        "reconciliation": [
+          "Category ID/name normalization/type/system/archive state and dependency findings reconcile before any mutable target operation is enabled"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Duplicate name, invalid type transition, system-category, dependency preflight, stale revision and capability-denial tests"
+        ],
+        "acceptance": [
+          "The form explains authoritative validation and cannot partially or silently mutate category semantics"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-1E0A38FC6F25",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Manages the vendor string array with optimistic local removal/reorder and silent saves; add uses the service's race-prone read-modify-write path.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-E60A204F472E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides modal/inline vendor suggestion pickers, each with its own Firestore listener/default seeding, fixed/excluded options, free-text Other input and optional save-as-preset behavior.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve source-entry UX from one local suggestion model; selection remains a text snapshot. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Shared Reference Data Presentation",
+        "surfaces": [
+          "ReferenceDataQuerying",
+          "VendorSuggestionPickerSnapshot",
+          "SaveVendorSuggestionIntent capability gate"
+        ],
+        "securityRequirements": [
+          "Picker receives only authorized reference rows; optional save-as-suggestion intent is shown and submitted only when the capability snapshot allows it"
+        ],
+        "syncRequirements": [
+          "One shared local ReferenceDataSnapshot supplies modal/inline pickers and exposes readiness; selecting free text remains available according to the owning form"
+        ]
+      },
+      "migration": {
+        "rule": "Normalize source suggestion strings to target entries for display while preserving the selected free-text source snapshot in domain records; retire per-view listeners/default seeding.",
+        "reconciliation": [
+          "Picker fixtures cover every normalized suggestion, fixed/excluded option, free-text path, capability state and source duplicate classification"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline picker/readiness, free-text Other, normalized duplicate, capability-gated save and no-silent-failure UI tests"
+        ],
+        "acceptance": [
+          "All pickers show the same offline suggestions and a user can select free text without accidentally creating canonical identity or unauthorized configuration"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-E00DB27DF0BA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Manages templates with create/edit/hard-delete and independent per-row reorder writes, suppressing all persistence errors.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "MCPMOD-8FC7F6247E2F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers Project list/get/budget/create/update/archive tools over Admin SDK. Client is free text; create/update/note side effects are independent; Project get scans Items; budget recomputes current Transaction-only arithmetic.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target MCP invokes shared authorized queries/commands and cannot own separate Project or accounting semantics. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ClientProject MCP query registry",
+          "ProjectOperations command registry",
+          "ProjectBudgetQuerying"
+        ],
+        "securityRequirements": [
+          "MCP Principal and active Account membership are resolved server-side; projection profile and financial fields follow the same visibility policy as app queries"
+        ],
+        "syncRequirements": [
+          "MCP is online and reads the canonical Project/Client projections with version/readiness metadata; app clients receive the same results through local synchronized projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Project IDs and reviewed Client correlations to target queries/commands; discard Admin-SDK scans, free-text Client authority and denormalized Transaction-only budgets.",
+        "reconciliation": [
+          "App and MCP Project lists/details/archive results match by stable IDs, archive scope, Client relation, visibility and canonical budget version on shared fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app query-command parity, cursor/bounds, cross-account/financial denial, idempotent archive and migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect and archive authorized Projects without raw scans, copied Client identity or an alternate budget calculation"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-FAD77282B988",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists active/archived/all Projects and projects summary/full fields including free-text Client and denormalized budget data.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve filters through stable bounded authorized queries. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ListProjectsQuery",
+          "ProjectListPage",
+          "stable cursor/projection profile"
+        ],
+        "securityRequirements": [
+          "MCP Principal and active Account membership are resolved server-side; projection profile and financial fields follow the same visibility policy as app queries"
+        ],
+        "syncRequirements": [
+          "MCP is online and reads the canonical Project/Client projections with version/readiness metadata; app clients receive the same results through local synchronized projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Project IDs and reviewed Client correlations to target queries/commands; discard Admin-SDK scans, free-text Client authority and denormalized Transaction-only budgets.",
+        "reconciliation": [
+          "App and MCP Project lists/details/archive results match by stable IDs, archive scope, Client relation, visibility and canonical budget version on shared fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app query-command parity, cursor/bounds, cross-account/financial denial, idempotent archive and migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect and archive authorized Projects without raw scans, copied Client identity or an alternate budget calculation"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-D0572E06EB6B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Gets one Project and scans every Project Item to return image counts, using Admin SDK account context and current Project shape.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target uses an authorized indexed projection rather than an unbounded per-call scan. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "GetProjectQuery",
+          "ProjectWorkspaceSnapshot",
+          "readiness/version metadata"
+        ],
+        "securityRequirements": [
+          "MCP Principal and active Account membership are resolved server-side; projection profile and financial fields follow the same visibility policy as app queries"
+        ],
+        "syncRequirements": [
+          "MCP is online and reads the canonical Project/Client projections with version/readiness metadata; app clients receive the same results through local synchronized projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Project IDs and reviewed Client correlations to target queries/commands; discard Admin-SDK scans, free-text Client authority and denormalized Transaction-only budgets.",
+        "reconciliation": [
+          "App and MCP Project lists/details/archive results match by stable IDs, archive scope, Client relation, visibility and canonical budget version on shared fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app query-command parity, cursor/bounds, cross-account/financial denial, idempotent archive and migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect and archive authorized Projects without raw scans, copied Client identity or an alternate budget calculation"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-55857D0737AE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates a Project with name/free-text clientName and then independently creates an optional nested note; no Client identity, Project category setup or shared idempotency result exists.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target accepts ClientID or authorized nested Client creation and one operation ID. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "CreateProjectCommand",
+          "optional CreateClientCommand",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Create requires trusted Account membership, an authorized existing/new Client and capability to configure the selected Project categories"
+        ],
+        "syncRequirements": [
+          "One locally durable operation projects stable Client/Project IDs and the exact selected-category nullable allocations; media has a separate durable AttachmentReceipt"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Project creation variants into one stable Client relation and one idempotent setup operation; retain partial source category/media outcomes as explicit migration findings rather than pretending atomic success.",
+        "reconciliation": [
+          "Project, Client, selected category set, absent/null/zero allocations, operation ID and media handoff reconcile together without duplicate or silent partial setup"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline existing/new-Client Project creation, restart/replay/idempotency, nullable allocation, rejected category, media failure and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A saved Project has one durable identity and Client relation, and every intended configuration/media exception remains visible and recoverable"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-A9FCDED31D3F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Directly updates name, free-text clientName and description and independently appends an optional note.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-025"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-025 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "MCPTOOL-921DA05B3330",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Directly toggles Project isArchived and updatedAt without an existence/precondition/idempotency contract.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve archive/unarchive with shared authorization and durable operation result. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Client and Project",
+        "surfaces": [
+          "ArchiveProjectCommand",
+          "ExpectedProjectRevision",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "MCP Principal and active Account membership are resolved server-side; projection profile and financial fields follow the same visibility policy as app queries"
+        ],
+        "syncRequirements": [
+          "MCP is online and reads the canonical Project/Client projections with version/readiness metadata; app clients receive the same results through local synchronized projections"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Project IDs and reviewed Client correlations to target queries/commands; discard Admin-SDK scans, free-text Client authority and denormalized Transaction-only budgets.",
+        "reconciliation": [
+          "App and MCP Project lists/details/archive results match by stable IDs, archive scope, Client relation, visibility and canonical budget version on shared fixtures"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app query-command parity, cursor/bounds, cross-account/financial denial, idempotent archive and migration fixture tests"
+        ],
+        "acceptance": [
+          "MCP can inspect and archive authorized Projects without raw scans, copied Client identity or an alternate budget calculation"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-7774C2CE6D09",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers note add, newest-first list and case-insensitive substring search. Add does not first prove Project existence; search loads all Project notes before filtering.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target shares note authorization/idempotency/order and bounded search semantics with the app. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "ProjectNote MCP query/command registry",
+          "indexed note search contract"
+        ],
+        "securityRequirements": [
+          "MCP note access requires verified Principal, Account membership and Project visibility with non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP queries the same indexed note projection and commands as the app; app note pages synchronize locally with explicit completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Map source nested/legacy notes to stable Project notes and replace Admin full scans/process filtering with indexed deterministic query and shared idempotent operations.",
+        "reconciliation": [
+          "MCP/app note pages and command results match by note ID, parent, revision, `(createdAt,id)` order, search predicate and visibility"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app note parity, bounded stable cursor, indexed search, parent preflight, replay, cross-account and non-enumeration tests"
+        ],
+        "acceptance": [
+          "MCP note behavior is bounded, deterministic and authorized, with no alternate writer or full-account in-process scan"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-D7FEF2D5FE3B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Adds a non-empty MCP-authored Project note with server process time and returns its ID, without a shared operation ID or explicit parent preflight.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Retry must resolve to one note and authorized existing Project. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "AddProjectNoteCommand",
+          "Project parent preflight",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "MCP note access requires verified Principal, Account membership and Project visibility with non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP queries the same indexed note projection and commands as the app; app note pages synchronize locally with explicit completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Map source nested/legacy notes to stable Project notes and replace Admin full scans/process filtering with indexed deterministic query and shared idempotent operations.",
+        "reconciliation": [
+          "MCP/app note pages and command results match by note ID, parent, revision, `(createdAt,id)` order, search predicate and visibility"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app note parity, bounded stable cursor, indexed search, parent preflight, replay, cross-account and non-enumeration tests"
+        ],
+        "acceptance": [
+          "MCP note behavior is bounded, deterministic and authorized, with no alternate writer or full-account in-process scan"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-C77F4C467B22",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Project notes by createdAt descending with a caller limit clamped to 1 through 200.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve bounded newest-first results with deterministic cursor order. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "ProjectNotePageRequest",
+          "ProjectNotePage",
+          "createdAt/id cursor"
+        ],
+        "securityRequirements": [
+          "MCP note access requires verified Principal, Account membership and Project visibility with non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP queries the same indexed note projection and commands as the app; app note pages synchronize locally with explicit completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Map source nested/legacy notes to stable Project notes and replace Admin full scans/process filtering with indexed deterministic query and shared idempotent operations.",
+        "reconciliation": [
+          "MCP/app note pages and command results match by note ID, parent, revision, `(createdAt,id)` order, search predicate and visibility"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app note parity, bounded stable cursor, indexed search, parent preflight, replay, cross-account and non-enumeration tests"
+        ],
+        "acceptance": [
+          "MCP note behavior is bounded, deterministic and authorized, with no alternate writer or full-account in-process scan"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-9499BE2CC41B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reads all notes for one Project, filters text substring in process and slices results without stable ordering or a hard upper limit.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Target search is bounded, authorized, indexed/measured and explicit about incomplete offline history. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "SearchProjectNotesQuery",
+          "bounded indexed search",
+          "stable result cursor"
+        ],
+        "securityRequirements": [
+          "MCP note access requires verified Principal, Account membership and Project visibility with non-enumerating missing/denied results"
+        ],
+        "syncRequirements": [
+          "MCP queries the same indexed note projection and commands as the app; app note pages synchronize locally with explicit completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Map source nested/legacy notes to stable Project notes and replace Admin full scans/process filtering with indexed deterministic query and shared idempotent operations.",
+        "reconciliation": [
+          "MCP/app note pages and command results match by note ID, parent, revision, `(createdAt,id)` order, search predicate and visibility"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP/app note parity, bounded stable cursor, indexed search, parent preflight, replay, cross-account and non-enumeration tests"
+        ],
+        "acceptance": [
+          "MCP note behavior is bounded, deterministic and authorized, with no alternate writer or full-account in-process scan"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-CA75CFB7F29D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers category list and Project category enable/update/read tools while also recomputing current Transaction-only spend via Admin SDK.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "MCPTOOL-063A741737E0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists active or all account budget categories with type, archive/order and overall-budget metadata.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Preserve read outcome through local/remote bounded reference read model. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Shared Reference Data",
+        "surfaces": [
+          "ListCategoriesQuery",
+          "ReferenceDataSnapshot",
+          "active/archive projection"
+        ],
+        "securityRequirements": [
+          "Account membership and field visibility govern reference-data reads; mutation capability is separate and remains policy-gated by O-026"
+        ],
+        "syncRequirements": [
+          "Authorized active/archive category, vendor-suggestion and Space-template rows synchronize with stable IDs, order, revision and readiness for offline forms"
+        ]
+      },
+      "migration": {
+        "rule": "Normalize source categories, ordered vendor strings and Space templates into stable revisioned rows; preserve source IDs/order/text and report duplicates/invalid types/check states instead of silently repairing authority.",
+        "reconciliation": [
+          "Reference entry counts, normalized-value hashes, order, archive/system/type state, template checklist content and source correlation reconcile with every anomaly classified"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline reference query/readiness, stable order, duplicate normalization, archive visibility, restricted-field and migration-variant tests"
+        ],
+        "acceptance": [
+          "Forms use one consistent offline reference snapshot without gaining write authority or turning a suggestion label into accounting identity"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-671048CA665A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Project allocation rows joined in process to categories and Transaction-only spent values.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001"
+      ],
+      "notes": "Configuration and calculated spend come from reviewed target projections, not MCP arithmetic. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "target": {
+        "owner": "Project Configuration and Budget Projection",
+        "surfaces": [
+          "GetProjectCategoryConfigurationQuery",
+          "ProjectCategoryConfigurationSnapshot",
+          "ProjectBudgetSnapshot"
+        ],
+        "securityRequirements": [
+          "Project/category rows require Account membership; allocation amounts and spend projections require the approved financial visibility grant"
+        ],
+        "syncRequirements": [
+          "Project stream contains category definitions, enablement and nullable allocation rows plus versioned canonical budget projections required for offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Project-category rows by stable Project/category IDs, preserve absent versus null versus explicit zero and ignore cached/Transaction-only spend as target authority.",
+        "reconciliation": [
+          "Per Project, category relationship IDs, enabled set, nullable allocations and canonical contribution totals reconcile with source anomalies and semantic differences explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Absent/null/zero allocation, financial-visibility, local readiness, stable ordering and source mapping tests"
+        ],
+        "acceptance": [
+          "Project configuration and budget previews show one complete authorized value set and never derive authority from cached Firebase summaries"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-9503D6684EDA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Merge-writes one Project category budgetCents without validating non-negative range, category existence/type, Project existence, permissions or a revision.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "MCPTOOL-DA72457132EF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Merge-enables one category for a Project with optional budgetCents and process timestamps, without validating parent/category/account relationships or authorization beyond MCP context.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+      ],
+      "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    }
+  ]
+}

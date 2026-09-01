@@ -1,0 +1,34 @@
+name: Supabase conversion control
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conversion-control:
+    name: Conversion state and traceability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate conversion control plane
+        run: |
+          npm run conversion:check
+          npm run conversion:capabilities:check
+          npm run conversion:queries:check
+          npm run conversion:residuals:check
+          npm run conversion:gate:m0
+
+      - name: Confirm checks did not rewrite tracked artifacts
+        run: git diff --exit-code

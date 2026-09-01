@@ -1,0 +1,1444 @@
+{
+  "schemaVersion": 1,
+  "generatedFromManifestSync": "2026-09-01T19:36:59.510Z",
+  "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
+  "totals": {
+    "surfaces": 687,
+    "targetRelevantSurfaces": 427,
+    "batches": 18,
+    "productScopeSurfaces": 573,
+    "technicalControlSurfaces": 114
+  },
+  "canonicalTargetCoverage": [
+    {
+      "path": "docs/specs/invoice-centered-project-accounting.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001",
+        "M0-BACKEND-FUNCTIONS-001",
+        "M0-BACKEND-RULES-001",
+        "M0-INVENTORY-TRANSACTION-001",
+        "M0-INVOICING-BUDGET-001",
+        "M0-ITEM-CREATION-LINK-001",
+        "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-REPORTING-SEARCH-001"
+      ],
+      "surfaceCount": 463,
+      "targetRelevantSurfaceCount": 311
+    },
+    {
+      "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001",
+        "M0-BACKEND-FUNCTIONS-001",
+        "M0-BACKEND-RULES-001",
+        "M0-INVENTORY-TRANSACTION-001",
+        "M0-INVOICING-BUDGET-001",
+        "M0-ITEM-CREATION-LINK-001",
+        "M0-REPORTING-SEARCH-001",
+        "M0-SPACES-REVIEW-001"
+      ],
+      "surfaceCount": 442,
+      "targetRelevantSurfaceCount": 286
+    },
+    {
+      "path": "docs/specs/proto-item-capture.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001",
+        "M0-BACKEND-FUNCTIONS-001",
+        "M0-BACKEND-RULES-001",
+        "M0-BACKEND-STORAGE-001",
+        "M0-CUTOVER-CONTROL-001",
+        "M0-INVENTORY-TRANSACTION-001",
+        "M0-INVOICING-BUDGET-001",
+        "M0-ITEM-CREATION-LINK-001",
+        "M0-MEDIA-LIFECYCLE-001",
+        "M0-REPORTING-SEARCH-001",
+        "M0-SPACES-REVIEW-001"
+      ],
+      "surfaceCount": 499,
+      "targetRelevantSurfaceCount": 314
+    },
+    {
+      "path": "docs/specs/client-identity-and-project-transfers.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001",
+        "M0-BACKEND-AUTH-001",
+        "M0-BACKEND-FUNCTIONS-001",
+        "M0-BACKEND-RULES-001",
+        "M0-IDENTITY-LIFECYCLE-001",
+        "M0-INVENTORY-TRANSACTION-001",
+        "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-REPORTING-SEARCH-001"
+      ],
+      "surfaceCount": 370,
+      "targetRelevantSurfaceCount": 254
+    },
+    {
+      "path": "docs/plans/non-item-receipt-lines/design.md",
+      "batchIds": [
+        "M0-APP-SHELL-PRESENTATION-001",
+        "M0-BACKEND-FUNCTIONS-001",
+        "M0-BACKEND-RULES-001",
+        "M0-INVENTORY-TRANSACTION-001",
+        "M0-INVOICING-BUDGET-001",
+        "M0-ITEM-CREATION-LINK-001",
+        "M0-REPORTING-SEARCH-001"
+      ],
+      "surfaceCount": 409,
+      "targetRelevantSurfaceCount": 259
+    }
+  ],
+  "batches": [
+    {
+      "batchId": "M0-APP-SHELL-PRESENTATION-001",
+      "title": "App shell, shared presentation, and test support",
+      "scope": "product",
+      "rationale": "Presentation and test surfaces must render and exercise the redesigned accounting, Item, Client, Transfer, receipt-line, security, and offline contracts without preserving Firebase mechanics.",
+      "surfaceCount": 115,
+      "targetRelevantSurfaceCount": 39,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-6976CCC7CEB3",
+        "SWIFT-01845C0E7003",
+        "SWIFT-031CFF3A66C3",
+        "SWIFT-0BC8C7903DA1",
+        "SWIFT-0BE5B00969F4",
+        "SWIFT-0C38F9CD1A2E",
+        "SWIFT-0DC9E061596B",
+        "SWIFT-0E4D079D9951",
+        "SWIFT-105C4E1CB610",
+        "SWIFT-11FEEE32A8EC",
+        "SWIFT-14E848AC021C",
+        "SWIFT-18C61B83B5DF",
+        "SWIFT-1D92D5E568CA",
+        "SWIFT-24780407AEC7",
+        "SWIFT-2919B4B009D8",
+        "SWIFT-37AC762E6AB9",
+        "SWIFT-3DAE3FEE9108",
+        "SWIFT-4076F892F380",
+        "SWIFT-424CEE01EBA6",
+        "SWIFT-43DBE441C46B",
+        "SWIFT-4A13E5D59F63",
+        "SWIFT-4BC1A6072EF3",
+        "SWIFT-4D0D546A02D8",
+        "SWIFT-50F75E5373A1",
+        "SWIFT-53634D9D7788",
+        "SWIFT-5A68B2705D17",
+        "SWIFT-5E516B0E78F0",
+        "SWIFT-5F4C0550B87A",
+        "SWIFT-69164596C247",
+        "SWIFT-6CD9675D385C",
+        "SWIFT-7283A92A1EEC",
+        "SWIFT-78DBAE560212",
+        "SWIFT-7996F5B7646F",
+        "SWIFT-7C24251C5824",
+        "SWIFT-7D783BD0967B",
+        "SWIFT-7FD35B52D248",
+        "SWIFT-812EB6C0ED72",
+        "SWIFT-8210E6F74339",
+        "SWIFT-83EC5B1CD743",
+        "SWIFT-865A6CF9C709",
+        "SWIFT-86B143646854",
+        "SWIFT-8A01FAD53F76",
+        "SWIFT-8B02CBB9672C",
+        "SWIFT-8BB41184F84B",
+        "SWIFT-8E23E32C2DC7",
+        "SWIFT-92844793C8F5",
+        "SWIFT-94EBE4E04058",
+        "SWIFT-9722B88721CA",
+        "SWIFT-99583A2865EE",
+        "SWIFT-9BB21F63E5CA",
+        "SWIFT-9FB2138FC5B4",
+        "SWIFT-A3E38557F13F",
+        "SWIFT-A548503EA221",
+        "SWIFT-A6340D77013A",
+        "SWIFT-A72FACEB03D0",
+        "SWIFT-A9422A32A60C",
+        "SWIFT-AA317435FD6E",
+        "SWIFT-AABD5ABA3A09",
+        "SWIFT-AD1684C54B8C",
+        "SWIFT-AF8C15D77693",
+        "SWIFT-B11D4234CF01",
+        "SWIFT-B19F68E7C8DF",
+        "SWIFT-B3D2195B0AED",
+        "SWIFT-BD714AB9981F",
+        "SWIFT-BEACA5B78325",
+        "SWIFT-BFC504E32AFF",
+        "SWIFT-C0ABD9666AE7",
+        "SWIFT-C5218B701C6A",
+        "SWIFT-C63D1A9B5735",
+        "SWIFT-C6595DCD62DC",
+        "SWIFT-CBD34D72F4FA",
+        "SWIFT-CD75BD4EB9CC",
+        "SWIFT-CDADEAA08764",
+        "SWIFT-CEABE6DC1587",
+        "SWIFT-CFE74F51AD82",
+        "SWIFT-D21A4FBB69CA",
+        "SWIFT-D2E27E81511F",
+        "SWIFT-D49180285F84",
+        "SWIFT-D5CAB6DD5FDC",
+        "SWIFT-D7FC2DBAE316",
+        "SWIFT-DC03C1E9F6DE",
+        "SWIFT-E0CBA4998B00",
+        "SWIFT-E3175033D07C",
+        "SWIFT-E793B24EEB18",
+        "SWIFT-E79C69CAF380",
+        "SWIFT-E8B79C6E043B",
+        "SWIFT-E90E64B0DA60",
+        "SWIFT-EB3DBFA37CCD",
+        "SWIFT-EBEEA8140082",
+        "SWIFT-EF13EACEC482",
+        "SWIFT-F4C58B1CF37F",
+        "SWIFT-F4D687DCD4F1",
+        "SWIFT-F60172F55754",
+        "SWIFT-F667CD548CD8",
+        "SWIFT-F6965594F2E4",
+        "SWIFT-F7172E042839",
+        "SWIFT-F81A30E4CBC8",
+        "SWIFT-F8D8A2AD2013",
+        "SWIFT-FC9E834DFB67",
+        "TEST-19253AF594CF",
+        "TEST-2599CE350D13",
+        "TEST-337C5611EE4F",
+        "TEST-3EC2FCFE5F4A",
+        "TEST-4FA2FD0EE08C",
+        "TEST-545AC1932A62",
+        "TEST-54720126C657",
+        "TEST-5D923CEA7853",
+        "TEST-6EF1C0BA2957",
+        "TEST-74BA6A48F8BC",
+        "TEST-771AD9C93BCB",
+        "TEST-843F020ACF71",
+        "TEST-84999BA9BBBE",
+        "TEST-B200C7C263E7",
+        "TEST-BB924134BF8E",
+        "TEST-C1A3D3DA5E75"
+      ]
+    },
+    {
+      "batchId": "M0-BACKEND-AUTH-001",
+      "title": "Firebase Auth, account membership, invites, and MCP OAuth",
+      "scope": "product",
+      "rationale": "Identity, membership, invite, and MCP principal surfaces support authoritative Client relationships and approved offline/security behavior.",
+      "surfaceCount": 10,
+      "targetRelevantSurfaceCount": 10,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/authentication-offline-access.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-9EF72A31126D",
+        "MAN-AUTH-001",
+        "MCPMOD-38F4B8D34053",
+        "MCPMOD-4938EA5E6169",
+        "MCPMOD-A379AECA88FB",
+        "SWIFT-2CE194E495FF",
+        "SWIFT-8E9B2DFCD775",
+        "SWIFT-C9CE3FC9787D",
+        "SWIFT-D22F0D6F71E4",
+        "SWIFT-FE44BBB4D35B"
+      ]
+    },
+    {
+      "batchId": "M0-BACKEND-FUNCTIONS-001",
+      "title": "Firebase Cloud Functions and privileged side effects",
+      "scope": "product",
+      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the five canonical target specs.",
+      "surfaceCount": 23,
+      "targetRelevantSurfaceCount": 15,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FUNCMOD-1BC6BB701AA3",
+        "FUNCMOD-78D697A89342",
+        "FUNCMOD-B42AA317B971",
+        "FUNCMOD-E7CB6889A620",
+        "FUNCMOD-ED4C25A2C78E",
+        "FUNCTION-0651745EC209",
+        "FUNCTION-0CBF780A52CC",
+        "FUNCTION-24C086150C5D",
+        "FUNCTION-295B190E7ADE",
+        "FUNCTION-2F49CACBCFB6",
+        "FUNCTION-48B935AA722D",
+        "FUNCTION-5612C1011897",
+        "FUNCTION-605DE567BE56",
+        "FUNCTION-64DF5B5FA8E6",
+        "FUNCTION-6C739413108B",
+        "FUNCTION-8741B9D80FCC",
+        "FUNCTION-92CE4FD9E25B",
+        "FUNCTION-A1F046859D60",
+        "FUNCTION-AADED40AD19C",
+        "FUNCTION-E58CC96C3CEF",
+        "FUNCTION-EBFFD3F950A0",
+        "FUNCTION-EE4FDF40EC7B",
+        "FUNCTION-FAF99C7D3C5B"
+      ]
+    },
+    {
+      "batchId": "M0-BACKEND-RULES-001",
+      "title": "Firestore paths, dynamic data, and query/index boundary",
+      "scope": "product",
+      "rationale": "Firestore paths and rules reveal current entity and authorization boundaries, but target tables, RLS, and Sync Streams must enforce the redesigned product model.",
+      "surfaceCount": 34,
+      "targetRelevantSurfaceCount": 27,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-063B0E6EC659",
+        "MAN-DATA-001",
+        "MAN-DATA-002",
+        "MAN-INDEX-001",
+        "RULE-0905373DBB19",
+        "RULE-0AD4AC2A568C",
+        "RULE-0E3C2A579423",
+        "RULE-24D32CA7C3A3",
+        "RULE-27D905FAD706",
+        "RULE-3084F8C3058D",
+        "RULE-3211FE38A8F0",
+        "RULE-3AB695EA4F67",
+        "RULE-3D7C7C89C486",
+        "RULE-4A287B38B778",
+        "RULE-4DD3733CBE59",
+        "RULE-684AA9BB1569",
+        "RULE-6852D375E671",
+        "RULE-69BC61B1B403",
+        "RULE-72EF389823CD",
+        "RULE-79E65DCC45A6",
+        "RULE-8150996399AA",
+        "RULE-9B7212EBB760",
+        "RULE-9FE811BC6DE1",
+        "RULE-AB3E61BAC3E3",
+        "RULE-AFC1D6191232",
+        "RULE-B16FE8CF3DEA",
+        "RULE-B77682D589C6",
+        "RULE-B902DC6128E8",
+        "RULE-C40E95B1636E",
+        "RULE-C4FE7FBE534A",
+        "RULE-D3CFB25D03AD",
+        "RULE-E1C045979A78",
+        "RULE-F75D4EA634AF",
+        "RULE-FC994C6C2FEA"
+      ]
+    },
+    {
+      "batchId": "M0-BACKEND-STORAGE-001",
+      "title": "Firebase Storage, media references, thumbnails, and pending uploads",
+      "scope": "product",
+      "rationale": "Media references and upload durability support the unified Item flow and accounting evidence while target object policy remains private and offline durable.",
+      "surfaceCount": 12,
+      "targetRelevantSurfaceCount": 8,
+      "authorities": [
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/items.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-33E69F8B5152",
+        "MAN-STORAGE-001",
+        "MCPMOD-3330B6FD5A68",
+        "MCPMOD-BB34B27B541A",
+        "MCPMOD-D4D2CD9DBB10",
+        "MCPMOD-D7B37EA0483A",
+        "SWIFT-6AF81DAE53D0",
+        "SWIFT-6EB56A9100C3",
+        "SWIFT-8A935E590458",
+        "SWIFT-A6162BC6046B",
+        "TEST-0F5D4C2D5F32",
+        "TEST-1E75BA95C759"
+      ]
+    },
+    {
+      "batchId": "M0-CAPABILITY-CONTROL-001",
+      "title": "Capability evolution guidance and complete service/MCP surface catalog",
+      "scope": "technical_control",
+      "rationale": "Coverage tooling governs how source and target obligations are tracked; it does not define product behavior.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 0,
+      "authorities": [
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/README.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-evolution-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+          "role": "conversion_control"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-208B7E9D7F47",
+        "FILE-7FD1F9FEF537"
+      ]
+    },
+    {
+      "batchId": "M0-CUTOVER-CONTROL-001",
+      "title": "Hard-cutover source freeze and late-writer recovery control",
+      "scope": "technical_control",
+      "rationale": "The final source freeze, late-writer recovery, and hard cutover are migration controls; they must preserve approved target behavior without implementing it in Firebase.",
+      "surfaceCount": 1,
+      "targetRelevantSurfaceCount": 1,
+      "authorities": [
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/production-compatibility-plan.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "MAN-CUTOVER-001"
+      ]
+    },
+    {
+      "batchId": "M0-IDENTITY-LIFECYCLE-001",
+      "title": "Identity, account session, and operation lifecycle dossier surfaces",
+      "scope": "product",
+      "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
+      "surfaceCount": 11,
+      "targetRelevantSurfaceCount": 8,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/authentication-offline-access.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "MCPMOD-33934129DB02",
+        "MCPMOD-3E4E627EC002",
+        "MCPMOD-B6552C94C033",
+        "SWIFT-0B9701086073",
+        "SWIFT-2D9222A4489A",
+        "SWIFT-3B7DE77EA8E4",
+        "SWIFT-BECC3329E3AA",
+        "SWIFT-C05952F542AD",
+        "SWIFT-D871AB13C6B1",
+        "SWIFT-F84D40FBC375",
+        "TEST-80E13A744139"
+      ]
+    },
+    {
+      "batchId": "M0-INVENTORY-TRANSACTION-001",
+      "title": "Inventory provenance, Transactions, receipts, and corrections",
+      "scope": "product",
+      "rationale": "Inventory, money, provenance, correction, and receipt surfaces are governed by the new story-specific accounting and Item lifecycle specs, not legacy movement Transaction mechanics.",
+      "surfaceCount": 81,
+      "targetRelevantSurfaceCount": 66,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/2026-08-30-correct-transaction-and-its-items.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/inventory-as-store.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/lineage-tracking.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/vendor-credits.md",
+          "role": "historical_evidence"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-008C2AF1A269",
+        "FILE-16D8E1ED963D",
+        "FILE-2A0F5EACA247",
+        "FILE-50BB777A34AB",
+        "FILE-5C3B617CC80C",
+        "FILE-7276A7F79405",
+        "FILE-7721AD229D9E",
+        "FILE-87943575B4AD",
+        "FILE-8F9B6867A7A9",
+        "FILE-9B76F11BD883",
+        "FILE-BD14FF765DF6",
+        "FILE-D4ED913747C9",
+        "FILE-E2260562EE79",
+        "FILE-F6414EB170B6",
+        "MCPMOD-4305DCB6FD6B",
+        "MCPMOD-868A3F35EBC3",
+        "MCPMOD-A34D9491FE4F",
+        "MCPMOD-B5A85B82D135",
+        "MCPMOD-D14DD1E83CFE",
+        "MCPMOD-DFECB1787DB7",
+        "MCPMOD-F5D411967411",
+        "MCPTOOL-044AFFA1EEFB",
+        "MCPTOOL-137430AF9A3B",
+        "MCPTOOL-188AF292FAFF",
+        "MCPTOOL-1E36059850BA",
+        "MCPTOOL-2182ACB9E363",
+        "MCPTOOL-282034D0C8AF",
+        "MCPTOOL-34265DD4542A",
+        "MCPTOOL-34FE2AE71BFF",
+        "MCPTOOL-3517FF5089A3",
+        "MCPTOOL-42E5CABFC6F6",
+        "MCPTOOL-4FF3862CBCD5",
+        "MCPTOOL-522654D35421",
+        "MCPTOOL-5A34CC142307",
+        "MCPTOOL-6E3CE3C31743",
+        "MCPTOOL-88CE4407A0B9",
+        "MCPTOOL-8FA709BDF790",
+        "MCPTOOL-9D1270611686",
+        "MCPTOOL-B1DC0447215A",
+        "MCPTOOL-BBB9B61F2EE8",
+        "MCPTOOL-BE6AD578A5CD",
+        "MCPTOOL-DFCD5082BE2F",
+        "MCPTOOL-E21155FFADEA",
+        "SWIFT-01C928A8B707",
+        "SWIFT-04CC0C101EA4",
+        "SWIFT-089405BED5D8",
+        "SWIFT-1178D1E9F474",
+        "SWIFT-19D2C873E96F",
+        "SWIFT-1DCA8A4ADE51",
+        "SWIFT-30289B39B988",
+        "SWIFT-3348465E2026",
+        "SWIFT-34855F53F580",
+        "SWIFT-4003332541C1",
+        "SWIFT-4C47C0D715F5",
+        "SWIFT-4C8A8E236450",
+        "SWIFT-57FFA664E36B",
+        "SWIFT-582C58D417AA",
+        "SWIFT-5BCE896008A3",
+        "SWIFT-5E15CB2D9DF7",
+        "SWIFT-674F92BED6F7",
+        "SWIFT-736B5D34BF46",
+        "SWIFT-7792F727AA52",
+        "SWIFT-9226674CC889",
+        "SWIFT-967F1C133CF5",
+        "SWIFT-99F937C57A47",
+        "SWIFT-A17130583CB1",
+        "SWIFT-A7915475818E",
+        "SWIFT-BDF8928A5FC7",
+        "SWIFT-CD04095425B1",
+        "SWIFT-CE425FC823BE",
+        "SWIFT-D8ADF0266301",
+        "SWIFT-E29B4124133A",
+        "SWIFT-E613F00C92A4",
+        "SWIFT-E73BF270D7A4",
+        "TEST-1EA750C216D5",
+        "TEST-7335FA7381B4",
+        "TEST-7E9C05E9E5D7",
+        "TEST-82FAD193C51B",
+        "TEST-86F344E55403",
+        "TEST-AB7FBFCBDFD4",
+        "TEST-B9672080328D"
+      ]
+    },
+    {
+      "batchId": "M0-INVOICING-BUDGET-001",
+      "title": "Invoicing, collection, and budget authority",
+      "scope": "product",
+      "rationale": "Invoice, collection, source membership, Expense/Fee, and budget surfaces are governed by the invoice-centered model and the related Item/receipt lifecycle.",
+      "surfaceCount": 62,
+      "targetRelevantSurfaceCount": 44,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/billing-invoicing.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/budget-management.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-0FDA0D22FE61",
+        "FILE-346E890221AE",
+        "FILE-666B71D31EE1",
+        "FILE-A0F0403EA66A",
+        "FILE-A50BC51BFBA3",
+        "FILE-B0DFEF68D8C0",
+        "FILE-E9D5488DD76F",
+        "FILE-F568992F71EF",
+        "FILE-F9A79784D576",
+        "MCPMOD-1710A9547AEB",
+        "MCPMOD-7E2A27F3F12F",
+        "MCPRESOURCE-05387AA3B2FB",
+        "MCPRESOURCE-E7354EF7E82B",
+        "MCPTOOL-03C1DA443F46",
+        "MCPTOOL-0FC981412C3D",
+        "MCPTOOL-1E17B2463089",
+        "MCPTOOL-2B21D2622825",
+        "MCPTOOL-43389521FF62",
+        "MCPTOOL-4CF82E3A1594",
+        "MCPTOOL-94CE0E801264",
+        "MCPTOOL-B07353E174CA",
+        "MCPTOOL-B87FC2B11214",
+        "MCPTOOL-BDE0436E5E98",
+        "MCPTOOL-F01CAFFDE387",
+        "MCPTOOL-FCF917D2F4D8",
+        "SWIFT-089FDE7D4B0B",
+        "SWIFT-0B430AAF3B6E",
+        "SWIFT-14D0C2F1019A",
+        "SWIFT-263BA57A580A",
+        "SWIFT-31DB4E9B5136",
+        "SWIFT-37B70FDD1318",
+        "SWIFT-38F4A97A4FCB",
+        "SWIFT-47AEA80908AD",
+        "SWIFT-4B46ED85F85E",
+        "SWIFT-4CAE3EA7812A",
+        "SWIFT-5E2EC2CDB48B",
+        "SWIFT-800DE43469FC",
+        "SWIFT-86F17626EE66",
+        "SWIFT-8818DB7D6FFB",
+        "SWIFT-8893ACF03D5F",
+        "SWIFT-99CD48FC486A",
+        "SWIFT-9A3A702CA92E",
+        "SWIFT-A3FD93675EFB",
+        "SWIFT-AB58F2F2752F",
+        "SWIFT-C25AEA49443F",
+        "SWIFT-C51DAED1C3CE",
+        "SWIFT-D6F4A0ED81EF",
+        "SWIFT-D7E8B2EB55DF",
+        "SWIFT-DCFAC7B24CF2",
+        "SWIFT-E4724837204F",
+        "SWIFT-E5E95679647A",
+        "SWIFT-EA6B4B939093",
+        "SWIFT-F1FAE8106010",
+        "SWIFT-F2B00E5AA869",
+        "SWIFT-FD51852D673A",
+        "TEST-04DAF7B43B47",
+        "TEST-43E8D2F232DE",
+        "TEST-49D678CB6929",
+        "TEST-688E9434074D",
+        "TEST-B14A5E3340E7",
+        "TEST-E5D06AC5D785",
+        "TEST-F86623DF8B57"
+      ]
+    },
+    {
+      "batchId": "M0-ITEM-CREATION-LINK-001",
+      "title": "Unified Item creation, accounting Link, and legacy capture",
+      "scope": "product",
+      "rationale": "All current Item/proto creation surfaces are reconciled with the one-Item target wizard, accounting Link, occurrence, Invoice, and receipt-line model.",
+      "surfaceCount": 52,
+      "targetRelevantSurfaceCount": 31,
+      "authorities": [
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/items.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/item-entry-flow.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/data-model.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-7EB13D79EF3E",
+        "FILE-9B6F2E8F7C67",
+        "FILE-A756C114568E",
+        "FILE-FA56265839AD",
+        "MCPMOD-82DC4C25B1B8",
+        "MCPMOD-B1238289755F",
+        "MCPTOOL-00ABE6895DBA",
+        "MCPTOOL-06C083E3F645",
+        "MCPTOOL-1159AA7AC389",
+        "MCPTOOL-133576E8F2FF",
+        "MCPTOOL-145C17DE8501",
+        "MCPTOOL-149B6F08EC7B",
+        "MCPTOOL-28AB94AA6869",
+        "MCPTOOL-296490D2ADA4",
+        "MCPTOOL-3FD3943A21F3",
+        "MCPTOOL-3FD87C59256C",
+        "MCPTOOL-69F70F0D82F2",
+        "MCPTOOL-90873708F7CA",
+        "MCPTOOL-9ACF50C26A5A",
+        "MCPTOOL-A0EFDDABC6F3",
+        "MCPTOOL-A5ACF0F717E8",
+        "MCPTOOL-C559C9328A76",
+        "MCPTOOL-D2757741F638",
+        "MCPTOOL-FF9A322A83CD",
+        "SWIFT-068E43CFFCC5",
+        "SWIFT-07FE72314E4C",
+        "SWIFT-08066A63BD11",
+        "SWIFT-0B434663295C",
+        "SWIFT-1B50ECDA7CA1",
+        "SWIFT-236679C7D427",
+        "SWIFT-265DE17B71EF",
+        "SWIFT-2B5DD377E0BB",
+        "SWIFT-47AEDE21C63C",
+        "SWIFT-4F4F708AA0DD",
+        "SWIFT-618D86C999C1",
+        "SWIFT-63EEC4FFD5ED",
+        "SWIFT-7F24BFB8649C",
+        "SWIFT-8B52C90F1043",
+        "SWIFT-8BA5197CA887",
+        "SWIFT-A24C5FE4E6AD",
+        "SWIFT-AB578AEF4330",
+        "SWIFT-BB61FBAE2B1D",
+        "SWIFT-C593225376EB",
+        "SWIFT-D2EEB690D6AD",
+        "SWIFT-F377448F2608",
+        "TEST-322BEAB07F90",
+        "TEST-6297E07C65AA",
+        "TEST-87CD4AFC58FD",
+        "TEST-8B555E151D8D",
+        "TEST-934F8ECFA62C",
+        "TEST-DA0DC6CF7163",
+        "TEST-FCBA68605B98"
+      ]
+    },
+    {
+      "batchId": "M0-MEDIA-LIFECYCLE-001",
+      "title": "Media, attachments, and offline byte durability dossier surfaces",
+      "scope": "product",
+      "rationale": "Attachment and offline-byte surfaces preserve media-heavy field workflows for the real-Item target and accounting evidence while changing storage mechanics.",
+      "surfaceCount": 44,
+      "targetRelevantSurfaceCount": 19,
+      "authorities": [
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/items.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/data-model.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-1DC030E7DE05",
+        "FILE-2CEE01D160F2",
+        "FILE-4E88B161ED56",
+        "FILE-58B5ED36AB1D",
+        "FILE-5EA6862C568C",
+        "FILE-673F68E2BE08",
+        "FILE-6EAB6B97119B",
+        "FILE-83E2157BE293",
+        "FILE-93CD4D9994C1",
+        "FILE-953CF1791F7A",
+        "FILE-A5E1BE214B16",
+        "FILE-C96A9F2ACE53",
+        "FILE-CCEE1B274901",
+        "FILE-DE824BF0DB8F",
+        "MAN-LOCAL-001",
+        "MCPMOD-E72071DBC337",
+        "MCPTOOL-16839AD4EE69",
+        "MCPTOOL-19127C4032BD",
+        "MCPTOOL-25AAB317BFEE",
+        "MCPTOOL-35D04B60563F",
+        "MCPTOOL-608B84DDBEA5",
+        "MCPTOOL-648BE9A38A56",
+        "MCPTOOL-9C8591F5294C",
+        "MCPTOOL-CF7AEAE1966B",
+        "MCPTOOL-EAA4B71CE0F5",
+        "SWIFT-06586B87FCA4",
+        "SWIFT-19A7638941BB",
+        "SWIFT-1BE4CD10F963",
+        "SWIFT-3CEB22DD4642",
+        "SWIFT-4AC6C92BBF6D",
+        "SWIFT-4E1AF7AD4958",
+        "SWIFT-4E4F3BC46421",
+        "SWIFT-54042738FD68",
+        "SWIFT-5CEBE17B0605",
+        "SWIFT-6E1F36B8E002",
+        "SWIFT-893FA8676E2C",
+        "SWIFT-8D965719CF18",
+        "SWIFT-98FF74C056E9",
+        "SWIFT-9F58549FBE25",
+        "SWIFT-AA164CD97713",
+        "SWIFT-EE7D53A3C3EA",
+        "SWIFT-F971A5B270E6",
+        "TEST-43FF2E5D6451",
+        "TEST-AE45E8FB9289"
+      ]
+    },
+    {
+      "batchId": "M0-PLATFORM-CONTROL-001",
+      "title": "Platform, transport, release, and migration control",
+      "scope": "technical_control",
+      "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
+      "surfaceCount": 102,
+      "targetRelevantSurfaceCount": 41,
+      "authorities": [
+        {
+          "path": "docs/architecture/redesign/README.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-2439DF7AA062",
+        "CONFIG-2F4D7DBFD096",
+        "CONFIG-324443A09D94",
+        "CONFIG-3C679B93A305",
+        "CONFIG-3F7C92E2669F",
+        "CONFIG-3FB361C7F0E9",
+        "CONFIG-50FA673297B2",
+        "CONFIG-5C0EE6600D97",
+        "CONFIG-6899B0DB9A09",
+        "CONFIG-6E140F8E16C0",
+        "CONFIG-91C9B311D005",
+        "CONFIG-B903A5D5110D",
+        "CONFIG-B982A17793ED",
+        "CONFIG-C185748A7F0A",
+        "CONFIG-C4677DA3DE5C",
+        "CONFIG-D74F97384F03",
+        "CONFIG-D94C7653FB36",
+        "CONFIG-EA72F3E0CC9F",
+        "CONFIG-EF6794568592",
+        "CONFIG-F3494FD36EE5",
+        "FILE-01858E7D6F2F",
+        "FILE-1411B600AD73",
+        "FILE-173B5909E4CC",
+        "FILE-1D6E44FA8F89",
+        "FILE-220AAA67895E",
+        "FILE-23BF624D3DEF",
+        "FILE-2484180463B8",
+        "FILE-2C8D6C14D6CB",
+        "FILE-35422F4029F9",
+        "FILE-3DCBE60029E4",
+        "FILE-40E918C46A49",
+        "FILE-4CBBAFBED6BB",
+        "FILE-5B2F34D7EB06",
+        "FILE-5D4C249ADCCE",
+        "FILE-5D8816D7BB7F",
+        "FILE-6200888CA628",
+        "FILE-63127609E244",
+        "FILE-6325677FFCC9",
+        "FILE-7E429B142402",
+        "FILE-845DA9FA06B6",
+        "FILE-89E25D7A77D5",
+        "FILE-8AA18619A287",
+        "FILE-9476860F2E0F",
+        "FILE-95B4631C73CD",
+        "FILE-9F65BB694716",
+        "FILE-A5E6C90AFA0E",
+        "FILE-A9F4A74ED736",
+        "FILE-AA3F04FDF7E2",
+        "FILE-BC248DD1D0EF",
+        "FILE-BF6F6537B9D8",
+        "FILE-CB878013686E",
+        "FILE-D96444FA1D27",
+        "FILE-DA9A57B158D0",
+        "FILE-DB2679C54F0C",
+        "FILE-E29E51B0CDE0",
+        "FILE-E970DB971AA4",
+        "FILE-F29942C1A7F4",
+        "FILE-F47E5F16E9BB",
+        "FILE-FC6420B340AA",
+        "FILE-FE79A7FF0888",
+        "MAN-HOSTING-001",
+        "MAN-OBS-001",
+        "MAN-OFFLINE-001",
+        "MAN-RELEASE-001",
+        "MCPMOD-00414EA2B411",
+        "MCPMOD-2CAC62C341EE",
+        "MCPMOD-4B5868CBF5DC",
+        "MCPMOD-5E757BAB490F",
+        "MCPMOD-9569EFF075EE",
+        "MCPMOD-A2B6F691FF2E",
+        "MCPMOD-ADD33B4FDA16",
+        "MCPMOD-B4E6A5972565",
+        "MCPMOD-C52F1FD8A983",
+        "MCPMOD-C6CA65EAAF8D",
+        "MCPMOD-DAB760104CEE",
+        "MCPMOD-E0D43AB307CC",
+        "MCPMOD-E8F7ED71D93A",
+        "MCPRESOURCE-115F802C8668",
+        "MCPRESOURCE-DF0AD6E43880",
+        "MCPTOOL-1090BA6ACEC9",
+        "MCPTOOL-7816E5307ACC",
+        "MCPTOOL-7A42BC7172C1",
+        "MCPTOOL-84506A435FA5",
+        "SWIFT-17DA4D1C0ADF",
+        "SWIFT-1928FD01B8A1",
+        "SWIFT-2208AFCA9830",
+        "SWIFT-2703ADAB66C5",
+        "SWIFT-584D99BC1062",
+        "SWIFT-6DA0525DFD44",
+        "SWIFT-6E5F6EAFF883",
+        "SWIFT-7B159D426B1D",
+        "SWIFT-88C69E26FBA0",
+        "SWIFT-9BA6E6DD44E4",
+        "SWIFT-AAE32021738A",
+        "SWIFT-AD26BFE430B2",
+        "SWIFT-D861839CD17D",
+        "SWIFT-E9529E2899CF",
+        "SWIFT-F26052171FEB",
+        "TEST-6A6B0926E2EE",
+        "TEST-B2C120C177D5",
+        "TEST-DE986CFD8624",
+        "TEST-ECE08B24ADCE"
+      ]
+    },
+    {
+      "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+      "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
+      "scope": "product",
+      "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
+      "surfaceCount": 54,
+      "targetRelevantSurfaceCount": 52,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/projects.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/budget-management.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/data-model.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "MCPMOD-7774C2CE6D09",
+        "MCPMOD-8FC7F6247E2F",
+        "MCPMOD-CA75CFB7F29D",
+        "MCPTOOL-063A741737E0",
+        "MCPTOOL-55857D0737AE",
+        "MCPTOOL-671048CA665A",
+        "MCPTOOL-921DA05B3330",
+        "MCPTOOL-9499BE2CC41B",
+        "MCPTOOL-9503D6684EDA",
+        "MCPTOOL-A9FCDED31D3F",
+        "MCPTOOL-C77F4C467B22",
+        "MCPTOOL-D0572E06EB6B",
+        "MCPTOOL-D7FEF2D5FE3B",
+        "MCPTOOL-DA72457132EF",
+        "MCPTOOL-FAD77282B988",
+        "SWIFT-038E6D4248AF",
+        "SWIFT-093E5E4F8D20",
+        "SWIFT-17BB6ABA1400",
+        "SWIFT-1DA3D2CE9B31",
+        "SWIFT-1E0A38FC6F25",
+        "SWIFT-27CA6EAC7092",
+        "SWIFT-2E174120940E",
+        "SWIFT-3875BEEAD657",
+        "SWIFT-3D3C4156BE8B",
+        "SWIFT-42B77ABFD098",
+        "SWIFT-4637466F7F73",
+        "SWIFT-48DE39470AF0",
+        "SWIFT-4F3C3856E659",
+        "SWIFT-51D84FD65ADE",
+        "SWIFT-58A14BD25578",
+        "SWIFT-58AED31D6D0B",
+        "SWIFT-5B59D74F6B13",
+        "SWIFT-7500FDB4FDB6",
+        "SWIFT-7DC1AEC51D21",
+        "SWIFT-8375C283D4E5",
+        "SWIFT-850F643150CE",
+        "SWIFT-87F9C321FCB3",
+        "SWIFT-8926C720D04A",
+        "SWIFT-8D312DD816C5",
+        "SWIFT-9CF3A4F84903",
+        "SWIFT-A3AB0F29E150",
+        "SWIFT-A9748507A27A",
+        "SWIFT-AFBB07058144",
+        "SWIFT-B6C3B72884E1",
+        "SWIFT-BAFED6656104",
+        "SWIFT-CF459111B7BB",
+        "SWIFT-D73C92887393",
+        "SWIFT-DCB56234B246",
+        "SWIFT-E00DB27DF0BA",
+        "SWIFT-E1A771F6A409",
+        "SWIFT-E23DAF7A18FA",
+        "SWIFT-E60A204F472E",
+        "TEST-3D0D949763A1",
+        "TEST-E591BE8A4B58"
+      ]
+    },
+    {
+      "batchId": "M0-QUERY-PROFILE-001",
+      "title": "Firestore query contract and fail-closed source profiling tools",
+      "scope": "technical_control",
+      "rationale": "Query extraction and production shape profiling prove source behavior and migration completeness; they do not establish target product semantics.",
+      "surfaceCount": 8,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-7AE45AD102EA",
+        "FILE-49BE7A26CE03",
+        "FILE-7F72D64AB542",
+        "FILE-AE9A316AEDEF",
+        "FILE-B4119B3F03F3",
+        "FILE-D1D4EEF7DF08",
+        "MCPMOD-11444B9842C5",
+        "SWIFT-9489B0032700"
+      ]
+    },
+    {
+      "batchId": "M0-REPORTING-SEARCH-001",
+      "title": "Reporting, search, and cross-domain projections",
+      "scope": "product",
+      "rationale": "Reports, search, exports, and cross-domain projections must consume the redesigned accounting/Item/Client authorities and preserve only approved report/search outcomes.",
+      "surfaceCount": 42,
+      "targetRelevantSurfaceCount": 37,
+      "authorities": [
+        {
+          "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/non-item-receipt-lines/design.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/reports.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/search-results.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "MAN-REPORT-001",
+        "MCPMOD-14F6F6559251",
+        "MCPMOD-4A73B044281F",
+        "MCPMOD-69B08099B8DF",
+        "MCPMOD-6B3872A8E6FB",
+        "MCPMOD-917C20FEDA6A",
+        "MCPMOD-B4D4B0CAEF8C",
+        "MCPRESOURCE-12DDDD1FF641",
+        "MCPRESOURCE-46F41439CD48",
+        "MCPRESOURCE-DF8684F8F268",
+        "MCPTOOL-094CE7FB35B1",
+        "MCPTOOL-2B4277A2F374",
+        "MCPTOOL-4ED77CBCA500",
+        "MCPTOOL-556E4BBD4A8C",
+        "MCPTOOL-5C0CCE378BDA",
+        "MCPTOOL-93A953185655",
+        "MCPTOOL-BC13265D05FD",
+        "MCPTOOL-EDD825A4C317",
+        "MCPTOOL-F15CC6C9A7AC",
+        "SWIFT-1772D7B7CE10",
+        "SWIFT-1AFC0C0D73D7",
+        "SWIFT-42D1850CD848",
+        "SWIFT-602AA12C6003",
+        "SWIFT-6109B0A97167",
+        "SWIFT-63EA86A59559",
+        "SWIFT-6A89422B64D8",
+        "SWIFT-7BC5A6440292",
+        "SWIFT-7C0540EDB528",
+        "SWIFT-AC99E4923E17",
+        "SWIFT-AE46427AE831",
+        "SWIFT-CB4AC317DF5E",
+        "SWIFT-CC7424F01DD0",
+        "SWIFT-DA1BA46ED84B",
+        "SWIFT-DFC984E30F2F",
+        "SWIFT-E09C688A850B",
+        "SWIFT-E16F2BBFB7DB",
+        "SWIFT-F3BDD0968C6D",
+        "TEST-10C486B0508C",
+        "TEST-7F63900EA573",
+        "TEST-880C5785FD49",
+        "TEST-BA9C46AF6F3D",
+        "TEST-E7854675A914"
+      ]
+    },
+    {
+      "batchId": "M0-RESIDUAL-CONTROL-001",
+      "title": "Deterministic M2 residual decision-queue control",
+      "scope": "technical_control",
+      "rationale": "Residual generation ensures every unmapped target surface remains tied to an explicit product, architecture, spike, or production-evidence blocker.",
+      "surfaceCount": 1,
+      "targetRelevantSurfaceCount": 0,
+      "authorities": [
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/product-decision-traceability.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+          "role": "conversion_control"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-0FD95E417B30"
+      ]
+    },
+    {
+      "batchId": "M0-SPACES-REVIEW-001",
+      "title": "Spaces, review, and work queues",
+      "scope": "product",
+      "rationale": "Space, assignment, review, and work-queue behavior is governed by the Space/Item specs and must remain compatible with the new one-Item provenance and accounting lifecycle.",
+      "surfaceCount": 33,
+      "targetRelevantSurfaceCount": 27,
+      "authorities": [
+        {
+          "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/proto-item-capture.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/items.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/data-model.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        }
+      ],
+      "surfaceIds": [
+        "FILE-42005FEF8FD8",
+        "MCPMOD-155A4AB80AC9",
+        "MCPMOD-D391DC704D1F",
+        "MCPTOOL-24DFA89A8F44",
+        "MCPTOOL-2B45E68B60F7",
+        "MCPTOOL-7211ECCE184C",
+        "MCPTOOL-7259894A6F1C",
+        "SWIFT-279736869F7E",
+        "SWIFT-3615734A053E",
+        "SWIFT-3D6443DA0A90",
+        "SWIFT-43F5DBD4F7F3",
+        "SWIFT-454F9189FDCF",
+        "SWIFT-56B8DD0FBD70",
+        "SWIFT-57F289B15D4B",
+        "SWIFT-5A16999D5F3A",
+        "SWIFT-5BB6D8BE3292",
+        "SWIFT-8494F171316C",
+        "SWIFT-8E04DCE88D68",
+        "SWIFT-901849ED8462",
+        "SWIFT-912A031F137B",
+        "SWIFT-9F4789704808",
+        "SWIFT-B5661A312D65",
+        "SWIFT-BC0B886FC610",
+        "SWIFT-C11974860D78",
+        "SWIFT-C3BE14BFCDE5",
+        "SWIFT-C821F5F10EAE",
+        "SWIFT-DDFAC91775DA",
+        "SWIFT-EF8BEC4E8BE5",
+        "TEST-3885FE2E9453",
+        "TEST-68DF2A480C92",
+        "TEST-8BFDF8C22B0C",
+        "TEST-E97A8051035C",
+        "TEST-EBA9C48BC4EE"
+      ]
+    }
+  ]
+}

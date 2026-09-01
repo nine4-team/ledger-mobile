@@ -1,0 +1,504 @@
+{
+  "batchId": "M0-BACKEND-FUNCTIONS-001",
+  "title": "Firebase Cloud Functions and privileged side effects",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-SOURCE-BACKEND-001"
+  ],
+  "surfaces": [
+    {
+      "id": "FUNCTION-E58CC96C3CEF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On every Item write, repairs projectPriceCents to at least purchasePriceCents using an idempotent follow-up update.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Target should enforce this synchronously with a constraint/authorized command, not an asynchronous repair."
+    },
+    {
+      "id": "FUNCTION-FAF99C7D3C5B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Starter callable enforces a hardcoded quota of ten and uses Admin SDK to write to a caller-supplied collectionPath after substituting {uid}; no shipped app caller was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether quota/object records exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Dynamic privileged path is unsafe to reproduce."
+    },
+    {
+      "id": "FUNCTION-8741B9D80FCC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "When Item.transactionId changes, creates an event-id-derived association edge and, if the destination is a Return transaction, an additional returned-intent edge.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCTION-0CBF780A52CC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On returned/sold lineage-edge creation, recomputes the source transaction isComplete/audit fields and suppresses failures after logging.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCTION-EE4FDF40EC7B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On Item cost/project-price/tax changes, adjusts an eligible unpaid project Inventory Purchase once using transactionRepricingEvents, preserves paid Invoice amounts, and recomputes completeness for linked and historical source transactions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCTION-92CE4FD9E25B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "When a Space transitions to archived, batches through same-scope Items and clears spaceId; errors are logged and suppressed so cleanup may lag or fail independently.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-037 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCTION-295B190E7ADE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On first membership creation, idempotently seeds Furnishings, Install, Design Fee, and Storage & Receiving categories and sets the default category pointer.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target account bootstrap must commit account, owner membership, and required defaults coherently. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Account and Membership Operations",
+        "surfaces": [
+          "AccountBootstrapOperations",
+          "SeedAccountReferenceDefaults",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Account bootstrap/update and membership changes require verified Principal and capability, validate resulting owner/admin/financial state and record server actor/time"
+        ],
+        "syncRequirements": [
+          "Authorized Account/membership/default-reference results enter bootstrap/admin streams through one durable operation result; clients never write role fields directly"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Accounts/members/default definitions to stable target IDs and typed bootstrap/admin operations; preserve source correlation and report denied/orphan/duplicate/default variants.",
+        "reconciliation": [
+          "Account, owner membership, member grants and seeded default IDs/counts/hashes reconcile atomically per source Account"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Account bootstrap idempotency/atomicity, owner/admin/financial validation, cross-account denial, default seeding and migration tests"
+        ],
+        "acceptance": [
+          "An Account is created or administered once through trusted operations and cannot be partially bootstrapped or client-edit its authorization"
+        ]
+      }
+    },
+    {
+      "id": "FUNCTION-A1F046859D60",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Authenticated callable creates an account, owner membership, and default categories; no current app caller was found because iOS uses createAccountHttp.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Retire duplicate transport while preserving account-bootstrap behavior in one target command."
+    },
+    {
+      "id": "FUNCTION-48B935AA722D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Public HTTP POST verifies a Firebase bearer token and creates account, owner membership, and seeded defaults; this is the current iOS account-bootstrap API.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target handler must be idempotent and transactionally create all authority records. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Account and Membership Operations",
+        "surfaces": [
+          "CreateAccountCommand",
+          "Account bootstrap handler",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Account bootstrap/update and membership changes require verified Principal and capability, validate resulting owner/admin/financial state and record server actor/time"
+        ],
+        "syncRequirements": [
+          "Authorized Account/membership/default-reference results enter bootstrap/admin streams through one durable operation result; clients never write role fields directly"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Accounts/members/default definitions to stable target IDs and typed bootstrap/admin operations; preserve source correlation and report denied/orphan/duplicate/default variants.",
+        "reconciliation": [
+          "Account, owner membership, member grants and seeded default IDs/counts/hashes reconcile atomically per source Account"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Account bootstrap idempotency/atomicity, owner/admin/financial validation, cross-account denial, default seeding and migration tests"
+        ],
+        "acceptance": [
+          "An Account is created or administered once through trusted operations and cannot be partially bootstrapped or client-edit its authorization"
+        ]
+      }
+    },
+    {
+      "id": "FUNCTION-2F49CACBCFB6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Authenticated callable creates a Project and caller preference after ensuring presets, but does not verify membership in supplied accountId; no current iOS call site was found because ProjectService writes directly.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production logs/profile should confirm whether externally used"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Current Admin-SDK authorization gap must not be reproduced; target Project creation is redesigned around Client identity."
+    },
+    {
+      "id": "FUNCTION-64DF5B5FA8E6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Public HTTP POST finds an invite by token, rejects accepted/revoked/expired records, and returns email, role, and normalized financial access.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target endpoint requires token secrecy, rate limiting, and bounded disclosure. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Invitations and Membership Admission",
+        "surfaces": [
+          "PreviewInviteQuery",
+          "rate-limited non-enumerating handler",
+          "InvitePreviewSnapshot"
+        ],
+        "securityRequirements": [
+          "Invite secrets are opaque, one-time, expiring and stored only as digests; preview is rate-limited/non-enumerating and accept binds authenticated Principal/email under capability checks"
+        ],
+        "syncRequirements": [
+          "Only authorized admin invite summaries synchronize; raw secrets/digests/Auth subjects do not. Preview/accept are online typed queries/operations with durable results"
+        ]
+      },
+      "migration": {
+        "rule": "Map source invite lifecycle/proposed grants to stable invite IDs and one-way token digests, preserve source audit/correlation and reject expired/revoked/accepted/duplicate variants deterministically.",
+        "reconciliation": [
+          "Every source invite maps to one lifecycle state and proposed-access hash or quarantine; accepted invites reconcile to exactly one Principal membership"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Secret digest/no-enumeration/rate-limit/expiry/revoke/one-time accept/email binding/cross-account and migration tests"
+        ],
+        "acceptance": [
+          "An invite reveals only approved preview fields and grants membership exactly once after authenticated acceptance"
+        ]
+      }
+    },
+    {
+      "id": "FUNCTION-6C739413108B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Authenticated callable accepts a token, enforces invited-email match and recent Firebase-user creation, then atomically writes membership and accepted invite state; no iOS caller was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Retire duplicate transport while preserving approved acceptance behavior in the target endpoint."
+    },
+    {
+      "id": "FUNCTION-605DE567BE56",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Public HTTP POST verifies Firebase bearer identity and performs the current iOS invite-acceptance transaction, including email/recent-account checks and default-category seeding.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target must define whether the 15-minute new-account restriction remains product behavior. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Invitations and Membership Admission",
+        "surfaces": [
+          "AcceptInviteCommand",
+          "membership admission handler",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Invite secrets are opaque, one-time, expiring and stored only as digests; preview is rate-limited/non-enumerating and accept binds authenticated Principal/email under capability checks"
+        ],
+        "syncRequirements": [
+          "Only authorized admin invite summaries synchronize; raw secrets/digests/Auth subjects do not. Preview/accept are online typed queries/operations with durable results"
+        ]
+      },
+      "migration": {
+        "rule": "Map source invite lifecycle/proposed grants to stable invite IDs and one-way token digests, preserve source audit/correlation and reject expired/revoked/accepted/duplicate variants deterministically.",
+        "reconciliation": [
+          "Every source invite maps to one lifecycle state and proposed-access hash or quarantine; accepted invites reconcile to exactly one Principal membership"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Secret digest/no-enumeration/rate-limit/expiry/revoke/one-time accept/email binding/cross-account and migration tests"
+        ],
+        "acceptance": [
+          "An invite reveals only approved preview fields and grants membership exactly once after authenticated acceptance"
+        ]
+      }
+    },
+    {
+      "id": "FUNCTION-EBFFD3F950A0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On any Transaction create/update/delete, recalculates budget summaries for old/new Projects and computes isComplete/audit except for loop-guarded Function-only updates.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-029",
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-015/O-029/O-030/O-031/O-032 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCTION-AADED40AD19C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On any project budget-category write, fully recalculates that Project's denormalized budgetSummary.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target summary includes redesigned paid/unpaid accounting segments. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "BudgetContributionProjection",
+          "ProjectBudgetSnapshot rebuild/reconciliation"
+        ],
+        "securityRequirements": [
+          "Projection reads/writes are internal or security-invoker and filter Account/financial/category capability before download; clients cannot update derived totals"
+        ],
+        "syncRequirements": [
+          "Versioned canonical contribution rows and `ProjectBudgetSnapshot` synchronize after authoritative command transactions; no asynchronous trigger is required for correctness"
+        ]
+      },
+      "migration": {
+        "rule": "Ignore source denormalized budgetSummary as authority, import allocations/source facts, and rebuild stable target contributions/projections with source correlation.",
+        "reconciliation": [
+          "Per Project/category source fact, contribution ID and paid/unpaid/recognized cents reconcile with zero unexplained double count"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Projection rebuild/idempotency, command-transaction consistency, no-double-count, visibility, migration and drift-reconciliation tests"
+        ],
+        "acceptance": [
+          "Budget state is correct immediately from canonical command effects and can be rebuilt without Firebase triggers or cached summaries"
+        ]
+      }
+    },
+    {
+      "id": "FUNCTION-24C086150C5D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "On relevant account budget-category changes, recomputes completeness for category Transactions and budget summaries for every Project in small concurrent batches.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-026",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-026/O-032 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCTION-5612C1011897",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Authenticated callable rebuilds budgetSummary for every Project under a supplied accountId but performs no membership/admin verification for that account.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Replace with environment-guarded, least-privilege target reconciliation tooling; do not expose as an ordinary user API."
+    },
+    {
+      "id": "FUNCTION-0651745EC209",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Authenticated callable rebuilds isComplete/audit for every Transaction under a supplied accountId but performs no membership/admin verification for that account.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Retain only as legacy evidence; target reconciliation must be environment-guarded and authorized."
+    },
+    {
+      "id": "FUNCMOD-B42AA317B971",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "A-007",
+        "A-015",
+        "A-016",
+        "O-007",
+        "O-015",
+        "O-022",
+        "O-026",
+        "O-029",
+        "O-030",
+        "O-031",
+        "O-032",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: A-007/A-015/A-016/O-007/O-015/O-022/O-026/O-029/O-030/O-031/O-032/O-037 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCMOD-78D697A89342",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure helpers identify project Inventory Purchases, compute project-price/tax contributions and deltas, detect paid Invoice membership, and adjust multi-Item transaction totals/audit fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCMOD-ED4C25A2C78E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure helper normalizes projectPriceCents to the maximum of purchase and project prices and reports whether repair is needed.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Preserve invariant through target validation/constraint and tests."
+    },
+    {
+      "id": "FUNCMOD-1BC6BB701AA3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure helper selects purchase versus project price as the current transaction completeness audit basis from legacy type/source/project fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-030",
+        "O-031",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-015/O-030/O-031/O-032 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FUNCMOD-E7CB6889A620",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pure helper selects budgetCategoryId or fallback intendedBudgetCategoryId when evaluating legacy transaction completeness.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target must model intended versus authoritative category explicitly. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Inventory Planning and Receipt Completeness",
+        "surfaces": [
+          "ActualCategoryRelationship",
+          "InventoryPlanningIntent",
+          "ReceiptCompletenessSnapshot"
+        ],
+        "securityRequirements": [
+          "Planning/category evidence follows Transaction/Inventory visibility and cannot grant Project/category access or create accounting effects"
+        ],
+        "syncRequirements": [
+          "Actual category and nonfinancial intended category are separate revisioned fields/projections with explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Separate source budgetCategoryId and intendedBudgetCategoryId into actual accounting category versus planning intent, preserving source values/correlation and reporting invalid fallbacks.",
+        "reconciliation": [
+          "Every source actual/intended category value maps to the correct typed relationship or explicit anomaly without one substituting for the other"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Actual versus intended category, no-accounting-effect, invalid reference, planning resolution and migration tests"
+        ],
+        "acceptance": [
+          "Planning intent can guide follow-up but never satisfies accounting completeness or changes spend by itself"
+        ]
+      }
+    }
+  ]
+}

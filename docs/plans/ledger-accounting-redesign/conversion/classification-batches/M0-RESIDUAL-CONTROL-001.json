@@ -1,0 +1,25 @@
+{
+  "batchId": "M0-RESIDUAL-CONTROL-001",
+  "title": "Deterministic M2 residual decision-queue control",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-M2-WHOLE-MANIFEST-001",
+    "EVID-M2-DECISION-PACKETS-001"
+  ],
+  "surfaces": [
+    {
+      "id": "FILE-0FD95E417B30",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "c2e70054bd628cfa693625b1724ed7ceb876edf5fb74eb93ca7db68695029b22",
+      "currentBehavior": "Reads the reviewed conversion classification batches, product-decision traceability, architecture decisions, and manifest baseline; validates that every target-relevant non-mapped surface has known blocker metadata; groups exact affected surface IDs; and deterministically generates/checks the JSON and Markdown M2 residual queue without accessing Firebase, Supabase, PowerSync, credentials, or production data.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-M2-WHOLE-MANIFEST-001",
+        "EVID-M2-DECISION-PACKETS-001"
+      ],
+      "notes": "Operator-only coverage control. It does not resolve product decisions, change manifest target status, implement target behavior, or authorize production access."
+    }
+  ]
+}

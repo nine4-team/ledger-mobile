@@ -1,0 +1,443 @@
+{
+  "batchId": "M0-IDENTITY-LIFECYCLE-001",
+  "title": "Identity, account session, and operation lifecycle dossier surfaces",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-IDENTITY-001",
+    "EVID-M2-IDENTITY-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-C05952F542AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Discovers memberships cache-first, resolves account documents, remembers/sorts the last account, activates one account, subscribes to broad account data, derives lookup indexes and applies financial filtering in memory. Switching/deactivation removes listeners and clears in-memory context but does not own durable pending-work disposition.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Target account session is a lifecycle capability, not a Firestore-listener container. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership / Application Shell",
+        "surfaces": [
+          "AccountQuerying",
+          "AuthorizedAccountListSnapshot",
+          "MembershipSnapshot",
+          "WorkspaceCoordinator",
+          "Account-scoped last-selection preference"
+        ],
+        "securityRequirements": [
+          "Authorized Accounts and membership/financial capability derive from validated Principal and active server membership",
+          "No hidden rows are downloaded for in-memory filtering",
+          "Remembered Account selection is convenience only and cannot grant access"
+        ],
+        "syncRequirements": [
+          "Bootstrap Account catalog and caller membership/capability stream",
+          "One encrypted environment/Principal/Account local database namespace",
+          "Workspace switch cancels prior observations and keeps queued work in its original Account"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source Account/member IDs to stable target IDs and import only namespaced last-selection preference when still authorized; do not migrate listener/cache mechanics.",
+        "reconciliation": [
+          "Account/member/Principal ID and role/financial-permission coverage",
+          "Remembered selections resolve only to active imported memberships"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountQuerying and WorkspaceCoordinator zero/one/many/stale/error/switch/revoke/offline contract tests",
+          "Cross-Account local-row and pending-operation isolation tests"
+        ],
+        "acceptance": [
+          "Account discovery distinguishes cached/stale/unavailable from no membership and switching cannot leak or misroute rows/operations"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-2D9222A4489A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Routes the app among invite signup, authentication, account selection, and main content; tears down account/project/inventory in-memory contexts when auth/account changes; shows network and media-upload state. It does not gate provider signout on pending durable work.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Root composition must distinguish local unlock, authorization freshness, sync readiness, and pending work. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Application Shell",
+        "surfaces": [
+          "RootPresentationState",
+          "IdentitySessionProviding",
+          "WorkspaceActivationState",
+          "WorkspaceReadinessSnapshot",
+          "AccountSessionEnding"
+        ],
+        "securityRequirements": [
+          "Root state is derived from validated Principal, invite flow and authorized Account selection",
+          "Signed-out/revoked transitions cannot expose a previous Account database"
+        ],
+        "syncRequirements": [
+          "Renders local database, required-stream, operation and media readiness",
+          "Orders account teardown/logout through pending-work disposition before database/key cleanup"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no provider/root-listener state; preserve only approved restoration preference inside the environment/Principal/Account namespace.",
+        "reconciliation": [
+          "No target root imports provider SDK or deactivates feature contexts independently",
+          "Every root state has an explicit readiness/error transition"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Root signed-out/invite/account-selection/workspace/degraded/revoked/pending-logout state-machine tests",
+          "Process-death and account-switch isolation tests"
+        ],
+        "acceptance": [
+          "The root reports honest offline and operation state and cannot lose pending work through direct provider signout"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3B7DE77EA8E4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays account profile/actions, deactivates in-memory account state for switching, and after a simple confirmation directly deactivates context and signs out Firebase without inspecting pending operations or uploads.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-016",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Target invokes AccountSessionEnding rather than identity-provider signout directly. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "AccountProfileSnapshot",
+          "SwitchAccountIntent",
+          "PendingLocalWorkSummary",
+          "AccountSessionEnding"
+        ],
+        "securityRequirements": [
+          "Account profile/action visibility derives from current active membership and capability",
+          "Logout/account removal follows local-data protection and exact pending-work confirmation"
+        ],
+        "syncRequirements": [
+          "Switch/logout coordinates operation/media queues and preserves them in the original Account namespace",
+          "Routine logout cannot delete encrypted local state with unresolved work"
+        ]
+      },
+      "migration": {
+        "rule": "Map Account profile/logo through target Account/Attachment records; migrate no direct signout or context-deactivation mechanics.",
+        "reconciliation": [
+          "Account profile/logo attachment correlation",
+          "Pending-work logout state coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Account profile, switch, clean logout, sync-first logout, destructive exact-count confirmation and cancel tests"
+        ],
+        "acceptance": [
+          "Users can switch or sign out without silent data loss or cross-Account upload"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-0B9701086073",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines an unused placeholder/debug Settings view whose signout button directly calls AuthManager without confirmation or account/pending-work cleanup; repository search finds only its preview construction.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001"
+      ],
+      "notes": "Do not carry this duplicate signout surface into the redesigned app."
+    },
+    {
+      "id": "SWIFT-F84D40FBC375",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines the Firestore-Codable Account document with document ID, display name, owner UID, optional logo attachment, and timestamps omitted from its explicit Codable keys.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Target domain/read values must not carry Firestore annotations or silently omit required version/audit fields. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "Account domain entity",
+          "AccountSummary",
+          "accounts table",
+          "Account logo AttachmentID relation"
+        ],
+        "securityRequirements": [
+          "RLS exposes an Account only through active membership",
+          "Ordinary updates cannot change immutable tenant identity or ownership"
+        ],
+        "syncRequirements": [
+          "Bootstrap Account catalog synchronizes visibility-safe Account summaries and stable IDs",
+          "Logo bytes follow Attachment authorization/local lifecycle"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Account ID/name and correlate owner UID to Principal membership; map logo reference to stable AttachmentID and server timestamps.",
+        "reconciliation": [
+          "Account ID/name/owner-member/logo/source-time coverage",
+          "Zero orphan required Account memberships"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Account mapper/constraint/RLS/Sync summary and attachment-visibility tests"
+        ],
+        "acceptance": [
+          "Every required source Account resolves to one tenant-isolated target Account with explainable membership and logo evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-BECC3329E3AA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firestore-Codable account membership with UID, role, company financial scope, allowed fee categories and display fields. Missing financial access defaults to full for owner/admin and none for employee/nil; timestamps are intentionally excluded from decoding.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "A-016",
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Server/download authorization owns enforcement; local resolved defaults are display/UX behavior only. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "MembershipSnapshot",
+          "account_members table",
+          "member_financial_permissions table",
+          "UpdateMemberAccessCommand"
+        ],
+        "securityRequirements": [
+          "Membership/role/financial access are server data, never user-editable Auth metadata",
+          "RLS/Sync/MCP enforce the same full/limited/none visibility",
+          "Handlers protect cross-Account escalation and unsafe self/last-owner changes"
+        ],
+        "syncRequirements": [
+          "Caller membership/capability is in bootstrap stream; admin member directory is capability-gated",
+          "Revocation removes entitlement on reconnect and drives approved offline lease state"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source UID to stable Principal/auth identity; explicitly map role, financial access and allowed category grants, quarantining ambiguous defaults.",
+        "reconciliation": [
+          "Per-member UID/Principal/Account/role/access/category-grant counts and hashes",
+          "Ambiguous/missing access default review"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Membership RLS/Sync/MCP parity, escalation, revoked, limited/no-financial and self-lockout tests"
+        ],
+        "acceptance": [
+          "A member receives exactly authorized rows/capabilities across app, Sync and MCP without relying on client filtering"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D871AB13C6B1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firestore-Codable invite state including account, email, role, proposed financial access, token, creator and lifecycle timestamps, plus current custom-scheme invite URL generation.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007",
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Target preview disclosure, token lifetime, authorization and idempotency require one trusted contract. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership",
+        "surfaces": [
+          "account_invites table",
+          "InvitePreview",
+          "InviteDirectorySnapshot",
+          "InviteMember/RevokeInvite/AcceptInvite commands"
+        ],
+        "securityRequirements": [
+          "Store only one-way digest of high-entropy single-use expiring token",
+          "Preview is rate-limited/non-enumerating and reveals minimum fields",
+          "Acceptance binds authenticated Principal once and validates proposed grants",
+          "Raw secrets and Auth subjects never enter Sync/MCP/logs"
+        ],
+        "syncRequirements": [
+          "Admin-only stream contains redacted pending-invite summaries without secrets/digests",
+          "Preview/accept are online trusted boundaries; accepted membership then enters authorized streams"
+        ]
+      },
+      "migration": {
+        "rule": "Map pending source invites with Account/email/role/access/lifecycle; rotate or invalidate legacy tokens unless a separately reviewed secure transition preserves them.",
+        "reconciliation": [
+          "Invite status/account/email/proposed-access/lifecycle coverage",
+          "Token rotation/invalidation and duplicate/replay report"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Invite create/preview/revoke/accept/expiry/replay/enumeration/cross-account/grant-escalation tests"
+        ],
+        "acceptance": [
+          "Invites support onboarding without making token possession permanent membership or leaking administrative secrets"
+        ]
+      }
+    },
+    {
+      "id": "TEST-80E13A744139",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Uses mock account/member services to verify zero/one/multiple account discovery, remembered-account sorting, discovery errors, selection persistence and deactivation behavior in AccountContext.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Extend target suite for stale authorization, account isolation and pending-work lifecycle"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001"
+      ],
+      "notes": "Preserve useful outcomes, not Firebase ListenerRegistration-shaped test seams."
+    },
+    {
+      "id": "MCPMOD-33934129DB02",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Resolves request UID/account from AsyncLocalStorage, then runtime-selected account, environment variables, and finally hardcoded production user/account defaults for non-request modes.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Target must fail closed without an authenticated principal and explicit authorized account; hardcoded production fallbacks are defects, not parity. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership / Target MCP",
+        "surfaces": [
+          "MCPRequestContext",
+          "PrincipalResolver",
+          "AuthorizedAccountBinding",
+          "CapabilitySet"
+        ],
+        "securityRequirements": [
+          "Every request validates issuer/audience/subject/expiry and resolves one Principal",
+          "Requested Account requires active membership/capability",
+          "No environment/runtime/hardcoded Principal or Account fallback",
+          "Errors are non-enumerating and redacted"
+        ],
+        "syncRequirements": [
+          "MCP is server-query/command based and does not use client PowerSync state; it uses the same authorization facts and versioned domain contracts"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no runtime/default context; deploy explicit environment configuration and correlate legacy Firebase subjects to Principals.",
+        "reconciliation": [
+          "No production ID literals/fallback paths in target MCP",
+          "Auth-subject/Principal/membership correlation coverage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Anonymous/expired/revoked/cross-account/static-actor/fallback refusal and capability-binding MCP tests"
+        ],
+        "acceptance": [
+          "Every MCP operation is attributable to the real caller and selected authorized Account with no silent fallback"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-3E4E627EC002",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reads/writes root Firestore mcpUserState/{uid} to persist an active account selection across stateless MCP HTTP requests.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Target MCP session/account binding design"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001"
+      ],
+      "notes": "Account selection remains a capability, but independent Firebase state does not enter the target application."
+    },
+    {
+      "id": "MCPMOD-B6552C94C033",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers list_accounts and switch_account. It lists membership-derived accounts and verifies a requested membership before updating in-memory and Firestore active-account state; errors and success text include raw account/UID details.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [
+        "A-007"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001"
+      ],
+      "notes": "Target keeps explicit authorized account choice but uses shared typed queries/commands, stable errors and redacted telemetry. M2 map reviewed under target-mapping-method.md; named blockers gate provider/schema implementation or policy enablement without changing this target-neutral owner and boundary.",
+      "target": {
+        "owner": "Identity and Membership / Target MCP",
+        "surfaces": [
+          "list_accounts AccountQuerying tool",
+          "select_account request/session binding",
+          "MCPRequestContext"
+        ],
+        "securityRequirements": [
+          "List returns only active caller memberships and visibility-safe Account summaries",
+          "Selection revalidates membership and never persists independent authorization",
+          "Responses/errors redact raw UID/token details"
+        ],
+        "syncRequirements": [
+          "MCP account selection is bounded request/session context, not a Firestore/user-state record and not a PowerSync client preference"
+        ]
+      },
+      "migration": {
+        "rule": "Retire root mcpUserState and current runtime selection; correlate memberships through target Principal identity and require explicit selection when ambiguous.",
+        "reconciliation": [
+          "Account list membership parity by Principal",
+          "Zero target mcpUserState or hardcoded-default dependencies"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MCP zero/one/many Account list, explicit select, nonmember, revoke, session isolation and no-fallback tests"
+        ],
+        "acceptance": [
+          "MCP can operate across authorized Accounts explicitly without turning selection state into authorization"
+        ]
+      }
+    }
+  ]
+}

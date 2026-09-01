@@ -1,0 +1,790 @@
+{
+  "batchId": "M0-BACKEND-RULES-001",
+  "title": "Firestore paths, dynamic data, and query/index boundary",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-SOURCE-BACKEND-001"
+  ],
+  "surfaces": [
+    {
+      "id": "RULE-9FE811BC6DE1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Root Firestore rules container; defines the database document scope and shared membership/validation helpers but grants no access itself.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "The target authorization boundary is captured by individual domain surfaces, grants, RLS, handlers, and Sync Streams."
+    },
+    {
+      "id": "RULE-B77682D589C6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Allows any Firebase-authenticated user to read health/ping for application connectivity checking.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Replace with a target readiness/authorization probe that does not stand in for end-to-end offline health. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Service Health and Readiness",
+        "surfaces": [
+          "TargetServiceHealthEndpoint",
+          "SyncHealthSnapshot separation"
+        ],
+        "securityRequirements": [
+          "Public health returns only coarse service/version status with rate limiting and no tenant, secret, topology or dependency payload"
+        ],
+        "syncRequirements": [
+          "Connectivity health is distinct from authenticated local/stream readiness and never proves offline data completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no Firebase health document; replace it with target service health plus client `SyncHealthSnapshot` semantics.",
+        "reconciliation": [
+          "Health endpoint/manifest inventory proves only approved fields and distinguishes liveness from dependency/readiness states"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Anonymous/rate-limit/no-sensitive-field, dependency degradation and liveness-versus-readiness tests"
+        ],
+        "acceptance": [
+          "Clients/operators can detect target liveness without reading tenant data or mistaking a ping for synchronized readiness"
+        ]
+      }
+    },
+    {
+      "id": "RULE-4A287B38B778",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Starter global user-profile path. A signed-in user may read/write the matching uid path or a document whose existing uid field equals the caller; no shipped app call site was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether documents exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Do not confuse this path with account membership documents."
+    },
+    {
+      "id": "RULE-B902DC6128E8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Account root is readable by members. Client create/update/delete is denied; account bootstrap is performed with Admin SDK.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Current AccountsService contains a direct update method that production rules deny. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Capability-Specific RLS and Sync Authorization",
+        "surfaces": [
+          "accounts RLS",
+          "AccountOperations authorization",
+          "Account bootstrap handler"
+        ],
+        "securityRequirements": [
+          "Existing-row and resulting-row policies derive immutable Account ownership, active membership, Principal and financial/capability grants; service credentials do not bypass handler checks"
+        ],
+        "syncRequirements": [
+          "Paired RLS and Sync Stream policies filter unauthorized rows/fields/counts before local download and revoke streams/local state according to the session policy"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source tenant rows to immutable target Account/Principal ownership and replace broad Firestore CRUD with capability-specific policies/handlers; preserve denied/invalid variants as migration findings.",
+        "reconciliation": [
+          "Authorization matrix proves exact row/field/count availability for every role/financial capability and source ownership variant across Postgres, Sync, app and MCP"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Cross-account, resulting-row ownership, standard/admin/restricted/revoked, service-role handler, Sync payload and migration ownership tests"
+        ],
+        "acceptance": [
+          "No client receives or mutates data outside its trusted tenant/capability even when payload paths or IDs are forged"
+        ]
+      }
+    },
+    {
+      "id": "RULE-8150996399AA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Membership record is readable by account members, server-created, non-deletable, and updateable only by owner/admin for role, companyFinancialAccess, allowedFeeCategoryIds, and updatedAt.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Membership documents, not custom claims, are current authorization authority. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "account_members/member_financial_permissions RLS",
+          "MembershipOperations"
+        ],
+        "securityRequirements": [
+          "One verified issuer/subject resolves to a stable Principal; active Account membership and server-owned role/financial grants authorize every request",
+          "Account discovery is non-enumerating and no caller-selected UID, Account fallback or service credential substitutes for Principal authority"
+        ],
+        "syncRequirements": [
+          "Bootstrap streams contain only authorized Account summaries and the caller's membership/capability snapshot; Auth subjects and secrets are not synchronized"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate Firebase Auth identities and membership paths to stable Principals/auth identities/account memberships, preserve provider/source IDs for audit and quarantine ambiguous or duplicate identity links.",
+        "reconciliation": [
+          "Every source identity/membership maps once with issuer/subject/Principal/Account/role/financial grants or an explicit blocking quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Identity correlation, Account discovery, cross-account/revoked/expired/non-enumerating access, membership grant and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "The same Principal/membership authority governs app and MCP without exposing provider IDs or inferring an Account"
+        ]
+      }
+    },
+    {
+      "id": "RULE-27D905FAD706",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collection-group membership discovery permits signed-in users to read only documents whose uid field equals their Firebase uid.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target must return all authorized accounts deterministically. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "Principal membership bootstrap query",
+          "AuthorizedAccountListSnapshot Sync policy"
+        ],
+        "securityRequirements": [
+          "One verified issuer/subject resolves to a stable Principal; active Account membership and server-owned role/financial grants authorize every request",
+          "Account discovery is non-enumerating and no caller-selected UID, Account fallback or service credential substitutes for Principal authority"
+        ],
+        "syncRequirements": [
+          "Bootstrap streams contain only authorized Account summaries and the caller's membership/capability snapshot; Auth subjects and secrets are not synchronized"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate Firebase Auth identities and membership paths to stable Principals/auth identities/account memberships, preserve provider/source IDs for audit and quarantine ambiguous or duplicate identity links.",
+        "reconciliation": [
+          "Every source identity/membership maps once with issuer/subject/Principal/Account/role/financial grants or an explicit blocking quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Identity correlation, Account discovery, cross-account/revoked/expired/non-enumerating access, membership grant and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "The same Principal/membership authority governs app and MCP without exposing provider IDs or inferring an Account"
+        ]
+      }
+    },
+    {
+      "id": "RULE-684AA9BB1569",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Per-user project preference document has member-wide CRUD; the rule does not restrict writes to the uid named in the path.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target authorization must decide whether preferences are user-owned or account-admin managed. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Personal Project Preferences",
+        "surfaces": [
+          "project_preferences own-Principal RLS",
+          "personal preference Sync policy"
+        ],
+        "securityRequirements": [
+          "Authenticated Principal must own the preference row and belong to the Account; path/payload UID cannot delegate access"
+        ],
+        "syncRequirements": [
+          "Only the current Principal's Account-scoped preferences synchronize, with revocation and local cleanup tied to session lifecycle"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source preference path UID to stable Principal and quarantine cross-user/path mismatches; migrate valid stable pins only.",
+        "reconciliation": [
+          "Per Principal/Account/Project preference and pin counts/hashes reconcile with every cross-user/stale variant reported"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Own-principal read/write, other-member denial, forged path/payload, revocation and migration tests"
+        ],
+        "acceptance": [
+          "Account membership never exposes another member's personal Project preferences"
+        ]
+      }
+    },
+    {
+      "id": "RULE-79E65DCC45A6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Account preset document, including default budget category pointer, has account-member CRUD.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-026 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-C4FE7FBE534A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Account budget-category definitions and metadata have account-member CRUD and drive completeness and budget-summary Functions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-026 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-AFC1D6191232",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Vendor-default documents below an account preset have account-member CRUD.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-026 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-3211FE38A8F0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Space-template documents below an account preset have account-member CRUD.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-026 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-E1C045979A78",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Business-profile documents have account-member CRUD.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Current code commonly uses profile/default or profile/accountId variants; production profile must confirm variants. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Capability-Specific RLS and Sync Authorization",
+        "surfaces": [
+          "business_profile RLS",
+          "AccountOperations capability policy"
+        ],
+        "securityRequirements": [
+          "Existing-row and resulting-row policies derive immutable Account ownership, active membership, Principal and financial/capability grants; service credentials do not bypass handler checks"
+        ],
+        "syncRequirements": [
+          "Paired RLS and Sync Stream policies filter unauthorized rows/fields/counts before local download and revoke streams/local state according to the session policy"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source tenant rows to immutable target Account/Principal ownership and replace broad Firestore CRUD with capability-specific policies/handlers; preserve denied/invalid variants as migration findings.",
+        "reconciliation": [
+          "Authorization matrix proves exact row/field/count availability for every role/financial capability and source ownership variant across Postgres, Sync, app and MCP"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Cross-account, resulting-row ownership, standard/admin/restricted/revoked, service-role handler, Sync payload and migration ownership tests"
+        ],
+        "acceptance": [
+          "No client receives or mutates data outside its trusted tenant/capability even when payload paths or IDs are forged"
+        ]
+      }
+    },
+    {
+      "id": "RULE-72EF389823CD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Invite records have account-member CRUD; token preview/acceptance also uses privileged public HTTP Functions.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Current rule does not require admin status to create or revoke invites. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Invitations and Membership Admission",
+        "surfaces": [
+          "account_invites handler/RLS policy",
+          "admin invite summary stream",
+          "secret exclusion"
+        ],
+        "securityRequirements": [
+          "Invite secrets are opaque, one-time, expiring and stored only as digests; preview is rate-limited/non-enumerating and accept binds authenticated Principal/email under capability checks"
+        ],
+        "syncRequirements": [
+          "Only authorized admin invite summaries synchronize; raw secrets/digests/Auth subjects do not. Preview/accept are online typed queries/operations with durable results"
+        ]
+      },
+      "migration": {
+        "rule": "Map source invite lifecycle/proposed grants to stable invite IDs and one-way token digests, preserve source audit/correlation and reject expired/revoked/accepted/duplicate variants deterministically.",
+        "reconciliation": [
+          "Every source invite maps to one lifecycle state and proposed-access hash or quarantine; accepted invites reconcile to exactly one Principal membership"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Secret digest/no-enumeration/rate-limit/expiry/revoke/one-time accept/email binding/cross-account and migration tests"
+        ],
+        "acceptance": [
+          "An invite reveals only approved preview fields and grants membership exactly once after authenticated acceptance"
+        ]
+      }
+    },
+    {
+      "id": "RULE-69BC61B1B403",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Starter per-user quota counter is user-readable and server-write-only; no shipped application caller was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether records exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Originates from the Firebase starter template."
+    },
+    {
+      "id": "RULE-24D32CA7C3A3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Starter quota-owned object path is user-readable and server-write-only; no shipped application caller was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether records exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Originates from the Firebase starter template."
+    },
+    {
+      "id": "RULE-F75D4EA634AF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Account-level request-doc scaffold allows a member to create only a pending request with server timestamp and own uid; no handler or app writer was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether records exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Target optimistic-operation design is owned separately and must not inherit this unused path by accident."
+    },
+    {
+      "id": "RULE-3D7C7C89C486",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Project-level request-doc scaffold allows constrained pending creates and member reads; no handler or app writer was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether records exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Target optimistic-operation design is owned separately."
+    },
+    {
+      "id": "RULE-0E3C2A579423",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Inventory-level request-doc scaffold allows constrained pending creates and member reads; no handler or app writer was found.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [
+        "Production profile must confirm whether records exist"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "Target optimistic-operation design is owned separately."
+    },
+    {
+      "id": "RULE-D3CFB25D03AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Core Item records are member-readable/deletable; create/update enforces nonnegative optional prices and project price at least nonzero purchase cost.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015",
+        "O-023",
+        "O-027"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015/O-023/O-027 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-4DD3733CBE59",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Legacy proto/quick-draft Item records have account-member CRUD and may carry media and candidate transaction links.",
+      "disposition": "migrate",
+      "status": "characterized",
+      "blockers": [
+        "O-018",
+        "O-019",
+        "O-020"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-018/O-019/O-020 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-0AD4AC2A568C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Project records have account-member CRUD and receive Function-maintained budgetSummary; current identity uses free-text clientName.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-024",
+        "O-025"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-024/O-025 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-AB3E61BAC3E3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Per-project category allocation records have account-member CRUD and trigger budget-summary recalculation.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-026"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-026 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-0905373DBB19",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Per-project fee installment records have account-member CRUD and participate in current invoicing UI/state.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Target fee and Invoice semantics are governed by the accounting specs. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Fees and Invoicing Sources",
+        "surfaces": [
+          "fees/installments RLS",
+          "FeeOperations",
+          "Project invoicing-source stream"
+        ],
+        "securityRequirements": [
+          "Fee/source rows require Account/Project membership and financial/category capability; authoritative handlers validate resulting state and source uniqueness"
+        ],
+        "syncRequirements": [
+          "Authorized open Fee/source rows synchronize with revision and readiness; Invoice links/collection evidence follow separate immutable policies"
+        ]
+      },
+      "migration": {
+        "rule": "Map source Fee installment IDs/amount/order/audit fields to typed Fee sources, preserving source correlation and classifying invalid parent/category/amount variants.",
+        "reconciliation": [
+          "Fee source IDs, Project/category, amounts, order/revision and Invoice membership reconcile once or quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Fee RLS/Sync, restricted category, parent/resulting-row, source uniqueness and migration tests"
+        ],
+        "acceptance": [
+          "Authorized Fee demand works offline without blanket member CRUD or mutable paid evidence"
+        ]
+      }
+    },
+    {
+      "id": "RULE-C40E95B1636E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Project note records have account-member CRUD.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Preserve account/project scoping and offline visibility. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Project Notes",
+        "surfaces": [
+          "project_notes RLS",
+          "ProjectNoteOperations",
+          "bounded note stream"
+        ],
+        "securityRequirements": [
+          "Note access follows Project membership; creator/time are server evidence and edit/remove requires revision plus explicit capability"
+        ],
+        "syncRequirements": [
+          "Bounded authorized note pages synchronize with deterministic order, revision/tombstone and completeness readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Map embedded/nested source notes to stable target note IDs and trusted evidence, quarantining missing parent/actor/timestamp variants.",
+        "reconciliation": [
+          "Every source note maps once or quarantines with parent/text hash/actor/time/revision/tombstone evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Note RLS/Sync, creator spoofing, stale revision, deterministic paging and migration tests"
+        ],
+        "acceptance": [
+          "Project notes remain usable offline without blanket Account-member mutation or forged audit evidence"
+        ]
+      }
+    },
+    {
+      "id": "RULE-3AB695EA4F67",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Space records have account-member CRUD. Archiving a Space asynchronously clears matching Item spaceId values.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-037 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-3084F8C3058D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Space review-note records have account-member CRUD.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-023 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-6852D375E671",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Transactions have member read/create; deletion requires empty itemIds; selected inventory-movement accounting fields are immutable while itemIds and non-accounting fields may change; Functions maintain audits and summaries.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-015",
+        "O-029",
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-015/O-029/O-032 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-9B7212EBB760",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Invoice records have account-member CRUD and contain both legacy embedded lines and newer flat membership representations used by price-lock logic.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-009",
+        "O-010",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-009/O-010/O-034 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-B16FE8CF3DEA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Invoice event records are readable and creatable by any account member, then immutable; intended as a payment-correction audit trail.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "RULE-FC994C6C2FEA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lineage edges are account-member readable/creatable and immutable after create; Functions and direct app/MCP batches both produce association and movement evidence.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-007",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-007/O-015 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "FILE-063B0E6EC659",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configured indexes include lineageEdges by itemId/createdAt and collection-group uid/token indexes for members, users, and invites.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-QUERY-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Legacy members.uid remains configured even though current membership subcollection is users. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Target Query and Index Control",
+        "surfaces": [
+          "TargetQueryIndexManifest",
+          "source-to-target query/index crosswalk",
+          "plan evidence"
+        ],
+        "securityRequirements": [
+          "Indexes accelerate only authorized RLS/security-invoker queries and never justify security-definer/raw table exposure"
+        ],
+        "syncRequirements": [
+          "Local PowerSync indexes cover actual offline queries; server indexes cover handler/projection/Sync Stream predicates and stable cursors by deployed contract version"
+        ]
+      },
+      "migration": {
+        "rule": "Use the source query/index catalog as workload evidence, map each retained semantic query to a target query/stream/index owner and retire Firestore-only paths without copying index syntax.",
+        "reconciliation": [
+          "Every target query/stream predicate has a measured index decision and every source query maps to target, source-only retirement or explicit decision hold"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Query-plan/index-presence, stable cursor, RLS performance, production-scale fixture and local SQLite index tests"
+        ],
+        "acceptance": [
+          "Target queries are bounded, authorized and measured; no Firestore index or broad scan is copied without a target workload"
+        ]
+      }
+    },
+    {
+      "id": "MAN-DATA-002",
+      "currentBehavior": "Static source reveals transactionRepricingEvents idempotency markers, transactionDeletionTombstones audit records, root _mcp_auth_codes, starter quota/object paths, and dynamically selected createWithQuota collection paths outside the ordinary client collection catalog.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "Canonical production profile"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: Canonical production profile changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    },
+    {
+      "id": "MAN-INDEX-001",
+      "currentBehavior": "Every recognized Firestore filter, collection-group query, ordering, limit, offset, cursor, listener, document/collection/bulk read, projection, and aggregate in the configured source roots is cataloged with file, line, symbol, subsystem, and expression in the deterministic query-contract generated artifacts. Semantic families, callers, offline expectations, and declared index coverage are reviewed in current-query-contract.md.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001",
+        "EVID-QUERY-001",
+        "EVID-M2-BACKEND-CONTROL-001"
+      ],
+      "notes": "Static query characterization is complete. Runtime usage, missing-index failures, and console-only deployed indexes remain production-evidence gaps. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "target": {
+        "owner": "Target Query and Index Control",
+        "surfaces": [
+          "TargetQueryIndexManifest",
+          "PowerSync local index plan",
+          "Postgres query-plan evidence"
+        ],
+        "securityRequirements": [
+          "Indexes accelerate only authorized RLS/security-invoker queries and never justify security-definer/raw table exposure"
+        ],
+        "syncRequirements": [
+          "Local PowerSync indexes cover actual offline queries; server indexes cover handler/projection/Sync Stream predicates and stable cursors by deployed contract version"
+        ]
+      },
+      "migration": {
+        "rule": "Use the source query/index catalog as workload evidence, map each retained semantic query to a target query/stream/index owner and retire Firestore-only paths without copying index syntax.",
+        "reconciliation": [
+          "Every target query/stream predicate has a measured index decision and every source query maps to target, source-only retirement or explicit decision hold"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Query-plan/index-presence, stable cursor, RLS performance, production-scale fixture and local SQLite index tests"
+        ],
+        "acceptance": [
+          "Target queries are bounded, authorized and measured; no Firestore index or broad scan is copied without a target workload"
+        ]
+      }
+    },
+    {
+      "id": "MAN-DATA-001",
+      "currentBehavior": "Static source paths and known embedded variants are cataloged, but no canonical production export has confirmed collections, fields, types, enums, orphans, or counts.",
+      "disposition": "migrate",
+      "status": "blocked",
+      "blockers": [
+        "Canonical production profile"
+      ],
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: Canonical production profile changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+# Product-to-Architecture Traceability
+
+Status: active crosswalk; product authority remains external
+Architecture version: 0.1
+Last reviewed: 2026-08-31
+
+## Purpose
+
+This crosswalk proves that the technical architecture covers every confirmed
+decision and open question in the
+[Ledger Accounting Redesign decision log](../../plans/ledger-accounting-redesign/decision-log.md).
+It does not restate or replace product authority. If this file and a canonical
+product spec disagree, the product spec/decision log wins and this file must be
+corrected.
+
+Tables and commands below are conceptual implementation surfaces. An entry does
+not authorize implementation where its product decision or architecture spike
+is still open.
+
+## Confirmed Decisions
+
+| Decision | Owning context | Commands / target surfaces | Required verification |
+|---|---|---|---|
+| D-001 | Transactions | Transaction classification constraint; Purchase/Return commands; `TransferItems` | No fourth target type; legacy values map without silent loss |
+| D-002 | Transactions and Inventory | Scope owner on Transaction; `RecordProjectVendorRefund`; `RecordInventoryVendorRefund` | Project and inventory Purchase/Return semantics use the correct money owner |
+| D-003 | Client/Project and Transfer | `clients`, `projects.client_id`, `TransferItems`, Transfer handler | Cross-Client and inventory destinations reject atomically |
+| D-004 | Transfer | Transfer aggregate plus linked source/destination evidence in one Postgres transaction | Retry creates exactly one pair; neither half is independently writable |
+| D-005 | Transfer and Item placement | Direct source→destination placement plus Transfer evidence | No Business Inventory acquisition, sale, or temporary placement is manufactured |
+| D-006 | Client/Project | `clients`, `projects.client_id`, target indexes/RLS/Sync Streams, migration correlation | Name variants never authorize Transfer; ambiguous legacy names block import |
+| D-007 | Transactions | Scope-relative Purchase/Return money evidence and source classification | Every Return corresponds to real money received by the scope owner |
+| D-008 | Inventory and Invoicing | Item acquisition/placement; open Item charge occurrence; `LinkItemAsBusinessPaid` | Business-paid project Item creates no project Transaction before collection |
+| D-009 | Invoicing and Transactions | `expenses`; direct Client-paid Purchase/Return | Business-paid non-itemized cost is an Expense; direct Client-paid cost remains a Transaction |
+| D-010 | Collection | `CollectInvoice`; frozen Invoice allocation/snapshot; one project Purchase | Partial collection rejects; retry produces one Purchase and one frozen membership set |
+| D-011 | Invoicing and Collection | Live Invoice revisions/source links; immutable paid snapshot | Created/sent edits recalculate and audit; collected contents cannot be rewritten |
+| D-012 | Budget/Reporting | Paid and unpaid projections derived from source evidence | Collection moves value between segments without changing combined recognized spend |
+| D-013 | Invoicing and Reporting | Furnishings category on Item occurrences; Additional Requests overlay/tag | Additional Requests never adds a second budget contribution |
+| D-014 | Presentation and Operations/Audit | User read models say Item/charge/credit; provenance keeps occurrence kinds | UI vocabulary tests hide sale/movement internals without deleting audit evidence |
+| D-015 | Collection | Frozen source allocations, collected Purchase link, inactive-open-source state | Collected sources leave active Invoicing; paid Invoice and membership remain queryable |
+| D-016 | Transactions and Receipt Completeness | `non_item_receipt_lines` embedded/value relationship | Exact-cent Purchase/Return reconstruction without fake Items or extra Transaction types |
+| D-017 | Transfer and Budget | Paired Transfer allocation evidence and budget resolver | Per-project amount moves; sum across the Client's projects remains unchanged |
+| D-018 | Project Items / Item Creation | `CreateItem`; one Item ID; staged wizard read/write model | Quick completion and extended completion use one writer and preserve one Item identity |
+| D-019 | Project Items | Accounting-state projection from Client-paid Purchase or billable occurrence | Space and Invoice membership changes alone cannot change Accounted For state |
+| D-020 | Project Items / Link | `LinkItemAsClientPaid`; `LinkItemAsBusinessPaid` | Dismiss leaves Item Unaccounted For; only the two confirmed payer branches appear |
+| D-021 | Project Items, Inventory, Invoicing | Link handlers; optional acquisition reference; open Item charge | Client-paid requires real project Purchase; Business-paid creates no pre-collection project Transaction |
+| D-022 | Project Items and Invoicing | Stable `items.id`; occurrence references `item_id` | Project list and Invoice source resolve the same physical Item; no cloned Item record |
+| D-023 | Project Items / Placement | Optional Space relationship independent of accounting link | Item can be Unaccounted For in a Space and Accounted For without a Space |
+| D-024 | Presentation and Audit | Link command/UI vocabulary; hidden occurrence provenance | UI never labels Business-paid Link “Sell from Business Inventory” |
+| D-025 | Compatibility and Migration | Read-only Firebase proto export mapping; real target Items; source/target correlation journal | New target creates no proto record or Firebase runtime reader; the existing Firebase app remains unchanged until the approved cutoff |
+| D-026 | Compatibility and Cutover | Unchanged Firebase production system; final source freeze; import–reconcile–activate runbook | Existing production behavior remains intact until the hard-cutover window; no Firebase target implementation is introduced |
+| D-027 | Verification and Release | Local source tests; isolated Supabase/PowerSync staging; read-only production export | Complete reset/migrate/reconcile rehearsal cannot resolve any production write credential |
+
+## Open Product Decisions and Implementation Blocks
+
+| Decision | Owning context / surface | Work blocked until closure | Required closure evidence |
+|---|---|---|---|
+| O-002 | Transfer and live Invoice membership | Transfer handler behavior for a sent/unpaid Invoice; proposed contract is in the [combined Transfer edge packet](../../plans/ledger-accounting-redesign/decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) | Approved recall/removal rule plus concurrency and audit tests |
+| O-003 | Credit Settlement | `ApplyClientCreditToInvoice` and/or `SettleClientCreditAsCashRefund` availability; proposed contract is in the [combined credit/zero-Invoice packet](../../plans/ledger-accounting-redesign/decision-packets/O-003-O-004-O-005-O-010-client-credit-and-zero-invoice.md) | Approved settlement routes and proof that only actual cash refund creates Return |
+| O-004 | Credit Settlement / Invoice lifecycle | Credit-only Invoice closure state and handler; proposed contract is in the [combined credit/zero-Invoice packet](../../plans/ledger-accounting-redesign/decision-packets/O-003-O-004-O-005-O-010-client-credit-and-zero-invoice.md) | Explicit terminal states, accounting effects, and collection rejection tests |
+| O-005 | Budget presentation | Negative unpaid-credit segment rendering; proposed contract is in the [combined credit/zero-Invoice packet](../../plans/ledger-accounting-redesign/decision-packets/O-003-O-004-O-005-O-010-client-credit-and-zero-invoice.md) | Approved arithmetic/visual specification and signed-value snapshot tests |
+| O-006 | Expense / live Invoice | Expense update commands, revisions, and paid locks; proposed matrix is in the [combined O-006/O-033 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-006-O-033-expense-locks-and-collection-payment.md) | Field-by-state mutability matrix with concurrent edit/collection tests |
+| O-007 | Item provenance | Final `item_occurrences` versus lineage representation; proposed contract is in the [combined O-007/O-015 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-007-O-015-item-accounting-and-provenance.md) | Approved authority model, migration mapping, and offline history query tests |
+| O-008 | Receipt Lines and Invoicing | Billable/absorbed/nonbillable treatment of each non-item line; proposed contract is in the [combined O-008/O-030 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-008-O-030-receipt-line-treatment-and-rounding.md) | Per-line treatment model and exact-cent collection/report tests |
+| O-009 | Invoice sources | Manual-adjustment table/source type and collection validation; proposed contract is in the [combined O-009/O-034 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-009-O-034-invoice-adjustments-and-sent-revisions.md) | Decision to retire adjustments or define typed category, provenance, edit, and audit rules |
+| O-010 | Invoice lifecycle | Zero-dollar live Invoice state, final-line removal, and collection guard; proposed contract is in the [combined credit/zero-Invoice packet](../../plans/ledger-accounting-redesign/decision-packets/O-003-O-004-O-005-O-010-client-credit-and-zero-invoice.md) | Approved cancel/noncollectible behavior and last-line concurrency tests |
+| O-011 | Transfer / Item tags | Additional Requests behavior at destination; proposed contract is in the [combined Transfer edge packet](../../plans/ledger-accounting-redesign/decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) | Approved carry/clear/reselect rule and source/destination projection tests |
+| O-012 | Transfer / Space placement | Destination Space fields and validation in `TransferItems`; proposed contract is in the [combined Transfer edge packet](../../plans/ledger-accounting-redesign/decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) | Approved default/optional selection behavior and atomic destination-scope tests |
+| O-013 | Transfer correction | `ReverseTransfer` contract and paired reversal schema; proposed contract is in the [combined Transfer edge packet](../../plans/ledger-accounting-redesign/decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) | Approved reversal rules; retry/concurrency and immutable-original tests |
+| O-014 | Credit after Transfer | Project owner of later paid-Item credit and provenance traversal; proposed contract is in the [combined Transfer edge packet](../../plans/ledger-accounting-redesign/decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) | Approved hosting rule and multi-transfer credit/budget tests |
+| O-015 | Item accounting model | Final acquisition, placement, occurrence, open billing, paid membership, and Transfer DDL; proposed contract is in the [combined O-007/O-015 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-007-O-015-item-accounting-and-provenance.md) | Approved relational model, constraints, query plan, and migration fixture results |
+| O-016 | Inventory acquisition evidence | Unresolved/backfillable acquisition association for Business-paid Link; proposed contract is in the [combined Item capture packet](../../plans/ledger-accounting-redesign/decision-packets/O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) | Approved state and later-resolution command without fabricated Purchase |
+| O-017 | Item Creation UI/domain boundary | Optional capture-time payer hint and whether it persists; proposed contract is in the [combined Item capture packet](../../plans/ledger-accounting-redesign/decision-packets/O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
+| O-018 | Proto migration and Compatibility | Open-proto import/resolution and cutoff for legacy proto writers; proposed contract is in the [combined proto migration/cutover packet](../../plans/ledger-accounting-redesign/decision-packets/O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Mapping policy, unresolved queue, source-freeze gate, rollback, and no-loss tests |
+| O-019 | Item reconciliation | Duplicate/evidence reconciliation command and media merge; proposed contract is in the [combined proto migration/cutover packet](../../plans/ledger-accounting-redesign/decision-packets/O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Deterministic identity winner, relationship/media merge, audit, and retry tests |
+| O-020 | Compatibility | First production activation of real Unaccounted For target Items; proposed gate is in the [combined proto migration/cutover packet](../../plans/ledger-accounting-redesign/decision-packets/O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Target accounting-contract/budget evidence, migration reconciliation, and O-022 source cutoff |
+| O-021 | Item Creation UI | One-screen expandable versus two sequential steps | UI-only decision; does not block domain schema, `CreateItem`, or migration work |
+| O-022 | Compatibility and Cutover | Existing-client Firebase writer rejection/recovery before target activation; proposed boundary is in the [combined proto migration/cutover packet](../../plans/ledger-accounting-redesign/decision-packets/O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Approved quiescence, source-freeze, and recovery plan; proof late Firebase writes cannot bypass or be lost after final delta |
+| O-023 | Attachments and retention | Reference-removal commands, destructive-delete availability, object-reference checks, financial/history retention, and quarantine cleanup; proposed contract is in the [O-023 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-023-attachment-reference-and-retention.md) | Approved detach/delete product behavior plus shared-reference, paid-evidence, retry, retention, and restoration tests |
+| O-024 | Project lifecycle | Physical Project deletion command, dependency preflight and retention/tombstone behavior; proposed contract is in the [combined O-024/O-025 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-024-O-025-project-and-client-lifecycle.md) | Approved archive/delete policy plus empty, child-bearing, financial-history, offline-retry and concurrent-child tests |
+| O-025 | Client/Project correction | `ChangeProjectClient` and Client merge/correction availability, audit shape and Transfer/history effects; proposed contract is in the [combined O-024/O-025 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-024-O-025-project-and-client-lifecycle.md) | Approved mutability boundaries plus cross-Client, prior-Transfer, paid-history, retry and concurrent-change tests |
+| O-026 | Shared reference-data authorization | Category/template/vendor mutation commands, RLS and Sync/download versus write capabilities; proposed matrix is in the [O-026 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-026-shared-reference-data-authorization.md) | Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests |
+| O-027 | Item Creation | `CreateItem` minimum-evidence validation shared by app/MCP/import repair; proposed contract is in the [combined Item capture packet](../../plans/ledger-accounting-redesign/decision-packets/O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) | One approved name/photo/note rule plus offline, API, and migration validation tests |
+| O-028 | Vendor cancellation/non-cash credit | Non-Transaction adjustment, conserved vendor balance, later-Purchase application and actual-cash Return link; proposed contract is in the [O-028 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-028-vendor-adjustment-and-credit-balance.md) | Approved representation that adds no fourth Transaction, conserves every credit cent, and creates Return only for actual money received |
+| O-029 | Transaction lifecycle | `VoidTransaction`, correction/replacement, dependency graph and retention shape; proposed contract is in the [combined O-029/O-032 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-029-O-032-transaction-posting-and-lifecycle.md) | Approved state/dependency policy plus stale-plan, paid/Invoice/Item/lineage/media, retry, human-confirmation and immutable-evidence tests |
+| O-030 | Receipt completeness | One-cent discrepancy rule in Purchase/Return validation and import; proposed contract is in the [combined O-008/O-030 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-008-O-030-receipt-line-treatment-and-rounding.md) | Approved explicit-rounding-line or visible-tolerance behavior with exact-cent fixtures and no inferred tax/discount |
+| O-031 | Item price/tax basis | Item tax fields, receipt-line allocation and movement/occurrence price basis; proposed model is in the [O-031 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-031-item-tax-and-acquisition-basis.md) | Approved tax-inclusive or explicit per-Item allocation rule with mixed-tax, migration and no-silent-inheritance tests |
+| O-032 | Transaction capture/import | Canonical Purchase/Return minimum validation, offline capture draft and incomplete-source migration state; proposed contract is in the [combined O-029/O-032 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-029-O-032-transaction-posting-and-lifecycle.md) | Approved posted-versus-draft contract plus offline restart, budget exclusion, completion, import quarantine and concurrency tests |
+| O-033 | Collection/payment variance | `CollectInvoice` actual-payment validation, payment evidence, frozen allocations, correction and reporting; proposed contract is in the [combined O-006/O-033 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-006-O-033-expense-locks-and-collection-payment.md) | Approved exact-match or explicit variance model plus mismatch, retry, rounding, allocation, receipt, budget and correction tests |
+| O-034 | Sent Invoice revision/delivery | Sent-Invoice membership commands, monotonic revision, rendered artifacts and delivery audit; proposed contract is in the [combined O-009/O-034 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-009-O-034-invoice-adjustments-and-sent-revisions.md) | Approved sent-mutation policy plus live-value, membership, resend, offline conflict, collection-race and historical-render tests |
+| O-035 | Client Summary financial meaning | Client Summary snapshot fields, labels, category aggregation, credit/Transfer treatment and migration parity rules; proposed contract is in the [combined O-035/O-036 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-035-O-036-client-summary-and-shared-evidence.md) | Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests |
+| O-036 | Client-shared receipt evidence | Report snapshot eligibility, PDF/link generation, Storage delivery boundary, audit and retention; proposed contract is in the [combined O-035/O-036 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-035-O-036-client-summary-and-shared-evidence.md) | Approved omit/embed/attach/authorized-link policy plus token/path leakage, revocation, expiry, offline, sharing and retention tests |
+| O-037 | Space archive and Item assignment | `ArchiveSpace`, archived-Space queryability, assignment picker, Item placement projection and any empty-draft delete command; proposed contract is in the [O-037 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-037-space-archive-and-item-assignment.md) | Approved retain/clear/move rule plus assigned/empty, offline, search/report, concurrent assignment and scope-change tests |
+
+## Traceability Enforcement
+
+- Before an implementation tracker row that changes schema or authoritative
+  writes moves to `ready`, it references its D/O dependencies.
+- Every approved command has domain, target-handler, adapter, security, offline,
+  and end-to-end tests before release.
+- Closing an O decision updates the product decision log first, then this table,
+  affected architecture decisions, DDL/command contracts, and tracker status.
+- A product decision cannot be marked implemented solely because a conceptual
+  table or command appears here.

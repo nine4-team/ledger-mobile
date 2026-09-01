@@ -1,0 +1,23 @@
+{
+  "batchId": "M0-CUTOVER-CONTROL-001",
+  "title": "Hard-cutover source freeze and late-writer recovery control",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+  ],
+  "surfaces": [
+    {
+      "id": "MAN-CUTOVER-001",
+      "currentBehavior": "No approved stale-client write-freeze, final-delta, rejected-write recovery, and rollback-boundary mechanism exists yet.",
+      "disposition": "redesign",
+      "status": "blocked",
+      "blockers": [
+        "O-022"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "This is the minimum operational Firebase freeze/rejection boundary for hard cutover, not a Firebase adapter or Firebase v2 application implementation. Keep blocked until O-022 and a rehearsal approve the exact mechanism."
+    }
+  ]
+}

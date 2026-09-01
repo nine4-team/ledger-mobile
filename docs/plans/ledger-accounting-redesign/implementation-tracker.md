@@ -1,0 +1,361 @@
+# Ledger Accounting Redesign — Implementation Tracker
+
+Status: active planning; broad implementation and production migration not yet authorized
+Last updated: 2026-08-31
+Program index: [README.md](README.md)
+Decision log: [decision-log.md](decision-log.md)
+Conversion coverage and resume state: [conversion/README.md](conversion/README.md)
+
+## Status Key
+
+- `not started` — no target implementation exists;
+- `design` — product/schema decisions are still being resolved;
+- `ready` — scope and acceptance tests are sufficiently defined to implement;
+- `in progress` — implementation has begun;
+- `blocked` — a named prerequisite prevents safe progress;
+- `verify` — implementation exists and awaits required validation;
+- `existing` — already-shipped source behavior that remains unchanged; and
+- `done` — implemented, migrated where required, and verified.
+
+## Program Gates
+
+| Gate | Status | Exit condition |
+|---|---|---|
+| G0 — Product boundary | design | Open decisions that change schemas/writers are resolved |
+| G0.5 — Capability synthesis | done | All 686 automatic/manual surfaces have one reviewed disposition, behavior, evidence owner and dossier/control contract; deterministic M0 gap audit passed |
+| G0.75 — Target mapping | design | 263 of 427 target-relevant surfaces have exact owner/security/Sync/migration/test maps; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` |
+| G1 — Target schema | not started | Postgres entities, relationships, IDs, locks, invariants, RLS, and Sync Streams approved |
+| G2 — Source migration/cutover | not started | Firebase export coverage, final-write freeze, pending-write disposition, and rejected-write recovery designed without refactoring the old app |
+| G3 — Implementation | not started | Every target slice has a passing machine-readable dossier under the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md); app/MCP use Postgres handlers, explicit grants/RLS, PowerSync and traced contract tests; no Firebase application adapter exists |
+| G4 — Migration rehearsal | not started | Read-only audit, backups, dry run, reconciliation, and rollback pass |
+| G5 — Authority cutover | not started | Supabase/PowerSync writers enabled; Firebase source frozen; stale writers rejected; monitoring active |
+| G6 — Release completion | not started | Production target, macOS/iOS distribution, MCP, and post-release reconciliation complete |
+
+## Backend Responsibility Rule
+
+The redesign has one target implementation, not parallel Firebase and Postgres
+v2 systems:
+
+| Surface | Permitted responsibility |
+|---|---|
+| Backend-neutral app/domain | Typed use cases, local query ports, operation receipts/results, product invariants, and UI |
+| Existing Firebase production system | Continue running unchanged until cutover; no port conformance or redesign implementation |
+| Firebase operational boundary | Read-only audit/export, verified backup, source-to-target mapping, final pending-write disposition, maintenance/write freeze, rejected-write recovery, and retained rollback evidence |
+| Supabase Postgres target | Canonical redesigned tables, constraints, transactions, command handlers, RLS, projections, indexes, migration journals, and audit evidence |
+| PowerSync target | Encrypted local SQLite, authorized Sync Streams, local query updates, durable upload coordination, and sync readiness |
+| Target MCP | Invoke the same typed target commands and authorized queries as the app; no independent accounting semantics |
+
+Do not build a Firebase application adapter. Do not add v2 Client, occurrence,
+Transfer, Invoice, credit, correction, budget, or provenance authority to
+Firestore rules, indexes, or Cloud Functions. The only new Firebase-side work is
+the minimum operational freeze/rejection control required for the hard cutover.
+
+## Workstream 0 — Product and Spec Control
+
+| Task | Status | Evidence / dependency |
+|---|---|---|
+| Establish central program directory | done | This directory |
+| Adopt capability evolution method | done | [Capability Evolution Method](conversion/capability-evolution-method.md) |
+| Build complete current capability/surface catalog | done | 686 surfaces: 674 repository-discovered plus 12 manual cross-cutting; zero unclassified/missing-source/drift/validation gaps; `EVID-M0-COVERAGE-001` |
+| Create reviewed capability dossiers | done | Identity/session, media, Projects/Clients/reference, unified Item/Link, Inventory/Transactions/provenance, Invoicing/budget, reporting/search, Spaces/review, platform/control, and app-shell/presentation/test-support dossiers complete |
+| Map stable target responsibilities | done | 263 exact mappings across every capability plus backend/query control; zero incomplete mapped records; unresolved surfaces remain blocked rather than guessed |
+| Generate exact residual decision queue | done | 164 residual surfaces grouped under 43 validated blockers; `npm run conversion:residuals:check` |
+| Draft product decision packets | done | Sixteen proposed packets cover all 35 product blockers and all 157 product-dependent residual surfaces; O-021 is UI-only; none is approved by documentation alone |
+| Register canonical target specs | done | [Program index](README.md#canonical-target-state-specs) |
+| Establish enforceable vertical-slice implementation protocol | done | [Required method](conversion/vertical-slice-implementation-method.md), ignored template, generated slice audit and conversion-check status/evidence gates; `EVID-SLICE-METHOD-001` |
+| Confirm global Purchase/Return/Transfer taxonomy | done | D-001/D-002 |
+| Confirm Client identity and same-Client destination rule | done | D-003 through D-006 |
+| Resolve Transfer budget behavior | done | D-017 |
+| Incorporate Item intake source task and raw requirements | done | [Item Intake Handoff](item-intake-handoff.md) |
+| Confirm unified Item wizard, Unaccounted For/Accounted For, and two-route Link UX | done | D-018 through D-025 |
+| Resolve optional Business Inventory acquisition evidence | blocked | O-016; [proposed unresolved-evidence Item capture packet](decision-packets/O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) awaits approval |
+| Resolve capture-time payer hint | blocked | O-017; proposed Item capture packet omits persisted hints; approval required |
+| Resolve legacy proto import, source cutoff, and matching | blocked | O-018/O-019/O-020/O-022; [proposed deterministic migration/freeze/activation packet](decision-packets/O-018-O-020-O-022-proto-migration-and-authority-cutover.md) awaits approval and pending-work proof |
+| Resolve wizard screen/step layout | blocked | O-021; does not block domain schema |
+| Resolve attachment reference removal versus byte deletion | blocked | O-023; [proposed detach/hold/30-day-quarantine packet](decision-packets/O-023-attachment-reference-and-retention.md) awaits approval and production reference/object evidence |
+| Resolve persisted Project deletion policy | blocked | O-024; [proposed archive-only Project lifecycle packet](decision-packets/O-024-O-025-project-and-client-lifecycle.md) awaits approval |
+| Resolve Client reassignment and merge/correction | blocked | O-025; proposed Project/Client packet limits Project reassignment to pre-history correction and uses an audited duplicate-Client merge; approval required |
+| Resolve shared reference-data administration | blocked | O-026; [proposed capability-matrix packet](decision-packets/O-026-shared-reference-data-authorization.md) awaits approval |
+| Resolve unified Item minimum identifying evidence | blocked | O-027; proposed Item capture packet uses any one durable name/photo/note; approval required |
+| Resolve non-cash vendor cancellation/account credit | blocked | O-028; [proposed non-Transaction adjustment/conserved-balance packet](decision-packets/O-028-vendor-adjustment-and-credit-balance.md) awaits approval; Return remains actual cash only |
+| Resolve Transaction posted/draft, void and deletion lifecycle | blocked | O-029/O-032; [proposed atomic-post/append-only-lifecycle packet](decision-packets/O-029-O-032-transaction-posting-and-lifecycle.md) awaits approval |
+| Resolve receipt rounding and per-Item tax basis | blocked | O-030 remains open; O-031 has a [proposed exact-allocation/basis packet](decision-packets/O-031-item-tax-and-acquisition-basis.md) awaiting approval |
+| Resolve paid-credit/refund closure | blocked | O-003/O-004/O-005/O-010; [proposed balance/settlement/signed-budget packet](decision-packets/O-003-O-004-O-005-O-010-client-credit-and-zero-invoice.md) awaits approval |
+| Resolve Expense edit-lock matrix | blocked | O-006/O-033; [proposed field-state/exact-payment packet](decision-packets/O-006-O-033-expense-locks-and-collection-payment.md) awaits approval |
+| Resolve hidden occurrence authority | blocked | O-007/O-015; [proposed explicit-facts/derived-history packet](decision-packets/O-007-O-015-item-accounting-and-provenance.md) awaits approval |
+| Resolve receipt-line billability | blocked | O-008/O-030; [proposed exact-treatment/explicit-variance packet](decision-packets/O-008-O-030-receipt-line-treatment-and-rounding.md) awaits approval |
+| Resolve manual Invoice adjustment and sent revision behavior | blocked | O-009/O-034; [proposed typed-adjustment/revise-and-resend packet](decision-packets/O-009-O-034-invoice-adjustments-and-sent-revisions.md) awaits approval |
+| Resolve actual collection-payment variance | blocked | O-033; proposed field-state/exact-payment packet retains strict equality and noncanonical mismatch review; approval required |
+| Resolve zero-dollar Invoice behavior | blocked | O-010; covered by the proposed credit/zero-Invoice packet, product approval still required |
+| Resolve Client Summary financial meaning | blocked | O-035/O-036; [proposed paid/open/recognized and sanitized-evidence packet](decision-packets/O-035-O-036-client-summary-and-shared-evidence.md) awaits approval |
+| Resolve client-shared receipt evidence policy | blocked | O-036; proposed report packet defaults to omission and explicit standalone sanitized packages; approval required |
+| Resolve Space archive behavior for assigned Items | blocked | O-037; [proposed archive-only/resolvable-assignment packet](decision-packets/O-037-space-archive-and-item-assignment.md) awaits approval |
+| Resolve Transfer edge cases | blocked | O-002/O-011–O-014; [proposed sent/tag/Space/reversal/credit packet](decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) awaits approval |
+
+## Workstream 1 — Additive Data Foundations
+
+| Task | Status | Required output |
+|---|---|---|
+| Design Client entity | design | Account scope, fields, archive/rename, snapshots; reassignment/merge blocked by O-025 |
+| Add authoritative `project.clientId` | not started | Domain/MCP contract plus target Postgres FK, RLS, indexes, and Sync Streams |
+| Design Expense entity | design | Category, amount, receipt, Invoice/paid links, locks |
+| Design Item charge/credit occurrence | blocked | O-007/O-015 |
+| Design paired Transfer shape | blocked | O-015 |
+| Split Item acquisition/current placement/open billing/paid history | blocked | O-015 |
+| Add collected Invoice attachment shape | design | Exact source IDs and frozen line allocation |
+| Add NonItemReceiptLine | blocked | [Accepted design](../non-item-receipt-lines/design.md); O-008/O-030/O-031 must close billability, rounding and Item tax-basis behavior |
+| Add accounting authority/version marker | not started | One active budget/writer model per project |
+| Design stale-Firebase-writer rejection/recovery | blocked | O-022; target read isolation does not stop an old client writing the source after final export |
+| Adopt categorized No-Transaction Item shape for Unaccounted For state | design | Implement in the target app/MCP/Postgres only; source behavior informs migration tests but is not refactored |
+| Define accounting-state projection | design | Project Purchase or open/Invoice/paid Item occurrence; never Space-derived |
+| Define unresolved acquisition association | blocked | O-016 |
+
+## Workstream 1A — Isolated Test Infrastructure
+
+| Task | Status | Required output |
+|---|---|---|
+| Define executable vertical-spike protocol | done | [Named phases, synthetic scale, mandatory tests, evidence layout and go/no-go](vertical-spike-protocol.md); execution remains unauthorized |
+| Provision dedicated target staging | blocked | Supabase project, PowerSync instance, Storage, identities, and no production IAM |
+| Approve spike budget, lifecycle and hard caps | blocked | Product owner records maximum hosted run-rate/spend, cleanup owner/time, supported devices and pre-measurement performance/cost caps |
+| S0 isolation/reset proof | not started | `SPIKE-ISO-001`; fail before Auth/network I/O on unknown/production resources; deterministic reset and cleanup |
+| S1 Postgres authority/RLS/restore | not started | `SPIKE-DB-001`, `SPIKE-RLS-001`, `SPIKE-RST-001`; exact invariants, plans, concurrency, backup/restore |
+| S2 Auth strategy comparison | not started | `SPIKE-AUTH-001`; Supabase Auth default candidate versus isolated identity-only Firebase contingency |
+| S3 encrypted local lifecycle/offline lease | not started | `SPIKE-ENC-001`, `SPIKE-OFF-001`; physical devices, logout dispositions and seven-day soak |
+| S4 Sync authorization/readiness/history | not started | `SPIKE-SYNC-001`, `SPIKE-REV-001`, `SPIKE-HIS-001`; zero local leakage and locally explainable cycles |
+| S5 durable operation/optimism comparison | not started | `SPIKE-QUE-001`; overlay/tagged/hybrid, retry, rejection, concurrency and cross-screen truth |
+| S6 attachment durability | not started | `SPIKE-MED-001`; protected local acceptance, interruption/resume and private resolution |
+| S7 schema/client evolution | not started | `SPIKE-EVO-001`; mixed versions, rebuild, contract rejection and pending-work preservation |
+| S8 performance/capacity/cost | not started | `SPIKE-PERF-001`, `SPIKE-COST-001`; baseline/headroom, physical targets, hosted/self-hosted run-rate |
+| S9 repeated decision review/cleanup | not started | Three clean repetitions plus randomized faults, gate recommendations, `SPIKE-PHY-001`, cleanup proof |
+| Build versioned Firebase export fixtures | not started | Sanitized snapshots exercise source decoding/transform; no Firebase app adapter |
+| Add `LedgeriOS (Staging)` configuration | not started | Separate service config, bundle ID/state, visible banner, runtime production refusal |
+| Parameterize MCP/backend/Storage targets | not started | No hard-coded production resource; staging-only credentials/config |
+| Add fail-closed migration environment guard | not started | Explicit source/target/account/mode/credential match; dry-run default |
+| Build staging reset/import workflow | not started | Curated fixtures plus restricted production-like snapshot |
+| Add staging Auth/member bootstrap | not started | Test identities only; chosen launch Auth strategy isolated from production |
+| Add staging deploy wrapper | not started | Explicit target for schema/RLS/functions/Sync Streams/Storage; production refusal |
+| Define migration manifest/reconciliation format | not started | Commit, snapshot, target, plan, results, invariants |
+| Rehearse interruption/idempotency/rollback | not started | Repeatable evidence before production cutover |
+| Design accounting maintenance mode | not started | Affected writes paused during final delta migration |
+
+## Workstream 2 — Client Identity
+
+| Task | Status | Current surfaces |
+|---|---|---|
+| Swift Client domain/read models, query port, and context | not started | Backend-neutral; no Firestore/Supabase SDK types |
+| Target Client table, FK, indexes, RLS, and Sync Streams | not started | Supabase/Postgres and PowerSync only |
+| MCP Client types/resources/commands | not started | Same target contracts and authorization as app |
+| Project creation: select/create Client | not started | `NewProjectView`, `ProjectService` |
+| Project editing: Client-controlled rename/assignment | not started | `EditProjectModal` |
+| Project cards/search/pickers use Client relationship | not started | Project list and destination pickers |
+| Reports/Invoices preserve Client display snapshots | not started | Report and Invoice renderers |
+| Contract setup accepts Client identity | not started | MCP contract setup |
+| Audit and review legacy `clientName` clusters | not started | Read-only normalized-name suggestions |
+| Backfill reviewed `project.clientId` | not started | No name-only automatic authorization |
+| Disable Transfer for unresolved projects | not started | App/MCP plus target handler/RLS/stream authorization guard |
+
+## Workstream 3 — Global Transaction Taxonomy
+
+| Task | Status | Current dependency |
+|---|---|---|
+| Define Firebase-source enum migration mapping | not started | Export transformer maps every legacy value with blocker reporting; target app has no Firestore DTO |
+| Define target Postgres Transaction type/scope constraints | not started | Purchase/Return scope-relative; Transfer project-only |
+| Change target Invoice collection output to Purchase | not started | Supabase command handler and target collection semantics |
+| Remove target writes of `paymentToBusiness` | not started | Legacy values are handled only by the source migration mapping |
+| Remove target project writes of Sale | not started | Inventory occurrence writer required first |
+| Keep inventory Purchase/Return scope-relative | not started | Update validations and language |
+| Add Transfer as project-only | blocked | Target Postgres paired Transfer schema/handler |
+| Update target filters/cards/search/export/report labels | not started | Target read models plus explicit migration mapping |
+| Update agent/MCP write guidance | not started | Cutover coordinated with deployed tools |
+| Audit legacy enum distribution and mapping | not started | Read-only before migration |
+| Reject retired writes after cutover | not started | Target command version plus Firebase source freeze/stale-client policy |
+
+## Workstream 4 — Unified Item Creation and Accounting Link
+
+| Task | Status | Required behavior |
+|---|---|---|
+| Merge provisional Quick Add and New Item paths | design | One wizard and one Item writer; former proto fields first; optional details continue |
+| Adopt one minimum Item-evidence validation rule | blocked | O-027; current full and Quick Add forms disagree |
+| Stop new-version `protoItems` creation | blocked | Real Unaccounted For Item shape plus production compatibility gate |
+| Leave legacy proto production behavior unchanged before cutover | existing | Existing Firebase app/collection/rules/indexes remain untouched; migration tooling reads them |
+| Unaccounted For / Accounted For projection | design | Transaction/billable destination alone controls section membership; Space remains independent |
+| Client-paid Link | blocked | Requires eligible project Purchase and target association schema |
+| Business-paid Link | blocked | Optional inventory Purchase, one Item identity, open Item charge, no project Transaction |
+| Business-paid Link without selected acquisition | blocked | O-016; never fabricate a vendor Purchase |
+| One-Item identity and occurrence reference | blocked | O-007/O-015; Invoicing references the physical Item |
+| Duplicate/evidence reconciliation | blocked | O-019; separate from normal Link |
+| Import legacy `protoItems` into real target Items | blocked | D-025/P-004 and O-018/O-020; no target proto writer or Firebase app refactor |
+| MCP terminology and trusted Link command | not started | Idempotent, account-scoped, same target behavior as app |
+| Media/quantity/name/Space preservation | design | Direct Item create or legacy proto migration; one Item stores quantity; explicit copy alone creates distinct identities; no duplicate uploads or lost fields |
+| Link concurrency and retry tests | not started | Collection, second Link, Item deletion, project change, stale writer |
+
+## Workstream 5 — Invoicing Sources and Collection
+
+| Task | Status | Required behavior |
+|---|---|---|
+| Items section backed by exact charge/credit occurrences | blocked | Occurrence schema |
+| Expenses section and CRUD | design | O-006 |
+| Fees section compatibility | design | Preserve FeeInstallment intent |
+| Whole-Invoice-only selection and collection | not started | Remove partial/selected-line collection |
+| Created/sent Invoices remain live | design | Recalculation and audit operations |
+| Created-Invoice membership commands and exclusivity | design | Stable typed source links, authoritative source revisions, one active Invoice per source |
+| Sent-Invoice membership revision/delivery | blocked | O-034; explicit revise/resend versus immutable membership after send |
+| One lump-sum Purchase on collection | not started | Target Postgres command is atomic/idempotent |
+| Validate actual collection amount | blocked | O-033; safe provisional contract requires exact positive Invoice-total match |
+| Attach all frozen collected contents | not started | Items, Expenses, Fees, adjustments |
+| Remove collected sources from active Invoicing | not started | Preserve source and Invoice history |
+| Credit settlement/refund workflow | blocked | O-003/O-004 |
+| Zero-dollar Invoice policy | blocked | O-010 |
+| Manual adjustment policy | blocked | O-009 |
+
+## Workstream 6 — Inventory Item Accounting Lifecycle
+
+| Task | Status | Required behavior |
+|---|---|---|
+| Inventory-to-project sale creates Item charge, not project Transaction | not started | Target Postgres occurrence handler |
+| Unpaid project-price edits recalculate charge/live Invoice | not started | Paid freeze and concurrency |
+| `RemoveUnpaidItemFromProject` removes open demand | not started | Atomic physical placement/provenance/budget; no Return Transaction because no money moved |
+| Live-Invoice physical removal updates/removes exact line | design | O-002/O-010; story-specific command, not generic `ReturnItems` |
+| `ReturnPaidItemToInventoryAndCreateCredit` creates deterministic Item credit | blocked | O-003/O-004/O-007; no Return Transaction until cash refund |
+| Resale creates a new occurrence | not started | Never reopen paid history |
+| Project-origin acquisition uses purchase cost | not started | Preserve origin-aware rules |
+| Return-to-source-project uses immutable snapshot | not started | Preserve provenance |
+| Cross-Client project sale uses inventory path | not started | Separate from Transfer |
+| Correction versus real movement | design | `CorrectPurchase`, `CorrectReturn`, or `ReverseTransfer`; explicit audit evidence |
+| Vendor refund follows scope-owner Return | not started | `RecordProjectVendorRefund` versus `RecordInventoryVendorRefund` |
+
+## Workstream 7 — Same-Client Direct Transfer
+
+| Task | Status | Required behavior |
+|---|---|---|
+| Bulk Item selection from source project | not started | All Items still in source at commit |
+| Destination picker filters exact same `clientId` | not started | Exclude source/inventory/other Clients |
+| One trusted idempotent Transfer command | blocked | Target Client and Transfer schema/handler |
+| Create both linked records atomically | blocked | One Postgres transaction; never expose independent writes |
+| Move Item directly between project IDs | not started | No inventory intermediate state |
+| Clear or assign destination Space | blocked | O-012 |
+| Handle open charge/live Invoice | blocked | O-002 |
+| Preserve paid history | design | Never rewrite original Purchase/Invoice |
+| Apply approved budget reallocation | design | D-017; exact schema depends on O-015 |
+| Support paired correction/reversal | blocked | O-013 |
+| Handle later return/credit through Transfer chain | blocked | O-014 |
+| Concurrency tests | not started | Collection, repricing, sale, second Transfer, Client change |
+
+## Workstream 8 — Budget and Reporting Authority
+
+| Task | Status | Required behavior |
+|---|---|---|
+| Define stable budget contribution identity by category/state | design | Direct Transaction allocation, Item occurrence, Expense, Fee/adjustment, collected allocation, and Transfer; Invoice links are non-additive |
+| Client-paid segment | design | Direct Purchase allocations + collected frozen allocations + approved Transfers; collection Purchase face amount is evidence, not a second contribution |
+| Invoicing/unpaid segment | design | Open Item/Expense/Fee/approved-adjustment signed activity, including live Invoice membership without duplicate value |
+| Collection moves segments without changing total | not started | No settlement double count |
+| Furnishings owns all Item activity | not started | Additional Requests non-additive overlay |
+| Transfer paid/open calculations | design | D-017 confirmed; implementation shape depends on O-015 |
+| Negative credit display | blocked | O-005 |
+| Implement target Postgres budget authority/projection | not started | Rebuildable from canonical target sources; compare with Firebase source during shadow rehearsal |
+| Search/reports/exports use one authority resolver | not started | No per-surface arithmetic |
+| Add typed report/export snapshots | design | Readiness, as-of/local/accounting versions, visibility scope, currency, stable row identity/order |
+| Add indexed local universal search | design | Authorized Items/Transactions/Spaces/Projects/Clients with deterministic ranking/cursors and scope readiness; no target proto results |
+| Replace MCP raw/full projections | design | Named visibility-safe profiles, stable cursors, response budgets and no arbitrary field selection |
+| Define Client Summary financial basis | blocked | O-035 |
+| Define report receipt delivery | blocked | O-036 |
+| Reconciliation and drift alarms | not started | Per-project/category/source evidence |
+
+## Workstream 9 — Receipt Lines and Completeness
+
+| Task | Status | Required behavior |
+|---|---|---|
+| Implement NonItemReceiptLine model and validation | not started | Target Swift/MCP/Postgres schema only |
+| Update Purchase/Return entry UI | not started | Other receipt lines section |
+| Replace subtotal/tax completeness equation | not started | Exact-cent final amount reconstruction |
+| Migrate discount/tax/shipping/warranty data | not started | Reviewed line mapping |
+| Preserve inventory movement pricing until replaced | not started | Avoid accidental project-price drift |
+| Decide project billability of receipt lines | blocked | O-008 |
+| Production audit/dry run/reconciliation | not started | Existing audit evidence available |
+
+## Workstream 10 — Platform and Backend Coordination
+
+| Surface | Status | Required coordination |
+|---|---|---|
+| Backend-neutral iOS/macOS application | design | Domain/read models, typed use cases, capability-aware composition, UI, and offline state without vendor SDK leakage |
+| Existing Firebase production app | existing | Remains on its current implementation until hard cutover; no redesign work |
+| Firebase migration/cutover tooling | not started | Read-only export, verified backup, final pending-write disposition, maintenance/write freeze, rejected-write recovery, and source retention |
+| Supabase Postgres target | not started | Canonical schema, constraints, indexes, transactional command handlers, RLS, projections, operation/audit evidence |
+| PowerSync target | blocked | A-004/A-015 spike; encrypted SQLite, Sync Streams, upload connector, readiness, inventory provenance |
+| Supabase Storage target | not started | Private paths, policies, resumable upload, metadata/reference reconciliation |
+| Target MCP server | design | Target terminology, tools, typed commands, authorization, schemas, and tests shared with app semantics |
+| Target background workers | not started | External integrations/media/scheduled reconciliation only; no duplicate database-local accounting authority |
+| Reports/search/exports | not started | Target canonical sources and local projections; Firebase source is used only in migration comparison |
+| Access controls | not started | Postgres RLS and PowerSync Sync Streams for Expense/Fee/provenance visibility and Transfer authorization |
+| Observability | not started | Cross-system operation IDs, sync lag, idempotency conflicts, reconciliation drift, and partial-history readiness |
+| Firebase source/export coverage audit | not started | Every collection, embedded shape, Storage reference, and legacy variant is classified for migration; no writer refactor |
+
+No work item may refactor current Firebase repositories behind the new ports.
+No target work item exists for v2 Client/occurrence/Invoice/Transfer indexes or
+paid-lock rules in Firestore, or for v2 budget/repricing/reconciliation in Cloud
+Functions. Any proposed Firebase application implementation violates A-017.
+
+Compatibility sequencing and per-surface hazards are authoritative in the
+[Production Compatibility and Rollout Plan](production-compatibility-plan.md).
+
+## Workstream 11 — Migration and Cutover
+
+| Task | Status | Safety requirement |
+|---|---|---|
+| Inventory production shapes and counts | not started | Read-only, account-scoped |
+| Establish corrected budget baseline | not started | Do not trust cached summaries blindly |
+| Back up affected Firebase collections and Storage metadata | not started | Verified source backup before every migration/cutover write phase |
+| Build target shadow import/projections | not started | Import to Supabase and compare without authority switch or Firebase v2 writers |
+| Import Clients and project IDs into target | not started | Human review for ambiguous clusters; durable source correlation |
+| Import occurrence/association relationships into target | not started | Preserve acquisition and paid history |
+| Audit and import open `protoItems` into target | not started | Preserve media, Space, hints, and exact Link status without accounting side effects |
+| Correlate legacy settlement Transactions | not started | Do not invent lump sums without evidence |
+| Rehearse migration with dry-run artifacts | not started | Per-row decisions and rollback plan |
+| Switch accounting authority | not started | Coordinated app/MCP/Supabase handlers/RLS/PowerSync activation plus Firebase source freeze |
+| Freeze/reject legacy Firebase writes | not started | Adopted O-022 hard-cutover procedure after final quiescence; preserve recovery evidence |
+| Verify legacy-client quiescence and target isolation | not started | Supabase keeps target reads isolated; final export occurs only after approved source-write freeze procedure |
+| Retire frozen legacy proto paths | not started | Only after rollback/evidence-retention window and verified open-proto migration |
+| Post-cutover reconcile and monitor | not started | Zero unexplained category/source differences |
+| Retire frozen Firebase production system | not started | Only after rollback window, source manifest verification, and target stability |
+
+## Required End-to-End Verification
+
+- Direct client vendor Purchase with physical Items.
+- Direct client non-itemized Purchase.
+- Inventory acquisition Purchase and vendor Return.
+- Minimum-field Item creation writes one real Unaccounted For Item with optional
+  Space and no accounting impact.
+- Continuing the same wizard adds optional detail without changing Item identity.
+- Client-paid Link attaches the Item to the selected project Purchase and is idempotent.
+- Business-paid Link with and without a selected inventory Purchase creates one
+  Item identity plus one open charge and no project Transaction.
+- Duplicate/evidence reconciliation preserves one Item identity, media, and
+  audit history.
+- Inventory Item charge → price edit → live Invoice → collection Purchase.
+- Return before Invoice, from created/sent Invoice, and after payment.
+- Paid credit application and cash refund once approved.
+- Same-Client Transfer for open, live-Invoice, paid, and mixed batches.
+- Cross-Client project sale cannot use Transfer.
+- Transfer retry and paired correction.
+- Repeated sale/return/Transfer cycles for one Item.
+- Inventory history remains explainable offline across repeated
+  inventory↔project sale/return/resale cycles and labels incomplete history.
+- Budget collection segment swap without total change.
+- Approved Transfer project-budget behavior without duplicate contribution.
+- Additional Requests subtotal without Furnishings/overall duplication.
+- Non-item receipt line reconstruction for Purchase and Return.
+- Imported legacy records render and calculate correctly in the target; the
+  existing Firebase app remains unchanged before cutover.
+- Offline/stale client cannot recreate retired writes after cutover.
+- Logout with pending operations/media blocks routine deletion, supports
+  sync-then-logout, and requires exact-count confirmation for destructive discard.
+- Pre-update client remains functional until the hard-cutover window, cannot see
+  target-only shapes, and receives the approved recovery behavior if it attempts
+  a Firebase write after the source freeze.
+
+## Release Rule
+
+This program is not “done” when code compiles. Final release requires the
+coordinated deployment sequence, production migration evidence, distributed app
+builds where applicable, and post-release reconciliation defined by the program
+gates above.

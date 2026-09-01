@@ -1,0 +1,2387 @@
+{
+  "batchId": "M0-PLATFORM-CONTROL-001",
+  "title": "Platform, transport, release, and migration control",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+  ],
+  "surfaces": [
+    {
+      "id": "CONFIG-2439DF7AA062",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines app identity, URL schemes, permissions, versions, and Firebase-hosted Sparkle metadata.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve product permissions/update outcomes while removing provider-mixed hard-coding. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "LedgerEnvironmentManifest projection for Info.plist/entitlements",
+          "ExternalRouteManifest",
+          "UpdateFeedManifest"
+        ],
+        "securityRequirements": [
+          "Manifest contains identifiers and versions only; secrets resolve from platform secret stores or deployment identity",
+          "Startup validates one environment across Auth, data, Sync, Storage, MCP, telemetry and local database/key namespaces before opening infrastructure"
+        ],
+        "syncRequirements": [
+          "Validated environment fixes the encrypted local database namespace and compatible Sync contract for the process lifetime",
+          "Staging and production data, credentials, queues and cached media cannot share local state"
+        ]
+      },
+      "migration": {
+        "rule": "Replace provider-mixed source build configuration with one validated target environment projection; retain the original configuration only for the unchanged source app and signed migration provenance.",
+        "reconciliation": [
+          "Environment matrix proves every build identifier, endpoint/resource identity, local namespace and contract version belongs to exactly one declared environment"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Environment-manifest schema, missing/mixed-resource startup-refusal, local-namespace isolation and release-projection tests"
+        ],
+        "acceptance": [
+          "No target process can open Auth, data, Sync, Storage, MCP or local state from more than one environment"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-2F4D7DBFD096",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pins the current Swift dependency graph, including Firebase-era packages.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "M2 withheld: the concrete target Swift SDK/lock graph is the output of the Supabase/PowerSync vertical spike and would change if either proposed architecture decision fails."
+    },
+    {
+      "id": "CONFIG-324443A09D94",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines the current archive scheme and release build behavior.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Archive only from an explicit validated production manifest. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and Artifact Control",
+        "surfaces": [
+          "ProductionArchiveProfile",
+          "LedgerReleaseManifestValidator"
+        ],
+        "securityRequirements": [
+          "Signing, notarization and store credentials remain CI/operator secrets with least privilege and audited use",
+          "Every distributable is bound to a reviewed environment and immutable release-manifest hash"
+        ],
+        "syncRequirements": [
+          "Release manifest embeds compatible schema, query, operation and Sync contract versions and blocks activation of an incompatible client"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve signed iOS/macOS distribution outcomes while replacing source-backend assumptions with reproducible target artifacts and a reviewed release manifest.",
+        "reconciliation": [
+          "Artifact hash, commit, dependency lock, bundle/build/version, environment and contract versions match the promoted staging artifact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean-build reproducibility, signing/notarization/store-upload, manifest compatibility, staged-rollout and rollback-rehearsal tests"
+        ],
+        "acceptance": [
+          "Only the immutable staging-proven artifact can be promoted, and operators can identify its environment and compatibility boundary before rollout"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-3C679B93A305",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configures TypeScript compilation for the current MCP server.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain strict build configuration while target modules change."
+    },
+    {
+      "id": "CONFIG-3F7C92E2669F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configures current Firebase rules, Functions, Hosting, Storage, and emulators.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain for the running source and freeze/rollback only; no target v2 implementation."
+    },
+    {
+      "id": "CONFIG-3FB361C7F0E9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds the current Firebase-backed MCP container.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Build a pinned non-root target MCP image with health/SBOM/environment verification. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "TargetMCPContainer",
+          "MCPDeploymentManifest",
+          "health/readiness endpoint",
+          "SBOM artifact"
+        ],
+        "securityRequirements": [
+          "Every request authenticates one Principal, resolves active Account membership and enforces the registered capability policy; no static actor or Account fallback exists",
+          "Runtime image is pinned, non-root, health-checked, secret-injected and emits redacted correlated telemetry"
+        ],
+        "syncRequirements": [
+          "MCP is an online transport over the same authoritative commands and authorized query projections as the app; durable operation results synchronize through the normal target contract"
+        ]
+      },
+      "migration": {
+        "rule": "Replace the Firebase Admin runtime/deployment with the versioned target MCP composition; migrate no runtime state or built-in production identity.",
+        "reconciliation": [
+          "Deployed tool/resource set, contract versions, authorization policies and image/SBOM hashes equal the reviewed capability manifest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Container/startup health, missing-secret/environment refusal, anonymous/static/cross-account denial and app-versus-MCP command parity tests"
+        ],
+        "acceptance": [
+          "MCP cannot bypass target domain authority or infer an Account/Principal, and deployment advertises exactly the contracts it runs"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-50FA673297B2",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Declares current app sandbox/keychain/network/platform entitlements.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Target security review"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only necessary entitlements and verify local encryption/keychain/share/update needs."
+    },
+    {
+      "id": "CONFIG-5C0EE6600D97",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines dependencies/scripts for the reverse Supabase-to-Firebase migration package.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Never reuse as the forward production migration package."
+    },
+    {
+      "id": "CONFIG-6899B0DB9A09",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Selects the current Firebase CLI project alias.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep for source freeze/hosting retirement operations only."
+    },
+    {
+      "id": "CONFIG-6E140F8E16C0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines the plain current production-Firebase app/test/run scheme.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve current source launch behavior until cutover; target gets explicit isolated profiles. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "TargetStaging scheme/profile",
+          "TargetProduction archive profile",
+          "environment-visible diagnostics"
+        ],
+        "securityRequirements": [
+          "Manifest contains identifiers and versions only; secrets resolve from platform secret stores or deployment identity",
+          "Startup validates one environment across Auth, data, Sync, Storage, MCP, telemetry and local database/key namespaces before opening infrastructure"
+        ],
+        "syncRequirements": [
+          "Validated environment fixes the encrypted local database namespace and compatible Sync contract for the process lifetime",
+          "Staging and production data, credentials, queues and cached media cannot share local state"
+        ]
+      },
+      "migration": {
+        "rule": "Replace provider-mixed source build configuration with one validated target environment projection; retain the original configuration only for the unchanged source app and signed migration provenance.",
+        "reconciliation": [
+          "Environment matrix proves every build identifier, endpoint/resource identity, local namespace and contract version belongs to exactly one declared environment"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Environment-manifest schema, missing/mixed-resource startup-refusal, local-namespace isolation and release-projection tests"
+        ],
+        "acceptance": [
+          "No target process can open Auth, data, Sync, Storage, MCP or local state from more than one environment"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-B903A5D5110D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines the explicit current Firebase emulator app/test scheme.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain for source-focused tests; it is not a target adapter/profile."
+    },
+    {
+      "id": "CONFIG-C4677DA3DE5C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configures TypeScript for the reverse migration package.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Historical source tooling only."
+    },
+    {
+      "id": "CONFIG-D94C7653FB36",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines app/test targets, build settings, versions, signing, resources, and SDK dependencies.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Modify only through the isolated target build plan with reproducible review. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "TargetAppBuildGraph",
+          "environment resource projections",
+          "target dependency injection points"
+        ],
+        "securityRequirements": [
+          "Manifest contains identifiers and versions only; secrets resolve from platform secret stores or deployment identity",
+          "Startup validates one environment across Auth, data, Sync, Storage, MCP, telemetry and local database/key namespaces before opening infrastructure"
+        ],
+        "syncRequirements": [
+          "Validated environment fixes the encrypted local database namespace and compatible Sync contract for the process lifetime",
+          "Staging and production data, credentials, queues and cached media cannot share local state"
+        ]
+      },
+      "migration": {
+        "rule": "Replace provider-mixed source build configuration with one validated target environment projection; retain the original configuration only for the unchanged source app and signed migration provenance.",
+        "reconciliation": [
+          "Environment matrix proves every build identifier, endpoint/resource identity, local namespace and contract version belongs to exactly one declared environment"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Environment-manifest schema, missing/mixed-resource startup-refusal, local-namespace isolation and release-projection tests"
+        ],
+        "acceptance": [
+          "No target process can open Auth, data, Sync, Storage, MCP or local state from more than one environment"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-F3494FD36EE5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines current MCP dependencies, scripts, and package metadata.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Pin target Supabase/contract/transport dependencies and verified scripts. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "Target MCP package/lock/scripts",
+          "generated contract build",
+          "deployment verification scripts"
+        ],
+        "securityRequirements": [
+          "Every request authenticates one Principal, resolves active Account membership and enforces the registered capability policy; no static actor or Account fallback exists",
+          "Runtime image is pinned, non-root, health-checked, secret-injected and emits redacted correlated telemetry"
+        ],
+        "syncRequirements": [
+          "MCP is an online transport over the same authoritative commands and authorized query projections as the app; durable operation results synchronize through the normal target contract"
+        ]
+      },
+      "migration": {
+        "rule": "Replace the Firebase Admin runtime/deployment with the versioned target MCP composition; migrate no runtime state or built-in production identity.",
+        "reconciliation": [
+          "Deployed tool/resource set, contract versions, authorization policies and image/SBOM hashes equal the reviewed capability manifest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Container/startup health, missing-secret/environment refusal, anonymous/static/cross-account denial and app-versus-MCP command parity tests"
+        ],
+        "acceptance": [
+          "MCP cannot bypass target domain authority or infer an Account/Principal, and deployment advertises exactly the contracts it runs"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-91C9B311D005",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds and publishes a signed macOS Sparkle update from current app artifacts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve signed update outcome with immutable artifact/schema/environment evidence. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and Artifact Control",
+        "surfaces": [
+          "SparkleReleaseArtifact",
+          "signed appcast publisher",
+          "LedgerReleaseManifest"
+        ],
+        "securityRequirements": [
+          "Signing, notarization and store credentials remain CI/operator secrets with least privilege and audited use",
+          "Every distributable is bound to a reviewed environment and immutable release-manifest hash"
+        ],
+        "syncRequirements": [
+          "Release manifest embeds compatible schema, query, operation and Sync contract versions and blocks activation of an incompatible client"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve signed iOS/macOS distribution outcomes while replacing source-backend assumptions with reproducible target artifacts and a reviewed release manifest.",
+        "reconciliation": [
+          "Artifact hash, commit, dependency lock, bundle/build/version, environment and contract versions match the promoted staging artifact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean-build reproducibility, signing/notarization/store-upload, manifest compatibility, staged-rollout and rollback-rehearsal tests"
+        ],
+        "acceptance": [
+          "Only the immutable staging-proven artifact can be promoted, and operators can identify its environment and compatibility boundary before rollout"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-B982A17793ED",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Adds a TestFlight build to external tester distribution.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Target release gates"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain distribution capability after automated health/compatibility approval."
+    },
+    {
+      "id": "CONFIG-C185748A7F0A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds an iOS archive and uploads it for TestFlight.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve delivery with reproducible environment/version/contract checks. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and Artifact Control",
+        "surfaces": [
+          "iOSReleaseArtifact",
+          "TestFlight uploader",
+          "LedgerReleaseManifest"
+        ],
+        "securityRequirements": [
+          "Signing, notarization and store credentials remain CI/operator secrets with least privilege and audited use",
+          "Every distributable is bound to a reviewed environment and immutable release-manifest hash"
+        ],
+        "syncRequirements": [
+          "Release manifest embeds compatible schema, query, operation and Sync contract versions and blocks activation of an incompatible client"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve signed iOS/macOS distribution outcomes while replacing source-backend assumptions with reproducible target artifacts and a reviewed release manifest.",
+        "reconciliation": [
+          "Artifact hash, commit, dependency lock, bundle/build/version, environment and contract versions match the promoted staging artifact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean-build reproducibility, signing/notarization/store-upload, manifest compatibility, staged-rollout and rollback-rehearsal tests"
+        ],
+        "acceptance": [
+          "Only the immutable staging-proven artifact can be promoted, and operators can identify its environment and compatibility boundary before rollout"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-D74F97384F03",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines helper script dependencies for build and release automation.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Pin and audit release tool dependencies. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and Artifact Control",
+        "surfaces": [
+          "ReleaseToolLock",
+          "release SBOM",
+          "reproducible build-tool runner"
+        ],
+        "securityRequirements": [
+          "Signing, notarization and store credentials remain CI/operator secrets with least privilege and audited use",
+          "Every distributable is bound to a reviewed environment and immutable release-manifest hash"
+        ],
+        "syncRequirements": [
+          "Release manifest embeds compatible schema, query, operation and Sync contract versions and blocks activation of an incompatible client"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve signed iOS/macOS distribution outcomes while replacing source-backend assumptions with reproducible target artifacts and a reviewed release manifest.",
+        "reconciliation": [
+          "Artifact hash, commit, dependency lock, bundle/build/version, environment and contract versions match the promoted staging artifact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean-build reproducibility, signing/notarization/store-upload, manifest compatibility, staged-rollout and rollback-rehearsal tests"
+        ],
+        "acceptance": [
+          "Only the immutable staging-proven artifact can be promoted, and operators can identify its environment and compatibility boundary before rollout"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-EA72F3E0CC9F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds/signs/packages the macOS DMG.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve packaging with notarization/hash/reproducibility evidence. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and Artifact Control",
+        "surfaces": [
+          "macOSArchiveAndDMGBuilder",
+          "notarization receipt",
+          "LedgerReleaseManifest"
+        ],
+        "securityRequirements": [
+          "Signing, notarization and store credentials remain CI/operator secrets with least privilege and audited use",
+          "Every distributable is bound to a reviewed environment and immutable release-manifest hash"
+        ],
+        "syncRequirements": [
+          "Release manifest embeds compatible schema, query, operation and Sync contract versions and blocks activation of an incompatible client"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve signed iOS/macOS distribution outcomes while replacing source-backend assumptions with reproducible target artifacts and a reviewed release manifest.",
+        "reconciliation": [
+          "Artifact hash, commit, dependency lock, bundle/build/version, environment and contract versions match the promoted staging artifact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean-build reproducibility, signing/notarization/store-upload, manifest compatibility, staged-rollout and rollback-rehearsal tests"
+        ],
+        "acceptance": [
+          "Only the immutable staging-proven artifact can be promoted, and operators can identify its environment and compatibility boundary before rollout"
+        ]
+      }
+    },
+    {
+      "id": "CONFIG-EF6794568592",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Coordinates current TestFlight release steps.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Gate promotion on target staging, migration, offline, security, and accounting evidence. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and Artifact Control",
+        "surfaces": [
+          "StagedRolloutPlan",
+          "TestFlight cohort gate",
+          "post-release observation/rollback record"
+        ],
+        "securityRequirements": [
+          "Signing, notarization and store credentials remain CI/operator secrets with least privilege and audited use",
+          "Every distributable is bound to a reviewed environment and immutable release-manifest hash"
+        ],
+        "syncRequirements": [
+          "Release manifest embeds compatible schema, query, operation and Sync contract versions and blocks activation of an incompatible client"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve signed iOS/macOS distribution outcomes while replacing source-backend assumptions with reproducible target artifacts and a reviewed release manifest.",
+        "reconciliation": [
+          "Artifact hash, commit, dependency lock, bundle/build/version, environment and contract versions match the promoted staging artifact"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean-build reproducibility, signing/notarization/store-upload, manifest compatibility, staged-rollout and rollback-rehearsal tests"
+        ],
+        "acceptance": [
+          "Only the immutable staging-proven artifact can be promoted, and operators can identify its environment and compatibility boundary before rollout"
+        ]
+      }
+    },
+    {
+      "id": "FILE-01858E7D6F2F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits mixed category behavior in Firebase source records.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-1D6E44FA8F89",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Adds supported-type metadata to Firebase categories.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-4CBBAFBED6BB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Repairs named-account install-category blockers in Firebase.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-63127609E244",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Clears legacy Transaction status fields in Firebase.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-845DA9FA06B6",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits zero-price sold Items in active Firebase Projects.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-9476860F2E0F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits Firebase category-type migration results.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-AA3F04FDF7E2",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Legacy duplicate path for macOS Sparkle build/publish.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-CB878013686E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Repairs zero Project prices for one named Firebase Project.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-D96444FA1D27",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Launches the current native Firebase development workflow.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-DA9A57B158D0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collects Item-tag fixtures from current Firebase-shaped source data.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for source characterization, fixtures, freeze/rollback, or historical evidence."
+    },
+    {
+      "id": "FILE-220AAA67895E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Backfills uncategorized Firebase movement records.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-23BF624D3DEF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates current Firebase Auth users through an admin script.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-2C8D6C14D6CB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines a test-only Firestore rules variant.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-40E918C46A49",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Firebase security rules.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-5B2F34D7EB06",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Backfills Item current-source fields in Firebase.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-5D4C249ADCCE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Locks dependencies for Firebase rules tests.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-5D8816D7BB7F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Sets up current Firebase Function health checks.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-7E429B142402",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Backfills the current Item project-price floor.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-89E25D7A77D5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firebase Functions dependencies/scripts.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-8AA18619A287",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Locks Firebase Functions dependencies.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-9F65BB694716",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Recorded the Firebase-hosted Sparkle build 82 release note until the build 83 publication commit deliberately replaced it.",
+      "disposition": "retire",
+      "status": "retired",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retired by committed release transition 369979cb579d9a6fd665c4ae68b9b0bbc7353486, which deleted the build 82 note and published build 83 artifacts; history retains rollback evidence."
+    },
+    {
+      "id": "FILE-1411B600AD73",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Records the current Firebase-hosted Sparkle build 83 release note.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-GIT-BASELINE-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, release verification, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-A5E6C90AFA0E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Seeds the Firebase emulator with source fixtures.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-A9F4A74ED736",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines current Firebase backup-bucket lifecycle.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-BC248DD1D0EF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Stores Firebase emulator seed data.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-BF6F6537B9D8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configures Firebase Functions TypeScript.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-DB2679C54F0C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firebase rules-test dependencies/scripts.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-E970DB971AA4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Documents current Firebase local/deploy workflows.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-FC6420B340AA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Contains another current Firestore rules source variant.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep isolated for the running Firebase source, export/freeze tests, rollback evidence, and eventual retirement only."
+    },
+    {
+      "id": "FILE-173B5909E4CC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Pulls records missing from Firebase from the legacy Supabase source.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-2484180463B8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Writes transformed documents to Firebase with Admin BulkWriter.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-35422F4029F9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Runs the reverse Supabase-to-Firebase migration and may target production.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-3DCBE60029E4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Imports Supabase Auth identities/password hashes into Firebase Auth.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-6200888CA628",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits legacy Supabase versus Firebase parity with production defaults.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-6325677FFCC9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines reverse-migration source/target DTOs.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-95B4631C73CD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Guesses/transforms legacy Supabase rows into Firebase documents.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-E29E51B0CDE0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reads all rows for an Account from the legacy Supabase schema via service role.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-F47E5F16E9BB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Repairs one named user's UID during reverse migration.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "FILE-FE79A7FF0888",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Verifies a current Firebase user document after reverse migration.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Quarantine as reverse-migration history/fixtures; do not adapt it into the Firebase-export-to-target runner."
+    },
+    {
+      "id": "MAN-HOSTING-001",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tracks Firebase Hosting, invite/update URLs, universal links, and external entry points.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Use stable provider-independent HTTPS routes with signed/allowlisted payloads. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Release and External Entry Points",
+        "surfaces": [
+          "StableProductLinkRouter",
+          "InviteLinkEnvelope",
+          "UpdateFeedPublisher",
+          "HostingManifest"
+        ],
+        "securityRequirements": [
+          "Invite, universal and update routes use allowlisted HTTPS hosts and validated signed/bounded payloads; links never grant membership or carry backend secrets",
+          "Update metadata and binaries are signature/hash verified independently of hosting provider"
+        ],
+        "syncRequirements": [
+          "External links resolve into typed local intents and then use current authenticated queries/commands; hosting itself owns no synchronized domain state"
+        ]
+      },
+      "migration": {
+        "rule": "Map Firebase-hosted invite/update/deep-link entry points to stable provider-independent product routes while preserving old source routes only for the reviewed compatibility window.",
+        "reconciliation": [
+          "Route inventory proves every supported legacy and target URL has one allowlisted destination, deprecation result and environment owner"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Host allowlist, payload validation, no-authority invite, universal-link environment isolation and Sparkle signature/hash tests"
+        ],
+        "acceptance": [
+          "Changing hosting or Auth providers does not change public product URLs or let a URL bypass identity and membership checks"
+        ]
+      }
+    },
+    {
+      "id": "MAN-OBS-001",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tracks target logs, traces, metrics, alerts, manifests, and reconciliation incidents.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Implement the dossier and architecture observability contract before release. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Observability and Operations",
+        "surfaces": [
+          "TelemetryEnvelope",
+          "HealthSnapshot",
+          "MetricAndAlertRegistry",
+          "OperationalRunbookRegistry"
+        ],
+        "securityRequirements": [
+          "Telemetry uses explicit data classes and redaction; tokens, service keys, signed URLs, notes, media and protected financial payloads are excluded",
+          "Principal/Account/entity correlation uses safe identifiers with access-controlled retention"
+        ],
+        "syncRequirements": [
+          "Health distinguishes local database, required-stream readiness, operation queue, replication, attachment, Auth and server state without treating network reachability as readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no unclassified source logs as target authority; preserve only approved aggregate baselines and replace source events with versioned target telemetry envelopes.",
+        "reconciliation": [
+          "Telemetry schema coverage proves each command/query/sync/release/migration outcome has owner, safe correlation, redaction class, metric and runbook/alert linkage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Correlation-chain, redaction, bounded-cardinality/size, health-state, failure-telemetry, alert and runbook contract tests"
+        ],
+        "acceptance": [
+          "Operators can distinguish local, Sync, server, Storage and release failures without exposing protected user data"
+        ]
+      }
+    },
+    {
+      "id": "MAN-OFFLINE-001",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tracks current Firebase cache/pending-write/listener/reconnect behavior and target offline parity.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "A-015",
+        "A-016",
+        "Physical target verification"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "M2 withheld: optimistic complex-operation projection and the offline authorization lease change the exact readiness/operation contract; physical target tests must prove the selected behavior."
+    },
+    {
+      "id": "MAN-RELEASE-001",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tracks iOS/macOS environment identity, local state isolation, staging and production refusal.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "One validated environment/release manifest must pass before implementation/cutover. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "ReleaseEnvironmentMatrix",
+          "ProductionEndpointRefusalSuite",
+          "LocalDataNamespace",
+          "LedgerReleaseManifest"
+        ],
+        "securityRequirements": [
+          "Manifest contains identifiers and versions only; secrets resolve from platform secret stores or deployment identity",
+          "Startup validates one environment across Auth, data, Sync, Storage, MCP, telemetry and local database/key namespaces before opening infrastructure"
+        ],
+        "syncRequirements": [
+          "Validated environment fixes the encrypted local database namespace and compatible Sync contract for the process lifetime",
+          "Staging and production data, credentials, queues and cached media cannot share local state"
+        ]
+      },
+      "migration": {
+        "rule": "Replace provider-mixed source build configuration with one validated target environment projection; retain the original configuration only for the unchanged source app and signed migration provenance.",
+        "reconciliation": [
+          "Environment matrix proves every build identifier, endpoint/resource identity, local namespace and contract version belongs to exactly one declared environment"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Environment-manifest schema, missing/mixed-resource startup-refusal, local-namespace isolation and release-projection tests"
+        ],
+        "acceptance": [
+          "No target process can open Auth, data, Sync, Storage, MCP or local state from more than one environment"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-00414EA2B411",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Publishes manually maintained current Firebase enums, including superseded values.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Generate/test Purchase/Return/Transfer and target state vocabularies from approved contracts. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "VersionedEnumRegistry",
+          "generated Swift/TypeScript enum projections",
+          "deprecation registry"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-2CAC62C341EE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Publishes a manually maintained raw entity schema and stale business rules.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Expose versioned command/query contracts, not database DTOs. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "VersionedContractCatalog",
+          "generated MCP schema resource",
+          "product-rule references by decision ID"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-4B5868CBF5DC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Derives current Item price/tax behavior from legacy fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-008",
+        "O-031"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "M2 withheld: the approved price/tax basis and inherited Item tax basis determine the target calculation contract; legacy helper behavior is not provisional authority."
+    },
+    {
+      "id": "MCPMOD-5E757BAB490F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Logs per-tool duration, response size, success, code, and timestamp to stderr.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve lightweight metrics with trusted Principal/Account/environment/contract correlation and redaction. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Observability and Operations",
+        "surfaces": [
+          "MCPTelemetryEnvelope",
+          "TelemetryRedactionPolicy",
+          "correlation context"
+        ],
+        "securityRequirements": [
+          "Telemetry uses explicit data classes and redaction; tokens, service keys, signed URLs, notes, media and protected financial payloads are excluded",
+          "Principal/Account/entity correlation uses safe identifiers with access-controlled retention"
+        ],
+        "syncRequirements": [
+          "Health distinguishes local database, required-stream readiness, operation queue, replication, attachment, Auth and server state without treating network reachability as readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no unclassified source logs as target authority; preserve only approved aggregate baselines and replace source events with versioned target telemetry envelopes.",
+        "reconciliation": [
+          "Telemetry schema coverage proves each command/query/sync/release/migration outcome has owner, safe correlation, redaction class, metric and runbook/alert linkage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Correlation-chain, redaction, bounded-cardinality/size, health-state, failure-telemetry, alert and runbook contract tests"
+        ],
+        "acceptance": [
+          "Operators can distinguish local, Sync, server, Storage and release failures without exposing protected user data"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-9569EFF075EE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides pure integer-cent display formatting for MCP output.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain deterministic formatting with explicit currency/locale contracts."
+    },
+    {
+      "id": "MCPMOD-A2B6F691FF2E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Registers all Firebase-backed MCP tools/resources and embeds large stale instructions.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Generate capabilities/instructions/deprecations from reviewed target contracts. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "MCPCommandQueryRegistry",
+          "authorization/version/test-owner registration validator",
+          "generated MCP instructions"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-ADD33B4FDA16",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Appends current user/MCP notes and audit prose to mutable fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve user prose while server audit evidence is structured and actor-derived. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Notes and Audit Evidence",
+        "surfaces": [
+          "AppendNoteCommand",
+          "NoteSnapshot",
+          "AuditEventWriting",
+          "notes and audit table families"
+        ],
+        "securityRequirements": [
+          "Note visibility follows parent scope and financial grants; immutable audit evidence is server/operator controlled and never accepts caller-authored actor/time text"
+        ],
+        "syncRequirements": [
+          "Authorized mutable notes synchronize as parent-scoped rows; clients receive only safe operation/audit result projections, not privileged audit payloads"
+        ]
+      },
+      "migration": {
+        "rule": "Split source fields that mix user notes and audit prose into typed note records and immutable server-authored audit events while retaining source text and correlation during migration.",
+        "reconciliation": [
+          "Every non-empty source note/audit fragment maps to a typed note, immutable audit event or reviewed quarantine with source correlation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Note authorization/offline edit, immutable actor/time audit, spoofing, migration classification and visibility tests"
+        ],
+        "acceptance": [
+          "Users can preserve authorized notes while no client or MCP caller can forge operational audit history"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-B4E6A5972565",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines Firebase-shaped MCP DTOs and legacy enums across all entities.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Do not expose Postgres rows or preserve legacy writable shapes. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "GeneratedMCPContractTypes",
+          "domain input/result DTO projections",
+          "legacy decode-only DTO namespace"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-C52F1FD8A983",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Falls back to built-in production Account and User IDs.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Target has no default Principal/Account identity."
+    },
+    {
+      "id": "MCPMOD-C6CA65EAAF8D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Serves Firebase-backed stateless MCP over HTTP with env/static auth fallbacks and per-request server construction.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Bind every call to an authenticated Principal and authorized Account; remove public fallbacks. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "PrincipalBoundMCPRequestContext",
+          "IdentityTokenVerifying",
+          "HTTPMCPCompositionRoot",
+          "operator-mode policy"
+        ],
+        "securityRequirements": [
+          "Every request authenticates one Principal, resolves active Account membership and enforces the registered capability policy; no static actor or Account fallback exists",
+          "Runtime image is pinned, non-root, health-checked, secret-injected and emits redacted correlated telemetry"
+        ],
+        "syncRequirements": [
+          "MCP is an online transport over the same authoritative commands and authorized query projections as the app; durable operation results synchronize through the normal target contract"
+        ]
+      },
+      "migration": {
+        "rule": "Replace the Firebase Admin runtime/deployment with the versioned target MCP composition; migrate no runtime state or built-in production identity.",
+        "reconciliation": [
+          "Deployed tool/resource set, contract versions, authorization policies and image/SBOM hashes equal the reviewed capability manifest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Container/startup health, missing-secret/environment refusal, anonymous/static/cross-account denial and app-versus-MCP command parity tests"
+        ],
+        "acceptance": [
+          "MCP cannot bypass target domain authority or infer an Account/Principal, and deployment advertises exactly the contracts it runs"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-DAB760104CEE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides structured MCP error payloads and note validation helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve machine-readable recovery while enforcing non-enumeration/correlation and durable operation results. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Application Error Contract",
+        "surfaces": [
+          "ApplicationErrorCode",
+          "OperationRejection",
+          "MCPErrorEnvelope",
+          "retry/redaction registry"
+        ],
+        "securityRequirements": [
+          "Unauthorized and inaccessible resources use non-enumerating stable codes; vendor messages, paths and sensitive payloads never cross the boundary"
+        ],
+        "syncRequirements": [
+          "Permanent command rejection is durable and synchronized without blocking unrelated operations; transient infrastructure failures remain retryable"
+        ]
+      },
+      "migration": {
+        "rule": "Replace tool-local Firebase error wrapping with one versioned domain/application error and operation-result registry; migrate no historical exception strings.",
+        "reconciliation": [
+          "Every registered command/query failure maps to one documented stable code, retry class, user outcome and telemetry class"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Vendor-error mapping, non-enumeration, retry/permanent classification, payload-bound and cross-app/MCP parity tests"
+        ],
+        "acceptance": [
+          "App and MCP report the same safe actionable failure for the same target outcome and one rejection cannot poison the queue"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-E0D43AB307CC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Advertises manually maintained server features, conventions, and deprecations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Generate exact contract/version/capability state and explicit deprecated rejections. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "LedgerCapabilities",
+          "CapabilityManifest",
+          "deprecation and minimum-client registry"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-E8F7ED71D93A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Starts the current Firebase Admin MCP server over stdio with optional credential path.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Retain stdio transport with validated environment and Principal-bound authorization mode. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "StdioMCPCompositionRoot",
+          "PrincipalBoundMCPRequestContext",
+          "validated environment/dependency factory"
+        ],
+        "securityRequirements": [
+          "Every request authenticates one Principal, resolves active Account membership and enforces the registered capability policy; no static actor or Account fallback exists",
+          "Runtime image is pinned, non-root, health-checked, secret-injected and emits redacted correlated telemetry"
+        ],
+        "syncRequirements": [
+          "MCP is an online transport over the same authoritative commands and authorized query projections as the app; durable operation results synchronize through the normal target contract"
+        ]
+      },
+      "migration": {
+        "rule": "Replace the Firebase Admin runtime/deployment with the versioned target MCP composition; migrate no runtime state or built-in production identity.",
+        "reconciliation": [
+          "Deployed tool/resource set, contract versions, authorization policies and image/SBOM hashes equal the reviewed capability manifest"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Container/startup health, missing-secret/environment refusal, anonymous/static/cross-account denial and app-versus-MCP command parity tests"
+        ],
+        "acceptance": [
+          "MCP cannot bypass target domain authority or infer an Account/Principal, and deployment advertises exactly the contracts it runs"
+        ]
+      }
+    },
+    {
+      "id": "MCPRESOURCE-115F802C8668",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes current manually maintained MCP version/features.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Return signed/versioned target capability and deprecation metadata. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "CapabilityManifestResource",
+          "release/contract version projection"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPRESOURCE-DF0AD6E43880",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes current Firebase DTO schema and stale rules.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Publish command/query schemas, product invariants and versions only. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "VersionedContractCatalogResource",
+          "authorized product schema projection"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-1090BA6ACEC9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Accounts reachable through current MCP/Firebase account context.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Return authorized account summaries without service-credential leakage. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "AccountQuerying.listAuthorizedAccounts",
+          "AuthorizedAccountListSnapshot",
+          "MCP account-list projection"
+        ],
+        "securityRequirements": [
+          "Verified Principal plus active Account membership is required for every list/select action; Account existence is non-enumerating",
+          "Account selection never changes server authorization and cannot be persisted as an independent source of access"
+        ],
+        "syncRequirements": [
+          "Authorized membership/bootstrap rows provide the Account list locally; active Account selection is local session/workspace state scoped to the Principal and environment"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source account context to stable Principal and membership identities; do not migrate hardcoded/fallback current-Account state as authority.",
+        "reconciliation": [
+          "Each migrated Principal sees exactly the Accounts granted by active target memberships and no persisted selection grants additional access"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Account-list/select, revoked/cross-account/non-enumerating access and app/MCP workspace-context parity tests"
+        ],
+        "acceptance": [
+          "A caller can choose only an already-authorized Account, and the same membership decision governs app and MCP"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-7816E5307ACC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns current MCP server features and conventions.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Keep session discovery with exact target versions/deprecations. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "GetCapabilitiesQuery",
+          "CapabilityManifest",
+          "MCP capability response"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-7A42BC7172C1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Returns manually duplicated current entity schema/enums.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Describe enabled typed operations/queries rather than persistence fields. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": [
+          "GetContractCatalogQuery",
+          "VersionedContractCatalog",
+          "MCP schema response"
+        ],
+        "securityRequirements": [
+          "Every published command/query has an authorization policy and non-enumerating error contract; raw database schema and restricted columns are not published"
+        ],
+        "syncRequirements": [
+          "Capability and contract versions are embedded in release/deployment manifests and incompatible clients fail readiness before issuing commands"
+        ]
+      },
+      "migration": {
+        "rule": "Replace manually duplicated Firebase DTOs, enums, instructions and schema prose with generated or parity-tested versioned product contracts; preserve explicit deprecation aliases only for the approved window.",
+        "reconciliation": [
+          "Generated Swift/TypeScript schemas, MCP tool/resource registry, capability manifest and authorization-policy registry have zero unexplained version or field differences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contract generation/parity, registration completeness, deprecation, schema snapshot, authorization-policy and unsupported-version tests"
+        ],
+        "acceptance": [
+          "App and MCP advertise and execute the same reviewed product operations without exposing persistence DTOs or stale business instructions"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-84506A435FA5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Persists a current active Account override for an MCP UID.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Select only active authorized memberships with expiry/audit and no env fallback. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "SelectWorkspaceIntent",
+          "AuthorizedAccountListSnapshot",
+          "Principal/environment-scoped MCP session context"
+        ],
+        "securityRequirements": [
+          "Verified Principal plus active Account membership is required for every list/select action; Account existence is non-enumerating",
+          "Account selection never changes server authorization and cannot be persisted as an independent source of access"
+        ],
+        "syncRequirements": [
+          "Authorized membership/bootstrap rows provide the Account list locally; active Account selection is local session/workspace state scoped to the Principal and environment"
+        ]
+      },
+      "migration": {
+        "rule": "Correlate source account context to stable Principal and membership identities; do not migrate hardcoded/fallback current-Account state as authority.",
+        "reconciliation": [
+          "Each migrated Principal sees exactly the Accounts granted by active target memberships and no persisted selection grants additional access"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Account-list/select, revoked/cross-account/non-enumerating access and app/MCP workspace-context parity tests"
+        ],
+        "acceptance": [
+          "A caller can choose only an already-authorized Account, and the same membership decision governs app and MCP"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-17DA4D1C0ADF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Wraps platform clipboard behavior.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain a narrow platform utility with privacy-safe call sites."
+    },
+    {
+      "id": "SWIFT-1928FD01B8A1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines keyboard shortcut notifications shared by app views.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain UI platform behavior independent of backend."
+    },
+    {
+      "id": "SWIFT-584D99BC1062",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines macOS/iOS Ledger command-menu shortcuts.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain and test navigation/action availability through target capabilities."
+    },
+    {
+      "id": "SWIFT-6DA0525DFD44",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Abstracts platform-specific share/presentation behavior.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain presentation boundary and typed artifact outcomes."
+    },
+    {
+      "id": "SWIFT-9BA6E6DD44E4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides cross-platform SwiftUI modifiers.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep backend-independent presentation utilities."
+    },
+    {
+      "id": "SWIFT-D861839CD17D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Integrates the signed Sparkle updater on macOS.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Target feed/release manifest"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain updater with provider-independent verified feed."
+    },
+    {
+      "id": "SWIFT-E9529E2899CF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Moves generated PDFs to platform download destinations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Preserve download outcome with typed errors, unique paths, protection and cleanup. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Protected Artifact Lifecycle",
+        "surfaces": [
+          "ProtectedArtifactExporting",
+          "ProtectedArtifactExportRequest",
+          "ProtectedArtifactExportReceipt",
+          "platform destination adapter"
+        ],
+        "securityRequirements": [
+          "Export requires an authorized visibility snapshot; temporary files are protected, time-bounded and cleaned after destination handoff"
+        ],
+        "syncRequirements": [
+          "Artifact rendering consumes a version/readiness-aware local snapshot; exported bytes are not synchronized as domain authority unless explicitly attached"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no generated temporary/download files; preserve only canonical source records and regenerate target artifacts from authorized snapshots.",
+        "reconciliation": [
+          "Export receipt records snapshot/version/visibility and cleanup result; fixture rendering matches approved semantic output"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline-ready export, restricted visibility, protected-temp cleanup, destination cancellation and deterministic rendering tests"
+        ],
+        "acceptance": [
+          "An authorized user can export/share the expected artifact without leaving an unscoped permanent local or remote copy"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-88C69E26FBA0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configures Firebase/Google/Firestore, creates every source service/context, media/network/deep-link/update singleton, and injects them into the app.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Replace with a small validated target composition root; no Firebase adapter. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Environment and Composition Control",
+        "surfaces": [
+          "TargetAppCompositionRoot",
+          "AppDependencies",
+          "ValidatedLedgerEnvironment",
+          "approved infrastructure factories"
+        ],
+        "securityRequirements": [
+          "Validated environment and identity dependencies are constructed before feature services; service credentials never enter the client",
+          "Views and domain/application modules receive only backend-neutral ports and cannot import Firebase, Supabase or PowerSync SDK types"
+        ],
+        "syncRequirements": [
+          "One encrypted local database and one readiness/operation lifecycle are constructed per Principal/environment; feature views do not start competing vendor listeners"
+        ]
+      },
+      "migration": {
+        "rule": "Replace the Firebase-heavy source application initializer with a small target composition root; source Firebase setup remains unchanged until hard cutover and is never wrapped as a target adapter.",
+        "reconciliation": [
+          "Dependency-graph audit proves every required port has one owner, environment matches, no redesigned module imports Firebase and no duplicate listener/write authority exists"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Composition completeness, mixed-environment refusal, no-Firebase-import, one-database/readiness lifecycle and in-memory/failure-adapter tests"
+        ],
+        "acceptance": [
+          "The redesigned app starts from one validated dependency graph and no feature code can select Firebase versus Supabase at runtime"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-2208AFCA9830",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Connects current debug builds to Firebase Auth/Firestore/Storage emulators when explicitly enabled.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Keep for source-focused tests only."
+    },
+    {
+      "id": "SWIFT-AAE32021738A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Defines a generic Firebase ListenerRegistration/field/update/delete repository protocol.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Backend-neutral target ports express Ledger queries and commands, not repository CRUD."
+    },
+    {
+      "id": "SWIFT-6E5F6EAFF883",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Abstracts Firestore batch paths/dictionaries plus source reads for tests.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain only for current Firebase source tests; target handlers use transactional domain contracts."
+    },
+    {
+      "id": "SWIFT-2703ADAB66C5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Logs current navigation lifecycle events for diagnostics.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Retain bounded diagnostics with environment/session correlation and no sensitive route data. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Observability and Operations",
+        "surfaces": [
+          "NavigationTelemetryEvent",
+          "TelemetryRedactionPolicy",
+          "client correlation context"
+        ],
+        "securityRequirements": [
+          "Telemetry uses explicit data classes and redaction; tokens, service keys, signed URLs, notes, media and protected financial payloads are excluded",
+          "Principal/Account/entity correlation uses safe identifiers with access-controlled retention"
+        ],
+        "syncRequirements": [
+          "Health distinguishes local database, required-stream readiness, operation queue, replication, attachment, Auth and server state without treating network reachability as readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no unclassified source logs as target authority; preserve only approved aggregate baselines and replace source events with versioned target telemetry envelopes.",
+        "reconciliation": [
+          "Telemetry schema coverage proves each command/query/sync/release/migration outcome has owner, safe correlation, redaction class, metric and runbook/alert linkage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Correlation-chain, redaction, bounded-cardinality/size, health-state, failure-telemetry, alert and runbook contract tests"
+        ],
+        "acceptance": [
+          "Operators can distinguish local, Sync, server, Storage and release failures without exposing protected user data"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-7B159D426B1D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collects startup/navigation performance signposts and diagnostics.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Instrument local DB/readiness/render/sync milestones under redaction policy. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Observability and Operations",
+        "surfaces": [
+          "ClientPerformanceMetric",
+          "startup/navigation signposts",
+          "performance objective registry"
+        ],
+        "securityRequirements": [
+          "Telemetry uses explicit data classes and redaction; tokens, service keys, signed URLs, notes, media and protected financial payloads are excluded",
+          "Principal/Account/entity correlation uses safe identifiers with access-controlled retention"
+        ],
+        "syncRequirements": [
+          "Health distinguishes local database, required-stream readiness, operation queue, replication, attachment, Auth and server state without treating network reachability as readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no unclassified source logs as target authority; preserve only approved aggregate baselines and replace source events with versioned target telemetry envelopes.",
+        "reconciliation": [
+          "Telemetry schema coverage proves each command/query/sync/release/migration outcome has owner, safe correlation, redaction class, metric and runbook/alert linkage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Correlation-chain, redaction, bounded-cardinality/size, health-state, failure-telemetry, alert and runbook contract tests"
+        ],
+        "acceptance": [
+          "Operators can distinguish local, Sync, server, Storage and release failures without exposing protected user data"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-F26052171FEB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tracks current listener/sync lifecycle state for views.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Replace connection/listener inference with scope-specific PowerSync readiness and operation health. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Local Data and Sync Operations",
+        "surfaces": [
+          "SyncHealthProviding",
+          "SyncHealthSnapshot",
+          "CapabilityReadinessState",
+          "RequiredStreamVersion"
+        ],
+        "securityRequirements": [
+          "Readiness is scoped to Principal, Account, capability and financial visibility; revoked or unauthorized streams never appear ready from stale rows"
+        ],
+        "syncRequirements": [
+          "SyncHealthSnapshot separately reports local database, required stream/version, upload queue, last checkpoint, replication lag and rejection/conflict state"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase listener-state heuristics with target local-database and required-stream readiness; source listener events are not migrated.",
+        "reconciliation": [
+          "For every workspace/capability fixture, readiness is true only when all required authorized stream versions and local operation results are present"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Cold-start/offline/reconnect/stale-stream/revocation/schema-upgrade/partial-readiness and delayed-replication tests"
+        ],
+        "acceptance": [
+          "UI can distinguish usable local data, stale/partial readiness, queued work and remote failure without equating connectivity with correctness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-AD26BFE430B2",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides a manual Firestore test screen inside the app.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Target diagnostics use isolated staging/admin tools and cannot expose raw production backend access."
+    },
+    {
+      "id": "FILE-F29942C1A7F4",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides shared current MCP Firebase test helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Create Principal/account/environment-isolated target fixtures and contract helpers. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Target Contract Test Infrastructure",
+        "surfaces": [
+          "TargetMCPContractHarness",
+          "SyntheticPrincipalAccountFixtures",
+          "command/query/fault adapters"
+        ],
+        "securityRequirements": [
+          "Fixtures use isolated synthetic tenants and explicit test identities; production credentials/endpoints are rejected"
+        ],
+        "syncRequirements": [
+          "Harness controls local database, stream readiness, network faults, queue replay and authoritative outcomes deterministically"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase-shaped test helpers/factories with provider-neutral semantic fixtures plus isolated target contract adapters; migrate source fixtures only through reviewed transforms.",
+        "reconciliation": [
+          "Fixture catalog covers each approved capability, visibility role, operation result and source migration variant with stable IDs and expected invariants"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Test-harness self-tests for environment refusal, deterministic clocks/IDs, restart/replay/fault injection and semantic fixture parity"
+        ],
+        "acceptance": [
+          "The same semantic story can exercise app, MCP, local adapter and staging target without Firebase-shaped models or production access"
+        ]
+      }
+    },
+    {
+      "id": "TEST-6A6B0926E2EE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds current Swift Firebase-shaped test entities and contexts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Generate typed domain/read-model fixtures with fixed clocks/IDs. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Target Contract Test Infrastructure",
+        "surfaces": [
+          "SemanticDomainFixtureFactory",
+          "deterministic IDs/clock/revisions",
+          "visibility and migration variants"
+        ],
+        "securityRequirements": [
+          "Fixtures use isolated synthetic tenants and explicit test identities; production credentials/endpoints are rejected"
+        ],
+        "syncRequirements": [
+          "Harness controls local database, stream readiness, network faults, queue replay and authoritative outcomes deterministically"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase-shaped test helpers/factories with provider-neutral semantic fixtures plus isolated target contract adapters; migrate source fixtures only through reviewed transforms.",
+        "reconciliation": [
+          "Fixture catalog covers each approved capability, visibility role, operation result and source migration variant with stable IDs and expected invariants"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Test-harness self-tests for environment refusal, deterministic clocks/IDs, restart/replay/fault injection and semantic fixture parity"
+        ],
+        "acceptance": [
+          "The same semantic story can exercise app, MCP, local adapter and staging target without Firebase-shaped models or production access"
+        ]
+      }
+    },
+    {
+      "id": "TEST-B2C120C177D5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Configures Firebase emulator integration tests and cleanup.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain for source compatibility tests only."
+    },
+    {
+      "id": "TEST-DE986CFD8624",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Records Firestore batch path/dictionary operations for unit tests.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+      ],
+      "notes": "Retain while source tests exist; target tests record typed commands/results."
+    },
+    {
+      "id": "TEST-ECE08B24ADCE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current performance diagnostic configuration and lifecycle.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001"
+      ],
+      "notes": "Verify target signposts, correlation, overhead, redaction and budgets. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "target": {
+        "owner": "Observability and Operations",
+        "surfaces": [
+          "ObservabilityContractTests",
+          "performance-configuration fixtures",
+          "lifecycle metric assertions"
+        ],
+        "securityRequirements": [
+          "Telemetry uses explicit data classes and redaction; tokens, service keys, signed URLs, notes, media and protected financial payloads are excluded",
+          "Principal/Account/entity correlation uses safe identifiers with access-controlled retention"
+        ],
+        "syncRequirements": [
+          "Health distinguishes local database, required-stream readiness, operation queue, replication, attachment, Auth and server state without treating network reachability as readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no unclassified source logs as target authority; preserve only approved aggregate baselines and replace source events with versioned target telemetry envelopes.",
+        "reconciliation": [
+          "Telemetry schema coverage proves each command/query/sync/release/migration outcome has owner, safe correlation, redaction class, metric and runbook/alert linkage"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Correlation-chain, redaction, bounded-cardinality/size, health-state, failure-telemetry, alert and runbook contract tests"
+        ],
+        "acceptance": [
+          "Operators can distinguish local, Sync, server, Storage and release failures without exposing protected user data"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1481 @@
+{
+  "batchId": "M0-INVOICING-BUDGET-001",
+  "title": "Invoicing, collection, and budget authority",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-INVOICING-BUDGET-001"
+  ],
+  "surfaces": [
+    {
+      "id": "FILE-0FDA0D22FE61",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Removes legacy Item billing-status fields from Firebase documents.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Retain only as source-history and migration-fixture evidence; target billing state is relationship-derived."
+    },
+    {
+      "id": "FILE-346E890221AE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Backfills embedded Invoice lines and compatibility membership from current Firebase records.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Production Invoice shape profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Use to understand and fixture legacy line synthesis; never run as target runtime logic."
+    },
+    {
+      "id": "FILE-666B71D31EE1",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reverts a prior Firebase Transaction-to-Fee/Expense rewrite.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve as evidence of ambiguous legacy representations and migration reversibility."
+    },
+    {
+      "id": "FILE-A0F0403EA66A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Repairs missing budget categories for one named source account/project set.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Production category reconciliation"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Record-specific repair informs quarantine fixtures only."
+    },
+    {
+      "id": "FILE-A50BC51BFBA3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Rebuilds cached Firebase Project budget summaries from current Transaction arithmetic.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Production budget-summary comparison"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Target rebuilds canonical contributions; cached summaries are comparison evidence only."
+    },
+    {
+      "id": "FILE-B0DFEF68D8C0",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Migrates certain Firebase Fee/Expense-like Transactions into alternate legacy shapes.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Use as source-shape evidence; target Expense/Fee mapping is independently reviewed."
+    },
+    {
+      "id": "FILE-E9D5488DD76F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Backfills legacy project budget summary fields during Firebase migration tooling.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Do not carry the cached-summary authority into Postgres."
+    },
+    {
+      "id": "FILE-F568992F71EF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests the independent MCP Transaction sign normalizer, including legacy payment-to-business behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Replace assertions with stable source-contribution and paid/unpaid segment tests. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Contract Tests",
+        "surfaces": [
+          "BudgetContributionResolverTests",
+          "legacy Transaction decode fixtures",
+          "canonical contribution signs"
+        ],
+        "securityRequirements": [
+          "Fixtures cover full/category-limited/no-financial/cross-account visibility and assert protected contribution rows/counts are absent"
+        ],
+        "syncRequirements": [
+          "Tests assert local snapshot versions/readiness and stable contribution identity across offline operation replay and authoritative collection results"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Transaction-only/legacy sign expectations with semantic contribution fixtures while retaining source variants for decode and migration reconciliation.",
+        "reconciliation": [
+          "Fixture catalog balances each Project/category paid/unpaid/recognized contribution and source correlation with zero unexplained double count"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contribution resolver, ProjectBudgetSnapshot, whole-collection movement, Transfer/credit/no-double-count, visibility and migration tests"
+        ],
+        "acceptance": [
+          "Tests fail if one economic value contributes twice or if paying an Invoice increases total spend"
+        ]
+      }
+    },
+    {
+      "id": "FILE-F9A79784D576",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Audits Invoice line category presence and mismatches in Firebase.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [
+        "Production Invoice profile"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Reuse its anomaly classes in read-only profiling and migration reconciliation."
+    },
+    {
+      "id": "MCPMOD-1710A9547AEB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Normalizes current/legacy Transaction types into signed project budget amounts.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "One target query projection replaces MCP-specific accounting arithmetic. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "BudgetContributionResolver",
+          "BudgetContributionID",
+          "legacy type decode-only mapping"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-7E2A27F3F12F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements Admin-SDK Invoice composition, mutable lines, partial/whole collection, cancel/void, and contract setup.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-033",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-033/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPRESOURCE-05387AA3B2FB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes a Project budget resource computed from current Transaction and allocation records.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Serve the authorization-safe canonical budget projection with readiness and stable version. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "ProjectBudgetQuery",
+          "ProjectBudgetSnapshot",
+          "MCP budget resource projection"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "MCPRESOURCE-E7354EF7E82B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes budget category definitions through the current MCP resource layer.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve discoverability through authorized local/target reference queries. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "ReferenceDataQuerying categories",
+          "visibility-safe CategoryDefinitionSnapshot",
+          "MCP category resource"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-03C1DA443F46",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Cancels Invoice settlement Transactions and changes a paid Invoice back to sent.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-029",
+        "O-033"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-029/O-033 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-0FC981412C3D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates an Invoice from caller-authored line DTOs after non-transactional validation.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-009",
+        "O-010"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-009/O-010 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-1E17B2463089",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reads one current Invoice and its embedded lines through privileged Firebase access.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Return an authorized local/API projection with live/frozen semantics and readiness. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Invoicing Read Models",
+        "surfaces": [
+          "GetInvoiceQuery",
+          "InvoiceDetailSnapshot",
+          "source/collection evidence versions"
+        ],
+        "securityRequirements": [
+          "Invoice list/detail rows and amounts require Project/financial visibility; private delivery/attachment fields use approved visibility-safe references and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Project stream contains authorized Invoice summaries/details, live source-link and immutable collection evidence versions needed for offline rendering with explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Invoice IDs/status/display evidence, transform embedded lines/links into relational source and frozen collection records, and quarantine inconsistent totals/status/membership instead of trusting arrays.",
+        "reconciliation": [
+          "Each source Invoice and line/source/payment relation maps once with ID, revision, status, signed amount, category, membership and collection evidence hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Invoice list/detail, stable cursor, financial visibility, readiness, source-link/frozen evidence and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can inspect the same Invoice offline and through MCP without embedded-array authority or privileged raw-schema reads"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-2B21D2622825",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds a billable pool from mutable Items, Transactions, Fees, and current Invoice arrays.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-006/O-007/O-008/O-009/O-010/O-015 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-43389521FF62",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes one Project budget from current Transactions and allocations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Use the shared contribution projection; no MCP-only arithmetic. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "GetProjectBudgetQuery",
+          "ProjectBudgetSnapshot",
+          "canonical contribution version"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-4CF82E3A1594",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Adds a caller-described line to a live Invoice after preflight checks.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-94CE0E801264",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Marks selected Invoice lines collected and creates grouped settlement Transactions.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Approved target has no selected-line or partial collection."
+    },
+    {
+      "id": "MCPTOOL-B07353E174CA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Marks an Invoice sent through a direct lifecycle mutation.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-B87FC2B11214",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Collects caller-selected lines and creates category-grouped payment-to-business Transactions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-033"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-033 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-BDE0436E5E98",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Invoices with privileged Firebase reads and unstable offset pagination.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Use authorized stable ordering/cursors and local/offline readiness. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Invoicing Read Models",
+        "surfaces": [
+          "ListInvoicesQuery",
+          "InvoiceListPage",
+          "stable cursor/archive/status filters"
+        ],
+        "securityRequirements": [
+          "Invoice list/detail rows and amounts require Project/financial visibility; private delivery/attachment fields use approved visibility-safe references and denial is non-enumerating"
+        ],
+        "syncRequirements": [
+          "Project stream contains authorized Invoice summaries/details, live source-link and immutable collection evidence versions needed for offline rendering with explicit readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Invoice IDs/status/display evidence, transform embedded lines/links into relational source and frozen collection records, and quarantine inconsistent totals/status/membership instead of trusting arrays.",
+        "reconciliation": [
+          "Each source Invoice and line/source/payment relation maps once with ID, revision, status, signed amount, category, membership and collection evidence hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/MCP Invoice list/detail, stable cursor, financial visibility, readiness, source-link/frozen evidence and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can inspect the same Invoice offline and through MCP without embedded-array authority or privileged raw-schema reads"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-F01CAFFDE387",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Mutates stored Invoice line amount/category/description through a generic tool.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-009",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-009/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-FCF917D2F4D8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates contract-design-fee charges as manual Invoice lines while applying project setup.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-009"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-009 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-089FDE7D4B0B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Parses and formats Invoice currency input using integer-cent-safe helpers.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Keep pure locale-aware money behavior behind target Money values."
+    },
+    {
+      "id": "SWIFT-0B430AAF3B6E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Composes Firestore Invoice creation, line edits, send, status paid, partial/whole collection, cancel, and payment voiding.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-033",
+        "O-034",
+        "A-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-033/O-034/A-015 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-14D0C2F1019A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Derives budget-tab rows and single spent progress from current Transaction/category/allocation arrays.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-263BA57A580A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders one budget progress bar and remaining/over labels.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-31DB4E9B5136",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Models Firebase Invoice arrays, embedded signed lines, mutable totals/status and compatibility settlement fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-009",
+        "O-010",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-009/O-010/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-37B70FDD1318",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Calculates billing totals from Transactions and Invoices with paid-status/payment fallbacks.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Use canonical contribution/collection evidence; status alone cannot prove money. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Invoicing and Billing Projections",
+        "surfaces": [
+          "ProjectBillingSummarySnapshot",
+          "BillingContributionResolver",
+          "collection evidence projection"
+        ],
+        "securityRequirements": [
+          "Billing totals and source counts require authorized Project financial visibility and never derive from rows filtered only after download"
+        ],
+        "syncRequirements": [
+          "Project stream carries a versioned `ProjectBillingSummarySnapshot` derived from live demand, Invoice lifecycle and immutable collection evidence with readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Replace source Transaction/paid-status fallbacks with one projection over authoritative Invoice source links and immutable collection allocations; preserve source values for discrepancy analysis only.",
+        "reconciliation": [
+          "Open, invoiced, collected, credited and outstanding cents reconcile per source/Invoice/payment with no duplicate contribution or unexplained fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Whole-collection, open-source, credit, cancellation/correction fixture, restricted visibility, offline readiness and source fallback migration tests"
+        ],
+        "acceptance": [
+          "Billing totals remain internally consistent and explainable from authoritative demand and actual collection evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-38F4A97A4FCB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds cached billable candidates, manual lines, and created-Invoice edits in one modal.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-015",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-006/O-007/O-008/O-009/O-010/O-015/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-47AEA80908AD",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Filters already-loaded financial Transactions, Invoices, and Fee/manual-line values in memory.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve fail-closed semantics while enforcing exclusion in RLS/Sync Streams before download. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Financial Projection Authorization",
+        "surfaces": [
+          "FinancialVisibilitySnapshot",
+          "RLS/Sync projection profiles",
+          "presentation defense-in-depth filter"
+        ],
+        "securityRequirements": [
+          "RLS, security-invoker views and Sync Streams remove unauthorized financial rows, counts, amounts and categories before local storage; ambiguity fails closed"
+        ],
+        "syncRequirements": [
+          "Each stream profile is capability/version specific and local snapshots declare visibility/readiness; client filtering is presentation defense only"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate role/financial grants through trusted membership correlation and replace in-memory filtering with server/download enforcement; record ambiguous legacy permissions for review.",
+        "reconciliation": [
+          "Role/permission fixtures prove exact row/field/count absence for every visibility class in database, Sync payload, local DB, app, MCP, report and export"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "RLS/Sync cross-account, category-limited/no-financial/admin, grant/revocation/offline lease and fail-closed ambiguity tests"
+        ],
+        "acceptance": [
+          "A restricted user never receives protected financial data locally, even while offline or when a UI filter is absent"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-4B46ED85F85E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes vendor-document import totals and draft validation before creating a Purchase and Items.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Keep pure reviewed-evidence calculations; target routing/commit is handled separately."
+    },
+    {
+      "id": "SWIFT-4CAE3EA7812A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Parses Amazon vendor PDFs into local draft purchase/item evidence.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Parser fixture coverage"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Retain local parsing with explicit confidence and review; it is not Client Invoice authority."
+    },
+    {
+      "id": "SWIFT-5E2EC2CDB48B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays and edits parsed vendor-document draft Items before commit.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Keep review productivity while routing to a typed atomic outcome. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Vendor Document Intake",
+        "surfaces": [
+          "VendorDocumentDraft",
+          "VendorDocumentLineDraft",
+          "VendorDocumentIntakeOperations",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Parsed draft and commit are Account/Project scoped, attachment access is authorized and commit revalidates payer/category/source evidence at the handler"
+        ],
+        "syncRequirements": [
+          "Draft edits persist locally with stable draft/line IDs; one durable commit operation creates typed Purchase/Expense/Item effects and exposes per-line rejection without silent partial writes"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source vendor-document draft lines to stable typed draft evidence, preserve original attachment/source correlation and route commit through approved Purchase/Expense/Item commands rather than view-layer Firebase writes.",
+        "reconciliation": [
+          "Document, parsed line, edited line, attachment and created source/Item IDs plus exact cents/quantity/category balance to one operation result or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline draft edit/restart, payer/scope routing, invalid line, atomic commit/replay, attachment authorization and source migration tests"
+        ],
+        "acceptance": [
+          "A user can review a parsed vendor document offline and commit it once without a partially created Purchase/Expense/Item graph"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-800DE43469FC",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds the Project budget screen from independent context listeners and Transaction-only calculations.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-86F17626EE66",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits one parsed vendor-document draft Item and its price/quantity/category fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve review interaction over explicit evidence and payer/scope routing. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Vendor Document Intake",
+        "surfaces": [
+          "VendorDocumentLineDraft",
+          "typed quantity/price/category validation",
+          "local draft persistence"
+        ],
+        "securityRequirements": [
+          "Parsed draft and commit are Account/Project scoped, attachment access is authorized and commit revalidates payer/category/source evidence at the handler"
+        ],
+        "syncRequirements": [
+          "Draft edits persist locally with stable draft/line IDs; one durable commit operation creates typed Purchase/Expense/Item effects and exposes per-line rejection without silent partial writes"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source vendor-document draft lines to stable typed draft evidence, preserve original attachment/source correlation and route commit through approved Purchase/Expense/Item commands rather than view-layer Firebase writes.",
+        "reconciliation": [
+          "Document, parsed line, edited line, attachment and created source/Item IDs plus exact cents/quantity/category balance to one operation result or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline draft edit/restart, payer/scope routing, invalid line, atomic commit/replay, attachment authorization and source migration tests"
+        ],
+        "acceptance": [
+          "A user can review a parsed vendor document offline and commit it once without a partially created Purchase/Expense/Item graph"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8818DB7D6FFB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes Firestore-shaped Invoice CRUD, listener, partial collection, paid, cancel, and void methods.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Do not wrap this as a Firebase adapter; use bounded target operations. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Invoicing Application Contracts",
+        "surfaces": [
+          "InvoiceQuerying",
+          "InvoiceOperations",
+          "ProjectBillingSummaryQuerying",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Invoice query and operation ports declare Project/financial/capability requirements; no Firebase listener, embedded-line dictionary or service credential crosses the boundary"
+        ],
+        "syncRequirements": [
+          "Queries return versioned local Invoice/billing snapshots and commands return durable operation receipts with authoritative applied/rejected/conflict results"
+        ]
+      },
+      "migration": {
+        "rule": "Retire the Firebase Invoice CRUD/lifecycle seam and map supported outcomes to `InvoiceQuerying` and typed `InvoiceOperations`; partial/generic mutation methods remain unavailable unless approved by product decisions.",
+        "reconciliation": [
+          "Contract registry assigns each source Invoice responsibility to one typed query/command/import owner or named hold with no app/MCP duplicate writer"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "No-vendor-type/embedded-array, contract registration, durable receipt, capability policy and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "Feature code can express approved Invoice stories without raw lines, arbitrary lifecycle changes or Firebase-shaped partial collection"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8893ACF03D5F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Parses Wayfair vendor PDFs into local draft purchase/item evidence.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [
+        "Parser fixture coverage"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Retain local parsing with confidence and human review."
+    },
+    {
+      "id": "SWIFT-99CD48FC486A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Models one category budget amount as spent/budget/remaining/percentage.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Replace with a versioned ProjectBudgetSnapshot containing both segments and readiness. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "CategoryBudgetSnapshot",
+          "paid/unpaid/recognized segments",
+          "nullable allocation"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-9A3A702CA92E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Infers invoiceable sources, signed amounts, price locks, membership, and manual credits from mutable app records.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-015 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-A3FD93675EFB",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Shows local parser diagnostics for vendor-document review and troubleshooting.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Keep non-authoritative diagnostics with redacted/safe evidence handling."
+    },
+    {
+      "id": "SWIFT-AB58F2F2752F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Shows compact single-segment budget progress previews.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-C25AEA49443F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Listens to current Transactions and computes single-segment budget progress client-side.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Watch the local canonical projection; no Transaction arithmetic in the service. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "BudgetQuerying",
+          "ProjectBudgetSnapshot",
+          "local PowerSync query adapter"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-C51DAED1C3CE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders billing summary totals derived from current Transaction/Invoice fallbacks.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve the user summary while removing paid-status and duplicated-arithmetic authority. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Invoicing and Billing Projections",
+        "surfaces": [
+          "ProjectBillingSummarySnapshot",
+          "BillingSummaryQuerying",
+          "readiness-aware presentation"
+        ],
+        "securityRequirements": [
+          "Billing totals and source counts require authorized Project financial visibility and never derive from rows filtered only after download"
+        ],
+        "syncRequirements": [
+          "Project stream carries a versioned `ProjectBillingSummarySnapshot` derived from live demand, Invoice lifecycle and immutable collection evidence with readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Replace source Transaction/paid-status fallbacks with one projection over authoritative Invoice source links and immutable collection allocations; preserve source values for discrepancy analysis only.",
+        "reconciliation": [
+          "Open, invoiced, collected, credited and outstanding cents reconcile per source/Invoice/payment with no duplicate contribution or unexplained fallback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Whole-collection, open-source, credit, cancellation/correction fixture, restricted visibility, offline readiness and source fallback migration tests"
+        ],
+        "acceptance": [
+          "Billing totals remain internally consistent and explainable from authoritative demand and actual collection evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D6F4A0ED81EF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays pinned category progress from current single-segment budget values.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve pins and ordering over paid/unpaid category projections. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Projections",
+        "surfaces": [
+          "PinnedCategoryBudgetSnapshot",
+          "ProjectPreferenceSnapshot",
+          "ProjectBudgetSnapshot"
+        ],
+        "securityRequirements": [
+          "Project budget rows, categories, amounts and contribution sources require trusted membership and the approved financial/category visibility grant before download or MCP response"
+        ],
+        "syncRequirements": [
+          "Project stream carries versioned canonical contribution rows, nullable allocations and `ProjectBudgetSnapshot` fields for paid, unpaid, recognized, total and per-category offline display"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve source Project/category allocation IDs and classify source Transactions/Invoice links/occurrences into stable target contribution identities; ignore cached budget summaries and legacy sign helpers as authority.",
+        "reconciliation": [
+          "Per Project/category contribution ID, signed cents, paid/unpaid/recognized segment and allocation totals reconcile to canonical source facts with every semantic difference explained"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Stable contribution identity, no-double-count, paid-to-unpaid movement, Transfer/client-net-zero, restricted visibility, local readiness and migration parity tests"
+        ],
+        "acceptance": [
+          "Budget total spend does not increase when value moves unpaid to paid, and every displayed cent is attributable to one canonical contribution"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D7E8B2EB55DF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Parses a vendor PDF and composes a Project Purchase followed by separate Item writes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Rename/reroute as vendor purchase or Expense intake and commit one atomic typed operation. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Vendor Document Intake",
+        "surfaces": [
+          "CommitVendorDocumentDraftCommand",
+          "typed Purchase/Expense/Item effects",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Parsed draft and commit are Account/Project scoped, attachment access is authorized and commit revalidates payer/category/source evidence at the handler"
+        ],
+        "syncRequirements": [
+          "Draft edits persist locally with stable draft/line IDs; one durable commit operation creates typed Purchase/Expense/Item effects and exposes per-line rejection without silent partial writes"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source vendor-document draft lines to stable typed draft evidence, preserve original attachment/source correlation and route commit through approved Purchase/Expense/Item commands rather than view-layer Firebase writes.",
+        "reconciliation": [
+          "Document, parsed line, edited line, attachment and created source/Item IDs plus exact cents/quantity/category balance to one operation result or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline draft edit/restart, payer/scope routing, invalid line, atomic commit/replay, attachment authorization and source migration tests"
+        ],
+        "acceptance": [
+          "A user can review a parsed vendor document offline and commit it once without a partially created Purchase/Expense/Item graph"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-DCFAC7B24CF2",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Summarizes parsed vendor-document totals, warnings, and draft evidence before import.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Keep review summary semantics while making payer/scope and target operation explicit."
+    },
+    {
+      "id": "SWIFT-E4724837204F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders category budget tracker values and Fee-specific labels from single spent progress.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-E5E95679647A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Combines Invoicing, Invoices, inferred Expenses, Fees, collection actions, and billing totals from independent local caches.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-005",
+        "O-006",
+        "O-007",
+        "O-008",
+        "O-009",
+        "O-010",
+        "O-033",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-005/O-006/O-007/O-008/O-009/O-010/O-033/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-EA6B4B939093",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Reconstructs Invoice lines from cached Items/Transactions/Fees and invokes send, collect, cancel, and payment correction.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-003",
+        "O-004",
+        "O-009",
+        "O-010",
+        "O-033",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-003/O-004/O-009/O-010/O-033/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-F1FAE8106010",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Calculates budget tracker values and labels from a single spent amount.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "SWIFT-F2B00E5AA869",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Parses legacy Invoice date representations for display and compatibility.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Keep as migration/read compatibility helper until normalized target timestamps cover all fixtures."
+    },
+    {
+      "id": "SWIFT-FD51852D673A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Formats budget currency, remaining, overage, and progress display values.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Reuse pure deterministic formatting with target snapshot inputs."
+    },
+    {
+      "id": "TEST-04DAF7B43B47",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current budget-tab Transaction/category/allocation arithmetic.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Replace with canonical paid/unpaid, collection-neutrality, credit, Transfer, and readiness fixtures. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Contract Tests",
+        "surfaces": [
+          "ProjectBudgetContributionContractSuite",
+          "category/allocation fixtures",
+          "semantic source mappings"
+        ],
+        "securityRequirements": [
+          "Fixtures cover full/category-limited/no-financial/cross-account visibility and assert protected contribution rows/counts are absent"
+        ],
+        "syncRequirements": [
+          "Tests assert local snapshot versions/readiness and stable contribution identity across offline operation replay and authoritative collection results"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Transaction-only/legacy sign expectations with semantic contribution fixtures while retaining source variants for decode and migration reconciliation.",
+        "reconciliation": [
+          "Fixture catalog balances each Project/category paid/unpaid/recognized contribution and source correlation with zero unexplained double count"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contribution resolver, ProjectBudgetSnapshot, whole-collection movement, Transfer/credit/no-double-count, visibility and migration tests"
+        ],
+        "acceptance": [
+          "Tests fail if one economic value contributes twice or if paying an Invoice increases total spend"
+        ]
+      }
+    },
+    {
+      "id": "TEST-43E8D2F232DE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current billing-summary totals and paid-status/payment fallbacks.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Require one payment Purchase and reject status-only collection inference. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Invoice Collection Contract Tests",
+        "surfaces": [
+          "ProjectBillingSummaryContractTests",
+          "whole-collection/frozen-evidence fixtures",
+          "fallback migration fixtures"
+        ],
+        "securityRequirements": [
+          "Collection fixtures cover authorized/restricted/cross-account actors and immutable server-authored payment/allocation evidence"
+        ],
+        "syncRequirements": [
+          "Tests assert one durable collection operation/result and readiness-aware synchronized Invoice/billing/budget projections across restart/retry"
+        ]
+      },
+      "migration": {
+        "rule": "Replace paid-status/payment fallbacks with semantic whole-Invoice collection and frozen allocation fixtures; unresolved variance/delivery cases remain parameterized decisions.",
+        "reconciliation": [
+          "Invoice sources, frozen line/allocation cents, actual Project Purchase, payment evidence and budget/billing projections reconcile exactly without duplicate effects"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Whole-Invoice collection idempotency/atomicity, frozen membership, no-double-count, correction fixture, visibility and migration tests"
+        ],
+        "acceptance": [
+          "One collection produces one real Project Purchase and immutable evidence while budget value moves unpaid to paid without growing total spend"
+        ]
+      }
+    },
+    {
+      "id": "TEST-49D678CB6929",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests Firestore Invoice service behavior including snapshots, partial collection, grouped settlements, cancel, and void.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-033",
+        "O-034"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-033/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    },
+    {
+      "id": "TEST-688E9434074D",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests pure budget display formatting and edge values.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "Retain and extend for paid/unpaid segment labels and negative states."
+    },
+    {
+      "id": "TEST-B14A5E3340E7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Transaction-only budget calculations and legacy signs.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Use stable contribution identities and prove no Invoice/collection double count. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Budget and Contribution Contract Tests",
+        "surfaces": [
+          "BudgetContributionResolverTests",
+          "legacy sign/source fixtures",
+          "no-double-count assertions"
+        ],
+        "securityRequirements": [
+          "Fixtures cover full/category-limited/no-financial/cross-account visibility and assert protected contribution rows/counts are absent"
+        ],
+        "syncRequirements": [
+          "Tests assert local snapshot versions/readiness and stable contribution identity across offline operation replay and authoritative collection results"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Transaction-only/legacy sign expectations with semantic contribution fixtures while retaining source variants for decode and migration reconciliation.",
+        "reconciliation": [
+          "Fixture catalog balances each Project/category paid/unpaid/recognized contribution and source correlation with zero unexplained double count"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Contribution resolver, ProjectBudgetSnapshot, whole-collection movement, Transfer/credit/no-double-count, visibility and migration tests"
+        ],
+        "acceptance": [
+          "Tests fail if one economic value contributes twice or if paying an Invoice increases total spend"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E5D06AC5D785",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests in-memory financial access filtering and fail-closed ambiguity handling.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001",
+        "EVID-M2-INVOICING-BUDGET-001"
+      ],
+      "notes": "Preserve negative expectations and add proof restricted rows/counts never download. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "target": {
+        "owner": "Financial Projection Authorization",
+        "surfaces": [
+          "FinancialRLSAndSyncContractSuite",
+          "visibility matrix fixtures",
+          "revocation/offline lease tests"
+        ],
+        "securityRequirements": [
+          "RLS, security-invoker views and Sync Streams remove unauthorized financial rows, counts, amounts and categories before local storage; ambiguity fails closed"
+        ],
+        "syncRequirements": [
+          "Each stream profile is capability/version specific and local snapshots declare visibility/readiness; client filtering is presentation defense only"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate role/financial grants through trusted membership correlation and replace in-memory filtering with server/download enforcement; record ambiguous legacy permissions for review.",
+        "reconciliation": [
+          "Role/permission fixtures prove exact row/field/count absence for every visibility class in database, Sync payload, local DB, app, MCP, report and export"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "RLS/Sync cross-account, category-limited/no-financial/admin, grant/revocation/offline lease and fail-closed ambiguity tests"
+        ],
+        "acceptance": [
+          "A restricted user never receives protected financial data locally, even while offline or when a UI filter is absent"
+        ]
+      }
+    },
+    {
+      "id": "TEST-F86623DF8B57",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests single-segment budget tracker calculations and labels.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-005"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-INVOICING-BUDGET-001"
+      ],
+      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+    }
+  ]
+}

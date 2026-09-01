@@ -1,0 +1,900 @@
+{
+  "batchId": "M0-SPACES-REVIEW-001",
+  "title": "Spaces, review, and work queues",
+  "reviewedAt": "2026-08-31",
+  "evidence": [
+    "EVID-CAPABILITY-SPACES-REVIEW-001"
+  ],
+  "surfaces": [
+    {
+      "id": "FILE-42005FEF8FD8",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Removes legacy needsReview fields from Firebase Transactions.",
+      "disposition": "source_only",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Keep as source migration history; target review uses explicit draft/import/integrity states."
+    },
+    {
+      "id": "MCPMOD-155A4AB80AC9",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Validates and applies Item Space assignment through Firebase batch helpers.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve same-scope validation in one typed idempotent operation. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "AssignItemsToSpaceCommand",
+          "ClearItemSpaceCommand",
+          "ExpectedItemRevisions",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-D391DC704D1F",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements Firebase Space list/get/create/update tools and generic fields.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-026/O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "MCPTOOL-24DFA89A8F44",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Spaces by current Firebase scope.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Return authorized stable pages with archive state and readiness. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "ListSpacesQuery",
+          "SpaceListSnapshot",
+          "stable scope/order cursor"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-2B45E68B60F7",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Gets one raw Firebase Space document.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Use named visibility-safe Space detail projection. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "GetSpaceQuery",
+          "SpaceWorkspaceSnapshot",
+          "readiness/version metadata"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-7211ECCE184C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates a Firebase Space from caller fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Validate scope, stable ID, template and offline/idempotent semantics. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "CreateSpaceCommand",
+          "stable Space/checklist IDs",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "MCPTOOL-7259894A6F1C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Updates generic Firebase Space fields.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-279736869F7E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Models Firestore Space plus embedded checklists whose missing IDs randomize and whose custom keys omit timestamps.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Use stable IDs/revisions/timestamps and separate placement/archive evidence. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceID",
+          "SpaceSnapshot",
+          "SpaceChecklistID",
+          "SpaceChecklistSnapshot"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-901849ED8462",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Models Firestore review notes and URL-keyed visual references with client-authored actor/time.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Reference stable attachment IDs and server-derived actor/time. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Review Evidence",
+        "surfaces": [
+          "SpaceReviewNoteID",
+          "SpaceReviewNoteSnapshot",
+          "AttachmentID visual references",
+          "trusted actor/time fields"
+        ],
+        "securityRequirements": [
+          "Review visibility follows Space scope; actor/time are server authority and media references use authorized stable AttachmentIDs rather than URLs"
+        ],
+        "syncRequirements": [
+          "Space stream carries stable review-note/marker/reference metadata and readiness; attachment bytes follow the separate local-first media lifecycle"
+        ]
+      },
+      "migration": {
+        "rule": "Map source review notes to stable IDs, trusted actor/time evidence and stable attachment references; preserve source URL correlation for migration only and quarantine invalid markers/missing parents.",
+        "reconciliation": [
+          "Every review note, marker and visual reference maps once with parent/actor/time/content/AttachmentID correlation or explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Review-note read/model, actor spoofing, marker bounds, attachment authorization/local display and migration correlation tests"
+        ],
+        "acceptance": [
+          "Authorized review evidence is stable and attributable offline without client-forged audit fields or permanent URL identity"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-3615734A053E",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Performs pure Space name/form validation.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Reuse after aligning one app/MCP command validation contract."
+    },
+    {
+      "id": "SWIFT-43F5DBD4F7F3",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Filters/sorts current Space lists and derives display state.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain deterministic list UX over local snapshots including archived-reference handling. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceListSnapshot",
+          "SpaceSummarySnapshot",
+          "SpaceReadinessState"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5BB6D8BE3292",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Computes Space checklist progress, template-role availability, and detail summaries.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-026",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-026/O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-C821F5F10EAE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Buckets legacy incomplete Transactions into unassigned/Inventory/Project review lists.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-3D6443DA0A90",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exposes Firebase ListenerRegistration, generic field dictionaries, hard delete, and scope listeners for Spaces.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-8494F171316C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Implements Firestore Space CRUD/listeners, generic updates, attachment normalization, and hard delete.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-037"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023/O-037 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-C11974860D78",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Performs Firestore review-note CRUD with client-authored fields and URL-shaped visual snapshots.",
+      "disposition": "replace",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-454F9189FDCF",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays an in-memory legacy incomplete-Transaction review queue from account arrays.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-032"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-032 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-56B8DD0FBD70",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Creates Project or Inventory Spaces and presents incomplete template selection.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve fast offline creation and implement real template application. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "CreateSpaceCommand presentation",
+          "ReferenceDataSnapshot template selection",
+          "OperationReceipt state"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8E04DCE88D68",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides an obsolete placeholder for the Project Spaces tab.",
+      "disposition": "retire",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Target uses the real local Space workspace."
+    },
+    {
+      "id": "SWIFT-912A031F137B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Inventory Spaces, creates them, and navigates from current context arrays.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve UX with readiness, stable ordering and typed operations. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceQuerying Inventory scope",
+          "SpaceListSnapshot",
+          "CreateSpace intent"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-BC0B886FC610",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Lists Project Spaces, creates them, and navigates from current Project context.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve UX with authorized local snapshots. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Read Models",
+        "surfaces": [
+          "SpaceQuerying Project scope",
+          "SpaceListSnapshot",
+          "CreateSpace intent"
+        ],
+        "securityRequirements": [
+          "Space rows require trusted Account and Project/Inventory scope access; Item/attachment/review summaries are filtered by their own visibility capabilities"
+        ],
+        "syncRequirements": [
+          "Project/Inventory streams carry Space summaries/details, stable checklist IDs/revisions, assignment summaries and explicit scope/history readiness for offline use"
+        ]
+      },
+      "migration": {
+        "rule": "Preserve stable source Space identity/scope/name/notes/archive/order and normalize checklist IDs/timestamps deterministically; report invalid scope, randomized-ID and orphan assignment variants.",
+        "reconciliation": [
+          "Every source Space/checklist/assignment maps once with stable IDs, scope, order, archive state and content hashes or an explicit quarantine"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline Space list/detail/readiness, stable checklist/order, Project/Inventory scope, cross-account/visibility and migration variant tests"
+        ],
+        "acceptance": [
+          "Authorized users can browse the same Spaces offline without randomized checklist identity or independent listener state hiding incompleteness"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-DDFAC91775DA",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Builds a large Firebase-listener Space detail that also composes Item media, movement, status, relation, delete, note and checklist actions.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023",
+        "O-037",
+        "A-015"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023/O-037/A-015 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "SWIFT-57F289B15D4B",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Presents Set/Clear Space selection for Item actions.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve picker UX over eligible local Space summaries. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "SpaceAssignmentCapabilitySnapshot",
+          "AssignItemsToSpaceCommand",
+          "ClearItemSpaceCommand"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-5A16999D5F3A",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Displays Space picker rows and selection state.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Keep pure presentation with archived/ineligible states supplied by query model."
+    },
+    {
+      "id": "SWIFT-9F4789704808",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits Space details through generic service fields.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Submit typed revisioned detail intent. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "UpdateSpaceDetailsCommand",
+          "ExpectedSpaceRevision",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-C3BE14BFCDE5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Renders Space card identity, progress, image, counts, and navigation affordance.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain presentation over stable Space summary values."
+    },
+    {
+      "id": "SWIFT-B5661A312D65",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Edits embedded checklist arrays and returns the whole replacement value.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve editing UX with stable IDs/revision conflict handling. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Spaces and Placement Operations",
+        "surfaces": [
+          "ReviseSpaceChecklistsCommand",
+          "stable checklist IDs/revision",
+          "OperationReceipt"
+        ],
+        "securityRequirements": [
+          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+        ],
+        "syncRequirements": [
+          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+        ]
+      },
+      "migration": {
+        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "reconciliation": [
+          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+        ],
+        "acceptance": [
+          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-EF8BEC4E8BE5",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Picks, marks, views, and edits URL-keyed Space review-note photo references.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "TEST-3885FE2E9453",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Space filtering/sorting/list calculations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain sorting fixtures and add archived-reference/readiness cases. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Target Contract Tests",
+        "surfaces": [
+          "SpaceListProjectionTests",
+          "archive/order/readiness fixtures",
+          "scope variants"
+        ],
+        "securityRequirements": [
+          "Fixtures cover Project/Inventory, standard/restricted/cross-account identities and template/reference capability separation"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local Space snapshots/readiness and durable operation outcomes across offline restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/listener/random-ID fixtures with stable semantic Space/checklist/assignment/readiness and source migration variants.",
+        "reconciliation": [
+          "Fixture catalog covers each Space scope, archive/list order, checklist revision, assignment and migration anomaly with expected hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Space list/detail/presentation, checklist progress, assignment, archive capability, offline and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests preserve intended Space workflows while rejecting generic CRUD, random checklist identity and silent partial updates"
+        ]
+      }
+    },
+    {
+      "id": "TEST-68DF2A480C92",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Exercises current Firebase Space CRUD integration behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Replace with app/MCP command, RLS, Sync, offline, conflict and migration integration tests. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Target Integration Tests",
+        "surfaces": [
+          "SpaceTargetIntegrationSuite",
+          "local/cloud-staging adapters",
+          "source import fixtures"
+        ],
+        "securityRequirements": [
+          "Harness uses isolated synthetic Accounts/Principals and target RLS/Sync policies; production and Firebase-emulator endpoints are rejected"
+        ],
+        "syncRequirements": [
+          "Harness controls encrypted local DB, Space streams, offline restart, command replay and authoritative outcomes"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase Space CRUD integration with target typed query/operation/security/offline contracts and immutable source-import fixtures.",
+        "reconciliation": [
+          "Fixture Space/checklist/assignment/review IDs and hashes reconcile across local adapter, staging target and source transform"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Local/cloud-staging Space adapter, RLS/Sync, restart/replay/fault, migration and environment-refusal self-tests"
+        ],
+        "acceptance": [
+          "Integration evidence proves the target Space slice without using or modifying production Firebase"
+        ]
+      }
+    },
+    {
+      "id": "TEST-8BFDF8C22B0C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests checklist progress and current Space detail calculations.",
+      "disposition": "replace",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001"
+      ],
+      "notes": "Preserve pure progress tests and add revision/capability/archive cases. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "target": {
+        "owner": "Space Target Contract Tests",
+        "surfaces": [
+          "SpaceWorkspaceSnapshotTests",
+          "checklist progress/detail fixtures",
+          "readiness assertions"
+        ],
+        "securityRequirements": [
+          "Fixtures cover Project/Inventory, standard/restricted/cross-account identities and template/reference capability separation"
+        ],
+        "syncRequirements": [
+          "Tests assert versioned local Space snapshots/readiness and durable operation outcomes across offline restart/reconnect"
+        ]
+      },
+      "migration": {
+        "rule": "Replace Firebase/listener/random-ID fixtures with stable semantic Space/checklist/assignment/readiness and source migration variants.",
+        "reconciliation": [
+          "Fixture catalog covers each Space scope, archive/list order, checklist revision, assignment and migration anomaly with expected hashes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Space list/detail/presentation, checklist progress, assignment, archive capability, offline and migration contract suites"
+        ],
+        "acceptance": [
+          "Tests preserve intended Space workflows while rejecting generic CRUD, random checklist identity and silent partial updates"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E97A8051035C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests review-note Space validation, marker bounds, photo filtering, and Firestore update fields.",
+      "disposition": "redesign",
+      "status": "characterized",
+      "blockers": [
+        "O-023"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority."
+    },
+    {
+      "id": "TEST-EBA9C48BC4EE",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Tests current Space form validation.",
+      "disposition": "preserve",
+      "status": "characterized",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001"
+      ],
+      "notes": "Retain and share validation across app/MCP commands."
+    }
+  ]
+}
