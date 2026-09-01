@@ -3,7 +3,8 @@
   "title": "Platform, transport, release, and migration control",
   "reviewedAt": "2026-08-31",
   "evidence": [
-    "EVID-CAPABILITY-PLATFORM-CONTROL-001"
+    "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+    "EVID-MIGRATION-RUN-INTEGRITY-001"
   ],
   "surfaces": [
     {
@@ -3456,6 +3457,95 @@
         ],
         "acceptance": [
           "All request, lifecycle, restart, mismatch, expiry, tamper and non-authority obligations pass in LedgerTargetCore"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-CBE990F49610",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides a comment-only target migration-control scaffold outside LedgerTargetCore and the target application runtime; no migration plan, journal, manifest, source reader, target writer or execution behavior exists yet.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
+      ],
+      "notes": "Target-only technical-control scaffold. The ready dossier authorizes provider-free plan/journal/manifest integrity values only; it cannot read Firebase, connect to Supabase, load data, sign a plan, approve apply mode, execute a migration or alter authority.",
+      "target": {
+        "owner": "Migration Run Plan and Journal Integrity",
+        "surfaces": [
+          "MigrationRunPlan and immutable source/target/artifact identity",
+          "MigrationRunJournal and deterministic resume evidence",
+          "MigrationRunManifest and per-entity outcome reconciliation",
+          "stable migration-integrity failure codes and canonical restart evidence"
+        ],
+        "securityRequirements": [
+          "Canonical values contain opaque environment/Account/export digests and immutable hashes but no raw identifier, path, URL, credential, token, provider handle or operator identity",
+          "Every validated plan and manifest is evidence-only and cannot represent signing, operator approval, production apply permission, authority activation or cutover"
+        ],
+        "syncRequirements": [
+          "Plan, journal and manifest evidence reconstructs deterministically without network, provider SDK, target database or mutable process state",
+          "Migration evidence is separate operational state and defines no PowerSync Stream or application local database table"
+        ]
+      },
+      "migration": {
+        "rule": "Define only provider-free integrity values for an already-created immutable export and explicitly identified target; do not implement extraction, transformation, load, provider adapters, apply authorization or migration execution.",
+        "reconciliation": [
+          "Exact plan identity, monotonic journal checkpoints, per-entity planned/applied/skipped/blocked/failed counts, artifact hashes and reconciliation results must close without unexplained differences before a completed evidence manifest can exist"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MigrationRunIntegrityTests"
+        ],
+        "acceptance": [
+          "Synthetic provider-free fixtures prove deterministic plan/journal/manifest evidence, restart/resume identity, exact counts, tamper refusal, wrong-target refusal and permanent non-authority"
+        ]
+      }
+    },
+    {
+      "id": "TEST-05A1A0F4E72C",
+      "acknowledgeCurrentSource": true,
+      "currentBehavior": "Provides a comment-only executable-test scaffold for the separate target migration-control module; no test behavior or provider fixture exists yet.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
+      ],
+      "notes": "Target-only test scaffold. Future tests use synthetic hashes, counts, versions and timestamps only and may not open source exports, databases, files, hosted resources or migration providers.",
+      "target": {
+        "owner": "Migration Run Plan and Journal Integrity",
+        "surfaces": [
+          "MigrationRunIntegrityTests",
+          "canonical plan/journal/manifest restart fixtures",
+          "interruption/resume/idempotency and count-reconciliation fixtures",
+          "environment/hash/sequence/tamper/non-authority rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use opaque synthetic digests and cannot contain production IDs, raw Account identities, credentials, paths, URLs or provider metadata",
+          "Production-shaped evidence remains non-executable and cannot satisfy source freeze, backup, operator, signing, rehearsal or cutover gates"
+        ],
+        "syncRequirements": [
+          "All fixtures run deterministically offline with no target application, provider SDK, database or PowerSync process"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic values only; never invoke current reverse-migration code, source profilers, release scripts, a Firebase export or a Supabase target.",
+        "reconciliation": [
+          "Equivalent evidence normalizes identically and any changed plan digest, checkpoint order, count, artifact hash or reconciliation status is refused with stable codes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter MigrationRunIntegrityTests"
+        ],
+        "acceptance": [
+          "All migration-integrity, restart, interruption, reconciliation, tamper and non-authority obligations pass in the separate LedgerTargetMigrationCore module"
         ]
       }
     }

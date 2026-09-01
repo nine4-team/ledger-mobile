@@ -168,7 +168,12 @@ function lineNumber(text, offset) {
 
 function swiftKind(filePath) {
   const rel = relative(filePath);
-  if (rel.includes("/LedgerTargetCore/")) return "swift_platform";
+  if (
+    rel.includes("/LedgerTargetCore/") ||
+    rel.includes("/LedgerTargetMigrationCore/")
+  ) {
+    return "swift_platform";
+  }
   if (rel.includes("/Auth/")) return "swift_auth";
   if (rel.includes("/Services/")) return "swift_service";
   if (rel.includes("/Views/")) return "swift_view";
@@ -1103,6 +1108,7 @@ function discoverSwiftApplication() {
     path.join(ROOT, "LedgeriOS/LedgeriOS"),
     path.join(ROOT, "LedgeriOS/LedgerTargetApp"),
     path.join(ROOT, "LedgeriOS/LedgerTargetCore"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetMigrationCore"),
   ];
   return directories.flatMap((directory) =>
     walk(directory, (filePath) => filePath.endsWith(".swift")),
@@ -1136,6 +1142,7 @@ function discoverSwiftTests() {
   const directories = [
     path.join(ROOT, "LedgeriOS/LedgeriOSTests"),
     path.join(ROOT, "LedgeriOS/LedgerTargetCoreTests"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetMigrationCoreTests"),
   ];
   return directories.flatMap((directory) =>
     walk(directory, (filePath) => filePath.endsWith(".swift")),

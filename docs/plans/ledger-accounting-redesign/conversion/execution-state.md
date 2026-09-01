@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 45
+State version: 46
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROTECTED-ARTIFACT-VERIFIED-NEXT-FOUNDATION-SELECTION-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: MIGRATION-RUN-INTEGRITY-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -545,6 +545,22 @@ modifying the running Firebase application before hard cutover.
   protected-artifact obligations and exactly its two target-only surfaces are
   now `verified`; current report/export/PDF/share/platform destination surfaces
   remain `target_mapped`.
+- Selected and passed the ready gate for
+  `migration-run-plan-and-journal-integrity` only after confirming the boundary
+  is explicitly owned by the migration/release architecture and reviewed
+  platform dossier. Exactly two comment-only surfaces live under a separate
+  target migration-control module; neither is linked into the target app.
+- The ready dossier binds immutable source/target/Account/artifact/version
+  evidence, deterministic journal/replay/resume semantics, exact per-entity
+  outcomes, named reconciliation and permanent evidence-only non-authority to
+  six planned domain/restart/rejection/migration/reconciliation/operational
+  obligations. It cannot read an export, connect to a target, persist a journal,
+  sign or approve a plan, execute/roll back a migration or authorize cutover.
+- Extended automatic conversion discovery to the separate migration-core/test
+  directories and re-acknowledged only the exact reviewed control-script hash.
+  Sync/check/report pass at 725 recorded / 710 discovered surfaces with zero
+  errors and the same three documented retired-path warnings. The existing
+  reverse Supabase-to-Firebase package remains source-only and untouched.
 
 ## Next Action
 
@@ -554,14 +570,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Select the next decision-independent technical-control foundation only from
-   currently `target_mapped` surfaces. Re-evaluate the provider-free fail-
-   closed migration-run manifest/plan-integrity boundary against exact mapped
-   surfaces and architecture; if it is complete and belongs outside the target
-   application runtime, create the narrow separate target tooling scaffold,
-   classify it, claim it in one dossier and pass `ready` before behavior. Never
-   execute a migration or advance current migration/release scripts from shared
-   evidence-contract proof.
+2. Implement only the ready
+   `migration-run-plan-and-journal-integrity` provider-free contract in the
+   separate `LedgerTargetMigrationCore` package target. Keep it absent from the
+   target and Firebase application graphs; add pure synthetic tests for
+   canonical plan/journal/manifest evidence, replay/resume, exact count and
+   reconciliation closure, tamper/wrong-target refusal and production-shaped
+   non-authority. Never read an export, open a provider/database/file, persist a
+   journal, execute a migration or advance current migration/release scripts.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -59,3 +59,16 @@ wrong-hash test failed with the requested and observed hashes identified; after
 restoring the reviewed hash, sync/check/report returned zero errors and
 warnings. This supplies an auditable re-acknowledgment path without weakening
 the original no-silent-drift rule.
+
+## Separate Target Migration-Control Discovery
+
+On 2026-09-01 the control tool advanced to source hash
+`5028736af14eeb48db09867498da41d386eee1a2f510b82340393079505223f5`.
+Automatic Swift discovery now includes
+`LedgeriOS/LedgerTargetMigrationCore` and its test directory as separate
+platform/test surfaces while retaining the existing application/core scopes.
+The reviewed exact-hash acknowledgment, syntax check, synchronization, full
+conversion check and report pass at 725 recorded / 710 currently discovered
+surfaces with zero errors and the same three documented retired-path warnings.
+This is inventory coverage only: it does not link the module into an app,
+execute migration behavior or grant provider, production or cutover authority.

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T23:14:08.661Z",
+  "generatedFromManifestSync": "2026-09-01T23:25:46.245Z",
   "totals": {
-    "slices": 9,
-    "claimedTargetSurfaces": 42,
+    "slices": 10,
+    "claimedTargetSurfaces": 44,
     "unclaimedTargetSurfaces": 419,
     "implementationAdvancedTargetSurfaces": 27
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 8,
@@ -17,6 +17,21 @@
     "cutover_ready": 0
   },
   "slices": [
+    {
+      "sliceId": "migration-run-plan-and-journal-integrity",
+      "title": "Prove a migration run plan, interruption journal, and reconciliation manifest without executing it",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Migration Run Plan and Journal Integrity",
+      "surfaceIds": [
+        "SWIFT-CBE990F49610",
+        "TEST-05A1A0F4E72C"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/migration-run-plan-and-journal-integrity.json"
+    },
     {
       "sliceId": "operation-lifecycle-and-readiness",
       "title": "Accept offline operations durably and distinguish queued work from authoritative results",

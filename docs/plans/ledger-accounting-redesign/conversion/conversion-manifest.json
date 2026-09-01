@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T23:14:08.661Z",
+    "lastSynchronizedAt": "2026-09-01T23:25:46.245Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2121,10 +2121,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "8fa03bfb80e387d673b2f11790f24a0686e693a6c954269ea18bef8c88d21bdd",
-      "acknowledgedSourceHash": "8fa03bfb80e387d673b2f11790f24a0686e693a6c954269ea18bef8c88d21bdd",
+      "observedSourceHash": "5028736af14eeb48db09867498da41d386eee1a2f510b82340393079505223f5",
+      "acknowledgedSourceHash": "5028736af14eeb48db09867498da41d386eee1a2f510b82340393079505223f5",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, the separately isolated target migration-core/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -2168,9 +2168,10 @@
         "EVID-CAPABILITY-001",
         "EVID-PRODUCT-AUTHORITY-001",
         "EVID-SLICE-METHOD-001",
-        "EVID-CONTRACT-CATALOG-001"
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. The separately compiled migration-control module is discovered without placing it in the application runtime.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -27501,6 +27502,65 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-CBE990F49610",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetMigrationCore/MigrationRunIntegrity.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetMigrationCore/MigrationRunIntegrity.swift"
+        }
+      ],
+      "observedSourceHash": "32c87fc70977a2b6781d23cf09a0f2aef4633e4c09e26c1a03db54ac042c0ffb",
+      "acknowledgedSourceHash": "32c87fc70977a2b6781d23cf09a0f2aef4633e4c09e26c1a03db54ac042c0ffb",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target migration-control scaffold outside LedgerTargetCore and the target application runtime; no migration plan, journal, manifest, source reader, target writer or execution behavior exists yet.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Migration Run Plan and Journal Integrity",
+        "surfaces": [
+          "MigrationRunPlan and immutable source/target/artifact identity",
+          "MigrationRunJournal and deterministic resume evidence",
+          "MigrationRunManifest and per-entity outcome reconciliation",
+          "stable migration-integrity failure codes and canonical restart evidence"
+        ],
+        "securityRequirements": [
+          "Canonical values contain opaque environment/Account/export digests and immutable hashes but no raw identifier, path, URL, credential, token, provider handle or operator identity",
+          "Every validated plan and manifest is evidence-only and cannot represent signing, operator approval, production apply permission, authority activation or cutover"
+        ],
+        "syncRequirements": [
+          "Plan, journal and manifest evidence reconstructs deterministically without network, provider SDK, target database or mutable process state",
+          "Migration evidence is separate operational state and defines no PowerSync Stream or application local database table"
+        ]
+      },
+      "migration": {
+        "rule": "Define only provider-free integrity values for an already-created immutable export and explicitly identified target; do not implement extraction, transformation, load, provider adapters, apply authorization or migration execution.",
+        "reconciliation": [
+          "Exact plan identity, monotonic journal checkpoints, per-entity planned/applied/skipped/blocked/failed counts, artifact hashes and reconciliation results must close without unexplained differences before a completed evidence manifest can exist"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "MigrationRunIntegrityTests"
+        ],
+        "acceptance": [
+          "Synthetic provider-free fixtures prove deterministic plan/journal/manifest evidence, restart/resume identity, exact counts, tamper refusal, wrong-target refusal and permanent non-authority"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
+      ],
+      "notes": "Target-only technical-control scaffold. The ready dossier authorizes provider-free plan/journal/manifest integrity values only; it cannot read Firebase, connect to Supabase, load data, sign a plan, approve apply mode, execute a migration or alter authority.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "SWIFT-CC7424F01DD0",
       "kind": "swift_view",
       "name": "LedgeriOS/LedgeriOS/Views/Reports/PropertyManagementReportView.swift",
@@ -30962,6 +31022,64 @@
       ],
       "notes": "Replace with canonical paid/unpaid, collection-neutrality, credit, Transfer, and readiness fixtures. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
+    },
+    {
+      "id": "TEST-05A1A0F4E72C",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift"
+        }
+      ],
+      "observedSourceHash": "cb0d5b49675e64cc258365fa7e7ea355d16d77d3d80a17452707dd3da801c37d",
+      "acknowledgedSourceHash": "cb0d5b49675e64cc258365fa7e7ea355d16d77d3d80a17452707dd3da801c37d",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only executable-test scaffold for the separate target migration-control module; no test behavior or provider fixture exists yet.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Migration Run Plan and Journal Integrity",
+        "surfaces": [
+          "MigrationRunIntegrityTests",
+          "canonical plan/journal/manifest restart fixtures",
+          "interruption/resume/idempotency and count-reconciliation fixtures",
+          "environment/hash/sequence/tamper/non-authority rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use opaque synthetic digests and cannot contain production IDs, raw Account identities, credentials, paths, URLs or provider metadata",
+          "Production-shaped evidence remains non-executable and cannot satisfy source freeze, backup, operator, signing, rehearsal or cutover gates"
+        ],
+        "syncRequirements": [
+          "All fixtures run deterministically offline with no target application, provider SDK, database or PowerSync process"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic values only; never invoke current reverse-migration code, source profilers, release scripts, a Firebase export or a Supabase target.",
+        "reconciliation": [
+          "Equivalent evidence normalizes identically and any changed plan digest, checkpoint order, count, artifact hash or reconciliation status is refused with stable codes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter MigrationRunIntegrityTests"
+        ],
+        "acceptance": [
+          "All migration-integrity, restart, interruption, reconciliation, tamper and non-authority obligations pass in the separate LedgerTargetMigrationCore module"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-MIGRATION-RUN-INTEGRITY-001"
+      ],
+      "notes": "Target-only test scaffold. Future tests use synthetic hashes, counts, versions and timestamps only and may not open source exports, databases, files, hosted resources or migration providers.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "TEST-0AD8A0619179",

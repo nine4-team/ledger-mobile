@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "migration-run-plan-and-journal-integrity",
+  "title": "Prove a migration run plan, interruption journal, and reconciliation manifest without executing it",
+  "kind": "technical_control",
+  "status": "ready",
+  "owner": "Migration Run Plan and Journal Integrity",
+  "surfaceIds": [
+    "SWIFT-CBE990F49610",
+    "TEST-05A1A0F4E72C"
+  ],
+  "requirements": [
+    {
+      "id": "MIGRATION-RUN-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Import Pipeline",
+      "invariant": "One immutable migration plan binds an already-produced source export, one explicit target environment and Account scope, exact repository/artifact/contract/mapping versions and expected entity work before any stage result can be recorded; constructing or validating the plan performs no source read or target write.",
+      "decisionIds": [],
+      "verificationIds": ["MIGRATION-RUN-TEST-001", "MIGRATION-RUN-TEST-003", "MIGRATION-RUN-TEST-004", "MIGRATION-RUN-TEST-006"]
+    },
+    {
+      "id": "MIGRATION-RUN-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Load",
+      "invariant": "Run progress is journaled against the exact plan with monotonic stages, sequence and counts; an equivalent replay returns the same checkpoint, conflicting replay fails, and interruption produces deterministic resume evidence without duplicating target evidence.",
+      "decisionIds": [],
+      "verificationIds": ["MIGRATION-RUN-TEST-001", "MIGRATION-RUN-TEST-002", "MIGRATION-RUN-TEST-003", "MIGRATION-RUN-TEST-004"]
+    },
+    {
+      "id": "MIGRATION-RUN-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Migration Manifest",
+      "invariant": "A terminal manifest closes every planned entity count into applied, skipped, blocked or failed outcomes, binds the final journal and named reconciliation rules, records completion or a stable abort reason and remains deterministic evidence rather than migration or cutover authority.",
+      "decisionIds": [],
+      "verificationIds": ["MIGRATION-RUN-TEST-001", "MIGRATION-RUN-TEST-003", "MIGRATION-RUN-TEST-005", "MIGRATION-RUN-TEST-006"]
+    },
+    {
+      "id": "MIGRATION-RUN-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Migration tests",
+      "invariant": "Executable fixtures prove deterministic dry-run evidence, batch interruption/resume, idempotent replay, ambiguous blockers, exact source-to-target coverage and production-destination non-authority without accessing a provider or mutable export.",
+      "decisionIds": [],
+      "verificationIds": ["MIGRATION-RUN-TEST-002", "MIGRATION-RUN-TEST-003", "MIGRATION-RUN-TEST-004", "MIGRATION-RUN-TEST-005", "MIGRATION-RUN-TEST-006"]
+    },
+    {
+      "id": "MIGRATION-RUN-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Rollback Boundaries",
+      "invariant": "The provider-free contract cannot sign, approve, execute, apply, resume or roll back a migration and cannot activate target authority; production-shaped evidence remains non-executable until separate rehearsal, source-freeze, backup, operator and cutover gates are explicitly satisfied.",
+      "decisionIds": [],
+      "verificationIds": ["MIGRATION-RUN-TEST-001", "MIGRATION-RUN-TEST-003", "MIGRATION-RUN-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Closed bounded run/export/entity/rule/version values and exact SHA-256 digests identify one immutable source snapshot, migration artifact, mapping set, target environment binding and opaque Account scope without raw provider identifiers.",
+        "MigrationRunPlan validates one mode, explicit source/target identities, repository and artifact versions, exact schema/query/operation/Sync versions and a unique sorted expected-entity set; it carries a canonical plan digest and evidenceOnly disposition.",
+        "MigrationRunJournal accepts only replay-identical or next-sequence events for the exact plan, enforces ordered stages and monotonic time/counts, and derives a deterministic resume fingerprint from the last accepted checkpoint.",
+        "MigrationRunManifest binds the exact plan and terminal journal, closes every expected entity into planned/applied/skipped/blocked/failed counts, records unique named reconciliation results and exposes only completed, interrupted, blocked or aborted evidence dispositions."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free integrity slice creates no target table, migration, constraint, index, view, function, schema history or journal store."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No exporter, transformer, loader, reconciliation query, signing endpoint, apply command, migration runner or provider handler executes."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, view or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row or privileged function exists; future journal/manifest storage and operator access require a separate security slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "Migration evidence is not application sync state and this slice defines no PowerSync Stream, local app table or upload queue."
+    },
+    "localOffline": {
+      "items": [
+        "Plan, journal and terminal manifest encode as bounded deterministic canonical bytes and reconstruct only through the same validators without network, keychain, filesystem, database, provider SDK or mutable process state.",
+        "Equivalent event replay is idempotent, conflicting replay and sequence/stage/count regression fail atomically, and interrupted evidence reconstructs the same resume fingerprint after restart.",
+        "Canonical values exclude paths, URLs, credentials, raw environment/Account/operator identities and provider handles and stay below fixed plan, journal and manifest byte ceilings."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Immutable source and mapping artifacts are represented only by opaque IDs, byte counts and hashes; this slice reads, writes, copies or deletes no file or object."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The contract is in a separate migration-control module not linked by the target app or current MCP; future operator tooling must consume it through a separately reviewed boundary."
+    },
+    "migrationReconciliation": {
+      "items": [
+        "Expected entity plans and journal outcomes reconcile exact nonnegative counts with no duplicate entity or mapping identity and no outcome sum beyond the planned total.",
+        "A completed manifest requires all planned counts closed, no blocked/failed/unexplained results, every required reconciliation rule passed or explicitly explained under its reviewed rule identity, and exact plan/journal/artifact hashes.",
+        "Interrupted, blocked and aborted manifests preserve the last checkpoint, incomplete counts and stable reason evidence and cannot be represented as completed."
+      ],
+      "notApplicable": ""
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Stable failure codes distinguish invalid or unsafe identity, wrong environment or plan, duplicate or missing entities/rules, event replay conflict, sequence/stage/time/count regression, incomplete reconciliation, hash/digest tamper, noncanonical bytes and size overflow.",
+        "The terminal evidence records safe stage, counts, disposition and reason codes only; it contains no private payload, operator credential, signing claim, provider log or assertion that a rollback/runbook action occurred."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The module is a separate package target not linked into LedgerTargetStaging or the Firebase application; app and source-project graph guards must fail if it becomes runtime-linked.",
+        "Every accepted plan and manifest has evidenceOnly authority, including production-shaped fixtures; signing, operator approval, rehearsal acceptance, production apply, rollback execution and target authority activation remain separate gates.",
+        "The scaffolds and later implementation cannot invoke or advance current reverse-migration, Firebase profiler, repair, release or cutover scripts."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "MIGRATION-RUN-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
+      "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-005"],
+      "expected": "Closed source/target/artifact/entity/rule identities, sorted unique plan work, legal journal progression, exact terminal outcomes, canonical digests and evidence-only authority validate deterministically.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "MIGRATION-RUN-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
+      "covers": ["MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-004"],
+      "expected": "Canonical plan/journal evidence reconstructs offline, equivalent replay returns the prior checkpoint, interruption preserves an identical resume fingerprint and a resumed sequence closes without duplicated counts.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "MIGRATION-RUN-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
+      "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-004", "MIGRATION-RUN-REQ-005"],
+      "expected": "Wrong target/plan, unsafe values, duplicates, replay conflict, event sequence/stage/time/count regression, digest tamper, noncanonical bytes and oversized evidence fail with stable codes and no accepted partial state.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "MIGRATION-RUN-TEST-004",
+      "kind": "migration",
+      "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
+      "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-002", "MIGRATION-RUN-REQ-004"],
+      "expected": "Synthetic dry-run, interruption, resume and idempotent reapply evidence stays bound to one immutable plan and exact source/target/artifact versions without provider, filesystem or database access.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "MIGRATION-RUN-TEST-005",
+      "kind": "reconciliation",
+      "owner": "LedgeriOS/LedgerTargetMigrationCoreTests/MigrationRunIntegrityTests.swift",
+      "covers": ["MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-004"],
+      "expected": "Per-entity outcome totals, required named reconciliation rules and exact hashes must close with zero unexplained differences before completed evidence exists; incomplete, blocked or failed evidence remains non-complete.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "MIGRATION-RUN-TEST-006",
+      "kind": "operational",
+      "owner": "scripts/check-target-environment.mjs and pull-request CI Isolated target environment job",
+      "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-004", "MIGRATION-RUN-REQ-005"],
+      "expected": "The exact implementation commit proves the separate provider-free migration module is tested but absent from both target and Firebase application runtime graphs, with no provider credential, source/export access, target write, script invocation or production/cutover action.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent technical-control foundation derived from the reviewed platform capability dossier. It stops before exporter, transformer, loader, reconciler or provider adapters, journal persistence, signatures, operator identity or approval, hosted resources, Firebase source access, Supabase target access, migration execution, production apply, rollback execution, release or cutover."
+}
