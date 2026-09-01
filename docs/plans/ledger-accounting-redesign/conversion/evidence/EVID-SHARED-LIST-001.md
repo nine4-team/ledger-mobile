@@ -2,9 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / offline presentation / query contract
-- Repository baseline: `fcfffdd0` on
-  `codex/supabase-powersync-implementation`; implementation was verified in the
-  working diff before commit
+- Repository implementation commit:
+  `587ce11eff25a5c9936b22f3482fbf0bca11ae2b` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current application project were not
   modified
@@ -92,6 +92,14 @@ Local results on 2026-09-01:
 - source `LedgeriOS.xcodeproj` diff: empty; and
 - tracked diff formatting check: pass.
 
+Immutable GitHub Actions run
+[`33560578730`](https://github.com/nine4-team/ledger-mobile/actions/runs/33560578730)
+passed on the exact implementation commit. Its `Conversion state and
+traceability` and `Isolated target environment` jobs both passed, including
+conversion coverage, generated-artifact cleanliness, target dependency and
+environment boundaries, generated app/MCP contracts, all target tests, the
+macOS build, and the generic iOS Simulator build.
+
 ## Verification Status
 
 - `SHARED-LIST-TEST-001`: passed locally. Named query state is bounded,
@@ -100,8 +108,13 @@ Local results on 2026-09-01:
   same local partial truth, and incomplete empty is never authoritative empty.
 - `SHARED-LIST-TEST-003`: passed locally. Failures are non-enumerating, safe
   cached rows survive retryable faults, and mismatched snapshots fail closed.
-- `SHARED-LIST-TEST-004`: exact-commit pull-request CI is pending, so the slice
-  remains `implemented`, not `verified`.
+- `SHARED-LIST-TEST-004`: passed in immutable GitHub Actions run `33560578730`
+  on exact implementation commit
+  `587ce11eff25a5c9936b22f3482fbf0bca11ae2b`.
+
+All four obligations pass, so the slice and its two target-only surfaces are
+`verified`. The four motivating current UI surfaces remain only
+`target_mapped` for the reasons above.
 
 ## Explicit Limits
 

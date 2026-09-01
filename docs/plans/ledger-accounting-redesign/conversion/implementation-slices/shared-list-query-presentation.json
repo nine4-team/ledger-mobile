@@ -3,7 +3,7 @@
   "sliceId": "shared-list-query-presentation",
   "title": "Distinguish local list readiness from authoritative empty results",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Shared Query Presentation",
   "surfaceIds": [
     "SWIFT-38DC8C755068",
@@ -153,8 +153,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SHARED-LIST-REQ-001", "SHARED-LIST-REQ-003", "SHARED-LIST-REQ-005"],
       "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SHARED-LIST-001"]
     }
   ],
   "implementationEvidence": ["EVID-SHARED-LIST-001"],

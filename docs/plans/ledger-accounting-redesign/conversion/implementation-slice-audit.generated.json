@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:20:46.476Z",
+  "generatedFromManifestSync": "2026-09-01T21:24:59.992Z",
   "totals": {
     "slices": 4,
     "claimedTargetSurfaces": 32,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 2,
+    "implemented": 0,
+    "verified": 3,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -39,7 +39,7 @@
       "sliceId": "shared-list-query-presentation",
       "title": "Distinguish local list readiness from authoritative empty results",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Shared Query Presentation",
       "surfaceIds": [
         "SWIFT-38DC8C755068",

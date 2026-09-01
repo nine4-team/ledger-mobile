@@ -2703,7 +2703,7 @@
       "acknowledgeSourceHash": "d3396fc6d99060260ab97ba06cf9bc634f35a0754bf31a69004bfccc1625d373",
       "currentBehavior": "Defines target-only named list query, sort, filter, cursor, readiness, safe-failure, intent, local snapshot, and pure presentation-reducer contracts without a backend dependency.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
@@ -2750,7 +2750,7 @@
       "acknowledgeSourceHash": "8013f41abebbba025d2392b1d5106d830fa637fdbb10bfdf4c6bfefdb78ff815",
       "currentBehavior": "Exercises target-only named-query validation, stable cursor binding, restart reconstruction, authoritative-empty versus incomplete/no-match state, safe failure collapse, cached-row preservation, retry intent, and mismatched late-snapshot refusal.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",

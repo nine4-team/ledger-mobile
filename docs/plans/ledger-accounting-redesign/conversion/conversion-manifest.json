@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T21:20:46.476Z",
+    "lastSynchronizedAt": "2026-09-01T21:24:59.992Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18498,7 +18498,7 @@
           "Cached-first list state is deterministic and safe without backend values or network availability"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
@@ -32171,7 +32171,7 @@
           "All domain, restart and safe-failure fixtures pass without network, provider SDK, credential or hosted resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",

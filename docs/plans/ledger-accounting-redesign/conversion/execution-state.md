@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 31
+State version: 32
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SHARED-LIST-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: SHARED-LIST-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -410,6 +410,12 @@ modifying the running Firebase application before hard cutover.
   are `implemented`; four broader current list-control replacements remain
   `target_mapped` pending concrete UI/accessibility and feature profiles. See
   `EVID-SHARED-LIST-001`.
+- Exact implementation commit `587ce11e` passed immutable GitHub Actions run
+  `33560578730`: both conversion traceability and isolated-target jobs passed,
+  including all target tests, generated contracts, target boundary checks,
+  macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
+  shared-list obligations and exactly its two target-only surfaces are now
+  `verified`; the four concrete source UI replacements remain `target_mapped`.
 
 ## Next Action
 
@@ -419,11 +425,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented `shared-list-query-presentation` checkpoint,
-   require the exact-commit pull-request conversion and isolated-target jobs to
-   pass, and record the immutable run in `EVID-SHARED-LIST-001`. Only then mark
-   `SHARED-LIST-TEST-004`, the dossier, and its two target-only surfaces
-   `verified`; do not advance the four concrete source UI replacements.
+2. Create and pass the ready gate for the next decision-independent technical
+   slice, `scoped-route-resolution-and-restoration`. Derive it from the app-
+   shell dossier's `Navigation and restoration` contract and implement only
+   target-owned stable route/scope/restoration keys, non-enumerating resolution
+   outcomes, and late-workspace-result rejection. Do not activate Auth,
+   workspace lifecycle, provider adapters, hosted resources, or concrete UI,
+   and do not advance current source routes merely from shared-contract proof.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
