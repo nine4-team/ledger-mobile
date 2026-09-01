@@ -197,7 +197,7 @@ struct ItemsTabView: View {
             ActionMenuSheet(
                 title: "Add Item",
                 items: [
-                    ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
+                    ActionMenuItem(id: "item-draft", label: "Quick Add", icon: "camera.badge.ellipsis", onPress: {
                         showNewItemDraft = true
                     }),
                     ActionMenuItem(id: "item", label: "Item", icon: "plus.square.fill", onPress: {
@@ -214,12 +214,14 @@ struct ItemsTabView: View {
                 context: protoItem.projectId.map { .project($0, spaceId: nil) } ?? .inventory,
                 initialTransactionId: protoItem.transactionId,
                 initialName: protoItem.name,
+                initialNotes: protoItem.notes,
                 initialSku: protoItem.sku,
                 initialSkuCandidates: protoItem.extracted?.skuCandidates ?? [],
                 initialQuantity: protoItem.quantity,
                 initialImageRefs: protoItem.photos ?? [],
+                initialSpaceId: protoItem.spaceId,
                 convertingProtoItemId: protoItem.id,
-                initialIsFromInventory: protoItem.usesInventoryRouting,
+                initialAssignmentHint: protoItem.effectiveAssignmentHint,
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
                         Task { await convertProtoItem(protoItem, itemId: itemId) }
@@ -257,20 +259,20 @@ struct ItemsTabView: View {
             }
         }
         .confirmationDialog(
-            "Delete Item Quick Draft?",
+            "Remove Item?",
             isPresented: Binding(
                 get: { protoItemPendingDelete != nil },
                 set: { if !$0 { protoItemPendingDelete = nil } }
             )
         ) {
-            Button("Delete Draft", role: .destructive) {
+            Button("Remove Item", role: .destructive) {
                 if let protoItem = protoItemPendingDelete {
                     Task { await deleteProtoItem(protoItem) }
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This removes the draft and its media. This cannot be undone.")
+            Text("This removes the captured item and its media. This cannot be undone.")
         }
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
             showNewItem = true
@@ -293,7 +295,7 @@ struct ItemsTabView: View {
 
     private var itemDraftsSection: some View {
         CollapsibleSection(
-            title: "Item Quick Drafts",
+            title: "Needs Assignment",
             isExpanded: sectionBinding("item-drafts"),
             badge: "\(activeProjectProtoItems.count)",
             onAdd: { showNewItemDraft = true }
@@ -301,7 +303,7 @@ struct ItemsTabView: View {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 if activeProjectProtoItems.isEmpty {
                     ContentUnavailableView {
-                        Label("No item quick drafts yet", systemImage: "camera.badge.ellipsis")
+                        Label("All items are assigned", systemImage: "checkmark.circle")
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xl)
@@ -504,7 +506,12 @@ struct ItemsTabView: View {
                 try await ProtoItemsService().updateProtoItem(
                     accountId: accountId,
                     protoItemId: protoItemId,
-                    fields: ["isFromInventory": nextValue]
+                    fields: [
+                        "assignmentHint": nextValue
+                            ? ProtoItemAssignmentHint.fromInventory.rawValue
+                            : ProtoItemAssignmentHint.undecided.rawValue,
+                        "isFromInventory": nextValue,
+                    ]
                 )
             } catch {
                 // Keep the capture flow light; failed writes leave the current state unchanged.
@@ -528,10 +535,16 @@ struct ItemsTabView: View {
               protoItem.id != nil,
               let itemId = item.id else { return }
         let mergedImages = mergeAttachments(existing: item.images ?? [], incoming: protoItem.photos ?? [])
+        var fields: [String: Any] = ["images": mergedImages.map(attachmentDict)]
+        if item.projectId == protoItem.projectId,
+           item.spaceId == nil,
+           let spaceId = protoItem.spaceId {
+            fields["spaceId"] = spaceId
+        }
         try? await ItemsService().updateItem(
             accountId: accountId,
             itemId: itemId,
-            fields: ["images": mergedImages.map(attachmentDict)]
+            fields: fields
         )
         await convertProtoItem(protoItem, itemId: itemId)
         protoItemPendingMerge = nil

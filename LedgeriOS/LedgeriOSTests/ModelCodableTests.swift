@@ -82,8 +82,10 @@ struct ModelCodableTests {
     func protoItemEncoding() throws {
         var protoItem = ProtoItem()
         protoItem.projectId = "project1"
+        protoItem.spaceId = "space1"
         protoItem.captureContext = .project
         protoItem.status = .open
+        protoItem.assignmentHint = .fromInventory
         protoItem.isFromInventory = true
         protoItem.quantity = 1
         protoItem.notes = "Blue fish with tag"
@@ -101,8 +103,10 @@ struct ModelCodableTests {
         let dict = try encodeToDict(protoItem)
 
         #expect(dict["projectId"] as? String == "project1")
+        #expect(dict["spaceId"] as? String == "space1")
         #expect(dict["captureContext"] as? String == "project")
         #expect(dict["status"] as? String == "open")
+        #expect(dict["assignmentHint"] as? String == "from_inventory")
         #expect(dict["isFromInventory"] as? Bool == true)
         #expect(dict["sourceHint"] == nil)
         #expect(dict["quantity"] as? Int == 1)

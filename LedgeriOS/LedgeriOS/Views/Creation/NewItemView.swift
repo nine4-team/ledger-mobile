@@ -8,9 +8,166 @@ enum ItemCreationContext: Equatable {
     case inventory
 }
 
+/// Assignment-only transaction picker. The two scopes correspond to materially
+/// different writes, so they stay explicit instead of being mixed into one list.
+private struct AssignmentTransactionPickerModal: View {
+    let transactions: [Transaction]
+    let projectId: String
+    var selectedId: String?
+    let onSelect: (Transaction) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    @State private var scope: AssignmentTransactionScope
+
+    init(
+        transactions: [Transaction],
+        projectId: String,
+        selectedId: String?,
+        initialScope: AssignmentTransactionScope,
+        onSelect: @escaping (Transaction) -> Void
+    ) {
+        self.transactions = transactions
+        self.projectId = projectId
+        self.selectedId = selectedId
+        self.onSelect = onSelect
+        self._scope = State(initialValue: initialScope)
+    }
+
+    private var visibleTransactions: [Transaction] {
+        transactions
+            .filter { transaction in
+                guard transaction.status != .canceled else { return false }
+                switch scope {
+                case .project:
+                    return transaction.projectId == projectId
+                case .inventory:
+                    return transaction.projectId == nil
+                        && transaction.transactionType == .purchase
+                        && (transaction.intendedProjectId == nil || transaction.intendedProjectId == projectId)
+                }
+            }
+            .filter { SearchCalculations.transactionPickerMatches(transaction: $0, query: searchText) }
+            .sorted { ($0.transactionDate ?? "") > ($1.transactionDate ?? "") }
+    }
+
+    private var explanation: String {
+        switch scope {
+        case .project:
+            "The item will be linked to the transaction you select."
+        case .inventory:
+            "The item will be linked to the Business Inventory transaction you select, then sold to this project. Ledger will create the matching inventory-to-project transaction."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack {
+                Text("Choose Existing Record")
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .font(.title2)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
+            }
+
+            SegmentedControl(selection: $scope, options: [
+                SegmentOption(id: .project, label: "This Project"),
+                SegmentOption(id: .inventory, label: "Business Inventory"),
+            ])
+
+            Text(explanation)
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            SearchField(text: $searchText, placeholder: "Search ID, source, or amount")
+
+            if visibleTransactions.isEmpty {
+                ContentUnavailableView(
+                    searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? (scope == .project ? "No project transactions" : "No inventory purchases")
+                        : "No matching transactions",
+                    systemImage: searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? "arrow.left.arrow.right"
+                        : "magnifyingglass"
+                )
+                .frame(maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(visibleTransactions) { transaction in
+                            Button {
+                                onSelect(transaction)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                                        Text(rowTitle(transaction))
+                                            .font(Typography.body)
+                                            .foregroundStyle(BrandColors.textPrimary)
+                                        if let detail = rowDetail(transaction) {
+                                            Text(detail)
+                                                .font(Typography.small)
+                                                .foregroundStyle(BrandColors.textSecondary)
+                                        }
+                                    }
+                                    Spacer()
+                                    if transaction.id == selectedId {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(BrandColors.primary)
+                                    }
+                                }
+                                .frame(minHeight: 52)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Divider()
+                        }
+                    }
+                }
+            }
+        }
+        .padding(Spacing.screenPadding)
+    }
+
+    private func rowTitle(_ transaction: Transaction) -> String {
+        let type = transaction.transactionType?.displayLabel ?? "Transaction"
+        guard let date = transaction.transactionDate, !date.isEmpty else { return type }
+        return "\(type) – \(date)"
+    }
+
+    private func rowDetail(_ transaction: Transaction) -> String? {
+        var components: [String] = []
+        if let source = transaction.source, !source.isEmpty { components.append(source) }
+        if let amount = transaction.amountCents {
+            components.append(CurrencyFormatting.formatCentsWithDecimals(amount))
+        }
+        if let matchingID = SearchCalculations.matchingTransactionID(
+            transaction: transaction,
+            query: searchText
+        ) {
+            components.append("ID: \(matchingID)")
+        }
+        return components.isEmpty ? nil : components.joined(separator: " · ")
+    }
+}
+
 private enum ProjectItemTransactionMode {
     case existing
     case createViaInventory
+}
+
+private enum AssignmentTransactionScope: Hashable {
+    case project
+    case inventory
 }
 
 /// Single scrolling bottom-sheet form for creating a new item.
@@ -20,7 +177,7 @@ struct NewItemView: View {
     private let initialImageRefs: [AttachmentRef]
     private let initialSkuCandidates: [String]
     private let convertingProtoItemId: String?
-    private let initialIsFromInventory: Bool
+    private let initialAssignmentHint: ProtoItemAssignmentHint
     private let onCreated: (([String]) -> Void)?
 
     init(
@@ -35,7 +192,7 @@ struct NewItemView: View {
         initialImageRefs: [AttachmentRef] = [],
         initialSpaceId: String? = nil,
         convertingProtoItemId: String? = nil,
-        initialIsFromInventory: Bool = false,
+        initialAssignmentHint: ProtoItemAssignmentHint = .undecided,
         onCreated: (([String]) -> Void)? = nil
     ) {
         self._resolvedContext = State(initialValue: context)
@@ -49,7 +206,7 @@ struct NewItemView: View {
         self.initialSkuCandidates = initialSkuCandidates
         self.initialImageRefs = initialImageRefs
         self.convertingProtoItemId = convertingProtoItemId
-        self.initialIsFromInventory = initialIsFromInventory
+        self.initialAssignmentHint = initialAssignmentHint
         self.onCreated = onCreated
     }
 
@@ -169,9 +326,6 @@ struct NewItemView: View {
             if selectedTransaction.projectId != nil,
                selectedTransaction.projectId != projectId {
                 requirements.append("choose a transaction for this project")
-            } else if initialIsFromInventory,
-                      selectedTransaction.projectId != nil {
-                requirements.append("select the business inventory purchase that acquired this item")
             } else if selectedTransaction.projectId == nil {
                 if convertingProtoItemId == nil {
                     requirements.append("choose a transaction for this project")
@@ -194,10 +348,6 @@ struct NewItemView: View {
             }
 
         case .createViaInventory:
-            if convertingProtoItemId != nil,
-               initialIsFromInventory {
-                requirements.append("select the business inventory purchase that acquired this item")
-            }
             if selectedInventorySaleCategory == nil {
                 requirements.append(
                     enabledPurchaseCategories.isEmpty
@@ -238,9 +388,10 @@ struct NewItemView: View {
     }
 
     private var transactionPickerTransactions: [Transaction] {
-        if initialIsFromInventory {
+        if convertingProtoItemId != nil, projectId != nil {
             return scopedTransactions.filter {
-                $0.projectId == nil
+                if $0.projectId == projectId { return true }
+                return $0.projectId == nil
                     && $0.transactionType == .purchase
                     && ($0.intendedProjectId == nil || $0.intendedProjectId == projectId)
             }
@@ -322,17 +473,21 @@ struct NewItemView: View {
             )
         }
         .adaptivePresentation(isPresented: $showTransactionPicker, style: .picker) {
-            TransactionPickerModal(
-                transactions: transactionPickerTransactions,
-                selectedId: selectedTransactionId,
-                onSelect: { tx in
-                    projectTransactionMode = .existing
-                    selectedTransactionId = tx.id
-                    if tx.projectId == nil, let intendedCategoryId = tx.intendedBudgetCategoryId {
-                        selectedInventorySaleCategoryId = intendedCategoryId
-                    }
-                }
-            )
+            if let projectId, convertingProtoItemId != nil {
+                AssignmentTransactionPickerModal(
+                    transactions: transactionPickerTransactions,
+                    projectId: projectId,
+                    selectedId: selectedTransactionId,
+                    initialScope: initialAssignmentHint == .fromInventory ? .inventory : .project,
+                    onSelect: selectTransaction
+                )
+            } else {
+                TransactionPickerModal(
+                    transactions: transactionPickerTransactions,
+                    selectedId: selectedTransactionId,
+                    onSelect: selectTransaction
+                )
+            }
         }
         .adaptivePresentation(isPresented: $showInventorySaleCategoryPicker, style: .picker) {
             CategoryPickerList(
@@ -443,10 +598,12 @@ struct NewItemView: View {
 
     private var itemForm: some View {
         FormSheet(
-            title: "New Item",
-            description: "Add a name or at least one image, plus a price, to create an item.",
+            title: convertingProtoItemId == nil ? "New Item" : "Assign Item",
+            description: convertingProtoItemId == nil
+                ? "Add a name or at least one image, plus a price, to create an item."
+                : "Complete the details and choose the accounting route. The captured item will then move out of Needs Assignment.",
             primaryAction: FormSheetAction(
-                title: "Create Item",
+                title: convertingProtoItemId == nil ? "Create Item" : "Assign Item",
                 isLoading: isCreating,
                 isDisabled: !isValid
             ) {
@@ -474,16 +631,14 @@ struct NewItemView: View {
                         fieldLabel("Transaction", isMissing: isTransactionChoiceMissing)
 
                         if projectId != nil {
-                            Text(convertingProtoItemId != nil && initialIsFromInventory
-                                ? "Select the business inventory purchase that acquired this item. Ledger will create the project Purchase and sale lineage together."
-                                : "Choose how this item gets attached to the project: link it to an existing transaction, or create it through inventory so Ledger creates an inventory sale transaction automatically.")
+                            Text("Choose an existing record or create the item through inventory. The final choice here—not the capture-time hint—is authoritative.")
                                 .font(Typography.caption)
                                 .foregroundStyle(BrandColors.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
 
                         if selectedTransactionIsInventoryAcquisition {
-                            Text("This inventory acquisition will be converted through a new Purchase in this project.")
+                            Text("The item will be linked to the Business Inventory transaction you select, then sold to this project. Ledger will create the matching inventory-to-project transaction.")
                                 .font(Typography.caption)
                                 .foregroundStyle(BrandColors.textSecondary)
                             Button { showInventorySaleCategoryPicker = true } label: {
@@ -497,11 +652,11 @@ struct NewItemView: View {
                             if isBudgetCategoryMissing {
                                 requirementMessage(budgetCategoryRequirementMessage)
                             }
-                        } else if initialIsFromInventory,
-                                  selectedTransaction?.projectId != nil {
-                            Text("This draft is marked From Inventory. Select its inventory acquisition transaction or remove the marker before converting.")
+                        } else if let selectedTransaction,
+                                  selectedTransaction.projectId == projectId {
+                            Text("The item will be linked to the transaction you select in this project.")
                                 .font(Typography.caption)
-                                .foregroundStyle(BrandColors.destructive)
+                                .foregroundStyle(BrandColors.textSecondary)
                         }
 
                         Button { showTransactionPicker = true } label: {
@@ -512,8 +667,7 @@ struct NewItemView: View {
                         }
                         .buttonStyle(.plain)
 
-                        if projectId != nil,
-                           !(convertingProtoItemId != nil && initialIsFromInventory) {
+                        if projectId != nil {
                             Button {
                                 projectTransactionMode = .createViaInventory
                                 selectedTransactionId = nil
@@ -529,6 +683,11 @@ struct NewItemView: View {
                             .buttonStyle(.plain)
 
                             if projectTransactionMode == .createViaInventory {
+                                Text("The item will be created in Business Inventory first, then sold to this project. Ledger will create the matching inventory-to-project transaction.")
+                                    .font(Typography.caption)
+                                    .foregroundStyle(BrandColors.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+
                                 Button { showInventorySaleCategoryPicker = true } label: {
                                     pickerButton(
                                         label: "Budget category: \(inventorySaleCategoryLabel)",
@@ -862,7 +1021,7 @@ struct NewItemView: View {
         let scope: ListScope
         switch context {
         case .project(let id, _):
-            scope = initialIsFromInventory ? .all : .project(id)
+            scope = convertingProtoItemId == nil ? .project(id) : .all
         case .inventory: scope = .inventory
         }
 
@@ -926,6 +1085,15 @@ struct NewItemView: View {
     }
 
     // MARK: - Actions
+
+    private func selectTransaction(_ transaction: Transaction) {
+        projectTransactionMode = .existing
+        selectedTransactionId = transaction.id
+        if transaction.projectId == nil,
+           let intendedCategoryId = transaction.intendedBudgetCategoryId {
+            selectedInventorySaleCategoryId = intendedCategoryId
+        }
+    }
 
     private func createItem() {
         guard let accountId = accountContext.currentAccountId else { return }
@@ -1040,10 +1208,10 @@ struct NewItemView: View {
         }
     }
 
-    /// Converts a project quick draft linked to an inventory acquisition in one
+    /// Assigns a captured project item linked to an inventory acquisition in one
     /// Firestore batch. The item never exists in a stranded intermediate state:
     /// acquisition lineage, project Purchase, final item scope, and converted
-    /// draft status commit together.
+    /// capture status commit together.
     private func createProjectDraftFromInventory(
         accountId: String,
         destinationProjectId: String,
@@ -1170,7 +1338,7 @@ struct NewItemView: View {
             } catch {
                 await MainActor.run {
                     isCreating = false
-                    submissionError = "Couldn't convert the draft from inventory. No records were changed."
+                    submissionError = "Couldn't assign the item from inventory. No records were changed."
                 }
             }
         }
@@ -1242,6 +1410,23 @@ struct NewItemView: View {
 
                 let categoryRef = db.document("accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories/\(categoryId)")
                 batch.setData(["updatedAt": FieldValue.serverTimestamp()], forDocument: categoryRef, merge: true)
+
+                if let protoItemId = convertingProtoItemId {
+                    var captureFields: [String: Any] = [
+                        "status": ProtoItemStatus.converted.rawValue,
+                        "convertedItemId": itemIds[0],
+                        "convertedAt": FieldValue.serverTimestamp(),
+                        "updatedAt": FieldValue.serverTimestamp(),
+                    ]
+                    if let userId = authManager.currentUser?.uid {
+                        captureFields["convertedBy"] = userId
+                        captureFields["updatedBy"] = userId
+                    }
+                    batch.updateData(
+                        captureFields,
+                        forDocument: db.document("accounts/\(accountId)/protoItems/\(protoItemId)")
+                    )
+                }
 
                 try await batch.commit()
                 onCreated?(itemIds)

@@ -17,6 +17,7 @@ import { notFound, validation } from "../util/errors.js";
 import { withTelemetry } from "../util/telemetry.js";
 import {
   quickDraftCaptureContexts,
+  quickDraftAssignmentHints,
   quickDraftItemStatuses,
 } from "../util/enums.js";
 import { checkTransactionLinkageOnCreate, checkUpdateInvariant } from "./items.js";
@@ -42,6 +43,7 @@ import { storagePathFromUrl } from "../storage.js";
 
 const QuickDraftStatus = z.enum(quickDraftItemStatuses);
 const QuickDraftCaptureContext = z.enum(quickDraftCaptureContexts);
+const QuickDraftAssignmentHint = z.enum(quickDraftAssignmentHints);
 
 const AttachmentInput = z.object({
   url: z.string(),
@@ -70,6 +72,7 @@ function defaultCaptureContext(args: {
 }
 
 function draftIsFromInventory(draft: ProtoItem): boolean {
+  if (draft.assignmentHint != null) return draft.assignmentHint === "from_inventory";
   return draft.isFromInventory ?? draft.sourceHint === "from_inventory";
 }
 
@@ -80,9 +83,11 @@ function formatQuickDraftItem(draft: ProtoItem & { id: string }) {
     projectId: draft.projectId ?? null,
     intendedProjectId: draft.intendedProjectId ?? null,
     transactionId: draft.transactionId ?? null,
+    spaceId: draft.spaceId ?? null,
     name: draft.name ?? "",
     captureContext: draft.captureContext ?? defaultCaptureContext(draft),
     status: draft.status ?? "open",
+    assignmentHint: draft.assignmentHint ?? (draftIsFromInventory(draft) ? "from_inventory" : "undecided"),
     isFromInventory: draftIsFromInventory(draft),
     sku: draft.sku ?? "",
     quantity: draft.quantity ?? 1,
@@ -284,7 +289,8 @@ async function promoteInventoryDraftToProject(
     createdAt: now,
     updatedAt: now,
   };
-  if (args.spaceId) itemData.spaceId = args.spaceId;
+  const resolvedSpaceId = args.spaceId ?? draft.spaceId;
+  if (resolvedSpaceId) itemData.spaceId = resolvedSpaceId;
   if (sku) itemData.sku = sku;
   if (notes) itemData.notes = notes;
   if (args.purchasePriceCents !== undefined) itemData.purchasePriceCents = args.purchasePriceCents;
@@ -480,9 +486,11 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       projectId: z.string().nullable().optional().describe("Project where the draft was captured. Omit/null for inventory."),
       intendedProjectId: z.string().nullable().optional().describe("Optional intended destination project."),
       transactionId: z.string().optional().describe("Optional linked transaction."),
+      spaceId: z.string().nullable().optional().describe("Optional physical space assignment. This does not resolve financial assignment."),
       name: z.string().optional().describe("Draft item name."),
       captureContext: QuickDraftCaptureContext.optional().describe("Defaults from transactionId/projectId."),
       status: QuickDraftStatus.default("open").describe("Draft lifecycle status."),
+      assignmentHint: QuickDraftAssignmentHint.optional().describe("Reversible capture-time routing hint. Confirmed assignment remains authoritative."),
       isFromInventory: z.boolean().default(false).describe("True only when the user says this project draft came from business inventory and needs inventory routing."),
       photos: z.array(AttachmentInput).default([]).describe("Photo attachment refs."),
       sku: z.string().optional().describe("SKU."),
@@ -505,7 +513,10 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         intendedProjectId: args.intendedProjectId ?? null,
         captureContext: args.captureContext ?? defaultCaptureContext({ transactionId: args.transactionId, projectId }),
         status: args.status,
-        isFromInventory: args.isFromInventory,
+        assignmentHint: args.assignmentHint ?? (args.isFromInventory ? "from_inventory" : "undecided"),
+        isFromInventory: args.assignmentHint != null
+          ? args.assignmentHint === "from_inventory"
+          : args.isFromInventory,
         quantity: args.quantity,
         photos: args.photos,
         createdBy: uid,
@@ -513,7 +524,7 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
         createdAt: now,
         updatedAt: now,
       };
-      for (const key of ["transactionId", "name", "sku", "notes", "extracted", "candidateItemId"] as const) {
+      for (const key of ["transactionId", "spaceId", "name", "sku", "notes", "extracted", "candidateItemId"] as const) {
         const value = args[key];
         if (value !== undefined) data[key] = value;
       }
@@ -531,9 +542,11 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       projectId: z.string().nullable().optional().describe("Project ID. Pass null to clear."),
       intendedProjectId: z.string().nullable().optional().describe("Intended project ID. Pass null to clear."),
       transactionId: z.string().nullable().optional().describe("Authoritative transaction the eventual item should initially join. Pass null to clear."),
+      spaceId: z.string().nullable().optional().describe("Physical space. Pass null to clear; changing it does not resolve assignment."),
       name: z.string().nullable().optional().describe("Draft name. Pass null to clear."),
       captureContext: QuickDraftCaptureContext.optional(),
       status: QuickDraftStatus.optional(),
+      assignmentHint: QuickDraftAssignmentHint.optional().describe("Reversible capture-time routing hint."),
       isFromInventory: z.boolean().optional().describe("User-selected inventory-routing marker."),
       photos: z.array(AttachmentInput).optional().describe("Replace the photos array."),
       sku: z.string().nullable().optional().describe("SKU. Pass null to clear."),
@@ -567,6 +580,11 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       };
       for (const [key, value] of Object.entries(fields)) {
         if (value !== undefined) updates[key] = value;
+      }
+      if (fields.assignmentHint !== undefined) {
+        updates.isFromInventory = fields.assignmentHint === "from_inventory";
+      } else if (fields.isFromInventory !== undefined) {
+        updates.assignmentHint = fields.isFromInventory ? "from_inventory" : "undecided";
       }
       await accountCollection(db, "protoItems").doc(quickDraftItemId).update(updates);
       return asToolResponse({ quickDraftItemId, updated: Object.keys(updates).filter((k) => k !== "updatedAt") });
@@ -872,7 +890,8 @@ export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
       if (resolvedProjectId) itemData.projectId = resolvedProjectId;
       if (resolvedTransactionId) itemData.transactionId = resolvedTransactionId;
       if (resolvedBudgetCategoryId) itemData.budgetCategoryId = resolvedBudgetCategoryId;
-      if (args.spaceId) itemData.spaceId = args.spaceId;
+      const resolvedSpaceId = args.spaceId ?? draft.spaceId;
+      if (resolvedSpaceId) itemData.spaceId = resolvedSpaceId;
       if (args.source) itemData.source = args.source;
       const sku = cleanString(args.sku) ?? cleanString(draft.sku);
       if (sku) itemData.sku = sku;

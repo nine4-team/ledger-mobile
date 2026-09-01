@@ -45,7 +45,7 @@ enum TransactionMenuBuilder {
         if let onCreateQuickDraft = callbacks.onCreateQuickDraft {
             items.append(ActionMenuItem(
                 id: "item-draft",
-                label: "Item Quick Draft",
+                label: "Quick Add",
                 icon: "camera.badge.ellipsis",
                 onPress: onCreateQuickDraft
             ))

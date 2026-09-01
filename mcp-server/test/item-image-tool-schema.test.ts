@@ -32,6 +32,9 @@ describe("item image MCP schemas", () => {
     expect(itemTools.get("attach_item_image")?.schema).toHaveProperty("position");
 
     const draftTools = captureTools(registerQuickDraftItemTools);
+    expect(draftTools.get("create_quick_draft_item")?.schema).toHaveProperty("assignmentHint");
+    expect(draftTools.get("create_quick_draft_item")?.schema).toHaveProperty("spaceId");
+    expect(draftTools.get("update_quick_draft_item")?.schema).toHaveProperty("assignmentHint");
     expect(draftTools.get("promote_quick_draft_item")?.schema).toHaveProperty("primaryImageUrl");
     expect(draftTools.get("promote_quick_draft_item")?.description).toContain("draft originals are preserved");
   });

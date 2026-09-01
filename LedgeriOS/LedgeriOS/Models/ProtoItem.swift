@@ -20,6 +20,27 @@ enum ProtoItemCaptureContext: String, Codable, CaseIterable, CaseInsensitiveStri
     case transaction
 }
 
+/// Reversible capture-time guidance for the later assignment workflow.
+///
+/// This is intentionally not accounting state. It helps the assignment UI open
+/// on the most likely route, but the route the user confirms during assignment
+/// remains authoritative.
+enum ProtoItemAssignmentHint: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
+    case undecided
+    case clientPaid = "client_paid"
+    case businessPaid = "business_paid"
+    case fromInventory = "from_inventory"
+
+    var displayLabel: String {
+        switch self {
+        case .undecided: "Not sure yet"
+        case .clientPaid: "Client paid"
+        case .businessPaid: "We paid"
+        case .fromInventory: "From our inventory"
+        }
+    }
+}
+
 struct ProtoItemExtraction: Codable, Hashable, Sendable {
     var rawText: String?
     var barcodePayloads: [String]?
@@ -54,9 +75,11 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     var projectId: String?
     var intendedProjectId: String?
     var transactionId: String?
+    var spaceId: String?
     var name: String?
     var captureContext: ProtoItemCaptureContext?
     var status: ProtoItemStatus?
+    var assignmentHint: ProtoItemAssignmentHint?
     /// User-selected routing marker for project drafts that originated in business inventory.
     var isFromInventory: Bool?
     /// Read-only compatibility for drafts created before `isFromInventory` replaced source hints.
@@ -79,8 +102,8 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, projectId, intendedProjectId, transactionId,
-             name, captureContext, status, isFromInventory, photos, sku, quantity, notes, extracted,
+        case id, accountId, projectId, intendedProjectId, transactionId, spaceId,
+             name, captureContext, status, assignmentHint, isFromInventory, photos, sku, quantity, notes, extracted,
              candidateTransactionId, candidateItemId, convertedItemId,
              convertedAt, createdBy, updatedBy, convertedBy,
              createdAt, updatedAt
@@ -88,6 +111,14 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     }
 
     var usesInventoryRouting: Bool {
-        isFromInventory ?? (legacySourceHint == "from_inventory")
+        effectiveAssignmentHint == .fromInventory
+    }
+
+    var effectiveAssignmentHint: ProtoItemAssignmentHint {
+        if let assignmentHint { return assignmentHint }
+        if isFromInventory == true || legacySourceHint == "from_inventory" {
+            return .fromInventory
+        }
+        return .undecided
     }
 }

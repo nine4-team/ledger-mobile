@@ -16,10 +16,9 @@ struct ItemQuickDraftDetailView: View {
     @State private var notesDraft: String
     @State private var showConvertToItem = false
     @State private var showMergeWithExistingItem = false
+    @State private var showSpacePicker = false
     @State private var showDeleteConfirmation = false
     @State private var errorMessage: String?
-    @State private var toastMessage: String?
-    @State private var toastTask: Task<Void, Never>?
     @State private var skuDraft: String
     @State private var quantityDraft: Int
 
@@ -66,6 +65,7 @@ struct ItemQuickDraftDetailView: View {
             AdaptiveContentWidth {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     nameSection
+                    assignmentSection
                     mediaSection
                     actionsSection
                     if let errorMessage {
@@ -79,22 +79,20 @@ struct ItemQuickDraftDetailView: View {
             }
         }
         .background(BrandColors.background.ignoresSafeArea())
-        .navigationTitle("Item Quick Draft")
+        .navigationTitle("Needs Assignment")
         .navBarTitleDisplayMode(.inline)
         .onAppear(perform: subscribe)
         .onDisappear {
             listener?.remove()
             listener = nil
-            toastTask?.cancel()
-            toastTask = nil
         }
-        .confirmationDialog("Delete Item Quick Draft?", isPresented: $showDeleteConfirmation) {
-            Button("Delete Draft", role: .destructive) {
+        .confirmationDialog("Remove Item?", isPresented: $showDeleteConfirmation) {
+            Button("Remove Item", role: .destructive) {
                 Task { await deleteDraft() }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This removes the draft and its media. This cannot be undone.")
+            Text("This removes the captured item and its media. This cannot be undone.")
         }
         .adaptivePresentation(isPresented: $showConvertToItem, style: .form) {
             NewItemView(
@@ -106,8 +104,9 @@ struct ItemQuickDraftDetailView: View {
                 initialSkuCandidates: liveProtoItem.extracted?.skuCandidates ?? [],
                 initialQuantity: liveProtoItem.quantity,
                 initialImageRefs: photos,
+                initialSpaceId: liveProtoItem.spaceId,
                 convertingProtoItemId: liveProtoItem.id,
-                initialIsFromInventory: liveProtoItem.usesInventoryRouting,
+                initialAssignmentHint: liveProtoItem.effectiveAssignmentHint,
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
                         Task { await markConverted(itemId: itemId) }
@@ -125,6 +124,15 @@ struct ItemQuickDraftDetailView: View {
                 ),
                 onMerge: { item in
                     Task { await mergeWithExistingItem(item) }
+                }
+            )
+        }
+        .adaptivePresentation(isPresented: $showSpacePicker, style: .picker) {
+            SetSpaceModal(
+                spaces: availableSpaces,
+                currentSpaceId: liveProtoItem.spaceId,
+                onSelect: { space in
+                    Task { await saveSpace(space?.id) }
                 }
             )
         }
@@ -278,32 +286,85 @@ struct ItemQuickDraftDetailView: View {
         )
     }
 
+    private var assignmentHintBinding: Binding<ProtoItemAssignmentHint> {
+        Binding(
+            get: { liveProtoItem.effectiveAssignmentHint },
+            set: { hint in
+                liveProtoItem.assignmentHint = hint
+                liveProtoItem.isFromInventory = hint == .fromInventory
+                Task { await saveAssignmentHint(hint) }
+            }
+        )
+    }
+
+    private var availableSpaces: [Space] {
+        if let projectId = liveProtoItem.projectId {
+            return projectContext.spaces.filter { $0.projectId == projectId }
+        }
+        return accountContext.allSpaces.filter { $0.projectId == nil }
+    }
+
+    private var selectedSpaceName: String {
+        guard let spaceId = liveProtoItem.spaceId else { return "Select Space" }
+        return availableSpaces.first(where: { $0.id == spaceId })?.name ?? "Unknown Space"
+    }
+
+    private var assignmentSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Assignment")
+                .font(Typography.h3)
+                .foregroundStyle(BrandColors.textPrimary)
+
+            Text("This is a routing hint only. The choice you confirm while assigning the item is authoritative.")
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            InlineOptionPicker(selection: assignmentHintBinding, options: [
+                InlineOption(id: .undecided, label: ProtoItemAssignmentHint.undecided.displayLabel),
+                InlineOption(id: .clientPaid, label: ProtoItemAssignmentHint.clientPaid.displayLabel),
+                InlineOption(id: .businessPaid, label: ProtoItemAssignmentHint.businessPaid.displayLabel),
+                InlineOption(id: .fromInventory, label: ProtoItemAssignmentHint.fromInventory.displayLabel),
+            ])
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Space")
+                    .font(Typography.label)
+                    .foregroundStyle(BrandColors.textSecondary)
+                Button { showSpacePicker = true } label: {
+                    HStack {
+                        Text(selectedSpaceName)
+                            .foregroundStyle(BrandColors.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    .font(Typography.input)
+                    .padding(.horizontal, Spacing.md)
+                    .frame(height: 44)
+                    .contentShape(Rectangle())
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     private var actionsSection: some View {
         VStack(spacing: Spacing.sm) {
-            if liveProtoItem.projectId != nil {
-                AppButton(
-                    title: liveProtoItem.usesInventoryRouting ? "Marked \"From Inventory\"" : "Mark \"From Inventory\"",
-                    variant: .secondary,
-                    action: { Task { await toggleFromInventory() } }
-                )
-                if let toastMessage {
-                    ToastBanner(message: toastMessage)
-                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
-                }
-            }
             AppButton(
-                title: "Convert to Item",
-                isDisabled: photos.isEmpty,
+                title: "Assign Item",
                 action: { showConvertToItem = true }
             )
             AppButton(
-                title: "Merge with Existing Item",
+                title: "Match Existing Item",
                 variant: .secondary,
-                isDisabled: photos.isEmpty,
                 action: { showMergeWithExistingItem = true }
             )
             AppButton(
-                title: "Delete Draft",
+                title: "Remove Item",
                 variant: .secondary,
                 action: { showDeleteConfirmation = true }
             )
@@ -398,6 +459,37 @@ struct ItemQuickDraftDetailView: View {
         }
     }
 
+    private func saveAssignmentHint(_ hint: ProtoItemAssignmentHint) async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = liveProtoItem.id else { return }
+        do {
+            try await protoItemsService.updateProtoItem(
+                accountId: accountId,
+                protoItemId: protoItemId,
+                fields: [
+                    "assignmentHint": hint.rawValue,
+                    "isFromInventory": hint == .fromInventory,
+                ]
+            )
+        } catch {
+            errorMessage = "Failed to update the assignment route."
+        }
+    }
+
+    private func saveSpace(_ spaceId: String?) async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = liveProtoItem.id else { return }
+        do {
+            try await protoItemsService.updateProtoItem(
+                accountId: accountId,
+                protoItemId: protoItemId,
+                fields: ["spaceId": spaceId as Any? ?? NSNull()]
+            )
+        } catch {
+            errorMessage = "Failed to update the space."
+        }
+    }
+
     private func uploadPhoto(_ data: Data) async throws {
         guard let accountId = accountContext.currentAccountId,
               let protoItemId = liveProtoItem.id else { return }
@@ -470,24 +562,7 @@ struct ItemQuickDraftDetailView: View {
             }
             dismiss()
         } catch {
-            errorMessage = "Failed to delete draft."
-        }
-    }
-
-    private func toggleFromInventory() async {
-        guard let accountId = accountContext.currentAccountId,
-              let protoItemId = liveProtoItem.id else { return }
-        do {
-            let isRemoving = liveProtoItem.usesInventoryRouting
-            let nextValue: Any = !isRemoving
-            try await protoItemsService.updateProtoItem(
-                accountId: accountId,
-                protoItemId: protoItemId,
-                fields: ["isFromInventory": nextValue]
-            )
-            showToast(isRemoving ? "Removed \"From Inventory\" Marker." : "Marked \"From Inventory\"")
-        } catch {
-            errorMessage = "Failed to update inventory marker."
+            errorMessage = "Failed to remove the item."
         }
     }
 
@@ -498,6 +573,11 @@ struct ItemQuickDraftDetailView: View {
         do {
             let mergedImages = mergeAttachments(existing: item.images ?? [], incoming: photos)
             var fields: [String: Any] = ["images": mergedImages.map(attachmentDict)]
+            if item.projectId == liveProtoItem.projectId,
+               item.spaceId == nil,
+               let spaceId = liveProtoItem.spaceId {
+                fields["spaceId"] = spaceId
+            }
             if (item.sku ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                let draftSku = liveProtoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines),
                !draftSku.isEmpty {
@@ -521,7 +601,7 @@ struct ItemQuickDraftDetailView: View {
             )
             dismiss()
         } catch {
-            errorMessage = "Failed to merge draft with item."
+            errorMessage = "Failed to match the captured item."
         }
     }
 
@@ -537,7 +617,7 @@ struct ItemQuickDraftDetailView: View {
             )
             dismiss()
         } catch {
-            errorMessage = "Item created, but draft was not marked converted."
+            errorMessage = "The item was created, but assignment did not finish."
         }
     }
 
@@ -555,16 +635,6 @@ struct ItemQuickDraftDetailView: View {
         return dict
     }
 
-    private func showToast(_ message: String) {
-        toastTask?.cancel()
-        toastMessage = message
-        toastTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            if !Task.isCancelled {
-                toastMessage = nil
-            }
-        }
-    }
 }
 
 struct ItemQuickDraftMergePicker: View {

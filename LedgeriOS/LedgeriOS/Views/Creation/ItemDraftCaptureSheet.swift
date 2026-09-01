@@ -15,7 +15,7 @@ struct ItemDraftCaptureSheet: View {
     @State private var name = ""
     @State private var notes = ""
     @State private var quantity = 1
-    @State private var isFromInventory = false
+    @State private var assignmentHint: ProtoItemAssignmentHint = .undecided
     @State private var imageItems: [PhotosPickerItem] = []
     @State private var imageDatas: [Data] = []
     @State private var showImageSourceMenu = false
@@ -40,7 +40,7 @@ struct ItemDraftCaptureSheet: View {
 
     var body: some View {
         FormSheet(
-            title: "New Item Quick Draft",
+            title: "Quick Add Item",
             primaryAction: FormSheetAction(
                 title: "Save & Next",
                 isLoading: isSaving,
@@ -57,27 +57,40 @@ struct ItemDraftCaptureSheet: View {
                 FormField(label: "Notes", text: $notes, placeholder: "Optional notes", axis: .vertical)
                 quantitySection
                 if projectId != nil && transactionId == nil {
-                    fromInventorySection
+                    assignmentHintSection
                 }
                 photosSection
             }
         }
     }
 
-    private var fromInventorySection: some View {
+    private var assignmentHintSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Source")
+            Text("How should this item be handled?")
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.textSecondary)
-            InlineOptionPicker(selection: $isFromInventory, options: [
-                InlineOption(id: false, label: "Project purchase"),
-                InlineOption(id: true, label: "From inventory"),
+            InlineOptionPicker(selection: $assignmentHint, options: [
+                InlineOption(id: .undecided, label: ProtoItemAssignmentHint.undecided.displayLabel),
+                InlineOption(id: .clientPaid, label: ProtoItemAssignmentHint.clientPaid.displayLabel),
+                InlineOption(id: .businessPaid, label: ProtoItemAssignmentHint.businessPaid.displayLabel),
+                InlineOption(id: .fromInventory, label: ProtoItemAssignmentHint.fromInventory.displayLabel),
             ])
-            Text(isFromInventory
-                 ? "This item will need an inventory transaction before it can be converted."
-                 : "This item will be linked directly to a transaction in this project.")
+            Text(assignmentHintExplanation)
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
+        }
+    }
+
+    private var assignmentHintExplanation: String {
+        switch assignmentHint {
+        case .undecided:
+            "You can decide when this item is assigned."
+        case .clientPaid:
+            "Ledger will start assignment on the client-paid route."
+        case .businessPaid:
+            "Ledger will start assignment on the business-paid route."
+        case .fromInventory:
+            "Assignment will offer an existing inventory purchase or a new inventory-first item. Either route records the sale into this project."
         }
     }
 
@@ -258,7 +271,10 @@ struct ItemDraftCaptureSheet: View {
                 ? (projectId == nil ? .inventory : .project)
                 : .transaction
             protoItem.status = .open
-            protoItem.isFromInventory = isFromInventory
+            protoItem.assignmentHint = assignmentHint
+            // Compatibility for older clients and tools that only understand
+            // the original boolean routing marker.
+            protoItem.isFromInventory = assignmentHint == .fromInventory
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
             protoItem.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
@@ -277,14 +293,14 @@ struct ItemDraftCaptureSheet: View {
             name = ""
             notes = ""
             quantity = 1
-            isFromInventory = false
+            assignmentHint = .undecided
             imageDatas = []
             showImageSourceMenu = true
             mediaUploadQueue.processQueue()
             isSaving = false
         } catch {
             isSaving = false
-            errorMessage = "Failed to save item draft. Please try again."
+            errorMessage = "Failed to save the item. Please try again."
         }
     }
 

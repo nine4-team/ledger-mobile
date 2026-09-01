@@ -25,10 +25,6 @@ struct ItemDraftCard: View {
         return Array(ordered.prefix(3))
     }
 
-    private var isFromInventory: Bool {
-        protoItem.usesInventoryRouting
-    }
-
     private var showsFromInventoryControl: Bool {
         protoItem.projectId != nil && onToggleFromInventory != nil
     }
@@ -80,7 +76,7 @@ struct ItemDraftCard: View {
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
-                title: "Item Quick Draft",
+                title: "Needs Assignment",
                 items: menuItems,
                 onSelectAction: { action in
                     menuPendingAction = action
@@ -115,13 +111,13 @@ struct ItemDraftCard: View {
     private var menuItems: [ActionMenuItem] {
         var items: [ActionMenuItem] = []
         if let onConvert {
-            items.append(ActionMenuItem(id: "convert", label: "Convert to Item", icon: "square.and.arrow.down", onPress: onConvert))
+            items.append(ActionMenuItem(id: "convert", label: "Assign Item", icon: "arrow.triangle.branch", onPress: onConvert))
         }
         if let onMerge {
-            items.append(ActionMenuItem(id: "merge", label: "Merge with Existing Item", icon: "arrow.triangle.merge", onPress: onMerge))
+            items.append(ActionMenuItem(id: "merge", label: "Match Existing Item", icon: "arrow.triangle.merge", onPress: onMerge))
         }
         if let onDelete {
-            items.append(ActionMenuItem(id: "delete", label: "Delete Draft", icon: "trash", isDestructive: true, onPress: onDelete))
+            items.append(ActionMenuItem(id: "delete", label: "Remove Item", icon: "trash", isDestructive: true, onPress: onDelete))
         }
         return items
     }
@@ -130,22 +126,22 @@ struct ItemDraftCard: View {
         Button {
             onToggleFromInventory?()
         } label: {
-            Image(systemName: isFromInventory ? "shippingbox.fill" : "shippingbox")
+            Image(systemName: protoItem.usesInventoryRouting ? "shippingbox.fill" : "shippingbox")
                 .font(.system(size: 17, weight: .semibold))
                 .frame(width: 36, height: 36)
-                .foregroundStyle(isFromInventory ? BrandColors.primary : BrandColors.textSecondary)
+                .foregroundStyle(protoItem.usesInventoryRouting ? BrandColors.primary : BrandColors.textSecondary)
                 .background(
                     RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
-                        .fill(isFromInventory ? BrandColors.primary.opacity(0.12) : BrandColors.surfaceTertiary)
+                        .fill(protoItem.usesInventoryRouting ? BrandColors.primary.opacity(0.12) : BrandColors.surfaceTertiary)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
-                        .stroke(isFromInventory ? BrandColors.primary.opacity(0.35) : BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+                        .stroke(protoItem.usesInventoryRouting ? BrandColors.primary.opacity(0.35) : BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
                 )
         }
         .frame(width: 44, height: 44)
         .buttonStyle(.plain)
-        .accessibilityLabel(isFromInventory ? "Marked from inventory" : "Mark from inventory")
+        .accessibilityLabel(protoItem.usesInventoryRouting ? "From our inventory" : "Set assignment route")
     }
 
     @ViewBuilder
@@ -184,6 +180,11 @@ struct ItemDraftCard: View {
             }
 
             HStack(spacing: Spacing.sm) {
+                FindableText(protoItem.effectiveAssignmentHint.displayLabel)
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.primary)
+                    .lineLimit(1)
+
                 FindableText("Qty: \(displayQuantity)")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)

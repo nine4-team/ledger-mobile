@@ -92,6 +92,9 @@ export type QuickDraftItemStatus = (typeof quickDraftItemStatuses)[number];
 export const quickDraftCaptureContexts = ["project", "inventory", "transaction"] as const;
 export type QuickDraftCaptureContext = (typeof quickDraftCaptureContexts)[number];
 
+export const quickDraftAssignmentHints = ["undecided", "client_paid", "business_paid", "from_inventory"] as const;
+export type QuickDraftAssignmentHint = (typeof quickDraftAssignmentHints)[number];
+
 export const invoiceStatuses = ["created", "sent", "paid", "canceled"] as const;
 export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
@@ -168,6 +171,11 @@ export const ENUMS: EnumSpec[] = [
     name: "quickDraftCaptureContext",
     values: quickDraftCaptureContexts,
     description: "Where a quick draft item was captured: project, inventory, or transaction.",
+  },
+  {
+    name: "quickDraftAssignmentHint",
+    values: quickDraftAssignmentHints,
+    description: "Reversible capture-time routing hint; confirmed assignment remains authoritative.",
   },
   {
     name: "invoiceStatus",

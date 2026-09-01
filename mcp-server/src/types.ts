@@ -193,6 +193,7 @@ export interface Item {
 
 export type ProtoItemStatus = "open" | "in_review" | "converted";
 export type ProtoItemCaptureContext = "project" | "inventory" | "transaction";
+export type ProtoItemAssignmentHint = "undecided" | "client_paid" | "business_paid" | "from_inventory";
 
 export interface ProtoItemExtraction {
   rawText?: string;
@@ -214,9 +215,12 @@ export interface ProtoItem {
   projectId?: string | null;
   intendedProjectId?: string | null;
   transactionId?: string;
+  spaceId?: string | null;
   name?: string;
   captureContext?: ProtoItemCaptureContext;
   status?: ProtoItemStatus;
+  /** Reversible capture-time guidance. Confirmed assignment writes remain authoritative. */
+  assignmentHint?: ProtoItemAssignmentHint;
   /** User-selected routing marker for a project draft originating in business inventory. */
   isFromInventory?: boolean;
   /** @deprecated Read compatibility only. New tools never expose or write this field. */
