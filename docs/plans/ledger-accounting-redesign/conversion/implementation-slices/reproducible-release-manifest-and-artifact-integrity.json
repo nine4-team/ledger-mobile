@@ -3,7 +3,7 @@
   "sliceId": "reproducible-release-manifest-and-artifact-integrity",
   "title": "Prove exactly what a target build contains before release",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Reproducible Release and Artifact Integrity",
   "surfaceIds": [
     "SWIFT-B2CF26BDA1A8",
@@ -156,8 +156,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["RELEASE-MANIFEST-REQ-001", "RELEASE-MANIFEST-REQ-002", "RELEASE-MANIFEST-REQ-003", "RELEASE-MANIFEST-REQ-004", "RELEASE-MANIFEST-REQ-005"],
       "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-RELEASE-MANIFEST-001"]
     }
   ],
   "implementationEvidence": ["EVID-RELEASE-MANIFEST-001"],

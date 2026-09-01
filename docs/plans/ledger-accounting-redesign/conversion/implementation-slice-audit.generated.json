@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T22:38:50.603Z",
+  "generatedFromManifestSync": "2026-09-01T22:45:28.639Z",
   "totals": {
     "slices": 8,
     "claimedTargetSurfaces": 40,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 6,
+    "implemented": 0,
+    "verified": 7,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -54,7 +54,7 @@
       "sliceId": "reproducible-release-manifest-and-artifact-integrity",
       "title": "Prove exactly what a target build contains before release",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Reproducible Release and Artifact Integrity",
       "surfaceIds": [
         "SWIFT-B2CF26BDA1A8",

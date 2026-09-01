@@ -19,7 +19,7 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CONTRACT-CATALOG-001"
       ],
-      "notes": "CI definition is implemented and claimed by target-environment-isolation; an actual successful GitHub Actions run remains external evidence before TARGET-ENV-TEST-005 can pass.",
+      "notes": "CI definition is implemented and claimed by target-environment-isolation; immutable run 33567370249 proves the complete 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
@@ -3171,7 +3171,7 @@
       "acknowledgeSourceHash": "eb9f9c5f72ea4eaa8e5a184763b5f77b5d2bb2dbd22246187207b1efd391653b",
       "currentBehavior": "Defines target-only validated build/environment/profile/channel identity, exact contract-catalog and contract-version binding, immutable artifact/dependency-lock byte evidence, deterministic canonical manifest reconstruction, compatibility refusal, stable failures and an evidence-only non-authority disposition.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
@@ -3218,7 +3218,7 @@
       "acknowledgeSourceHash": "038601aba957d6a8a4d25d9647811b682d485c26b856ebad1faec80adbfa3736",
       "currentBehavior": "Exercises exact release evidence coverage and ordering, deterministic offline reconstruction, immutable byte verification, environment/profile/channel/contracts/catalog compatibility, duplicate/missing/tampered/oversized refusal, data leakage absence and production-shaped evidence-only non-authority.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",

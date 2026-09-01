@@ -99,7 +99,13 @@ Results on 2026-09-01:
 - GitHub Actions pull-request run
   `https://github.com/nine4-team/ledger-mobile/actions/runs/33555553117`:
   pass, with both `Conversion state and traceability` and
-  `Isolated target environment` jobs successful.
+  `Isolated target environment` jobs successful. Its then-current test command
+  covered the 12 environment tests, not the later complete target package;
+- GitHub Actions run
+  `https://github.com/nine4-team/ledger-mobile/actions/runs/33567370249`:
+  pass after the target job was corrected to execute `swift test --package-path
+  LedgeriOS`; all 47 target tests across eight suites, both target builds and
+  the final clean-diff guard passed.
 
 ## Proven Test Obligations
 
@@ -113,11 +119,12 @@ Results on 2026-09-01:
 - `TARGET-ENV-TEST-004`: a stale persisted environment binding is rejected
   before the local-state opener runs; sentinel existing bytes remain unchanged,
   and the matching binding reopens the same isolated state.
-- `TARGET-ENV-TEST-005` external-CI portion: the immutable pull-request run
-  independently passed the boundary guard, target package suite, both target
-  staging builds and clean-diff check. Signed/visual/physical staging evidence
-  and provisioned-resource projection remain open, so the complete obligation
-  is not marked passed.
+- `TARGET-ENV-TEST-005` external-CI portion: immutable pull-request run
+  `33567370249` independently passed the boundary guard, generated contracts,
+  the complete 47-test target package suite, both target staging builds and
+  clean-diff check. Signed/visual/physical staging evidence and provisioned-
+  resource projection remain open, so the complete obligation is not marked
+  passed.
 
 ## Explicit Limits
 

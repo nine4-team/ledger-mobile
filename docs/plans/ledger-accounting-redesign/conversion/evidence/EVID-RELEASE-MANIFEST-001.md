@@ -2,9 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / release evidence / artifact integrity
-- Repository baseline: `39cae653` on
-  `codex/supabase-powersync-implementation`; implementation is in the current
-  bounded diff pending its exact commit
+- Exact implementation commit:
+  `81726e3bf7345f06fcc6a38cb826142387d39b47` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree, current application and release scripts are
   not modified
@@ -72,6 +72,15 @@ Local results on 2026-09-01:
 - source `LedgeriOS.xcodeproj` diff from `fe018501`: empty; and
 - tracked diff formatting check: pass.
 
+Immutable GitHub Actions run
+[`33567370249`](https://github.com/nine4-team/ledger-mobile/actions/runs/33567370249)
+passed on that exact implementation commit. Its `Conversion state and
+traceability` and `Isolated target environment` jobs both passed, including
+conversion coverage and generated-artifact cleanliness, target dependency and
+environment boundaries, generated app/MCP contracts, the complete 47-test
+target package suite, the macOS build, the generic iOS Simulator build and the
+final clean-diff guard.
+
 ## Verification Status
 
 - `RELEASE-MANIFEST-TEST-001`: passed locally. Closed values, validated build
@@ -84,9 +93,12 @@ Local results on 2026-09-01:
   contracts/catalog, duplicate/missing evidence, invalid values, digest tamper,
   noncanonical encoding and oversized candidates fail closed; encoded fixtures
   contain no paths, URLs, credentials, provider or user identities.
-- `RELEASE-MANIFEST-TEST-004`: immutable exact-commit pull-request CI,
-  including the conversion and isolated target jobs, is pending. The slice
-  therefore remains `implemented`, not `verified`.
+- `RELEASE-MANIFEST-TEST-004`: passed in immutable GitHub Actions run
+  `33567370249` on exact implementation commit `81726e3b`, including all 47
+  target tests and both target builds.
+
+All four obligations pass, so the slice and its two target-only surfaces are
+`verified`. Current release scripts remain only `target_mapped`.
 
 ## Explicit Limits
 

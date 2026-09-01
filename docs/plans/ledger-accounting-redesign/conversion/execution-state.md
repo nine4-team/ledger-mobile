@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 41
+State version: 42
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: RELEASE-MANIFEST-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: RELEASE-MANIFEST-VERIFIED-NEXT-FOUNDATION-SELECTION-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -395,9 +395,12 @@ modifying the running Firebase application before hard cutover.
   verification; a new exact-commit run is required.
 - Exact implementation commit `c79484a8` passed immutable GitHub Actions run
   `33559241558`: both conversion traceability and isolated-target jobs passed,
-  including generated contract validation, all 29 target-package tests, macOS
-  and generic iOS Simulator builds, and clean-diff checks. All three catalog
-  obligations and exactly its ten target-only surfaces are now `verified`.
+  including generated contract validation, the then-configured 12 environment
+  tests, macOS and generic iOS Simulator builds, and clean-diff checks. All 29
+  then-current package tests also passed locally; corrected cumulative run
+  `33567370249` later passed the complete 47-test suite with the implementation
+  unchanged. All three catalog obligations and exactly its ten target-only
+  surfaces are now `verified`.
 - Created and passed the ready gate for `shared-list-query-presentation`, then
   implemented target-only named query/sort/filter/action profiles, normalized
   search, stable-ID tie ordering, query-bound opaque cursors, local version/as-
@@ -412,10 +415,12 @@ modifying the running Firebase application before hard cutover.
   `EVID-SHARED-LIST-001`.
 - Exact implementation commit `587ce11e` passed immutable GitHub Actions run
   `33560578730`: both conversion traceability and isolated-target jobs passed,
-  including all target tests, generated contracts, target boundary checks,
-  macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
-  shared-list obligations and exactly its two target-only surfaces are now
-  `verified`; the four concrete source UI replacements remain `target_mapped`.
+  including the then-configured environment tests, generated contracts, target
+  boundary checks, macOS and generic iOS Simulator builds, and clean tracked
+  artifacts. Corrected cumulative run `33567370249` later passed all 47 target
+  tests with the implementation unchanged. All four shared-list obligations and
+  exactly its two target-only surfaces are now `verified`; the four concrete
+  source UI replacements remain `target_mapped`.
 - Created and passed the ready gate for
   `scoped-route-resolution-and-restoration`, then implemented target-only
   registered stable routes, bounded subject/parent scope, environment/
@@ -431,10 +436,12 @@ modifying the running Firebase application before hard cutover.
   `EVID-SCOPED-ROUTE-001`.
 - Exact implementation commit `bb978212` passed immutable GitHub Actions run
   `33562117852`: both conversion traceability and isolated-target jobs passed,
-  including all target tests, generated contracts, target boundary checks,
-  macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
-  scoped-route obligations and exactly its two target-only surfaces are now
-  `verified`; current Firebase-era route/view surfaces remain unadvanced.
+  including the then-configured environment tests, generated contracts, target
+  boundary checks, macOS and generic iOS Simulator builds, and clean tracked
+  artifacts. Corrected cumulative run `33567370249` later passed all 47 target
+  tests with the implementation unchanged. All four scoped-route obligations
+  and exactly its two target-only surfaces are now `verified`; current Firebase-
+  era route/view surfaces remain unadvanced.
 - Created and passed the ready gate for `typed-edit-draft-and-submission`, then
   implemented target-only unchanged/set/clear field values, typed Account/
   actor/contract/entity/revision-bound drafts, stable validation results,
@@ -449,10 +456,12 @@ modifying the running Firebase application before hard cutover.
   unadvanced. See `EVID-TYPED-EDIT-001`.
 - Exact implementation commit `10a7db79` passed immutable GitHub Actions run
   `33563347569`: both conversion traceability and isolated-target jobs passed,
-  including all target tests, generated contracts, target boundary checks,
-  macOS and generic iOS Simulator builds, and clean tracked artifacts. All five
-  typed-edit obligations and exactly its two target-only surfaces are now
-  `verified`; current editors and feature commands remain unadvanced.
+  including the then-configured environment tests, generated contracts, target
+  boundary checks, macOS and generic iOS Simulator builds, and clean tracked
+  artifacts. Corrected cumulative run `33567370249` later passed all 47 target
+  tests with the implementation unchanged. All five typed-edit obligations and
+  exactly its two target-only surfaces are now `verified`; current editors and
+  feature commands remain unadvanced.
 - Created and passed the ready gate for
   `privacy-safe-telemetry-and-correlation`. Exactly two comment-only target
   scaffolds are mapped to stable signal IDs, validated environment/build scope,
@@ -473,10 +482,12 @@ modifying the running Firebase application before hard cutover.
   `target_mapped`. Exact-commit CI is still required before verification.
 - Exact implementation commit `4277afc5` passed immutable GitHub Actions run
   `33565583450`: both conversion traceability and isolated-target jobs passed,
-  including all target tests, generated contracts, target boundary checks,
-  macOS and generic iOS Simulator builds, and clean tracked artifacts. All four
-  telemetry obligations and exactly its two target-only surfaces are now
-  `verified`; current app/MCP/performance logging remains unadvanced.
+  including the then-configured environment tests, generated contracts, target
+  boundary checks, macOS and generic iOS Simulator builds, and clean tracked
+  artifacts. Corrected cumulative run `33567370249` later passed all 47 target
+  tests with the implementation unchanged. All four telemetry obligations and
+  exactly its two target-only surfaces are now `verified`; current app/MCP/
+  performance logging remains unadvanced.
 - Created and passed the ready gate for
   `reproducible-release-manifest-and-artifact-integrity`. Exactly two comment-
   only target scaffolds are mapped to validated release build/channel/contract
@@ -495,6 +506,19 @@ modifying the running Firebase application before hard cutover.
   clean source-project isolation and diff formatting. Exactly the two target-
   only release-manifest surfaces are `implemented`; current release scripts
   remain `target_mapped`. Exact-commit CI is still required before verification.
+- Exact implementation commit `81726e3b` passed immutable GitHub Actions run
+  `33567370249`: both conversion traceability and isolated-target jobs passed,
+  including the corrected complete 47-test target package suite, generated
+  contracts, target boundary checks, macOS and generic iOS Simulator builds,
+  and clean tracked artifacts. All four release-manifest obligations and exactly
+  its two target-only surfaces are now `verified`; current release scripts
+  remain `target_mapped`.
+- The same checkpoint corrected an inherited CI evidence gap: earlier isolated-
+  target runs executed only the 12 environment tests despite evidence prose
+  saying “all target tests.” The workflow now runs the complete package, prior
+  evidence names the exact split instead of overstating the old runs, and
+  immutable run `33567370249` supplies cumulative hosted proof for all 47
+  unchanged target tests.
 
 ## Next Action
 
@@ -504,14 +528,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented
-   `reproducible-release-manifest-and-artifact-integrity` slice, wait for both
-   exact-commit pull-request jobs to pass, and record the immutable run in
-   `EVID-RELEASE-MANIFEST-001`. Only then mark `RELEASE-MANIFEST-TEST-004`, the
-   dossier, and its two target-only surfaces `verified`; do not advance current
-   release scripts. Do not add signing/notarization keys, filesystem/provider
-   adapters, TestFlight/Sparkle upload, deployment, migration execution, or
-   production activation/release/cutover authority.
+2. Select the next decision-independent technical-control foundation only from
+   currently `target_mapped` surfaces. Prefer a provider-free fail-closed
+   migration-run manifest/plan integrity slice if its exact mapped surfaces and
+   architecture headings support a complete offline evidence contract; first
+   create comment scaffolds, classify them, claim them in one dossier and pass
+   the `ready` gate before behavior. Do not execute a migration or advance any
+   current migration/release script from shared-contract proof.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

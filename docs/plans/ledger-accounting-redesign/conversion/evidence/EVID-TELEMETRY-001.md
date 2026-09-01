@@ -78,8 +78,11 @@ Immutable GitHub Actions run
 passed on the exact implementation commit. Its `Conversion state and
 traceability` and `Isolated target environment` jobs both passed, including
 conversion coverage, generated-artifact cleanliness, target dependency and
-environment boundaries, generated app/MCP contracts, all target tests, the
-macOS build, and the generic iOS Simulator build.
+environment boundaries, generated app/MCP contracts, the then-configured 12
+environment tests, the macOS build, and the generic iOS Simulator build. The
+complete 47-test package suite, including the unchanged telemetry tests, later
+passed with the corrected workflow in immutable run
+[`33567370249`](https://github.com/nine4-team/ledger-mobile/actions/runs/33567370249).
 
 ## Verification Status
 
@@ -93,9 +96,10 @@ macOS build, and the generic iOS Simulator build.
 - `TELEMETRY-TEST-003`: passed locally. Protected classes redact, raw identifiers
   and unclassified material refuse, and duplicate/disallowed/mismatched/invalid/
   oversized candidates produce stable failures without a partial envelope.
-- `TELEMETRY-TEST-004`: passed in immutable GitHub Actions run `33565583450`
-  on exact implementation commit
-  `4277afc5b7046a77fc4b0af2e39d1da3a3d9b2cc`.
+- `TELEMETRY-TEST-004`: exact implementation run `33565583450` passed the
+  conversion/boundary/contracts/build/clean-diff gates; corrected cumulative
+  run `33567370249` passed the complete 47-test target suite with this
+  implementation unchanged.
 
 All four obligations pass, so the slice and its two target-only surfaces are
 `verified`. Current `NavLifecycleLog`, performance diagnostics and MCP telemetry

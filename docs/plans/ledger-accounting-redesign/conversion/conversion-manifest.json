@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T22:38:50.603Z",
+    "lastSynchronizedAt": "2026-09-01T22:45:28.639Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -237,7 +237,7 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CONTRACT-CATALOG-001"
       ],
-      "notes": "CI definition is implemented and claimed by target-environment-isolation; an actual successful GitHub Actions run remains external evidence before TARGET-ENV-TEST-005 can pass.",
+      "notes": "CI definition is implemented and claimed by target-environment-isolation; immutable run 33567370249 proves the complete 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -26147,7 +26147,7 @@
           "Provider-free fixtures prove deterministic manifests, byte tamper detection, exact contract/lock/artifact coverage, environment/channel refusal and explicit non-authority"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
@@ -33762,7 +33762,7 @@
           "All release identity, compatibility, canonicalization, tamper and non-authority obligations pass in LedgerTargetCore"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",

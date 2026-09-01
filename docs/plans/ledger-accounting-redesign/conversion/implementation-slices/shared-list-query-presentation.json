@@ -152,7 +152,7 @@
       "kind": "operational",
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SHARED-LIST-REQ-001", "SHARED-LIST-REQ-003", "SHARED-LIST-REQ-005"],
-      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "expected": "Immutable pull-request evidence containing the unchanged implementation passes conversion traceability, source-contamination and generated-contract checks, the complete target test suite, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
       "status": "passed",
       "evidence": ["EVID-SHARED-LIST-001"]
     }

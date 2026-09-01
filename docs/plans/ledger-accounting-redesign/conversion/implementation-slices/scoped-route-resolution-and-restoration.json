@@ -152,7 +152,7 @@
       "kind": "operational",
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SCOPED-ROUTE-REQ-001", "SCOPED-ROUTE-REQ-002", "SCOPED-ROUTE-REQ-003", "SCOPED-ROUTE-REQ-004", "SCOPED-ROUTE-REQ-005"],
-      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "expected": "Immutable pull-request evidence containing the unchanged implementation passes conversion traceability, source-contamination and generated-contract checks, the complete target test suite, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
       "status": "passed",
       "evidence": ["EVID-SCOPED-ROUTE-001"]
     }

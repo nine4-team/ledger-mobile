@@ -155,7 +155,7 @@
       "kind": "operational",
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["TELEMETRY-REQ-001", "TELEMETRY-REQ-002", "TELEMETRY-REQ-003", "TELEMETRY-REQ-004", "TELEMETRY-REQ-005"],
-      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "expected": "Immutable pull-request evidence containing the unchanged implementation passes conversion traceability, source-contamination and generated-contract checks, the complete target test suite, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
       "status": "passed",
       "evidence": ["EVID-TELEMETRY-001"]
     }

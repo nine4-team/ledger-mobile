@@ -161,7 +161,7 @@
       "kind": "operational",
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["TYPED-EDIT-REQ-001", "TYPED-EDIT-REQ-002", "TYPED-EDIT-REQ-003", "TYPED-EDIT-REQ-004", "TYPED-EDIT-REQ-005"],
-      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "expected": "Immutable pull-request evidence containing the unchanged implementation passes conversion traceability, source-contamination and generated-contract checks, the complete target test suite, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
       "status": "passed",
       "evidence": ["EVID-TYPED-EDIT-001"]
     }

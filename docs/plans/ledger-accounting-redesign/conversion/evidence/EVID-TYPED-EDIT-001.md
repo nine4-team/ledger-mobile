@@ -106,8 +106,11 @@ Immutable GitHub Actions run
 passed on the exact implementation commit. Its `Conversion state and
 traceability` and `Isolated target environment` jobs both passed, including
 conversion coverage, generated-artifact cleanliness, target dependency and
-environment boundaries, generated app/MCP contracts, all target tests, the
-macOS build, and the generic iOS Simulator build.
+environment boundaries, generated app/MCP contracts, the then-configured 12
+environment tests, the macOS build, and the generic iOS Simulator build. The
+complete 47-test package suite, including the unchanged typed-edit tests, later
+passed with the corrected workflow in immutable run
+[`33567370249`](https://github.com/nine4-team/ledger-mobile/actions/runs/33567370249).
 
 ## Verification Status
 
@@ -119,9 +122,10 @@ macOS build, and the generic iOS Simulator build.
   nonmonotonic mismatches fail without mutating the current presentation.
 - `TYPED-EDIT-TEST-004`: passed locally. Every shared operation state maps to a
   stable provider-free edit presentation category.
-- `TYPED-EDIT-TEST-005`: passed in immutable GitHub Actions run `33563347569`
-  on exact implementation commit
-  `10a7db798712512be61cff0354083c9d5e2ce25d`.
+- `TYPED-EDIT-TEST-005`: exact implementation run `33563347569` passed the
+  conversion/boundary/contracts/build/clean-diff gates; corrected cumulative
+  run `33567370249` passed the complete 47-test target suite with this
+  implementation unchanged.
 
 All five obligations pass, so the slice and its two target-only surfaces are
 `verified`. Current editor, feature-command, and Firebase surfaces remain at
