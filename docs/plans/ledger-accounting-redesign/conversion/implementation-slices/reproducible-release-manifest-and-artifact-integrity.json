@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "reproducible-release-manifest-and-artifact-integrity",
+  "title": "Prove exactly what a target build contains before release",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Reproducible Release and Artifact Integrity",
+  "surfaceIds": [
+    "SWIFT-B2CF26BDA1A8",
+    "TEST-E323BA653B17"
+  ],
+  "requirements": [
+    {
+      "id": "RELEASE-MANIFEST-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 5 — Release-candidate and cutover readiness",
+      "invariant": "A release candidate records one validated target environment/profile/channel, immutable repository/build identity, exact contract versions and a complete artifact/lock evidence set before it may be compared with staging evidence; constructing that record performs no distribution or production write.",
+      "decisionIds": [],
+      "verificationIds": ["RELEASE-MANIFEST-TEST-001", "RELEASE-MANIFEST-TEST-002", "RELEASE-MANIFEST-TEST-003", "RELEASE-MANIFEST-TEST-004"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "Canonical manifest evidence includes schema/query/operation/Sync/catalog versions, dependency-lock hashes and immutable artifact hashes; local/staging/production order and feature authority remain separate gates rather than fields a build can self-authorize.",
+      "decisionIds": [],
+      "verificationIds": ["RELEASE-MANIFEST-TEST-001", "RELEASE-MANIFEST-TEST-002", "RELEASE-MANIFEST-TEST-003", "RELEASE-MANIFEST-TEST-004"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Platform control and contract publication",
+      "invariant": "Release evidence contains only reviewed Ledger and standard Swift values; provider handles, signing material, mutable URLs/paths, dynamic dictionaries and backend SDK values cannot enter the manifest boundary.",
+      "decisionIds": [],
+      "verificationIds": ["RELEASE-MANIFEST-TEST-001", "RELEASE-MANIFEST-TEST-002", "RELEASE-MANIFEST-TEST-003", "RELEASE-MANIFEST-TEST-004"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Evolvability",
+      "invariant": "Artifact creation, schema/contract compatibility and feature activation remain separate: a manifest can prove exact immutable inputs and compatibility without granting deployment, authority activation, cutover or destructive cleanup.",
+      "decisionIds": [],
+      "verificationIds": ["RELEASE-MANIFEST-TEST-001", "RELEASE-MANIFEST-TEST-002", "RELEASE-MANIFEST-TEST-003", "RELEASE-MANIFEST-TEST-004"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Cutover Release Gates",
+      "invariant": "The manifest explicitly remains evidence-only and cannot represent cutover authorization; even an internally consistent production-profile manifest does not satisfy product, spike, security, physical-device, migration, backup, operator or source-freeze gates.",
+      "decisionIds": [],
+      "verificationIds": ["RELEASE-MANIFEST-TEST-001", "RELEASE-MANIFEST-TEST-003", "RELEASE-MANIFEST-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ReleaseApplicationVersion, ReleaseSourceRevision, ReleaseArtifactID and ReleaseSHA256 are validated bounded values; channel, platform, artifact kind and dependency ecosystem are closed enums.",
+        "ReleaseBuildIdentity derives environment/profile and exact schema/query/operation/Sync versions from ValidatedLedgerEnvironment and binds app version, build number, source revision and generated contract-catalog hash.",
+        "ReleaseArtifactEvidence contains stable artifact ID/kind/platform, positive byte count and SHA-256 only; pure byte verification detects changed size or content without opening a file, URL or provider object.",
+        "ReleaseDependencyLockEvidence contains one closed ecosystem plus bounded public lock identity and SHA-256; raw lock contents, paths and credentials are excluded.",
+        "LedgerReleaseManifest is created only through ReleaseManifestValidator from a draft, exact required artifact/lock sets and compatibility policy; it stores deterministically sorted evidence, a canonical content digest and an evidenceOnly authority disposition."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free evidence contract creates no Postgres relation, deployment table, view, function, constraint or index."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No release, deployment, upload, signing, activation or business command handler executes."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, view or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row or privileged function exists; future manifest retention/approval storage requires a separate security and operator-authority slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "Sync contract version is evidence only; no PowerSync Stream, deployment or client schema activation is defined."
+    },
+    "localOffline": {
+      "items": [
+        "A validated manifest encodes to deterministic sorted canonical bytes and reconstructs through the same validator without network, keychain, signer, provider SDK or mutable build-host state.",
+        "Reordered equivalent artifact/lock inputs normalize to the same manifest digest; changed bytes, hashes, required sets, environment/channel/profile, catalog/contract versions and duplicate identities fail atomically.",
+        "Canonical bytes contain no filesystem path, URL, credential, provider metadata, Principal, Account or product payload and stay below a fixed manifest-size ceiling."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Artifact byte hashing is pure evidence verification; this slice does not read/write Storage, local files, app media or release-provider objects."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The shared target value contract is not wired to app, MCP or existing build/release tools; each later release adapter must consume the same validated manifest."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "A migration artifact may be listed by hash, but no Firebase export, transform, migration plan, reconciliation or production apply is created or authorized."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Stable failure codes distinguish invalid build identity, environment/channel confusion, contract/catalog mismatch, missing/duplicate artifact or lock evidence, byte/hash tamper and canonical-size overflow.",
+        "The manifest's evidenceOnly disposition and compatibility result are operational inputs only; no dashboard, alert, signer, operator sign-off, release provider or runbook activation exists in this slice."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "Local, staging and production channels are bound to their matching validated environment/profile, while every accepted manifest remains evidenceOnly and cannot activate feature/backend authority.",
+        "The contracts are additive target-only Swift code/tests, import no provider SDK, alter no current app/release script, contact no hosted service, and can be reverted before release without changing an artifact or external state."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "RELEASE-MANIFEST-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/LedgerReleaseManifestTests.swift",
+      "covers": ["RELEASE-MANIFEST-REQ-001", "RELEASE-MANIFEST-REQ-002", "RELEASE-MANIFEST-REQ-003", "RELEASE-MANIFEST-REQ-004", "RELEASE-MANIFEST-REQ-005"],
+      "expected": "Closed release values, environment-derived build identity, exact catalog/contracts, required artifact/lock coverage, sorted canonical evidence, stable digest and evidence-only authority validate deterministically.",
+      "status": "passed",
+      "evidence": ["EVID-RELEASE-MANIFEST-001"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/LedgerReleaseManifestTests.swift",
+      "covers": ["RELEASE-MANIFEST-REQ-001", "RELEASE-MANIFEST-REQ-002", "RELEASE-MANIFEST-REQ-003", "RELEASE-MANIFEST-REQ-004"],
+      "expected": "Equivalent reordered drafts create identical canonical bytes/digests, decode and revalidate offline, and pure artifact-byte verification preserves exact kind/platform/size/hash identity.",
+      "status": "passed",
+      "evidence": ["EVID-RELEASE-MANIFEST-001"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/LedgerReleaseManifestTests.swift",
+      "covers": ["RELEASE-MANIFEST-REQ-001", "RELEASE-MANIFEST-REQ-002", "RELEASE-MANIFEST-REQ-003", "RELEASE-MANIFEST-REQ-004", "RELEASE-MANIFEST-REQ-005"],
+      "expected": "Wrong environment/profile/channel, contract/catalog mismatch, unsafe values, duplicates, missing/unexpected evidence, changed bytes/hash/size and oversized/noncanonical manifests fail with stable codes and no accepted partial manifest.",
+      "status": "passed",
+      "evidence": ["EVID-RELEASE-MANIFEST-001"]
+    },
+    {
+      "id": "RELEASE-MANIFEST-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["RELEASE-MANIFEST-REQ-001", "RELEASE-MANIFEST-REQ-002", "RELEASE-MANIFEST-REQ-003", "RELEASE-MANIFEST-REQ-004", "RELEASE-MANIFEST-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-RELEASE-MANIFEST-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent technical-control foundation derived from the platform capability dossier. It stops before signing/notarization keys, App Store/TestFlight/Sparkle/DMG adapters, SBOM generation, file I/O, provider credentials/resources, deployment, feature activation, migration/reconciliation execution, production release, cutover or operator approval."
+}

@@ -9,8 +9,8 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "7e704d1d6aa68f40fcb311eed43c3427eaf6fbafeb976b547d3cfc76e63d436f",
-      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, installs the isolated target TypeScript compiler, checks generated Swift/TypeScript/MCP contract parity, executes target contract tests, builds staging for macOS/iOS Simulator, and rejects tracked rewrites.",
+      "acknowledgeSourceHash": "8583f1b2f3b91be56b98d10d268bfa28e873d916c18cc1b30095a902671e311b",
+      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, installs the isolated target TypeScript compiler, checks generated Swift/TypeScript/MCP contract parity, executes the complete target package test suite, builds staging for macOS/iOS Simulator, and rejects tracked rewrites.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -3162,6 +3162,98 @@
         ],
         "acceptance": [
           "Provider-free fixtures prove stable registration, canonical encoding, one-way scope-separated correlation, bounded values, and fail-closed redaction/refusal without a telemetry destination"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-B2CF26BDA1A8",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "eb9f9c5f72ea4eaa8e5a184763b5f77b5d2bb2dbd22246187207b1efd391653b",
+      "currentBehavior": "Defines target-only validated build/environment/profile/channel identity, exact contract-catalog and contract-version binding, immutable artifact/dependency-lock byte evidence, deterministic canonical manifest reconstruction, compatibility refusal, stable failures and an evidence-only non-authority disposition.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-RELEASE-MANIFEST-001"
+      ],
+      "notes": "Target-only technical-control surface. It defines evidence values and validation only; it does not replace or advance current TestFlight, Sparkle, DMG, archive or deployment scripts and grants no release/cutover authority.",
+      "target": {
+        "owner": "Reproducible Release and Artifact Integrity",
+        "surfaces": [
+          "LedgerReleaseManifest and canonical manifest digest",
+          "release environment/profile/channel binding",
+          "release contract and dependency-lock evidence",
+          "immutable artifact identity, byte count and SHA-256 evidence",
+          "release compatibility and required-evidence validation"
+        ],
+        "securityRequirements": [
+          "Release values contain no signing/notarization/upload credential, token, URL, filesystem path, provider handle, Principal, Account or user payload",
+          "Staging/local/production environment, build profile and release channel combinations fail closed before a manifest exists"
+        ],
+        "syncRequirements": [
+          "Catalog/schema/query/operation/Sync versions and dependency locks are explicit immutable evidence and must match the validated target build",
+          "Canonical ordering and hashes survive process restart without a network, release provider or mutable build-host state"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no current release script, appcast, build output or mutable provider state as target authority; later release tooling consumes the reviewed target manifest contract.",
+        "reconciliation": [
+          "Every required artifact and lock identity appears exactly once with its byte/hash evidence, and the canonical manifest digest reproduces exactly from reviewed inputs"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "LedgerReleaseManifestTests"
+        ],
+        "acceptance": [
+          "Provider-free fixtures prove deterministic manifests, byte tamper detection, exact contract/lock/artifact coverage, environment/channel refusal and explicit non-authority"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E323BA653B17",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "038601aba957d6a8a4d25d9647811b682d485c26b856ebad1faec80adbfa3736",
+      "currentBehavior": "Exercises exact release evidence coverage and ordering, deterministic offline reconstruction, immutable byte verification, environment/profile/channel/contracts/catalog compatibility, duplicate/missing/tampered/oversized refusal, data leakage absence and production-shaped evidence-only non-authority.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-RELEASE-MANIFEST-001"
+      ],
+      "notes": "Target-only provider-free test surface; it uses synthetic artifact bytes and identifiers with no signing key, provider credential, upload, deployment, production endpoint or current release-script invocation.",
+      "target": {
+        "owner": "Reproducible Release and Artifact Integrity",
+        "surfaces": [
+          "LedgerReleaseManifestTests",
+          "canonical manifest restart fixtures",
+          "artifact tamper and missing-evidence fixtures",
+          "environment/channel/contract compatibility refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Negative fixtures prove credentials, URLs, paths, raw provider metadata and production-channel confusion cannot enter an accepted manifest",
+          "Synthetic artifact bytes and hashes contain no production-derived data"
+        ],
+        "syncRequirements": [
+          "Canonical manifest and artifact verification fixtures run deterministically without network or provider availability"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only build/artifact fixtures and do not inspect current release outputs or provider state.",
+        "reconciliation": [
+          "Reordered equivalent inputs normalize identically; changed bytes, hashes, versions, locks, channels and required sets are rejected exactly"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter LedgerReleaseManifestTests"
+        ],
+        "acceptance": [
+          "All release identity, compatibility, canonicalization, tamper and non-authority obligations pass in LedgerTargetCore"
         ]
       }
     },

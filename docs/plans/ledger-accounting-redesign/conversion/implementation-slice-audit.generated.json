@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T22:21:07.917Z",
+  "generatedFromManifestSync": "2026-09-01T22:38:50.603Z",
   "totals": {
-    "slices": 7,
-    "claimedTargetSurfaces": 38,
+    "slices": 8,
+    "claimedTargetSurfaces": 40,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 23
+    "implementationAdvancedTargetSurfaces": 25
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 6,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -49,6 +49,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/privacy-safe-telemetry-and-correlation.json"
+    },
+    {
+      "sliceId": "reproducible-release-manifest-and-artifact-integrity",
+      "title": "Prove exactly what a target build contains before release",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Reproducible Release and Artifact Integrity",
+      "surfaceIds": [
+        "SWIFT-B2CF26BDA1A8",
+        "TEST-E323BA653B17"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/reproducible-release-manifest-and-artifact-integrity.json"
     },
     {
       "sliceId": "scoped-route-resolution-and-restoration",

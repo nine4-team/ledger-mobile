@@ -58,7 +58,7 @@ jobs:
           npm run target:contracts:check
 
       - name: Test isolated target contracts
-        run: npm run target:environment:test
+        run: swift test --package-path LedgeriOS
 
       - name: Build target staging for macOS
         run: npm run target:staging:build:macos
