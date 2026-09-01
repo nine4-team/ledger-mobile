@@ -52,6 +52,11 @@ jobs:
           node --check scripts/check-target-environment.mjs
           npm run target:environment:check
 
+      - name: Validate generated app and MCP contracts
+        run: |
+          npm --prefix LedgerTargetMCP ci --ignore-scripts
+          npm run target:contracts:check
+
       - name: Test isolated target contracts
         run: npm run target:environment:test
 

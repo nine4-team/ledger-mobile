@@ -95,8 +95,19 @@ const targetRelevant = batches.flatMap((batch) =>
     .filter((surface) => ["replace", "redesign", "migrate"].includes(surface.disposition))
     .map((surface) => ({ batchId: batch.batchId, ...surface })),
 );
-const mapped = targetRelevant.filter((surface) => surface.status === "target_mapped");
-const residual = targetRelevant.filter((surface) => surface.status !== "target_mapped");
+const mappedOrLaterStatuses = new Set([
+  "target_mapped",
+  "implemented",
+  "verified",
+  "rehearsed",
+  "cutover_ready",
+]);
+const mapped = targetRelevant.filter((surface) =>
+  mappedOrLaterStatuses.has(surface.status),
+);
+const residual = targetRelevant.filter(
+  (surface) => !mappedOrLaterStatuses.has(surface.status),
+);
 
 for (const surface of residual) {
   if (!Array.isArray(surface.blockers) || surface.blockers.length === 0) {
@@ -157,7 +168,7 @@ md.push(
   "## Summary",
   "",
   `- Target-relevant surfaces: ${targetRelevant.length}`,
-  `- Exactly target-mapped: ${mapped.length}`,
+  `- Target-mapped or later: ${mapped.length}`,
   `- Residual surfaces: ${residual.length}`,
   `- Distinct blockers: ${blockers.length}`,
   "",

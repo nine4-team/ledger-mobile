@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 28
+State version: 29
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: OPERATION-LIFECYCLE-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: CONTRACT-CATALOG-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -352,7 +352,7 @@ modifying the running Firebase application before hard cutover.
   an Account-scoped restartable reference journal, provider-free operation and
   health ports, and explicit subscription/pending/write-block readiness.
 - Added eleven deterministic operation/restart/readiness tests. The first run
-  exposed and then corrected a mismatched date decode strategy; the final 10
+  exposed and then corrected a mismatched date decode strategy; the final 11
   operation tests and all 23 target-package tests pass. Exact replay,
   same-ID/different-payload refusal, transient requeue, permanent rejection
   without queue starvation, lost-response replay, illegal transition refusal,
@@ -368,6 +368,31 @@ modifying the running Firebase application before hard cutover.
   path warnings. No Postgres schema, RLS, Data API grant, PowerSync Stream,
   provider adapter, hosted resource, Firebase implementation, migration,
   deployment or production operation was introduced.
+- Implemented the decision-independent `versioned-contract-catalog` technical
+  slice with one canonical registry and deterministic Swift, TypeScript and
+  bounded MCP-resource projections. All projections embed catalog SHA-256
+  `1a42004b…`, and the target TypeScript package pins compiler 5.9.3 with no
+  runtime dependencies.
+- Added strict shape/version/cross-reference/test-owner/size/leakage validation,
+  reciprocal deprecation checks, generated-file freshness enforcement and
+  nineteen intentional malformed-catalog controls. Six catalog tests and all
+  29 target-package tests pass; strict TypeScript compilation, isolated target
+  checks, macOS build, generic iOS Simulator build, clean source-project diff
+  and diff formatting also pass locally. See `EVID-CONTRACT-CATALOG-001`.
+- Advanced only the ten new target implementation surfaces to `implemented`.
+  The ten broader current-MCP replacement surfaces deliberately remain
+  `target_mapped` because product command/query DTOs, transport execution,
+  container/deployment controls and full app/MCP parity are not implemented by
+  this platform-only catalog. Exact-commit external CI remains the final
+  `CONTRACT-CATALOG-TEST-003` obligation before verification.
+- Parent-commit GitHub Actions run `33557226244` passed the isolated target job
+  but failed conversion traceability because the query catalog had not been
+  regenerated after new Swift/script candidates and the residual generator
+  recognized only the literal `target_mapped` status. This checkpoint excludes
+  target-only scripts from Firebase query-source candidates, treats every later
+  lifecycle status as mapped-or-later, regenerates both artifacts, and passes
+  the complete local workflow command set. The failed run is not accepted as
+  verification; a new exact-commit run is required.
 
 ## Next Action
 
@@ -377,38 +402,43 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Begin the next decision-independent technical slice for the versioned
-   contract catalog and app/MCP projection boundary. Start from the mapped MCP
-   Platform and Contract Registry surfaces, trace the exact architecture
-   headings into a ready dossier, and generate/parity-test Swift and TypeScript
-   command/query/capability/error/version projections without introducing a
-   provider adapter or hosted resource.
-3. Keep `target-environment-isolation` in progress with successful external CI
+2. Commit and push the implemented `versioned-contract-catalog` checkpoint,
+   then require the exact-commit pull-request `Conversion state and
+   traceability` and `Isolated target environment` jobs to pass. Record the
+   immutable run in `EVID-CONTRACT-CATALOG-001`; only then mark
+   `CONTRACT-CATALOG-TEST-003`, the dossier and its ten target-only surfaces
+   `verified`.
+3. After catalog verification, select the next decision-independent Phase 1
+   backend-neutral foundation through the manifest and slice-ready gate. Do
+   not enter hosted/provider-specific Phase 2, identity/Auth, encrypted local
+   persistence, media retention, or product-command work while its named
+   A-/O-/credential/spend gates remain open.
+4. Keep `target-environment-isolation` in progress with successful external CI
    recorded. Complete only the later signed/visual/physical staging and actual
    hosted-resource projection portions when their credentials/resources and
    authorization exist; do not wait on those gates before continuing other
    decision-independent target foundations and do not reattach target files to
    `LedgeriOS.xcodeproj`.
-4. Keep the target projection explicitly `unprovisioned` until isolated hosted
+5. Keep the target projection explicitly `unprovisioned` until isolated hosted
    resource IDs, staging-only credentials, maximum spend/run-rate, cleanup
    owner, and the applicable spike authorization are explicit. Do not replace
    synthetic IDs with guesses or production identifiers.
-5. Preserve the decision-packet queue as proposals until product approval. Every
+6. Preserve the decision-packet queue as proposals until product approval. Every
    generated product blocker now has a packet; O-021 remains an explicit UI-only
    UX experiment rather than a schema gate.
-6. Do not execute the prepared vertical-spike protocol until isolated hosted
+7. Do not execute the prepared vertical-spike protocol until isolated hosted
    resources, staging-only credentials, maximum spend/run-rate, cleanup owner,
    device matrix, and pre-measurement hard caps are explicitly authorized. When
    authorized, begin at S0 and stop fail-closed on any unknown/production ID.
-7. When the user approves a product decision, update its canonical spec and
+8. When the user approves a product decision, update its canonical spec and
    decision log first, then traceability, architecture, affected batch mappings/
    evidence and this state. Keep one target operation/query authority across app
    and MCP and do not create a Firebase application adapter.
-8. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
+9. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
    may use synthetic staging only and must prove encrypted local durability,
    scoped Sync Streams, idempotent operations/rejection, media restart, RLS, and
    offline provenance before provider-specific architecture is approved.
-9. When an external chmod-600 service-account JSON whose `project_id` is exactly
+10. When an external chmod-600 service-account JSON whose `project_id` is exactly
    `ledger-nine4`, or a separately proven canonical immutable production export,
    becomes available, run the fail-closed read-only profiling/reconciliation
    flow. Do not copy credentials into the repository, substitute authorized-user

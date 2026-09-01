@@ -1,8 +1,8 @@
 # Ledger Accounting Redesign — Production Compatibility and Rollout Plan
 
-Status: initial repository audit complete; no redesign deployment authorized
+Status: Firebase baseline prepared; isolated redesign implementation in progress; no redesign deployment authorized
 Created: 2026-08-31
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Program: [Ledger Accounting Redesign](README.md)
 Pre-cutover validation: [Isolated Testing Plan](pre-cutover-testing-plan.md)
 
@@ -34,7 +34,22 @@ deployment, migration, or authority switch is implied by this document.
 
 ## Repository and Branch Baseline
 
-Read-only verification after `git fetch origin --prune` on 2026-08-31 found:
+Current authority after the coordinated baseline preparation and branch rename:
+
+- local/remote `firebase` and local/remote `main` resolve to
+  `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`;
+- GitHub's default branch and `origin/HEAD` are `firebase`; remote `dev` is
+  absent;
+- the Firebase checkout is clean at
+  `/Users/benjaminmackenzie/Dev/ledger_mobile` and must remain unchanged by
+  redesign implementation;
+- the redesign runs only in the dedicated
+  `codex/supabase-powersync-implementation` branch/worktree; and
+- the complete preparation evidence is
+  [git-baseline-preparation-2026-09-01.md](git-baseline-preparation-2026-09-01.md).
+
+The following bullets are the historical read-only audit snapshot from
+2026-08-31; they explain the starting state and are not current branch guidance:
 
 - the checked-out branch is local `dev` at `93095593`;
 - local `dev` is one commit behind `origin/dev`;
@@ -49,18 +64,17 @@ Read-only verification after `git fetch origin --prune` on 2026-08-31 found:
 - the current worktree contains many modified and untracked app, MCP, script,
   plan, and spec files from overlapping work.
 
-Consequences:
+Current consequences:
 
-- Do not switch branches, merge, fast-forward `main`, or run a release from the
-  current dirty worktree.
+- Do not run redesign implementation, branch/ref operations, or releases from
+  the clean Firebase checkout.
 - Do not treat a backend command as a harmless development deploy. The repository
   defaults point at production unless deliberately overridden.
-- “Update prod” is ambiguous in this repository. If it means fast-forwarding
-  `main`, that Git operation is structurally possible, but it does not by itself
-  prove that any app, MCP, Functions, rules, or data migration has been deployed.
-- Establish the current production baseline in a separate clean worktree and
-  confirm which ref and artifacts constitute production before changing either
-  branch.
+- A commit or push on the redesign branch does not deploy the app, MCP,
+  Functions, rules, or a data migration and does not authorize any such action.
+- The current source baseline is already established. Any later Firebase release
+  is managed independently on `firebase`; it must not absorb target redesign
+  files or behavior.
 - Any unrelated release of the current app is managed separately. The redesign
   requires a recorded source baseline, not an intermediate Firebase release.
 
@@ -209,7 +223,8 @@ existing Firebase `budgetSummary` formula merely to preview target numbers.
 
 1. Confirm what “prod” means: Git `main`, released app artifacts, deployed MCP,
    Firebase Functions/rules, or all of them.
-2. Use a clean worktree at `origin/dev`, not the current dirty checkout.
+2. Use the recorded clean `origin/firebase` baseline; do not perform redesign
+   implementation in that checkout.
 3. Verify the already-released build-82 state and any unshipped MCP/backend
    changes independently.
 4. Record exact commit and deployed component versions without publishing a new
@@ -322,11 +337,14 @@ The redesign cannot activate until all are true:
 
 ## Immediate Next Actions
 
-1. Confirm whether “prod” means `main`, the released binaries, deployed Firebase
-   components, deployed MCP, or the entire set.
-2. Finish or isolate the current dirty work; do not release from it.
-3. Create a clean read-only baseline-audit worktree from `origin/dev` and verify
-   build 82 plus deployed MCP/Functions/rules state; do not publish it merely for
-   this migration program.
-4. Create the redesign branch/worktree only after that baseline is recorded.
-5. Resolve the remaining target schema decisions before adding active writers.
+1. Keep the clean `firebase` checkout and its running implementation unchanged
+   while target work proceeds in the dedicated Supabase branch/worktree.
+2. Continue decision-independent target foundations through the manifest and
+   machine-checked slice dossiers.
+3. Resolve each mapping-changing product decision in the canonical spec and
+   decision log before adding its active target writer.
+4. Provision or contact no hosted staging service until isolated resource IDs,
+   staging-only credentials, spend/run-rate bounds, cleanup ownership, and spike
+   authority are explicit.
+5. Treat source export, final freeze, deployment, release, and cutover as later
+   separately authorized operations.

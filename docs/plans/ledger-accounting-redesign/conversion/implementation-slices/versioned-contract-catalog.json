@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "versioned-contract-catalog",
+  "title": "Publish one versioned contract catalog to the target app and MCP",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "MCP Platform and Contract Registry",
+  "surfaceIds": [
+    "CONFIG-1BF5CA7701CD",
+    "CONFIG-5209F00EB920",
+    "CONFIG-A02A8D8114A1",
+    "CONFIG-B2A2BF619303",
+    "CONFIG-E8C1EA5B72F9",
+    "FILE-3920BDE7C604",
+    "MCPMOD-CE84DA4C8EA4",
+    "SWIFT-5FA3004D3855",
+    "SWIFT-6AA27A022A10",
+    "TEST-C8A63111BD2B"
+  ],
+  "requirements": [
+    {
+      "id": "CONTRACT-CATALOG-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Platform control and contract publication",
+      "invariant": "The target app and MCP project their command, query, capability, enum, stable-error, authorization-policy and version metadata from one reviewed registry rather than handwritten or database-derived schemas.",
+      "decisionIds": [],
+      "verificationIds": ["CONTRACT-CATALOG-TEST-001", "CONTRACT-CATALOG-TEST-002"]
+    },
+    {
+      "id": "CONTRACT-CATALOG-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "MCP advertises and validates the same typed contract versions as the app, exposes no raw persistence schema, and cannot register an entry without an explicit authorization policy and stable result/error contract.",
+      "decisionIds": [],
+      "verificationIds": ["CONTRACT-CATALOG-TEST-002", "CONTRACT-CATALOG-TEST-003"]
+    },
+    {
+      "id": "CONTRACT-CATALOG-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Contract Tests",
+      "invariant": "Generated Swift, TypeScript and MCP resource projections have one canonical catalog hash, preserve exact enum order/values, and fail freshness/parity checks after any ungenerated registry edit.",
+      "decisionIds": [],
+      "verificationIds": ["CONTRACT-CATALOG-TEST-001", "CONTRACT-CATALOG-TEST-002"]
+    },
+    {
+      "id": "CONTRACT-CATALOG-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "CI rejects stale generated projections, duplicate or unknown references, missing test/telemetry/security ownership, unsupported versions, secret-like values, provider/persistence leakage, and changes that rewrite tracked artifacts.",
+      "decisionIds": [],
+      "verificationIds": ["CONTRACT-CATALOG-TEST-002", "CONTRACT-CATALOG-TEST-003"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "LedgerContractCatalog contains catalog/schema/query/operation/Sync versions, exact enum registries, stable platform errors, capability entries, operation/query/resource entries and explicit deprecations.",
+        "Each registry entry has a stable ID, version, availability, authorization policy, result/error contract, telemetry class and executable test owner.",
+        "Generated Swift values use LedgerTargetCore types and generated TypeScript values contain only product/API DTO metadata; neither projection contains provider SDK or database-table types.",
+        "A canonical SHA-256 source hash is embedded in every generated projection and exposed as safe contract metadata."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "The catalog is an application/API contract artifact and introduces no target database relation."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "This slice publishes metadata and registration validation only; it does not execute a business command or authoritative transaction."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Supabase Data API schema or relation is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No database row/function is introduced; policy identifiers describe later handler/query requirements but do not implement authorization."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The catalog records the Sync contract version but defines no PowerSync Stream or row visibility."
+    },
+    "localOffline": {
+      "items": [],
+      "notApplicable": "Generated catalog values are bundled build artifacts; local database and offline queue persistence are owned by other slices."
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No object or attachment contract is registered in this initial platform-only catalog slice."
+    },
+    "appMcp": {
+      "items": [
+        "One canonical JSON registry deterministically generates a compiled Swift projection, a TypeScript projection and bounded MCP capability/catalog resource JSON.",
+        "Swift tests compare generated enum registries with runtime operation/readiness enums and reject missing or extra values.",
+        "Node checks validate TypeScript syntax, canonical hashes, generated-file freshness, registration completeness, deprecation structure and absence of provider, SQL, table, credential or private payload material.",
+        "The target projection lives outside the current Firebase MCP runtime; current MCP files are source evidence only and are not imported or modified."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No source data or existing MCP persisted state is migrated by contract publication."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Every advertised operation/query/resource names a bounded telemetry class and test owner, while catalog diagnostics expose only versions, hashes, stable IDs and availability.",
+        "Generation/validation failures identify the registry field and entry ID without printing secret values or private payloads."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The catalog and projections are target-only additive build artifacts, run in pull-request CI, activate no MCP endpoint, and may be reverted without modifying the Firebase application or MCP runtime.",
+        "Deprecations are explicit registry entries with replacement/minimum-client metadata; removal is never inferred from deleting a generated tool description."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CONTRACT-CATALOG-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/GeneratedContractCatalogTests.swift",
+      "covers": ["CONTRACT-CATALOG-REQ-001", "CONTRACT-CATALOG-REQ-003"],
+      "expected": "The generated Swift catalog compiles and exactly matches runtime operation/readiness enums, versions, stable platform errors, capability metadata and canonical hash.",
+      "status": "passed",
+      "evidence": ["EVID-CONTRACT-CATALOG-001"]
+    },
+    {
+      "id": "CONTRACT-CATALOG-TEST-002",
+      "kind": "app_mcp_contract",
+      "owner": "scripts/generate-target-contracts.mjs check",
+      "covers": ["CONTRACT-CATALOG-REQ-001", "CONTRACT-CATALOG-REQ-002", "CONTRACT-CATALOG-REQ-003", "CONTRACT-CATALOG-REQ-004"],
+      "expected": "Canonical registry, Swift, TypeScript and MCP resource projections have identical hashes and exact entry/value parity; a stale projection or unsupported reference fails.",
+      "status": "passed",
+      "evidence": ["EVID-CONTRACT-CATALOG-001"]
+    },
+    {
+      "id": "CONTRACT-CATALOG-TEST-003",
+      "kind": "operational",
+      "owner": "scripts/generate-target-contracts.mjs check and pull-request CI target job",
+      "covers": ["CONTRACT-CATALOG-REQ-002", "CONTRACT-CATALOG-REQ-004"],
+      "expected": "Registration validation rejects missing authorization/error/result/telemetry/test/version metadata, duplicate IDs/values, invalid deprecations, secret/provider/persistence leakage and generated rewrites.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-CONTRACT-CATALOG-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent platform contract slice. Initial entries are limited to already-verified environment, operation-status, sync-health and contract-introspection capabilities. Product commands remain absent until their canonical slices are approved and ready. No current Firebase MCP file, backend adapter, hosted resource, transport server, deployment or production authority is included."
+}

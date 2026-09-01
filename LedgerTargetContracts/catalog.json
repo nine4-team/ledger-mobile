@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "versions": {
+    "catalog": "1",
+    "schema": "1",
+    "query": "1",
+    "operation": "1",
+    "sync": "1"
+  },
+  "enums": [
+    {
+      "name": "LedgerEnvironmentKind",
+      "values": ["targetLocal", "targetStaging", "targetProduction"]
+    },
+    {
+      "name": "OperationPhase",
+      "values": ["draft", "queued", "applying", "applied", "rejected", "superseded", "resolved"]
+    },
+    {
+      "name": "ApplicationErrorCategory",
+      "values": ["validation", "conflict", "authorization", "authentication", "unsupportedContract", "invariant", "transientInfrastructure", "requiredUpdate"]
+    },
+    {
+      "name": "RetryDisposition",
+      "values": ["never", "automatic", "afterUserCorrection", "afterReauthentication", "afterClientUpdate"]
+    },
+    {
+      "name": "ConnectivityState",
+      "values": ["offline", "connecting", "online"]
+    },
+    {
+      "name": "AuthenticationRefreshState",
+      "values": ["unavailable", "refreshing", "current", "stale", "expired", "revoked"]
+    },
+    {
+      "name": "SubscriptionReadinessState",
+      "values": ["notRequested", "loading", "ready", "stale", "blocked"]
+    },
+    {
+      "name": "SyncWriteBlock",
+      "values": ["none", "maintenance", "migrationRequired", "clientUpdateRequired", "authorizationExpired", "authorizationRevoked"]
+    }
+  ],
+  "authorizationPolicies": [
+    {
+      "id": "account_member",
+      "description": "Derive the Principal from authentication and require active membership in the requested Account."
+    },
+    {
+      "id": "build_validated_local",
+      "description": "Require a validated target build environment before opening any local infrastructure."
+    },
+    {
+      "id": "local_principal_account",
+      "description": "Require the active local Principal and Account namespace; this is local scope, not fresh server authorization."
+    },
+    {
+      "id": "public_contract_metadata",
+      "description": "Expose only bounded version, capability, deprecation and stable contract metadata with no tenant or persistence data."
+    }
+  ],
+  "telemetryClasses": [
+    {
+      "id": "local_sync_health_read",
+      "description": "Record bounded local readiness state and duration without payload or private content."
+    },
+    {
+      "id": "operation_status_read",
+      "description": "Record bounded operation status reads by stable outcome and contract version."
+    },
+    {
+      "id": "platform_contract_read",
+      "description": "Record bounded contract/capability reads by catalog hash and version."
+    },
+    {
+      "id": "platform_environment_validation",
+      "description": "Record stable environment validation outcome codes without rejected resource values."
+    }
+  ],
+  "errors": [
+    {
+      "code": "account_not_authorized",
+      "category": "authorization",
+      "retryDisposition": "afterReauthentication"
+    },
+    {
+      "code": "client_update_required",
+      "category": "requiredUpdate",
+      "retryDisposition": "afterClientUpdate"
+    },
+    {
+      "code": "contract_unsupported",
+      "category": "unsupportedContract",
+      "retryDisposition": "afterClientUpdate"
+    },
+    {
+      "code": "operation_not_found",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "operation_payload_mismatch",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "operation_transition_invalid",
+      "category": "invariant",
+      "retryDisposition": "never"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "capability_manifest",
+      "version": "1",
+      "availability": "available",
+      "authorizationPolicy": "public_contract_metadata",
+      "telemetryClass": "platform_contract_read",
+      "testOwner": "scripts/generate-target-contracts.mjs"
+    },
+    {
+      "id": "contract_catalog",
+      "version": "1",
+      "availability": "available",
+      "authorizationPolicy": "public_contract_metadata",
+      "telemetryClass": "platform_contract_read",
+      "testOwner": "scripts/generate-target-contracts.mjs"
+    },
+    {
+      "id": "environment_manifest",
+      "version": "1",
+      "availability": "available",
+      "authorizationPolicy": "build_validated_local",
+      "telemetryClass": "platform_environment_validation",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift"
+    },
+    {
+      "id": "operation_status",
+      "version": "1",
+      "availability": "available",
+      "authorizationPolicy": "account_member",
+      "telemetryClass": "operation_status_read",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift"
+    },
+    {
+      "id": "sync_health",
+      "version": "1",
+      "availability": "available",
+      "authorizationPolicy": "local_principal_account",
+      "telemetryClass": "local_sync_health_read",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "get_capabilities",
+      "kind": "query",
+      "version": "1",
+      "capability": "capability_manifest",
+      "authorizationPolicy": "public_contract_metadata",
+      "resultContract": "CapabilityManifest",
+      "errorCodes": ["client_update_required", "contract_unsupported"],
+      "telemetryClass": "platform_contract_read",
+      "testOwner": "scripts/generate-target-contracts.mjs",
+      "deprecation": null
+    },
+    {
+      "id": "get_contract_catalog",
+      "kind": "resource",
+      "version": "1",
+      "capability": "contract_catalog",
+      "authorizationPolicy": "public_contract_metadata",
+      "resultContract": "VersionedContractCatalog",
+      "errorCodes": ["client_update_required", "contract_unsupported"],
+      "telemetryClass": "platform_contract_read",
+      "testOwner": "scripts/generate-target-contracts.mjs",
+      "deprecation": null
+    },
+    {
+      "id": "observe_sync_health",
+      "kind": "query",
+      "version": "1",
+      "capability": "sync_health",
+      "authorizationPolicy": "local_principal_account",
+      "resultContract": "SyncHealthSnapshot",
+      "errorCodes": ["client_update_required", "contract_unsupported"],
+      "telemetryClass": "local_sync_health_read",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/GeneratedContractCatalogTests.swift",
+      "deprecation": null
+    },
+    {
+      "id": "validate_environment_manifest",
+      "kind": "operation",
+      "version": "1",
+      "capability": "environment_manifest",
+      "authorizationPolicy": "build_validated_local",
+      "resultContract": "ValidatedLedgerEnvironment",
+      "errorCodes": ["client_update_required", "contract_unsupported"],
+      "telemetryClass": "platform_environment_validation",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
+      "deprecation": null
+    },
+    {
+      "id": "watch_operation",
+      "kind": "query",
+      "version": "1",
+      "capability": "operation_status",
+      "authorizationPolicy": "account_member",
+      "resultContract": "OperationSnapshot",
+      "errorCodes": ["account_not_authorized", "client_update_required", "contract_unsupported", "operation_not_found"],
+      "telemetryClass": "operation_status_read",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "deprecation": null
+    },
+    {
+      "id": "watch_unresolved_operations",
+      "kind": "query",
+      "version": "1",
+      "capability": "operation_status",
+      "authorizationPolicy": "account_member",
+      "resultContract": "OperationSnapshotList",
+      "errorCodes": ["account_not_authorized", "client_update_required", "contract_unsupported"],
+      "telemetryClass": "operation_status_read",
+      "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "deprecation": null
+    }
+  ],
+  "deprecations": []
+}

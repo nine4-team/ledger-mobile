@@ -9,13 +9,15 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, executes target contract tests, builds the staging app for macOS and iOS Simulator, and rejects tracked rewrites.",
+      "acknowledgeSourceHash": "7e704d1d6aa68f40fcb311eed43c3427eaf6fbafeb976b547d3cfc76e63d436f",
+      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, installs the isolated target TypeScript compiler, checks generated Swift/TypeScript/MCP contract parity, executes target contract tests, builds staging for macOS/iOS Simulator, and rejects tracked rewrites.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CONTINUITY-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-CONTRACT-CATALOG-001"
       ],
       "notes": "CI definition is implemented and claimed by target-environment-isolation; an actual successful GitHub Actions run remains external evidence before TARGET-ENV-TEST-005 can pass.",
       "target": {
@@ -42,7 +44,7 @@
           "GitHub Actions Isolated target environment job"
         ],
         "acceptance": [
-          "Boundary check, 12 target tests, macOS build, iOS Simulator build, and clean-diff check all pass on the hosted runner"
+          "Boundary check, generated contract parity/TypeScript compilation, target package tests, macOS build, iOS Simulator build, and clean-diff check all pass on the hosted runner"
         ]
       }
     },
@@ -2771,6 +2773,256 @@
         "acceptance": [
           "The suite deterministically proves the pure target validation and namespace boundary without network or production access"
         ]
+      }
+    },
+    {
+      "id": "CONFIG-1BF5CA7701CD",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "fe94cdaffa13aee28efd457505ae074789fa7019b9c2faca260e8fb459769ae1",
+      "currentBehavior": "Pins the isolated target MCP contract compiler to TypeScript 5.9.3 with no runtime dependency.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Target-only compiler lock; it is not imported by the current Firebase MCP package or target runtime.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Target MCP contract compiler lock"],
+        "securityRequirements": ["The lock contains no runtime or provider dependency and install runs with lifecycle scripts disabled"],
+        "syncRequirements": ["Compiler version changes require regenerated projection parity and clean-diff verification"]
+      },
+      "migration": {
+        "rule": "Migrate no source package dependency; retain current MCP lock independently until source retirement.",
+        "reconciliation": ["The target lock resolves exactly the reviewed compiler version and zero runtime packages"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP ci --ignore-scripts", "npm --prefix LedgerTargetMCP run check"],
+        "acceptance": ["A clean install compiles the generated target TypeScript projection without source MCP dependencies"]
+      }
+    },
+    {
+      "id": "CONFIG-5209F00EB920",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0cff14a23efaeb3c47e96d4cfecdd0a01f3902256fde9fc001ba446e1d7dcf47",
+      "currentBehavior": "Defines the private target MCP contracts package and its compile-only check.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Separate target package; no current MCP server entrypoint, Firebase Admin dependency, transport, credential or deployment script is present.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Target MCP contract package", "TypeScript projection compile command"],
+        "securityRequirements": ["Package is private, has no runtime dependencies and executes no install script"],
+        "syncRequirements": ["Generated projection version/hash must match the app and MCP resource projections"]
+      },
+      "migration": {
+        "rule": "Create an isolated target package; do not alter or import the current Firebase MCP package.",
+        "reconciliation": ["Dependency audit shows only the pinned TypeScript development compiler"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP run check"],
+        "acceptance": ["Generated target contracts compile under strict TypeScript settings"]
+      }
+    },
+    {
+      "id": "CONFIG-A02A8D8114A1",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "632da0d176ecc9ff929f402c34e6893dcf465110c8ae56245d1c2c49ddf07d4b",
+      "currentBehavior": "Applies strict no-emit ES2022 TypeScript compilation only to generated target contract projections.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Target-only compile configuration; it includes no source MCP runtime path.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Strict target contract TypeScript compiler configuration"],
+        "securityRequirements": ["Only generated target contract paths are compiled and no emitted JavaScript is produced"],
+        "syncRequirements": ["Projection syntax/parity failure blocks CI before app/MCP build or deployment"]
+      },
+      "migration": {
+        "rule": "Migrate no current MCP compiler option; target contract compilation remains separate.",
+        "reconciliation": ["Compiler include set resolves only the generated target TypeScript file"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP run check"],
+        "acceptance": ["Strict no-emit compilation succeeds with no implicit runtime dependency"]
+      }
+    },
+    {
+      "id": "CONFIG-B2A2BF619303",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "73007b4e1843bdf8775e66a42db169ff9b57aa0a224277b1542a54b1e0cae138",
+      "currentBehavior": "Defines the canonical target-only version, enum, authorization-policy, telemetry, stable-error, capability, contract and deprecation registry.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Initial registry advertises only implemented platform contracts; no product command, provider or persistence schema is present.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Canonical target contract registry", "Capability manifest source", "Deprecation registry source"],
+        "securityRequirements": ["Every entry names authorization, stable errors, telemetry and test ownership; catalog contains no tenant, credential, provider or persistence detail"],
+        "syncRequirements": ["Catalog/query/operation/Sync versions are explicit and project identically into Swift, TypeScript and MCP resource output"]
+      },
+      "migration": {
+        "rule": "Do not import handwritten current MCP schema text; add target entries only through approved owning slices.",
+        "reconciliation": ["Canonical hash and entry/value counts match every generated projection exactly"]
+      },
+      "verification": {
+        "tests": ["npm run target:contracts:check", "GeneratedContractCatalogTests"],
+        "acceptance": ["Registry validation rejects incomplete, duplicate, unknown, leaked or stale contract metadata"]
+      }
+    },
+    {
+      "id": "CONFIG-E8C1EA5B72F9",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "054077c708f89c34ffcc508b03eb0ce411474fb50582df2b459d31e50caf03ea",
+      "currentBehavior": "Publishes the bounded generated MCP contract resource with the canonical catalog and hash.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Build artifact only; no target MCP endpoint is active in this slice.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Generated VersionedContractCatalog MCP resource payload", "Catalog hash projection"],
+        "securityRequirements": ["Resource is bounded below 64 KiB and contains public contract metadata only"],
+        "syncRequirements": ["Resource catalog hash and versions equal the compiled app and TypeScript projections"]
+      },
+      "migration": {
+        "rule": "Replace handwritten source schema publication only when target MCP activates; do not alter current resources before cutover.",
+        "reconciliation": ["Resource JSON is byte-deterministic from the canonical registry"]
+      },
+      "verification": {
+        "tests": ["npm run target:contracts:check"],
+        "acceptance": ["Stale or manually edited MCP resource output fails the freshness check"]
+      }
+    },
+    {
+      "id": "FILE-3920BDE7C604",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "db49708aba12991177a0540f6b762d75b6e08e3c2d43c43c6500048896c037b6",
+      "currentBehavior": "Validates the canonical target contract registry and deterministically generates/checks Swift, TypeScript and MCP resource projections with one SHA-256 hash.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Discovered through the broad Firebase-audit script class only because it rejects provider leakage; its actual responsibility is target contract generation and it performs no backend access.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Target contract generator", "Registration validator", "Generated freshness checker"],
+        "securityRequirements": ["Rejects provider/credential terms, absolute/traversal test paths, unknown policies/errors/capabilities and unbounded catalog output"],
+        "syncRequirements": ["One canonical sorted representation and hash drive all language/resource projections"]
+      },
+      "migration": {
+        "rule": "Generate target API metadata from the reviewed registry only; never scrape current database or Firebase MCP DTOs.",
+        "reconciliation": ["Generate followed by check produces no tracked diff"]
+      },
+      "verification": {
+        "tests": ["node --check scripts/generate-target-contracts.mjs", "npm run target:contracts:generate", "npm run target:contracts:check"],
+        "acceptance": ["Invalid registry controls fail and all generated outputs are deterministic and fresh"]
+      }
+    },
+    {
+      "id": "MCPMOD-CE84DA4C8EA4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "8438efae7c85e10d1f529a46e95ea98a326680e19906953a1bfd37d9e93aa8cb",
+      "currentBehavior": "Provides the generated strict TypeScript target contract catalog and canonical hash.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Separate target projection; no current MCP runtime file imports it in this slice.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["Generated TypeScript contract catalog", "TargetContractCatalog type", "Canonical catalog hash"],
+        "securityRequirements": ["Projection contains public contract metadata only and no provider/persistence DTO"],
+        "syncRequirements": ["Exact enum/entry/version/hash parity with Swift and MCP resource projections"]
+      },
+      "migration": {
+        "rule": "Do not reuse current MCP types/enums; target code imports only this generated projection after later composition approval.",
+        "reconciliation": ["Strict TypeScript compilation and generator freshness checks pass"]
+      },
+      "verification": {
+        "tests": ["npm --prefix LedgerTargetMCP run check", "npm run target:contracts:check"],
+        "acceptance": ["Generated TypeScript is strict, fresh and hash-identical to the canonical catalog"]
+      }
+    },
+    {
+      "id": "SWIFT-5FA3004D3855",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "aa036f2e2a263095798eca641c4c63db7390242939b5d5d993afa355639875f0",
+      "currentBehavior": "Embeds the generated canonical target contract bytes/hash and loads them through the typed Swift catalog validator.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Generated target-only Swift projection compiled by LedgerTargetCore.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["GeneratedTargetContractCatalog", "Canonical Swift catalog hash/data"],
+        "securityRequirements": ["Embedded data contains bounded public metadata and is hash-validated before use"],
+        "syncRequirements": ["Runtime enum and contract versions are parity-tested against the generated catalog"]
+      },
+      "migration": {
+        "rule": "Generate from target registry; do not decode current Firebase/MCP schemas into app authority.",
+        "reconciliation": ["Swift embedded bytes hash to the same value as TypeScript and MCP resource output"]
+      },
+      "verification": {
+        "tests": ["GeneratedContractCatalogTests", "npm run target:contracts:check"],
+        "acceptance": ["Compiled Swift projection loads, validates and matches runtime enums exactly"]
+      }
+    },
+    {
+      "id": "SWIFT-6AA27A022A10",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7577e03cc4fb348a120dc94f118a4fbfa6bffa3d0cdb8ee3cd3d0ddd1324b5b8",
+      "currentBehavior": "Defines typed target catalog/version/enum/policy/telemetry/error/capability/contract/deprecation values, cross-reference/hash validation, and the provider-free ContractCatalogProviding port.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Target-only shared domain/application contract with no backend SDK import.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["VersionedContractCatalog", "ContractCatalogValidator", "ContractCatalogProviding"],
+        "securityRequirements": ["Every capability/contract resolves reviewed authorization, telemetry, stable errors and test ownership before publication"],
+        "syncRequirements": ["Catalog/query/operation/Sync versions and enum registries are explicit typed values"]
+      },
+      "migration": {
+        "rule": "Target catalog values replace handwritten provider-shaped API metadata; source schemas remain migration evidence only.",
+        "reconciliation": ["Typed validation resolves every cross-reference and rejects duplicate/unknown/deprecation drift"]
+      },
+      "verification": {
+        "tests": ["GeneratedContractCatalogTests"],
+        "acceptance": ["Provider-free catalog types compile and invalid hash/reference/deprecation state fails closed"]
+      }
+    },
+    {
+      "id": "TEST-C8A63111BD2B",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "cc8a5808d4fc51ac4a116174e89945222693176e319924c6a638cc8010d6c625",
+      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, platform-only advertised scope, provider/credential/persistence exclusion and noncanonical-hash refusal.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
+      "notes": "Six deterministic target package tests with no network or provider test host.",
+      "target": {
+        "owner": "MCP Platform and Contract Registry",
+        "surfaces": ["GeneratedContractCatalogTests", "App/MCP enum and registration parity fixtures"],
+        "securityRequirements": ["Negative assertions exclude provider, credential and persistence schema terms from advertised metadata"],
+        "syncRequirements": ["Exact runtime readiness/operation enums and version/hash values match the registry"]
+      },
+      "migration": {
+        "rule": "Use synthetic platform contracts only; product/source schemas are not fixtures for this slice.",
+        "reconciliation": ["All generated catalog entries and values are covered by exact parity assertions"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter GeneratedContractCatalogTests"],
+        "acceptance": ["All generated Swift catalog, registration, scope and leakage tests pass"]
       }
     },
     {

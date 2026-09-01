@@ -91,13 +91,14 @@
     },
     {
       "id": "FILE-49BE7A26CE03",
-      "acknowledgeSourceHash": "c284952facdb6d19f04127f234ca65301cbf8373505f9f11c2bc622192c24793",
-      "currentBehavior": "Deterministically scans configured Firestore-candidate source roots and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
+      "acknowledgeSourceHash": "63ca3a3f4c1b16d78afe58cf7f8289149b3ccf4235eef03218e04e2f16138dc7",
+      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only check/generation scripts, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
       "disposition": "source_only",
       "status": "verified",
       "blockers": [],
       "evidence": [
-        "EVID-QUERY-001"
+        "EVID-QUERY-001",
+        "EVID-CONTRACT-CATALOG-001"
       ],
       "verification": {
         "tests": [
@@ -178,8 +179,8 @@
     },
     {
       "id": "CONFIG-7AE45AD102EA",
-      "acknowledgeSourceHash": "eb3c2cf9a765d384f51d62a811f0fdaecc9b453ae4f1305a350bb641a7390a52",
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, and M2 residual decision-queue generation/checking; fail-closed Firebase source profiler checking and entry points; and the isolated target-environment graph check and test commands. Vitest remains the root development test dependency.",
+      "acknowledgeSourceHash": "37af17b61f27bebf9e44f3f6a8dcdc941599faed72b02d70f3bbcb3d0e92cf77",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue and target contract generation/checking; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "status": "characterized",
       "blockers": [],
@@ -187,7 +188,8 @@
         "EVID-QUERY-001",
         "EVID-PROFILER-001",
         "EVID-CAPABILITY-001",
-        "EVID-M2-DECISION-PACKETS-001"
+        "EVID-M2-DECISION-PACKETS-001",
+        "EVID-CONTRACT-CATALOG-001"
       ],
       "notes": "These are operator commands, not product runtime dependencies."
     }

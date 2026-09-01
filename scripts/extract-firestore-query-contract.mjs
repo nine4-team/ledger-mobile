@@ -115,13 +115,17 @@ function extract() {
   let candidateFilesInspected = 0;
   for (const [sourceRoot, extensions] of SOURCE_ROOTS) {
     for (const filePath of walk(path.join(ROOT, sourceRoot), extensions)) {
-      if (relative(filePath) === "scripts/extract-firestore-query-contract.mjs") {
+      const sourcePath = relative(filePath);
+      if (
+        sourcePath === "scripts/extract-firestore-query-contract.mjs" ||
+        sourcePath.startsWith("scripts/check-target-") ||
+        sourcePath.startsWith("scripts/generate-target-")
+      ) {
         continue;
       }
       const text = fs.readFileSync(filePath, "utf8");
       if (!isFirestoreSource(text)) continue;
       candidateFilesInspected += 1;
-      const sourcePath = relative(filePath);
       const lines = text.split("\n");
       let occurrenceCount = 0;
       for (let index = 0; index < lines.length; index += 1) {

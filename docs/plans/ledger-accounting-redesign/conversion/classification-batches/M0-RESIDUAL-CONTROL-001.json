@@ -10,14 +10,15 @@
     {
       "id": "FILE-0FD95E417B30",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c2e70054bd628cfa693625b1724ed7ceb876edf5fb74eb93ca7db68695029b22",
-      "currentBehavior": "Reads the reviewed conversion classification batches, product-decision traceability, architecture decisions, and manifest baseline; validates that every target-relevant non-mapped surface has known blocker metadata; groups exact affected surface IDs; and deterministically generates/checks the JSON and Markdown M2 residual queue without accessing Firebase, Supabase, PowerSync, credentials, or production data.",
+      "acknowledgeSourceHash": "b5eda0a6564032efb6b8fa7479db9e2298882dea02f1a775806d03439f255b24",
+      "currentBehavior": "Reads the reviewed conversion classification batches, product-decision traceability, architecture decisions, and manifest baseline; validates that every target-relevant surface below target_mapped has known blocker metadata while treating implemented, verified, rehearsed, and cutover-ready as mapped-or-later; groups exact affected surface IDs; and deterministically generates/checks the JSON and Markdown M2 residual queue without accessing Firebase, Supabase, PowerSync, credentials, or production data.",
       "disposition": "preserve",
       "status": "characterized",
       "blockers": [],
       "evidence": [
         "EVID-M2-WHOLE-MANIFEST-001",
-        "EVID-M2-DECISION-PACKETS-001"
+        "EVID-M2-DECISION-PACKETS-001",
+        "EVID-CONTRACT-CATALOG-001"
       ],
       "notes": "Operator-only coverage control. It does not resolve product decisions, change manifest target status, implement target behavior, or authorize production access."
     }

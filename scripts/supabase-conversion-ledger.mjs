@@ -1225,8 +1225,13 @@ function discoverCloudFunctions() {
 }
 
 function discoverMcp() {
-  const directory = path.join(ROOT, "mcp-server/src");
-  const files = walk(directory, (filePath) => filePath.endsWith(".ts"));
+  const directories = [
+    path.join(ROOT, "mcp-server/src"),
+    path.join(ROOT, "LedgerTargetMCP"),
+  ];
+  const files = directories.flatMap((directory) =>
+    walk(directory, (filePath) => filePath.endsWith(".ts")),
+  );
   const surfaces = [];
   for (const filePath of files) {
     const rel = relative(filePath);
@@ -1337,6 +1342,11 @@ function discoverConfiguration() {
     "LedgeriOS/LedgeriOS/GoogleService-Info.plist",
     "LedgeriOS/LedgeriOS/Info.plist",
     "LedgeriOS/LedgeriOS/LedgeriOS.entitlements",
+    "LedgerTargetContracts/catalog.json",
+    "LedgerTargetMCP/package.json",
+    "LedgerTargetMCP/package-lock.json",
+    "LedgerTargetMCP/tsconfig.json",
+    "LedgerTargetMCP/resources/contract-catalog.json",
     "mcp-server/Dockerfile",
     "mcp-server/package.json",
     "mcp-server/tsconfig.json",

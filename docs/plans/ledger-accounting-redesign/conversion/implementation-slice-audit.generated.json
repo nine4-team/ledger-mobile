@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T20:45:35.131Z",
+  "generatedFromManifestSync": "2026-09-01T21:04:51.013Z",
   "totals": {
-    "slices": 2,
-    "claimedTargetSurfaces": 20,
+    "slices": 3,
+    "claimedTargetSurfaces": 30,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 5
+    "implementationAdvancedTargetSurfaces": 15
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 1,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -62,6 +62,29 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-environment-isolation.json"
+    },
+    {
+      "sliceId": "versioned-contract-catalog",
+      "title": "Publish one versioned contract catalog to the target app and MCP",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "MCP Platform and Contract Registry",
+      "surfaceIds": [
+        "CONFIG-1BF5CA7701CD",
+        "CONFIG-5209F00EB920",
+        "CONFIG-A02A8D8114A1",
+        "CONFIG-B2A2BF619303",
+        "CONFIG-E8C1EA5B72F9",
+        "FILE-3920BDE7C604",
+        "MCPMOD-CE84DA4C8EA4",
+        "SWIFT-5FA3004D3855",
+        "SWIFT-6AA27A022A10",
+        "TEST-C8A63111BD2B"
+      ],
+      "requirementCount": 4,
+      "verificationCount": 3,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/versioned-contract-catalog.json"
     }
   ]
 }

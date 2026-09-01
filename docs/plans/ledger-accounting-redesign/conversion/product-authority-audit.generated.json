@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T20:45:35.131Z",
+  "generatedFromManifestSync": "2026-09-01T21:04:51.013Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 701,
-    "targetRelevantSurfaces": 439,
+    "surfaces": 711,
+    "targetRelevantSurfaces": 449,
     "batches": 18,
     "productScopeSurfaces": 573,
-    "technicalControlSurfaces": 128
+    "technicalControlSurfaces": 138
   },
   "canonicalTargetCoverage": [
     {
@@ -993,8 +993,8 @@
       "title": "Platform, transport, release, and migration control",
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
-      "surfaceCount": 116,
-      "targetRelevantSurfaceCount": 53,
+      "surfaceCount": 126,
+      "targetRelevantSurfaceCount": 63,
       "authorities": [
         {
           "path": "docs/architecture/redesign/01-system-context-and-principles.md",
@@ -1039,6 +1039,7 @@
       ],
       "surfaceIds": [
         "CONFIG-031396750B85",
+        "CONFIG-1BF5CA7701CD",
         "CONFIG-1FC6F8A5DFA5",
         "CONFIG-2439DF7AA062",
         "CONFIG-2EBA890AF767",
@@ -1048,6 +1049,7 @@
         "CONFIG-3F7C92E2669F",
         "CONFIG-3FB361C7F0E9",
         "CONFIG-50FA673297B2",
+        "CONFIG-5209F00EB920",
         "CONFIG-5C0EE6600D97",
         "CONFIG-634171BE50F3",
         "CONFIG-6899B0DB9A09",
@@ -1055,12 +1057,15 @@
         "CONFIG-77D38BB6819B",
         "CONFIG-81235587F306",
         "CONFIG-91C9B311D005",
+        "CONFIG-A02A8D8114A1",
+        "CONFIG-B2A2BF619303",
         "CONFIG-B903A5D5110D",
         "CONFIG-B982A17793ED",
         "CONFIG-C185748A7F0A",
         "CONFIG-C4677DA3DE5C",
         "CONFIG-D74F97384F03",
         "CONFIG-D94C7653FB36",
+        "CONFIG-E8C1EA5B72F9",
         "CONFIG-EA72F3E0CC9F",
         "CONFIG-EF6794568592",
         "CONFIG-F3494FD36EE5",
@@ -1073,6 +1078,7 @@
         "FILE-2484180463B8",
         "FILE-2C8D6C14D6CB",
         "FILE-35422F4029F9",
+        "FILE-3920BDE7C604",
         "FILE-3DCBE60029E4",
         "FILE-40E918C46A49",
         "FILE-4CBBAFBED6BB",
@@ -1119,6 +1125,7 @@
         "MCPMOD-B4E6A5972565",
         "MCPMOD-C52F1FD8A983",
         "MCPMOD-C6CA65EAAF8D",
+        "MCPMOD-CE84DA4C8EA4",
         "MCPMOD-DAB760104CEE",
         "MCPMOD-E0D43AB307CC",
         "MCPMOD-E8F7ED71D93A",
@@ -1135,6 +1142,8 @@
         "SWIFT-2703ADAB66C5",
         "SWIFT-481A2D09BC68",
         "SWIFT-584D99BC1062",
+        "SWIFT-5FA3004D3855",
+        "SWIFT-6AA27A022A10",
         "SWIFT-6DA0525DFD44",
         "SWIFT-6E5F6EAFF883",
         "SWIFT-7B159D426B1D",
@@ -1152,6 +1161,7 @@
         "TEST-6A6B0926E2EE",
         "TEST-7D6F49F784FB",
         "TEST-B2C120C177D5",
+        "TEST-C8A63111BD2B",
         "TEST-DE986CFD8624",
         "TEST-ECE08B24ADCE"
       ]

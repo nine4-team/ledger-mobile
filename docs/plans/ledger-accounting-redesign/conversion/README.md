@@ -1,10 +1,11 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; bounded M2 target mapping has 263
-of 427 target-relevant surfaces complete and the remaining 164 explicitly tied
-to decisions/spikes/production evidence. M1 is blocked only by canonical
-production-profile evidence and O-022 hard-cutover evidence; target
-implementation and production migration are not authorized by this directory
+Status: M0 inventory classification complete; 285 of 449 target-relevant
+surfaces are target-mapped or later and the remaining 164 are explicitly tied
+to decisions/spikes/production evidence. Decision-independent target
+foundations are in progress. M1 is blocked only by canonical production-profile
+evidence and O-022 hard-cutover evidence; production migration is not authorized
+by this directory
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

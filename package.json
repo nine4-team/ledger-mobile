@@ -12,6 +12,8 @@
     "conversion:profiles:check-readonly": "node scripts/check-firebase-readonly-profilers.mjs",
     "target:environment:check": "node scripts/check-target-environment.mjs",
     "target:environment:test": "swift test --package-path LedgeriOS --filter TargetEnvironmentManifestTests",
+    "target:contracts:generate": "node scripts/generate-target-contracts.mjs generate",
+    "target:contracts:check": "node scripts/generate-target-contracts.mjs check && npm --prefix LedgerTargetMCP run check",
     "target:project:generate": "xcodegen --spec LedgeriOS/LedgerTargetProject.yml",
     "target:staging:build:ios": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build",
     "target:staging:build:macos": "xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj -scheme LedgerTargetStaging -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build",
