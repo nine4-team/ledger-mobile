@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T21:09:39.380Z",
+    "lastSynchronizedAt": "2026-09-01T21:20:46.476Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18449,6 +18449,66 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-38DC8C755068",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SharedListQueryPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SharedListQueryPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "d3396fc6d99060260ab97ba06cf9bc634f35a0754bf31a69004bfccc1625d373",
+      "acknowledgedSourceHash": "d3396fc6d99060260ab97ba06cf9bc634f35a0754bf31a69004bfccc1625d373",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines target-only named list query, sort, filter, cursor, readiness, safe-failure, intent, local snapshot, and pure presentation-reducer contracts without a backend dependency.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "NamedListQueryProfile and ListQueryState",
+          "StableSortDescriptor and opaque query-bound cursor",
+          "ListReadiness, ListEmptyState and ListFailureState",
+          "ListPresentationIntent and ListPresentationReducer"
+        ],
+        "securityRequirements": [
+          "Only registered sort/filter/action IDs cross the boundary and not-found/authorization/authentication collapse before public presentation updates",
+          "Unavailable state clears cached rows and version metadata rather than revealing inaccessible existence"
+        ],
+        "syncRequirements": [
+          "Partial and stale snapshots remain distinct from ready authoritative emptiness",
+          "Query fingerprints reject late snapshots and cursors from a different filter/sort/search state"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no transient list state; bind target feature projections to the shared contracts without importing source field names, collection paths, listener handles, or generic repositories.",
+        "reconciliation": [
+          "Named profile IDs replace raw source sort/filter fields",
+          "No-matches, authoritative-empty, incomplete, stale, unavailable, and retryable fixtures remain distinguishable"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "SharedListQueryPresentationTests domain, restart and rejection suite"
+        ],
+        "acceptance": [
+          "Cached-first list state is deterministic and safe without backend values or network availability"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SHARED-LIST-001"
+      ],
+      "notes": "Target-only shared presentation foundation. Concrete capability profiles and UI components remain in owning feature slices.",
+      "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
       "id": "SWIFT-38F4A97A4FCB",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/CreateInvoiceModal.swift",
@@ -32064,6 +32124,62 @@
       ],
       "notes": "Target package contract suite claimed by operation-lifecycle-and-readiness; it runs with deterministic clocks/IDs and no network, provider SDK, production identifier, or Firebase test host.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-7E87ABB4166B",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SharedListQueryPresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SharedListQueryPresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "8013f41abebbba025d2392b1d5106d830fa637fdbb10bfdf4c6bfefdb78ff815",
+      "acknowledgedSourceHash": "8013f41abebbba025d2392b1d5106d830fa637fdbb10bfdf4c6bfefdb78ff815",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Exercises target-only named-query validation, stable cursor binding, restart reconstruction, authoritative-empty versus incomplete/no-match state, safe failure collapse, cached-row preservation, retry intent, and mismatched late-snapshot refusal.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Shared Query Presentation",
+        "surfaces": [
+          "SharedListQueryPresentationTests",
+          "bounded profile/query/cursor fixtures",
+          "offline restart and safe rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Tests prove public unavailable state cannot distinguish missing from unauthorized and clears cached inaccessible rows"
+        ],
+        "syncRequirements": [
+          "Tests prove partial empty is not authoritative empty, restart is deterministic, retry preserves safe cached rows, and mismatched query snapshots fail"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target fixtures only; migrate no source test database, snapshot, or transient UI state.",
+        "reconciliation": [
+          "Every shared-list requirement has a reciprocal executable assertion"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SharedListQueryPresentationTests"
+        ],
+        "acceptance": [
+          "All domain, restart and safe-failure fixtures pass without network, provider SDK, credential or hosted resource"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-APP-SHELL-001",
+        "EVID-M2-APP-SHELL-001",
+        "EVID-SHARED-LIST-001"
+      ],
+      "notes": "Deterministic provider-free target contract evidence; it asserts no current Firebase listener timing or field mechanics.",
+      "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
       "id": "TEST-7E9C05E9E5D7",

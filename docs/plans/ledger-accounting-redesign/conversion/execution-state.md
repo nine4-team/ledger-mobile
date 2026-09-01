@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 30
+State version: 31
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CONTRACT-CATALOG-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: SHARED-LIST-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -398,6 +398,18 @@ modifying the running Firebase application before hard cutover.
   including generated contract validation, all 29 target-package tests, macOS
   and generic iOS Simulator builds, and clean-diff checks. All three catalog
   obligations and exactly its ten target-only surfaces are now `verified`.
+- Created and passed the ready gate for `shared-list-query-presentation`, then
+  implemented target-only named query/sort/filter/action profiles, normalized
+  search, stable-ID tie ordering, query-bound opaque cursors, local version/as-
+  of snapshots, explicit readiness/empty/failure states, typed presentation
+  intents, and a pure cached-first reducer. Raw not-found/authorization/
+  authentication causes collapse internally before the public update boundary.
+- Added three deterministic domain/restart/rejection tests; all 32 target tests,
+  the target boundary guard, macOS build, generic iOS Simulator build and clean
+  source-project diff pass locally. Only the two new target code/test surfaces
+  are `implemented`; four broader current list-control replacements remain
+  `target_mapped` pending concrete UI/accessibility and feature profiles. See
+  `EVID-SHARED-LIST-001`.
 
 ## Next Action
 
@@ -407,16 +419,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Begin the next decision-independent Phase 1 slice,
-   `shared-list-query-presentation`, from mapped surfaces
-   `SWIFT-7FD35B52D248`, `SWIFT-AA317435FD6E`, `SWIFT-CDADEAA08764`, and
-   `SWIFT-D49180285F84`. Trace the app-shell dossier plus architecture sections
-   `Presentation`, `Commands and queries are separate`, `Port Design Rules`,
-   and `Application use-case tests` into the ready dossier before code. Define
-   backend-neutral named query/sort/filter state, stable ordering/tie-breakers,
-   explicit local readiness/partial/stale/empty/failure states, and typed
-   presentation intents with deterministic tests; introduce no domain-write,
-   backend SDK, persistence table, provider adapter, or hosted resource.
+2. Commit and push the implemented `shared-list-query-presentation` checkpoint,
+   require the exact-commit pull-request conversion and isolated-target jobs to
+   pass, and record the immutable run in `EVID-SHARED-LIST-001`. Only then mark
+   `SHARED-LIST-TEST-004`, the dossier, and its two target-only surfaces
+   `verified`; do not advance the four concrete source UI replacements.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:09:39.380Z",
+  "generatedFromManifestSync": "2026-09-01T21:20:46.476Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 711,
-    "targetRelevantSurfaces": 449,
+    "surfaces": 713,
+    "targetRelevantSurfaces": 451,
     "batches": 18,
-    "productScopeSurfaces": 573,
+    "productScopeSurfaces": 575,
     "technicalControlSurfaces": 138
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 463,
-      "targetRelevantSurfaceCount": 311
+      "surfaceCount": 465,
+      "targetRelevantSurfaceCount": 313
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 442,
-      "targetRelevantSurfaceCount": 286
+      "surfaceCount": 444,
+      "targetRelevantSurfaceCount": 288
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 499,
-      "targetRelevantSurfaceCount": 314
+      "surfaceCount": 501,
+      "targetRelevantSurfaceCount": 316
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 370,
-      "targetRelevantSurfaceCount": 254
+      "surfaceCount": 372,
+      "targetRelevantSurfaceCount": 256
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -84,8 +84,8 @@
         "M0-ITEM-CREATION-LINK-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 409,
-      "targetRelevantSurfaceCount": 259
+      "surfaceCount": 411,
+      "targetRelevantSurfaceCount": 261
     }
   ],
   "batches": [
@@ -94,8 +94,8 @@
       "title": "App shell, shared presentation, and test support",
       "scope": "product",
       "rationale": "Presentation and test surfaces must render and exercise the redesigned accounting, Item, Client, Transfer, receipt-line, security, and offline contracts without preserving Firebase mechanics.",
-      "surfaceCount": 115,
-      "targetRelevantSurfaceCount": 39,
+      "surfaceCount": 117,
+      "targetRelevantSurfaceCount": 41,
       "authorities": [
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
@@ -128,6 +128,22 @@
         {
           "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
           "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/01-system-context-and-principles.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
         }
       ],
       "surfaceIds": [
@@ -147,6 +163,7 @@
         "SWIFT-24780407AEC7",
         "SWIFT-2919B4B009D8",
         "SWIFT-37AC762E6AB9",
+        "SWIFT-38DC8C755068",
         "SWIFT-3DAE3FEE9108",
         "SWIFT-4076F892F380",
         "SWIFT-424CEE01EBA6",
@@ -241,6 +258,7 @@
         "TEST-6EF1C0BA2957",
         "TEST-74BA6A48F8BC",
         "TEST-771AD9C93BCB",
+        "TEST-7E87ABB4166B",
         "TEST-843F020ACF71",
         "TEST-84999BA9BBBE",
         "TEST-B200C7C263E7",

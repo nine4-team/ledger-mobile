@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "shared-list-query-presentation",
+  "title": "Distinguish local list readiness from authoritative empty results",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Shared Query Presentation",
+  "surfaceIds": [
+    "SWIFT-38DC8C755068",
+    "TEST-7E87ABB4166B"
+  ],
+  "requirements": [
+    {
+      "id": "SHARED-LIST-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "List presentation renders immutable read state and emits typed user intent while owning no authorization rule, persistence path, multi-record write, server commitment inference, or backend SDK value.",
+      "decisionIds": [],
+      "verificationIds": ["SHARED-LIST-TEST-001", "SHARED-LIST-TEST-003", "SHARED-LIST-TEST-004"]
+    },
+    {
+      "id": "SHARED-LIST-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "A list control selects a named query profile, sort, filter, search, page, retry, add, or selection intent; it never turns those values into a generic repository or an untyped domain write.",
+      "decisionIds": [],
+      "verificationIds": ["SHARED-LIST-TEST-001"]
+    },
+    {
+      "id": "SHARED-LIST-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "List state carries stable query/cursor and readiness metadata so authoritative empty, no local matches, incomplete subscription, partial data, stale data, and failure remain different representable outcomes.",
+      "decisionIds": [],
+      "verificationIds": ["SHARED-LIST-TEST-001", "SHARED-LIST-TEST-002", "SHARED-LIST-TEST-003", "SHARED-LIST-TEST-004"]
+    },
+    {
+      "id": "SHARED-LIST-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "Every query, sort, filter, cursor, failure, and intent value uses Ledger or standard Swift types; arbitrary field names, SQL, collection paths, dynamic dictionaries, SDK listener handles, and vendor errors cannot cross the boundary.",
+      "decisionIds": [],
+      "verificationIds": ["SHARED-LIST-TEST-001", "SHARED-LIST-TEST-003"]
+    },
+    {
+      "id": "SHARED-LIST-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Application use-case tests",
+      "invariant": "Deterministic reference fixtures prove cached-first rendering, readiness transitions, restart reconstruction, non-enumerating failure, retry intent, bounded query state, and stable ordering without a network or provider adapter.",
+      "decisionIds": [],
+      "verificationIds": ["SHARED-LIST-TEST-001", "SHARED-LIST-TEST-002", "SHARED-LIST-TEST-003", "SHARED-LIST-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "NamedQueryProfileID, NamedSortID, NamedFilterID, StableCursor, and LocalDataVersion are validated stable values with no persistence-field or provider meaning.",
+        "StableSortDescriptor selects one reviewed named sort, direction, cursor contract version, and stable-entity-ID tie-breaker; the UI never submits a raw field name.",
+        "ListQueryState contains one named profile plus only validated sort, filter, normalized search, bounded page-size, and opaque cursor state.",
+        "ListReadiness, ListEmptyState, and ListFailureState form closed non-overlapping outcomes; unavailable/not-authorized/not-found presentation cannot enumerate inaccessible entity existence.",
+        "ListPresentationIntent is a closed typed set for query changes, retry, add, and selection; presentation cannot synthesize a business command."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "Shared presentation contracts introduce no target relation, view, function, index, or persistence schema."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "This slice executes no query or business command; owning feature slices later bind named profiles and intents to their ports."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema or relation is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row/function is introduced; authorization remains the owning query projection's obligation."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The slice consumes abstract readiness metadata and defines no PowerSync Stream or row visibility."
+    },
+    "localOffline": {
+      "items": [
+        "A pure ListPresentationReducer accepts local query snapshots and metadata without waiting for network state, preserves the last locally usable snapshot through partial/stale transitions, and never converts incomplete data into authoritative empty.",
+        "Reconstructing the reducer from the same query state and local snapshot produces the same presentation state; transient retry emits a typed RetryQueryIntent without discarding cached rows.",
+        "Authorization/not-found failures collapse into one non-enumerating unavailable state, while retryable infrastructure failure remains explicit and cached rows stay visibly stale rather than disappearing."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No attachment identity, byte, object, or display-source contract is introduced."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "These are reusable app-presentation contracts only; MCP receives the owning named query contracts, not UI control state."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "Transient list state is not migrated and no Firebase record is read."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "This slice emits no telemetry; later feature presenters may record bounded readiness categories without query contents."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The contracts and reference reducer are additive target-only Swift code, import no provider SDK, alter no current app project, contact no hosted service, and activate no production behavior.",
+        "Owning feature slices opt into the contracts individually; reverting this foundation before cutover removes only target-only code and tests."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SHARED-LIST-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SharedListQueryPresentationTests.swift",
+      "covers": ["SHARED-LIST-REQ-001", "SHARED-LIST-REQ-002", "SHARED-LIST-REQ-003", "SHARED-LIST-REQ-004", "SHARED-LIST-REQ-005"],
+      "expected": "Stable identifiers, named sorts/filters, bounded query state, opaque cursors, closed intents, deterministic tie metadata, and invalid-value rejection behave without raw fields or backend values.",
+      "status": "passed",
+      "evidence": ["EVID-SHARED-LIST-001"]
+    },
+    {
+      "id": "SHARED-LIST-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SharedListQueryPresentationTests.swift",
+      "covers": ["SHARED-LIST-REQ-003", "SHARED-LIST-REQ-005"],
+      "expected": "The same locally available snapshot and query state reconstruct identical ready/partial/stale presentation after restart, and incomplete readiness never becomes authoritative empty.",
+      "status": "passed",
+      "evidence": ["EVID-SHARED-LIST-001"]
+    },
+    {
+      "id": "SHARED-LIST-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SharedListQueryPresentationTests.swift",
+      "covers": ["SHARED-LIST-REQ-001", "SHARED-LIST-REQ-003", "SHARED-LIST-REQ-004", "SHARED-LIST-REQ-005"],
+      "expected": "Unavailable/not-found/authorization outcomes do not enumerate existence; retryable failure preserves visibly stale cached rows and emits a typed retry intent; invalid transitions fail closed.",
+      "status": "passed",
+      "evidence": ["EVID-SHARED-LIST-001"]
+    },
+    {
+      "id": "SHARED-LIST-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SHARED-LIST-REQ-001", "SHARED-LIST-REQ-003", "SHARED-LIST-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-SHARED-LIST-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent shared presentation foundation derived from the app-shell capability dossier. It deliberately stops before concrete Item/Project/Invoice filters, UI snapshots, provider adapters, local database implementation, Auth, Sync Streams, product commands, hosted resources, migration, or production authority."
+}

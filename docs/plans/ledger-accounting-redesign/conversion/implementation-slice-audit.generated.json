@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:09:39.380Z",
+  "generatedFromManifestSync": "2026-09-01T21:20:46.476Z",
   "totals": {
-    "slices": 3,
-    "claimedTargetSurfaces": 30,
+    "slices": 4,
+    "claimedTargetSurfaces": 32,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 15
+    "implementationAdvancedTargetSurfaces": 17
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 2,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -34,6 +34,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json"
+    },
+    {
+      "sliceId": "shared-list-query-presentation",
+      "title": "Distinguish local list readiness from authoritative empty results",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Shared Query Presentation",
+      "surfaceIds": [
+        "SWIFT-38DC8C755068",
+        "TEST-7E87ABB4166B"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/shared-list-query-presentation.json"
     },
     {
       "sliceId": "target-environment-isolation",
