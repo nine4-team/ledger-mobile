@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T21:04:51.013Z",
+  "generatedFromManifestSync": "2026-09-01T21:09:39.380Z",
   "totals": {
     "slices": 3,
     "claimedTargetSurfaces": 30,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 1,
+    "implemented": 0,
+    "verified": 2,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -67,7 +67,7 @@
       "sliceId": "versioned-contract-catalog",
       "title": "Publish one versioned contract catalog to the target app and MCP",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "MCP Platform and Contract Registry",
       "surfaceIds": [
         "CONFIG-1BF5CA7701CD",

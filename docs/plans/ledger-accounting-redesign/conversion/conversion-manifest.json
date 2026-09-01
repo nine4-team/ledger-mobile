@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T21:04:51.013Z",
+    "lastSynchronizedAt": "2026-09-01T21:09:39.380Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -178,7 +178,7 @@
           "A clean install compiles the generated target TypeScript projection without source MCP dependencies"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -658,7 +658,7 @@
           "Generated target contracts compile under strict TypeScript settings"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -1151,7 +1151,7 @@
           "Strict no-emit compilation succeeds with no implicit runtime dependency"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -1205,7 +1205,7 @@
           "Registry validation rejects incomplete, duplicate, unknown, leaked or stale contract metadata"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -1536,7 +1536,7 @@
           "Stale or manually edited MCP resource output fails the freshness check"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -2581,7 +2581,7 @@
           "Invalid registry controls fail and all generated outputs are deterministic and fresh"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -9165,7 +9165,7 @@
           "Generated TypeScript is strict, fresh and hash-identical to the canonical catalog"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -21000,7 +21000,7 @@
           "Compiled Swift projection loads, validates and matches runtime enums exactly"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -21438,7 +21438,7 @@
           "Provider-free catalog types compile and invalid hash/reference/deprecation state fails closed"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",
@@ -33140,7 +33140,7 @@
           "All generated Swift catalog, registration, scope and leakage tests pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-M2-PLATFORM-001",

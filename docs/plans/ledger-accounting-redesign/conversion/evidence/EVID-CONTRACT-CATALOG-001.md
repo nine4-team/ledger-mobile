@@ -2,9 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / app-MCP contract / operational control
-- Repository baseline: `7ae171a8` on
-  `codex/supabase-powersync-implementation`; implementation was verified in the
-  working diff before commit
+- Repository implementation commit:
+  `c79484a8483b1203a4e5c1a95d2b92371e2722aa` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree, app project, and current MCP runtime were not
   modified
@@ -104,6 +104,13 @@ Local results on 2026-09-01:
 - tracked diff formatting check: pass; and
 - conversion ledger: 711 recorded surfaces, 696 currently discovered, zero
   errors, and three explained retired-path warnings.
+- immutable GitHub Actions run
+  `https://github.com/nine4-team/ledger-mobile/actions/runs/33559241558` for
+  exact commit `c79484a8`: pass; and
+- both `Conversion state and traceability` and `Isolated target environment`
+  jobs passed, including clean generated-artifact checks, isolated dependency
+  install, contract validation/negative controls, all target tests, macOS
+  build, generic iOS Simulator build, and clean tracked diff.
 
 ## Verification Status
 
@@ -113,9 +120,9 @@ Local results on 2026-09-01:
 - `CONTRACT-CATALOG-TEST-002`: passed locally. Canonical JSON, Swift,
   TypeScript, and MCP resource projections have exact hash and entry parity;
   strict compilation and stale-output checks pass.
-- `CONTRACT-CATALOG-TEST-003`: local generator/negative-control portion passes.
-  The immutable pull-request CI run for this exact implementation commit is
-  pending, so the slice remains `implemented`, not `verified`.
+- `CONTRACT-CATALOG-TEST-003`: passed. The local negative-control suite and
+  immutable exact-commit pull-request run both pass, including the clean-diff
+  guard that rejects rewritten generated artifacts.
 
 ## Explicit Limits
 

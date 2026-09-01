@@ -3,7 +3,7 @@
   "sliceId": "versioned-contract-catalog",
   "title": "Publish one versioned contract catalog to the target app and MCP",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "MCP Platform and Contract Registry",
   "surfaceIds": [
     "CONFIG-1BF5CA7701CD",
@@ -146,8 +146,8 @@
       "owner": "scripts/generate-target-contracts.mjs check and pull-request CI target job",
       "covers": ["CONTRACT-CATALOG-REQ-002", "CONTRACT-CATALOG-REQ-004"],
       "expected": "Registration validation rejects missing authorization/error/result/telemetry/test/version metadata, duplicate IDs/values, invalid deprecations, secret/provider/persistence leakage and generated rewrites.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CONTRACT-CATALOG-001"]
     }
   ],
   "implementationEvidence": ["EVID-CONTRACT-CATALOG-001"],

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 29
+State version: 30
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CONTRACT-CATALOG-IMPLEMENTED-AWAITING-CI-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: CONTRACT-CATALOG-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -393,6 +393,11 @@ modifying the running Firebase application before hard cutover.
   lifecycle status as mapped-or-later, regenerates both artifacts, and passes
   the complete local workflow command set. The failed run is not accepted as
   verification; a new exact-commit run is required.
+- Exact implementation commit `c79484a8` passed immutable GitHub Actions run
+  `33559241558`: both conversion traceability and isolated-target jobs passed,
+  including generated contract validation, all 29 target-package tests, macOS
+  and generic iOS Simulator builds, and clean-diff checks. All three catalog
+  obligations and exactly its ten target-only surfaces are now `verified`.
 
 ## Next Action
 
@@ -402,16 +407,18 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented `versioned-contract-catalog` checkpoint,
-   then require the exact-commit pull-request `Conversion state and
-   traceability` and `Isolated target environment` jobs to pass. Record the
-   immutable run in `EVID-CONTRACT-CATALOG-001`; only then mark
-   `CONTRACT-CATALOG-TEST-003`, the dossier and its ten target-only surfaces
-   `verified`.
-3. After catalog verification, select the next decision-independent Phase 1
-   backend-neutral foundation through the manifest and slice-ready gate. Do
-   not enter hosted/provider-specific Phase 2, identity/Auth, encrypted local
-   persistence, media retention, or product-command work while its named
+2. Begin the next decision-independent Phase 1 slice,
+   `shared-list-query-presentation`, from mapped surfaces
+   `SWIFT-7FD35B52D248`, `SWIFT-AA317435FD6E`, `SWIFT-CDADEAA08764`, and
+   `SWIFT-D49180285F84`. Trace the app-shell dossier plus architecture sections
+   `Presentation`, `Commands and queries are separate`, `Port Design Rules`,
+   and `Application use-case tests` into the ready dossier before code. Define
+   backend-neutral named query/sort/filter state, stable ordering/tie-breakers,
+   explicit local readiness/partial/stale/empty/failure states, and typed
+   presentation intents with deterministic tests; introduce no domain-write,
+   backend SDK, persistence table, provider adapter, or hosted resource.
+3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
+   local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
 4. Keep `target-environment-isolation` in progress with successful external CI
    recorded. Complete only the later signed/visual/physical staging and actual
