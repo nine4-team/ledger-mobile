@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "protected-artifact-export-lifecycle",
+  "title": "Prepare an authorized snapshot for a protected time-bounded local handoff",
+  "kind": "technical_control",
+  "status": "ready",
+  "owner": "Protected Artifact Lifecycle",
+  "surfaceIds": [
+    "SWIFT-7452FE59FE81",
+    "TEST-1FC8EF92E971"
+  ],
+  "requirements": [
+    {
+      "id": "PROTECTED-ARTIFACT-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Platform control and contract publication",
+      "invariant": "A protected export consumes an already-authorized immutable visibility-bound snapshot, creates only a short-lived local artifact lease and returns a typed destination/cleanup receipt; a path, URL, file or provider handle never becomes durable domain state.",
+      "decisionIds": [],
+      "verificationIds": ["PROTECTED-ARTIFACT-TEST-001", "PROTECTED-ARTIFACT-TEST-002", "PROTECTED-ARTIFACT-TEST-003", "PROTECTED-ARTIFACT-TEST-004"]
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Platform control and contract publication",
+      "invariant": "Export evidence preserves the exact approved visibility scope and projection/profile version, excludes private paths, expiring bearer URLs and hidden-row facts, and cannot widen authorization during rendering or destination handoff.",
+      "decisionIds": [],
+      "verificationIds": ["PROTECTED-ARTIFACT-TEST-001", "PROTECTED-ARTIFACT-TEST-002", "PROTECTED-ARTIFACT-TEST-003", "PROTECTED-ARTIFACT-TEST-004"]
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "Artifact preparation and handoff operate on a completed immutable query snapshot and never recalculate business meaning, infer missing evidence, mutate accounting state or act as another query authority.",
+      "decisionIds": [],
+      "verificationIds": ["PROTECTED-ARTIFACT-TEST-001", "PROTECTED-ARTIFACT-TEST-003", "PROTECTED-ARTIFACT-TEST-004"]
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "8. Authorization fails closed",
+      "invariant": "Unknown formats, destination intents, scope/profile/authority mismatches, expired leases, illegal lifecycle transitions, changed hashes and malformed canonical evidence fail with stable non-enumerating results and no accepted partial receipt.",
+      "decisionIds": [],
+      "verificationIds": ["PROTECTED-ARTIFACT-TEST-001", "PROTECTED-ARTIFACT-TEST-002", "PROTECTED-ARTIFACT-TEST-003", "PROTECTED-ARTIFACT-TEST-004"]
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "The exact target-only implementation commit passes deterministic contract tests, source-contamination and generated-contract checks, clean artifact validation, and both isolated target builds before this shared foundation is called verified.",
+      "decisionIds": [],
+      "verificationIds": ["PROTECTED-ARTIFACT-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProtectedArtifactExportID, ProtectedArtifactSnapshotID, ProtectedArtifactVisibilityScopeID, ProtectedArtifactProfileVersion and ProtectedArtifactSHA256 are bounded validated values; content kind, destination intent, destination outcome, lifecycle phase and cleanup disposition are closed enums.",
+        "ProtectedArtifactSnapshotReference binds stable snapshot identity, exact immutable snapshot hash, visibility scope, projection/profile version and authority version without carrying entity, Account, Principal, path, URL or provider values.",
+        "ProtectedArtifactExportRequest is created only through a policy that constrains format, destination intent, positive output ceiling, lease duration and canonical evidence size, and derives one request fingerprint.",
+        "ProtectedArtifactLifecycle validates a monotonic requested/materialized/handoff-recorded/cleanup-required/cleaned or terminal failure/cancellation transition path using exact request/snapshot/output identity.",
+        "ProtectedArtifactExportReceipt binds request fingerprint, snapshot/profile/authority scope, output byte count/hash, lease expiry, destination outcome and cleanup disposition while explicitly remaining evidence-only and not proof of filesystem protection/deletion or client delivery authorization."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free local evidence contract creates no Postgres relation, view, function, check, uniqueness rule or index."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No rendering, share, print, download, upload, delivery, cleanup, business command or trusted server handler executes."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema, relation, view or function is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "The contract accepts only a caller-supplied already-authorized snapshot reference and creates no server row; snapshot authorization remains with the owning query/RLS slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "Generated artifacts and lifecycle evidence are not synchronized domain authority; no PowerSync Stream or local synchronized table is defined."
+    },
+    "localOffline": {
+      "items": [
+        "Request, lifecycle and receipt encode to deterministic sorted canonical bytes and reconstruct through the same validators without network, filesystem, keychain, provider SDK or mutable process state.",
+        "Expiry, cancellation, failure, destination outcome and cleanup-required state survive restart; illegal or reordered transitions and changed request/snapshot/output identity fail atomically.",
+        "Canonical evidence excludes raw paths, URLs, credentials, provider handles and human/account/entity identifiers and stays under a fixed size ceiling."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "This slice stores no bytes and performs no file or Storage I/O. A future platform adapter must prove data-protection attributes and physical cleanup separately; O-023 still governs attachment retention/deletion."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No app, MCP, renderer, share sheet, print controller, file picker or download adapter is wired. Product report/export snapshots and O-036 client-delivery eligibility remain separate owning slices."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase artifact/path/URL is imported and no migration runs. Later adapters regenerate target artifacts from authorized immutable snapshots."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Stable diagnostic codes distinguish invalid bounded values, scope/profile/authority mismatch, disallowed content/destination, invalid lease bounds, duplicate/illegal transitions, request/output/hash mismatch, expiry, canonical tamper and evidence-size overflow.",
+        "Receipts expose only safe lifecycle categories and hashes. They do not assert physical deletion, destination delivery to a client, retained artifact bytes or feature/cutover authority."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The contracts are additive target-only Swift code/tests, import no provider SDK, alter no source application or current report/export implementation, contact no hosted service and can be reverted without external state change.",
+        "O-023 attachment retention and O-036 report-content/client-delivery decisions remain explicit later gates; this slice cannot satisfy or bypass them."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROTECTED-ARTIFACT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift",
+      "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-003", "PROTECTED-ARTIFACT-REQ-004"],
+      "expected": "Closed values, exact already-authorized snapshot scope, policy-bounded request, request fingerprint, legal lifecycle and evidence-only receipt validate deterministically without recalculation or provider values.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift",
+      "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-004"],
+      "expected": "Equivalent request/lifecycle/receipt evidence normalizes to identical bytes and hashes, decodes and revalidates offline, and preserves expiry, destination outcome and cleanup-required state across restart.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProtectedArtifactExportTests.swift",
+      "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-003", "PROTECTED-ARTIFACT-REQ-004"],
+      "expected": "Unsafe values, scope/profile/authority/request/output mismatches, disallowed formats/intents, invalid bounds, expiry, illegal/reordered transitions, changed hashes, noncanonical bytes and oversized evidence fail with stable codes and no partial accepted receipt.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROTECTED-ARTIFACT-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-003", "PROTECTED-ARTIFACT-REQ-004", "PROTECTED-ARTIFACT-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent target technical-control foundation. It stops before snapshot preparation, report/export semantics, O-036 client-delivery policy, O-023 attachment retention, filesystem/data-protection APIs, renderer bytes, destination adapters, app/MCP wiring, hosted resources, migration, production release or cutover."
+}

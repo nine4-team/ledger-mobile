@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T22:45:28.639Z",
+  "generatedFromManifestSync": "2026-09-01T22:53:27.745Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 721,
-    "targetRelevantSurfaces": 459,
+    "surfaces": 723,
+    "targetRelevantSurfaces": 461,
     "batches": 18,
     "productScopeSurfaces": 579,
-    "technicalControlSurfaces": 142
+    "technicalControlSurfaces": 144
   },
   "canonicalTargetCoverage": [
     {
@@ -1015,8 +1015,8 @@
       "title": "Platform, transport, release, and migration control",
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
-      "surfaceCount": 130,
-      "targetRelevantSurfaceCount": 67,
+      "surfaceCount": 132,
+      "targetRelevantSurfaceCount": 69,
       "authorities": [
         {
           "path": "docs/architecture/redesign/01-system-context-and-principles.md",
@@ -1168,6 +1168,7 @@
         "SWIFT-6AA27A022A10",
         "SWIFT-6DA0525DFD44",
         "SWIFT-6E5F6EAFF883",
+        "SWIFT-7452FE59FE81",
         "SWIFT-7B159D426B1D",
         "SWIFT-88C69E26FBA0",
         "SWIFT-9BA6E6DD44E4",
@@ -1182,6 +1183,7 @@
         "SWIFT-FE0D03920D59",
         "TEST-0AD8A0619179",
         "TEST-16A01A0FF3D5",
+        "TEST-1FC8EF92E971",
         "TEST-6A6B0926E2EE",
         "TEST-7D6F49F784FB",
         "TEST-B2C120C177D5",

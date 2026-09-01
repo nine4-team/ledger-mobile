@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 42
+State version: 43
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: RELEASE-MANIFEST-VERIFIED-NEXT-FOUNDATION-SELECTION-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: PROTECTED-ARTIFACT-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -519,6 +519,15 @@ modifying the running Firebase application before hard cutover.
   evidence names the exact split instead of overstating the old runs, and
   immutable run `33567370249` supplies cumulative hosted proof for all 47
   unchanged target tests.
+- Created and passed the ready gate for
+  `protected-artifact-export-lifecycle`. Exactly two comment-only target
+  scaffolds are mapped to an already-authorized immutable snapshot reference,
+  policy-bounded short-lived lease lifecycle, deterministic restart evidence,
+  typed destination/cleanup receipt and stable fail-closed results. The dossier
+  explicitly cannot choose report contents, widen visibility, authorize client
+  delivery, prove filesystem protection/deletion or settle O-023/O-036. No
+  bytes, files, renderer, destination adapter, provider, migration or production
+  action exists; see `EVID-PROTECTED-ARTIFACT-001`.
 
 ## Next Action
 
@@ -528,13 +537,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Select the next decision-independent technical-control foundation only from
-   currently `target_mapped` surfaces. Prefer a provider-free fail-closed
-   migration-run manifest/plan integrity slice if its exact mapped surfaces and
-   architecture headings support a complete offline evidence contract; first
-   create comment scaffolds, classify them, claim them in one dossier and pass
-   the `ready` gate before behavior. Do not execute a migration or advance any
-   current migration/release script from shared-contract proof.
+2. Implement only the active `protected-artifact-export-lifecycle` ready
+   dossier: provider-free validated values, exact snapshot/scope/version/hash
+   binding, policy-bounded request fingerprint, restart-safe lifecycle and
+   evidence-only receipt, plus its domain/restart/rejection tests. Do not add
+   filesystem or destination adapters, report/export semantics, attachment
+   retention, app/MCP wiring or any O-023/O-036-dependent behavior. Advance
+   only its two target-only surfaces after local proof and exact-commit CI; leave
+   all current report/export/platform surfaces `target_mapped`.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
