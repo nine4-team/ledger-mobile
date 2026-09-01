@@ -1,7 +1,16 @@
 # Billing & Invoicing
-Status: active redesign
-Last updated: 2026-07-15
+Status: current implementation model — target replacement approved
+Last updated: 2026-08-30
 Implementation plan: [../plans/billing-invoicing-canonical-implementation.md](../plans/billing-invoicing-canonical-implementation.md)
+
+> **Target-state notice (2026-08-30):**
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> replaces this document as the approved redesign direction where the two
+> conflict. In particular, the target uses Items/Expenses/Fees as invoiceable
+> sources, whole-Invoice collection, one actual lump-sum payment Transaction,
+> typed `purchase` because the client paid 1584, and frozen source-based category
+> allocations. This document remains the
+> reference for current behavior until the staged migration is implemented.
 
 ## Summary
 

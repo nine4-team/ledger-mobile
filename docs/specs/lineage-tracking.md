@@ -1,5 +1,12 @@
 # Lineage Tracking
 
+> **Target-state notice (2026-08-30):** Existing lineage is a candidate
+> foundation, not yet the finalized authority, for the hidden occurrence
+> provenance required by
+> [Inventory Item Invoicing and Return Lifecycle](inventory-item-invoicing-lifecycle.md).
+> The redesign must preserve repeated sale/return cycles, exact price bases, and
+> corrections even when no project movement Transaction is created.
+
 ## Overview
 
 Lineage tracking maintains a complete audit trail of item movements across transactions and projects. Every time an item is linked to a transaction, sold between scopes, returned, or corrected, a lineage edge is created. These edges form a directed graph that shows the full history of every item.

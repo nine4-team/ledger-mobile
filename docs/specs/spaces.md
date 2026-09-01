@@ -1,5 +1,12 @@
 # Spaces
 
+> **Target-state notice (2026-08-31):** Spaces remain organizational placement,
+> never accounting authority. The target uses typed, scope-validating Space and
+> Item-assignment operations over local read models. Current Firestore hard
+> delete, independent bulk writes, URL-keyed review-note references, and
+> last-write-wins embedded checklist updates are source behavior rather than
+> target parity. O-037 controls assigned Items when a Space is archived.
+
 ## Overview
 
 Spaces are organizational containers for items. They represent physical locations (rooms, storage units, warehouses) or logical groupings where items are placed. Spaces can belong to a project or to business inventory.
@@ -61,6 +68,13 @@ overallProgress = (totalCompleted / totalItems) * 100
 
 Reusable templates allow users to create new spaces with pre-configured checklists.
 
+> **Current implementation gap:** Template management persistence exists, but
+> the shipped New Space picker is a stub and Save as Template currently reports
+> success without writing. The current `createFromSpace` service also copies
+> checked state. These are source defects, not target parity: the target must
+> support actual select/apply/save flows and reset every template checklist item
+> to unchecked.
+
 **Storage:** `accounts/{accountId}/presets/default/spaceTemplates/{templateId}`
 
 ### Template Fields
@@ -93,7 +107,11 @@ Items are assigned to spaces via `item.spaceId`:
 
 ### Bulk Assignment
 
-Multiple items can be assigned to a space at once. This is a batch of individual fire-and-forget writes (Tier 1) -- each item's `spaceId` is updated independently.
+Multiple Items may be assigned or cleared through one durable typed operation.
+The authoritative handler validates that every Item and destination Space still
+belong to the same Project or Business Inventory scope and applies the complete
+selection atomically/idempotently. Scope-changing Item commands separately
+validate or clear incompatible Space assignments.
 
 ## Space in Budget Context
 
@@ -102,8 +120,12 @@ Spaces do not directly participate in budget calculations. However, items in spa
 ## Edge Cases
 
 1. **Space with no items**: Valid state -- spaces can exist as empty containers awaiting items.
-2. **Deleting a space**: Soft delete (archive). Items in the space retain their `spaceId` reference but the space no longer appears in lists. Items should be reassigned or the reference cleared.
-3. **Moving items between spaces**: Update `item.spaceId` -- fire-and-forget write.
+2. **Deleting a space**: Ordinary removal means archive, not hard delete. O-037
+   controls whether assigned Items retain a resolvable archived reference or
+   must be explicitly moved/cleared; target code must not leave an unexplained
+   hidden ID or silently erase placement.
+3. **Moving items between spaces**: Use a typed, scope-validating assignment
+   operation with stable Item IDs and a durable result.
 4. **Space images**: No cap on image count (unlike transactions which may have separate receipt/other image categories).
 5. **Empty checklists**: Valid -- a checklist can have zero items.
 6. **Duplicate space names**: Allowed (spaces are identified by ID, not name).

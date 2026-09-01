@@ -1,7 +1,12 @@
 # Transaction Taxonomy Open Decisions
 
-Status: tracking
+Status: historical decisions for the superseded June taxonomy
 Created: 2026-06-26
+
+> The Purchase/Return/Sale/Payment-to-Business target in this document is no
+> longer the approved redesign. Preserve its production findings and completed
+> cleanup evidence, but track current decisions in the
+> [Ledger Accounting Redesign decision log](ledger-accounting-redesign/decision-log.md).
 
 Master tracker: [transaction-taxonomy-master-tracker.md](transaction-taxonomy-master-tracker.md)
 

@@ -1,5 +1,12 @@
 # Budget Management
 
+> **Target-state notice (2026-08-30):** Project budget progress is no longer
+> Transaction-only in the approved redesign. See
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md).
+> Each category combines client-paid and invoicing/unpaid source allocations;
+> collection transfers an amount between those segments without changing the
+> total, and the settlement Transaction cannot be counted a second time.
+
 ## Overview
 
 Budget management lets users define account-wide budget categories, allocate per-project budgets, and track spending progress in real-time. Every transaction must have a budget category — there are no uncategorized transactions.
@@ -302,9 +309,28 @@ This ensures the budget tab only shows categories the user intentionally selecte
 
 ## Offline and Conflict Behavior
 
-- **Conflict resolution:** Last-write-wins (database default) for all budget data. Acceptable because most edits are single-user, single-device.
-- **Category name uniqueness:** Cannot be enforced offline (requires server query). Allow potential duplicates offline; surface error on sync.
-- **Transaction count aggregation:** Requires server query. Offline views use cached counts which may be stale.
+### Current Firebase behavior
+
+- Most budget and reference writes effectively use database last-write-wins.
+- Category reordering and Project setup fan out multiple independent writes.
+- Category-name uniqueness is not enforced at the current backend boundary.
+- Offline views depend on whatever Firestore documents and derived summaries are
+  cached and do not expose one complete-history/readiness state.
+
+### Target requirement
+
+- Accepted local edits have durable operation receipts and survive restart.
+- Project category enablement/allocation is one conflict-aware operation and
+  preserves absent versus enabled-without-budget versus explicit zero.
+- Category definition/type/archive and ordering mutations use revisions or
+  equivalent preconditions; interruption cannot report success with a partial
+  order.
+- Duplicate-name conflicts are surfaced without merging category identities.
+- Authorization for shared category changes is blocked on O-026 and enforced at
+  the server/RLS boundary, not by hiding Settings UI.
+- Budget/read projections expose freshness and incomplete-history state; cached
+  denormalized Firebase summaries are migration comparison evidence, not target
+  accounting authority.
 
 ## Edge Cases
 

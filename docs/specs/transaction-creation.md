@@ -1,5 +1,16 @@
 # Transaction Creation Flow
 
+> **Target-state notice (2026-08-30):**
+> [Invoice-Centered Project Accounting](invoice-centered-project-accounting.md)
+> is authoritative where it conflicts with this current flow. Target project
+> Transactions record client-paid money movement: direct client-to-vendor
+> purchases and whole-Invoice Client → 1584 payments. A direct client-paid
+> physical-goods Transaction may have Items in Furnishings. 1584-paid project
+> Expenses and inventory Item charges remain in Invoicing until collection.
+> Target project types are exactly Purchase, Return, and same-Client Transfer;
+> collection creates Purchase rather than Payment to Business. See
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md).
+
 ## Purpose
 
 The New Transaction flow records actual financial events. It does not create

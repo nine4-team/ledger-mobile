@@ -1,6 +1,18 @@
 # Vendor Credits
 
-**Status:** Proposed — no implementation or migration is authorized by this document.
+**Status:** superseded as a target Transaction proposal; retained as source and
+product-problem evidence only
+
+> **Target-state notice (2026-08-31):** D-001 and D-007 now limit target
+> Transactions to Purchase, Return, and project-only Transfer, and require a
+> Return to represent money actually received by the scope owner. This older
+> proposal's fourth `Credit` Transaction type is therefore not authorized for
+> the Supabase redesign. A vendor refund that returns money is a scope-relative
+> Return. A cancellation or vendor account credit where no money is received is
+> tracked by O-028 and must use an explicit non-Transaction representation or
+> correction rule once approved. The evidence and distinctions below remain
+> useful; its implementation plan is current-Firebase-era proposal history, not
+> target guidance.
 
 ## Purpose
 
@@ -19,7 +31,7 @@ The design deliberately distinguishes two questions:
 Those answers may both be yes in a physical return, but they are not the same
 event and must not be inferred from each other.
 
-## Decision
+## Superseded Proposal
 
 Add canonical transaction type `Credit`.
 

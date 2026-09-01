@@ -1,8 +1,35 @@
 # Projects
 
+> **Target-state notice (2026-08-31):** The shipped Firebase app stores a
+> free-text `clientName`, creates Project setup through several independent
+> writes, and can delete only the Project document while orphaning children.
+> Those mechanics below remain current-system and migration evidence. The
+> redesigned app requires the account-scoped Client identity and mandatory
+> `project.clientId` in
+> [Client Identity and Project Transfers](client-identity-and-project-transfers.md),
+> a durable Project-setup result, and archive-first lifecycle. O-024 controls
+> whether any persisted Project may be physically deleted; O-025 controls Client
+> reassignment/merge.
+
 ## Overview
 
 Projects are the primary organizational unit in Ledger. Each project represents a client engagement (e.g., a home renovation, an interior design project) and contains transactions, items, spaces, and budget allocations. Projects exist alongside business inventory as the two scopes in the system — every item and transaction belongs to either a project or business inventory.
+
+## Target Redesign Requirements
+
+- Every Project belongs to one authoritative account-scoped Client by stable ID.
+  Client display names remain searchable but never authorize relationships or
+  same-Client Transfers.
+- Project creation selects or creates a Client and durably records the Project,
+  Client relationship, selected categories, and exact nullable allocations as
+  one observable operation. Attachment upload reconciles through the separate
+  durable media lifecycle.
+- Project rename, Client rename, Project archive, and any future Client
+  reassignment are distinct operations.
+- Project archive preserves all history. No normal delete may orphan Items,
+  Transactions, Spaces, notes, Invoices, preferences, or accounting evidence.
+- Current lists/details remain usable from synchronized local data and expose
+  readiness when a Project's required history is not fully available offline.
 
 ## Project Entity
 
@@ -97,12 +124,17 @@ Projects can be archived by setting `isArchived` to `true`. Archiving is preferr
 
 ## Deletion
 
+### Current Firebase behavior
+
 Project deletion removes the project document. This is destructive and prompts for confirmation.
 
 - If the project contains items, the confirmation warns: "This will delete the project and orphan N items. Consider archiving instead to preserve data."
 - If the project is empty, the confirmation shows: "This action cannot be undone."
 - Associated transactions, items, and spaces are NOT automatically deleted — they become orphaned with a `projectId` that no longer resolves
 - On deletion, the user is dismissed back to the project list
+
+This behavior must not be copied into the target. Target physical deletion is
+blocked on O-024; archive is the safe supported lifecycle meanwhile.
 
 ## Project List
 

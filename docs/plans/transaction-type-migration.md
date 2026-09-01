@@ -2,6 +2,10 @@
 
 **Spec:** [../specs/transaction-type.md](../specs/transaction-type.md)
 
+> **Historical and superseded.** Do not resume this migration for the coming
+> redesign. Current authority:
+> [Ledger Accounting Redesign](ledger-accounting-redesign/README.md).
+
 > **Paused / correction required (2026-06-26).** This plan narrowed
 > `TransactionType.purchase` to "itemized purchase only" and proposed removing
 > category itemization metadata. That drift caused inventory routing to trigger
