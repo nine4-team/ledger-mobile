@@ -2,6 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / offline contract / protected artifact lifecycle
+- Exact implementation commit:
+  `10d94f1ff8256c0b0e524f18eb37dc60f423f70f` on
+  `codex/supabase-powersync-implementation`
 - Branch: `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current report/export implementations are
@@ -83,6 +86,20 @@ Local results on 2026-09-01:
 - source `LedgeriOS.xcodeproj` diff from `fe018501`: empty; and
 - tracked diff formatting check: pass.
 
+Immutable GitHub Actions run
+[`33569882379`](https://github.com/nine4-team/ledger-mobile/actions/runs/33569882379)
+passed on that exact implementation commit. Its `Conversion state and
+traceability` and `Isolated target environment` jobs both passed, including
+conversion coverage and generated-artifact cleanliness, target dependency and
+environment boundaries, generated app/MCP contracts, the complete 51-test
+target package suite, the macOS build, the generic iOS Simulator build and the
+final clean-diff guard.
+
+The earlier comment-scaffold-only run `33568548589` failed generated residual-
+register freshness and is not verification evidence. The implemented
+checkpoint regenerated that artifact locally before exact run `33569882379`
+passed it.
+
 ## Verification Status
 
 - `PROTECTED-ARTIFACT-TEST-001`: passed locally. Closed values, opaque scope,
@@ -94,10 +111,12 @@ Local results on 2026-09-01:
   formats/intents, policy/fingerprint/hash mismatch, invalid bounds, expiry,
   illegal transitions, noncanonical bytes, digest tamper and oversize fail
   closed with stable results.
-- `PROTECTED-ARTIFACT-TEST-004`: planned. The exact implementation commit must
-  pass both GitHub Actions jobs before the slice can become `verified`.
+- `PROTECTED-ARTIFACT-TEST-004`: passed in immutable GitHub Actions run
+  `33569882379` on exact implementation commit `10d94f1f`, including all 51
+  target tests and both target builds.
 
-The slice and exactly its two target-only surfaces are `implemented`. Current
+All four obligations pass, so the slice and exactly its two target-only
+surfaces are `verified`. Current
 report, export, PDF/share and platform destination surfaces remain only
 `target_mapped`.
 

@@ -3,7 +3,7 @@
   "sliceId": "protected-artifact-export-lifecycle",
   "title": "Prepare an authorized snapshot for a protected time-bounded local handoff",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Protected Artifact Lifecycle",
   "surfaceIds": [
     "SWIFT-7452FE59FE81",
@@ -156,8 +156,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROTECTED-ARTIFACT-REQ-001", "PROTECTED-ARTIFACT-REQ-002", "PROTECTED-ARTIFACT-REQ-003", "PROTECTED-ARTIFACT-REQ-004", "PROTECTED-ARTIFACT-REQ-005"],
       "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, all target tests, macOS and generic iOS Simulator target builds, and clean tracked-diff validation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROTECTED-ARTIFACT-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROTECTED-ARTIFACT-001"],

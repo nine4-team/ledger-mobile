@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T23:10:59.072Z",
+  "generatedFromManifestSync": "2026-09-01T23:14:08.661Z",
   "totals": {
     "slices": 9,
     "claimedTargetSurfaces": 42,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 7,
+    "implemented": 0,
+    "verified": 8,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -54,7 +54,7 @@
       "sliceId": "protected-artifact-export-lifecycle",
       "title": "Prepare an authorized snapshot for a protected time-bounded local handoff",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Protected Artifact Lifecycle",
       "surfaceIds": [
         "SWIFT-7452FE59FE81",
