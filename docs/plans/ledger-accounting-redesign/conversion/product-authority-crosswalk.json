@@ -162,8 +162,11 @@
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
       "authorities": [
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/README.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
         { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" },

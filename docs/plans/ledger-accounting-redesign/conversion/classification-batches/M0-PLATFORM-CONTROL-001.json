@@ -1875,11 +1875,12 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Provides structured MCP error payloads and note validation helpers.",
       "disposition": "replace",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
-        "EVID-M2-PLATFORM-001"
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATION-CORE-001"
       ],
       "notes": "Preserve machine-readable recovery while enforcing non-enumeration/correlation and durable operation results. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "target": {
@@ -2584,11 +2585,12 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Tracks current listener/sync lifecycle state for views.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
-        "EVID-M2-PLATFORM-001"
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATION-CORE-001"
       ],
       "notes": "Replace connection/listener inference with scope-specific PowerSync readiness and operation health. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "target": {
@@ -2638,11 +2640,12 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Provides shared current MCP Firebase test helpers.",
       "disposition": "replace",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
-        "EVID-M2-PLATFORM-001"
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATION-CORE-001"
       ],
       "notes": "Create Principal/account/environment-isolated target fixtures and contract helpers. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "target": {
@@ -2767,6 +2770,99 @@
         ],
         "acceptance": [
           "The suite deterministically proves the pure target validation and namespace boundary without network or production access"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-A3B756DA1382",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "ebe45a30e236a23198235c31e7756ebc5922d5f628f8c9f8313c8c74b1c59ba6",
+      "currentBehavior": "Defines provider-free operation identifiers, envelopes, canonical codec/fingerprint, lifecycle transitions, stable error and rejection values, an Account-scoped restartable reference journal, operation query ports, and explicit synchronization readiness snapshots.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATION-CORE-001"
+      ],
+      "notes": "New target-only shared contract surface claimed by operation-lifecycle-and-readiness; it imports no Firebase, Supabase, or PowerSync SDK and chooses no provider-specific optimism or persistence mechanism.",
+      "target": {
+        "owner": "Shared Operation and Readiness Contracts",
+        "surfaces": [
+          "OperationEnvelope and OperationFingerprint",
+          "OperationReceipt and OperationSnapshot",
+          "OperationLifecycle state machine",
+          "ApplicationErrorSummary and OperationRejection",
+          "OperationQuerying and SyncHealthProviding",
+          "OperationJournal reference contract",
+          "SyncHealthSnapshot and subscription readiness"
+        ],
+        "securityRequirements": [
+          "Account scope is a typed part of every accepted operation and unresolved query; another Account's local operation evidence is never returned",
+          "Actor Principal ID is audit intent only and authoritative handlers must derive and verify the actor from authentication",
+          "Diagnostics expose stable codes, categories and retry disposition without raw provider messages, payloads, credentials or private text"
+        ],
+        "syncRequirements": [
+          "Local queued acceptance remains distinct from authoritative applied/rejected/superseded results across restart and retry",
+          "Connectivity, Auth freshness, subscription readiness, checkpoint, pending work, rejection and write blocks remain independent typed state",
+          "Provider-specific Sync Streams and optimistic projection storage must conform to these contracts in later gated slices"
+        ]
+      },
+      "migration": {
+        "rule": "Migrate no Firebase operation record; later source transforms map only approved recoverable pending-work evidence into a versioned target operation contract.",
+        "reconciliation": [
+          "Every migrated operation ID, Account scope, fingerprint, lifecycle state and authoritative result is unique and relationship-consistent or explicitly quarantined"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter OperationLifecycleContractTests"
+        ],
+        "acceptance": [
+          "Exact replay is idempotent, different-payload replay fails, lifecycle transitions are closed, restart preserves unresolved evidence, Accounts remain isolated, and online/synchronized state is explicit"
+        ]
+      }
+    },
+    {
+      "id": "TEST-7D6F49F784FB",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "81ffdad15c576488ae0654f964d683ca6f5a7db9079ef3922e7f237aa6dc56fa",
+      "currentBehavior": "Exercises canonical envelope encoding/fingerprints, queued acceptance, exact replay, payload mismatch, closed lifecycle transitions, transient retry, permanent rejection, lost response, queue continuation, restart restoration, Account isolation, readiness blockers, health validation and safe diagnostics.",
+      "disposition": "redesign",
+      "status": "verified",
+      "blockers": [],
+      "evidence": [
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATION-CORE-001"
+      ],
+      "notes": "Target package contract suite claimed by operation-lifecycle-and-readiness; it runs with deterministic clocks/IDs and no network, provider SDK, production identifier, or Firebase test host.",
+      "target": {
+        "owner": "Shared Operation and Readiness Contracts",
+        "surfaces": [
+          "OperationLifecycleContractTests",
+          "deterministic operation fault fixtures",
+          "restart and Account-isolation fixtures",
+          "sync-readiness and safe-diagnostic fixtures"
+        ],
+        "securityRequirements": [
+          "Negative fixtures prove Account-local unresolved queries exclude other Account records and diagnostics contain no vendor messages, tokens or payloads"
+        ],
+        "syncRequirements": [
+          "Fixtures cover process-style encode/decode restart, transient requeue, permanent rejection, lost-response replay and independent online/readiness state"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only operation fixtures; do not load production records or infer a Firebase pending-write migration policy.",
+        "reconciliation": [
+          "Round-trip fixtures preserve operation ID, Account, contract, fingerprint, timestamps and lifecycle state exactly"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter OperationLifecycleContractTests"
+        ],
+        "acceptance": [
+          "All shared operation and readiness contract obligations pass deterministically in the dependency-free target package"
         ]
       }
     },

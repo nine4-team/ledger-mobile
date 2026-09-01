@@ -1,22 +1,40 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T20:19:07.678Z",
+  "generatedFromManifestSync": "2026-09-01T20:45:35.131Z",
   "totals": {
-    "slices": 1,
-    "claimedTargetSurfaces": 15,
-    "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 0
+    "slices": 2,
+    "claimedTargetSurfaces": 20,
+    "unclaimedTargetSurfaces": 419,
+    "implementationAdvancedTargetSurfaces": 5
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
     "implemented": 0,
-    "verified": 0,
+    "verified": 1,
     "rehearsed": 0,
     "cutover_ready": 0
   },
   "slices": [
+    {
+      "sliceId": "operation-lifecycle-and-readiness",
+      "title": "Accept offline operations durably and distinguish queued work from authoritative results",
+      "kind": "technical_control",
+      "status": "verified",
+      "owner": "Shared Operation and Readiness Contracts",
+      "surfaceIds": [
+        "FILE-F29942C1A7F4",
+        "MCPMOD-DAB760104CEE",
+        "SWIFT-A3B756DA1382",
+        "SWIFT-F26052171FEB",
+        "TEST-7D6F49F784FB"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json"
+    },
     {
       "sliceId": "target-environment-isolation",
       "title": "Start the target app only in one validated, isolated environment",

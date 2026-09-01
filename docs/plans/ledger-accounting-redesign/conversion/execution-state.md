@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 27
+State version: 28
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-ENVIRONMENT-ISOLATION-IN-PROGRESS
+- Checkpoint: OPERATION-LIFECYCLE-VERIFIED-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -336,41 +336,79 @@ modifying the running Firebase application before hard cutover.
   `EVID-TARGET-ENVIRONMENT-001`. No hosted resource, credential, network
   backend, source Firebase implementation, production read/mutation, deployment,
   migration, release, or cutover was used.
+- Opened draft pull request `#1` only as the review/CI surface for the isolated
+  Supabase branch. GitHub Actions run `33555553117` passed both conversion
+  traceability and isolated-target jobs at commit `2da54304`, including the
+  target boundary check, 12 package tests, macOS build, generic iOS Simulator
+  build and clean-diff verification. The Firebase worktree/branch remained
+  unchanged; the draft was not merged and grants no deployment or cutover
+  authority.
+- Completed and verified the decision-independent
+  `operation-lifecycle-and-readiness` technical slice. The dependency-free
+  target core now owns typed Operation/Account/Principal IDs, a typed command
+  envelope and closed preconditions, canonical epoch-millisecond codec and
+  SHA-256 fingerprint, queued receipt versus authoritative snapshot/outcome,
+  the closed lifecycle transition graph, stable error/retry/rejection values,
+  an Account-scoped restartable reference journal, provider-free operation and
+  health ports, and explicit subscription/pending/write-block readiness.
+- Added eleven deterministic operation/restart/readiness tests. The first run
+  exposed and then corrected a mismatched date decode strategy; the final 10
+  operation tests and all 23 target-package tests pass. Exact replay,
+  same-ID/different-payload refusal, transient requeue, permanent rejection
+  without queue starvation, lost-response replay, illegal transition refusal,
+  restart restoration, Account isolation, online/readiness separation,
+  explicit required-update/contract blocks, retained original result/rejection
+  evidence through supersession/resolution, and safe diagnostics are proven in
+  `EVID-OPERATION-CORE-001`.
+- Advanced exactly five claimed replacement surfaces to `verified` through the
+  slice dossier, classified the two new target files, extended the reviewed
+  platform authority set to the operation/domain/port architecture files, and
+  regenerated coverage/authority/slice audits. The conversion ledger passes at
+  701 recorded / 686 discovered surfaces with only the three explained retired-
+  path warnings. No Postgres schema, RLS, Data API grant, PowerSync Stream,
+  provider adapter, hosted resource, Firebase implementation, migration,
+  deployment or production operation was introduced.
 
 ## Next Action
 
 Continue without waiting on the two M1 evidence blockers:
 
-1. Resume `target-environment-isolation` from its dossier and
-   `EVID-TARGET-ENVIRONMENT-001`. Reconcile the live diff, rerun
-   `npm run target:environment:check`,
-   `npm run target:environment:test`, both target staging builds, and
-   `npm run conversion:check`. Do not reattach target files to
+1. Treat `operation-lifecycle-and-readiness` and
+   `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
+   operation slice. Do not recreate queued/applied/rejected, idempotency,
+   readiness or error behavior independently in app, MCP, SQL or adapters.
+2. Begin the next decision-independent technical slice for the versioned
+   contract catalog and app/MCP projection boundary. Start from the mapped MCP
+   Platform and Contract Registry surfaces, trace the exact architecture
+   headings into a ready dossier, and generate/parity-test Swift and TypeScript
+   command/query/capability/error/version projections without introducing a
+   provider adapter or hosted resource.
+3. Keep `target-environment-isolation` in progress with successful external CI
+   recorded. Complete only the later signed/visual/physical staging and actual
+   hosted-resource projection portions when their credentials/resources and
+   authorization exist; do not wait on those gates before continuing other
+   decision-independent target foundations and do not reattach target files to
    `LedgeriOS.xcodeproj`.
-2. Obtain the first external run of the configured target CI job only through
-   the ordinary reviewed branch/PR workflow. Record its immutable run reference
-   before passing `TARGET-ENV-TEST-005`; do not treat the workflow file or
-   local compilation as external CI evidence.
-3. Keep the target projection explicitly `unprovisioned` until isolated hosted
+4. Keep the target projection explicitly `unprovisioned` until isolated hosted
    resource IDs, staging-only credentials, maximum spend/run-rate, cleanup
    owner, and the applicable spike authorization are explicit. Do not replace
    synthetic IDs with guesses or production identifiers.
-4. Preserve the decision-packet queue as proposals until product approval. Every
+5. Preserve the decision-packet queue as proposals until product approval. Every
    generated product blocker now has a packet; O-021 remains an explicit UI-only
    UX experiment rather than a schema gate.
-5. Do not execute the prepared vertical-spike protocol until isolated hosted
+6. Do not execute the prepared vertical-spike protocol until isolated hosted
    resources, staging-only credentials, maximum spend/run-rate, cleanup owner,
    device matrix, and pre-measurement hard caps are explicitly authorized. When
    authorized, begin at S0 and stop fail-closed on any unknown/production ID.
-6. When the user approves a product decision, update its canonical spec and
+7. When the user approves a product decision, update its canonical spec and
    decision log first, then traceability, architecture, affected batch mappings/
    evidence and this state. Keep one target operation/query authority across app
    and MCP and do not create a Firebase application adapter.
-7. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
+8. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
    may use synthetic staging only and must prove encrypted local durability,
    scoped Sync Streams, idempotent operations/rejection, media restart, RLS, and
    offline provenance before provider-specific architecture is approved.
-8. When an external chmod-600 service-account JSON whose `project_id` is exactly
+9. When an external chmod-600 service-account JSON whose `project_id` is exactly
    `ledger-nine4`, or a separately proven canonical immutable production export,
    becomes available, run the fail-closed read-only profiling/reconciliation
    flow. Do not copy credentials into the repository, substitute authorized-user

@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "operation-lifecycle-and-readiness",
+  "title": "Accept offline operations durably and distinguish queued work from authoritative results",
+  "kind": "technical_control",
+  "status": "verified",
+  "owner": "Shared Operation and Readiness Contracts",
+  "surfaceIds": [
+    "FILE-F29942C1A7F4",
+    "MCPMOD-DAB760104CEE",
+    "SWIFT-A3B756DA1382",
+    "SWIFT-F26052171FEB",
+    "TEST-7D6F49F784FB"
+  ],
+  "requirements": [
+    {
+      "id": "OPERATION-CORE-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "3. Local acceptance is not server commitment",
+      "invariant": "A locally accepted operation is reported as durably queued and is never represented as authoritatively applied until a server result is observed.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-001", "OPERATION-CORE-TEST-002"]
+    },
+    {
+      "id": "OPERATION-CORE-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "6. Retries are expected",
+      "invariant": "The same operation identifier and payload replay to the same result, while reuse of that identifier with a different payload fails with a stable non-retryable mismatch.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-001", "OPERATION-CORE-TEST-003"]
+    },
+    {
+      "id": "OPERATION-CORE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "Every durable command carries one stable operation ID, contract version, Account scope, actor intent, client evidence time, typed payload, and typed preconditions without provider values or dynamic persistence fields.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-001"]
+    },
+    {
+      "id": "OPERATION-CORE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Lifecycle",
+      "invariant": "Only the reviewed draft, queued, applying, applied, rejected, superseded, and resolved transitions are legal; transient failures requeue and permanent domain or authorization failures reject without blocking unrelated work.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-001", "OPERATION-CORE-TEST-003"]
+    },
+    {
+      "id": "OPERATION-CORE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Operation status",
+      "invariant": "Callers observe one operation or the unresolved operations for one Account through a provider-free query port using stable snapshots and safe errors.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-002", "OPERATION-CORE-TEST-003"]
+    },
+    {
+      "id": "OPERATION-CORE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Sync Health Model",
+      "invariant": "Connectivity, authentication freshness, required subscription readiness, checkpoint age, pending work, rejected work, transient failure, maintenance, migration, and required-update state remain explicit; online and synchronized are never synonyms.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-002", "OPERATION-CORE-TEST-004"]
+    },
+    {
+      "id": "OPERATION-CORE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Fault Matrix",
+      "invariant": "Restart, transient retry, permanent rejection, lost response, duplicate delivery, retired contract, and account-isolation fixtures produce durable deterministic outcomes and stable diagnostics.",
+      "decisionIds": [],
+      "verificationIds": ["OPERATION-CORE-TEST-002", "OPERATION-CORE-TEST-003", "OPERATION-CORE-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "OperationID, AccountID, PrincipalID, OperationContractVersion, OperationEnvelope, and closed OperationPrecondition values contain only Ledger and standard Swift types.",
+        "OperationReceipt reports local queued acceptance; OperationSnapshot and OperationOutcome represent later authoritative or recovery state without provider SDK types.",
+        "OperationLifecycle validates the exact transition graph and classifies transient transport failure separately from permanent rejection.",
+        "ApplicationErrorCode, ApplicationErrorCategory, RetryDisposition, OperationRejection, and safe diagnostic summaries never expose raw vendor errors.",
+        "OperationFingerprint is deterministic for a canonical encoded envelope and detects same-ID/different-payload misuse."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This shared-contract slice introduces no Postgres relation; operation tables and result journals belong to provider-specific command-handler slices."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No business command is handled here; later slices must implement these lifecycle semantics in authoritative transactions."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No Data API schema or relation is exposed."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server row or function is introduced; Account authorization remains a later RLS and handler obligation."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "This slice defines portable operation/readiness values only; PowerSync stream definitions and unauthorized-local-row tests remain provider-specific slices."
+    },
+    "localOffline": {
+      "items": [
+        "The reference operation journal accepts an envelope once, returns the same receipt for exact replay, rejects payload mismatch, and persists as a Codable snapshot suitable for restart fixtures.",
+        "Unresolved operation queries are Account-scoped and cannot return another Account's queued, applying, rejected, or recovery evidence.",
+        "Restart preserves queued, applying, and rejected state; applying may be safely retried, and unrelated later operations are not starved by a permanent rejection.",
+        "SyncHealthSnapshot validates nonnegative counts and explicit oldest-pending timestamps and calculates online and synchronized state independently."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Attachment bytes and media queue durability are owned by the attachment lifecycle slice."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This slice publishes the provider-free Swift contract and reference behavior; concrete app presenters, generated TypeScript contracts, and MCP endpoints are later entry-point slices."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase record is read and no target data is migrated by the shared lifecycle contract."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Safe operation diagnostics include stable error category, code, retry disposition, operation ID, and Account ID only; provider messages, payload bodies, credentials, and private text are excluded.",
+        "Sync health exposes pending/rejected counts, oldest ages, readiness, checkpoint, transient failure, maintenance, migration, and required-update state as bounded typed fields."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The contracts are additive inside LedgerTargetCore, import no provider SDK, alter no Firebase target, open no hosted resource, and activate no production authority.",
+        "Later adapters may be replaced without changing the lifecycle semantics; removing this slice before cutover requires only reverting target-only code and evidence."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "OPERATION-CORE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "covers": ["OPERATION-CORE-REQ-001", "OPERATION-CORE-REQ-002", "OPERATION-CORE-REQ-003", "OPERATION-CORE-REQ-004"],
+      "expected": "Canonical envelopes fingerprint deterministically; exact replay is idempotent; different payload reuse fails; and only reviewed lifecycle transitions succeed.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATION-CORE-001"]
+    },
+    {
+      "id": "OPERATION-CORE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "covers": ["OPERATION-CORE-REQ-001", "OPERATION-CORE-REQ-005", "OPERATION-CORE-REQ-006", "OPERATION-CORE-REQ-007"],
+      "expected": "Encoding and restoring the journal preserves Account-scoped queued, applying, rejected, and resolved evidence and never upgrades local acceptance to server application.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATION-CORE-001"]
+    },
+    {
+      "id": "OPERATION-CORE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "covers": ["OPERATION-CORE-REQ-002", "OPERATION-CORE-REQ-004", "OPERATION-CORE-REQ-005", "OPERATION-CORE-REQ-007"],
+      "expected": "Transient faults requeue, permanent rejection remains durable and recoverable, lost-response replay returns the prior result, different payload replay fails, and later unrelated operations continue.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATION-CORE-001"]
+    },
+    {
+      "id": "OPERATION-CORE-TEST-004",
+      "kind": "operational",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "covers": ["OPERATION-CORE-REQ-006", "OPERATION-CORE-REQ-007"],
+      "expected": "Health validation rejects contradictory counts/timestamps, online and synchronized states remain distinct, required-update and migration blocks are explicit, and diagnostics contain no vendor message or payload.",
+      "status": "passed",
+      "evidence": ["EVID-OPERATION-CORE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-OPERATION-CORE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent shared infrastructure. It deliberately stops before A-003/A-004 provider selection, A-015 optimistic projection mechanics, A-016 offline authorization lease, Supabase schema/handlers, PowerSync streams, app/MCP entry points, hosted resources, migration, or production authority."
+}

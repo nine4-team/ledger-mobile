@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T20:19:07.678Z",
+  "generatedFromManifestSync": "2026-09-01T20:45:35.131Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 699,
-    "targetRelevantSurfaces": 437,
+    "surfaces": 701,
+    "targetRelevantSurfaces": 439,
     "batches": 18,
     "productScopeSurfaces": 573,
-    "technicalControlSurfaces": 126
+    "technicalControlSurfaces": 128
   },
   "canonicalTargetCoverage": [
     {
@@ -993,15 +993,27 @@
       "title": "Platform, transport, release, and migration control",
       "scope": "technical_control",
       "rationale": "Environment, transport, release, observability, and migration tooling implement architecture and operational controls; product behavior remains delegated to the owning domain batches.",
-      "surfaceCount": 114,
-      "targetRelevantSurfaceCount": 51,
+      "surfaceCount": 116,
+      "targetRelevantSurfaceCount": 53,
       "authorities": [
+        {
+          "path": "docs/architecture/redesign/01-system-context-and-principles.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
         {
           "path": "docs/architecture/redesign/README.md",
           "role": "architecture_authority"
         },
         {
           "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
           "role": "architecture_authority"
         },
         {
@@ -1128,6 +1140,7 @@
         "SWIFT-7B159D426B1D",
         "SWIFT-88C69E26FBA0",
         "SWIFT-9BA6E6DD44E4",
+        "SWIFT-A3B756DA1382",
         "SWIFT-AAE32021738A",
         "SWIFT-AD26BFE430B2",
         "SWIFT-D861839CD17D",
@@ -1137,6 +1150,7 @@
         "TEST-0AD8A0619179",
         "TEST-16A01A0FF3D5",
         "TEST-6A6B0926E2EE",
+        "TEST-7D6F49F784FB",
         "TEST-B2C120C177D5",
         "TEST-DE986CFD8624",
         "TEST-ECE08B24ADCE"

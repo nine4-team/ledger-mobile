@@ -2,8 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / environment isolation / local offline foundation
-- Repository baseline: `16cfa68c79e5fabcf04c0749f533c1c6cfad5f4e`
-  on `codex/supabase-powersync-implementation`; checkpoint worktree was dirty
+- Repository implementation commit:
+  `2da54304ec8261ed67c88f5510002c8d8a3626fc` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
   on `firebase`
 - Target environment: synthetic target staging identifiers only
@@ -42,9 +43,10 @@ The first target foundation is compiled outside the Firebase application:
 - the app projection is fixed at compilation, displays
   `STAGING • NO HOSTED SERVICES`, and uses only explicit
   `unprovisioned-*-staging` resource identifiers;
-- the pull-request workflow defines a separate macOS target job for the
-  boundary check, package suite, macOS build, iOS Simulator build, and clean
-  tracked-diff check; the job has not yet produced external run evidence;
+- the pull-request workflow's Linux conversion-control job and separate macOS
+  target job passed in immutable GitHub Actions run
+  `33555553117` for commit `2da54304`, including the boundary check, package
+  suite, macOS build, iOS Simulator build, and clean tracked-diff check;
 - the source `LedgeriOS.xcodeproj` has no target-only source/test references;
 - the target environment kind is closed to local, staging, and production
   target values, so Firebase cannot be selected as a target runtime;
@@ -78,6 +80,7 @@ xcodebuild -project LedgeriOS/LedgerTarget.xcodeproj \
   -destination 'generic/platform=iOS Simulator' \
   CODE_SIGNING_ALLOWED=NO build
 git diff -- LedgeriOS/LedgeriOS.xcodeproj/project.pbxproj
+gh run view 33555553117 --json status,conclusion,url,jobs,headSha,event
 ```
 
 Results on 2026-09-01:
@@ -92,7 +95,11 @@ Results on 2026-09-01:
 - recursive byte scan of both compiled app bundles found the staging bundle and
   unprovisioned PowerSync identifiers and found none of the known Firebase or
   target-production identifiers;
-- source application project diff: empty.
+- source application project diff: empty; and
+- GitHub Actions pull-request run
+  `https://github.com/nine4-team/ledger-mobile/actions/runs/33555553117`:
+  pass, with both `Conversion state and traceability` and
+  `Isolated target environment` jobs successful.
 
 ## Proven Test Obligations
 
@@ -106,16 +113,20 @@ Results on 2026-09-01:
 - `TARGET-ENV-TEST-004`: a stale persisted environment binding is rejected
   before the local-state opener runs; sentinel existing bytes remain unchanged,
   and the matching binding reopens the same isolated state.
+- `TARGET-ENV-TEST-005` external-CI portion: the immutable pull-request run
+  independently passed the boundary guard, target package suite, both target
+  staging builds and clean-diff check. Signed/visual/physical staging evidence
+  and provisioned-resource projection remain open, so the complete obligation
+  is not marked passed.
 
 ## Explicit Limits
 
-This is partial evidence for an `in_progress` technical-control slice. It does
-not prove:
+This remains partial evidence for an `in_progress` technical-control slice. It
+does not prove:
 
-- an external CI run, signed staging distribution, visual/physical-device
-  banner verification, deep links, update feed, or actual hosted-resource
-  projection;
-- the complete build/release operational gate
+- signed staging distribution, visual/physical-device banner verification,
+  deep links, update feed, or actual hosted-resource projection;
+- the non-CI portions of the complete build/release operational gate
   (`TARGET-ENV-TEST-005`);
 - Supabase Auth, Postgres, RLS, Storage, PowerSync Sync Streams, or the
   A-003/A-004 vertical spike; or
