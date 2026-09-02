@@ -998,14 +998,14 @@
       "acknowledgeSourceHash": "9340c1bbd40347661b1514c7072a75d46b99f066261ddf5ec65b4f76f738e5d8",
       "currentBehavior": "Defines deterministic provider-free tests for complete canonical ordered Space checklist replacement, stable nested identities, progress, exact same-Space revision, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-REVISION-001"
       ],
-      "notes": "Target-only Phase 1 implemented tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
+      "notes": "Target-only Phase 1 verified tests. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
       "target": {
         "owner": "Space Checklist Revision Operation Contracts",
         "surfaces": [
@@ -1092,14 +1092,14 @@
       "acknowledgeSourceHash": "11862dcb6771efc7ba0f9c61d7001d41426e50e9d1b2b06252f5768ddbc5bb8a",
       "currentBehavior": "Defines the implemented provider-free boundary for revision-aware replacement of one Space's complete canonical ordered checklist hierarchy with stable nested identities, checked-state progress, exact operation binding, restart/refusal validation and a narrow operation port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-REVISION-001"
       ],
-      "notes": "Target-only Phase 1 implemented surface. The bounded implementation defines one ReviseSpaceChecklists intent with stable Space/checklist/item identities, complete canonical ordered hierarchy replacement, exact expected Space revision, shared operation binding/receipt validation and a narrow port. It cannot change scope/details, apply/save templates, attach media, assign Items, create review evidence, set Space completion/lifecycle or mutate accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production.",
+      "notes": "Target-only Phase 1 verified surface. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. The bounded implementation defines one ReviseSpaceChecklists intent with stable Space/checklist/item identities, complete canonical ordered hierarchy replacement, exact expected Space revision, shared operation binding/receipt validation and a narrow port. It cannot change scope/details, apply/save templates, attach media, assign Items, create review evidence, set Space completion/lifecycle or mutate accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production.",
       "target": {
         "owner": "Space Checklist Revision Operation Contracts",
         "surfaces": [

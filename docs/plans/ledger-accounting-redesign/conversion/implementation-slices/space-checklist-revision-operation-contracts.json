@@ -3,7 +3,7 @@
   "sliceId": "space-checklist-revision-operation-contracts",
   "title": "Replace one Space's complete ordered checklist hierarchy without changing other Space state",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Checklist Revision Operation Contracts",
   "surfaceIds": ["SWIFT-EB8803C0864A", "TEST-9A22BFF16437"],
   "requirements": [
@@ -160,8 +160,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-CHECKLIST-REVISION-001"],

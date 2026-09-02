@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 132
+State version: 133
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CHECKLIST-REVISION-IMPLEMENTED-LOCAL
+- Checkpoint: SPACE-CHECKLIST-REVISION-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1978,6 +1978,14 @@ modifying the running Firebase application before hard cutover.
   implementation acknowledges exact source hashes; 82 target surfaces are
   implementation-advanced. Exact implementation-commit CI remains before
   verification.
+- Exact Space-checklist implementation commit
+  `8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed` passed immutable GitHub Actions
+  run `33659853864`: conversion traceability passed in 10 seconds and the
+  isolated target environment passed in 2 minutes 36 seconds with all four
+  focused/all 164 target tests in 38 suites, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts. All five obligations pass;
+  exactly the two Space-checklist surfaces are now `verified`, and 82 target
+  surfaces are implemented or later.
 
 ## Next Action
 
@@ -2048,10 +2056,9 @@ Continue without waiting on the two M1 evidence blockers:
    both CI jobs are verified. Treat
    `space-checklist-revision-operation-contracts` and
    `EVID-SPACE-CHECKLIST-REVISION-001` as the sole provider-free
-   ReviseSpaceChecklists semantic authority. Its exact ready commit and both CI
-   jobs pass. Finish the local implementation gate, commit and push only the
-   frozen provider-free boundary, and require both exact-implementation-commit
-   CI jobs before marking either claimed surface verified. Keep
+   ReviseSpaceChecklists semantic authority. Its exact implementation commit and
+   both CI jobs are verified. Audit the next smallest complete decision-
+   independent dependency and run its ready gate before implementation. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

@@ -141,13 +141,13 @@ Scope/checklist/template/media/Item/review/
 lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
 Sync/provider behavior, app/MCP, migration and production remain excluded.
 O-023/O-026/O-037 stay open; `EVID-SPACE-DETAILS-UPDATE-001`.
-The provider-free Space checklist revision slice is implemented locally and
-awaits exact-implementation-commit CI. Exactly two target surfaces implement
-one complete canonical ordered
+The provider-free Space checklist revision slice is verified. Exactly two
+target surfaces implement one complete canonical ordered
 checklist hierarchy replacement, stable distinct nested identities, checked-
 state progress, exact same-Space expected revision, shared operation lifecycle
-and a narrow port. Four focused/all 164 target tests, graph/contracts and both
-staging builds pass locally.
+and a narrow port. Exact implementation commit `8131e857` and immutable
+Actions run `33659853864` pass four focused/all 164 target tests, graph/
+generated-contract checks, both staging builds and clean artifacts.
 Scope/details/template/media/Item/review/Space-completion/
 lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
 Sync/provider behavior, app/MCP, migration and production remain excluded.
