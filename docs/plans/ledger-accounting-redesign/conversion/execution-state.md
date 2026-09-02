@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 66
+State version: 67
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TRANSACTION-TAXONOMY-IMPLEMENTED-EXACT-CI-NEXT
+- Checkpoint: TRANSACTION-TAXONOMY-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -838,6 +838,14 @@ modifying the running Firebase application before hard cutover.
   lifecycle behavior, schema/RLS/Sync/provider, app/MCP wiring, legacy import,
   Firebase change, hosted resource, migration or production operation was
   introduced.
+- Exact implementation commit
+  `031a240a703232216a4efff9686c1516a35a82f4` passed immutable GitHub Actions
+  run `33585853504`: conversion traceability and isolated-target jobs both
+  passed, including graph/generated-contract checks, all 76 target tests,
+  macOS and generic iOS Simulator builds and clean tracked artifacts. All five
+  taxonomy obligations and exactly its two target-only surfaces are now
+  `verified`; every excluded writer/accounting/provider/migration surface
+  remains unadvanced.
 
 ## Next Action
 
@@ -847,14 +855,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented
-   `transaction-taxonomy-and-transfer-identity` slice, then require the exact
-   implementation SHA to pass both immutable pull-request jobs before advancing
-   only `SWIFT-C7C58265EA19`, `TEST-28D11BDABC0A`, `TAXONOMY-TEST-005`, and the
-   dossier to `verified`. Do not infer verification from local success or a
-   different commit.
-3. After exact-commit verification, audit the remaining Phase 1/domain
-   dependency order and select the smallest decision-independent slice whose
+2. Treat `transaction-taxonomy-and-transfer-identity` and
+   `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
+   Transaction classification, scope, route and pair identity. Do not recreate
+   or extend that meaning independently in app, MCP, SQL or adapters.
+3. Audit the remaining Phase 1/domain dependency order and select the smallest
+   decision-independent slice whose
    exact product/architecture authority is closed. Create and pass its ready
    dossier before behavior. Do not implement Transaction writers, money sign or
    posting bounds, Item/Invoice/Space effects, corrections/lifecycle, schema/

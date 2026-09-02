@@ -7,9 +7,9 @@ foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
-taxonomy/Transfer-identity slice is implemented and locally verified, with its
-exact-commit hosted CI still required. Broader app/schema/provider and migration
-surfaces remain unadvanced.
+taxonomy/Transfer-identity slice is verified at exact implementation commit
+`031a240a`. Broader app/schema/provider and migration surfaces remain
+unadvanced.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

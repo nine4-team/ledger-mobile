@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T03:06:44.820Z",
+    "lastSynchronizedAt": "2026-09-02T03:11:18.080Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27633,14 +27633,14 @@
           "Synthetic values prove exact three-type decoding, scope-owner meaning, project-only non-cash Transfer, exact-ID route eligibility and distinct paired record identity without provider dependencies"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
         "EVID-M2-INVENTORY-TRANSACTION-001",
         "EVID-TRANSACTION-TAXONOMY-001"
       ],
-      "notes": "Target-only Phase 1 taxonomy foundation. Four focused tests and all 76 target tests, graph/contracts, and both staging builds pass locally; exact-commit hosted CI remains required before verification. It cannot define money-record minimum evidence, Transaction lifecycle, amount/line/category basis, Transfer Item/Invoice/Space effects, correction, schema, RLS, Sync, provider adapters, app/MCP wiring or migration.",
+      "notes": "Target-only Phase 1 taxonomy foundation. Exact implementation commit 031a240a passed immutable Actions run 33585853504: four focused/all 76 target tests, graph/contracts, both staging builds and clean artifacts. It cannot define money-record minimum evidence, Transaction lifecycle, amount/line/category basis, Transfer Item/Invoice/Space effects, correction, schema, RLS, Sync, provider adapters, app/MCP wiring or migration.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -32080,14 +32080,14 @@
           "Self-tests prove only the provider-free taxonomy and pair-identity boundary without claiming handler, schema, RLS, Sync, app/MCP, migration or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
         "EVID-M2-INVENTORY-TRANSACTION-001",
         "EVID-TRANSACTION-TAXONOMY-001"
       ],
-      "notes": "Target-only taxonomy self-tests pass locally as part of all 76 target tests; exact-commit hosted CI remains required before verification. They cannot establish server atomicity, pair persistence, authorization/download absence, physical offline behavior, legacy import correctness or concrete app/MCP integration.",
+      "notes": "Target-only taxonomy self-tests passed at exact implementation commit 031a240a in immutable Actions run 33585853504 as part of all 76 target tests. They cannot establish server atomicity, pair persistence, authorization/download absence, physical offline behavior, legacy import correctness or concrete app/MCP integration.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {

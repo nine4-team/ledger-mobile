@@ -7,8 +7,9 @@
 - Claimed target surfaces: `SWIFT-C7C58265EA19`, `TEST-28D11BDABC0A`
 - Slice dossier:
   `conversion/implementation-slices/transaction-taxonomy-and-transfer-identity.json`
-- Implementation state: implemented locally; exact-commit hosted CI remains
-  required before verification
+- Implementation state: verified at exact commit
+  `031a240a703232216a4efff9686c1516a35a82f4`
+- Immutable CI: [GitHub Actions run 33585853504](https://github.com/nine4-team/ledger-mobile/actions/runs/33585853504)
 - Implementation hashes:
   - `TransactionTaxonomy.swift`:
     `63c7836292efe4211e8ed7b5cf8d5ac446b05daf1df94bfc44f9c6689430e54f`
@@ -89,10 +90,23 @@ All commands ran from the dedicated Supabase worktree on 2026-09-01:
 - `npm run target:staging:build:ios` — pass; and
 - `git diff --check` — pass before control-artifact updates.
 
-`TAXONOMY-TEST-001` through `TAXONOMY-TEST-004` pass with this evidence.
-`TAXONOMY-TEST-005` remains planned until the exact committed implementation
-passes the immutable pull-request conversion and isolated-target jobs. Both
-claimed surfaces and the dossier therefore advance only to `implemented`.
+`TAXONOMY-TEST-001` through `TAXONOMY-TEST-004` pass with this local evidence.
+
+## Exact-Commit Hosted Verification
+
+Immutable Actions run `33585853504` executed against exact implementation SHA
+`031a240a703232216a4efff9686c1516a35a82f4` and passed both jobs:
+
+- `Conversion state and traceability` passed conversion validation and proved
+  the checks did not rewrite tracked artifacts; and
+- `Isolated target environment` passed the graph/environment boundary,
+  generated app/MCP contracts, all 76 target tests, macOS build, generic iOS
+  Simulator build, and clean tracked-artifact check.
+
+`TAXONOMY-TEST-005`, both claimed surfaces, and the dossier are therefore
+`verified`. The runner's Node 20 deprecation annotation applies to GitHub's
+current `actions/checkout@v4` and `actions/setup-node@v4` runtime and did not
+change either job result or this slice's contract evidence.
 
 ## Permanent Limits
 

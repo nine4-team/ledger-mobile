@@ -3,7 +3,7 @@
   "sliceId": "transaction-taxonomy-and-transfer-identity",
   "title": "Define canonical Transaction taxonomy, scope meaning, and Transfer pair identity",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Transaction Taxonomy and Transfer Identity",
   "surfaceIds": [
     "SWIFT-C7C58265EA19",
@@ -172,8 +172,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming writer, schema, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
     }
   ],
   "implementationEvidence": ["EVID-TRANSACTION-TAXONOMY-001"],
