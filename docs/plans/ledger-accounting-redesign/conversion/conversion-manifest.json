@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T17:19:25.581Z",
+    "lastSynchronizedAt": "2026-09-02T17:34:15.869Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17105,6 +17105,67 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-1599BDC0D574",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SessionEndingPolicy.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SessionEndingPolicy.swift"
+        }
+      ],
+      "observedSourceHash": "e2f8dacf9569a97893673777b04aedef33c345b5f76526b327b1abce30af8d4e",
+      "acknowledgedSourceHash": "e2f8dacf9569a97893673777b04aedef33c345b5f76526b327b1abce30af8d4e",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines only the ready-gate scaffold for an environment-, Principal-, and Account-scoped pending-work summary and session-ending safety policy; executable behavior is intentionally absent before the exact ready checkpoint passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Session Ending and Pending-Work Policy",
+        "surfaces": [
+          "PendingLocalWorkSummary",
+          "SessionEndDisposition",
+          "DestructiveLocalRemovalConfirmation",
+          "SessionEndRequest",
+          "SessionEndPolicy",
+          "AccountSessionEnding"
+        ],
+        "securityRequirements": [
+          "Every summary, confirmation and request is bound to one validated target environment, Principal and Account; a payload identity is not provider authorization",
+          "Ordinary logout cannot destroy pending operations or unverified attachment bytes, and destructive removal requires exact current-summary confirmation"
+        ],
+        "syncRequirements": [
+          "Pending work distinguishes queued, applying and unresolved-rejected operations from unverified captured attachments without equating local acceptance with server apply",
+          "Sync-first can complete only after a fresh zero-pending summary; interrupted or stale cleanup fails closed"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only safety contract and import no Firebase session, listener, cache, pending-media directory, provider token or logout state.",
+        "reconciliation": [
+          "Later local-store and provider adapters must reconcile exact Account-scoped operation/media counts and prove cleanup ordering without cross-Account loss"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SessionEndingPolicyTests"
+        ],
+        "acceptance": [
+          "Synthetic contract tests prove clean, sync-first and exact-confirmed destructive dispositions, canonical restart and fail-closed stale/scope/tamper behavior without signing out a provider or deleting data"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001",
+        "EVID-SESSION-ENDING-POLICY-001"
+      ],
+      "notes": "Target-only Phase 1 ready scaffold. The bounded contract freezes only loss-prevention, exact summary/confirmation and session-ending port semantics. It chooses no Auth provider, offline lease, UI copy, physical store/key mechanism, revocation retention, adapter, hosted resource or production behavior.",
+      "classificationBatch": "M0-IDENTITY-LIFECYCLE-001"
     },
     {
       "id": "SWIFT-1772D7B7CE10",
@@ -35644,6 +35705,65 @@
       ],
       "notes": "Verified target-only composition self-tests use the deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally and in exact implementation commit be88c5b9e42eef90018f84012f5a3e60f9631009 / immutable Actions run 33581326840. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-95498CCCD467",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SessionEndingPolicyTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SessionEndingPolicyTests.swift"
+        }
+      ],
+      "observedSourceHash": "b2ca691096664a6a7d4d245fcf09ea5a8472ddcfa25078840d060ec58f30a50b",
+      "acknowledgedSourceHash": "b2ca691096664a6a7d4d245fcf09ea5a8472ddcfa25078840d060ec58f30a50b",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines only the ready-gate scaffold for deterministic session-ending pending-work contract tests; executable tests are intentionally absent before the exact ready checkpoint passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Session Ending and Pending-Work Policy",
+        "surfaces": [
+          "SessionEndingPolicyTests",
+          "exact pending-work count and summary fixtures",
+          "clean/sync-first/destructive disposition fixtures",
+          "canonical restart and stale-summary refusal fixtures",
+          "scope/tamper/failing-port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production environment, Principal and Account values and prove another scope cannot reuse summary or confirmation evidence",
+          "Negative diagnostics expose stable bounded codes without provider messages, operation payloads, attachment paths, credentials or private content"
+        ],
+        "syncRequirements": [
+          "Tests keep queued/applying/rejected/unverified-byte counts distinct and do not claim physical queue, filesystem, database, key, provider or network behavior"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase auth/session/cache/upload/export profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent summary/request evidence round-trips byte-identically while changed scope/counts/revision/fingerprint/confirmation evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SessionEndingPolicyTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral safety boundary without claiming provider signout, local deletion, synchronization, app UI, migration or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001",
+        "EVID-SESSION-ENDING-POLICY-001"
+      ],
+      "notes": "Target-only Phase 1 planned test surface. It will prove only the provider-free pending-work/session-ending contract and cannot authorize or simulate destructive device cleanup.",
+      "classificationBatch": "M0-IDENTITY-LIFECYCLE-001"
     },
     {
       "id": "TEST-96AAFA22224B",

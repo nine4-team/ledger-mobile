@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 133
+State version: 134
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CHECKLIST-REVISION-VERIFIED
+- Checkpoint: SESSION-ENDING-PENDING-WORK-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1986,6 +1986,30 @@ modifying the running Firebase application before hard cutover.
   both staging builds and clean tracked artifacts. All five obligations pass;
   exactly the two Space-checklist surfaces are now `verified`, and 82 target
   surfaces are implemented or later.
+- The Space-checklist verification-document commit
+  `3cfbcb5a70c0d3620aedf04a57bf46690cd6263a` passed both jobs in immutable
+  Actions run `33660769158`, including all 164 then-existing target tests, both
+  staging builds and clean tracked artifacts.
+- Audited Item-to-Space assignment and withheld it because O-037 still owns
+  archived destination/retained-assignment semantics; no proposed archive
+  policy was promoted into code.
+- Selected the decision-independent session-ending pending-work safety
+  boundary. Canonical Auth/offline requirements now state the already-required
+  exact environment/Principal/Account summary, four distinct pending-work
+  counts, clean-zero rule, sync-first completion rule, exact-confirmed
+  destructive exception, cancellation no-call and fail-closed interruption
+  behavior while leaving Auth, offline lease, UI copy and physical cleanup open.
+- Added exactly two comment-only target surfaces, the reviewed identity batch
+  mapping, `session-ending-pending-work-contracts`, and
+  `EVID-SESSION-ENDING-POLICY-001`. The ready dossier freezes eight requirements
+  and five deterministic obligations; executable behavior remains absent until
+  the exact ready checkpoint passes immutable CI.
+- The complete local ready gate passes with all 164 existing target tests in 38
+  suites, both staging builds, target isolation/generated contracts,
+  conversion/capability/query/residual controls, M0 and clean formatting. The
+  ledger records 783 surfaces / 768 discovered, 357 mapped / 164 residual / 43
+  blockers; M1/M2 retain the expected 2/164 blockers with zero structural
+  errors.
 
 ## Next Action
 
@@ -2057,8 +2081,13 @@ Continue without waiting on the two M1 evidence blockers:
    `space-checklist-revision-operation-contracts` and
    `EVID-SPACE-CHECKLIST-REVISION-001` as the sole provider-free
    ReviseSpaceChecklists semantic authority. Its exact implementation commit and
-   both CI jobs are verified. Audit the next smallest complete decision-
-   independent dependency and run its ready gate before implementation. Keep
+   both CI jobs are verified. Treat the ready
+   `session-ending-pending-work-contracts` dossier and
+   `EVID-SESSION-ENDING-POLICY-001` as the sole provider-free safety authority
+   for exact pending-work summaries and clean/sync-first/destructive session
+   dispositions. Finish its local ready gate, commit/push only the comment
+   scaffolds and frozen documentation, and require exact-ready-commit CI before
+   implementing any executable behavior. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

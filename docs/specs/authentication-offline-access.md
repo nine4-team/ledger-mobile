@@ -35,6 +35,42 @@ If the user has previously authenticated successfully, keep the session alive lo
 ### Option C: Offline-Aware Auth with Local Credential
 On first successful Google sign-in, generate and store a local credential (PIN, biometric enrollment, or device-specific token) that can authenticate the user when the network is unavailable. This is more complex but provides a seamless fallback without requiring the user to remember another password.
 
+## Target Session-Ending Requirements
+
+The canonical target authority for this boundary is
+[Session Ending and Pending Local Work](session-ending-pending-work.md). The
+requirements below summarize that dedicated safety contract so authentication
+and offline-access design cannot bypass it.
+
+The provider-independent session-ending boundary is fixed even while the
+identity provider, offline-access lease, and final interface copy remain open:
+
+- Before ending or removing a local Account session, Ledger produces one
+  environment-, Principal-, and Account-scoped summary containing exact counts
+  for queued operations, applying operations, unresolved rejected operations,
+  and captured attachment bytes whose upload is not verified.
+- Ordinary clean logout is permitted only when every count is zero. A changed
+  summary or newly accepted work must be detected before teardown rather than
+  discarded through a stale confirmation.
+- Sync-then-logout remains pending until a fresh summary proves that every
+  operation has an authoritative or explicitly resolved outcome and every
+  captured attachment is verified or explicitly resolved.
+- Destructive local removal is the only path that may discard pending work. It
+  requires an explicit confirmation bound to the exact scoped summary and exact
+  counts currently being removed; a changed summary invalidates confirmation.
+  This path never claims discarded work reached the server.
+- Cancellation creates no session-ending request. Provider signout, sync
+  shutdown, queue/media deletion, database/key removal, cache cleanup, and
+  cleanup recovery are coordinated behind the session-ending boundary rather
+  than being callable independently by a feature screen.
+- App termination, token expiry, revocation, a closed prompt, or interrupted
+  cleanup is never destructive consent. Cleanup resumes fail-closed before the
+  same Principal's protected local data may be reopened.
+
+These requirements define the durable safety contract, not the final wording,
+button layout, identity provider, offline unlock method, lease duration,
+revocation retention policy, or platform-specific secure-storage mechanism.
+
 ## Open Questions
 
 - What is the approved offline authorization lease duration and what conditions

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T17:19:25.581Z",
+  "generatedFromManifestSync": "2026-09-02T17:34:15.869Z",
   "totals": {
-    "slices": 38,
-    "claimedTargetSurfaces": 97,
+    "slices": 39,
+    "claimedTargetSurfaces": 99,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 82
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 37,
@@ -406,6 +406,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/scoped-route-resolution-and-restoration.json"
+    },
+    {
+      "sliceId": "session-ending-pending-work-contracts",
+      "title": "End or remove one local Account session without silently losing accepted offline work",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Session Ending and Pending-Work Policy",
+      "surfaceIds": [
+        "SWIFT-1599BDC0D574",
+        "TEST-95498CCCD467"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/session-ending-pending-work-contracts.json"
     },
     {
       "sliceId": "shared-list-query-presentation",

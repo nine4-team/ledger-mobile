@@ -152,6 +152,15 @@ Scope/details/template/media/Item/review/Space-completion/
 lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
 Sync/provider behavior, app/MCP, migration and production remain excluded.
 O-023/O-026/O-032/O-037 stay open; `EVID-SPACE-CHECKLIST-REVISION-001`.
+The provider-free session-ending pending-work slice is ready. Exactly two
+comment-only target surfaces freeze one environment/Principal/Account-scoped
+summary with exact queued, applying, unresolved-rejected and unverified-
+attachment counts, plus clean, sync-first and exact-confirmed destructive
+dispositions behind one narrow port. Executable behavior awaits exact ready-
+commit CI. Auth provider and offline lease choices, final UI copy/policy,
+physical synchronization/cleanup, O-023 media retention, schema/RLS/Sync,
+app/MCP, migration, hosted resources and production remain excluded;
+`EVID-SESSION-ENDING-POLICY-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

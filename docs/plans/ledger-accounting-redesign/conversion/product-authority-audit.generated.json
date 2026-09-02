@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T17:19:25.581Z",
+  "generatedFromManifestSync": "2026-09-02T17:34:15.869Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 781,
-    "targetRelevantSurfaces": 519,
+    "surfaces": 783,
+    "targetRelevantSurfaces": 521,
     "batches": 18,
-    "productScopeSurfaces": 627,
+    "productScopeSurfaces": 629,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 414,
-      "targetRelevantSurfaceCount": 298
+      "surfaceCount": 416,
+      "targetRelevantSurfaceCount": 300
     },
     {
       "path": "docs/specs/projects.md",
@@ -89,6 +89,14 @@
       ],
       "surfaceCount": 125,
       "targetRelevantSurfaceCount": 117
+    },
+    {
+      "path": "docs/specs/session-ending-pending-work.md",
+      "batchIds": [
+        "M0-IDENTITY-LIFECYCLE-001"
+      ],
+      "surfaceCount": 13,
+      "targetRelevantSurfaceCount": 10
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -578,11 +586,15 @@
       "title": "Identity, account session, and operation lifecycle dossier surfaces",
       "scope": "product",
       "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
-      "surfaceCount": 11,
-      "targetRelevantSurfaceCount": 8,
+      "surfaceCount": 13,
+      "targetRelevantSurfaceCount": 10,
       "authorities": [
         {
           "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
           "role": "canonical_target"
         },
         {
@@ -600,6 +612,26 @@
         {
           "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
           "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
         }
       ],
       "surfaceIds": [
@@ -607,13 +639,15 @@
         "MCPMOD-3E4E627EC002",
         "MCPMOD-B6552C94C033",
         "SWIFT-0B9701086073",
+        "SWIFT-1599BDC0D574",
         "SWIFT-2D9222A4489A",
         "SWIFT-3B7DE77EA8E4",
         "SWIFT-BECC3329E3AA",
         "SWIFT-C05952F542AD",
         "SWIFT-D871AB13C6B1",
         "SWIFT-F84D40FBC375",
-        "TEST-80E13A744139"
+        "TEST-80E13A744139",
+        "TEST-95498CCCD467"
       ]
     },
     {

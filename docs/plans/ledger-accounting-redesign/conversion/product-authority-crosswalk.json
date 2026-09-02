@@ -8,6 +8,7 @@
     "docs/specs/client-identity-and-project-transfers.md",
     "docs/specs/projects.md",
     "docs/specs/spaces.md",
+    "docs/specs/session-ending-pending-work.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
   "batches": {
@@ -103,10 +104,16 @@
       "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
       "authorities": [
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
         { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
         { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
         { "path": "docs/specs/offline-first.md", "role": "current_product" },
-        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
       ]
     },
     "M0-INVENTORY-TRANSACTION-001": {
