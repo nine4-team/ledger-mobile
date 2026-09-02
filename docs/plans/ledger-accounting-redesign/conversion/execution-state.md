@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 163
+State version: 164
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CORE-DETAILS-VERIFIED
+- Checkpoint: PROJECT-CORE-DETAILS-READY-GATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2429,6 +2429,21 @@ modifying the running Firebase application before hard cutover.
   generated contracts, both builds and clean tracked artifacts. The slice and
   its two surfaces are `verified`. No provider, Firebase or production action
   occurred.
+- Rescouted the next boundary after Space core details. A read-only scout and an
+  independent adversarial reviewer approved only
+  `project-core-details-read-contracts`: exact Account/Project/Client core
+  identity, verified ProjectSummary fields, canonical optional description,
+  exact locally observed Project revision and explicit local readiness/
+  absence/failure truth. The review requires revision to remain local conflict-
+  precondition evidence distinct from LocalDataVersion, accepts an active
+  Project with an archived Client, and rejects any complete-workspace, current
+  Firebase/app/MCP, child, media, accounting, mutation, authorization,
+  provider/schema/RLS/Sync, migration or production claim. Two new target-only
+  paths contain comments only. The complete local ready gate passes: all 199
+  existing target tests in 46 suites, repeatable XcodeGen output, both staging
+  builds, target isolation/generated contracts and clean-artifact checks pass.
+  Immutable CI on the exact ready commit remains the sole prerequisite before
+  delegation. No provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2547,6 +2562,15 @@ Continue without waiting on the two M1 evidence blockers:
    authoritative partial counts, percentage policy, archive effects,
    Item/media/review/template/accounting, provider/schema/RLS/Sync, app/MCP,
    migration or production behavior.
+   Treat ready `project-core-details-read-contracts` and
+   `EVID-PROJECT-CORE-DETAILS-001` as the next frozen implementation boundary.
+   First pass complete local ready gates and immutable CI on the exact comment-
+   only ready checkpoint. Then assign only its two paths to one isolated worker
+   and retain primary every-line plus independent adversarial review because
+   the slice composes shared Project/Client, canonical-description, revision and
+   offline-readiness semantics. Do not let it become a Project workspace or
+   acquire children, media, accounting, mutation, authorization, provider,
+   schema/RLS/Sync, app/MCP, migration or production behavior.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

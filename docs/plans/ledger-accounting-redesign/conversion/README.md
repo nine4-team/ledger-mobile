@@ -271,6 +271,19 @@ normalization refusal, port-side validation and stable diagnostics. Candidate
 finding. Exact integration checkpoint `d5afa699` then passed immutable Actions
 run `33695588031`, including both staging builds;
 `EVID-SPACE-CORE-DETAILS-001`.
+The provider-free single-Project core-details read slice is prepared as a ready
+gate with exactly two comment-only target surfaces. Primary, scout and
+independent adversarial preflight approved only exact Account/Project/Client
+identity and current core display/lifecycle, canonical optional description,
+the exact locally observed Project revision needed by verified conflict-aware
+commands, and explicit local readiness/absence/failure truth. Local revision is
+distinct from LocalDataVersion and never claims current server authority. The
+slice expressly excludes the complete Project workspace, children, media,
+accounting, mutations, authorization, provider/schema/RLS/Sync, app/MCP,
+migration and production behavior. The complete local ready gate passes with
+all 199 existing target tests in 46 suites, repeatable generation, both staging
+builds and clean isolation. Immutable CI on the exact ready commit remains
+required before delegation; `EVID-PROJECT-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

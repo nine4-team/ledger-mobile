@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T23:38:44.372Z",
+    "lastSynchronizedAt": "2026-09-02T23:52:27.397Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -20515,6 +20515,67 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-4C4690368BEC",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift"
+        }
+      ],
+      "observedSourceHash": "cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e",
+      "acknowledgedSourceHash": "cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains the comment-only ready-gate scaffold for a provider-free single-Project core-record read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Core Details Read Contracts",
+        "surfaces": [
+          "ProjectCoreDetailsRequest",
+          "ProjectCoreDetailsSnapshot",
+          "ProjectCoreDetailsLocalSnapshot",
+          "ProjectCoreDetailsUpdate",
+          "ProjectCoreDetailsQuerying",
+          "ProjectCoreDetailsFailure"
+        ],
+        "securityRequirements": [
+          "Every request and returned row binds one exact AccountID and ProjectID; cross-Account, rebound, malformed and incomplete-as-authoritative evidence fails without revealing whether another scoped Project exists",
+          "Cached Client relationship, lifecycle, description and revision are local evidence only; current membership and authorization remain server responsibilities"
+        ],
+        "syncRequirements": [
+          "Canonical local state distinguishes authoritative absence from incomplete absence and preserves ready, partial, stale, unavailable, retryable and required-update truth across restart",
+          "The locally observed Project revision remains distinct from LocalDataVersion and cannot be promoted to current authoritative server revision by incomplete, partial or stale evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Project core-detail values and decode no Firebase Project document, free-text ownership field, listener snapshot, provider path, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Account/Project/Client identity, normalized core content, lifecycle/revision and source correlation or quarantine invalid evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Synthetic single-Project fixtures prove exact identity/relationship/core/revision/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-CORE-DETAILS-001"
+      ],
+      "notes": "Ready scaffold only. The frozen slice is limited to exact Account/Project identity, verified ProjectSummary relationship/core fields, canonical optional description, exact locally observed revision, explicit local readiness/absence/failure truth, restart and one narrow query port. It cannot define a complete workspace, Project children, media, accounting, mutation, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-4C47C0D715F5",
       "kind": "swift_logic",
       "name": "LedgeriOS/LedgeriOS/Logic/IncompleteReturnDetection.swift",
@@ -34993,6 +35054,65 @@
       ],
       "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-5F24EA7C310A",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "f0947a1bca6060d39a05255fa442830f707851d944c08945d6d71f11d3ed7c62",
+      "acknowledgedSourceHash": "f0947a1bca6060d39a05255fa442830f707851d944c08945d6d71f11d3ed7c62",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains the comment-only ready-gate test scaffold for the provider-free single-Project core-record read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Core Details Read Contracts",
+        "surfaces": [
+          "ProjectCoreDetailsDataTests",
+          "active and archived Project core fixtures",
+          "active-Project and archived-Client relationship fixture",
+          "ready, incomplete, partial and stale found/empty fixtures",
+          "canonical restart, refusal, port-side request validation and cancellation fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic identities/content and require unavailable states and bounded failures to avoid enumerating inaccessible or nonexistent Projects",
+          "Tests treat local relationship and revision evidence as non-authorizing and include no credential, provider payload, path, media or production identifier"
+        ],
+        "syncRequirements": [
+          "All tests run provider-free and distinguish structured contract restart from physical local database durability or authenticated synchronization"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase DTO, listener result, free-text clientName authority, source export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent canonical input restarts identically while Account/Project/request/relationship/description/revision/time/cardinality/completeness tampering fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Tests prove only the provider-free single-Project core-record contract and explicitly exclude complete-workspace, child, media, accounting, mutation, authorization, provider, migration and production claims"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-CORE-DETAILS-001"
+      ],
+      "notes": "Ready scaffold only. Planned tests cover exact Account/Project/Client identity, canonical description, active/archived core rows, local revision truth, explicit completeness/readiness/absence/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure, cancellation and encoded exclusions. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-61925915E20E",

@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-core-details-read-contracts",
+  "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Core Details Read Contracts",
+  "surfaceIds": ["SWIFT-4C4690368BEC", "TEST-5F24EA7C310A"],
+  "requirements": [
+    {
+      "id": "PROJECTCORE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One Project core read binds an exact AccountID and stable ProjectID. Project rename, Client rename, archive and any future Client reassignment remain distinct operations; copied names, paths and provider locators cannot define or rebind identity.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Every target Project has one required same-Account ClientID relationship. Current Project and Client display values are presentation evidence only; clientName text never defines ownership or authorization. An active Project may retain an archived Client relationship because archive preserves history.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Project core detail preserves the verified ProjectSummary identity, Client relationship, current display values and active-or-archived lifecycle. Optional description must already equal ProjectDescriptionReplacement(description).value; leading/trailing whitespace and whitespace-only encoded values are rejected rather than silently normalized.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Preconditions and Concurrency",
+      "invariant": "The row carries the exact Project revision observed in that local snapshot as ExpectedProjectRevision because verified Project rename, details-update and archive intents require it. This is conflict-precondition evidence, is distinct from LocalDataVersion and is never described as current authoritative server revision when enclosing evidence is incomplete, partial or stale.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Cached Project detail remains usable without server acknowledgement while exact LocalDataVersion, finite as-of time, readiness and completeness remain explicit. Ready found, ready authoritative absence, incomplete found/empty, partial found/empty and stale found/empty are distinct; archived found remains present and incomplete or stale empty evidence never proves absence.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "One narrow backend-neutral query port streams updates for the exact request. Waiting, unavailable, retryable and required-update states are explicit; unavailable cannot reveal whether a Project is nonexistent or inaccessible, cached failures cannot rebind the request, and upstream failure or cancellation cannot yield a false row or authoritative absence.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-007",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "This core-record read is not a complete Project workspace. It contains no child Item, Transaction, Space, note, category, preference, Invoice, budget, history, report, media or accounting evidence and defines no rename, archive, delete, reassignment or other mutation behavior.",
+      "decisionIds": ["O-023", "O-024", "O-025"],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    },
+    {
+      "id": "PROJECTCORE-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable only with deterministic provider-free synthetic evidence while the Firebase application remains unchanged. It defines no persistence, authorization, Postgres schema/handler/grant/RLS, PowerSync Stream, Auth/provider, app/MCP, migration, hosted resource, release or production behavior.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTCORE-TEST-001", "PROJECTCORE-TEST-002", "PROJECTCORE-TEST-003", "PROJECTCORE-TEST-004", "PROJECTCORE-TEST-005", "PROJECTCORE-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectCoreDetailsRequest binds exact AccountID and ProjectID to a deterministic versioned query fingerprint and revalidates the binding after decode.",
+        "ProjectCoreDetailsSnapshot reuses the verified ProjectSummary only after exact request/row scope and canonical ProjectDescriptionReplacement validation, then adds the exact locally observed ExpectedProjectRevision without claiming server-current authority.",
+        "ProjectCoreDetailsLocalSnapshot represents at most one exact-request row with exact cardinality/completeness, ListSnapshotQuality, LocalDataVersion and finite as-of evidence. Only a complete ready empty result is authoritative absence; archived detail remains found.",
+        "ProjectCoreDetailsUpdate and ProjectCoreDetailsFailure expose bounded waiting/snapshot/unavailable/retryable/required-update/refusal semantics without path, provider, authorization or existence detail. ProjectCoreDetailsQuerying is the sole narrow port."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Project table, Account/Client foreign key, lifecycle/revision column, constraint, index, view, function, trigger or migration is created or changed."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative get-Project handler, membership/capability derivation, mutation, audit event or reconciliation exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Account/Project/Client evidence is not authorization. No membership, relationship, grant or cross-account database test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Project table, authenticated predicate, subscription, upload connector or synchronized visibility proof is defined."},
+    "localOffline": {
+      "items": [
+        "Request, row, local snapshot and updates are canonical Codable evidence over stable identity/relationship, current display/lifecycle, canonical description, locally observed revision, readiness/completeness, local version and as-of time; canonical decode/encode is byte-identical.",
+        "At-most-one cardinality, exact request/row binding and explicit completeness prevent an empty incomplete cache from becoming authoritative absence or a stale revision from becoming server-current authority.",
+        "A deterministic reference port may stream exact request-matching updates and bounded failures and prove cancellation; this is not physical durable storage, process/device persistence, current authorization or authenticated synchronization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "Core details carry no attachment identity, hero locator, URL, image byte, upload, cache, retention or deletion behavior; O-023 remains open."},
+    "appMcp": {"items": [], "notApplicable": "No Project view/card/list, navigation, action, MCP schema/tool/resource/handler, transport or parity wiring is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project DTO, clientName authority, document path, listener result, URL, export row or migration disposition is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize, persist, synchronize or present a complete Project workspace; mutate Project state; define schema/RLS/Sync/provider/migration behavior; activate a feature; deploy, release or cut over.",
+        "O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside this boundary. Physical offline verification, production profiling and all hosted-resource authority remain gated."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTCORE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
+      "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
+      "expected": "Active and archived rows preserve exact ProjectSummary and locally observed revision, including nil/canonical descriptions, UInt64.max revision and an active Project with archived Client; AccountID and ProjectID independently alter the fingerprint.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
+    },
+    {
+      "id": "PROJECTCORE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
+      "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
+      "expected": "Ready found/authoritative-absent, incomplete found/empty, partial found/empty and stale found/empty fixtures round-trip byte-identically with exact local version/as-of/readiness/completeness/row/revision evidence; archived found never becomes absent and non-ready revision remains non-authoritative.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
+    },
+    {
+      "id": "PROJECTCORE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
+      "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
+      "expected": "Account/Project/request/fingerprint mismatch, malformed Project/Client relationship, multiple rows, hidden count, nonfinite as-of, invalid completeness, malformed revision and noncanonical description fail atomically through exact unique bounded provider-neutral diagnostics.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
+    },
+    {
+      "id": "PROJECTCORE-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
+      "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
+      "expected": "Unavailable is non-enumerating and carries no cached evidence; retryable and required-update remain distinct; cached failure evidence matches the exact request and cannot upgrade completeness, revision authority or authorization.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
+    },
+    {
+      "id": "PROJECTCORE-TEST-005",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
+      "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
+      "expected": "A deterministic reference port validates before yielding and streams only exact Account/Project request updates; a raw consumer proves mismatch rejection, upstream failure yields no false result and cancellation stops delivery.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
+    },
+    {
+      "id": "PROJECTCORE-TEST-006",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming complete-workspace, provider, migration, hosted or production behavior.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-CORE-DETAILS-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready-gate only. Primary and independent adversarial preflight approved this bounded provider-free core-record read after constraining revision to exact locally observed conflict-precondition evidence, requiring canonical description revalidation, allowing active Project/archived Client history, and rejecting any full-workspace or current Firebase/app/MCP claim. O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside. Complete local ready gates pass with all 199 existing target tests in 46 suites, repeatable generation, both staging builds and clean isolation; implementation remains withheld until immutable CI passes on the exact ready commit."
+}
