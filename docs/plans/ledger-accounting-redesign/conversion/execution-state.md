@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 53
+State version: 54
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: DETERMINISTIC-TEST-SUPPORT-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: DETERMINISTIC-TEST-SUPPORT-IMPLEMENTED-EXACT-CI-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -647,6 +647,26 @@ modifying the running Firebase application before hard cutover.
   `FILE-F29942C1A7F4` remain `target_mapped`; no behavior, package target,
   application link, database, provider, hosted resource, product fixture,
   migration or production operation exists at this ready checkpoint.
+- Implemented `LedgerTargetTestSupport` as a separate provider-free Swift
+  package product depending only on `LedgerTargetCore`, plus a self-test target
+  depending only on those two modules. Neither application project links the
+  support module; the graph guard now enforces those edges, scans both support
+  roots for provider imports and rejects application/source-project
+  contamination.
+- Added validated synthetic non-production context, finite domain-separated
+  clock/Operation-ID/Entity-ID/revision schedules, immutable Account-scoped
+  operation/unresolved/readiness/durability scripts, safe terminal failures,
+  lifecycle/order/cross-reference validation and bounded canonical restart
+  evidence with digest/tamper/noncanonical/size refusal. Decode reconstructs
+  through the environment, schedule, operation-script and Sync-health
+  validators rather than trusting Codable structure.
+- Four focused test-support tests and all 63 target package tests pass locally,
+  as do target graph/contract checks and macOS/generic-iOS-Simulator staging
+  builds. Three of four slice obligations pass; exact-commit hosted CI remains
+  planned, so exactly its two target-only surfaces are `implemented`. Current
+  Swift/MCP helper surfaces remain `target_mapped`; no domain-specific product
+  fixture, app/MCP wiring, local database, provider, hosted resource, Firebase
+  change, migration or production operation was introduced.
 
 ## Next Action
 
@@ -656,18 +676,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready `deterministic-target-test-support` dossier. Add a
-   separate Swift package target that depends only on `LedgerTargetCore`, a
-   matching self-test target, and graph/source-contamination checks proving that
-   neither application links it. Implement validated synthetic context,
-   deterministic fixed clock/ID/revision schedules, finite immutable scripted
-   `OperationQuerying`/`SyncHealthProviding` reference adapters, bounded
-   canonical restart evidence and stable unsafe/production/cross-Account/
-   exhaustion/tamper refusal. Run the focused and complete target suites, both
-   target builds and conversion checks. Keep `TEST-6A6B0926E2EE` and
-   `FILE-F29942C1A7F4` target-mapped and stop before domain-specific product
-   fixtures, app/MCP entry-point parity, local database, provider SDK, hosted
-   staging, A-003/A-004/A-007/A-015/A-016 or any open product decision.
+2. Commit and push the exact `deterministic-target-test-support` implementation
+   checkpoint, then require the immutable pull-request run to pass conversion
+   traceability, graph/generated-contract checks, all 63 target tests, both
+   target builds and clean tracked artifacts. Only then advance its two target-
+   only surfaces and dossier from `implemented` to `verified`. Keep
+   `TEST-6A6B0926E2EE` and `FILE-F29942C1A7F4` target-mapped and do not infer
+   domain-specific fixture, app/MCP, database/provider, hosted, physical-offline
+   or production coverage from the reference adapters.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

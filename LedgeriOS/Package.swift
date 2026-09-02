@@ -13,6 +13,10 @@ let package = Package(
         .library(
             name: "LedgerTargetMigrationCore",
             targets: ["LedgerTargetMigrationCore"]
+        ),
+        .library(
+            name: "LedgerTargetTestSupport",
+            targets: ["LedgerTargetTestSupport"]
         )
     ],
     targets: [
@@ -34,6 +38,16 @@ let package = Package(
             name: "LedgerTargetMigrationCoreTests",
             dependencies: ["LedgerTargetCore", "LedgerTargetMigrationCore"],
             path: "LedgerTargetMigrationCoreTests"
+        ),
+        .target(
+            name: "LedgerTargetTestSupport",
+            dependencies: ["LedgerTargetCore"],
+            path: "LedgerTargetTestSupport"
+        ),
+        .testTarget(
+            name: "LedgerTargetTestSupportTests",
+            dependencies: ["LedgerTargetCore", "LedgerTargetTestSupport"],
+            path: "LedgerTargetTestSupportTests"
         )
     ]
 )

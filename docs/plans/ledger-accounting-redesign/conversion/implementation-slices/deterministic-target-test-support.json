@@ -3,7 +3,7 @@
   "sliceId": "deterministic-target-test-support",
   "title": "Provide deterministic provider-free reference adapters for target use-case tests",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Deterministic Target Test Support",
   "surfaceIds": [
     "SWIFT-8AB5414F20CE",
@@ -126,8 +126,8 @@
       "owner": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
       "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004", "TESTSUPPORT-REQ-005"],
       "expected": "Validated synthetic context and deterministic value schedules are exact and stable, and the reference operation-query/sync-health adapters emit the configured typed outcomes through the shared LedgerTargetCore ports.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
     },
     {
       "id": "TESTSUPPORT-TEST-002",
@@ -135,8 +135,8 @@
       "owner": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
       "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004"],
       "expected": "Canonical scenario evidence reconstructs offline after restart and emits the identical fixed clock, IDs, revisions, operation snapshots, health snapshots and stable failures independent of input ordering.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
     },
     {
       "id": "TESTSUPPORT-TEST-003",
@@ -144,8 +144,8 @@
       "owner": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
       "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004", "TESTSUPPORT-REQ-005"],
       "expected": "Production or unsafe binding, credential/provider material, nonfixture or cross-Account identity, duplicate/conflicting/nonmonotonic scripts, exhaustion, noncanonical bytes, digest tamper and oversized evidence fail with stable safe codes and no partial advancement.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
     },
     {
       "id": "TESTSUPPORT-TEST-004",
@@ -157,8 +157,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 technical-control foundation only. It stops before domain-specific product fixtures, current app/MCP helper replacement, local database or PowerSync behavior, provider SDKs, hosted staging, migration fixtures, physical offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, production access or cutover authority."
+  "notes": "Decision-independent Phase 1 technical-control foundation only. The implementation and first three obligations pass locally; exact-commit hosted CI remains before verification. It stops before domain-specific product fixtures, current app/MCP helper replacement, local database or PowerSync behavior, provider SDKs, hosted staging, migration fixtures, physical offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, production access or cutover authority."
 }

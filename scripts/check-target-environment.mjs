@@ -15,6 +15,11 @@ const migrationTestRoot = path.join(
   packageRoot,
   "LedgerTargetMigrationCoreTests",
 );
+const testSupportRoot = path.join(packageRoot, "LedgerTargetTestSupport");
+const testSupportTestRoot = path.join(
+  packageRoot,
+  "LedgerTargetTestSupportTests",
+);
 const targetAppRoot = path.join(packageRoot, "LedgerTargetApp");
 const targetProject = path.join(
   packageRoot,
@@ -89,6 +94,8 @@ if (description) {
   const tests = targets.get("LedgerTargetCoreTests");
   const migrationCore = targets.get("LedgerTargetMigrationCore");
   const migrationTests = targets.get("LedgerTargetMigrationCoreTests");
+  const testSupport = targets.get("LedgerTargetTestSupport");
+  const testSupportTests = targets.get("LedgerTargetTestSupportTests");
   if (!core) {
     fail("target_core_missing", "LedgerTargetCore");
   } else if ((core.target_dependencies ?? []).length !== 0) {
@@ -137,6 +144,32 @@ if (description) {
       );
     }
   }
+  if (!testSupport) {
+    fail("target_test_support_missing", "LedgerTargetTestSupport");
+  } else {
+    const dependencies = new Set(testSupport.target_dependencies ?? []);
+    if (dependencies.size !== 1 || !dependencies.has("LedgerTargetCore")) {
+      fail(
+        "target_test_support_dependency_boundary",
+        "LedgerTargetTestSupport may depend only on LedgerTargetCore.",
+      );
+    }
+  }
+  if (!testSupportTests) {
+    fail("target_test_support_tests_missing", "LedgerTargetTestSupportTests");
+  } else {
+    const dependencies = new Set(testSupportTests.target_dependencies ?? []);
+    if (
+      dependencies.size !== 2 ||
+      !dependencies.has("LedgerTargetCore") ||
+      !dependencies.has("LedgerTargetTestSupport")
+    ) {
+      fail(
+        "target_test_support_test_dependency_boundary",
+        "LedgerTargetTestSupportTests may depend only on LedgerTargetCore and LedgerTargetTestSupport.",
+      );
+    }
+  }
 }
 
 const forbiddenImport =
@@ -146,6 +179,8 @@ for (const filePath of [
   ...swiftFiles(testRoot),
   ...swiftFiles(migrationCoreRoot),
   ...swiftFiles(migrationTestRoot),
+  ...swiftFiles(testSupportRoot),
+  ...swiftFiles(testSupportTestRoot),
   ...swiftFiles(targetAppRoot),
 ]) {
   const match = fs.readFileSync(filePath, "utf8").match(forbiddenImport);
@@ -246,6 +281,12 @@ if (
       "The target staging application must not link migration-control tooling.",
     );
   }
+  if (/LedgerTargetTestSupport/.test(project)) {
+    fail(
+      "target_app_test_support_contamination",
+      "The target staging application must not link test-support tooling.",
+    );
+  }
 }
 
 if (!fs.existsSync(sourceProject)) {
@@ -257,6 +298,8 @@ if (!fs.existsSync(sourceProject)) {
     "LedgerTargetCoreTests/TargetEnvironmentManifestTests.swift",
     "LedgerTargetMigrationCore",
     "LedgerTargetMigrationCoreTests",
+    "LedgerTargetTestSupport",
+    "LedgerTargetTestSupportTests",
   ]) {
     if (project.includes(targetOnlyPath)) {
       fail(
@@ -275,5 +318,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  "target-environment: isolated LedgerTargetCore, separate migration-control tooling, and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, migration-tooling app link, or source-project contamination detected\n",
+  "target-environment: isolated LedgerTargetCore, separate migration-control/test-support tooling, and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, tooling app link, or source-project contamination detected\n",
 );

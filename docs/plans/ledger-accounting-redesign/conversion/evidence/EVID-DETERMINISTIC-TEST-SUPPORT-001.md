@@ -1,14 +1,17 @@
 # EVID-DETERMINISTIC-TEST-SUPPORT-001 — Deterministic Target Test Support
 
 - Timestamp: 2026-09-01
-- Class: implementation planning / provider-free reference test adapters
+- Class: implementation / provider-free reference test adapters
+- Exact implementation commit: pending this bounded checkpoint on
+  `codex/supabase-powersync-implementation`; immutable hosted CI is still
+  required before verification
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current test helpers remain unchanged
 - Claimed target surfaces: `SWIFT-8AB5414F20CE`, `TEST-77875A971729`
 - Slice dossier:
   `conversion/implementation-slices/deterministic-target-test-support.json`
-- Ready-gate state: ready; behavior and executable self-tests are not yet
-  implemented
+- Slice state: implemented; three local obligations pass and exact-commit
+  hosted CI remains planned
 
 ## Surface Selection
 
@@ -53,9 +56,66 @@ Postgres, handlers, Data API, RLS, PowerSync Streams, Storage/media, concrete
 app/MCP integration, migration and observability are explicitly out of scope
 rather than silently omitted.
 
+## Implemented Contract
+
+`LedgerTargetTestSupport/DeterministicTargetTestSupport.swift` now provides:
+
+- a normalized `DeterministicTargetTestContext` that accepts only an already
+  validated target-local/staging environment, synthetic `test-principal-*`,
+  `test-account-*` and `test-scenario-*` identities, a nonzero seed and bounded
+  integer epoch-millisecond base time;
+- a finite `DeterministicTargetValueSource` that derives domain-separated
+  timestamps, Operation/Entity IDs and monotonic revisions by stable key/index
+  and refuses exhaustion or arithmetic overflow without reading clocks, UUIDs,
+  randomness or global state;
+- validated operation and unresolved-operation sequences with stable Account,
+  contract, fingerprint, acceptance-time, ordering and lifecycle progression;
+- immutable `ScriptedOperationQueryAdapter` and `ScriptedSyncHealthAdapter`
+  implementations of the existing `LedgerTargetCore` ports, including finite
+  success/failure streams and explicit durability outcomes;
+- scenario-wide cross-reference, uniqueness and Account-isolation validation;
+  and
+- bounded sorted-key JSON evidence with integer-millisecond dates, SHA-256
+  digest, canonical re-encoding and decode-through-constructor revalidation for
+  context, schedules, operation scripts and Sync health invariants.
+
+`LedgerTargetTestSupport` is a separate package product depending only on
+`LedgerTargetCore`. Its self-test target depends only on those two products.
+The graph guard scans both directories for provider imports and refuses either
+test-support product in the target staging or Firebase application project.
+
+## Local Verification
+
+Local results on 2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter DeterministicTargetTestSupportTests`:
+  pass, four tests;
+- `swift test --package-path LedgeriOS`: pass, 63 tests across twelve suites;
+- `npm run target:environment:check`: pass; exact package edges, provider-import
+  scan and application/source-project exclusion are valid;
+- `npm run target:contracts:check`: pass; generated Swift/TypeScript/MCP
+  contract projections remain current;
+- `npm run target:staging:build:macos`: pass; and
+- `npm run target:staging:build:ios`: pass for generic iOS Simulator.
+
+Fixtures prove exact deterministic values; local/queued/applying/applied/
+rejected outcomes; offline-ready versus online-unsynchronized health; required-
+update and maintenance blocks; successful and failed local durability; restart
+and input-order equivalence; and stable refusal for production binding,
+nonfixture identity, credential-shaped environment material, cross-Account
+queries, missing/duplicate/out-of-order scripts, finite-schedule exhaustion,
+digest tamper, noncanonical bytes and oversized evidence.
+
+`TESTSUPPORT-TEST-001`, `TESTSUPPORT-TEST-002` and
+`TESTSUPPORT-TEST-003` pass locally. `TESTSUPPORT-TEST-004` remains planned
+until immutable GitHub Actions passes on the exact implementation commit with
+conversion/contract/graph checks, all 63 tests, both target builds and clean
+tracked artifacts. The slice and exactly its two target-only surfaces are
+therefore `implemented`, not `verified`.
+
 ## Permanent Limits
 
-This ready gate and later reference implementation cannot:
+This implementation and its ready-gate evidence cannot:
 
 - choose or emulate a Supabase/PowerSync provider architecture;
 - establish database, RLS, Sync Stream, encrypted-local-store or physical-
