@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T01:31:25.383Z",
+    "lastSynchronizedAt": "2026-09-02T01:39:23.984Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2130,10 +2130,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "b89d3e61a254eff7e51894572e115666d3d0495588417fee301ee00502ccb93d",
-      "acknowledgedSourceHash": "b89d3e61a254eff7e51894572e115666d3d0495588417fee301ee00502ccb93d",
+      "observedSourceHash": "6630f91903ff9790cd36edbde0b2749aebf86314074093a50b5fe41d6faa63ad",
+      "acknowledgedSourceHash": "6630f91903ff9790cd36edbde0b2749aebf86314074093a50b5fe41d6faa63ad",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target migration-core/tests and target test-support/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -2180,7 +2180,7 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate migration-control and test-support module roots are discovered without placing them in the application runtime.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -16024,6 +16024,66 @@
       ],
       "notes": "M2 withheld: O-017/O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "SWIFT-06BA59E1BBDF",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetComposition/ValidatedTargetComposition.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetComposition/ValidatedTargetComposition.swift"
+        }
+      ],
+      "observedSourceHash": "52399330fcc75a81d4bdf721b90b360b41da26e9f7872f39720f67bb7b18e41a",
+      "acknowledgedSourceHash": "52399330fcc75a81d4bdf721b90b360b41da26e9f7872f39720f67bb7b18e41a",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for an explicit validated composition plan, environment-bound port assembly, capability ownership, deterministic receipt and fail-closed composition refusal; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Validated Target Composition",
+        "surfaces": [
+          "TargetCompositionPlan",
+          "EnvironmentBoundTargetDependency",
+          "ValidatedTargetComposition",
+          "TargetCompositionReceipt",
+          "TargetCompositionAssembler"
+        ],
+        "securityRequirements": [
+          "Every dependency is explicit, typed, bound to the exact validated environment persistence identity and restricted to its registered capability ownership before any composed value is returned",
+          "Test-reference dependencies cannot enter an application-runtime composition; descriptors and receipts contain only stable bounded IDs, versions and digests with no endpoint, credential, provider payload or private data"
+        ],
+        "syncRequirements": [
+          "The currently available contract-catalog, operation-query and sync-health ports are complete and uniquely owned in the plan; missing, duplicate, cross-environment, incompatible-version or unadvertised capability wiring fails atomically",
+          "Composition validation runs without opening a database, Sync Stream, queue, file, network or provider SDK and grants no synchronization or provider-readiness claim"
+        ]
+      },
+      "migration": {
+        "rule": "Create a target-only composition contract and import no Firebase root, service, SDK, configuration, emulator helper or export fixture.",
+        "reconciliation": [
+          "Canonical composition receipts prove exact environment/version/dependency/capability ownership and equivalent input order; they cannot prove adapter, hosted-service, migration or production behavior"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ValidatedTargetCompositionTests"
+        ],
+        "acceptance": [
+          "A complete provider-free reference plan assembles the current target ports only after environment, version, lifecycle and capability closure pass, while every incomplete, mixed, test-runtime or authority-bearing plan is refused"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-COMPOSITION-001"
+      ],
+      "notes": "Target-only composition-contract scaffold claimed by validated-target-composition. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "SWIFT-07FE72314E4C",
@@ -33452,6 +33512,64 @@
       ],
       "notes": "Target integration tests run against isolated Postgres/PowerSync, not a Firebase Item adapter. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "TEST-952BC24E0233",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift"
+        }
+      ],
+      "observedSourceHash": "d25b01bae286902b726b8558bfea4b4ca34ee0d2173036595f358a240f93937b",
+      "acknowledgedSourceHash": "d25b01bae286902b726b8558bfea4b4ca34ee0d2173036595f358a240f93937b",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for composition completeness, environment/version/capability ownership, restart receipt, reference-versus-runtime and provider/Firebase contamination refusal tests; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Validated Target Composition",
+        "surfaces": [
+          "ValidatedTargetCompositionTests",
+          "complete composition and capability-ownership fixtures",
+          "canonical receipt/restart fixtures",
+          "environment/version/reference-runtime/contamination rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only validated synthetic target environments, bounded implementation IDs, generated catalog values and provider-free reference adapters",
+          "Negative tests prove cross-environment binding, test-reference runtime activation, unowned capability, unsafe descriptor material and Firebase/provider imports cannot pass the composition boundary"
+        ],
+        "syncRequirements": [
+          "All fixtures execute without a local database, PowerSync process, network or hosted service and do not infer synchronized state from successful structural composition"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic composition inputs and load no source app root, Firebase dependency, export or production-derived value.",
+        "reconciliation": [
+          "Equivalent plans produce identical canonical receipts and every missing, duplicate, cross-bound, incompatible or unauthorized plan fails with a stable code and no partial composition"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ValidatedTargetCompositionTests"
+        ],
+        "acceptance": [
+          "Self-tests prove explicit typed composition, catalog/capability closure, environment isolation, deterministic restart evidence and permanent non-authority without external dependencies"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-COMPOSITION-001"
+      ],
+      "notes": "Target-only self-test scaffold. It may use the verified deterministic reference adapters in the test target only and cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "TEST-AB7FBFCBDFD4",

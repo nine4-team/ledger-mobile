@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 55
+State version: 56
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: DETERMINISTIC-TEST-SUPPORT-VERIFIED-NEXT-DECISION-INDEPENDENT-SLICE-SELECTION
+- Checkpoint: VALIDATED-TARGET-COMPOSITION-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -674,6 +674,18 @@ modifying the running Firebase application before hard cutover.
   macOS and generic iOS Simulator builds and clean tracked artifacts. All four
   test-support obligations and exactly its two target-only surfaces are now
   `verified`; current Swift/MCP helper surfaces remain `target_mapped`.
+- Audited the remaining Phase 1 dependency order and selected
+  `validated-target-composition` as the next smallest decision-independent
+  technical slice. Exactly two comment-only target scaffolds define the future
+  explicit environment/version-bound composition contract and self-tests;
+  current Firebase root `SWIFT-88C69E26FBA0`, target app/MCP wiring, provider
+  adapters and target-environment package/project surfaces remain unadvanced.
+- The ready dossier binds exact Phase 1, composition-root, feature-activation,
+  dependency-rule and port-contract requirements to typed dependency/capability
+  closure, reference-versus-runtime separation, canonical structural receipt,
+  stable refusal and operational graph/source-isolation tests. No behavior,
+  package target, application link, SDK, database, hosted service, product
+  command, migration or production operation exists at this checkpoint.
 
 ## Next Action
 
@@ -683,13 +695,17 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Treat `deterministic-target-test-support` as verified only for its two
-   target-only reference-adapter surfaces. Keep `TEST-6A6B0926E2EE` and
-   `FILE-F29942C1A7F4` target-mapped and do not infer domain-specific fixture,
-   app/MCP, database/provider, hosted, physical-offline or production coverage
-   from the reference adapters. Select the next smallest decision-independent
-   Phase 1 technical slice from the reviewed platform mappings, create its exact
-   dossier, and pass the ready gate before behavior is implemented.
+2. Implement only the ready `validated-target-composition` dossier. Add a
+   separate Swift package product depending only on `LedgerTargetCore`, with a
+   self-test target that may also depend on `LedgerTargetTestSupport`; extend
+   graph/provider/source-contamination checks. Implement explicit typed
+   environment-bound catalog/operation-query/sync-health composition, exact
+   available-capability ownership, reference-versus-application-runtime
+   separation, bounded canonical structural receipt and stable completeness/
+   binding/version/capability/tamper refusal. Keep the module out of both
+   application projects and stop before provider factories, concrete app/MCP
+   wiring, local database/PowerSync, Auth, Storage, hosted resources, product
+   operations, migration, production access or cutover.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

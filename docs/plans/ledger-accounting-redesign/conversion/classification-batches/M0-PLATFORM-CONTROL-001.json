@@ -6,7 +6,8 @@
     "EVID-CAPABILITY-PLATFORM-CONTROL-001",
     "EVID-MIGRATION-RUN-INTEGRITY-001",
     "EVID-OPERATIONAL-HEALTH-001",
-    "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+    "EVID-DETERMINISTIC-TEST-SUPPORT-001",
+    "EVID-TARGET-COMPOSITION-001"
   ],
   "surfaces": [
     {
@@ -3749,6 +3750,98 @@
         ],
         "acceptance": [
           "Self-tests prove deterministic context, values, scripted port behavior, restart reconstruction, Account isolation and provider/production refusal without external dependencies"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-06BA59E1BBDF",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "52399330fcc75a81d4bdf721b90b360b41da26e9f7872f39720f67bb7b18e41a",
+      "currentBehavior": "Provides a comment-only target scaffold for an explicit validated composition plan, environment-bound port assembly, capability ownership, deterministic receipt and fail-closed composition refusal; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-COMPOSITION-001"
+      ],
+      "notes": "Target-only composition-contract scaffold claimed by validated-target-composition. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
+      "target": {
+        "owner": "Validated Target Composition",
+        "surfaces": [
+          "TargetCompositionPlan",
+          "EnvironmentBoundTargetDependency",
+          "ValidatedTargetComposition",
+          "TargetCompositionReceipt",
+          "TargetCompositionAssembler"
+        ],
+        "securityRequirements": [
+          "Every dependency is explicit, typed, bound to the exact validated environment persistence identity and restricted to its registered capability ownership before any composed value is returned",
+          "Test-reference dependencies cannot enter an application-runtime composition; descriptors and receipts contain only stable bounded IDs, versions and digests with no endpoint, credential, provider payload or private data"
+        ],
+        "syncRequirements": [
+          "The currently available contract-catalog, operation-query and sync-health ports are complete and uniquely owned in the plan; missing, duplicate, cross-environment, incompatible-version or unadvertised capability wiring fails atomically",
+          "Composition validation runs without opening a database, Sync Stream, queue, file, network or provider SDK and grants no synchronization or provider-readiness claim"
+        ]
+      },
+      "migration": {
+        "rule": "Create a target-only composition contract and import no Firebase root, service, SDK, configuration, emulator helper or export fixture.",
+        "reconciliation": [
+          "Canonical composition receipts prove exact environment/version/dependency/capability ownership and equivalent input order; they cannot prove adapter, hosted-service, migration or production behavior"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ValidatedTargetCompositionTests"
+        ],
+        "acceptance": [
+          "A complete provider-free reference plan assembles the current target ports only after environment, version, lifecycle and capability closure pass, while every incomplete, mixed, test-runtime or authority-bearing plan is refused"
+        ]
+      }
+    },
+    {
+      "id": "TEST-952BC24E0233",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d25b01bae286902b726b8558bfea4b4ca34ee0d2173036595f358a240f93937b",
+      "currentBehavior": "Provides a comment-only target scaffold for composition completeness, environment/version/capability ownership, restart receipt, reference-versus-runtime and provider/Firebase contamination refusal tests; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-TARGET-COMPOSITION-001"
+      ],
+      "notes": "Target-only self-test scaffold. It may use the verified deterministic reference adapters in the test target only and cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
+      "target": {
+        "owner": "Validated Target Composition",
+        "surfaces": [
+          "ValidatedTargetCompositionTests",
+          "complete composition and capability-ownership fixtures",
+          "canonical receipt/restart fixtures",
+          "environment/version/reference-runtime/contamination rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only validated synthetic target environments, bounded implementation IDs, generated catalog values and provider-free reference adapters",
+          "Negative tests prove cross-environment binding, test-reference runtime activation, unowned capability, unsafe descriptor material and Firebase/provider imports cannot pass the composition boundary"
+        ],
+        "syncRequirements": [
+          "All fixtures execute without a local database, PowerSync process, network or hosted service and do not infer synchronized state from successful structural composition"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic composition inputs and load no source app root, Firebase dependency, export or production-derived value.",
+        "reconciliation": [
+          "Equivalent plans produce identical canonical receipts and every missing, duplicate, cross-bound, incompatible or unauthorized plan fails with a stable code and no partial composition"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ValidatedTargetCompositionTests"
+        ],
+        "acceptance": [
+          "Self-tests prove explicit typed composition, catalog/capability closure, environment isolation, deterministic restart evidence and permanent non-authority without external dependencies"
         ]
       }
     }

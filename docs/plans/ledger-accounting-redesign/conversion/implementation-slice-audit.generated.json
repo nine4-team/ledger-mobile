@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T01:31:25.383Z",
+  "generatedFromManifestSync": "2026-09-02T01:39:23.984Z",
   "totals": {
-    "slices": 12,
-    "claimedTargetSurfaces": 45,
+    "slices": 13,
+    "claimedTargetSurfaces": 47,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 30
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 11,
@@ -194,6 +194,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/typed-edit-draft-and-submission.json"
+    },
+    {
+      "sliceId": "validated-target-composition",
+      "title": "Validate one explicit environment-bound target composition before application or provider wiring",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Validated Target Composition",
+      "surfaceIds": [
+        "SWIFT-06BA59E1BBDF",
+        "TEST-952BC24E0233"
+      ],
+      "requirementCount": 5,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/validated-target-composition.json"
     },
     {
       "sliceId": "versioned-contract-catalog",

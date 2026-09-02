@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "validated-target-composition",
+  "title": "Validate one explicit environment-bound target composition before application or provider wiring",
+  "kind": "technical_control",
+  "status": "ready",
+  "owner": "Validated Target Composition",
+  "surfaceIds": [
+    "SWIFT-06BA59E1BBDF",
+    "TEST-952BC24E0233"
+  ],
+  "requirements": [
+    {
+      "id": "COMPOSE-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "The target has one explicit Supabase/PowerSync composition boundary and no Firestore application adapter, while the released Firebase app and backend remain unchanged before hard cutover.",
+      "decisionIds": [],
+      "verificationIds": ["COMPOSE-TEST-001", "COMPOSE-TEST-002", "COMPOSE-TEST-003", "COMPOSE-TEST-004"]
+    },
+    {
+      "id": "COMPOSE-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Composition Root",
+      "invariant": "Composition is an explicit typed set of currently available Ledger ports created only after environment validation; it contains infrastructure wiring, not accounting, duplicated listeners, vendor objects, a generic service locator or a runtime Firebase/Supabase switch.",
+      "decisionIds": [],
+      "verificationIds": ["COMPOSE-TEST-001", "COMPOSE-TEST-002", "COMPOSE-TEST-003", "COMPOSE-TEST-004"]
+    },
+    {
+      "id": "COMPOSE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Composition and Feature Activation",
+      "invariant": "One composition uses one exact environment and contract catalog; every advertised available capability has exactly one owning dependency, gated or unknown capabilities cannot be activated, and reference-only dependencies cannot enter application-runtime composition.",
+      "decisionIds": [],
+      "verificationIds": ["COMPOSE-TEST-001", "COMPOSE-TEST-002", "COMPOSE-TEST-003", "COMPOSE-TEST-004"]
+    },
+    {
+      "id": "COMPOSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Dependency Rule",
+      "invariant": "The separate target-composition module depends inward only on LedgerTargetCore and exposes Ledger/standard Swift types; its tests may use LedgerTargetTestSupport, while neither composition module imports a database, transport, Firebase, Supabase or PowerSync SDK.",
+      "decisionIds": [],
+      "verificationIds": ["COMPOSE-TEST-001", "COMPOSE-TEST-003", "COMPOSE-TEST-004"]
+    },
+    {
+      "id": "COMPOSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port and infrastructure contracts",
+      "invariant": "Successful structural composition proves only exact environment, version, dependency and capability closure; it does not claim local durability, authorization, synchronization, provider fidelity, hosted readiness or production authority without each adapter's later contract evidence.",
+      "decisionIds": [],
+      "verificationIds": ["COMPOSE-TEST-001", "COMPOSE-TEST-002", "COMPOSE-TEST-003", "COMPOSE-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "TargetCompositionUse distinguishes testReference from applicationRuntime and cannot be inferred from an environment name, adapter type or successful stream emission.",
+        "TargetCompositionDependencyKey is closed over the currently implemented contractCatalog, operationQueries and syncHealth ports; each key has one exact available-capability ownership set and accepts one typed EnvironmentBoundTargetDependency.",
+        "TargetDependencyDescriptor contains only a bounded stable implementation ID, dependency key, composition use, exact LedgerEnvironmentPersistenceBinding and sorted unique capability IDs; it cannot carry endpoints, secrets, provider payloads, database handles or transport errors.",
+        "TargetCompositionAssembler validates environment/catalog version compatibility, dependency key/binding/use agreement, exact available-capability closure and prohibited gated/deprecated/unknown ownership before returning ValidatedTargetComposition.",
+        "TargetCompositionReceipt is bounded canonical evidence over environment binding, contract versions, catalog capability state and dependency ownership; restore revalidates and cannot recreate or authorize runtime adapters."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free composition contract creates no Postgres schema, table, relationship, constraint, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative command handler, server transaction, lock, idempotency store or provider factory is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "No server rows or roles exist; structural environment/capability validation is not authorization and cannot substitute for RLS."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The composition contains the existing backend-neutral operation-query and sync-health ports but defines no PowerSync Stream, local schema, bucket, upload queue or visibility policy."
+    },
+    "localOffline": {
+      "items": [
+        "A validated composition receipt encodes to bounded canonical bytes and restores offline through the same environment/version/dependency/capability validators; reordered descriptors and capabilities normalize identically.",
+        "Missing/duplicate/wrong-key/cross-environment dependency bindings, reference/runtime mixing, catalog version mismatch, unknown/gated/deprecated or multiply-owned capabilities, unsafe implementation IDs, noncanonical bytes, digest tamper and oversized evidence fail atomically with stable safe codes.",
+        "Reference adapters can prove composition structure in target-local tests only; their successful operation/readiness streams never become evidence of a local database, PowerSync process, hosted service or synchronization."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No attachment port is currently advertised by the generated catalog and no byte, object, path, URL, upload or retention behavior exists."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This slice defines and tests the reusable composition boundary only. It does not link the target app, construct an MCP transport, replace the current Firebase root or claim entry-point parity."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase export, source transform, target load or production-derived record is used; the composition receipt is structural evidence, not migration reconciliation."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable composition refusal codes are local contract values only; no telemetry sink, metric, alert or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The composition and self-test modules are additive target-only Swift package targets; the composition target depends only on LedgerTargetCore and is absent from the Firebase application project.",
+        "The module is a structural factory boundary only: it cannot select Auth, instantiate Supabase/PowerSync, activate a product feature, prove adapter contracts, deploy, migrate, release or authorize cutover.",
+        "SWIFT-88C69E26FBA0 and all target app/MCP/provider/project/package integration surfaces remain target_mapped or in their owning slice until concrete wiring and contract evidence replace them."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "COMPOSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
+      "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-004", "COMPOSE-REQ-005"],
+      "expected": "A complete typed target-local reference composition validates one environment, matching catalog versions, exact dependency keys and one-owner available-capability closure and exposes the configured Ledger ports without a provider or service locator.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "COMPOSE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
+      "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-005"],
+      "expected": "Canonical composition receipt evidence restores offline with identical environment/version/dependency/capability ownership, and equivalent input order produces identical bytes without reconstructing runtime adapters.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "COMPOSE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
+      "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-004", "COMPOSE-REQ-005"],
+      "expected": "Missing, duplicate, wrong-key, cross-environment, incompatible-version, reference/runtime, unknown/gated/deprecated/multiply-owned capability, unsafe descriptor, noncanonical, tampered and oversized inputs fail with stable codes before any partial composition is returned.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "COMPOSE-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-004", "COMPOSE-REQ-005"],
+      "expected": "The exact implementation commit passes conversion traceability, package graph/provider/source-contamination guards, the complete target suite, both target builds and clean artifacts while the Firebase project links no target composition code and no provider/runtime integration is claimed.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 technical-control foundation only. It stops before application/MCP wiring, provider factories or SDKs, local database/PowerSync behavior, Auth, Storage/media, product commands/queries, hosted staging, adapter/physical-offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, migration, production access or cutover authority."
+}
