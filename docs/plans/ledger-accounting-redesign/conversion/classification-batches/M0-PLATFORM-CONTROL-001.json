@@ -3665,14 +3665,14 @@
       "acknowledgeSourceHash": "87aad6268c70e25821b1206910f113567c5cc6feadb076644bbbf10050da2cae",
       "currentBehavior": "Defines validated synthetic non-production test context, deterministic finite time/ID/revision schedules, immutable Account-scoped OperationQuerying and SyncHealthProviding scripts, safe failure results, canonical scenario evidence and decode-through-validation restart/tamper refusal in a provider-free target-only module.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001"
       ],
-      "notes": "Target-only provider-free reference adapters pass four focused and all 63 target tests locally; graph/contract checks and both builds pass. Exact-commit CI remains required before verification. Current Swift factory TEST-6A6B0926E2EE and MCP helper FILE-F29942C1A7F4 remain target_mapped pending domain fixture and concrete app/MCP/local/staging coverage.",
+      "notes": "Target-only provider-free reference adapters pass four focused and all 63 target tests locally and in exact implementation commit 986d633eec2884d1138e0613f9fc35d68ae913c3 / immutable Actions run 33579458286, including graph/contract checks, clean artifacts and both builds. Current Swift factory TEST-6A6B0926E2EE and MCP helper FILE-F29942C1A7F4 remain target_mapped pending domain fixture and concrete app/MCP/local/staging coverage.",
       "target": {
         "owner": "Deterministic Target Test Support",
         "surfaces": [
@@ -3712,14 +3712,14 @@
       "acknowledgeSourceHash": "81d1a3c2ef80661cd265063b225c471cf9ec127eb920acd0294b68c49284982a",
       "currentBehavior": "Exercises validated synthetic context, domain-separated fixed values, local/authoritative/retry/rejection/update/maintenance scripts, Account isolation, canonical restart/input reordering, production/nonfixture/credential/exhaustion/duplicate/out-of-order/cross-Account/tamper/noncanonical/size refusal and safe terminal errors using only provider-free target values.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001"
       ],
-      "notes": "Four focused and all 63 target package tests pass locally. Exact-commit CI remains required before verification. These synthetic tests do not establish app/MCP parity, local database fidelity, hosted target behavior, physical offline durability or replacement of current Firebase-era helpers.",
+      "notes": "Four focused and all 63 target package tests pass locally and in exact implementation commit 986d633eec2884d1138e0613f9fc35d68ae913c3 / immutable Actions run 33579458286. These synthetic tests do not establish app/MCP parity, local database fidelity, hosted target behavior, physical offline durability or replacement of current Firebase-era helpers.",
       "target": {
         "owner": "Deterministic Target Test Support",
         "surfaces": [

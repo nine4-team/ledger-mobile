@@ -2,16 +2,18 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / provider-free reference test adapters
-- Exact implementation commit: pending this bounded checkpoint on
-  `codex/supabase-powersync-implementation`; immutable hosted CI is still
-  required before verification
+- Exact implementation commit:
+  `986d633eec2884d1138e0613f9fc35d68ae913c3` on
+  `codex/supabase-powersync-implementation`
+- Immutable hosted CI:
+  [GitHub Actions run 33579458286](https://github.com/nine4-team/ledger-mobile/actions/runs/33579458286),
+  both jobs passed
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current test helpers remain unchanged
 - Claimed target surfaces: `SWIFT-8AB5414F20CE`, `TEST-77875A971729`
 - Slice dossier:
   `conversion/implementation-slices/deterministic-target-test-support.json`
-- Slice state: implemented; three local obligations pass and exact-commit
-  hosted CI remains planned
+- Slice state: verified; all four obligations pass
 
 ## Surface Selection
 
@@ -107,11 +109,12 @@ queries, missing/duplicate/out-of-order scripts, finite-schedule exhaustion,
 digest tamper, noncanonical bytes and oversized evidence.
 
 `TESTSUPPORT-TEST-001`, `TESTSUPPORT-TEST-002` and
-`TESTSUPPORT-TEST-003` pass locally. `TESTSUPPORT-TEST-004` remains planned
-until immutable GitHub Actions passes on the exact implementation commit with
-conversion/contract/graph checks, all 63 tests, both target builds and clean
-tracked artifacts. The slice and exactly its two target-only surfaces are
-therefore `implemented`, not `verified`.
+`TESTSUPPORT-TEST-003` pass locally. `TESTSUPPORT-TEST-004` passed in immutable
+GitHub Actions run `33579458286` on exact implementation commit
+`986d633eec2884d1138e0613f9fc35d68ae913c3`: conversion traceability,
+contract/graph checks, all 63 target tests, both target builds and clean tracked
+artifacts passed. The slice and exactly its two target-only surfaces are
+therefore `verified`.
 
 ## Permanent Limits
 

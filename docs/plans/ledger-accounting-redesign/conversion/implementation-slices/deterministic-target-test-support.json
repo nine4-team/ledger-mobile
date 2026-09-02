@@ -3,7 +3,7 @@
   "sliceId": "deterministic-target-test-support",
   "title": "Provide deterministic provider-free reference adapters for target use-case tests",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Deterministic Target Test Support",
   "surfaceIds": [
     "SWIFT-8AB5414F20CE",
@@ -153,12 +153,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["TESTSUPPORT-REQ-001", "TESTSUPPORT-REQ-002", "TESTSUPPORT-REQ-003", "TESTSUPPORT-REQ-004", "TESTSUPPORT-REQ-005"],
       "expected": "The exact implementation commit passes conversion traceability, package graph/provider/source-contamination guards, the complete target package suite, both target builds and clean artifacts while neither application links the test-support module.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"]
     }
   ],
   "implementationEvidence": ["EVID-DETERMINISTIC-TEST-SUPPORT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 technical-control foundation only. The implementation and first three obligations pass locally; exact-commit hosted CI remains before verification. It stops before domain-specific product fixtures, current app/MCP helper replacement, local database or PowerSync behavior, provider SDKs, hosted staging, migration fixtures, physical offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, production access or cutover authority."
+  "notes": "Decision-independent Phase 1 technical-control foundation only. All four obligations pass locally and in exact implementation commit 986d633eec2884d1138e0613f9fc35d68ae913c3 / immutable Actions run 33579458286. Verification stops before domain-specific product fixtures, current app/MCP helper replacement, local database or PowerSync behavior, provider SDKs, hosted staging, migration fixtures, physical offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, production access or cutover authority."
 }

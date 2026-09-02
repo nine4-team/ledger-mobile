@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T01:22:28.799Z",
+    "lastSynchronizedAt": "2026-09-02T01:31:25.383Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -23578,14 +23578,14 @@
           "The provider-free reference adapters reproduce exact use-case operation and readiness stories across restart without linking either Ledger application or claiming current app/MCP test-helper replacement"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001"
       ],
-      "notes": "Target-only provider-free reference adapters pass four focused and all 63 target tests locally; graph/contract checks and both builds pass. Exact-commit CI remains required before verification. Current Swift factory TEST-6A6B0926E2EE and MCP helper FILE-F29942C1A7F4 remain target_mapped pending domain fixture and concrete app/MCP/local/staging coverage.",
+      "notes": "Target-only provider-free reference adapters pass four focused and all 63 target tests locally and in exact implementation commit 986d633eec2884d1138e0613f9fc35d68ae913c3 / immutable Actions run 33579458286, including graph/contract checks, clean artifacts and both builds. Current Swift factory TEST-6A6B0926E2EE and MCP helper FILE-F29942C1A7F4 remain target_mapped pending domain fixture and concrete app/MCP/local/staging coverage.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -32725,14 +32725,14 @@
           "Self-tests prove deterministic context, values, scripted port behavior, restart reconstruction, Account isolation and provider/production refusal without external dependencies"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001"
       ],
-      "notes": "Four focused and all 63 target package tests pass locally. Exact-commit CI remains required before verification. These synthetic tests do not establish app/MCP parity, local database fidelity, hosted target behavior, physical offline durability or replacement of current Firebase-era helpers.",
+      "notes": "Four focused and all 63 target package tests pass locally and in exact implementation commit 986d633eec2884d1138e0613f9fc35d68ae913c3 / immutable Actions run 33579458286. These synthetic tests do not establish app/MCP parity, local database fidelity, hosted target behavior, physical offline durability or replacement of current Firebase-era helpers.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {

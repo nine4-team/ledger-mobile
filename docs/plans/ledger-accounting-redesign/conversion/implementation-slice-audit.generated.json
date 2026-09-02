@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T01:22:28.799Z",
+  "generatedFromManifestSync": "2026-09-02T01:31:25.383Z",
   "totals": {
     "slices": 12,
     "claimedTargetSurfaces": 45,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 10,
+    "implemented": 0,
+    "verified": 11,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -21,7 +21,7 @@
       "sliceId": "deterministic-target-test-support",
       "title": "Provide deterministic provider-free reference adapters for target use-case tests",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Deterministic Target Test Support",
       "surfaceIds": [
         "SWIFT-8AB5414F20CE",
