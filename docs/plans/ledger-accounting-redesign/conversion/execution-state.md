@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 76
+State version: 77
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ITEM-ACCOUNTING-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: ATTACHMENT-CAPTURE-RECEIPT-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1007,6 +1007,19 @@ modifying the running Firebase application before hard cutover.
   clean tracked artifacts. All five Item-accounting obligations and exactly its
   two target-only surfaces are now `verified`; every excluded writer, current
   app/MCP, provider, migration and production surface remains unadvanced.
+- Audited the attachment/offline boundary against the reviewed media dossier,
+  offline contract, adapter ports and Phase 1 architecture and selected
+  `attachment-capture-and-local-durability-receipt` as the smallest honest next
+  technical slice. Stable ID/scope/byte-evidence/receipt semantics are settled;
+  actual encrypted filesystem persistence and provider behavior are not.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for non-Codable raw capture input, exact environment/Principal/Account/parent
+  binding, opaque local-object identity, positive byte count, SHA-256 evidence,
+  canonical path-free receipt, a narrow capture-store port and stable refusal.
+- O-023 remains open because the slice exposes no detach/delete/retention
+  operation. A-003/A-004/A-016, O-022, SPIKE-MED-001, content/size/derivative
+  policy, physical local durability, upload/display/provider, app/MCP,
+  migration and production behavior remain explicitly outside the boundary.
 
 ## Next Action
 
@@ -1026,14 +1039,14 @@ Continue without waiting on the two M1 evidence blockers:
    or extend that meaning independently in app, MCP, SQL or adapters. Treat the
    verified `project-item-accounting-section-contracts` and
    `EVID-PROJECT-ITEM-ACCOUNTING-001` as the sole shared read semantics for
-   relationship-derived Project Item sections. Select the next smallest
-   decision-independent Phase 1 slice by auditing remaining mapped surfaces
-   against confirmed product authority, dependencies and open blockers; create
-   and pass its ready dossier before behavioral code. Do not add Item creation/
-   Link, occurrence persistence, credit settlement, amount/category/budget
-   effects, schema/RLS/Sync/provider behavior, legacy mapping, current app/MCP
-   wiring, production access or any other open decision merely to extend this
-   read boundary.
+   relationship-derived Project Item sections. Implement only the ready
+   `attachment-capture-and-local-durability-receipt` dossier: stable scoped
+   capture input, exact adapter-reported byte evidence, canonical path-free
+   receipt, narrow capture-store port, closed failures and the five planned
+   tests. Do not claim or add filesystem persistence/encryption, process/device
+   restart proof, upload/display/Storage, content/size/derivative policy,
+   detach/delete/retention, schema/RLS/Sync/provider behavior, current app/MCP,
+   migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

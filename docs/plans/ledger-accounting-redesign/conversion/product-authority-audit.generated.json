@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T04:36:47.100Z",
+  "generatedFromManifestSync": "2026-09-02T04:50:38.359Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 743,
-    "targetRelevantSurfaces": 481,
+    "surfaces": 745,
+    "targetRelevantSurfaces": 483,
     "batches": 18,
-    "productScopeSurfaces": 589,
+    "productScopeSurfaces": 591,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 513,
-      "targetRelevantSurfaceCount": 328
+      "surfaceCount": 515,
+      "targetRelevantSurfaceCount": 330
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -967,8 +967,8 @@
       "title": "Media, attachments, and offline byte durability dossier surfaces",
       "scope": "product",
       "rationale": "Attachment and offline-byte surfaces preserve media-heavy field workflows for the real-Item target and accounting evidence while changing storage mechanics.",
-      "surfaceCount": 44,
-      "targetRelevantSurfaceCount": 19,
+      "surfaceCount": 46,
+      "targetRelevantSurfaceCount": 21,
       "authorities": [
         {
           "path": "docs/specs/proto-item-capture.md",
@@ -992,6 +992,14 @@
         },
         {
           "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
           "role": "architecture_authority"
         }
       ],
@@ -1036,10 +1044,12 @@
         "SWIFT-98FF74C056E9",
         "SWIFT-9F58549FBE25",
         "SWIFT-AA164CD97713",
+        "SWIFT-D8174F26DDD5",
         "SWIFT-EE7D53A3C3EA",
         "SWIFT-F971A5B270E6",
         "TEST-43FF2E5D6451",
-        "TEST-AE45E8FB9289"
+        "TEST-AE45E8FB9289",
+        "TEST-BA04EFCE369C"
       ]
     },
     {

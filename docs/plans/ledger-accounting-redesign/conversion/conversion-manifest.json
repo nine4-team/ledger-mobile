@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T04:36:47.100Z",
+    "lastSynchronizedAt": "2026-09-02T04:50:38.359Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -28993,6 +28993,68 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-D8174F26DDD5",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/AttachmentCaptureReceipt.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/AttachmentCaptureReceipt.swift"
+        }
+      ],
+      "observedSourceHash": "923584d71112c0a905411e3d599a182ae78962be55d0f2f5c2d745286ff46691",
+      "acknowledgedSourceHash": "923584d71112c0a905411e3d599a182ae78962be55d0f2f5c2d745286ff46691",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for stable attachment capture identity and scoped local-durability receipt evidence; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Attachment Local Capture Contracts",
+        "surfaces": [
+          "LocalAttachmentCapture",
+          "AttachmentContentSHA256",
+          "AttachmentLocalObjectID",
+          "AttachmentPersistedLocalObjectEvidence",
+          "AttachmentLocalDurabilityReceipt",
+          "AttachmentCaptureStoring",
+          "AttachmentCaptureReceiptFailure"
+        ],
+        "securityRequirements": [
+          "Capture and persisted evidence bind the exact environment, Principal, Account, Attachment and parent identity before a success-shaped receipt exists",
+          "Raw bytes are never Codable structured state and receipts contain no filesystem path, object path, bucket, URL, bearer token or credential"
+        ],
+        "syncRequirements": [
+          "Structured restart evidence carries stable identity, scope, byte count and digest only; attachment bytes remain outside structured synchronization",
+          "A later physical adapter must return no receipt when protected local persistence fails and must pass the separately gated restart/fault suite"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only receipt semantics and decode no Firebase URL/path, queue record, AttachmentRef or source bytes.",
+        "reconciliation": [
+          "Later provider and migration slices prove every locally accepted or imported attachment has exact scoped byte/object evidence or an explicit failure/quarantine result"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AttachmentCaptureReceiptTests"
+        ],
+        "acceptance": [
+          "Synthetic matching capture/persistence evidence yields one canonical path-free receipt while scope/identity/size/digest/timestamp/fingerprint mismatch yields no accepted receipt"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001",
+        "EVID-ATTACHMENT-CAPTURE-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define capture input, exact byte evidence, stable AttachmentID/scope, a path-free receipt and a narrow storage port. It cannot claim physical persistence/encryption, upload, private remote access, display caching, metadata policy, detach/delete/retention, provider behavior, migration, app/MCP wiring or production authority.",
+      "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
+    },
+    {
       "id": "SWIFT-D861839CD17D",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgeriOS/Platform/SparkleUpdateController.swift",
@@ -34500,6 +34562,65 @@
       ],
       "notes": "Preserve atomic/rejection outcomes in target operation and fault-injection contracts.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "TEST-BA04EFCE369C",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift"
+        }
+      ],
+      "observedSourceHash": "cbec524c0c435a6fe46c1ac3ddafb084a80a8759e0e4e037d2cef812c5e4b367",
+      "acknowledgedSourceHash": "cbec524c0c435a6fe46c1ac3ddafb084a80a8759e0e4e037d2cef812c5e4b367",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target tests for stable attachment capture and local-durability receipt contracts; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Attachment Local Capture Contracts",
+        "surfaces": [
+          "AttachmentCaptureReceiptTests",
+          "matching and mismatched scope fixtures",
+          "canonical restart/tamper fixtures",
+          "deterministic capture-store failure fixture"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic target-only identities and bytes and expose no path, URL, token, credential or production-derived value",
+          "Every rejection is asserted by stable bounded diagnostic code rather than raw infrastructure detail"
+        ],
+        "syncRequirements": [
+          "Tests prove structured receipt bytes are canonical and exclude raw attachment bytes while a failed store returns no success receipt",
+          "Physical encrypted persistence and restart remain SPIKE-MED-001 obligations and are never inferred from deterministic value tests"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only capture and persistence evidence; load no Firebase export, AttachmentRef, Storage object or production identity.",
+        "reconciliation": [
+          "Equivalent scoped evidence round-trips identically while cross-scope, changed-byte, malformed and tampered evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AttachmentCaptureReceiptTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free receipt boundary and retain an explicit no-physical-durability limitation"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-MEDIA-001",
+        "EVID-ATTACHMENT-CAPTURE-001"
+      ],
+      "notes": "Ready-gate test surface only. Planned deterministic tests prove value/port semantics, canonical restart and fail-closed evidence validation; they explicitly do not prove actual filesystem protection, process/device restart durability, upload, provider security, retention, migration or production behavior.",
+      "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
       "id": "TEST-BA9C46AF6F3D",

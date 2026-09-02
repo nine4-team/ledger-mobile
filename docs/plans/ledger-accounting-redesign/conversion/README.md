@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 317 of 481 target-relevant
+Status: M0 inventory classification complete; 319 of 483 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -18,7 +18,10 @@ The provider-free Project Item relationship-derived accounting-section slice is
 verified at exact implementation commit `92e0b565`, including all 88 target
 tests and both staging builds. It chooses no Item/Link, occurrence persistence,
 credit settlement, media, provider or migration behavior. Broader app/schema/
-provider and migration surfaces remain unadvanced.
+provider and migration surfaces remain unadvanced. The next provider-free
+attachment capture/local-durability receipt slice has passed its ready mapping;
+it explicitly does not claim physical byte persistence, encryption, upload,
+display, Storage, retention or provider behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
