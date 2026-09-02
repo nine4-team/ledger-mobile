@@ -7,8 +7,9 @@
 - Claimed target surfaces: `SWIFT-42C7BDDCD714`, `TEST-A0B2D5B97695`
 - Slice dossier:
   `conversion/implementation-slices/project-budget-segment-read-contracts.json`
-- Verification state: ready scaffold pending immutable ready-commit CI and
-  enhanced second-pilot implementation review
+- Verification state: exact ready commit
+  `43189f1abe6e023f4d29b00f190b40464ce7a3e5` passed immutable Actions run
+  `33687191592`; enhanced second-pilot implementation review remains open
 - Ready scaffold hashes:
   - `ProjectBudgetSegmentData.swift`:
     `74231d9920e803381789c0b342ce09273de40216cf9d673c65e78c4637251dd2`
@@ -78,6 +79,15 @@ domain arithmetic/no-double-count evidence, byte-identical readiness restart,
 negative scope/currency/duplicate/overflow/tamper cases, exact-request port
 isolation, upstream-failure/cancellation behavior, and exact-implementation-
 commit operational CI.
+
+The complete local ready gate passed all 184 then-existing target tests in 43
+suites, target isolation and generated app/MCP contracts, repeatable project
+generation, both staging builds, conversion/capability/query/residual checks,
+M0, clean formatting, and the expected M1/M2 holds of exactly 2/167 surfaces.
+Exact ready commit `43189f1abe6e023f4d29b00f190b40464ce7a3e5`
+then passed immutable Actions run `33687191592`: conversion traceability passed
+in 11 seconds and the isolated target environment passed in 2 minutes 3 seconds
+with the same 184 tests, both staging builds, and clean tracked artifacts.
 
 The second write-capable pilot cannot be accepted from its own report. It must
 start from the exact green ready commit in an isolated branch/worktree, change

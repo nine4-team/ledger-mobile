@@ -232,8 +232,9 @@ recognized value, equal collection-segment exchange, category order, distinct
 local and accounting-authority versions, readiness/restart/refusal and one
 narrow query port. A strict rescout and independent adversarial preflight both
 approved only this bounded foundation and rejected complete-budget,
-contribution-resolution, visual, provider or migration claims. Exact ready-
-commit CI and the full enhanced second-pilot reviews remain required;
+contribution-resolution, visual, provider or migration claims. Exact ready
+commit `43189f1a` passed immutable run `33687191592`; the isolated second pilot
+is now tracked and the full enhanced implementation reviews remain required;
 `EVID-PROJECT-BUDGET-SEGMENT-001`.
 
 This directory makes whole-application conversion progress durable across long

@@ -57,6 +57,35 @@
         "exactIntegrationCommitCi": "passed: b0ffef836cc82f6011b802a5cb5f6a6ade05680a in immutable Actions run 33682239349"
       },
       "integrationDisposition": "accepted and verified at b0ffef836cc82f6011b802a5cb5f6a6ade05680a after the full enhanced review and immutable Actions run 33682239349; the clean pilot worktree was removed after verification while the branch and candidate commit remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-PILOT-002",
+      "pilotOrdinal": 2,
+      "sliceId": "project-budget-segment-read-contracts",
+      "status": "in_progress",
+      "baseCommit": "43189f1abe6e023f4d29b00f190b40464ce7a3e5",
+      "readyCiRun": 33687191592,
+      "branch": "codex/supabase-slice-project-budget-segment",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_budget_segment",
+      "workerAgent": "/root/project_budget_segment_pilot",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectBudgetSegmentDataTests",
+      "handoff": null,
+      "enhancedReview": null,
+      "integrationDisposition": null
     }
   ],
   "preflightFindings": [

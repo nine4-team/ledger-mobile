@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 152
+State version: 153
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-BUDGET-SEGMENT-READY-PILOT-002-CI-PENDING
+- Checkpoint: PROJECT-BUDGET-SEGMENT-PILOT-002-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2299,6 +2299,15 @@ modifying the running Firebase application before hard cutover.
   discovered, 364 mapped-or-later / 167 residual / 44 blockers, 44 slices
   claiming 109 of 531 target-relevant surfaces, and only the three documented
   retired-path warnings. No worker, provider, Firebase or production action has
+  occurred.
+- The complete local ready gate passed all 184 target tests in 43 suites,
+  target isolation/contracts, repeatable project generation, both staging
+  builds, conversion/capability/query/residual/M0 controls and the exact
+  expected M1/M2 holds. Exact ready commit `43189f1a` passed immutable Actions
+  run `33687191592`: conversion traceability in 11 seconds and the isolated
+  target environment in 2 minutes 3 seconds. `SUBAGENT-PILOT-002` is now
+  recorded from that exact base in its own branch/worktree with only the two
+  scaffold Swift paths writable. No provider, Firebase or production action
   occurred.
 
 ## Next Action
