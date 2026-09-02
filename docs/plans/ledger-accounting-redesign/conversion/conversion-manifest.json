@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T05:07:01.721Z",
+    "lastSynchronizedAt": "2026-09-02T05:28:26.965Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18822,6 +18822,66 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "SWIFT-3B3E02643603",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ClientCreationOperation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ClientCreationOperation.swift"
+        }
+      ],
+      "observedSourceHash": "6746be5c8c8c9849835ad8296e80504d5c7eb76f5db99f8cdc8c69d55e0e4183",
+      "acknowledgedSourceHash": "6746be5c8c8c9849835ad8296e80504d5c7eb76f5db99f8cdc8c69d55e0e4183",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for a stable Account-scoped Client-creation command bound to the shared operation lifecycle; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Creation Operation Contracts",
+        "surfaces": [
+          "ClientCreationDraft",
+          "CreateClientPayload",
+          "CreateClientCommand",
+          "ClientCreationOperating",
+          "ClientCreationFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, Operation contract/version and preallocated ClientID; display-name text never selects an Account, Principal or existing Client",
+          "Construction and restart reject changed scope, actor, contract, payload, subject, preconditions or fingerprint with stable bounded diagnostics; local validation is not membership authorization"
+        ],
+        "syncRequirements": [
+          "The command is canonical structured evidence over typed Ledger values and reuses the shared operation fingerprint/receipt lifecycle without inventing a Client-specific queue state",
+          "A deterministic reference port may prove command/receipt/replay semantics only; physical durable storage, PowerSync projection, authoritative result and offline authorization remain later obligations"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only creation intent and decode no Firebase Project clientName, source Client cluster, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must prove every applied target Client has the command's exact Account/Client identity and source correlation or an explicit migration-created disposition without inferring identity from text equality"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientCreationOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove stable same-name/different-ID identity, exact operation binding, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-CREATION-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one typed CreateClient command, exact Account/actor/contract/Operation/Client/name binding, canonical restart evidence, receipt validation and a narrow operation port. It cannot create a server row, authorize membership, choose Auth, enforce name uniqueness, rename/archive/merge a Client, reassign a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source names or activate production.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-3B7DE77EA8E4",
       "kind": "swift_view",
       "name": "LedgeriOS/LedgeriOS/Views/Settings/AccountView.swift",
@@ -35222,6 +35282,64 @@
       ],
       "notes": "Target-only provider-free test surface; it uses synthetic artifact bytes and identifiers with no signing key, provider credential, upload, deployment, production endpoint or current release-script invocation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-E42E9E6D7B28",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift"
+        }
+      ],
+      "observedSourceHash": "e16ecc701ce099d8b9f58c3d749d66a101f555e503fc463701ab487236bca30f",
+      "acknowledgedSourceHash": "e16ecc701ce099d8b9f58c3d749d66a101f555e503fc463701ab487236bca30f",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target tests for Client-creation command binding, restart, receipt and rejection semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Creation Operation Contracts",
+        "surfaces": [
+          "ClientCreationOperationTests",
+          "same-name distinct-identity fixtures",
+          "canonical command restart/replay fixtures",
+          "scope/payload/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation and Client IDs and prove display-name equality cannot rebind identity or authority",
+          "Negative tests expose only stable bounded codes and no raw names, paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish a deterministic local receipt contract from physical persistence, authoritative apply and synchronized Client visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Project/clientName/export/profile or source-to-target Client mapping.",
+        "reconciliation": [
+          "Equivalent command evidence round-trips byte-identically while changed Account/actor/contract/payload/subject/precondition/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientCreationOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Client-creation command boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-CREATION-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove typed Client creation and shared operation semantics without claiming physical local durability, membership authorization, authoritative server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-E591BE8A4B58",

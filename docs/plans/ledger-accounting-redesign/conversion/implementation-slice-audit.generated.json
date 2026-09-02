@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T05:07:01.721Z",
+  "generatedFromManifestSync": "2026-09-02T05:28:26.965Z",
   "totals": {
-    "slices": 20,
-    "claimedTargetSurfaces": 61,
+    "slices": 21,
+    "claimedTargetSurfaces": 63,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 46
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 19,
@@ -31,6 +31,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-capture-and-local-durability-receipt.json"
+    },
+    {
+      "sliceId": "client-creation-operation-contracts",
+      "title": "Create one Account-scoped Client through the shared operation contract",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Client Creation Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-3B3E02643603",
+        "TEST-E42E9E6D7B28"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-creation-operation-contracts.json"
     },
     {
       "sliceId": "client-project-directory-read-contracts",

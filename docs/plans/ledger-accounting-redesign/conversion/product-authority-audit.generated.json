@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T05:07:01.721Z",
+  "generatedFromManifestSync": "2026-09-02T05:28:26.965Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 745,
-    "targetRelevantSurfaces": 483,
+    "surfaces": 747,
+    "targetRelevantSurfaces": 485,
     "batches": 18,
-    "productScopeSurfaces": 591,
+    "productScopeSurfaces": 593,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 479,
-      "targetRelevantSurfaceCount": 327
+      "surfaceCount": 481,
+      "targetRelevantSurfaceCount": 329
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 384,
-      "targetRelevantSurfaceCount": 268
+      "surfaceCount": 386,
+      "targetRelevantSurfaceCount": 270
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -1251,8 +1251,8 @@
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
-      "surfaceCount": 56,
-      "targetRelevantSurfaceCount": 54,
+      "surfaceCount": 58,
+      "targetRelevantSurfaceCount": 56,
       "authorities": [
         {
           "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -1323,6 +1323,7 @@
         "SWIFT-27CA6EAC7092",
         "SWIFT-2E174120940E",
         "SWIFT-3875BEEAD657",
+        "SWIFT-3B3E02643603",
         "SWIFT-3D3C4156BE8B",
         "SWIFT-401EBD892749",
         "SWIFT-42B77ABFD098",
@@ -1355,6 +1356,7 @@
         "SWIFT-E60A204F472E",
         "TEST-0911D1BF8A05",
         "TEST-3D0D949763A1",
+        "TEST-E42E9E6D7B28",
         "TEST-E591BE8A4B58"
       ]
     },

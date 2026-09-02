@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 79
+State version: 80
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ATTACHMENT-CAPTURE-RECEIPT-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: CLIENT-CREATION-OPERATION-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1041,6 +1041,25 @@ modifying the running Firebase application before hard cutover.
   clean tracked artifacts. All five attachment obligations and exactly its two
   target-only surfaces are now `verified`; every excluded filesystem/provider,
   current app/MCP, migration and production surface remains unadvanced.
+- Audited the next Phase 1 dependency graph and selected
+  `client-creation-operation-contracts` as the smallest user-meaningful command
+  needed before Project setup. D-006 and the canonical Client spec settle one
+  stable Account-scoped Client ID and display-name non-authority; O-025 remains
+  open because rename/archive/merge/reassignment are excluded.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for exact Account/actor/contract/Operation/Client/name binding, the shared
+  operation fingerprint/receipt/replay lifecycle, canonical restart, a narrow
+  Client creation operation port and stable mismatch/tamper/local-failure
+  refusal. No behavioral code or executable Client test exists at ready.
+- Postgres, handlers, Data API grants, RLS, Sync Streams, physical local
+  durability, membership authorization, Auth/provider choice, current/target
+  app/MCP, source migration, hosted resources and production remain explicit
+  nonapplicabilities.
+- Ready-gate sync/check and capability/query/residual controls pass at 747
+  recorded / 732 discovered surfaces, 321 mapped / 164 residual / 43 blockers;
+  M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 92 target
+  tests, graph/contracts, both staging builds and diff formatting pass with no
+  executable Client-creation behavior claimed.
 
 ## Next Action
 
@@ -1064,13 +1083,13 @@ Continue without waiting on the two M1 evidence blockers:
    `attachment-capture-and-local-durability-receipt` dossier and
    `EVID-ATTACHMENT-CAPTURE-001` as the sole shared semantic source for stable
    capture identity, exact local-byte evidence and success-shaped receipts.
-   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
-   decision-independent user/operational outcome, create exactly its target-only
-   scaffolds and complete its ready dossier before behavioral implementation.
-   Do not claim or add filesystem persistence/encryption, process/device restart
-   proof, upload/display/Storage, content/size/derivative policy, detach/delete/
-   retention, schema/RLS/Sync/provider behavior, current app/MCP, migration,
-   hosted resources or production access without the applicable gates.
+   Implement only the ready `client-creation-operation-contracts` dossier:
+   stable typed draft/payload/command, exact shared-envelope subject/fingerprint
+   binding, narrow operation port, receipt validation, canonical restart and
+   the five planned tests. Do not add a Client row/handler, membership
+   authorization, Client rename/archive/merge, Project reassignment/setup,
+   filesystem persistence, schema/RLS/Sync/Auth/provider behavior, current app/
+   MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

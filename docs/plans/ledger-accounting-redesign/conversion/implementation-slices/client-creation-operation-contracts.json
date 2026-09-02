@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-creation-operation-contracts",
+  "title": "Create one Account-scoped Client through the shared operation contract",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Client Creation Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-3B3E02643603",
+    "TEST-E42E9E6D7B28"
+  ],
+  "requirements": [
+    {
+      "id": "CLIENTCREATE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "A create intent preallocates one stable opaque ClientID inside one immutable Account and supplies one required current display name; display text is not identity, relationship or authorization evidence, and two Clients may retain equal names as distinct IDs.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-002", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
+    },
+    {
+      "id": "CLIENTCREATE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "Client creation is a distinct operation that may later supply authoritative identity to Project creation; it cannot rename/archive/merge a Client, edit copied Project client text or reassign a Project, so O-025 remains fully open.",
+      "decisionIds": ["D-006", "O-025"],
+      "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
+    },
+    {
+      "id": "CLIENTCREATE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "CreateClient expresses one business intent through typed Ledger values and exposes no arbitrary field map, collection/path/SQL string, generic CRUD, Client merge/correction or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-002", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
+    },
+    {
+      "id": "CLIENTCREATE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The Client payload is bound to exactly one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared operation fingerprint and receipt lifecycle; Client creation defines no competing queue, retry, result or rejection semantics.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-002", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
+    },
+    {
+      "id": "CLIENTCREATE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral Client creation operation accepts the validated typed command and returns the shared OperationReceipt or a stable failure; local command validation never substitutes for trusted membership/capability authorization at the later server boundary.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
+    },
+    {
+      "id": "CLIENTCREATE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the Firebase app remains unchanged and no Client table, handler, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-002", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ClientCreationDraft owns exact Account, actor, operation-contract, preallocated Client and validated display-name intent plus finite capture time; the draft contains no copied Project clientName or lifecycle mutation.",
+        "CreateClientPayload contains only stable ClientID and ClientDisplayName; CreateClientCommand binds it to the shared OperationEnvelope, derives the exact Client subject and fingerprint, permits no caller-authored preconditions and revalidates all derived evidence on decode.",
+        "ClientCreationOperating is the narrow backend-neutral operation port returning the shared OperationReceipt; command receipt validation requires the exact OperationID and exposes no authoritative Client row/result claim.",
+        "ClientCreationFailure exposes stable bounded time, binding, precondition, subject, fingerprint, receipt, local-acceptance and malformed-encoding codes while reusing the existing ClientDisplayName and shared operation validators."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates no clients table, account foreign key, name/lifecycle/audit column, uniqueness rule, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative CreateClient handler, membership/capability check, locking, audit timestamp, idempotency storage, conflict result or server row creation exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/actor binding is not authorization. No membership predicate, grant, WITH CHECK policy or cross-tenant database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Client table, optimistic projection, upload connector or synchronized visibility/readiness claim is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The complete command is canonical Codable evidence over draft, shared envelope, Client subject and fingerprint; decode reconstructs through the same validators and byte-identical structured restart is required.",
+        "Same-name/different-Client commands remain distinct, while changed Account, actor, contract, payload, subject, preconditions, fingerprint or receipt OperationID fails atomically without rebinding identity.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart or optimistic Client-row evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Client creation owns no attachment bytes/reference. Project hero media remains a separate later Project-setup handoff through the verified attachment receipt boundary."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Client form/picker, Project flow, current app service, MCP tool/schema, transport, contract-catalog entry or app/MCP parity claim is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase project.clientName is clustered, decoded or transformed and no source Client is synthesized. Later import must correlate every migrated Client explicitly and quarantine ambiguity."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot create a visible or authoritative Client, authorize membership, choose Auth, rename/archive/merge, reassign a Project, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-024/O-025, O-026, A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CLIENTCREATE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
+      "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
+      "expected": "A valid synthetic draft produces one typed exact-scope CreateClient command; two equal display names with distinct Client IDs remain distinct commands and neither text nor caller-authored lifecycle/correction state supplies identity.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CLIENTCREATE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
+      "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-006"],
+      "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Client/name/time/subject/fingerprint evidence and no backend path, provider, credential or server-result claim.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CLIENTCREATE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
+      "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
+      "expected": "Blank display input plus invalid time and changed Account/actor/contract/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Client-creation stable diagnostic codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CLIENTCREATE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
+      "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Client payload is refused by the shared lifecycle, and a failing port returns no success receipt.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CLIENTCREATE-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 command boundary only. D-006 settles stable Account-scoped Client identity and display-name non-authority. O-025 remains fully open because no rename/archive/merge/reassignment exists. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}
