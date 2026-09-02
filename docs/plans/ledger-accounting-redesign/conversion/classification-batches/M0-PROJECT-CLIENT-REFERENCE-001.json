@@ -1847,16 +1847,17 @@
     {
       "id": "SWIFT-3B3E02643603",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for a stable Account-scoped Client-creation command bound to the shared operation lifecycle; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "bcda18195d249e5c852ef7125c0151a83eaf294c5f324d4b656bbb48cbb1b78f",
+      "currentBehavior": "Implements a provider-free stable Client-creation draft, exact typed payload and shared-envelope command, derived Client subject/fingerprint validation, exact receipt validation, a narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-CREATION-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one typed CreateClient command, exact Account/actor/contract/Operation/Client/name binding, canonical restart evidence, receipt validation and a narrow operation port. It cannot create a server row, authorize membership, choose Auth, enforce name uniqueness, rename/archive/merge a Client, reassign a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source names or activate production.",
+      "notes": "Target-only Phase 1 command boundary implemented locally. Four focused/all 96 target tests pass; exact-commit hosted CI remains before verification. The implementation creates no Client row, membership authorization, name uniqueness, Client lifecycle/correction, Project setup/reassignment, schema/RLS/Sync/Auth/provider behavior, app/MCP wiring, source migration or production authority.",
       "target": {
         "owner": "Client Creation Operation Contracts",
         "surfaces": [
@@ -1893,16 +1894,17 @@
     {
       "id": "TEST-E42E9E6D7B28",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Defines only the comment-scaffolded target tests for Client-creation command binding, restart, receipt and rejection semantics; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "11866971537ccb6d043ab034acc8f1a95222fc642ed4d9dc7c6f9dbdcb91df28",
+      "currentBehavior": "Executes four deterministic target-only tests for same-name distinct identity, exact command scope and derived evidence, canonical structured restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-CREATION-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove typed Client creation and shared operation semantics without claiming physical local durability, membership authorization, authoritative server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, migration or production behavior.",
+      "notes": "Four focused/all 96 target tests pass locally; exact-commit hosted CI remains before verification. Tests prove typed value/operation/restart/replay/refusal semantics only and do not prove physical local durability, membership authorization, authoritative server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Client Creation Operation Contracts",
         "surfaces": [

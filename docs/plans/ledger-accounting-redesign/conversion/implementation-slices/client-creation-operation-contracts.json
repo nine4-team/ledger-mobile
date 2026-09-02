@@ -3,7 +3,7 @@
   "sliceId": "client-creation-operation-contracts",
   "title": "Create one Account-scoped Client through the shared operation contract",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client Creation Operation Contracts",
   "surfaceIds": [
     "SWIFT-3B3E02643603",
@@ -135,8 +135,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
       "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
       "expected": "A valid synthetic draft produces one typed exact-scope CreateClient command; two equal display names with distinct Client IDs remain distinct commands and neither text nor caller-authored lifecycle/correction state supplies identity.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-CREATION-001"]
     },
     {
       "id": "CLIENTCREATE-TEST-002",
@@ -144,8 +144,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
       "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-006"],
       "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Client/name/time/subject/fingerprint evidence and no backend path, provider, credential or server-result claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-CREATION-001"]
     },
     {
       "id": "CLIENTCREATE-TEST-003",
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
       "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
       "expected": "Blank display input plus invalid time and changed Account/actor/contract/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Client-creation stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-CREATION-001"]
     },
     {
       "id": "CLIENTCREATE-TEST-004",
@@ -162,8 +162,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCreationOperationTests.swift",
       "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Client payload is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-CREATION-001"]
     },
     {
       "id": "CLIENTCREATE-TEST-005",
@@ -175,7 +175,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-CLIENT-CREATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 command boundary only. D-006 settles stable Account-scoped Client identity and display-name non-authority. O-025 remains fully open because no rename/archive/merge/reassignment exists. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."

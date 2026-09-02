@@ -7,7 +7,13 @@
 - Claimed target surfaces: `SWIFT-3B3E02643603`, `TEST-E42E9E6D7B28`
 - Slice dossier:
   `conversion/implementation-slices/client-creation-operation-contracts.json`
-- Verification state: ready; behavioral implementation and tests have not begun
+- Verification state: implemented locally; exact-commit hosted CI remains
+  planned
+- Implementation hashes:
+  - `ClientCreationOperation.swift`:
+    `bcda18195d249e5c852ef7125c0151a83eaf294c5f324d4b656bbb48cbb1b78f`
+  - `ClientCreationOperationTests.swift`:
+    `11866971537ccb6d043ab034acc8f1a95222fc642ed4d9dc7c6f9dbdcb91df28`
 
 ## Selection and Scope
 
@@ -81,9 +87,51 @@ The ready checkpoint ran from the dedicated Supabase worktree on 2026-09-01:
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
 
+## Implemented Contract
+
+`ClientCreationOperation.swift` now provides:
+
+- `ClientCreationDraft`, which binds one preallocated Client ID and validated
+  display name to exact Account, actor, operation-contract and finite capture
+  time evidence;
+- `CreateClientPayload`, which contains only the stable Client identity and
+  display name and gives text no relationship or authorization meaning;
+- `CreateClientCommand`, whose public construction creates a precondition-free
+  shared `OperationEnvelope`, derives the exact Client subject and operation
+  fingerprint, and whose decoder revalidates every duplicated binding instead
+  of trusting serialized derived evidence;
+- exact `OperationReceipt` validation for the command's Operation ID;
+- the narrow `ClientCreationOperating` provider-free port; and
+- a closed stable failure taxonomy for invalid time, scope/actor/contract/
+  payload/precondition/subject/fingerprint/receipt mismatches, malformed command
+  evidence and local acceptance failure.
+
+The implementation reuses `OperationJournal` only through a deterministic test
+adapter. It does not claim physical durable storage, server authorization,
+authoritative Client creation or synchronized visibility.
+
+## Local Implementation Verification
+
+The implementation checkpoint ran from the dedicated Supabase worktree on
+2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter ClientCreationOperationTests`
+  — pass, four focused tests;
+- `swift test --package-path LedgeriOS` — pass, all 96 tests in 21 suites;
+- target environment and generated-contract checks — pass;
+- macOS and generic iOS Simulator staging builds — pass;
+- conversion sync/check/report, capability/query/residual controls and M0 —
+  pass at 747 recorded / 732 discovered surfaces and 321 mapped / 164 residual /
+  43 blockers, with only the three documented retired-path warnings; and
+- M1/M2 — expected blocks at the unchanged 2/164 prerequisites.
+
+`CLIENTCREATE-TEST-001` through `-004` therefore pass with this evidence.
+`CLIENTCREATE-TEST-005` remains planned until immutable exact-commit CI
+succeeds.
+
 ## Permanent Limits
 
-This ready gate and its later provider-free implementation cannot:
+This provider-free implementation cannot:
 
 - create a server/local-database Client row or make a Client visible in a query;
 - authorize Account membership or choose an authentication provider;

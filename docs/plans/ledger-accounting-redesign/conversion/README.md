@@ -22,10 +22,11 @@ provider and migration surfaces remain unadvanced. The provider-free attachment
 capture/local-durability receipt slice is verified at exact implementation
 commit `1792a862`, including all 92 target tests and both staging builds. It
 explicitly does not claim physical byte persistence, encryption, upload,
-display, Storage, retention or provider behavior. The next provider-free Client
-creation operation slice has passed its ready mapping; it defines no server row,
-authorization, Auth/provider, schema, Sync, app/MCP, migration or production
-behavior.
+display, Storage, retention or provider behavior. The provider-free Client
+creation operation slice is implemented locally with four focused/all 96 target
+tests and both builds passing; exact-commit hosted CI remains before
+verification. It defines no server row, authorization, Auth/provider, schema,
+Sync, app/MCP, migration or production behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

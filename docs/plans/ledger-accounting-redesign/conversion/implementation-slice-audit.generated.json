@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T05:28:26.965Z",
+  "generatedFromManifestSync": "2026-09-02T05:43:57.021Z",
   "totals": {
     "slices": 21,
     "claimedTargetSurfaces": 63,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 46
+    "implementationAdvancedTargetSurfaces": 48
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 19,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -36,7 +36,7 @@
       "sliceId": "client-creation-operation-contracts",
       "title": "Create one Account-scoped Client through the shared operation contract",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Client Creation Operation Contracts",
       "surfaceIds": [
         "SWIFT-3B3E02643603",

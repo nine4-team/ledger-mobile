@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 80
+State version: 81
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CREATION-OPERATION-READY
+- Checkpoint: CLIENT-CREATION-OPERATION-IMPLEMENTED-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1060,6 +1060,22 @@ modifying the running Firebase application before hard cutover.
   M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 92 target
   tests, graph/contracts, both staging builds and diff formatting pass with no
   executable Client-creation behavior claimed.
+- Implemented only the ready provider-free Client creation boundary: an exact
+  Account/actor/contract/Client/name/time draft, minimal typed payload,
+  precondition-free shared operation envelope, derived Client subject and
+  fingerprint, receipt validator, narrow operation port and closed failures.
+- Added four deterministic tests for same-name/different-ID identity, exact
+  command scope, byte-identical structured restart, provider/path/credential
+  exclusion, every binding/precondition/subject/fingerprint/receipt/malformed
+  refusal and shared OperationJournal replay/same-ID-changed-payload behavior.
+- Four focused/all 96 target tests, graph/contracts and both staging builds pass
+  locally. `CLIENTCREATE-TEST-001` through `-004` pass; exact-commit hosted
+  `CLIENTCREATE-TEST-005` remains planned, so exactly the two Client-creation
+  surfaces are `implemented`, not `verified`.
+- No Client row, authoritative apply, physical local durability, membership
+  authorization, Client lifecycle/correction, Project setup/reassignment,
+  schema/RLS/Sync/Auth/provider, current/target app/MCP, migration, hosted
+  resource or production operation was introduced; O-025 remains open.
 
 ## Next Action
 
@@ -1083,10 +1099,11 @@ Continue without waiting on the two M1 evidence blockers:
    `attachment-capture-and-local-durability-receipt` dossier and
    `EVID-ATTACHMENT-CAPTURE-001` as the sole shared semantic source for stable
    capture identity, exact local-byte evidence and success-shaped receipts.
-   Implement only the ready `client-creation-operation-contracts` dossier:
-   stable typed draft/payload/command, exact shared-envelope subject/fingerprint
-   binding, narrow operation port, receipt validation, canonical restart and
-   the five planned tests. Do not add a Client row/handler, membership
+   Treat the implemented `client-creation-operation-contracts` dossier as the
+   sole Client-create semantic authority. Commit the exact implementation
+   checkpoint, push it, require immutable pull-request CI for
+   `CLIENTCREATE-TEST-005`, and advance only its two surfaces to verified after
+   the exact commit passes. Do not add a Client row/handler, membership
    authorization, Client rename/archive/merge, Project reassignment/setup,
    filesystem persistence, schema/RLS/Sync/Auth/provider behavior, current app/
    MCP, migration, hosted resources or production access.
