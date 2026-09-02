@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-77F812A8F463`, `TEST-CB30140F137B`
 - Slice dossier:
   `conversion/implementation-slices/space-template-reference-read-contracts.json`
-- Verification state: implemented; four deterministic obligations pass locally
-  and exact-implementation-commit operational CI remains planned
+- Verification state: verified; all five obligations pass at exact implementation
+  commit `f23afce3a95dbf9bb96d1716b73f65f79bbc2714`
 - Ready scaffold hashes:
   - `SpaceTemplateReferenceData.swift`:
     `9682f5d9bbec156fd6c8f92fa0280217622ee19d89ed3198844ad7c69a11dac2`
@@ -168,8 +168,12 @@ controls, M0 and clean diff formatting. The synchronized ledger remains at 771
 recorded / 756 discovered surfaces, 345 mapped-or-later / 164 residual / 43
 blockers. M1 and M2 retain exactly their expected 2 and 164 blockers.
 
-Exact implementation-commit CI remains required before the slice or either
-claimed surface can advance to `verified`.
+Exact implementation commit `f23afce3a95dbf9bb96d1716b73f65f79bbc2714`
+passed immutable GitHub Actions run `33636359059`: conversion traceability
+passed in 8 seconds and the isolated target environment passed in 2 minutes 33
+seconds with all 144 tests in 33 suites, graph/generated-contract checks, both
+staging builds and clean tracked artifacts. All five obligations pass, and both
+claimed target surfaces are `verified`.
 
 ## Permanent Limits
 

@@ -2984,14 +2984,14 @@
       "acknowledgeSourceHash": "a197651e96a978aa3794b180ab05b99568d3bee72c402e2042a67f030cf26520",
       "currentBehavior": "Implements a provider-free Account-scoped Space-template read model with stable template/checklist/item identity, preserved structure-only text, lifecycle, explicit deterministic order, revision, local readiness and a narrow query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ],
-      "notes": "Implemented target-only Phase 1 read contract after exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042. Four focused tests pass locally. Exact implementation-commit CI remains required before verification. Applying, saving, creating, updating, archiving, reactivating or reordering templates; Space creation; O-026 authority; physical persistence; schema/RLS/Sync/provider; app/MCP; migration; hosted resources and production remain excluded.",
+      "notes": "Verified target-only Phase 1 read contract. Exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042; exact implementation commit f23afce3a95dbf9bb96d1716b73f65f79bbc2714 passed immutable run 33636359059 with four focused/all 144 tests, graph/contracts, both staging builds and clean tracked artifacts. Applying, saving, creating, updating, archiving, reactivating or reordering templates; Space creation; O-026 authority; physical persistence; schema/RLS/Sync/provider; app/MCP; migration; hosted resources and production remain excluded.",
       "target": {
         "owner": "Space Template Reference Read Contracts",
         "surfaces": [
@@ -3035,14 +3035,14 @@
       "acknowledgeSourceHash": "148238915bb72bd8bc22acf9e2f0631dc7baae2f80c62874f8043072de656e8d",
       "currentBehavior": "Implements four deterministic Space-template read contract tests covering exact structure without checked state, canonical readiness/restart, nested/scope/count/time/encoding refusal and Account-exact port behavior.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ],
-      "notes": "Implemented target-only deterministic tests after exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042. Four focused tests pass locally. Exact implementation-commit CI remains required before verification. They cannot prove template mutation, O-026 authorization, Space creation, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
+      "notes": "Verified target-only deterministic tests. Exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042; exact implementation commit f23afce3a95dbf9bb96d1716b73f65f79bbc2714 passed immutable run 33636359059 with four focused/all 144 tests, graph/contracts, both staging builds and clean tracked artifacts. They cannot prove template mutation, O-026 authorization, Space creation, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
       "target": {
         "owner": "Space Template Reference Read Contracts",
         "surfaces": [

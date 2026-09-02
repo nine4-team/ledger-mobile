@@ -3,7 +3,7 @@
   "sliceId": "space-template-reference-read-contracts",
   "title": "Read ordered Space-template structure offline without carrying checked state or granting write authority",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Template Reference Read Contracts",
   "surfaceIds": [
     "SWIFT-77F812A8F463",
@@ -277,7 +277,7 @@
         "SPACETEMPLATE-REQ-007"
       ],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming template mutation/application, Space creation, authentication, physical persistence, schema/RLS/Sync/provider, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": [
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ]
@@ -288,5 +288,5 @@
   ],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented decision-independent Phase 1 read boundary after exact comment-only ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042: conversion traceability in 11 seconds and the isolated target environment in 2 minutes 7 seconds with all 140 then-existing tests, graph/generated-contract checks, both staging builds and clean artifacts. Four focused tests now pass locally; exact implementation-commit operational CI remains planned. The canonical Spaces target spec—not the defective Firebase createFromSpace behavior—owns template semantics. O-026 remains fully open for every template writer and authorization capability. The slice stops before template selection/application/save UI, Space creation, identity allocation, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified decision-independent Phase 1 read boundary. Exact comment-only ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042: conversion traceability in 11 seconds and the isolated target environment in 2 minutes 7 seconds with all 140 then-existing tests. Exact implementation commit f23afce3a95dbf9bb96d1716b73f65f79bbc2714 passed immutable run 33636359059: conversion traceability in 8 seconds and the isolated target environment in 2 minutes 33 seconds with four focused/all 144 tests, graph/generated-contract checks, both staging builds and clean artifacts. The canonical Spaces target spec—not the defective Firebase createFromSpace behavior—owns template semantics. O-026 remains fully open for every template writer and authorization capability. The slice stops before template selection/application/save UI, Space creation, identity allocation, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
 }

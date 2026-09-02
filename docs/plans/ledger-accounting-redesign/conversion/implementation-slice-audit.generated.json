@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T13:32:12.747Z",
+  "generatedFromManifestSync": "2026-09-02T13:37:25.824Z",
   "totals": {
     "slices": 33,
     "claimedTargetSurfaces": 87,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 31,
+    "implemented": 0,
+    "verified": 32,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -396,7 +396,7 @@
       "sliceId": "space-template-reference-read-contracts",
       "title": "Read ordered Space-template structure offline without carrying checked state or granting write authority",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Space Template Reference Read Contracts",
       "surfaceIds": [
         "SWIFT-77F812A8F463",

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 117
+State version: 118
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-TEMPLATE-READ-IMPLEMENTED
+- Checkpoint: SPACE-TEMPLATE-READ-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1726,8 +1726,14 @@ modifying the running Firebase application before hard cutover.
 - `SPACETEMPLATE-TEST-001` through `-004` pass locally. All 144 target tests in
   33 suites, target graph/generated contracts, both staging builds,
   conversion/capability/query/residual controls, M0 and clean artifacts pass.
-  Exactly the two claimed surfaces are `implemented`; exact-implementation-
-  commit hosted `SPACETEMPLATE-TEST-005` remains planned.
+  Exact-implementation-commit hosted `SPACETEMPLATE-TEST-005` also passes, so
+  exactly the two claimed surfaces are `verified`.
+- Exact implementation commit `f23afce3a95dbf9bb96d1716b73f65f79bbc2714`
+  passed immutable GitHub Actions run `33636359059`: conversion traceability
+  passed in 8 seconds and the isolated target environment passed in 2 minutes
+  33 seconds with all 144 tests in 33 suites, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts. All five dossier obligations
+  now pass; 72 target surfaces are implemented or later.
 
 ## Next Action
 
@@ -1783,12 +1789,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
    semantics. Treat the verified `vendor-suggestion-reference-read-contracts`
    dossier and `EVID-VENDOR-SUGGESTION-REFERENCE-001` as the sole vendor-
-   suggestion read semantics. Treat the implemented
+   suggestion read semantics. Treat the verified
    `space-template-reference-read-contracts` dossier and
    `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
-   Require the exact implementation commit to pass immutable CI before
-   advancing its two claimed surfaces to verified. Then audit the next smallest
-   complete decision-independent dependency. Keep
+   Audit the next smallest complete decision-independent dependency before
+   creating another ready slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

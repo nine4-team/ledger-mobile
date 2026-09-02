@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T13:32:12.747Z",
+    "lastSynchronizedAt": "2026-09-02T13:37:25.824Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -22678,14 +22678,14 @@
           "Synthetic contracts prove only exact Account scope, stable ordered structure without checked state, local readiness/restart and atomic refusal without mutation, Space creation, a provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ],
-      "notes": "Implemented target-only Phase 1 read contract after exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042. Four focused tests pass locally. Exact implementation-commit CI remains required before verification. Applying, saving, creating, updating, archiving, reactivating or reordering templates; Space creation; O-026 authority; physical persistence; schema/RLS/Sync/provider; app/MCP; migration; hosted resources and production remain excluded.",
+      "notes": "Verified target-only Phase 1 read contract. Exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042; exact implementation commit f23afce3a95dbf9bb96d1716b73f65f79bbc2714 passed immutable run 33636359059 with four focused/all 144 tests, graph/contracts, both staging builds and clean tracked artifacts. Applying, saving, creating, updating, archiving, reactivating or reordering templates; Space creation; O-026 authority; physical persistence; schema/RLS/Sync/provider; app/MCP; migration; hosted resources and production remain excluded.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -36213,14 +36213,14 @@
           "Self-tests prove the backend-neutral Space-template read boundary without claiming writer authorization, Space creation, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ],
-      "notes": "Implemented target-only deterministic tests after exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042. Four focused tests pass locally. Exact implementation-commit CI remains required before verification. They cannot prove template mutation, O-026 authorization, Space creation, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
+      "notes": "Verified target-only deterministic tests. Exact ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042; exact implementation commit f23afce3a95dbf9bb96d1716b73f65f79bbc2714 passed immutable run 33636359059 with four focused/all 144 tests, graph/contracts, both staging builds and clean tracked artifacts. They cannot prove template mutation, O-026 authorization, Space creation, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
