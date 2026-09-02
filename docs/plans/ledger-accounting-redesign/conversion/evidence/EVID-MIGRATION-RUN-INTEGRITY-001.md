@@ -2,9 +2,9 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / migration evidence integrity / operational control
-- Exact implementation commit: pending this bounded checkpoint on
-  `codex/supabase-powersync-implementation`; immutable hosted CI is still
-  required before verification
+- Exact implementation commit:
+  `34d52dba8960e6cd96621db10e2769c17cc86a4e` on
+  `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree, current application, reverse migration
   package, profilers and release scripts are not modified or invoked
@@ -101,6 +101,15 @@ Local results on 2026-09-01:
   surfaces with zero errors and the same three documented retired-path
   warnings.
 
+Immutable GitHub Actions run
+[`33573298495`](https://github.com/nine4-team/ledger-mobile/actions/runs/33573298495)
+passed on that exact implementation commit. Its `Conversion state and
+traceability` and `Isolated target environment` jobs both passed, including
+conversion coverage and generated-artifact cleanliness, target dependency and
+environment boundaries, generated app/MCP contracts, the complete 55-test
+target package suite, the macOS build, the generic iOS Simulator build and the
+final clean-diff guard.
+
 ## Verification Status
 
 - `MIGRATION-RUN-TEST-001`: passed locally. Closed values, exact plan identity,
@@ -117,12 +126,13 @@ Local results on 2026-09-01:
 - `MIGRATION-RUN-TEST-005`: passed locally. Completed evidence requires exact
   entity closure and the complete named reconciliation set with no unexplained
   or failed result.
-- `MIGRATION-RUN-TEST-006`: planned until an immutable GitHub Actions run passes
-  on the exact implementation commit, including the full package suite, graph
-  guard, both target builds and clean tracked artifacts.
+- `MIGRATION-RUN-TEST-006`: passed in immutable GitHub Actions run
+  `33573298495` on exact implementation commit `34d52dba`, including the full
+  55-test package suite, graph guard, contract validation, both target builds
+  and clean tracked artifacts.
 
-The slice and its two target-only surfaces are `implemented`, not `verified`,
-until the operational obligation passes externally.
+All six obligations pass, so the slice and exactly its two target-only surfaces
+are `verified`.
 
 ## Explicit Limits
 

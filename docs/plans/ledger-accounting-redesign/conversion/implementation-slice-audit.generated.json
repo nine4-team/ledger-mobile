@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-01T23:56:51.653Z",
+  "generatedFromManifestSync": "2026-09-02T00:02:09.715Z",
   "totals": {
     "slices": 10,
     "claimedTargetSurfaces": 44,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 8,
+    "implemented": 0,
+    "verified": 9,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -21,7 +21,7 @@
       "sliceId": "migration-run-plan-and-journal-integrity",
       "title": "Prove a migration run plan, interruption journal, and reconciliation manifest without executing it",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Migration Run Plan and Journal Integrity",
       "surfaceIds": [
         "SWIFT-CBE990F49610",

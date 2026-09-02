@@ -3,7 +3,7 @@
   "sliceId": "migration-run-plan-and-journal-integrity",
   "title": "Prove a migration run plan, interruption journal, and reconciliation manifest without executing it",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Migration Run Plan and Journal Integrity",
   "surfaceIds": [
     "SWIFT-CBE990F49610",
@@ -178,8 +178,8 @@
       "owner": "scripts/check-target-environment.mjs and pull-request CI Isolated target environment job",
       "covers": ["MIGRATION-RUN-REQ-001", "MIGRATION-RUN-REQ-003", "MIGRATION-RUN-REQ-004", "MIGRATION-RUN-REQ-005"],
       "expected": "The exact implementation commit proves the separate provider-free migration module is tested but absent from both target and Firebase application runtime graphs, with no provider credential, source/export access, target write, script invocation or production/cutover action.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"]
     }
   ],
   "implementationEvidence": ["EVID-MIGRATION-RUN-INTEGRITY-001"],

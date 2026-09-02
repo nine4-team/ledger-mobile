@@ -3475,14 +3475,14 @@
       "acknowledgeSourceHash": "373be5b74a57e14409db8734e6d96cbe86b36dd37c3b0908a72a2aa332770d72",
       "currentBehavior": "Defines provider-free policy-validated migration plan/source/target/artifact/entity identity, canonical evidence-only plan bytes, monotonic replay-safe journal events and resume fingerprints, exact terminal entity/reconciliation manifests including honest not-run evidence, bounded canonical restart decoding and stable fail-closed results in a separate non-app module. Every public journal boundary revalidates the supplied plan under the same exact target/artifact/version policy before accepting evidence.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "Target-only separate tooling contract. It contains values and validators only: no source/file/provider reader, target/database writer, durable journal store, signer, operator approval, migration executor or authority switch. Exact-commit external CI remains before verification.",
+      "notes": "Target-only separate tooling contract verified by immutable Actions run 33573298495 on exact implementation commit 34d52dba. It contains values and validators only: no source/file/provider reader, target/database writer, durable journal store, signer, operator approval, migration executor or authority switch.",
       "target": {
         "owner": "Migration Run Plan and Journal Integrity",
         "surfaces": [
@@ -3521,14 +3521,14 @@
       "acknowledgeSourceHash": "fd06cf71f11cec245fad30a31f03cb83c2b4ad3e1a6c8051ba713940120cb39f",
       "currentBehavior": "Exercises canonical dry-run/apply evidence, sorted plan identity, offline plan/journal/manifest reconstruction, interruption/replay/resume, wrong target, conflicting replay, count/stage regression, direct-decode policy bypass, digest/canonical/size tamper, exact reconciliation closure, honest not-run blocked evidence and production-shaped evidence-only non-authority with synthetic values only.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "Four provider-free focused tests pass locally with synthetic hashes, counts, versions and timestamps only; they open no export, database, file, hosted resource or provider. Exact-commit external CI remains before verification.",
+      "notes": "Four provider-free focused tests pass locally and in the complete 55-test package suite from immutable Actions run 33573298495 on exact implementation commit 34d52dba. Synthetic hashes, counts, versions and timestamps open no export, database, file, hosted resource or provider.",
       "target": {
         "owner": "Migration Run Plan and Journal Integrity",
         "surfaces": [

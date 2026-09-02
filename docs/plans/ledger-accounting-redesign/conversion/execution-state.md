@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 47
+State version: 48
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: MIGRATION-RUN-INTEGRITY-IMPLEMENTED-EXACT-CI-PENDING-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: MIGRATION-RUN-INTEGRITY-VERIFIED-OPERATIONAL-HEALTH-READY-GATE-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -580,6 +580,12 @@ modifying the running Firebase application before hard cutover.
   obligations pass locally; the exact-commit operational CI obligation remains
   planned, so exactly its two target-only surfaces are `implemented` rather
   than `verified`.
+- Exact implementation commit `34d52dba` passed immutable GitHub Actions run
+  `33573298495`: both conversion traceability and isolated-target jobs passed,
+  including all 55 target tests, generated contracts, dependency/application-
+  graph guards, macOS and generic iOS Simulator builds and clean tracked
+  artifacts. All six migration-run obligations and exactly its two target-only
+  surfaces are now `verified`.
 
 ## Next Action
 
@@ -589,14 +595,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented
-   `migration-run-plan-and-journal-integrity` checkpoint, then require an
-   immutable GitHub Actions run on that exact implementation commit. Advance
-   the slice and exactly its two target-only surfaces to `verified` only if both
-   conversion and isolated-target jobs pass the complete 55-test suite, graph/
-   generated-contract guards, both builds and clean artifacts. Never read an
-   export, open a provider/database/file, persist a journal, execute a migration
-   or advance current migration/release scripts from this evidence.
+2. Create and pass the `ready` gate for the next decision-independent technical
+   slice, `operational-health-and-objective-registry`. Audit exact architecture
+   headings and the reviewed `MAN-OBS-001`, `SWIFT-7B159D426B1D` and
+   `TEST-ECE08B24ADCE` mappings before claiming them; add only comment-only
+   target scaffolds until the dossier passes. The slice may define provider-free
+   health snapshots, bounded objective/alert/runbook registration and pure
+   contract tests using the existing readiness/telemetry authorities, but no
+   sink, SDK, hosted alert, production threshold claim or provider adapter.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

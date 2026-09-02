@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-01T23:56:51.653Z",
+    "lastSynchronizedAt": "2026-09-02T00:02:09.715Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27557,14 +27557,14 @@
           "Synthetic provider-free fixtures prove deterministic plan/journal/manifest evidence, restart/resume identity, exact counts, tamper refusal, wrong-target refusal and permanent non-authority"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "Target-only separate tooling contract. It contains values and validators only: no source/file/provider reader, target/database writer, durable journal store, signer, operator approval, migration executor or authority switch. Exact-commit external CI remains before verification.",
+      "notes": "Target-only separate tooling contract verified by immutable Actions run 33573298495 on exact implementation commit 34d52dba. It contains values and validators only: no source/file/provider reader, target/database writer, durable journal store, signer, operator approval, migration executor or authority switch.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -31078,14 +31078,14 @@
           "All migration-integrity, restart, interruption, reconciliation, tamper and non-authority obligations pass in the separate LedgerTargetMigrationCore module"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "Four provider-free focused tests pass locally with synthetic hashes, counts, versions and timestamps only; they open no export, database, file, hosted resource or provider. Exact-commit external CI remains before verification.",
+      "notes": "Four provider-free focused tests pass locally and in the complete 55-test package suite from immutable Actions run 33573298495 on exact implementation commit 34d52dba. Synthetic hashes, counts, versions and timestamps open no export, database, file, hosted resource or provider.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
