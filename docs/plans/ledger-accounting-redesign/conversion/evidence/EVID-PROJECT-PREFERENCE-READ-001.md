@@ -1,14 +1,14 @@
 # EVID-PROJECT-PREFERENCE-READ-001 — Project Preference Read Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation planning / provider-free current-Principal preference read
+- Class: verification / provider-free current-Principal preference read
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-C6AE96622805`, `TEST-96AAFA22224B`
 - Slice dossier:
   `conversion/implementation-slices/project-preference-read-contracts.json`
-- Verification state: implemented; four local obligations pass and exact-
-  implementation-commit CI remains planned
+- Verification state: verified; all five obligations pass at exact implementation
+  commit `59526ccc33c5317768dc0e986f6c91bf24b2a441`
 - Ready scaffold hashes:
   - `ProjectPreferenceData.swift`:
     `dcf06d2a71a083a4025bad3d92a658f83c6a2d265ce4f10ccbbd654f4bb49bc3`
@@ -171,9 +171,23 @@ The complete local gate passes with all 132 target tests in 30 suites, target
 environment isolation, generated app/MCP contracts, macOS and generic iOS
 Simulator staging builds, conversion/capability/query/residual controls, M0 and
 clean diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
-PROJECTPREFERENCE-TEST-001 through -004 therefore pass. Exact-implementation-commit hosted
-PROJECTPREFERENCE-TEST-005 remains planned, so exactly the two claimed target
-surfaces are implemented, not verified.
+PROJECTPREFERENCE-TEST-001 through -004 therefore pass locally.
+
+## Exact Implementation CI
+
+Exact implementation commit
+`59526ccc33c5317768dc0e986f6c91bf24b2a441` passed immutable GitHub Actions run
+[33624655214](https://github.com/nine4-team/ledger-mobile/actions/runs/33624655214).
+Conversion state and traceability passed in 11 seconds. The isolated target
+environment passed in 2 minutes 2 seconds with all 132 target tests, target
+dependency/environment and generated app/MCP contract checks, macOS and generic
+iOS Simulator staging builds, and clean tracked artifacts.
+
+PROJECTPREFERENCE-TEST-001 through -005 and exactly the two claimed target
+surfaces are therefore verified. The runner's repository-level Node.js 20
+deprecation annotation applies to GitHub-provided actions being forced to Node
+24; it is not a Project-preference contract failure and did not alter the
+passing jobs.
 
 ## Permanent Limits
 

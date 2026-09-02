@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T11:26:34.782Z",
+  "generatedFromManifestSync": "2026-09-02T11:31:12.775Z",
   "totals": {
     "slices": 30,
     "claimedTargetSurfaces": 81,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 28,
+    "implemented": 0,
+    "verified": 29,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -276,7 +276,7 @@
       "sliceId": "project-preference-read-contracts",
       "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Preference Read Contracts",
       "surfaceIds": [
         "SWIFT-C6AE96622805",

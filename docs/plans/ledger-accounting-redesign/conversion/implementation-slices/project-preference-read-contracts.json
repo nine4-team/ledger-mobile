@@ -3,7 +3,7 @@
   "sliceId": "project-preference-read-contracts",
   "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Preference Read Contracts",
   "surfaceIds": [
     "SWIFT-C6AE96622805",
@@ -181,12 +181,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming authentication, persistence, schema, Sync, provider, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-PREFERENCE-READ-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 read contract only. It preserves exact current-Principal preference scope, ordered stable pin identities, revision and authoritative absence versus incomplete-local truth. It does not invent a first-use default, resolve archived/stale category visibility, calculate budgets, authorize a caller, write preferences, define schema/RLS/Sync/Auth/provider behavior, wire app/MCP, migrate source data, provision hosted resources or authorize production/cutover."
+  "notes": "Verified decision-independent Phase 1 read contract at exact implementation commit 59526ccc33c5317768dc0e986f6c91bf24b2a441 and immutable Actions run 33624655214. It preserves exact current-Principal preference scope, ordered stable pin identities, revision and authoritative absence versus incomplete-local truth. It does not invent a first-use default, resolve archived/stale category visibility, calculate budgets, authorize a caller, write preferences, define schema/RLS/Sync/Auth/provider behavior, wire app/MCP, migrate source data, provision hosted resources or authorize production/cutover."
 }

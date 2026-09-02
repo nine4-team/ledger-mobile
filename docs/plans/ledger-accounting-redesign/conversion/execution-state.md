@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 108
+State version: 109
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-READ-IMPLEMENTED
+- Checkpoint: PROJECT-PREFERENCE-READ-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1569,6 +1569,17 @@ modifying the running Firebase application before hard cutover.
   Exact-implementation-commit hosted
   `PROJECTPREFERENCE-TEST-005` remains planned, so exactly the two claimed
   target surfaces are `implemented`, not `verified`.
+- Exact implementation commit
+  `59526ccc33c5317768dc0e986f6c91bf24b2a441` passed immutable GitHub Actions
+  run `33624655214`: conversion traceability passed in 11 seconds and the
+  isolated target environment passed in 2 minutes 2 seconds with all 132 target
+  tests, dependency/environment and generated-contract checks, both staging
+  builds and clean tracked artifacts.
+- All five Project-preference obligations and exactly its two claimed target
+  surfaces are now `verified`. Authentication/authorization implementation,
+  physical persistence, preference writes, defaults/category resolution,
+  budget calculation, schema/RLS/Sync/provider behavior, app/MCP, migration,
+  hosted resources and production remain unadvanced.
 
 ## Next Action
 
@@ -1617,11 +1628,11 @@ Continue without waiting on the two M1 evidence blockers:
    and explicit offline-history completeness. Treat the verified
    `project-note-creation-operation-contracts` dossier and
    `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
-   authority. Verify exact implementation commit CI for the frozen
-   `project-preference-read-contracts` dossier. If both jobs pass, record the
-   immutable run and advance only its two claimed surfaces and all five
-   obligations to `verified`, then audit the next smallest complete dependency.
-   Keep preference writes, first-use defaults,
+   authority. Treat the verified `project-preference-read-contracts` dossier
+   and `EVID-PROJECT-PREFERENCE-READ-001` as the sole current-Principal Project
+   preference read semantics. Audit the next smallest complete decision-
+   independent Phase 1 dependency before creating a ready dossier. Keep
+   preference writes, first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
    policy, schema/RLS/Sync/Auth/provider behavior, app/MCP/search, migration,
