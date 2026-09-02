@@ -2040,17 +2040,17 @@
     {
       "id": "SWIFT-B3DBE3375ACE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6b3cf7b3430b34455a2286516484c0a5cbd7a46da4e2d596704ed3a9819b8d5f",
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for stable bounded Project-note pages and explicit local-history evidence; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "f9ac710c8c031f23178b8a4ab064a3243ed2c2d6ff694de95044fdd8a14c1f18",
+      "currentBehavior": "Implements provider-free stable Project-note identity/text/source/audit/tombstone values, scoped bounded page requests with deterministic fingerprints and structured cursors, validated newest-first local pages with explicit Project-history completeness, one narrow read port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-READ-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may preserve already-authorized Account/Project/note identity, content-or-tombstone state, immutable creator/creation/source evidence, revision/edit audit, deterministic newest-first order, structured continuation and explicit offline-history readiness. It cannot authorize or mutate notes, choose roles/retention, define schema/RLS/Sync/provider behavior, wire app/MCP/search, migrate source data or activate production.",
+      "notes": "Implemented target-only Phase 1 read surface. It preserves already-authorized Account/Project/note identity, content-or-tombstone state, immutable creator/creation/source evidence, revision/edit audit, deterministic newest-first order, structured continuation and explicit offline-history readiness. Four focused tests and the complete local gate pass; exact implementation-commit CI remains required before verification. It cannot authorize or mutate notes, choose roles/retention, define schema/RLS/Sync/provider behavior, wire app/MCP/search, migrate source data or activate production.",
       "target": {
         "owner": "Project Note Read Contracts",
         "surfaces": [
@@ -2089,17 +2089,17 @@
     {
       "id": "TEST-E8DC4AE52ED7",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "f37383a496fc9c5a3b2ae6491c9441f2d4ff1e1489df28b7e91efedd198adbc0",
-      "currentBehavior": "Defines only the comment-scaffolded target tests for Project-note page shape, audit/order/readiness, canonical restart, atomic refusal and exact read-port request matching; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "572fc8cb8ace9e690fea913754f96a33427f7cc0fc3257ade4680d75df11db31",
+      "currentBehavior": "Implements four deterministic tests for Project-note page shape, creation/edit/deletion audit, newest-first tie-break/cursor/history readiness, canonical restart, malformed/scope/order/fingerprint refusal and exact/failing read-port request behavior.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-READ-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/note/content-or-tombstone/audit/order/cursor/history-readiness truth and malformed/rebound refusal without claiming physical local durability, authorization, note mutation, schema/RLS/Sync/provider behavior, app/MCP/search parity, migration or production behavior.",
+      "notes": "Implemented target-only deterministic tests prove exact Account/Project/note/content-or-tombstone/audit/order/cursor/history-readiness truth, byte-identical restart, malformed/rebound refusal, exact request matching and no false page. Four focused tests and the complete local gate pass; exact implementation-commit CI remains required before verification. No physical local durability, authorization, note mutation, schema/RLS/Sync/provider behavior, app/MCP/search parity, migration or production behavior is claimed.",
       "target": {
         "owner": "Project Note Read Contracts",
         "surfaces": [

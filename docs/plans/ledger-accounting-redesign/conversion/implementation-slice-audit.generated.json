@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T09:57:31.327Z",
+  "generatedFromManifestSync": "2026-09-02T10:13:24.802Z",
   "totals": {
     "slices": 28,
     "claimedTargetSurfaces": 77,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 60
+    "implementationAdvancedTargetSurfaces": 62
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 26,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -246,7 +246,7 @@
       "sliceId": "project-note-read-contracts",
       "title": "Read bounded Project notes with stable audit and offline-history evidence",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Note Read Contracts",
       "surfaceIds": [
         "SWIFT-B3DBE3375ACE",

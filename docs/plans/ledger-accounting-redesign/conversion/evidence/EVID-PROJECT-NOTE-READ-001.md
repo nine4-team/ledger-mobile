@@ -7,12 +7,13 @@
 - Claimed target surfaces: `SWIFT-B3DBE3375ACE`, `TEST-E8DC4AE52ED7`
 - Slice dossier:
   `conversion/implementation-slices/project-note-read-contracts.json`
-- Verification state: ready; implementation is intentionally absent
-- Ready scaffold hashes:
+- Verification state: implemented; four local obligations pass and exact-
+  implementation-commit CI remains planned
+- Implementation hashes:
   - `ProjectNoteData.swift`:
-    `6b3cf7b3430b34455a2286516484c0a5cbd7a46da4e2d596704ed3a9819b8d5f`
+    `f9ac710c8c031f23178b8a4ab064a3243ed2c2d6ff694de95044fdd8a14c1f18`
   - `ProjectNoteDataTests.swift`:
-    `f37383a496fc9c5a3b2ae6491c9441f2d4ff1e1489df28b7e91efedd198adbc0`
+    `572fc8cb8ace9e690fea913754f96a33427f7cc0fc3257ade4680d75df11db31`
 
 ## Selection and Scope
 
@@ -89,6 +90,46 @@ adding executable behavior to either comment-only scaffold.
 
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
+
+Exact ready commit `58319f2a89a81dd39dd8d624dba481b7d5b17abe`
+passed immutable GitHub Actions run `33616981355`: conversion traceability
+passed in 7 seconds and the isolated-target job passed in 2 minutes 22 seconds
+with all 120 then-existing tests, graph/generated-contract checks, macOS and
+generic iOS Simulator builds and clean tracked artifacts.
+
+## Implemented Contract
+
+- `ProjectNoteID`, `ProjectNoteText`, `ProjectNoteCreatorDisplayName` and
+  `ProjectNoteSource` provide provider-free stable identity and validated
+  visible values.
+- `ProjectNoteSnapshot` binds exact Account/Project/note scope to visible text
+  or non-content-bearing tombstone state, immutable creator/creation/source
+  evidence, an explicit revision and optional paired last-editor/time evidence.
+  Finite creation, edit and deletion times must be causally ordered.
+- `ProjectNotePageRequest` enforces a 1...200 bound, exact Account/Project scope,
+  an optional structured `(createdAt,id)` continuation boundary and a derived
+  canonical query fingerprint with no provider token.
+- `ProjectNotePage` reuses `ListLocalSnapshot`, refuses fingerprint/scope/
+  duplicate/order/limit/count/cursor/readiness contradictions and exposes
+  complete Project-history truth independently from bounded-page completeness.
+- `ProjectNoteQuerying` is the narrow typed local read port. Stable failures
+  reveal no hidden note, actor, membership, provider or production detail.
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove active, edited and tombstoned
+note shape; newest-first same-time ID ordering; structured continuation;
+complete, partial, stale and authoritative-empty canonical restart; stable
+refusal of malformed text/source/audit/scope/identity/order/limit/fingerprint/
+cursor/readiness evidence; exact request matching; and no false page from a
+failing read port.
+
+The complete local gate passes with all 124 target tests in 28 suites, target
+environment isolation, generated app/MCP contracts, macOS and generic iOS
+Simulator staging builds, conversion/capability/query/residual controls, M0 and
+clean diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
+Exact implementation-commit hosted verification remains required before either
+surface advances from `implemented` to `verified`.
 
 ## Permanent Limits
 

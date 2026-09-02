@@ -51,11 +51,11 @@ implementation commit `7f395bbe`, including all 120 target tests and both
 staging builds. It preserves stable Project identity, replacement display text,
 expected revision and Client-relationship separation without deciding Project
 deletion, Client reassignment, provider, migration or production behavior.
-The provider-free Project-note read slice is ready, with exactly two comment-
-only target surfaces. It freezes stable Account/Project/note identity, audit and
-tombstone evidence, deterministic bounded order and explicit offline-history
-readiness without authorizing mutation, provider, migration or production
-behavior.
+The provider-free Project-note read slice is implemented locally and awaits
+exact-commit CI. Exactly two target surfaces now preserve stable Account/
+Project/note identity, audit and tombstone evidence, deterministic bounded order
+and explicit offline-history readiness without authorizing mutation, provider,
+migration or production behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

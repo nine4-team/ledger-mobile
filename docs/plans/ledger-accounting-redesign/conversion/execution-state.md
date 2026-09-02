@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 101
+State version: 102
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-READ-READY
+- Checkpoint: PROJECT-NOTE-READ-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1432,6 +1432,27 @@ modifying the running Firebase application before hard cutover.
   existing target tests in 27 suites, macOS and generic iOS Simulator staging
   builds, generated target-project stability and diff formatting pass while
   both Project-note scaffolds remain comment-only.
+- Exact ready commit `58319f2a89a81dd39dd8d624dba481b7d5b17abe`
+  passed immutable GitHub Actions run `33616981355`: conversion traceability
+  passed in 7 seconds and the isolated-target job passed in 2 minutes 22 seconds
+  with all 120 then-existing tests, graph/generated-contract checks, macOS and
+  generic iOS Simulator builds and clean tracked artifacts.
+- Implemented only the frozen provider-free Project-note read boundary: stable
+  Account/Project/note identity, validated text/source, immutable creator/
+  creation evidence, revision and paired edit audit, non-content-bearing
+  tombstones, bounded typed requests, derived query fingerprints, structured
+  `(createdAt,id)` cursors, newest-first page validation, explicit complete/
+  incomplete Project-history truth and one narrow read port.
+- Added four deterministic tests covering active/edited/tombstoned values,
+  same-time ID tie-breaks, bounded continuation, complete/partial/stale/empty
+  restart, malformed/scope/audit/order/fingerprint/readiness refusal, exact
+  request matching and no false page from a failing port.
+- `PROJECTNOTE-TEST-001` through `-004` pass locally. Exact-implementation-
+  commit hosted `PROJECTNOTE-TEST-005` remains planned, so exactly the two
+  Project-note target surfaces are `implemented`, not `verified`.
+- No note authorization/mutation, physical local persistence, schema/RLS/Sync/
+  Auth/provider behavior, app/MCP/search wiring, source note migration, hosted
+  resource or production operation was introduced.
 
 ## Next Action
 
@@ -1474,10 +1495,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority.
    Treat the verified `project-rename-operation-contracts` dossier and
    `EVID-PROJECT-RENAME-001` as the sole RenameProject semantic authority.
-   Implement only the ready `project-note-read-contracts` dossier after its
-   exact ready commit passes immutable CI. Keep Add/Edit/Remove, role policy,
-   physical persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP/search,
-   migration, hosted resources and production access excluded.
+   Require exact implementation-commit CI for `project-note-read-contracts`,
+   then advance only its five obligations and two surfaces to verified if the
+   run passes. Keep Add/Edit/Remove, role policy, physical persistence, schema/
+   RLS/Sync/Auth/provider behavior, app/MCP/search, migration, hosted resources
+   and production access excluded.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

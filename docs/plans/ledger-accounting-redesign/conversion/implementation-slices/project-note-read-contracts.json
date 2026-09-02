@@ -3,7 +3,7 @@
   "sliceId": "project-note-read-contracts",
   "title": "Read bounded Project notes with stable audit and offline-history evidence",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Note Read Contracts",
   "surfaceIds": [
     "SWIFT-B3DBE3375ACE",
@@ -144,7 +144,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteDataTests.swift",
       "covers": ["PROJECTNOTE-REQ-001", "PROJECTNOTE-REQ-002", "PROJECTNOTE-REQ-003", "PROJECTNOTE-REQ-004", "PROJECTNOTE-REQ-005", "PROJECTNOTE-REQ-006", "PROJECTNOTE-REQ-007"],
       "expected": "Valid synthetic active, edited and tombstoned notes preserve exact Account/Project/note identity, source/creator/creation/edit/deletion audit, revision, newest-first tie-broken order, bounded request and explicit history/readiness evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-READ-001"]
     },
     {
@@ -153,7 +153,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteDataTests.swift",
       "covers": ["PROJECTNOTE-REQ-001", "PROJECTNOTE-REQ-002", "PROJECTNOTE-REQ-003", "PROJECTNOTE-REQ-004", "PROJECTNOTE-REQ-005", "PROJECTNOTE-REQ-006", "PROJECTNOTE-REQ-007"],
       "expected": "Representative ready, partial, stale, complete-history, incomplete-history and tombstoned pages round-trip byte-identically with exact structured cursor, query fingerprint, LocalDataVersion and as-of evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-READ-001"]
     },
     {
@@ -162,7 +162,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteDataTests.swift",
       "covers": ["PROJECTNOTE-REQ-001", "PROJECTNOTE-REQ-002", "PROJECTNOTE-REQ-003", "PROJECTNOTE-REQ-004", "PROJECTNOTE-REQ-005", "PROJECTNOTE-REQ-006", "PROJECTNOTE-REQ-007"],
       "expected": "Blank content, malformed source, unpaired/reversed/nonfinite audit, cross-scope/duplicate/unsorted/over-limit rows, mismatched cursor/fingerprint and false complete-history evidence fail atomically through stable non-enumerating codes.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-READ-001"]
     },
     {
@@ -171,7 +171,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteDataTests.swift",
       "covers": ["PROJECTNOTE-REQ-001", "PROJECTNOTE-REQ-002", "PROJECTNOTE-REQ-003", "PROJECTNOTE-REQ-004", "PROJECTNOTE-REQ-005", "PROJECTNOTE-REQ-006", "PROJECTNOTE-REQ-007"],
       "expected": "A deterministic reference port returns only the exact typed Account/Project/page request, preserves incomplete local history, refuses a mismatched request without yielding rows and yields no false page on failure.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-READ-001"]
     },
     {
