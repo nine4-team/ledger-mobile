@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "policy": "docs/plans/ledger-accounting-redesign/conversion/parallel-subagent-workflow.md",
+  "integrationBranch": "codex/supabase-powersync-implementation",
+  "integrationOwner": "primary-agent",
+  "maximumConcurrentWriters": 2,
+  "enhancedPilotReviewsRequired": 2,
+  "enhancedPilotReviewsCompleted": 0,
+  "assignments": [
+    {
+      "assignmentId": "SUBAGENT-PILOT-001",
+      "pilotOrdinal": 1,
+      "sliceId": "space-assignment-destination-read-contracts",
+      "status": "assigned",
+      "baseCommit": "5f4867af1cba9b860efe9de2a914782bb8010278",
+      "readyCiRun": 33679542831,
+      "branch": "codex/supabase-slice-space-assignment-destination",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_assignment_destination",
+      "workerAgent": null,
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests",
+      "handoff": {
+        "candidateCommit": null,
+        "changedPaths": [],
+        "focusedTests": "pending",
+        "requirementsAccountedFor": false,
+        "forbiddenFilesConfirmedUntouched": false,
+        "risks": []
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "pending",
+        "independentReviewer": null,
+        "independentAdversarialReview": "pending",
+        "findings": [],
+        "focusedRetest": "pending",
+        "completeLocalGate": "pending",
+        "exactIntegrationCommitCi": "pending"
+      },
+      "integrationDisposition": "pending"
+    }
+  ]
+}

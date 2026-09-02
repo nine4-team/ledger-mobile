@@ -246,6 +246,12 @@ repository owns authority, progress, evidence, and the next executable action.
 - One active implementation slice is the normal unit of delivery. Its dossier
   is updated alongside requirements, code, migrations, tests, and evidence—not
   reconstructed only at the end of a long turn.
+- Write-capable subagents follow
+  `parallel-subagent-workflow.md` and `parallel-work-registry.json`: the primary
+  agent remains the sole control-plane/integration writer, workers own one
+  frozen slice in isolated worktrees, and the first two pilots receive complete
+  primary-agent line review plus an independent adversarial review before
+  integration or status promotion.
 - A repo-local Codex hook at `.codex/hooks.json` runs after context compaction.
   It re-injects the persisted checkpoint and a fresh conversion-check result
   before the immediate continuation. The hook is recovery context, not product

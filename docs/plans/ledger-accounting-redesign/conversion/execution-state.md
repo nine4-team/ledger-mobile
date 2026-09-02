@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 146
+State version: 147
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-READY-LOCAL
+- Checkpoint: SUBAGENT-PILOT-001-ASSIGNED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2215,6 +2215,27 @@ modifying the running Firebase application before hard cutover.
   capability/query/residual controls, M0, clean formatting and repeatable target
   project/scheme hashes. The source application project is unchanged. M1/M2
   retain exactly 2/164 coverage blockers with zero structural errors.
+- Exact ready commit `5f4867af1cba9b860efe9de2a914782bb8010278`
+  passed immutable Actions run `33679542831`: conversion traceability passed in
+  8 seconds and the isolated target environment passed in 3 minutes 39 seconds
+  with all 180 then-existing tests, generated contracts, graph checks, both
+  staging builds and clean tracked artifacts.
+- Adopted the controlled subagent model after an explicit risk/reward review.
+  `parallel-subagent-workflow.md` keeps one canonical integration/control-plane
+  owner and permits at most two write-capable workers, each owning one frozen
+  slice in an exact-base isolated worktree. Worker results are untrusted
+  candidate commits and cannot advance evidence or status.
+- The first two implementation pilots require primary-agent review of every
+  changed line, a separate read-only adversarial requirements/security/offline/
+  test review, primary-agent focused and complete-gate reruns, and fresh exact-
+  integration-commit CI. A critical/repeated-major finding, out-of-scope edit or
+  evidence overclaim suspends further write delegation until the process is
+  corrected.
+- Recorded `SUBAGENT-PILOT-001` in `parallel-work-registry.json`, pinned to the
+  exact ready commit and run above. Its dedicated branch/worktree may modify only
+  the two Space assignment-destination implementation/test scaffolds; Firebase,
+  docs/control/generated files, package/project graphs, MCP and hosted systems
+  are forbidden.
 
 ## Next Action
 
@@ -2305,11 +2326,13 @@ Continue without waiting on the two M1 evidence blockers:
    are verified. Treat the ready
    `space-assignment-destination-read-contracts` dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the frozen contract for the next
-   bounded implementation. Commit and push the comment-only ready checkpoint;
-   require both pull-request jobs to pass at that exact commit before adding
-   executable behavior. Then implement only the claimed provider-free directory
-   and deterministic tests, run the complete local gate, obtain exact
-   implementation-commit CI, and promote exactly its two surfaces. Keep
+   bounded implementation. Its exact ready commit and both pull-request jobs
+   are verified. Execute `SUBAGENT-PILOT-001` only in the registry's isolated
+   worktree and allowlisted files. Treat its candidate commit as untrusted:
+   complete the enhanced first-pilot line and independent adversarial reviews,
+   integrate only after all findings are resolved, run the complete local gate,
+   obtain exact integration-commit CI, and promote exactly its two surfaces.
+   Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
