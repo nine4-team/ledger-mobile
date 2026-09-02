@@ -7,7 +7,8 @@
 - Claimed target surfaces: `SWIFT-C6AE96622805`, `TEST-96AAFA22224B`
 - Slice dossier:
   `conversion/implementation-slices/project-preference-read-contracts.json`
-- Verification state: ready; all executable obligations remain planned
+- Verification state: implemented; four local obligations pass and exact-
+  implementation-commit CI remains planned
 - Ready scaffold hashes:
   - `ProjectPreferenceData.swift`:
     `dcf06d2a71a083a4025bad3d92a658f83c6a2d265ce4f10ccbbd654f4bb49bc3`
@@ -117,9 +118,62 @@ their expected 2 and 164 blockers. Only the three documented retired-path
 warnings remain. All 128 existing target tests in 29 suites pass while the two
 new scaffolds contain no executable Project-preference behavior.
 
-Passing this local ready gate authorizes only the bounded provider-free
-implementation named in the dossier. Exact ready-commit CI and later exact-
-implementation-commit CI remain required.
+Passing this local ready gate authorized only the bounded provider-free
+implementation named in the dossier.
+
+Exact ready commit `dfcc1419f59b058c1a4a467662cba8ff95dd5909`
+passed immutable GitHub Actions run
+[33623843538](https://github.com/nine4-team/ledger-mobile/actions/runs/33623843538):
+conversion traceability passed in 7 seconds and the isolated target environment
+passed in 1 minute 50 seconds with all 128 then-existing tests, graph/generated-
+contract checks, macOS and generic iOS Simulator builds and clean tracked
+artifacts.
+
+## Implemented Contract
+
+ProjectPreferenceData.swift now provides:
+
+- ProjectPreferenceSnapshot, binding one Account, Principal and Project to an
+  ordered duplicate-free stable category-ID list and preference revision;
+- ProjectPreferenceDirectoryRequest, whose Account/Principal query fingerprint
+  is derived and reconstructed rather than accepted as caller-authored encoded
+  evidence;
+- ProjectPreferenceDirectorySnapshot, which validates finite local evidence,
+  exact query fingerprint and row scope, unique Project rows and already-
+  authorized visible count before canonical Project ordering;
+- ProjectPreferenceLookupState, which returns stored, notStored only from a
+  complete directory, and notAvailable from incomplete evidence;
+- the narrow provider-free ProjectPreferenceQuerying port; and
+- a stable closed failure taxonomy for pin duplication, Account/Principal
+  scope, Project identity, visible count, time, query/request mismatch, local
+  read failure and malformed encoded evidence.
+
+Category IDs are retained without resolving labels or lifecycle. The read does
+not synthesize default pins, calculate budget values, authorize the supplied
+Principal or implement persistence.
+
+Implementation hashes:
+
+- ProjectPreferenceData.swift:
+  cb11e437e260261aee72edc5510adcb93c05964a760721366f24ae784fccb85b
+- ProjectPreferenceDataTests.swift:
+  c46dc44da180cf030ba018f420569c5086b4604173a5e564459381bd13d6501b
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact row/payload shape and
+pin order; canonical ready/partial/stale/authoritative-empty restart; stored,
+notStored and notAvailable lookup; stable refusal of cross-Account/Principal,
+duplicate Project/pin, fingerprint/count/request/time and malformed evidence;
+and exact/no-false-result reference-port behavior.
+
+The complete local gate passes with all 132 target tests in 30 suites, target
+environment isolation, generated app/MCP contracts, macOS and generic iOS
+Simulator staging builds, conversion/capability/query/residual controls, M0 and
+clean diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
+PROJECTPREFERENCE-TEST-001 through -004 therefore pass. Exact-implementation-commit hosted
+PROJECTPREFERENCE-TEST-005 remains planned, so exactly the two claimed target
+surfaces are implemented, not verified.
 
 ## Permanent Limits
 

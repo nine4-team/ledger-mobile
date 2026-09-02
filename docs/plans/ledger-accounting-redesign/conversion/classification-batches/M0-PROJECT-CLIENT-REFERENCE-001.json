@@ -2698,17 +2698,17 @@
     {
       "id": "SWIFT-C6AE96622805",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "dcf06d2a71a083a4025bad3d92a658f83c6a2d265ce4f10ccbbd654f4bb49bc3",
-      "currentBehavior": "Provides a comment-only target scaffold for current-Principal Project preference read contracts; no executable read, write, provider, migration or application behavior exists.",
+      "acknowledgeSourceHash": "cb11e437e260261aee72edc5510adcb93c05964a760721366f24ae784fccb85b",
+      "currentBehavior": "Implements provider-free current-Principal Project preference rows, exact Account/Principal directory requests, derived fingerprints, ordered local snapshots, authoritative absence versus unavailable lookup, a narrow read port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-READ-001"
       ],
-      "notes": "Ready target-only Phase 1 scaffold. The reviewed slice may define exact Account/Principal/Project scope, ordered unique pinned category identities, preference revision, authoritative absence versus incomplete local evidence and one narrow read port. It cannot authorize a caller, calculate or mutate budget values, resolve category visibility, write preferences, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source preferences or activate production.",
+      "notes": "Implemented target-only Phase 1 read surface pending exact-implementation-commit CI. It defines exact Account/Principal/Project scope, ordered unique pinned category identities, preference revision, derived query identity, canonical local evidence, authoritative absence versus incomplete unavailability and one narrow read port. Four focused/all 132 tests, graph/contracts, both staging builds and clean artifacts pass locally. It cannot authorize a caller, calculate or mutate budget values, resolve category visibility, write preferences, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source preferences or activate production.",
       "target": {
         "owner": "Project Preference Read Contracts",
         "surfaces": [
@@ -2746,17 +2746,17 @@
     {
       "id": "TEST-96AAFA22224B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e5e274a833492de9cc8fd4974b0ac40ea1863312fbbceaf40ea59222fe0878d4",
-      "currentBehavior": "Provides a comment-only target scaffold for deterministic Project preference read tests; no executable test or provider/source fixture exists.",
+      "acknowledgeSourceHash": "c46dc44da180cf030ba018f420569c5086b4604173a5e564459381bd13d6501b",
+      "currentBehavior": "Implements four deterministic tests for exact current-Principal Project preference shape, pin order/revision, ready/partial/stale/authoritative-empty restart, not-stored versus unavailable lookup, scope/duplicate/fingerprint/request refusal and exact read-port behavior.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-READ-001"
       ],
-      "notes": "Ready target-only test scaffold. Planned fixtures cover exact Account/Principal/Project scope, ordered unique pinned category IDs, revision, ready/partial/stale/authoritative-empty restart, authoritative not-stored versus not-available lookup, malformed/scope/duplicate/fingerprint refusal and exact read-port behavior. No physical durability, authorization, preference write, budget calculation, schema/RLS/Sync/provider, app/MCP, migration or production behavior is claimed.",
+      "notes": "Implemented target-only deterministic tests pending exact-implementation-commit CI. They prove exact Account/Principal/Project scope, ordered unique pinned category IDs, revision, ready/partial/stale/authoritative-empty restart, authoritative not-stored versus not-available lookup, malformed/scope/duplicate/fingerprint/request refusal and no false read result. Four focused/all 132 tests, graph/contracts, both staging builds and clean artifacts pass locally. No physical durability, authorization, preference write, budget calculation, schema/RLS/Sync/provider, app/MCP, migration or production behavior is claimed.",
       "target": {
         "owner": "Project Preference Read Contracts",
         "surfaces": [

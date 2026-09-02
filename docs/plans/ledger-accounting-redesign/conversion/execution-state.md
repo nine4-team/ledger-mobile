@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 107
+State version: 108
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-READ-READY
+- Checkpoint: PROJECT-PREFERENCE-READ-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1549,6 +1549,26 @@ modifying the running Firebase application before hard cutover.
   contracts, macOS and generic iOS Simulator staging builds, XcodeGen/source-
   project stability, conversion/capability/query/residual controls, M0 and clean
   diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
+- Exact ready commit `dfcc1419f59b058c1a4a467662cba8ff95dd5909`
+  passed immutable GitHub Actions run `33623843538`: conversion traceability
+  passed in 7 seconds and the isolated target environment passed in 1 minute
+  50 seconds with all 128 then-existing tests, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts.
+- Implemented only the frozen provider-free Project preference read boundary:
+  exact Account/Principal/Project rows with ordered unique category pins and
+  revision, a derived-fingerprint directory request, canonical local directory,
+  stored/not-stored/not-available lookup, one narrow read port and stable
+  bounded failures.
+- Added four deterministic tests for exact personal scope/pin order, ready/
+  partial/stale/authoritative-empty restart, authoritative absence versus local
+  unavailability, cross-scope/duplicate/fingerprint/count/request/time/malformed
+  refusal and exact/no-false-result port behavior.
+- `PROJECTPREFERENCE-TEST-001` through `-004` pass locally. All 132 target tests
+  in 30 suites, target graph/generated contracts, both staging builds,
+  conversion/capability/query/residual controls, M0 and clean artifacts pass.
+  Exact-implementation-commit hosted
+  `PROJECTPREFERENCE-TEST-005` remains planned, so exactly the two claimed
+  target surfaces are `implemented`, not `verified`.
 
 ## Next Action
 
@@ -1597,10 +1617,11 @@ Continue without waiting on the two M1 evidence blockers:
    and explicit offline-history completeness. Treat the verified
    `project-note-creation-operation-contracts` dossier and
    `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
-   authority. Run the complete ready gate for the frozen
-   `project-preference-read-contracts` dossier. If it passes, push and verify
-   the exact ready commit, then implement only its two claimed provider-free
-   surfaces and five obligations. Keep preference writes, first-use defaults,
+   authority. Verify exact implementation commit CI for the frozen
+   `project-preference-read-contracts` dossier. If both jobs pass, record the
+   immutable run and advance only its two claimed surfaces and all five
+   obligations to `verified`, then audit the next smallest complete dependency.
+   Keep preference writes, first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
    policy, schema/RLS/Sync/Auth/provider behavior, app/MCP/search, migration,

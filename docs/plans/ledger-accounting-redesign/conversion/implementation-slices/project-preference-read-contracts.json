@@ -3,7 +3,7 @@
   "sliceId": "project-preference-read-contracts",
   "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Preference Read Contracts",
   "surfaceIds": [
     "SWIFT-C6AE96622805",
@@ -145,7 +145,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
       "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
       "expected": "Valid synthetic rows preserve exact Account/Principal/Project identity, ordered unique pins, empty stored state and revision while excluding category labels/lifecycle, budget values, user paths, authorization and provider data.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
     },
     {
@@ -154,7 +154,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
       "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-007"],
       "expected": "Ready, partial, stale and authoritative-empty current-Principal directories round-trip byte-identically with exact query fingerprint, row/pin order, revisions, LocalDataVersion, completeness, quality and as-of evidence; lookup preserves stored/notStored/notAvailable truth.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
     },
     {
@@ -163,7 +163,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
       "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
       "expected": "Cross-Account/Principal rows, duplicate Project identities or pinned category IDs, fingerprint/count/request mismatch, invalid as-of time and malformed decoded values fail atomically through stable codes.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
     },
     {
@@ -172,7 +172,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
       "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
       "expected": "A deterministic reference port returns only the exact Account/Principal directory, rejects request/snapshot mismatch without yielding rows, and a failing port yields no false snapshot.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
     },
     {
@@ -185,7 +185,7 @@
       "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-PREFERENCE-READ-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 read contract only. It preserves exact current-Principal preference scope, ordered stable pin identities, revision and authoritative absence versus incomplete-local truth. It does not invent a first-use default, resolve archived/stale category visibility, calculate budgets, authorize a caller, write preferences, define schema/RLS/Sync/Auth/provider behavior, wire app/MCP, migrate source data, provision hosted resources or authorize production/cutover."
