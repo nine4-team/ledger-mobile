@@ -6,6 +6,15 @@ import Testing
 struct SpaceCoreDetailsDataTests {
     @Test("Project and inventory Spaces preserve exact core detail and derived progress")
     func projectAndInventoryDetails() throws {
+        let request = try Self.request()
+        let accountChanged = try Self.request(account: "other-account")
+        let spaceChanged = try Self.request(space: "other-space")
+        #expect(Set([
+            request.queryFingerprint,
+            accountChanged.queryFingerprint,
+            spaceChanged.queryFingerprint
+        ]).count == 3)
+
         let sharedItemID = try SpaceChecklistItemID(validating: "shared-item")
         let laterChecklist = try Self.checklist(
             "installation",
@@ -152,28 +161,20 @@ struct SpaceCoreDetailsDataTests {
         #expect(Self.decodeFailure(SpaceCoreDetailsRequest.self, badFingerprint) == .requestFingerprintMismatch)
 
         let localBytes = try OperationContractCodec.encode(try Self.local([row]))
-        let reboundAccount = try Self.mutate(localBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            rows[0]["accountId"] = "other-account"
-            local["rows"] = rows
-            root["local"] = local
+        let reboundAccount = try Self.mutateFirstRow(localBytes) { row in
+            row["accountId"] = "other-account"
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, reboundAccount) == .accountScopeMismatch)
-        let noncanonicalName = try Self.mutate(localBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            rows[0]["displayName"] = " Living Room "
-            local["rows"] = rows
-            root["local"] = local
+        let noncanonicalName = try Self.mutateFirstRow(localBytes) { row in
+            row["displayName"] = " Living Room "
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, noncanonicalName) == .invalidEncodedSpace)
-        let invalidScope = try Self.mutate(localBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            rows[0]["scope"] = ["kind": "businessInventory", "projectId": "not-allowed"]
-            local["rows"] = rows
-            root["local"] = local
+        let noncanonicalNotes = try Self.mutateFirstRow(localBytes) { row in
+            row["notes"] = ["value": " Operational notes "]
+        }
+        #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, noncanonicalNotes) == .invalidEncodedSpace)
+        let invalidScope = try Self.mutateFirstRow(localBytes) { row in
+            row["scope"] = ["kind": "businessInventory", "projectId": "not-allowed"]
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, invalidScope) == .invalidSpaceScope)
 
@@ -185,68 +186,38 @@ struct SpaceCoreDetailsDataTests {
             Self.checklist("two", order: 2, items: [Self.item("other", text: "Second", checked: true, order: 1)])
         ])
         let checklistBytes = try OperationContractCodec.encode(try Self.local([checklistRow]))
-        let duplicateChecklist = try Self.mutate(checklistBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            var collection = rows[0]["checklists"] as! [String: Any]
-            var checklists = collection["checklists"] as! [[String: Any]]
+        let noncanonicalChecklistName = try Self.mutateChecklists(checklistBytes) { checklists in
+            checklists[0]["name"] = " One "
+        }
+        #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, noncanonicalChecklistName) == .invalidEncodedSpace)
+        let noncanonicalChecklistItemText = try Self.mutateChecklists(checklistBytes) { checklists in
+            var items = checklists[0]["items"] as! [[String: Any]]
+            items[0]["text"] = " First "
+            checklists[0]["items"] = items
+        }
+        #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, noncanonicalChecklistItemText) == .invalidEncodedSpace)
+        let duplicateChecklist = try Self.mutateChecklists(checklistBytes) { checklists in
             checklists[1]["id"] = checklists[0]["id"]
-            collection["checklists"] = checklists
-            rows[0]["checklists"] = collection
-            local["rows"] = rows
-            root["local"] = local
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, duplicateChecklist) == .invalidEncodedSpace)
-        let duplicateChecklistOrder = try Self.mutate(checklistBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            var collection = rows[0]["checklists"] as! [String: Any]
-            var checklists = collection["checklists"] as! [[String: Any]]
+        let duplicateChecklistOrder = try Self.mutateChecklists(checklistBytes) { checklists in
             checklists[1]["presentationOrder"] = checklists[0]["presentationOrder"]
-            collection["checklists"] = checklists
-            rows[0]["checklists"] = collection
-            local["rows"] = rows
-            root["local"] = local
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, duplicateChecklistOrder) == .invalidEncodedSpace)
-        let duplicateItem = try Self.mutate(checklistBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            var collection = rows[0]["checklists"] as! [String: Any]
-            var checklists = collection["checklists"] as! [[String: Any]]
+        let duplicateItem = try Self.mutateChecklists(checklistBytes) { checklists in
             var items = checklists[0]["items"] as! [[String: Any]]
             items[1]["id"] = items[0]["id"]
             checklists[0]["items"] = items
-            collection["checklists"] = checklists
-            rows[0]["checklists"] = collection
-            local["rows"] = rows
-            root["local"] = local
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, duplicateItem) == .invalidEncodedSpace)
-        let duplicateItemOrder = try Self.mutate(checklistBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            var collection = rows[0]["checklists"] as! [String: Any]
-            var checklists = collection["checklists"] as! [[String: Any]]
+        let duplicateItemOrder = try Self.mutateChecklists(checklistBytes) { checklists in
             var items = checklists[0]["items"] as! [[String: Any]]
             items[1]["presentationOrder"] = items[0]["presentationOrder"]
             checklists[0]["items"] = items
-            collection["checklists"] = checklists
-            rows[0]["checklists"] = collection
-            local["rows"] = rows
-            root["local"] = local
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, duplicateItemOrder) == .invalidEncodedSpace)
-        let noncanonicalOrder = try Self.mutate(checklistBytes) { root in
-            var local = root["local"] as! [String: Any]
-            var rows = local["rows"] as! [[String: Any]]
-            var collection = rows[0]["checklists"] as! [String: Any]
-            collection["checklists"] = Array(
-                (collection["checklists"] as! [[String: Any]]).reversed()
-            )
-            rows[0]["checklists"] = collection
-            local["rows"] = rows
-            root["local"] = local
+        let noncanonicalOrder = try Self.mutateChecklists(checklistBytes) { checklists in
+            checklists.reverse()
         }
         #expect(Self.decodeFailure(SpaceCoreDetailsLocalSnapshot.self, noncanonicalOrder) == .invalidEncodedSpace)
     }
@@ -321,7 +292,10 @@ struct SpaceCoreDetailsDataTests {
         #expect(exact.updates == exactUpdates && exact.failure == nil)
 
         let otherRequest = try Self.request(space: "other-space")
-        let rebound = await Self.collect(FixturePort(updates: exactUpdates), otherRequest)
+        let rebound = await Self.collectWithoutConsumerValidation(
+            FixturePort(updates: exactUpdates),
+            otherRequest
+        )
         #expect(rebound.updates.isEmpty && rebound.failure == .updateRequestMismatch)
         let failed = await Self.collect(FailingPort(), request)
         #expect(failed.updates.isEmpty && failed.failure == .localReadFailed)
@@ -506,6 +480,32 @@ struct SpaceCoreDetailsDataTests {
         return try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
     }
 
+    private static func mutateFirstRow(
+        _ bytes: Data,
+        _ body: (inout [String: Any]) -> Void
+    ) throws -> Data {
+        try mutate(bytes) { root in
+            var local = root["local"] as! [String: Any]
+            var rows = local["rows"] as! [[String: Any]]
+            body(&rows[0])
+            local["rows"] = rows
+            root["local"] = local
+        }
+    }
+
+    private static func mutateChecklists(
+        _ bytes: Data,
+        _ body: (inout [[String: Any]]) -> Void
+    ) throws -> Data {
+        try mutateFirstRow(bytes) { row in
+            var collection = row["checklists"] as! [String: Any]
+            var checklists = collection["checklists"] as! [[String: Any]]
+            body(&checklists)
+            collection["checklists"] = checklists
+            row["checklists"] = collection
+        }
+    }
+
     private static func collect<Port: SpaceCoreDetailsQuerying>(
         _ port: Port,
         _ request: SpaceCoreDetailsRequest
@@ -514,6 +514,23 @@ struct SpaceCoreDetailsDataTests {
         do {
             for try await update in port.watchSpaceCoreDetails(request) {
                 updates.append(try update.validating(request: request))
+            }
+            return (updates, nil)
+        } catch let failure as SpaceCoreDetailsFailure {
+            return (updates, failure)
+        } catch {
+            return (updates, nil)
+        }
+    }
+
+    private static func collectWithoutConsumerValidation<Port: SpaceCoreDetailsQuerying>(
+        _ port: Port,
+        _ request: SpaceCoreDetailsRequest
+    ) async -> (updates: [SpaceCoreDetailsUpdate], failure: SpaceCoreDetailsFailure?) {
+        var updates: [SpaceCoreDetailsUpdate] = []
+        do {
+            for try await update in port.watchSpaceCoreDetails(request) {
+                updates.append(update)
             }
             return (updates, nil)
         } catch let failure as SpaceCoreDetailsFailure {
@@ -531,8 +548,14 @@ private struct FixturePort: SpaceCoreDetailsQuerying {
         _ request: SpaceCoreDetailsRequest
     ) -> AsyncThrowingStream<SpaceCoreDetailsUpdate, Error> {
         AsyncThrowingStream { continuation in
-            for update in updates { continuation.yield(update) }
-            continuation.finish()
+            do {
+                for update in updates {
+                    continuation.yield(try update.validating(request: request))
+                }
+                continuation.finish()
+            } catch {
+                continuation.finish(throwing: error)
+            }
         }
     }
 }
