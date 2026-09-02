@@ -3078,17 +3078,17 @@
     {
       "id": "SWIFT-82AD18E41C5C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "9df1f684216df501b959cd2cb31e5116fd50181ddcc16627599bdbf9ac0698e1",
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for a revision-aware Client archive command that hides the Client from future selection without deleting identity or history; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "398e75bc9fdd23b0e993a13d36b893cdd9ec87f8b365b0cbd09b31148cfe650f",
+      "currentBehavior": "Implements a provider-free Client archive draft, reused typed expected Client revision, exact same-subject revision precondition, shared-envelope command, derived Client subject/fingerprint validation, exact receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-ARCHIVE-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one stable Client archive intent, exact expected-revision precondition, shared operation binding/receipt validation and a narrow port. It cannot archive/reassign Projects, restore/merge/delete/rename a Client, rewrite frozen history, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-025 remains open for Client merge and Project reassignment.",
+      "notes": "Target-only Phase 1 command boundary implemented locally after exact ready commit 9f3a03dd passed immutable Actions run 33638235220. Four focused tests pass. Exact implementation-commit CI remains planned. It cannot archive/reassign Projects, restore/merge/delete/rename a Client, rewrite frozen history, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-025 remains open for Client merge and Project reassignment.",
       "target": {
         "owner": "Client Archive Operation Contracts",
         "surfaces": [
@@ -3125,17 +3125,17 @@
     {
       "id": "TEST-DAD87DF6C1DB",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "4eb6a5c22de6e721c0eba77e626bce6f183e5d698f48065e46f07b002119db93",
-      "currentBehavior": "Defines only the comment-scaffolded target tests for Client archive identity, revision, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "0c1c8e041ff38d5ec9b29a635409fb3c3c6fb4b79af1abf494afc4acfbf8ded4",
+      "currentBehavior": "Executes four deterministic provider-free tests for exact Client archive scope/revision, canonical restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-ARCHIVE-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove stable Client archive intent, expected revision, restart/replay/refusal and absence of Project cascade, delete, merge, rename, history rewrite or reassignment without claiming physical local durability, authorization, server apply/history retention, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Four focused deterministic tests pass locally after exact ready commit 9f3a03dd passed immutable Actions run 33638235220. Exact implementation-commit CI remains planned. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply/history retention, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Client Archive Operation Contracts",
         "surfaces": [

@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-82AD18E41C5C`, `TEST-DAD87DF6C1DB`
 - Slice dossier:
   `conversion/implementation-slices/client-archive-operation-contracts.json`
-- Verification state: ready locally; executable behavior remains absent until
-  the exact comment-only ready commit passes immutable pull-request CI
+- Verification state: implemented locally; four of five obligations pass and
+  exact-implementation-commit pull-request CI remains planned
 - Ready scaffold hashes:
   - `ClientArchiveOperation.swift`:
     `9df1f684216df501b959cd2cb31e5116fd50181ddcc16627599bdbf9ac0698e1`
@@ -111,6 +111,56 @@ The complete local ready gate passes:
 
 Passing immutable exact-ready-commit CI may authorize only the bounded
 provider-free implementation named here.
+
+Exact comment-only ready commit
+`9f3a03dd257b350362d48ef8b5742dcd01131747` passed immutable GitHub Actions
+run `33638235220`: conversion traceability passed in 7 seconds and the isolated
+target environment passed in 2 minutes 20 seconds with all 144 then-existing
+tests, graph/generated-contract checks, both staging builds and clean tracked
+artifacts. That gate authorized only the frozen provider-free implementation.
+
+## Implemented Contract
+
+- `ClientArchiveDraft` binds one exact Account, actor, operation contract,
+  stable Client, reused `ExpectedClientRevision` and finite capture time.
+- `ArchiveClientPayload` contains only the stable Client ID.
+- `ArchiveClientCommand` derives exactly one Client subject and one same-subject
+  expected-revision precondition, reuses the shared operation envelope and
+  fingerprint, and revalidates all duplicated bindings on decode.
+- Receipt validation accepts only the command's exact Operation ID, while
+  `ClientArchiving` supplies one narrow provider-free operation port.
+- `ClientArchiveFailure` provides stable bounded diagnostic codes for invalid
+  time, binding/precondition/subject/fingerprint/receipt mismatch, malformed
+  evidence and local acceptance failure.
+
+The command contains no lifecycle boolean, Project list, name/history/
+accounting field, delete/merge/restore/reassignment input, generic mutation map
+or authoritative archive result. Its deterministic test adapter uses the shared
+`OperationJournal`; it is not a physical local or server implementation.
+
+Implementation hashes:
+
+- `ClientArchiveOperation.swift`:
+  `398e75bc9fdd23b0e993a13d36b893cdd9ec87f8b365b0cbd09b31148cfe650f`
+- `ClientArchiveOperationTests.swift`:
+  `0c1c8e041ff38d5ec9b29a635409fb3c3c6fb4b79af1abf494afc4acfbf8ded4`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact stable Client scope and
+same-subject revision intent, canonical byte-identical restart, atomic invalid/
+rebound/tampered evidence refusal with stable diagnostics, shared exact replay/
+Operation-ID mismatch semantics and no false receipt from a failing port.
+
+The complete local implementation gate also passes: all 148 target tests in 34
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The ledger remains at 773 recorded / 758
+discovered, 347 mapped-or-later / 164 residual / 43 blockers; 74 target surfaces
+are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
+
+`CLIENTARCHIVE-TEST-001` through `-004` therefore pass. The exact-implementation-
+commit operational obligation remains planned until immutable CI completes.
 
 ## Permanent Limits
 

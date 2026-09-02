@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T13:43:51.516Z",
+  "generatedFromManifestSync": "2026-09-02T13:57:39.245Z",
   "totals": {
     "slices": 34,
     "claimedTargetSurfaces": 89,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 72
+    "implementationAdvancedTargetSurfaces": 74
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 32,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -51,7 +51,7 @@
       "sliceId": "client-archive-operation-contracts",
       "title": "Archive one Client without deleting identity, Projects, or history",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Client Archive Operation Contracts",
       "surfaceIds": [
         "SWIFT-82AD18E41C5C",

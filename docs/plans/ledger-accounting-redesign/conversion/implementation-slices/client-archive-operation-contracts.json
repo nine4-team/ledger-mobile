@@ -3,7 +3,7 @@
   "sliceId": "client-archive-operation-contracts",
   "title": "Archive one Client without deleting identity, Projects, or history",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client Archive Operation Contracts",
   "surfaceIds": [
     "SWIFT-82AD18E41C5C",
@@ -118,8 +118,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveOperationTests.swift",
       "covers": ["CLIENTARCHIVE-REQ-001", "CLIENTARCHIVE-REQ-002", "CLIENTARCHIVE-REQ-003", "CLIENTARCHIVE-REQ-004", "CLIENTARCHIVE-REQ-005", "CLIENTARCHIVE-REQ-006", "CLIENTARCHIVE-REQ-007"],
       "expected": "A valid synthetic draft produces one typed exact-scope ArchiveClient command with one same-subject expected revision and no Project/history/name/accounting/delete/merge/restore/reassignment/generic-write input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-001"]
     },
     {
       "id": "CLIENTARCHIVE-TEST-002",
@@ -127,8 +127,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveOperationTests.swift",
       "covers": ["CLIENTARCHIVE-REQ-001", "CLIENTARCHIVE-REQ-002", "CLIENTARCHIVE-REQ-003", "CLIENTARCHIVE-REQ-004", "CLIENTARCHIVE-REQ-005", "CLIENTARCHIVE-REQ-007"],
       "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Client/revision/time/subject/fingerprint evidence and no backend path, provider, credential, dependent-row result or archive-authority claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-001"]
     },
     {
       "id": "CLIENTARCHIVE-TEST-003",
@@ -136,8 +136,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveOperationTests.swift",
       "covers": ["CLIENTARCHIVE-REQ-001", "CLIENTARCHIVE-REQ-002", "CLIENTARCHIVE-REQ-003", "CLIENTARCHIVE-REQ-004", "CLIENTARCHIVE-REQ-005", "CLIENTARCHIVE-REQ-006", "CLIENTARCHIVE-REQ-007"],
       "expected": "Invalid time and changed Account/actor/contract/Client/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through Client-archive stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-001"]
     },
     {
       "id": "CLIENTARCHIVE-TEST-004",
@@ -145,8 +145,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveOperationTests.swift",
       "covers": ["CLIENTARCHIVE-REQ-001", "CLIENTARCHIVE-REQ-002", "CLIENTARCHIVE-REQ-003", "CLIENTARCHIVE-REQ-004", "CLIENTARCHIVE-REQ-005", "CLIENTARCHIVE-REQ-006", "CLIENTARCHIVE-REQ-007"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Client/revision intent is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-001"]
     },
     {
       "id": "CLIENTARCHIVE-TEST-005",
@@ -158,7 +158,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-CLIENT-ARCHIVE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 Client archive command only. Canonical target authority requires history-preserving archive rather than hard deletion for a Client with Projects or accounting history. O-025 remains fully open because no Client merge or Project reassignment exists. Restore/unarchive is deliberately absent pending its own exact command authority rather than a generic lifecycle toggle. The slice stops before physical durable storage, authoritative dependency/history preservation, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."

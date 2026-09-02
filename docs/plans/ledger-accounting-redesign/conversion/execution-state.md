@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 119
+State version: 120
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-ARCHIVE-READY
+- Checkpoint: CLIENT-ARCHIVE-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1757,6 +1757,23 @@ modifying the running Firebase application before hard cutover.
   environment/generated contracts, both staging builds, conversion/capability/
   query/residual controls, M0 and clean diff formatting. Immutable exact-ready-
   commit CI remains the only prerequisite to bounded implementation.
+- Exact comment-only ready commit
+  `9f3a03dd257b350362d48ef8b5742dcd01131747` passed immutable Actions run
+  `33638235220`: conversion traceability passed in 7 seconds and the isolated
+  target environment passed in 2 minutes 20 seconds with all 144 then-existing
+  tests, graph/generated-contract checks, both staging builds and clean tracked
+  artifacts.
+- Implemented only the frozen provider-free Client archive boundary: one stable
+  Client ID, reused typed expected revision, exact same-subject precondition,
+  shared envelope/fingerprint/receipt/replay lifecycle, canonical restart and
+  stable refusal. There is no lifecycle boolean, Project list, cascade, hard
+  delete, merge, rename, restore, history rewrite or reassignment input.
+- Added four deterministic tests for exact scope/precondition, byte-identical
+  restart, invalid/rebound/tampered evidence refusal, shared replay/mismatch
+  semantics and no false receipt from a failing port. Four focused/all 148
+  target tests in 34 suites, graph/generated contracts, both staging builds,
+  conversion/capability/query/residual controls, M0 and clean artifacts pass
+  locally. Exactly two surfaces are `implemented`; exact-commit CI remains.
 
 ## Next Action
 
@@ -1815,10 +1832,10 @@ Continue without waiting on the two M1 evidence blockers:
    suggestion read semantics. Treat the verified
    `space-template-reference-read-contracts` dossier and
    `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
-   Treat the ready `client-archive-operation-contracts` dossier and
-   `EVID-CLIENT-ARCHIVE-001` as the exact bounded implementation plan. Commit
-   only its comment scaffolds/control evidence, require immutable ready-commit
-   CI, then implement and verify only that frozen provider-free command. Keep
+   Treat the implemented `client-archive-operation-contracts` dossier and
+   `EVID-CLIENT-ARCHIVE-001` as the exact bounded implementation authority.
+   Commit only this frozen provider-free implementation, require immutable
+   exact-commit CI, then advance exactly its two surfaces to verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
