@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T15:26:55.871Z",
+    "lastSynchronizedAt": "2026-09-02T16:05:00.485Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -31457,6 +31457,67 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-EDFA6A1EF8C3",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SpaceDetailsUpdateOperation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SpaceDetailsUpdateOperation.swift"
+        }
+      ],
+      "observedSourceHash": "17d858d85970e165a22db02d9e3b7d3956245be5fd21b9c48eeb4be9941ad9c8",
+      "acknowledgedSourceHash": "17d858d85970e165a22db02d9e3b7d3956245be5fd21b9c48eeb4be9941ad9c8",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for revision-aware replacement of one Space's complete normalized name-and-optional-notes pair; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Details Update Operation Contracts",
+        "surfaces": [
+          "ExpectedSpaceRevision",
+          "SpaceDetailsUpdateDraft",
+          "UpdateSpaceDetailsPayload",
+          "UpdateSpaceDetailsCommand",
+          "SpaceDetailsUpdating",
+          "SpaceDetailsUpdateFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable SpaceID and expected Space revision while carrying no caller-authored scope, path, authorization claim or unrelated Space field",
+          "Construction and restart reject changed Account, actor, contract, Space/name/notes payload, revision precondition, subject or fingerprint; local value validity never substitutes for later trusted membership, Space existence/revision and update authorization"
+        ],
+        "syncRequirements": [
+          "The complete details-replacement intent reuses the shared operation fingerprint/receipt/replay lifecycle and exactly one same-Space expected-revision precondition",
+          "A deterministic reference port proves only provider-free acceptance/conflict semantics, not physical durability, authoritative row update, optimistic Space visibility or synchronized detail readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Space-details intent and decode no Firebase generic field dictionary, Space document, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Space identity/scope, canonical mutable name/notes, revision/audit and source correlation while separately reconciling checklists, attachments, assignments, review and lifecycle"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove complete normalized name/notes replacement, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one UpdateSpaceDetails intent with stable Space identity, complete canonical name/notes replacement, exact expected revision, shared operation binding/receipt validation and a narrow port. It cannot change scope, checklists, templates, media, Item assignment, review/completion/lifecycle state or accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "SWIFT-EE7D53A3C3EA",
       "kind": "swift_logic",
       "name": "LedgeriOS/LedgeriOS/Logic/PdfImageExtractor.swift",
@@ -37191,6 +37252,65 @@
       ],
       "notes": "Preserve matcher value while adding authorization, readiness, rank/cursor, result-context, offline, and no-proto target tests. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
       "classificationBatch": "M0-REPORTING-SEARCH-001"
+    },
+    {
+      "id": "TEST-E8832A105D5C",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift"
+        }
+      ],
+      "observedSourceHash": "f5a877a366877ed95661f043c406981921da8f94cb3878e3eac91f718b127b78",
+      "acknowledgedSourceHash": "f5a877a366877ed95661f043c406981921da8f94cb3878e3eac91f718b127b78",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target tests for complete normalized Space detail replacement, exact revision, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Details Update Operation Contracts",
+        "surfaces": [
+          "SpaceDetailsUpdateOperationTests",
+          "complete Space name and notes fixtures",
+          "same-Space expected-revision fixtures",
+          "canonical command restart/replay fixtures",
+          "payload/precondition/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation and Space identities and prove no scope/checklist/template/attachment/Item/review/lifecycle/accounting field can rebind update identity or authority",
+          "Negative tests expose only stable bounded codes and no name/notes text, source paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local update-operation receipt from physical persistence, authoritative row state and synchronized Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent set/clear details evidence round-trips byte-identically while changed Account/actor/contract/Space/name/notes/revision/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Space-details boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove complete canonical Space name/notes replacement, same-Space revision, restart/replay/refusal and absence of scope/checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-E8DC4AE52ED7",

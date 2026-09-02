@@ -21,6 +21,11 @@ Spaces are organizational containers for items. They represent physical location
   whitespace. Optional notes use the same outer-whitespace normalization, with
   nil or whitespace-only input meaning no notes. Accepted interior text is
   preserved, and duplicate Space names remain valid because identity is by ID.
+- `UpdateSpaceDetails` replaces the complete mutable name-and-optional-notes
+  pair using those same normalization rules for one stable Space ID and one
+  expected Space revision. It cannot change the immutable Project-or-Business-
+  Inventory scope or act as a partial/generic field update; a stale edit must
+  surface a conflict rather than silently overwriting newer details.
 - Direct creation owns only Space identity, scope, name, and optional notes.
   Attachments, checklist revisions, template application/saving, Item
   assignment, archive, review notes, and completion/reconciliation state are

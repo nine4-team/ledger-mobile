@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 351 of 515 target-relevant
+Status: M0 inventory classification complete; 353 of 517 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -130,6 +130,15 @@ artifacts. Checklist/template/media/
 Item/review/lifecycle/accounting mutation, authorization, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded. O-023/O-026/O-037 stay open; `EVID-SPACE-CREATION-001`.
+The provider-free Space details update slice is ready. Exactly two comment-only
+target surfaces and one machine-readable dossier freeze a complete normalized
+name/optional-notes replacement, stable Space identity, exact same-Space
+expected revision, shared operation lifecycle, and a narrow port. No executable
+details-update behavior exists before exact-ready-commit CI; scope/checklist/
+template/media/Item/review/lifecycle/accounting mutation, authorization,
+physical persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
+production remain excluded. O-023/O-026/O-037 stay open;
+`EVID-SPACE-DETAILS-UPDATE-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

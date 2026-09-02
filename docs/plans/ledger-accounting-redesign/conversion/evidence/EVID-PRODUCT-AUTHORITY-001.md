@@ -14,13 +14,13 @@
 
 ## Result
 
-All 777 conversion surfaces resolve through their one reviewed classification
+All 779 conversion surfaces resolve through their one reviewed classification
 batch to an explicit authority set in `product-authority-crosswalk.json`:
 
-- 623 surfaces are in product-governed batches;
+- 625 surfaces are in product-governed batches;
 - 154 are platform, query/profiling, cutover, residual, or conversion-control
   surfaces governed by technical authorities;
-- all 515 target-relevant surfaces resolve to one of those reviewed scopes; and
+- all 517 target-relevant surfaces resolve to one of those reviewed scopes; and
 - all seven canonical target specs are explicitly present and distinguished from
   current-product and historical-evidence documents.
 
@@ -56,6 +56,11 @@ The direct Space-creation dependency audit also registers architecture documents
 operation lifecycle, narrow port, and migration separation used by that slice;
 they do not change `spaces.md` product authority or resolve any open product
 decision.
+
+The Space-details dependency audit additionally registers the reviewed Spaces/
+review capability dossier as conversion-control evidence for that batch. It
+supports the preserve/correct operation split and cannot override canonical
+`spaces.md` behavior or grant implementation authority by itself.
 
 The conversion check now fails when a classification batch has no authority
 entry, a referenced authority file disappears, a product batch lacks a
@@ -95,7 +100,7 @@ npm run conversion:report
 npm run conversion:gate:m0
 ```
 
-Result: 777 recorded surfaces, 762 currently discovered, zero errors and three
+Result: 779 recorded surfaces, 764 currently discovered, zero errors and three
 explained retained-path warnings; M0 passes. No Firebase application behavior,
 Supabase/PowerSync schema, deployment, production data, or cutover state was
 changed.

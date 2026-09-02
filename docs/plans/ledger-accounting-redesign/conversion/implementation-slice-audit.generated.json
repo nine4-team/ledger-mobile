@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T15:26:55.871Z",
+  "generatedFromManifestSync": "2026-09-02T16:05:00.485Z",
   "totals": {
-    "slices": 36,
-    "claimedTargetSurfaces": 93,
+    "slices": 37,
+    "claimedTargetSurfaces": 95,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 78
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 35,
@@ -436,6 +436,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-details-update-operation-contracts",
+      "title": "Replace one Space's complete mutable details without changing scope or child state",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Details Update Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-EDFA6A1EF8C3",
+        "TEST-E8832A105D5C"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-details-update-operation-contracts.json"
     },
     {
       "sliceId": "space-template-reference-read-contracts",
