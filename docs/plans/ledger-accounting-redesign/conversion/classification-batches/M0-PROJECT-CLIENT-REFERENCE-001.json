@@ -2795,14 +2795,14 @@
       "acknowledgeSourceHash": "fe54fb28fe1e772c222976a2953402f267faa1e6c95fa48a1433e21b6abbc2c8",
       "currentBehavior": "Implements a provider-free current-Principal Project preference update draft, complete ordered pin-replacement payload, explicit not-stored or revision precondition, derived exact subject, shared operation fingerprint/receipt lifecycle, canonical restart, stable failures and one narrow port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-UPDATE-001"
       ],
-      "notes": "Implemented target-only Phase 1 command at the post-ready local checkpoint. It binds one own-Principal Account/Project, complete ordered unique pins, absent/revision concurrency and the shared operation lifecycle. Four focused/all 136 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
+      "notes": "Verified target-only Phase 1 command at exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 and immutable Actions run 33628801064. It binds one own-Principal Account/Project, complete ordered unique pins, absent/revision concurrency and the shared operation lifecycle. Four focused/all 136 tests, graph/contracts, both staging builds and clean tracked artifacts pass. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
       "target": {
         "owner": "Project Preference Update Operation Contracts",
         "surfaces": [
@@ -2843,14 +2843,14 @@
       "acknowledgeSourceHash": "6af5561e63199d40831281b6c1eb4ffd7ba68f5926916f9269849aed78b93292",
       "currentBehavior": "Implements four deterministic tests for exact own-Principal scope and ordered replacement, absent/revision/stored-empty restart, duplicate/rebound/tampered refusal, shared operation-journal replay/mismatch semantics and no false receipt.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-UPDATE-001"
       ],
-      "notes": "Implemented target-only deterministic tests at the post-ready local checkpoint. Four focused/all 136 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
+      "notes": "Verified target-only deterministic tests at exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 and immutable Actions run 33628801064. Four focused/all 136 tests, graph/contracts, both staging builds and clean tracked artifacts pass. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Project Preference Update Operation Contracts",
         "surfaces": [

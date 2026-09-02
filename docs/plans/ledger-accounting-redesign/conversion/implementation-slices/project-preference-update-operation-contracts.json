@@ -3,7 +3,7 @@
   "sliceId": "project-preference-update-operation-contracts",
   "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Preference Update Operation Contracts",
   "surfaceIds": [
     "SWIFT-8668DE2251DE",
@@ -180,12 +180,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming preference persistence/apply, authentication, schema/RLS/Sync/provider, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented decision-independent Phase 1 command boundary after exact ready commit 30a131e8305b838f32854601db44ae5aeacbfe7b passed immutable Actions run 33626533989. Four deterministic obligations pass locally; exact-implementation-commit operational evidence remains planned, so the slice is not verified. Personal pinning and the reviewed capability/architecture contracts settle a complete current-Principal replacement plus explicit absent/revision concurrency. O-026 remains fully open because this operation cannot mutate shared category definitions or grant reference-data authority. The slice stops before authentication, category resolution/defaults, physical durability, authoritative server apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified decision-independent Phase 1 command boundary. Exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 passed immutable Actions run 33628801064: conversion traceability in 10 seconds and the isolated target environment in 2 minutes 29 seconds with all 136 tests in 31 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. Personal pinning and the reviewed capability/architecture contracts settle a complete current-Principal replacement plus explicit absent/revision concurrency. O-026 remains fully open because this operation cannot mutate shared category definitions or grant reference-data authority. The slice stops before authentication, category resolution/defaults, physical durability, authoritative server apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

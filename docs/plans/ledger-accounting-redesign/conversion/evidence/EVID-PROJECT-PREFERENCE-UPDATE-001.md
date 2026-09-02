@@ -1,15 +1,15 @@
 # EVID-PROJECT-PREFERENCE-UPDATE-001 — Project Preference Update Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation plan / provider-free current-Principal Project
+- Class: verification / provider-free current-Principal Project
   preference update command
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-8668DE2251DE`, `TEST-AC9956AE9D5C`
 - Slice dossier:
   `conversion/implementation-slices/project-preference-update-operation-contracts.json`
-- Verification state: implemented; four deterministic obligations pass locally,
-  exact-implementation-commit operational evidence remains planned
+- Verification state: verified; all five obligations pass at exact implementation
+  commit `0e652548d3d4009c392ddacb298d0ef66db61aa2`
 - Implementation hashes:
   - `ProjectPreferenceUpdateOperation.swift`:
     `fe54fb28fe1e772c222976a2953402f267faa1e6c95fa48a1433e21b6abbc2c8`
@@ -121,7 +121,7 @@ only the bounded provider-free implementation named in the dossier.
   validation is limited to the shared OperationID lifecycle and makes no
   preference-row, category-resolution or authoritative-apply claim.
 
-## Local Implementation Verification
+## Verified Implementation
 
 Four focused deterministic tests pass. They prove exact current-Principal scope,
 ordered complete replacement, absent/revision preconditions, stored-empty and
@@ -136,9 +136,12 @@ residual controls, M0 and clean diff formatting. The synchronized ledger remains
 at 767 recorded / 752 discovered surfaces, 341 mapped / 164 residual / 43
 blockers. M1 and M2 retain exactly their expected 2 and 164 blockers.
 
-Exact-implementation-commit CI remains planned, so all four deterministic
-obligations pass but the operational obligation and the two claimed surfaces
-remain `implemented`, not `verified`.
+Exact implementation commit `0e652548d3d4009c392ddacb298d0ef66db61aa2`
+passed immutable GitHub Actions run `33628801064`: conversion traceability
+passed in 10 seconds and the isolated target environment passed in 2 minutes
+29 seconds with all 136 tests in 31 suites, graph/generated-contract checks,
+macOS and generic iOS Simulator staging builds and clean tracked artifacts.
+All five obligations pass, and the two claimed target surfaces are `verified`.
 
 ## Permanent Limits
 

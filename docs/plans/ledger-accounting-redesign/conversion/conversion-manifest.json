@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T12:11:55.459Z",
+    "lastSynchronizedAt": "2026-09-02T12:19:49.802Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -23619,14 +23619,14 @@
           "Synthetic contracts prove exact own-Principal pin-replacement intent, absence/revision concurrency, canonical restart, replay and atomic refusal without a database, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-UPDATE-001"
       ],
-      "notes": "Implemented target-only Phase 1 command at the post-ready local checkpoint. It binds one own-Principal Account/Project, complete ordered unique pins, absent/revision concurrency and the shared operation lifecycle. Four focused/all 136 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
+      "notes": "Verified target-only Phase 1 command at exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 and immutable Actions run 33628801064. It binds one own-Principal Account/Project, complete ordered unique pins, absent/revision concurrency and the shared operation lifecycle. Four focused/all 136 tests, graph/contracts, both staging builds and clean tracked artifacts pass. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35358,14 +35358,14 @@
           "Self-tests prove only the backend-neutral preference update intent boundary without claiming authentication, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-UPDATE-001"
       ],
-      "notes": "Implemented target-only deterministic tests at the post-ready local checkpoint. Four focused/all 136 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
+      "notes": "Verified target-only deterministic tests at exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 and immutable Actions run 33628801064. Four focused/all 136 tests, graph/contracts, both staging builds and clean tracked artifacts pass. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

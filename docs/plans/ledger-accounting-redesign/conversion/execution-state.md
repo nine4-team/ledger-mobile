@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 111
+State version: 112
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-UPDATE-IMPLEMENTED-LOCAL
+- Checkpoint: PROJECT-PREFERENCE-UPDATE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1628,6 +1628,12 @@ modifying the running Firebase application before hard cutover.
   Exact-implementation-commit hosted `PROJECTPREFERENCEUPDATE-TEST-005`
   remains planned, so exactly the two claimed target surfaces are
   `implemented`, not `verified`.
+- Exact implementation commit `0e652548d3d4009c392ddacb298d0ef66db61aa2`
+  passed immutable GitHub Actions run `33628801064`: conversion traceability
+  passed in 10 seconds and the isolated target environment passed in 2 minutes
+  29 seconds with all 136 tests in 31 suites, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts. All five dossier obligations
+  now pass and `SWIFT-8668DE2251DE` plus `TEST-AC9956AE9D5C` are verified.
 
 ## Next Action
 
@@ -1678,10 +1684,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
    authority. Treat the verified `project-preference-read-contracts` dossier
    and `EVID-PROJECT-PREFERENCE-READ-001` as the sole current-Principal Project
-   preference read semantics. Treat the implemented
-   `project-preference-update-operation-contracts` dossier as the sole
-   UpdateProjectPreferences semantics and obtain immutable-CI evidence before
-   advancing its two surfaces to verified. Keep
+   preference read semantics. Treat the verified
+   `project-preference-update-operation-contracts` dossier and
+   `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
+   semantics. Audit the next smallest complete decision-independent dependency
+   before creating another ready slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
