@@ -6,6 +6,7 @@
     "docs/specs/inventory-item-invoicing-lifecycle.md",
     "docs/specs/proto-item-capture.md",
     "docs/specs/client-identity-and-project-transfers.md",
+    "docs/specs/projects.md",
     "docs/specs/spaces.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
@@ -195,7 +196,7 @@
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
         { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
         { "path": "docs/specs/spaces.md", "role": "canonical_target" },
-        { "path": "docs/specs/projects.md", "role": "current_product" },
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
         { "path": "docs/specs/budget-management.md", "role": "current_product" },
         { "path": "docs/specs/data-model.md", "role": "current_product" },
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },

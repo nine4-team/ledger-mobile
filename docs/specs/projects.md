@@ -26,6 +26,11 @@ Projects are the primary organizational unit in Ledger. Each project represents 
   durable media lifecycle.
 - Project rename, Client rename, Project archive, and any future Client
   reassignment are distinct operations.
+- Project description remains optional. Updating or clearing it is a distinct
+  `UpdateProjectDetails` intent: leading/trailing whitespace is not stored and
+  whitespace-only input clears the description. It cannot rename the Project,
+  change its Client, categories, media, lifecycle, children, or accounting
+  history.
 - Project archive preserves all history. No normal delete may orphan Items,
   Transactions, Spaces, notes, Invoices, preferences, or accounting evidence.
 - Current lists/details remain usable from synchronized local data and expose

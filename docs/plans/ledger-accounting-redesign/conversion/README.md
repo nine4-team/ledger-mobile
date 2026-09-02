@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 347 of 511 target-relevant
+Status: M0 inventory classification complete; 349 of 513 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -108,6 +108,13 @@ Actions run `33639210706` pass four focused/all 148 target tests, graph/
 generated-contract checks, both staging builds and clean artifacts.
 O-025, physical persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP,
 migration and production remain excluded.
+The provider-free Project details update slice is ready. Exactly two comment-
+only target surfaces freeze one canonical optional-description replacement,
+stable Project identity, exact expected revision, shared operation lifecycle
+and explicit separation from rename, Client/category/media/lifecycle/child/
+accounting/history mutation. Executable implementation awaits immutable exact-
+ready-commit CI. O-023/O-024/O-025, physical persistence, schema/RLS/Sync/Auth/
+provider behavior, app/MCP, migration and production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
@@ -187,7 +194,7 @@ summary or select a different slice merely because the prior reasoning is gone.
   reviewed canonical-target, current-product, historical-evidence,
   decision-log, architecture, or conversion-control authorities.
 - `product-authority-audit.generated.json` and `.md` prove that every stable
-  surface resolves through its batch to an authority set and that all six
+  surface resolves through its batch to an authority set and that all seven
   registered target specs remain represented. Generated artifacts must not be
   edited.
 - `implementation-slices/*.json` contains one machine-readable dossier per

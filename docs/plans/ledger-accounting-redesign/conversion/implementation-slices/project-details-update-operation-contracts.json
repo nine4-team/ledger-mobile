@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-details-update-operation-contracts",
+  "title": "Replace or clear one Project description without changing other Project state",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Details Update Operation Contracts",
+  "surfaceIds": ["SWIFT-1A34CF88E95E", "TEST-22878D176671"],
+  "requirements": [
+    {
+      "id": "PROJECTDETAILS-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "A Project description is optional. UpdateProjectDetails carries one complete normalized replacement: leading/trailing whitespace is removed, whitespace-only input is clear, and no unapproved length cap or rewriting of accepted interior text is invented.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Updating description preserves the same stable ProjectID and authoritative ClientID relationship and cannot carry copied Client text, Client reassignment, frozen-display rewrite or Transfer/accounting ownership input.",
+      "decisionIds": ["D-006", "O-025"],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "UpdateProjectDetails is distinct from CreateProject, RenameProject, ArchiveProject, ConfigureProjectCategories, media capture/removal and Client correction. It cannot recreate the current generic field dictionary or partial multi-workflow edit.",
+      "decisionIds": ["O-023", "O-024", "O-025"],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "UpdateProjectDetails expresses one typed business intent and exposes no arbitrary field map, collection/path/SQL string, generic CRUD, lifecycle toggle, delete flag, Client/category/media/child/accounting/history mutation or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The exact Project-description replacement is bound to one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared fingerprint/receipt lifecycle and defines no competing queue, retry, result or rejection semantics.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Preconditions and Concurrency",
+      "invariant": "The command carries exactly one expected-revision precondition for the same Project subject so stale description intent cannot silently become last-write-wins; local construction does not decide authoritative conflict or idempotent-already-applied results.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral Project-details operation accepts the validated command and returns the shared OperationReceipt or stable failure; local validation never substitutes for trusted membership, Project existence/revision or update authorization.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    },
+    {
+      "id": "PROJECTDETAILS-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Project table/handler, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTDETAILS-TEST-001", "PROJECTDETAILS-TEST-002", "PROJECTDETAILS-TEST-003", "PROJECTDETAILS-TEST-004", "PROJECTDETAILS-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectDescriptionReplacement canonicalizes raw optional input to either clear or one leading/trailing-whitespace-trimmed nonblank String while preserving accepted interior text and adding no unapproved length cap.",
+        "ProjectDetailsUpdateDraft owns exact Account, actor, operation-contract, stable Project, complete description replacement, expected Project revision and finite capture time; it contains no name/Client/category/media/lifecycle/child/accounting/history input.",
+        "UpdateProjectDetailsPayload contains only ProjectID and canonical description replacement. UpdateProjectDetailsCommand binds it to the shared OperationEnvelope, derives the exact Project subject/fingerprint and exactly one same-subject expected-revision precondition, and revalidates duplicated evidence on decode.",
+        "ProjectDetailsUpdating is the narrow backend-neutral operation port returning the shared OperationReceipt; receipt validation requires exact OperationID and exposes no authoritative updated-row/result claim.",
+        "ProjectDetailsUpdateFailure exposes stable bounded time, binding, precondition, subject, fingerprint, receipt, local-acceptance and malformed-encoding codes while reusing shared typed identity and operation validators."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "This Phase 1 contract creates no projects table, description/revision/audit column, foreign key, check, index, view or migration."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative UpdateProjectDetails handler, membership/Project lookup, revision lock, idempotency storage, audit timestamp, conflict result or server update exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Account/actor/Project binding is not authorization. No membership predicate, grant, WITH CHECK policy or cross-tenant database test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Project row/details projection, optimistic overlay, upload connector or synchronized visibility/readiness claim is defined."},
+    "localOffline": {
+      "items": [
+        "The command is canonical Codable evidence over draft, shared envelope, exact expected-revision precondition, Project subject and fingerprint; decode reconstructs through the same replacement/binding validators and byte-identical structured restart is required.",
+        "Changed Account, actor, contract, Project/description payload, revision subject/value/count, command subject, fingerprint or receipt OperationID fails atomically without rebinding identity or converting details into a generic Project update.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart, optimistic row, authoritative apply or offline-authorization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "UpdateProjectDetails owns no attachment reference/bytes/retention behavior and cannot add, replace, detach or delete Project hero media."},
+    "appMcp": {"items": [], "notApplicable": "No Project edit UI, current app service, MCP tool/schema, transport, contract-catalog entry or app/MCP parity claim is wired."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project document/generic field update, source export or description migration is decoded or transformed. Later migration must preserve/canonicalize optional description with explicit evidence."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot visibly or authoritatively update a Project, rename/archive/delete/reassign it, alter Client/category/media/child/accounting/history state, authorize membership, choose Auth, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-023/O-024/O-025, A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTDETAILS-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
+      "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
+      "expected": "Valid synthetic set and clear inputs produce typed exact-scope UpdateProjectDetails commands with canonical replacement and one same-Project revision, containing no rename/Client/category/media/lifecycle/child/accounting/history/generic-write input.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTDETAILS-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
+      "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-008"],
+      "expected": "Set and clear commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/revision/time/subject/fingerprint evidence and no backend path, provider, credential or authoritative result claim.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTDETAILS-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
+      "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
+      "expected": "Noncanonical encoded replacement, invalid time and changed Account/actor/contract/Project/description/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTDETAILS-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
+      "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Project/description/revision is refused, and a failing port returns no success receipt.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTDETAILS-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 Project-details command only. The reviewed preserve/correct split keeps optional Project description while separating rename, Client relation, category configuration, media and lifecycle. O-023/O-024/O-025 remain fully open because this command carries no media deletion, Project deletion or Client correction. The slice stops before physical durable storage, authoritative server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

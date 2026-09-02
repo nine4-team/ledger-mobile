@@ -8,29 +8,31 @@
   on `firebase`; target work remains isolated on
   `codex/supabase-powersync-implementation`
 - Production reads or mutations: none
-- Target implementation/deployment/migration changes: none
+- This authority-registry correction changes no executable target behavior,
+  deployment, migration, hosted resource or production state
 - Operator: Codex
 
 ## Result
 
-All 771 conversion surfaces resolve through their one reviewed classification
+All 775 conversion surfaces resolve through their one reviewed classification
 batch to an explicit authority set in `product-authority-crosswalk.json`:
 
-- 617 surfaces are in product-governed batches;
+- 621 surfaces are in product-governed batches;
 - 154 are platform, query/profiling, cutover, residual, or conversion-control
   surfaces governed by technical authorities;
-- all 509 target-relevant surfaces resolve to one of those reviewed scopes; and
-- all six canonical target specs are explicitly present and distinguished from
+- all 513 target-relevant surfaces resolve to one of those reviewed scopes; and
+- all seven canonical target specs are explicitly present and distinguished from
   current-product and historical-evidence documents.
 
-The six target specs are:
+The seven target specs are:
 
 1. `docs/specs/invoice-centered-project-accounting.md`;
 2. `docs/specs/inventory-item-invoicing-lifecycle.md`;
 3. `docs/specs/proto-item-capture.md`;
 4. `docs/specs/client-identity-and-project-transfers.md`;
-5. `docs/specs/spaces.md`; and
-6. `docs/plans/non-item-receipt-lines/design.md`.
+5. `docs/specs/projects.md`;
+6. `docs/specs/spaces.md`; and
+7. `docs/plans/non-item-receipt-lines/design.md`.
 
 The sixth entry corrects authority metadata rather than choosing new behavior:
 `spaces.md` already declared itself a target-state spec and already stated the
@@ -39,6 +41,15 @@ dependency audit found that it was still labeled `current_product`. It is now
 canonical for both the Spaces/review and Project/Client/reference batches, so a
 later slice cannot preserve the source hard-delete, checked-state-copy or no-op
 template defects as target behavior.
+
+The seventh-spec audit made the analogous correction for `projects.md`. That
+document already separates an explicit Target Redesign Requirements section
+from the Firebase mechanics retained below it as current/migration evidence.
+The Project-details dependency audit made the preserved optional-description
+rule explicit there and registers the spec as canonical for the Project/Client/
+reference batch. This formalizes the reviewed preserve/correct split: optional
+description remains, while generic field dictionaries, free-text Client
+identity, partial edits and orphaning delete do not become target behavior.
 
 The conversion check now fails when a classification batch has no authority
 entry, a referenced authority file disappears, a product batch lacks a
@@ -78,7 +89,7 @@ npm run conversion:report
 npm run conversion:gate:m0
 ```
 
-Result: 771 recorded surfaces, 756 currently discovered, zero errors and three
+Result: 775 recorded surfaces, 760 currently discovered, zero errors and three
 explained retained-path warnings; M0 passes. No Firebase application behavior,
 Supabase/PowerSync schema, deployment, production data, or cutover state was
 changed.

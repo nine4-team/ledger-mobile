@@ -15,6 +15,7 @@ migration mechanics.
 | [invoice-centered-project-accounting.md](invoice-centered-project-accounting.md) | Canonical target Transaction/Invoicing boundary, whole-Invoice collection, Expenses, paid history, and no-double-count budget model |
 | [inventory-item-invoicing-lifecycle.md](inventory-item-invoicing-lifecycle.md) | Canonical target Item charge/credit, inventory placement, return, resale, correction, and provenance stories |
 | [client-identity-and-project-transfers.md](client-identity-and-project-transfers.md) | Canonical target Client identity, global three-type Transaction taxonomy, and paired same-Client Transfers |
+| [projects.md](projects.md) | Canonical target Project identity, Client relationship, optional details, archive-first lifecycle, and offline readiness; Firebase mechanics below the target-state notice remain migration evidence |
 | [data-model.md](data-model.md) | All entities, relationships, canonical lookups, and validation rules |
 | [proto-item-capture.md](proto-item-capture.md) | Canonical target unified Item wizard, accounting Link, and hard-cutover legacy capture import |
 | [spaces.md](spaces.md) | Canonical target organizational placement, scoped assignment, template, checklist, and archive behavior |

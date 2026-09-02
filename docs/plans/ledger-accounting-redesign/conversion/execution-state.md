@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 121
+State version: 122
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-ARCHIVE-VERIFIED
+- Checkpoint: PROJECT-DETAILS-UPDATE-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1782,6 +1782,32 @@ modifying the running Firebase application before hard cutover.
   tracked artifacts. All five obligations pass and exactly the two Client-
   archive surfaces are now `verified`; 74 target surfaces are implemented or
   later.
+- Exact Client-archive verification-document commit
+  `1926a16e87e353853d3e439d62fbc88495ee1c0d` passed immutable Actions run
+  `33639869188`: conversion traceability passed in 8 seconds and the isolated
+  target environment passed in 2 minutes 35 seconds.
+- Audited Project details as the next smallest complete dependency. The target
+  taxonomy already separates `UpdateProjectDetails`; the preserved optional
+  Project description is the only field it owns after Project rename, Client
+  relationship, category configuration, media and lifecycle are excluded.
+- Corrected `projects.md` from `current_product` to the seventh canonical target
+  spec because it already separates Target Redesign Requirements from Firebase
+  mechanics retained as migration evidence. Made the reviewed optional-
+  description preserve/correct rule explicit without adding a new feature:
+  trim outer whitespace, whitespace-only clears, and no other Project concern
+  may change.
+- Added exactly two target-only comment scaffolds and a ready dossier for one
+  expected-revision-aware `UpdateProjectDetails` description replacement. No
+  executable behavior exists before exact-ready-commit CI.
+- The synchronized ledger now records 775 surfaces / 760 discovered, 349 mapped-
+  or-later target-relevant surfaces, 164 residual surfaces and 43 validated
+  blockers. Thirty-five slices claim 91 target surfaces; 74 are implemented or
+  later. M0 passes; M1/M2 retain exactly their expected 2/164 blockers.
+- The complete local Project-details ready gate passes with all 148 existing
+  target tests in 34 suites while both new files remain comment-only, target
+  environment/generated contracts, both staging builds, conversion/capability/
+  query/residual controls, M0 and clean diff formatting. Immutable exact-ready-
+  commit CI remains the only prerequisite to bounded implementation.
 
 ## Next Action
 
@@ -1842,8 +1868,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
    Treat the verified `client-archive-operation-contracts` dossier and
    `EVID-CLIENT-ARCHIVE-001` as the sole ArchiveClient semantic authority.
-   Audit the next smallest complete decision-independent dependency before
-   creating another ready slice. Keep
+   Treat the ready `project-details-update-operation-contracts` dossier and
+   `EVID-PROJECT-DETAILS-UPDATE-001` as the exact bounded implementation plan.
+   Commit only its comment scaffolds, spec/authority correction and control
+   evidence, require immutable ready-commit CI, then implement and verify only
+   that frozen provider-free command. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

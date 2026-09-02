@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T14:05:44.853Z",
+  "generatedFromManifestSync": "2026-09-02T14:13:47.693Z",
   "totals": {
-    "slices": 34,
-    "claimedTargetSurfaces": 89,
+    "slices": 35,
+    "claimedTargetSurfaces": 91,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 74
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 33,
@@ -241,6 +241,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-read-contracts.json"
+    },
+    {
+      "sliceId": "project-details-update-operation-contracts",
+      "title": "Replace or clear one Project description without changing other Project state",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Details Update Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-1A34CF88E95E",
+        "TEST-22878D176671"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-details-update-operation-contracts.json"
     },
     {
       "sliceId": "project-item-accounting-section-contracts",

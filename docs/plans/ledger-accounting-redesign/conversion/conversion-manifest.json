@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T14:05:44.853Z",
+    "lastSynchronizedAt": "2026-09-02T14:13:47.693Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17468,6 +17468,67 @@
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
+      "id": "SWIFT-1A34CF88E95E",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateOperation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateOperation.swift"
+        }
+      ],
+      "observedSourceHash": "f80752de441941d33245a4d7c260fc6b9100a05a3099a015db1a65c9faf00532",
+      "acknowledgedSourceHash": "f80752de441941d33245a4d7c260fc6b9100a05a3099a015db1a65c9faf00532",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for a revision-aware optional Project-description replacement that is separate from rename, Client relation, categories, media, lifecycle and history; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Details Update Operation Contracts",
+        "surfaces": [
+          "ProjectDescriptionReplacement",
+          "ProjectDetailsUpdateDraft",
+          "UpdateProjectDetailsPayload",
+          "UpdateProjectDetailsCommand",
+          "ProjectDetailsUpdating",
+          "ProjectDetailsUpdateFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable ProjectID and expected Project revision; it carries no caller-authored Account path, Client relation, category/media/history set or authorization claim",
+          "Construction and restart reject changed scope, actor, contract, Project/description payload, revision precondition, subject or fingerprint; local value validity never substitutes for later trusted membership and Project authorization"
+        ],
+        "syncRequirements": [
+          "The canonical replacement distinguishes a cleared description from one normalized nonblank description and reuses the shared operation fingerprint/receipt/replay lifecycle; revision mismatch remains a later authoritative conflict rather than last-write-wins",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, authoritative row apply, downstream projection refresh or synchronized Project visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Project-details intent and decode no Firebase Project document, generic update dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve or explicitly normalize the optional source Project description while keeping exact Project/Client identity and every category/media/child/accounting/history reference unchanged"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectDetailsUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact normalized set/clear description intent, stable Project identity, expected-revision binding, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-DETAILS-UPDATE-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one exact Project-description replacement/clear intent, normalization, expected-revision precondition, shared operation binding/receipt validation and a narrow port. It cannot rename/archive/delete/reassign a Project, change Client/category/media/child/accounting state, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-1AFC0C0D73D7",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/SearchField.swift",
@@ -33155,6 +33216,65 @@
       ],
       "notes": "Target-only provider-free tests use synthetic hashes, IDs, versions and timestamps and do not create files, invoke share/print/download UI, select client-visible report contents, inspect attachments or contact a provider. Four focused/51 total tests and both target builds passed exact implementation Actions run 33569882379.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-22878D176671",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift"
+        }
+      ],
+      "observedSourceHash": "dd825723b6c0d3bf4de3d6cb60942ca0e74c6cdcf8fef7ba69bcbfebee04c61e",
+      "acknowledgedSourceHash": "dd825723b6c0d3bf4de3d6cb60942ca0e74c6cdcf8fef7ba69bcbfebee04c61e",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target tests for Project description set/clear normalization, stable identity, revision, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Details Update Operation Contracts",
+        "surfaces": [
+          "ProjectDetailsUpdateOperationTests",
+          "normalized description set/clear fixtures",
+          "expected-revision precondition fixtures",
+          "canonical command restart/replay fixtures",
+          "scope/payload/precondition/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation and Project identities and prove no Client/category/media/history field can rebind update identity or authority",
+          "Negative tests expose only stable bounded codes and no description text, source names, paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local details-operation receipt from physical persistence, authoritative row state and synchronized Project visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Project/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent set/clear evidence round-trips byte-identically while changed Account/actor/contract/Project/description/revision/subject/precondition/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectDetailsUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Project details command boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-DETAILS-UPDATE-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove normalized Project-description set/clear intent, expected revision, restart/replay/refusal and absence of rename, Client/category/media/lifecycle/child/history/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-2599CE350D13",
