@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T14:13:47.693Z",
+  "generatedFromManifestSync": "2026-09-02T14:31:47.853Z",
   "totals": {
     "slices": 35,
     "claimedTargetSurfaces": 91,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 74
+    "implementationAdvancedTargetSurfaces": 76
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 33,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -246,7 +246,7 @@
       "sliceId": "project-details-update-operation-contracts",
       "title": "Replace or clear one Project description without changing other Project state",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Details Update Operation Contracts",
       "surfaceIds": [
         "SWIFT-1A34CF88E95E",

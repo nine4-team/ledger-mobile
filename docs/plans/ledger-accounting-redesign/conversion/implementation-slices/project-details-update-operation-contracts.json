@@ -3,7 +3,7 @@
   "sliceId": "project-details-update-operation-contracts",
   "title": "Replace or clear one Project description without changing other Project state",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Details Update Operation Contracts",
   "surfaceIds": ["SWIFT-1A34CF88E95E", "TEST-22878D176671"],
   "requirements": [
@@ -124,8 +124,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
       "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
       "expected": "Valid synthetic set and clear inputs produce typed exact-scope UpdateProjectDetails commands with canonical replacement and one same-Project revision, containing no rename/Client/category/media/lifecycle/child/accounting/history/generic-write input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-001"]
     },
     {
       "id": "PROJECTDETAILS-TEST-002",
@@ -133,8 +133,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
       "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-008"],
       "expected": "Set and clear commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/revision/time/subject/fingerprint evidence and no backend path, provider, credential or authoritative result claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-001"]
     },
     {
       "id": "PROJECTDETAILS-TEST-003",
@@ -142,8 +142,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
       "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
       "expected": "Noncanonical encoded replacement, invalid time and changed Account/actor/contract/Project/description/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-001"]
     },
     {
       "id": "PROJECTDETAILS-TEST-004",
@@ -151,8 +151,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift",
       "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Project/description/revision is refused, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-001"]
     },
     {
       "id": "PROJECTDETAILS-TEST-005",
@@ -164,7 +164,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-DETAILS-UPDATE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 Project-details command only. The reviewed preserve/correct split keeps optional Project description while separating rename, Client relation, category configuration, media and lifecycle. O-023/O-024/O-025 remain fully open because this command carries no media deletion, Project deletion or Client correction. The slice stops before physical durable storage, authoritative server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T14:13:47.693Z",
+    "lastSynchronizedAt": "2026-09-02T14:31:47.853Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17478,12 +17478,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateOperation.swift"
         }
       ],
-      "observedSourceHash": "f80752de441941d33245a4d7c260fc6b9100a05a3099a015db1a65c9faf00532",
-      "acknowledgedSourceHash": "f80752de441941d33245a4d7c260fc6b9100a05a3099a015db1a65c9faf00532",
+      "observedSourceHash": "adb07ec93fef9eae58574c474c20af7841ffbd99ff5a6ca505bc59105d7f7f58",
+      "acknowledgedSourceHash": "adb07ec93fef9eae58574c474c20af7841ffbd99ff5a6ca505bc59105d7f7f58",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for a revision-aware optional Project-description replacement that is separate from rename, Client relation, categories, media, lifecycle and history; no executable behavior exists at the ready checkpoint.",
+      "currentBehavior": "Implements one provider-free normalized optional Project-description replacement, exact Project expected-revision precondition, shared-envelope command, derived Project subject/fingerprint validation, receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Details Update Operation Contracts",
@@ -17518,14 +17518,14 @@
           "Synthetic commands prove exact normalized set/clear description intent, stable Project identity, expected-revision binding, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-DETAILS-UPDATE-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one exact Project-description replacement/clear intent, normalization, expected-revision precondition, shared operation binding/receipt validation and a narrow port. It cannot rename/archive/delete/reassign a Project, change Client/category/media/child/accounting state, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
+      "notes": "Target-only Phase 1 implementation. Defines one exact Project-description replacement/clear intent, normalization, expected-revision precondition, shared operation binding/receipt validation and a narrow port. It cannot rename/archive/delete/reassign a Project, change Client/category/media/child/accounting state, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33228,12 +33228,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateOperationTests.swift"
         }
       ],
-      "observedSourceHash": "dd825723b6c0d3bf4de3d6cb60942ca0e74c6cdcf8fef7ba69bcbfebee04c61e",
-      "acknowledgedSourceHash": "dd825723b6c0d3bf4de3d6cb60942ca0e74c6cdcf8fef7ba69bcbfebee04c61e",
+      "observedSourceHash": "45087dbf3dd13b10ef8b547a1499e4bfaa640ee54c6457286c47a03f96f1d35b",
+      "acknowledgedSourceHash": "45087dbf3dd13b10ef8b547a1499e4bfaa640ee54c6457286c47a03f96f1d35b",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Defines only the comment-scaffolded target tests for Project description set/clear normalization, stable identity, revision, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "currentBehavior": "Executes four deterministic provider-free tests for normalized Project-description set/clear scope and revision, byte-identical restart, noncanonical/malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Details Update Operation Contracts",
@@ -33266,14 +33266,14 @@
           "Self-tests prove the backend-neutral Project details command boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-DETAILS-UPDATE-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove normalized Project-description set/clear intent, expected revision, restart/replay/refusal and absence of rename, Client/category/media/lifecycle/child/history/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Implemented target-only tests prove normalized Project-description set/clear intent, expected revision, restart/replay/refusal and absence of rename, Client/category/media/lifecycle/child/history/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

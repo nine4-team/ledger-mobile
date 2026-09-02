@@ -108,13 +108,16 @@ Actions run `33639210706` pass four focused/all 148 target tests, graph/
 generated-contract checks, both staging builds and clean artifacts.
 O-025, physical persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP,
 migration and production remain excluded.
-The provider-free Project details update slice is ready. Exactly two comment-
-only target surfaces freeze one canonical optional-description replacement,
+The provider-free Project details update slice is implemented locally. Exactly
+two target surfaces define one canonical optional-description replacement,
 stable Project identity, exact expected revision, shared operation lifecycle
 and explicit separation from rename, Client/category/media/lifecycle/child/
-accounting/history mutation. Executable implementation awaits immutable exact-
-ready-commit CI. O-023/O-024/O-025, physical persistence, schema/RLS/Sync/Auth/
-provider behavior, app/MCP, migration and production remain excluded.
+accounting/history mutation. Exact ready commit `119e0455` and immutable
+Actions run `33641244740` pass all 148 then-existing tests and both builds; four
+focused/all 152 tests and the complete gate pass locally after implementation.
+Exact implementation-commit CI remains planned. O-023/O-024/O-025, physical
+persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP, migration and
+production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-1A34CF88E95E`, `TEST-22878D176671`
 - Slice dossier:
   `conversion/implementation-slices/project-details-update-operation-contracts.json`
-- Verification state: ready locally; executable behavior remains absent until
-  the exact comment-only ready commit passes immutable pull-request CI
+- Verification state: implemented locally; four of five obligations pass and
+  exact-implementation-commit pull-request CI remains planned
 - Ready scaffold hashes:
   - `ProjectDetailsUpdateOperation.swift`:
     `f80752de441941d33245a4d7c260fc6b9100a05a3099a015db1a65c9faf00532`
@@ -127,9 +127,65 @@ The complete local ready gate passes:
 Passing immutable exact-ready-commit CI may authorize only the bounded
 provider-free implementation named here.
 
+Exact comment-only ready commit
+`119e04559fbf756e2481287963d0367d80d39846` passed immutable GitHub Actions
+run `33641244740`: conversion traceability passed in 8 seconds and the isolated
+target environment passed in 2 minutes 25 seconds with all 148 then-existing
+tests, graph/generated-contract checks, both staging builds and clean tracked
+artifacts. That gate authorized only the frozen provider-free implementation.
+
+## Implemented Contract
+
+- `ProjectDescriptionReplacement` canonicalizes optional raw input by trimming
+  leading/trailing whitespace, maps nil/whitespace-only to explicit clear,
+  preserves accepted interior text and rejects noncanonical serialized values.
+- `ProjectDetailsUpdateDraft` binds one exact Account, actor, operation
+  contract, stable Project, canonical replacement, reused
+  `ExpectedProjectRevision` and finite capture time.
+- `UpdateProjectDetailsPayload` contains only Project ID and the canonical
+  replacement. `UpdateProjectDetailsCommand` derives exactly one Project
+  subject and same-subject revision precondition through the shared envelope,
+  fingerprint, receipt and replay lifecycle and revalidates duplicated evidence
+  on decode.
+- `ProjectDetailsUpdating` is one narrow provider-free operation port.
+  `ProjectDetailsUpdateFailure` supplies stable bounded codes for invalid time,
+  noncanonical/malformed evidence, binding/precondition/subject/fingerprint/
+  receipt mismatch and local acceptance failure.
+
+The command contains no Project name, Client/category/media/lifecycle/child/
+accounting/history mutation, generic field map or authoritative update result.
+Its deterministic test adapter uses the shared `OperationJournal`; it is not a
+physical local or server implementation.
+
+Implementation hashes:
+
+- `ProjectDetailsUpdateOperation.swift`:
+  `adb07ec93fef9eae58574c474c20af7841ffbd99ff5a6ca505bc59105d7f7f58`
+- `ProjectDetailsUpdateOperationTests.swift`:
+  `45087dbf3dd13b10ef8b547a1499e4bfaa640ee54c6457286c47a03f96f1d35b`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact normalized set/clear
+scope and same-Project revision intent, canonical byte-identical restart,
+atomic noncanonical/malformed/rebound/tampered evidence refusal with stable
+diagnostics, shared exact replay/Operation-ID mismatch semantics and no false
+receipt from a failing port.
+
+The complete local implementation gate also passes: all 152 target tests in 35
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The ledger remains at 775 recorded / 760
+discovered, 349 mapped-or-later / 164 residual / 43 blockers; 76 target surfaces
+are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
+
+`PROJECTDETAILS-TEST-001` through `-004` therefore pass. The exact-
+implementation-commit operational obligation remains planned until immutable
+CI completes.
+
 ## Permanent Limits
 
-This ready plan cannot:
+This implementation cannot:
 
 - visibly or authoritatively update any Project description;
 - create or modify a local/server Project row, revision or audit field;
