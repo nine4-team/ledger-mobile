@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T22:19:41.859Z",
+  "generatedFromManifestSync": "2026-09-02T22:31:21.321Z",
   "totals": {
-    "slices": 44,
-    "claimedTargetSurfaces": 109,
+    "slices": 45,
+    "claimedTargetSurfaces": 111,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 94
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 43,
@@ -331,6 +331,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-item-accounting-section-contracts.json"
+    },
+    {
+      "sliceId": "project-item-link-presentation-contracts",
+      "title": "Present exact Project Item accounting labels and Unaccounted-only Link payer choices",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Item Link Presentation",
+      "surfaceIds": [
+        "SWIFT-A2FCAF3E6103",
+        "TEST-F63806A8047A"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-item-link-presentation-contracts.json"
     },
     {
       "sliceId": "project-note-creation-operation-contracts",

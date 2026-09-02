@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 364 of 531 target-relevant
+Status: M0 inventory classification complete; 366 of 533 target-relevant
 surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -241,6 +241,13 @@ Exact checkpoint `8fce53b7` then passed immutable run `33689446640`, including
 all 189 target tests in 44 suites, generated contracts, both staging builds and
 clean artifacts. Both enhanced write-capable pilots have now passed;
 `EVID-PROJECT-BUDGET-SEGMENT-001`.
+The Project Item accounting-label and Link payer-choice presentation slice is
+ready with two comment-only target paths after a fresh independent preflight.
+It is intentionally limited to exact section/action/question/choice vocabulary,
+authoritative Unaccounted-only availability, fail-closed other states,
+side-effect-free dismissal and restart re-projection. Actual Link routes,
+commands, Purchase selection, acquisition handling, persistence, app/MCP and
+provider behavior remain excluded; `EVID-PROJECT-ITEM-LINK-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

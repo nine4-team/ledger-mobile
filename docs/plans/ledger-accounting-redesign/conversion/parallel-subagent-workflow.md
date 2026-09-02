@@ -118,6 +118,32 @@ After two clean pilots, line review, full local verification and exact-commit CI
 remain mandatory. The extra independent review may be risk-based, but security,
 RLS, Sync, accounting, migration and cutover slices always require it.
 
+### Pilot outcome — 2026-09-02
+
+Both enhanced write-capable pilots completed without an accepted P0-P2 defect.
+The controls nevertheless changed the outcome materially:
+
+- pilot 1's independent review found and corrected one P3 documentation
+  ambiguity before verification;
+- candidate selection review rejected Inventory destination planning before a
+  writer launched because canonical target authority was missing and O-038 was
+  unresolved; and
+- pilot 2's integration review rejected an approximately 1,076-line first
+  draft on maintainability grounds and required a reduced 768-line candidate
+  before commit; independent adversarial review then found no P0-P3 defect.
+
+This is enough evidence to continue bounded delegation, not evidence that
+worker output may be trusted without inspection. Every worker candidate still
+requires exact ancestry/path verification, integration-agent line review,
+focused and complete local gates, central regeneration and exact integrated-SHA
+CI. Independent adversarial review remains mandatory for novel shared
+semantics, accounting, security, authorization/RLS, Sync/offline durability,
+migration/reconciliation, provider, release and cutover work, and whenever the
+integration review identifies complexity, ambiguity, unusual size or weak test
+evidence. It is optional only for low-risk leaf work whose behavior is already
+fully fixed and whose complete diff is straightforward for the integration
+agent to validate.
+
 ## Concurrency Limits
 
 - At most two write-capable workers may run concurrently.

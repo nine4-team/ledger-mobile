@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 155
+State version: 156
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-BUDGET-SEGMENT-VERIFIED-PILOT-002-COMPLETE
+- Checkpoint: PROJECT-ITEM-LINK-PRESENTATION-READY-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2334,6 +2334,35 @@ modifying the running Firebase application before hard cutover.
   write-capable pilots now preserve worker, every-line integration and
   independent adversarial review evidence. No provider, Firebase or production
   action occurred.
+- Completed the first-two-pilot quality audit and retained its controls as
+  permanent policy. Both accepted workers changed only their allowlisted paths
+  and had no accepted P0-P2 defect, but review materially improved the work:
+  pilot 1 received a P3 documentation correction, Inventory planning was
+  rejected before delegation for missing authority/O-038, and pilot 2 was
+  reduced from approximately 1,076 to 768 added lines before commit. Worker
+  output remains untrusted until exact ancestry/path and line review, complete
+  local gates, central regeneration and exact integrated-SHA CI pass;
+  independent adversarial review remains mandatory for novel shared semantics
+  and accounting/security/Sync/migration/provider/release risk.
+- A fresh primary and independent read-only preflight approved
+  `project-item-link-presentation-contracts` only as a narrow stateless leaf.
+  Two comment-only target paths, six requirements and five planned obligations
+  now cover exact Unaccounted/Accounted labels and order, authoritative
+  Unaccounted-only Link availability, exact prompt/two-choice membership without
+  imposing choice order, fail-closed Accounted/incomplete rows, side-effect-free
+  dismissal, restart re-projection and provider isolation. The broader Link
+  flow is NO-GO: no command/route, Purchase selection/eligibility, acquisition
+  handling, transient persistence, Accounted-item behavior, app/MCP, schema/
+  RLS/Sync/provider, migration or production authority exists. Deterministic
+  state is 795 recorded / 780 discovered, 366 mapped-or-later / 167 residual /
+  44 blockers with only the three documented retired-path warnings. No worker,
+  provider, Firebase or production action occurred.
+- The complete Project Item Link presentation ready gate passes conversion,
+  capability, query, regenerated residual and M0 controls, target isolation,
+  generated app/MCP contracts, all 189 existing target tests in 44 suites,
+  two identical project generations, macOS and iOS staging builds and clean
+  formatting. The slice remains comment-only and cannot enter implementation
+  until immutable CI passes on the exact ready commit.
 
 ## Next Action
 
@@ -2435,6 +2464,13 @@ Continue without waiting on the two M1 evidence blockers:
    independent review and exact-integration-SHA CI controls, and apply review
    depth according to novelty and accounting/security risk without allowing a
    worker to promote its own status or edit canonical integration controls.
+   Treat the verified `project-item-accounting-section-contracts` resolution as
+   the sole input authority for the ready
+   `project-item-link-presentation-contracts` leaf. Finish its complete local
+   ready gate and immutable exact-ready-commit CI before implementation. Keep
+   actual Link routes/commands, Purchase choice/eligibility, acquisition
+   handling, correction/relink behavior, transient UI state, Accounted-item
+   actions, app/MCP and provider/migration behavior outside this slice.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

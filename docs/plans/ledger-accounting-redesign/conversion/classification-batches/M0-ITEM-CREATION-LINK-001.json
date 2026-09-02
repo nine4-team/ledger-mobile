@@ -1221,6 +1221,99 @@
           "Self-tests prove only the provider-free accounting-state/read-section boundary without claiming Item creation/Link, occurrence persistence, RLS, Sync, app/MCP, migration or production evidence"
         ]
       }
+    },
+    {
+      "id": "SWIFT-A2FCAF3E6103",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "f83b017c6902a682f931aee3df6c0441a321103d904da8b62f5dde11e002e971",
+      "currentBehavior": "Contains the comment-only ready scaffold for the provider-free Project Item accounting labels and Link payer-choice presentation contract.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-LINK-PRESENTATION-001"
+      ],
+      "notes": "Ready scaffold only. The frozen slice may project exact canonical labels, Unaccounted-only Link availability, the two semantic payer choices and side-effect-free dismissal from the verified accounting rows. It cannot add Link commands/routes, Purchase selection, acquisition handling, transient-state persistence, Accounted-item actions, app/MCP wiring, provider behavior, migration or production authority.",
+      "target": {
+        "owner": "Project Item Link Presentation",
+        "surfaces": [
+          "ProjectItemAccountingSectionKind display label",
+          "ProjectItemLinkPayerChoice presentation meaning",
+          "ProjectItemLinkPresentationDescriptor",
+          "ProjectItemLinkPresentationFailure",
+          "side-effect-free dismissal projection"
+        ],
+        "securityRequirements": [
+          "Link presentation is derived only for an already validated authoritative Unaccounted For row; Accounted For and incomplete relationship evidence fail closed",
+          "The value carries no authorization, provider payload, Purchase identity, command, route or mutation capability"
+        ],
+        "syncRequirements": [
+          "Presentation is re-derived from the verified canonical Project Item accounting snapshot after structured restart; no transient payer/modal state is persisted",
+          "No new query port, PowerSync Stream, local table or upload behavior is introduced"
+        ]
+      },
+      "migration": {
+        "rule": "Project target-only vocabulary from verified target accounting rows and decode no Firebase proto, linked/unlinked, assignment or inventory-sale UI state.",
+        "reconciliation": [
+          "Later app wiring must preserve exact target labels and refuse unresolved accounting rows without treating presentation values as Link command authority"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemLinkPresentationTests"
+        ],
+        "acceptance": [
+          "Synthetic verified accounting rows produce only the exact approved target labels and Unaccounted-only Link payer presentation, with dismissal producing no route or mutation"
+        ]
+      }
+    },
+    {
+      "id": "TEST-F63806A8047A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "b0c93bfa0c3e6f177ec74c68e5e78648a067c6701c26c692790b0e9d644b77d4",
+      "currentBehavior": "Contains the comment-only ready scaffold for deterministic Project Item accounting-label and Link payer-choice presentation tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-LINK-PRESENTATION-001"
+      ],
+      "notes": "Ready test scaffold only. Planned tests cover exact labels/choice membership, authoritative Unaccounted-only availability, fail-closed Accounted/incomplete rows, forbidden vocabulary, side-effect-free dismissal and re-projection after restart without asserting payer display order or any actual Link behavior.",
+      "target": {
+        "owner": "Project Item Link Presentation",
+        "surfaces": [
+          "ProjectItemLinkPresentationTests",
+          "exact target-vocabulary fixtures",
+          "Unaccounted/accounted/incomplete availability fixtures",
+          "dismissal and restart re-projection fixtures",
+          "provider/command/legacy-vocabulary exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic already-validated target rows and prove unresolved/accounted rows cannot acquire a Link affordance",
+          "Failures and public values expose no source/provider path, credential, Purchase identity or command authority"
+        ],
+        "syncRequirements": [
+          "Tests re-derive identical presentation after canonical accounting-snapshot encoding/decoding and persist no transient choice state"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no current Firebase UI/model/export fixture.",
+        "reconciliation": [
+          "Forbidden legacy/internal wording remains absent and dismissal leaves the original accounting evidence unchanged"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemLinkPresentationTests"
+        ],
+        "acceptance": [
+          "Tests prove only the stateless presentation boundary and explicitly cannot prove Link routing, commands, persistence, app/MCP, provider, migration or production behavior"
+        ]
+      }
     }
   ]
 }

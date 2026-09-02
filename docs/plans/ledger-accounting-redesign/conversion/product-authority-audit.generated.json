@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T22:19:41.859Z",
+  "generatedFromManifestSync": "2026-09-02T22:31:21.321Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 793,
-    "targetRelevantSurfaces": 531,
+    "surfaces": 795,
+    "targetRelevantSurfaces": 533,
     "batches": 18,
-    "productScopeSurfaces": 639,
+    "productScopeSurfaces": 641,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 511,
-      "targetRelevantSurfaceCount": 359
+      "surfaceCount": 513,
+      "targetRelevantSurfaceCount": 361
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 470,
-      "targetRelevantSurfaceCount": 314
+      "surfaceCount": 472,
+      "targetRelevantSurfaceCount": 316
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 529,
-      "targetRelevantSurfaceCount": 344
+      "surfaceCount": 531,
+      "targetRelevantSurfaceCount": 346
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -117,8 +117,8 @@
         "M0-ITEM-CREATION-LINK-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 425,
-      "targetRelevantSurfaceCount": 275
+      "surfaceCount": 427,
+      "targetRelevantSurfaceCount": 277
     }
   ],
   "batches": [
@@ -952,8 +952,8 @@
       "title": "Unified Item creation, accounting Link, and legacy capture",
       "scope": "product",
       "rationale": "All current Item/proto creation surfaces are reconciled with the one-Item target wizard, accounting Link, occurrence, Invoice, and receipt-line model.",
-      "surfaceCount": 54,
-      "targetRelevantSurfaceCount": 33,
+      "surfaceCount": 56,
+      "targetRelevantSurfaceCount": 35,
       "authorities": [
         {
           "path": "docs/specs/proto-item-capture.md",
@@ -1038,6 +1038,7 @@
         "SWIFT-8B52C90F1043",
         "SWIFT-8BA5197CA887",
         "SWIFT-A24C5FE4E6AD",
+        "SWIFT-A2FCAF3E6103",
         "SWIFT-AB578AEF4330",
         "SWIFT-BB61FBAE2B1D",
         "SWIFT-C593225376EB",
@@ -1050,6 +1051,7 @@
         "TEST-8B555E151D8D",
         "TEST-934F8ECFA62C",
         "TEST-DA0DC6CF7163",
+        "TEST-F63806A8047A",
         "TEST-FCBA68605B98"
       ]
     },
