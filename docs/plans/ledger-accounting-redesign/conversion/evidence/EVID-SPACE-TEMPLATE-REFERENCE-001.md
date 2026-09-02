@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-77F812A8F463`, `TEST-CB30140F137B`
 - Slice dossier:
   `conversion/implementation-slices/space-template-reference-read-contracts.json`
-- Verification state: ready; executable implementation and all five obligations
-  remain planned
+- Verification state: implemented; four deterministic obligations pass locally
+  and exact-implementation-commit operational CI remains planned
 - Ready scaffold hashes:
   - `SpaceTemplateReferenceData.swift`:
     `9682f5d9bbec156fd6c8f92fa0280217622ee19d89ed3198844ad7c69a11dac2`
@@ -118,7 +118,58 @@ The complete local ready gate passes:
   and
 - clean diff formatting.
 
-Exact ready-commit CI remains to be recorded before executable implementation.
+Exact ready commit `acc48f637d0f8702a83142f2ba94facd462b48ff` passed
+immutable GitHub Actions run `33634828042`: conversion traceability passed in
+11 seconds and the isolated target environment passed in 2 minutes 7 seconds
+with all 140 then-existing tests, graph/generated-contract checks, both staging
+builds and clean tracked artifacts. That gate authorized only the bounded
+provider-free implementation named here.
+
+## Implemented Contract
+
+- `SpaceTemplateID`, `SpaceTemplateChecklistID` and
+  `SpaceTemplateChecklistItemID` are distinct stable typed identities.
+- `SpaceTemplateName`, `SpaceTemplateChecklistName` and
+  `SpaceTemplateChecklistItemText` preserve accepted product text and reject
+  blank values without inventing an unapproved target length limit.
+- `SpaceTemplateChecklistItemDefinition` contains identity, text and explicit
+  order only. `SpaceTemplateChecklistDefinition` validates unique item identity/
+  order and canonicalizes item order. Neither type can carry `isChecked`.
+- `SpaceTemplateSnapshot` binds exact Account, optional notes, validated ordered
+  checklist structure, lifecycle, presentation order and revision. It validates
+  unique checklist identity/order and exposes selection only while active.
+- `SpaceTemplateReferenceSnapshot` validates finite local evidence, exact
+  Account scope, already-authorized visible count and unique template identity/
+  order, then canonicalizes order and exposes active selectable templates.
+- `SpaceTemplateQuerying` is the narrow provider-free Account read port, and
+  `SpaceTemplateReferenceFailure` supplies stable text/scope/duplicate/count/
+  time/local-read/encoding diagnostics.
+
+Implementation hashes:
+
+- SpaceTemplateReferenceData.swift:
+  `a197651e96a978aa3794b180ab05b99568d3bee72c402e2042a67f030cf26520`
+- SpaceTemplateReferenceDataTests.swift:
+  `148238915bb72bd8bc22acf9e2f0631dc7baae2f80c62874f8043072de656e8d`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact stable Account/template/
+checklist/item structure and active/archive selection; explicit canonical order;
+the absence and normalization-away of stale source `isChecked` input;
+ready/partial/stale/authoritative-empty restart; atomic blank/cross-Account/
+nested-duplicate/count/time/malformed refusal with stable diagnostics; and
+exact/no-false-snapshot query-port behavior.
+
+The complete local implementation gate also passes: all 144 target tests in 33
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The synchronized ledger remains at 771
+recorded / 756 discovered surfaces, 345 mapped-or-later / 164 residual / 43
+blockers. M1 and M2 retain exactly their expected 2 and 164 blockers.
+
+Exact implementation-commit CI remains required before the slice or either
+claimed surface can advance to `verified`.
 
 ## Permanent Limits
 

@@ -3,7 +3,7 @@
   "sliceId": "space-template-reference-read-contracts",
   "title": "Read ordered Space-template structure offline without carrying checked state or granting write authority",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space Template Reference Read Contracts",
   "surfaceIds": [
     "SWIFT-77F812A8F463",
@@ -201,7 +201,7 @@
         "SPACETEMPLATE-REQ-007"
       ],
       "expected": "Valid synthetic templates preserve exact stable Account/template/checklist/item identity, text, optional notes, lifecycle, revision and deterministic explicit order. Encoded template structure has no checked-state, Space identity, backend field or write capability.",
-      "status": "planned",
+      "status": "passed",
       "evidence": [
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ]
@@ -220,7 +220,7 @@
         "SPACETEMPLATE-REQ-007"
       ],
       "expected": "Ready, partial, stale and authoritative-empty local snapshots round-trip byte-identically with exact Account/query fingerprint, nested row order, visible count, completeness, quality, data version and finite as-of evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": [
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ]
@@ -239,7 +239,7 @@
         "SPACETEMPLATE-REQ-007"
       ],
       "expected": "Blank required text, cross-Account rows, duplicate template/checklist/item identity or order at the documented scope, count/time mismatches and malformed encodings fail atomically through stable diagnostic codes.",
-      "status": "planned",
+      "status": "passed",
       "evidence": [
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ]
@@ -258,7 +258,7 @@
         "SPACETEMPLATE-REQ-007"
       ],
       "expected": "A deterministic provider-free query port streams only its exact Account snapshot; a different Account and a failing port yield no false snapshot and return stable bounded failures.",
-      "status": "planned",
+      "status": "passed",
       "evidence": [
         "EVID-SPACE-TEMPLATE-REFERENCE-001"
       ]
@@ -288,5 +288,5 @@
   ],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready-gated decision-independent Phase 1 read boundary only. The canonical Spaces target spec—not the defective Firebase createFromSpace behavior—owns template semantics. O-026 remains fully open for every template writer and authorization capability. The slice stops before template selection/application/save UI, Space creation, identity allocation, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Implemented decision-independent Phase 1 read boundary after exact comment-only ready commit acc48f637d0f8702a83142f2ba94facd462b48ff passed immutable Actions run 33634828042: conversion traceability in 11 seconds and the isolated target environment in 2 minutes 7 seconds with all 140 then-existing tests, graph/generated-contract checks, both staging builds and clean artifacts. Four focused tests now pass locally; exact implementation-commit operational CI remains planned. The canonical Spaces target spec—not the defective Firebase createFromSpace behavior—owns template semantics. O-026 remains fully open for every template writer and authorization capability. The slice stops before template selection/application/save UI, Space creation, identity allocation, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
 }

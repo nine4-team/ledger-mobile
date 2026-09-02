@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 116
+State version: 117
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-TEMPLATE-READ-READY
+- Checkpoint: SPACE-TEMPLATE-READ-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1701,14 +1701,33 @@ modifying the running Firebase application before hard cutover.
   restart/refusal and one narrow Account query port.
 - The synchronized ledger records 771 surfaces / 756 discovered, 345 mapped-or-
   later target-relevant surfaces, 164 residual surfaces and 43 validated
-  blockers. Thirty-three slices claim 87 target surfaces and 70 are implemented
-  or later. M0 passes; M1/M2 retain exactly their expected 2/164 blockers.
+  blockers. Thirty-three slices claim 87 target surfaces. M0 passes; M1/M2
+  retain exactly their expected 2/164 blockers.
 - The complete local ready gate passes with all 140 existing target tests in 32
   suites, target graph/generated contracts, both staging builds, repeatable
   XcodeGen/source-project hashes, conversion/capability/query/residual controls,
   M0 and clean diff formatting.
-- Executable Space-template implementation remains prohibited until the exact
-  ready commit passes immutable pull-request CI.
+- Exact comment-only ready commit
+  `acc48f637d0f8702a83142f2ba94facd462b48ff` passed immutable Actions run
+  `33634828042`: conversion traceability passed in 11 seconds and the isolated
+  target environment passed in 2 minutes 7 seconds with all 140 then-existing
+  tests, graph/generated-contract checks, both staging builds and clean tracked
+  artifacts.
+- Implemented only the frozen provider-free Space-template read boundary:
+  distinct stable template/checklist/item identity, preserved required text,
+  optional notes, lifecycle/revision/explicit deterministic order, local
+  readiness/restart/refusal and one narrow Account query port. The target
+  structure has no checked-state field and discards unknown stale source
+  `isChecked` input on decode/re-encode.
+- Added four deterministic tests for exact nested structure and active/archive
+  selection, no checked-state carriage, ready/partial/stale/authoritative-empty
+  restart, blank/cross-Account/nested-duplicate/count/time/malformed refusal and
+  exact/no-false-snapshot query-port behavior.
+- `SPACETEMPLATE-TEST-001` through `-004` pass locally. All 144 target tests in
+  33 suites, target graph/generated contracts, both staging builds,
+  conversion/capability/query/residual controls, M0 and clean artifacts pass.
+  Exactly the two claimed surfaces are `implemented`; exact-implementation-
+  commit hosted `SPACETEMPLATE-TEST-005` remains planned.
 
 ## Next Action
 
@@ -1764,11 +1783,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
    semantics. Treat the verified `vendor-suggestion-reference-read-contracts`
    dossier and `EVID-VENDOR-SUGGESTION-REFERENCE-001` as the sole vendor-
-   suggestion read semantics. Finish the `space-template-reference-read-contracts`
-   ready gate and `EVID-SPACE-TEMPLATE-REFERENCE-001`; only after the exact
-   comment-only ready commit passes CI, implement that frozen provider-free
-   read boundary, run its full gate, and advance only its two claimed surfaces.
-   Then audit the next smallest complete decision-independent dependency. Keep
+   suggestion read semantics. Treat the implemented
+   `space-template-reference-read-contracts` dossier and
+   `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
+   Require the exact implementation commit to pass immutable CI before
+   advancing its two claimed surfaces to verified. Then audit the next smallest
+   complete decision-independent dependency. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

@@ -89,11 +89,13 @@ pass all 140 target tests, graph/generated-contract checks, both staging builds
 and clean artifacts. O-026 mutation authority, default seeding, physical
 persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
 production remain excluded.
-The provider-free Space-template reference read slice is ready, not implemented.
-Exactly two comment-only target surfaces have frozen stable Account/template/
-checklist/item identity, text, lifecycle/revision/order, structure-without-
-checked-state, readiness/restart/refusal and narrow-query-port obligations.
-Executable implementation is gated on the exact ready commit passing CI.
+The provider-free Space-template reference read slice is implemented with exact
+implementation-commit CI pending. Exactly two target surfaces define stable
+Account/template/checklist/item identity, text, lifecycle/revision/order,
+structure without checked state, readiness/restart/refusal and one narrow query
+port. Exact ready commit `acc48f63` and immutable Actions run `33634828042`
+passed all 140 then-existing tests and both staging builds; four focused/all 144
+target tests now pass locally.
 O-026 mutation authority, template apply/save, Space creation, physical
 persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
 production remain excluded.
