@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 69
+State version: 70
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TRANSFER-DESTINATION-IMPLEMENTED-EXACT-CI-NEXT
+- Checkpoint: TRANSFER-DESTINATION-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -884,6 +884,14 @@ modifying the running Firebase application before hard cutover.
   `implemented`. No Item selection, Transfer writer, server authorization,
   schema/RLS/Sync/provider, app/MCP wiring, Firebase change, migration, hosted
   resource or production operation was introduced.
+- Exact implementation commit
+  `6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92` passed immutable GitHub Actions
+  run `33587234037`: conversion traceability and isolated-target jobs both
+  passed, including graph/generated-contract checks, all 80 target tests,
+  macOS and generic iOS Simulator builds and clean tracked artifacts. All five
+  destination-selection obligations and exactly its two target-only surfaces
+  are now `verified`; current picker/app/MCP, command, authorization, schema/
+  RLS/Sync/provider and migration surfaces remain unadvanced.
 
 ## Next Action
 
@@ -897,13 +905,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
    Transaction classification, scope, route and pair identity. Do not recreate
    or extend that meaning independently in app, MCP, SQL or adapters.
-3. Commit and push the implemented
-   `transfer-destination-selection-contracts` checkpoint, require both pull-
-   request jobs to pass for that exact immutable commit, and then advance only
-   `SWIFT-1A05F36246B4`, `TEST-C01243D7B782`, `DESTINATION-TEST-005` and the
-   dossier to `verified` with the exact run URL. Do not advance any current
-   picker/app/MCP, command/write, authorization, schema/RLS/Sync/provider,
-   migration or production surface from that operational evidence.
+3. Audit the remaining Phase 1 dependency graph and select the smallest next
+   decision-independent user or operational slice. Claim only stable target-
+   only surfaces whose exact product/architecture authority is closed; create
+   its dossier, executable verification obligations and ready evidence before
+   implementing behavior. Do not infer any open O-/A- decision or advance a
+   current Firebase-era app/MCP surface from a provider-free foundation.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

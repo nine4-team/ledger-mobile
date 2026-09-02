@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-1A05F36246B4`, `TEST-C01243D7B782`
 - Slice dossier:
   `conversion/implementation-slices/transfer-destination-selection-contracts.json`
-- Implementation state: implemented locally; exact-commit hosted CI remains
-  required before verification
+- Verification state: verified at exact implementation commit
+  `6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92`
 - Implementation hashes:
   - `TransferDestinationSelection.swift`:
     `eb79e780e2391ad1fadd2eb6ce04ae3240af341d433cdabcdde4dc188c82744b`
@@ -90,13 +90,28 @@ All commands ran from the dedicated Supabase worktree on 2026-09-01:
 - `git diff --check` — pass before control-artifact updates.
 
 `DESTINATION-TEST-001` through `DESTINATION-TEST-004` pass with this evidence.
-`DESTINATION-TEST-005` remains planned until the exact committed implementation
-passes the immutable pull-request conversion and isolated-target jobs. Both
-claimed surfaces and the dossier therefore advance only to `implemented`.
+
+## Immutable Hosted Verification
+
+Exact implementation commit
+`6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92` passed both jobs in immutable
+[GitHub Actions run 33587234037](https://github.com/nine4-team/ledger-mobile/actions/runs/33587234037):
+
+- `Conversion state and traceability` passed the synchronized conversion,
+  authority, slice, query, capability, residual and M0 controls and confirmed
+  that checks did not rewrite tracked artifacts; and
+- `Isolated target environment` passed the dependency/source-contamination
+  boundary, generated app/MCP contract checks, all 80 target tests, macOS and
+  generic iOS Simulator builds, and clean-artifact verification.
+
+`DESTINATION-TEST-005`, both claimed surfaces and the dossier are therefore
+`verified` at that exact implementation commit. The Node-action deprecation
+annotation concerns GitHub's action runtime and did not change or waive any
+Ledger check.
 
 ## Permanent Limits
 
-This ready gate and later projection implementation cannot:
+This verified projection slice cannot:
 
 - authorize a Principal or prove current membership/financial visibility;
 - create a Transaction, Transfer pair, Item move, Invoice effect, payment,

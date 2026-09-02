@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T03:28:33.414Z",
+    "lastSynchronizedAt": "2026-09-02T03:33:10.186Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17269,7 +17269,7 @@
           "Synthetic local directory evidence yields only other active Projects with the exact same AccountID and ClientID, while authoritative empty and incomplete local scope remain distinct"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -17277,7 +17277,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSFER-DESTINATION-001"
       ],
-      "notes": "Target-only Phase 1 destination-selection foundation. Four focused tests and all 80 target tests, graph/contracts, and both staging builds pass locally; exact-commit hosted CI remains required before verification. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
+      "notes": "Target-only Phase 1 destination-selection foundation. Four focused tests and all 80 target tests pass locally; exact implementation commit 6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92 passed immutable GitHub Actions run 33587234037, including conversion traceability, graph/contracts, both staging builds, and clean artifacts. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -34462,7 +34462,7 @@
           "Self-tests prove only the provider-free destination projection and readiness boundary without claiming command, handler, schema, RLS, Sync, app/MCP, migration or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -34470,7 +34470,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSFER-DESTINATION-001"
       ],
-      "notes": "Target-only destination-selection self-tests pass locally as part of all 80 target tests; exact-commit hosted CI remains required before verification. They cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
+      "notes": "Target-only destination-selection self-tests pass locally and as part of the complete 80-test target suite at exact implementation commit 6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92 in immutable GitHub Actions run 33587234037. They cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {

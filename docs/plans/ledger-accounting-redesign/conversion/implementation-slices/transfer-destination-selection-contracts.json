@@ -3,7 +3,7 @@
   "sliceId": "transfer-destination-selection-contracts",
   "title": "Select exact same-Client Transfer destinations from local directory evidence",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Transfer Destination Selection",
   "surfaceIds": [
     "SWIFT-1A05F36246B4",
@@ -171,8 +171,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["DESTINATION-REQ-001", "DESTINATION-REQ-002", "DESTINATION-REQ-003", "DESTINATION-REQ-004", "DESTINATION-REQ-005", "DESTINATION-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming command, authorization, schema, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TRANSFER-DESTINATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-TRANSFER-DESTINATION-001"],

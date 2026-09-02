@@ -1999,7 +1999,7 @@
       "acknowledgeSourceHash": "eb79e780e2391ad1fadd2eb6ce04ae3240af341d433cdabcdde4dc188c82744b",
       "currentBehavior": "Implements provider-free exact same-Client Transfer destination candidates, source-bound filtering over validated local Project directory evidence, deterministic order, available/authoritative-empty/incomplete states, query fingerprints, canonical decoding, and stable bounded failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -2007,7 +2007,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSFER-DESTINATION-001"
       ],
-      "notes": "Target-only Phase 1 destination-selection foundation. Four focused tests and all 80 target tests, graph/contracts, and both staging builds pass locally; exact-commit hosted CI remains required before verification. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
+      "notes": "Target-only Phase 1 destination-selection foundation. Four focused tests and all 80 target tests pass locally; exact implementation commit 6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92 passed immutable GitHub Actions run 33587234037, including conversion traceability, graph/contracts, both staging builds, and clean artifacts. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
       "target": {
         "owner": "Transfer Destination Selection",
         "surfaces": [
@@ -2047,7 +2047,7 @@
       "acknowledgeSourceHash": "8b3c09fd7db046e9a28ac561a3d453fc56eb2210bc72057bf7573de0fe458e04",
       "currentBehavior": "Executes four deterministic target-only tests for exact destination filtering, available/authoritative-empty/incomplete evidence, source-bound query changes, canonical restart through an in-memory port, and invalid/duplicate/tampered selection refusal.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -2055,7 +2055,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSFER-DESTINATION-001"
       ],
-      "notes": "Target-only destination-selection self-tests pass locally as part of all 80 target tests; exact-commit hosted CI remains required before verification. They cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
+      "notes": "Target-only destination-selection self-tests pass locally and as part of the complete 80-test target suite at exact implementation commit 6dc7d0c21ccd8c966b43b02240d14ad9fe79ea92 in immutable GitHub Actions run 33587234037. They cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
       "target": {
         "owner": "Transfer Destination Selection",
         "surfaces": [
