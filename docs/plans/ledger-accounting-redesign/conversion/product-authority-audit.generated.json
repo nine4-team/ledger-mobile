@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T16:31:33.092Z",
+  "generatedFromManifestSync": "2026-09-02T16:56:50.043Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 779,
-    "targetRelevantSurfaces": 517,
+    "surfaces": 781,
+    "targetRelevantSurfaces": 519,
     "batches": 18,
-    "productScopeSurfaces": 625,
+    "productScopeSurfaces": 627,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 460,
-      "targetRelevantSurfaceCount": 304
+      "surfaceCount": 462,
+      "targetRelevantSurfaceCount": 306
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 519,
-      "targetRelevantSurfaceCount": 334
+      "surfaceCount": 521,
+      "targetRelevantSurfaceCount": 336
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -87,8 +87,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 123,
-      "targetRelevantSurfaceCount": 115
+      "surfaceCount": 125,
+      "targetRelevantSurfaceCount": 117
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -1569,8 +1569,8 @@
       "title": "Spaces, review, and work queues",
       "scope": "product",
       "rationale": "Space, assignment, review, and work-queue behavior is governed by the Space/Item specs and must remain compatible with the new one-Item provenance and accounting lifecycle.",
-      "surfaceCount": 37,
-      "targetRelevantSurfaceCount": 31,
+      "surfaceCount": 39,
+      "targetRelevantSurfaceCount": 33,
       "authorities": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -1641,12 +1641,14 @@
         "SWIFT-C3BE14BFCDE5",
         "SWIFT-C821F5F10EAE",
         "SWIFT-DDFAC91775DA",
+        "SWIFT-EB8803C0864A",
         "SWIFT-EDFA6A1EF8C3",
         "SWIFT-EF8BEC4E8BE5",
         "SWIFT-F61D38406022",
         "TEST-3885FE2E9453",
         "TEST-68DF2A480C92",
         "TEST-8BFDF8C22B0C",
+        "TEST-9A22BFF16437",
         "TEST-E8832A105D5C",
         "TEST-E97A8051035C",
         "TEST-EBA9C48BC4EE",

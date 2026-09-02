@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 130
+State version: 131
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-DETAILS-UPDATE-VERIFIED
+- Checkpoint: SPACE-CHECKLIST-REVISION-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1936,6 +1936,29 @@ modifying the running Firebase application before hard cutover.
   both staging builds and clean tracked artifacts. All five obligations pass;
   exactly the two Space-details surfaces are now `verified`, and 80 target
   surfaces remain implemented or later.
+- Exact Space-details verification-document commit
+  `01d3638b2b7850f39a7a16e1b899b37ce441e189` passed immutable GitHub Actions
+  run `33655871244`: conversion traceability passed in 8 seconds and the
+  isolated target environment passed in 2 minutes 36 seconds.
+- Audited `ReviseSpaceChecklists` as the next smallest complete decision-
+  independent dependency. Canonical Space authority and the reviewed capability
+  dossier preserve add/remove/rename/reorder/check/progress outcomes while
+  replacing random decoded IDs and last-write-wins embedded-array updates with
+  one complete revisioned hierarchy. Template administration, media, Item
+  assignment, review, Space reconciliation, lifecycle and accounting remain
+  separate and O-023/O-026/O-032/O-037 remain open.
+- Clarified that target rule in `spaces.md`, added exactly two target-only
+  comment scaffolds and froze the ready dossier. The synchronized ledger now
+  records 781 surfaces / 766 discovered, 355 mapped-or-later target-relevant
+  surfaces, 164 residual surfaces and 43 validated blockers. Thirty-eight
+  slices claim 97 target surfaces; 80 are implemented or later. M0 passes;
+  M1/M2 retain exactly their expected 2/164 blockers.
+- The complete local Space-checklist ready gate passes with all 160 existing
+  target tests in 37 suites while both new files remain comment-only, target
+  environment/generated contracts, both staging builds, conversion/capability/
+  query/residual controls, M0 and clean diff formatting. M1/M2 retain exactly
+  their expected 2/164 prerequisite blockers. Immutable exact-ready-commit CI
+  remains required before bounded implementation.
 
 ## Next Action
 
@@ -2003,8 +2026,12 @@ Continue without waiting on the two M1 evidence blockers:
    semantic authority. Treat `space-details-update-operation-contracts` and
    `EVID-SPACE-DETAILS-UPDATE-001` as the sole provider-free
    UpdateSpaceDetails semantic authority. The exact implementation commit and
-   both CI jobs are verified. Audit the next smallest complete decision-
-   independent dependency and run its ready gate before implementation. Keep
+   both CI jobs are verified. Treat
+   `space-checklist-revision-operation-contracts` and
+   `EVID-SPACE-CHECKLIST-REVISION-001` as the sole provider-free
+   ReviseSpaceChecklists semantic authority. Finish and commit its ready gate,
+   require both exact-ready-commit CI jobs, then implement only the frozen
+   provider-free boundary. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

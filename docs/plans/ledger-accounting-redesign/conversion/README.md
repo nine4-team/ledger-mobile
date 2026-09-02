@@ -141,6 +141,15 @@ Scope/checklist/template/media/Item/review/
 lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
 Sync/provider behavior, app/MCP, migration and production remain excluded.
 O-023/O-026/O-037 stay open; `EVID-SPACE-DETAILS-UPDATE-001`.
+The provider-free Space checklist revision slice is at its ready gate. Exactly
+two comment-only target surfaces reserve one complete canonical ordered
+checklist hierarchy replacement, stable distinct nested identities, checked-
+state progress, exact same-Space expected revision, shared operation lifecycle
+and a narrow port. No executable checklist behavior exists before immutable
+exact-ready-commit CI. Scope/details/template/media/Item/review/Space-completion/
+lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
+Sync/provider behavior, app/MCP, migration and production remain excluded.
+O-023/O-026/O-032/O-037 stay open; `EVID-SPACE-CHECKLIST-REVISION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

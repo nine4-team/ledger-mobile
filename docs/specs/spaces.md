@@ -26,6 +26,19 @@ Spaces are organizational containers for items. They represent physical location
   expected Space revision. It cannot change the immutable Project-or-Business-
   Inventory scope or act as a partial/generic field update; a stale edit must
   surface a conflict rather than silently overwriting newer details.
+- `ReviseSpaceChecklists` replaces one Space's complete ordered checklist
+  collection using stable checklist and checklist-item IDs and one expected
+  Space revision. Checklist names and item text are nonblank after outer-
+  whitespace normalization, accepted interior text is preserved, duplicate
+  names/text remain valid, and no unapproved length cap is invented. Explicit
+  presentation order and each item's checked state are part of the replacement;
+  an empty collection clears all checklists and a checklist with zero items is
+  valid. A stale revision conflicts atomically rather than merging or
+  overwriting concurrent check/edit/reorder work.
+- Checklist-item checked state is checklist progress, not the legacy
+  `Space.isComplete` reconciliation flag. Checklist revision cannot create from
+  or save to a template, change Space scope/details/lifecycle, attach media,
+  assign Items, create review evidence, or mutate accounting.
 - Direct creation owns only Space identity, scope, name, and optional notes.
   Attachments, checklist revisions, template application/saving, Item
   assignment, archive, review notes, and completion/reconciliation state are
@@ -154,5 +167,6 @@ Spaces do not directly participate in budget calculations. However, items in spa
 3. **Moving items between spaces**: Use a typed, scope-validating assignment
    operation with stable Item IDs and a durable result.
 4. **Space images**: No cap on image count (unlike transactions which may have separate receipt/other image categories).
-5. **Empty checklists**: Valid -- a checklist can have zero items.
+5. **Empty checklists**: Valid -- a Space can have zero checklists and a
+   checklist can have zero items.
 6. **Duplicate space names**: Allowed (spaces are identified by ID, not name).
