@@ -17,6 +17,10 @@ let package = Package(
         .library(
             name: "LedgerTargetTestSupport",
             targets: ["LedgerTargetTestSupport"]
+        ),
+        .library(
+            name: "LedgerTargetComposition",
+            targets: ["LedgerTargetComposition"]
         )
     ],
     targets: [
@@ -48,6 +52,20 @@ let package = Package(
             name: "LedgerTargetTestSupportTests",
             dependencies: ["LedgerTargetCore", "LedgerTargetTestSupport"],
             path: "LedgerTargetTestSupportTests"
+        ),
+        .target(
+            name: "LedgerTargetComposition",
+            dependencies: ["LedgerTargetCore"],
+            path: "LedgerTargetComposition"
+        ),
+        .testTarget(
+            name: "LedgerTargetCompositionTests",
+            dependencies: [
+                "LedgerTargetCore",
+                "LedgerTargetComposition",
+                "LedgerTargetTestSupport"
+            ],
+            path: "LedgerTargetCompositionTests"
         )
     ]
 )

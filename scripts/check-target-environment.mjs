@@ -20,6 +20,11 @@ const testSupportTestRoot = path.join(
   packageRoot,
   "LedgerTargetTestSupportTests",
 );
+const compositionRoot = path.join(packageRoot, "LedgerTargetComposition");
+const compositionTestRoot = path.join(
+  packageRoot,
+  "LedgerTargetCompositionTests",
+);
 const targetAppRoot = path.join(packageRoot, "LedgerTargetApp");
 const targetProject = path.join(
   packageRoot,
@@ -96,6 +101,8 @@ if (description) {
   const migrationTests = targets.get("LedgerTargetMigrationCoreTests");
   const testSupport = targets.get("LedgerTargetTestSupport");
   const testSupportTests = targets.get("LedgerTargetTestSupportTests");
+  const composition = targets.get("LedgerTargetComposition");
+  const compositionTests = targets.get("LedgerTargetCompositionTests");
   if (!core) {
     fail("target_core_missing", "LedgerTargetCore");
   } else if ((core.target_dependencies ?? []).length !== 0) {
@@ -170,6 +177,33 @@ if (description) {
       );
     }
   }
+  if (!composition) {
+    fail("target_composition_missing", "LedgerTargetComposition");
+  } else {
+    const dependencies = new Set(composition.target_dependencies ?? []);
+    if (dependencies.size !== 1 || !dependencies.has("LedgerTargetCore")) {
+      fail(
+        "target_composition_dependency_boundary",
+        "LedgerTargetComposition may depend only on LedgerTargetCore.",
+      );
+    }
+  }
+  if (!compositionTests) {
+    fail("target_composition_tests_missing", "LedgerTargetCompositionTests");
+  } else {
+    const dependencies = new Set(compositionTests.target_dependencies ?? []);
+    if (
+      dependencies.size !== 3 ||
+      !dependencies.has("LedgerTargetCore") ||
+      !dependencies.has("LedgerTargetComposition") ||
+      !dependencies.has("LedgerTargetTestSupport")
+    ) {
+      fail(
+        "target_composition_test_dependency_boundary",
+        "LedgerTargetCompositionTests may depend only on LedgerTargetCore, LedgerTargetComposition, and LedgerTargetTestSupport.",
+      );
+    }
+  }
 }
 
 const forbiddenImport =
@@ -181,6 +215,8 @@ for (const filePath of [
   ...swiftFiles(migrationTestRoot),
   ...swiftFiles(testSupportRoot),
   ...swiftFiles(testSupportTestRoot),
+  ...swiftFiles(compositionRoot),
+  ...swiftFiles(compositionTestRoot),
   ...swiftFiles(targetAppRoot),
 ]) {
   const match = fs.readFileSync(filePath, "utf8").match(forbiddenImport);
@@ -287,6 +323,12 @@ if (
       "The target staging application must not link test-support tooling.",
     );
   }
+  if (/LedgerTargetComposition/.test(project)) {
+    fail(
+      "target_app_composition_contamination",
+      "The target staging application must not link composition before its application-wiring slice.",
+    );
+  }
 }
 
 if (!fs.existsSync(sourceProject)) {
@@ -300,6 +342,8 @@ if (!fs.existsSync(sourceProject)) {
     "LedgerTargetMigrationCoreTests",
     "LedgerTargetTestSupport",
     "LedgerTargetTestSupportTests",
+    "LedgerTargetComposition",
+    "LedgerTargetCompositionTests",
   ]) {
     if (project.includes(targetOnlyPath)) {
       fail(
@@ -318,5 +362,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  "target-environment: isolated LedgerTargetCore, separate migration-control/test-support tooling, and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, tooling app link, or source-project contamination detected\n",
+  "target-environment: isolated LedgerTargetCore, separate migration-control/test-support/composition tooling, and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, tooling app link, premature composition link, or source-project contamination detected\n",
 );

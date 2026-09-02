@@ -3,7 +3,7 @@
   "sliceId": "validated-target-composition",
   "title": "Validate one explicit environment-bound target composition before application or provider wiring",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Validated Target Composition",
   "surfaceIds": [
     "SWIFT-06BA59E1BBDF",
@@ -127,8 +127,8 @@
       "owner": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
       "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-004", "COMPOSE-REQ-005"],
       "expected": "A complete typed target-local reference composition validates one environment, matching catalog versions, exact dependency keys and one-owner available-capability closure and exposes the configured Ledger ports without a provider or service locator.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TARGET-COMPOSITION-001"]
     },
     {
       "id": "COMPOSE-TEST-002",
@@ -136,8 +136,8 @@
       "owner": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
       "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-005"],
       "expected": "Canonical composition receipt evidence restores offline with identical environment/version/dependency/capability ownership, and equivalent input order produces identical bytes without reconstructing runtime adapters.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TARGET-COMPOSITION-001"]
     },
     {
       "id": "COMPOSE-TEST-003",
@@ -145,8 +145,8 @@
       "owner": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift",
       "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-004", "COMPOSE-REQ-005"],
       "expected": "Missing, duplicate, wrong-key, cross-environment, incompatible-version, reference/runtime, unknown/gated/deprecated/multiply-owned capability, unsafe descriptor, noncanonical, tampered and oversized inputs fail with stable codes before any partial composition is returned.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TARGET-COMPOSITION-001"]
     },
     {
       "id": "COMPOSE-TEST-004",
@@ -158,7 +158,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-TARGET-COMPOSITION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 technical-control foundation only. It stops before application/MCP wiring, provider factories or SDKs, local database/PowerSync behavior, Auth, Storage/media, product commands/queries, hosted staging, adapter/physical-offline claims, A-003/A-004/A-007/A-015/A-016, open product decisions, deployment, migration, production access or cutover authority."

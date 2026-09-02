@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T01:39:23.984Z",
+  "generatedFromManifestSync": "2026-09-02T01:55:40.065Z",
   "totals": {
     "slices": 13,
     "claimedTargetSurfaces": 47,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 30
+    "implementationAdvancedTargetSurfaces": 32
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 11,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -199,7 +199,7 @@
       "sliceId": "validated-target-composition",
       "title": "Validate one explicit environment-bound target composition before application or provider wiring",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Validated Target Composition",
       "surfaceIds": [
         "SWIFT-06BA59E1BBDF",

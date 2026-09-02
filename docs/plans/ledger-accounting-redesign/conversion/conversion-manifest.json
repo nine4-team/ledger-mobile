@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T01:39:23.984Z",
+    "lastSynchronizedAt": "2026-09-02T01:55:40.065Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -90,10 +90,10 @@
           "path": "LedgeriOS/Package.swift"
         }
       ],
-      "observedSourceHash": "598a1016dc77f817d609a8a09981cdf61058f31fdbcffd6922895a4da6c1b14f",
-      "acknowledgedSourceHash": "598a1016dc77f817d609a8a09981cdf61058f31fdbcffd6922895a4da6c1b14f",
+      "observedSourceHash": "e24ba371722c7c53ee63b9fa9dc7e4c6581c2eb6b53650d13c125cc4189abc80",
+      "acknowledgedSourceHash": "e24ba371722c7c53ee63b9fa9dc7e4c6581c2eb6b53650d13c125cc4189abc80",
       "metadata": {},
-      "currentBehavior": "Defines standalone LedgerTargetCore library/tests plus separately exported LedgerTargetMigrationCore and LedgerTargetTestSupport library/test targets that each depend only on the provider-free core; the package has no external dependencies and the staging app links only LedgerTargetCore.",
+      "currentBehavior": "Defines standalone LedgerTargetCore library/tests plus separately exported LedgerTargetMigrationCore, LedgerTargetTestSupport and LedgerTargetComposition library/test targets that each depend inward only on the provider-free core; the package has no external dependencies and the staging app still links only LedgerTargetCore.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -102,12 +102,13 @@
           "LedgerTargetCoreTests package test target",
           "LedgerTargetMigrationCore separate tooling product and test target",
           "LedgerTargetTestSupport separate reference-adapter product and self-test target",
+          "LedgerTargetComposition provider-free product and self-test target",
           "future target application dependency boundary"
         ],
         "securityRequirements": [
           "The foundation package has no vendor dependency and cannot acquire credentials or open infrastructure",
           "The current Firebase app project does not compile or link target-only foundation paths",
-          "Neither application project compiles or links LedgerTargetMigrationCore or LedgerTargetTestSupport"
+          "Neither application project compiles or links LedgerTargetMigrationCore, LedgerTargetTestSupport or LedgerTargetComposition"
         ],
         "syncRequirements": [
           "PowerSync remains a descriptor behind validated target contracts until the separately gated adapter is introduced"
@@ -135,9 +136,10 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
-        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001",
+        "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Target package graph remains claimed by target-environment-isolation. Migration integrity and deterministic reference test support compile/test as separate library products but are intentionally absent from both application Xcode projects.",
+      "notes": "Target package graph remains claimed by target-environment-isolation. Migration integrity, deterministic reference test support and validated composition compile/test as separate library products but are intentionally absent from both application Xcode projects.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -964,10 +966,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "b78384990d44a74158ea9793c42b1134c49b22ef3287cba2a166337c01671365",
-      "acknowledgedSourceHash": "b78384990d44a74158ea9793c42b1134c49b22ef3287cba2a166337c01671365",
+      "observedSourceHash": "ac16a48c10d96de468d70f0ca590a65a4393abe4f03eebc38900aa1cd8ac1050",
+      "acknowledgedSourceHash": "ac16a48c10d96de468d70f0ca590a65a4393abe4f03eebc38900aa1cd8ac1050",
       "metadata": {},
-      "currentBehavior": "Fails closed unless LedgerTargetCore remains dependency-free; LedgerTargetMigrationCore and LedgerTargetTestSupport each depend only on that core; every test target has only its reviewed edges; all target/tooling files contain no provider SDK imports; neither application project links migration or test-support tooling; and the source Firebase Xcode project references no target-only path.",
+      "currentBehavior": "Fails closed unless LedgerTargetCore remains dependency-free; LedgerTargetMigrationCore, LedgerTargetTestSupport and LedgerTargetComposition each depend only on that core; every test target has only its reviewed edges; all target/tooling files contain no provider SDK imports; neither application project links migration, test-support or composition tooling; and the source Firebase Xcode project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -976,6 +978,7 @@
           "provider import guard",
           "migration-tooling application-link guard",
           "test-support application-link guard",
+          "premature composition application-link guard",
           "source-project contamination guard"
         ],
         "securityRequirements": [
@@ -988,7 +991,7 @@
       "migration": {
         "rule": "Run locally and in CI before target slice evidence is accepted; it reads configuration only and performs no migration.",
         "reconciliation": [
-          "Swift package description, application graphs and lexical import inspection agree that the app foundation and separate migration/test-support tooling are provider-free and isolated"
+          "Swift package description, application graphs and lexical import inspection agree that the app foundation and separate migration/test-support/composition tooling are provider-free and isolated"
         ]
       },
       "verification": {
@@ -997,7 +1000,7 @@
           "npm run target:environment:check"
         ],
         "acceptance": [
-          "Any external package dependency, provider import, missing target, wrong package edge, application link to migration/test-support tooling, or source-project path contamination exits nonzero"
+          "Any external package dependency, provider import, missing target, wrong package edge, application link to migration/test-support/composition tooling, or source-project path contamination exits nonzero"
         ]
       },
       "status": "target_mapped",
@@ -1007,7 +1010,8 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
-        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001",
+        "EVID-TARGET-COMPOSITION-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -4336,17 +4340,18 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "b78384990d44a74158ea9793c42b1134c49b22ef3287cba2a166337c01671365",
-      "acknowledgedSourceHash": "b78384990d44a74158ea9793c42b1134c49b22ef3287cba2a166337c01671365",
+      "observedSourceHash": "ac16a48c10d96de468d70f0ca590a65a4393abe4f03eebc38900aa1cd8ac1050",
+      "acknowledgedSourceHash": "ac16a48c10d96de468d70f0ca590a65a4393abe4f03eebc38900aa1cd8ac1050",
       "metadata": {},
-      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers and provider imports, enforces separate migration/test-support dependency graphs, and refuses either tooling product in both application projects.",
+      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers and provider imports, enforces separate migration/test-support/composition dependency graphs, and refuses every tooling product in both application projects.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
           "known source-production identifier contamination guard",
           "migration-tooling application-contamination guard",
-          "test-support application-contamination guard"
+          "test-support application-contamination guard",
+          "composition application-contamination guard"
         ],
         "securityRequirements": [
           "The target staging application source and generated project contain no source-production identifier or provider dependency"
@@ -4374,7 +4379,8 @@
       "evidence": [
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
-        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001",
+        "EVID-TARGET-COMPOSITION-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -16036,12 +16042,12 @@
           "path": "LedgeriOS/LedgerTargetComposition/ValidatedTargetComposition.swift"
         }
       ],
-      "observedSourceHash": "52399330fcc75a81d4bdf721b90b360b41da26e9f7872f39720f67bb7b18e41a",
-      "acknowledgedSourceHash": "52399330fcc75a81d4bdf721b90b360b41da26e9f7872f39720f67bb7b18e41a",
+      "observedSourceHash": "cd52b14244b38dcb57b5da4334a928f8723e9791848a49d24ab19f276e7eb57d",
+      "acknowledgedSourceHash": "cd52b14244b38dcb57b5da4334a928f8723e9791848a49d24ab19f276e7eb57d",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides a comment-only target scaffold for an explicit validated composition plan, environment-bound port assembly, capability ownership, deterministic receipt and fail-closed composition refusal; no executable behavior exists before the slice ready gate passes.",
+      "currentBehavior": "Implements the provider-free explicit target composition boundary: validated environment/version/use-bound dependency plans, exact implementation and capability ownership, typed catalog/operation-query/sync-health assembly, structural-only canonical receipts, and stable fail-closed environment/dependency/catalog/capability/evidence results.",
       "disposition": "redesign",
       "target": {
         "owner": "Validated Target Composition",
@@ -16075,14 +16081,14 @@
           "A complete provider-free reference plan assembles the current target ports only after environment, version, lifecycle and capability closure pass, while every incomplete, mixed, test-runtime or authority-bearing plan is refused"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Target-only composition-contract scaffold claimed by validated-target-composition. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
+      "notes": "Implemented target-only composition contract claimed by validated-target-composition. Three focused and all 66 target tests pass locally; exact-commit CI remains required before verification. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -33524,12 +33530,12 @@
           "path": "LedgeriOS/LedgerTargetCompositionTests/ValidatedTargetCompositionTests.swift"
         }
       ],
-      "observedSourceHash": "d25b01bae286902b726b8558bfea4b4ca34ee0d2173036595f358a240f93937b",
-      "acknowledgedSourceHash": "d25b01bae286902b726b8558bfea4b4ca34ee0d2173036595f358a240f93937b",
+      "observedSourceHash": "788e5b229fb2ad3b7bb5859693df44b12914766f05fb63ea5f45b5bcb1aee394",
+      "acknowledgedSourceHash": "788e5b229fb2ad3b7bb5859693df44b12914766f05fb63ea5f45b5bcb1aee394",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Provides a comment-only target scaffold for composition completeness, environment/version/capability ownership, restart receipt, reference-versus-runtime and provider/Firebase contamination refusal tests; no executable test exists before the slice ready gate passes.",
+      "currentBehavior": "Exercises complete provider-free reference composition, explicit port use, canonical receipt restart/input normalization, and atomic refusal for missing/duplicate/wrong/cross-environment/reference-runtime dependencies, version drift, unavailable/deprecated/duplicate/unowned capabilities, unsafe evidence, tamper, noncanonical bytes and size bounds.",
       "disposition": "redesign",
       "target": {
         "owner": "Validated Target Composition",
@@ -33561,14 +33567,14 @@
           "Self-tests prove explicit typed composition, catalog/capability closure, environment isolation, deterministic restart evidence and permanent non-authority without external dependencies"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Target-only self-test scaffold. It may use the verified deterministic reference adapters in the test target only and cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
+      "notes": "Implemented target-only composition self-tests use the verified deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally; exact-commit CI remains required before verification. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {

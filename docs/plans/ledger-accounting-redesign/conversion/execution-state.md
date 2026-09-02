@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 56
+State version: 57
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: VALIDATED-TARGET-COMPOSITION-READY-IMPLEMENTATION-NEXT
+- Checkpoint: VALIDATED-TARGET-COMPOSITION-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -686,6 +686,24 @@ modifying the running Firebase application before hard cutover.
   stable refusal and operational graph/source-isolation tests. No behavior,
   package target, application link, SDK, database, hosted service, product
   command, migration or production operation exists at this checkpoint.
+- Implemented `LedgerTargetComposition` as a separate provider-free package
+  product depending only on `LedgerTargetCore`; its self-test target may also
+  depend on `LedgerTargetTestSupport`. Neither application project links the
+  module, and the graph guard now enforces exact package edges, scans both new
+  roots for provider imports, and rejects premature composition/source-project
+  contamination.
+- Added exact environment/use/version-bound dependency plans for the generated
+  contract catalog, operation queries and Sync health; exact stable
+  implementation/capability ownership; explicit reference-versus-runtime
+  classes; typed port assembly; stable fail-closed dependency/catalog/
+  capability results; and a bounded structural-only canonical receipt that
+  restores through the same validators without reconstructing adapters.
+- Three focused composition tests and all 66 target package tests pass locally,
+  as do the target graph/generated-contract checks and macOS/generic-iOS-
+  Simulator staging builds. Three of four slice obligations pass; exact-commit
+  hosted CI remains planned, so exactly the two target-only composition
+  surfaces are `implemented`. Current Firebase root, app/MCP integration,
+  provider adapters and target application project surfaces remain unadvanced.
 
 ## Next Action
 
@@ -695,17 +713,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready `validated-target-composition` dossier. Add a
-   separate Swift package product depending only on `LedgerTargetCore`, with a
-   self-test target that may also depend on `LedgerTargetTestSupport`; extend
-   graph/provider/source-contamination checks. Implement explicit typed
-   environment-bound catalog/operation-query/sync-health composition, exact
-   available-capability ownership, reference-versus-application-runtime
-   separation, bounded canonical structural receipt and stable completeness/
-   binding/version/capability/tamper refusal. Keep the module out of both
-   application projects and stop before provider factories, concrete app/MCP
-   wiring, local database/PowerSync, Auth, Storage, hosted resources, product
-   operations, migration, production access or cutover.
+2. Preserve the implemented `validated-target-composition` boundary exactly,
+   commit and push its implementation checkpoint, and require the immutable
+   exact-commit pull-request run to pass conversion traceability, graph/
+   generated-contract checks, all 66 target tests, both target builds and clean
+   tracked artifacts. Only then advance its dossier and exactly
+   `SWIFT-06BA59E1BBDF` / `TEST-952BC24E0233` to `verified`. Keep the module out
+   of both application projects and do not infer provider, app/MCP, local-
+   database, hosted-resource, migration, production or cutover authority.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
