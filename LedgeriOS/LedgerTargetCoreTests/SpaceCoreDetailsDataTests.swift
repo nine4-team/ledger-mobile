@@ -265,19 +265,34 @@ struct SpaceCoreDetailsDataTests {
         #expect(!unavailableText.contains("authoritativeAbsence"))
         #expect(!unavailableText.contains("cached"))
 
-        let diagnostics: [SpaceCoreDetailsFailure] = [
-            .accountScopeMismatch, .spaceIdentityMismatch, .invalidSpaceScope,
-            .invalidSpaceTimestamp, .multipleRows, .visibleCountMismatch,
-            .invalidSnapshotAsOf, .invalidCompleteness, .requestFingerprintMismatch,
-            .queryFingerprintMismatch, .updateRequestMismatch, .invalidWaitingState,
-            .unavailableCachedEvidence, .localReadFailed, .invalidEncodedRequest,
-            .invalidEncodedSpace, .invalidEncodedLocalSnapshot, .invalidEncodedUpdate
+        let diagnostics: [(SpaceCoreDetailsFailure, String)] = [
+            (.accountScopeMismatch, "space_core_details_account_scope_mismatch"),
+            (.spaceIdentityMismatch, "space_core_details_identity_mismatch"),
+            (.invalidSpaceScope, "space_core_details_scope_invalid"),
+            (.invalidSpaceTimestamp, "space_core_details_timestamp_invalid"),
+            (.multipleRows, "space_core_details_multiple_rows"),
+            (.visibleCountMismatch, "space_core_details_visible_count_mismatch"),
+            (.invalidSnapshotAsOf, "space_core_details_as_of_invalid"),
+            (.invalidCompleteness, "space_core_details_completeness_invalid"),
+            (.requestFingerprintMismatch, "space_core_details_request_fingerprint_mismatch"),
+            (.queryFingerprintMismatch, "space_core_details_query_fingerprint_mismatch"),
+            (.updateRequestMismatch, "space_core_details_update_request_mismatch"),
+            (.invalidWaitingState, "space_core_details_waiting_state_invalid"),
+            (.unavailableCachedEvidence, "space_core_details_unavailable_cache_invalid"),
+            (.localReadFailed, "space_core_details_local_read_failed"),
+            (.invalidEncodedRequest, "space_core_details_request_encoding_invalid"),
+            (.invalidEncodedSpace, "space_core_details_space_encoding_invalid"),
+            (.invalidEncodedLocalSnapshot, "space_core_details_snapshot_encoding_invalid"),
+            (.invalidEncodedUpdate, "space_core_details_update_encoding_invalid")
         ]
-        for failure in diagnostics {
-            #expect(failure.diagnosticCode.utf8.count <= 80)
-            #expect(!failure.diagnosticCode.contains("firebase"))
-            #expect(!failure.diagnosticCode.contains("supabase"))
+        let codes = diagnostics.map { failure, expectedCode in
+            #expect(failure.diagnosticCode == expectedCode)
+            #expect(expectedCode.utf8.count <= 80)
+            #expect(!expectedCode.contains("firebase"))
+            #expect(!expectedCode.contains("supabase"))
+            return expectedCode
         }
+        #expect(Set(codes).count == diagnostics.count)
     }
 
     @Test("The query port streams only exact request updates and propagates failure and cancellation")
