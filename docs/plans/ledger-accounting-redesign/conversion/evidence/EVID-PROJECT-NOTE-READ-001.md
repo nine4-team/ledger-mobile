@@ -7,8 +7,9 @@
 - Claimed target surfaces: `SWIFT-B3DBE3375ACE`, `TEST-E8DC4AE52ED7`
 - Slice dossier:
   `conversion/implementation-slices/project-note-read-contracts.json`
-- Verification state: implemented; four local obligations pass and exact-
-  implementation-commit CI remains planned
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `b421f41948a23fa0918b5e33c0a4d436e5b87080`
+  and immutable Actions run `33618364544`
 - Implementation hashes:
   - `ProjectNoteData.swift`:
     `f9ac710c8c031f23178b8a4ab064a3243ed2c2d6ff694de95044fdd8a14c1f18`
@@ -128,8 +129,14 @@ The complete local gate passes with all 124 target tests in 28 suites, target
 environment isolation, generated app/MCP contracts, macOS and generic iOS
 Simulator staging builds, conversion/capability/query/residual controls, M0 and
 clean diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
-Exact implementation-commit hosted verification remains required before either
-surface advances from `implemented` to `verified`.
+
+Exact implementation commit `b421f41948a23fa0918b5e33c0a4d436e5b87080`
+passed immutable GitHub Actions run `33618364544`: conversion state and
+traceability passed in 12 seconds; the isolated target environment passed in 2
+minutes 21 seconds with all 124 tests, target graph/generated-contract controls,
+macOS and generic iOS Simulator staging builds, and clean tracked artifacts. All
+five obligations and exactly the two Project-note target surfaces are therefore
+verified.
 
 ## Permanent Limits
 

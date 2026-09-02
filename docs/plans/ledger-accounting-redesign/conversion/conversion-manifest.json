@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T10:13:24.802Z",
+    "lastSynchronizedAt": "2026-09-02T10:17:45.872Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27019,14 +27019,14 @@
           "Synthetic pages prove exact Account/Project/note/audit/order/cursor/history-readiness truth, canonical restart, atomic malformed/rebound refusal and exact request matching without a database, note mutation or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-READ-001"
       ],
-      "notes": "Implemented target-only Phase 1 read surface. It preserves already-authorized Account/Project/note identity, content-or-tombstone state, immutable creator/creation/source evidence, revision/edit audit, deterministic newest-first order, structured continuation and explicit offline-history readiness. Four focused tests and the complete local gate pass; exact implementation-commit CI remains required before verification. It cannot authorize or mutate notes, choose roles/retention, define schema/RLS/Sync/provider behavior, wire app/MCP/search, migrate source data or activate production.",
+      "notes": "Verified target-only Phase 1 read surface at exact implementation commit b421f41948a23fa0918b5e33c0a4d436e5b87080 and immutable Actions run 33618364544. It preserves already-authorized Account/Project/note identity, content-or-tombstone state, immutable creator/creation/source evidence, revision/edit audit, deterministic newest-first order, structured continuation and explicit offline-history readiness. Four focused/all 124 tests, graph/contracts, both staging builds and clean artifacts pass. It cannot authorize or mutate notes, choose roles/retention, define schema/RLS/Sync/provider behavior, wire app/MCP/search, migrate source data or activate production.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -36337,14 +36337,14 @@
           "Self-tests prove the backend-neutral Project-note read boundary without claiming mutation, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-READ-001"
       ],
-      "notes": "Implemented target-only deterministic tests prove exact Account/Project/note/content-or-tombstone/audit/order/cursor/history-readiness truth, byte-identical restart, malformed/rebound refusal, exact request matching and no false page. Four focused tests and the complete local gate pass; exact implementation-commit CI remains required before verification. No physical local durability, authorization, note mutation, schema/RLS/Sync/provider behavior, app/MCP/search parity, migration or production behavior is claimed.",
+      "notes": "Verified target-only deterministic tests at exact implementation commit b421f41948a23fa0918b5e33c0a4d436e5b87080 and immutable Actions run 33618364544 prove exact Account/Project/note/content-or-tombstone/audit/order/cursor/history-readiness truth, byte-identical restart, malformed/rebound refusal, exact request matching and no false page. Four focused/all 124 tests, graph/contracts, both staging builds and clean artifacts pass. No physical local durability, authorization, note mutation, schema/RLS/Sync/provider behavior, app/MCP/search parity, migration or production behavior is claimed.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

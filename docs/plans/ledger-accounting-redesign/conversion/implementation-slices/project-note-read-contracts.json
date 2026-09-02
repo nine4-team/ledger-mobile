@@ -3,7 +3,7 @@
   "sliceId": "project-note-read-contracts",
   "title": "Read bounded Project notes with stable audit and offline-history evidence",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Note Read Contracts",
   "surfaceIds": [
     "SWIFT-B3DBE3375ACE",
@@ -180,7 +180,7 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTNOTE-REQ-001", "PROJECTNOTE-REQ-002", "PROJECTNOTE-REQ-003", "PROJECTNOTE-REQ-004", "PROJECTNOTE-REQ-005", "PROJECTNOTE-REQ-006", "PROJECTNOTE-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming schema, authorization, Sync, mutation, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-READ-001"]
     }
   ],

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 102
+State version: 103
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-READ-IMPLEMENTED
+- Checkpoint: PROJECT-NOTE-READ-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1453,6 +1453,14 @@ modifying the running Firebase application before hard cutover.
 - No note authorization/mutation, physical local persistence, schema/RLS/Sync/
   Auth/provider behavior, app/MCP/search wiring, source note migration, hosted
   resource or production operation was introduced.
+- Exact implementation commit
+  `b421f41948a23fa0918b5e33c0a4d436e5b87080` passed immutable GitHub Actions
+  run `33618364544`: conversion traceability passed in 12 seconds and the
+  isolated-target job passed in 2 minutes 21 seconds with all 124 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five Project-note obligations and exactly its
+  two target-only surfaces are now `verified`; every excluded mutation,
+  provider, migration and production surface remains unadvanced.
 
 ## Next Action
 
@@ -1495,11 +1503,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority.
    Treat the verified `project-rename-operation-contracts` dossier and
    `EVID-PROJECT-RENAME-001` as the sole RenameProject semantic authority.
-   Require exact implementation-commit CI for `project-note-read-contracts`,
-   then advance only its five obligations and two surfaces to verified if the
-   run passes. Keep Add/Edit/Remove, role policy, physical persistence, schema/
-   RLS/Sync/Auth/provider behavior, app/MCP/search, migration, hosted resources
-   and production access excluded.
+   Treat the verified `project-note-read-contracts` dossier and
+   `EVID-PROJECT-NOTE-READ-001` as the sole shared read semantics for stable
+   Project-note identity, audit/tombstone evidence, deterministic bounded order
+   and explicit offline-history completeness. Audit the next smallest complete
+   decision-independent Phase 1 dependency against canonical specs and the
+   residual register, then prepare its ready dossier before implementation.
+   Keep Add/Edit/Remove, role policy, physical persistence, schema/RLS/Sync/
+   Auth/provider behavior, app/MCP/search, migration, hosted resources and
+   production access excluded unless that later slice explicitly owns them.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
