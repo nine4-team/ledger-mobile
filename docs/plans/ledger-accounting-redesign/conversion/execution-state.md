@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 113
+State version: 114
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: VENDOR-SUGGESTION-READ-READY
+- Checkpoint: VENDOR-SUGGESTION-READ-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1659,6 +1659,26 @@ modifying the running Firebase application before hard cutover.
   XcodeGen/source-project stability, conversion/capability/query/residual
   controls, M0 and clean diff formatting pass; M1/M2 retain exactly their
   expected 2/164 blockers.
+- Exact ready commit `3abee18e8011943e74185e43d1630aeb9fa2bff7`
+  passed immutable GitHub Actions run `33631062466`: conversion traceability
+  passed in 20 seconds and the isolated target environment passed in 2 minutes
+  51 seconds with all 136 then-existing tests, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts.
+- Implemented only the frozen provider-free vendor-suggestion read boundary:
+  stable typed suggestion identity, exact Account scope, preserved control-free
+  display spelling bounded to 200 UTF-8 bytes, normalized comparison, active/
+  archive lifecycle, revision/order, local readiness/restart, atomic refusal and
+  one narrow query port. Selection exposes only the preserved source string.
+- Added four deterministic tests for exact values/source-text semantics,
+  ready/partial/stale/authoritative-empty restart, invalid/cross-Account/
+  duplicate/count/time/malformed refusal and exact/no-false-snapshot port
+  behavior.
+- `VENDORSUGGESTION-TEST-001` through `-004` pass locally. All 140 target tests
+  in 32 suites, target graph/generated contracts, both staging builds,
+  conversion/capability/query/residual controls, M0 and clean artifacts pass.
+  Exact-implementation-commit hosted `VENDORSUGGESTION-TEST-005` remains
+  planned, so exactly the two claimed surfaces are `implemented`, not
+  `verified`.
 
 ## Next Action
 
@@ -1712,9 +1732,9 @@ Continue without waiting on the two M1 evidence blockers:
    preference read semantics. Treat the verified
    `project-preference-update-operation-contracts` dossier and
    `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
-   semantics. Implement only the ready
-   `vendor-suggestion-reference-read-contracts` dossier, then require exact
-   local and immutable-CI evidence before advancing its two surfaces. Keep
+   semantics. Treat the implemented `vendor-suggestion-reference-read-contracts`
+   dossier as the sole vendor-suggestion read semantics and obtain immutable-CI
+   evidence before advancing its two surfaces to verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
