@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T18:02:51.041Z",
+  "generatedFromManifestSync": "2026-09-02T18:17:05.574Z",
   "totals": {
-    "slices": 39,
-    "claimedTargetSurfaces": 99,
+    "slices": 40,
+    "claimedTargetSurfaces": 101,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 84
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 38,
@@ -17,6 +17,21 @@
     "cutover_ready": 0
   },
   "slices": [
+    {
+      "sliceId": "account-discovery-and-selection-contracts",
+      "title": "Discover visible Accounts and express explicit workspace choice without creating authorization",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Identity, Membership, and Workspace Context",
+      "surfaceIds": [
+        "SWIFT-C1B994920894",
+        "TEST-11AC450D596A"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-discovery-and-selection-contracts.json"
+    },
     {
       "sliceId": "attachment-capture-and-local-durability-receipt",
       "title": "Accept attachment capture only with scoped local-durability evidence",

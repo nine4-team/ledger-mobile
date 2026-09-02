@@ -67,5 +67,6 @@ Central cross-feature program tracking:
 - [shipped] [Project List Bugs](project-list-bugs.md) — Business Inventory card on the Projects screen showed "0 items · 0 transactions" because `InventoryContext` was only activated from the Inventory tab. Fixed by activating it at `MainTabView` for the whole signed-in session. Shipped 2026-04-07.
 
 ### Authentication & Access
+- [new] [Account Discovery and Workspace Selection](account-discovery-and-workspace-selection.md) — **Canonical target selection contract.** A stable Principal sees a readiness-labeled, visibility-safe Account list and must explicitly choose an Account. Remembered state is ordering convenience only; selection is local intent, never membership or authorization. Auth provider, offline lease, physical activation, app/MCP wiring, and target schema remain separately gated.
 - [new] [Financial Access Controls](financial-access-controls.md) — **Active planned spec.** Member-specific company financial visibility: full, limited-by-fee-category, or none. Intended first use is employees who can see selected fee categories such as Kitchen Fees without seeing broader design-fee revenue or hidden-fee invoices.
 - [tbd] [Authentication & Offline Access](authentication-offline-access.md) — Google Sign-In users have no fallback when Google auth is unavailable; need a workaround for offline/degraded scenarios

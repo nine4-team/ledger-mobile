@@ -165,6 +165,17 @@ run `33663785835`. Auth provider and offline lease choices, final UI copy/policy
 physical synchronization/cleanup, O-023 media retention, schema/RLS/Sync,
 app/MCP, migration, hosted resources and production remain excluded;
 `EVID-SESSION-ENDING-POLICY-001`.
+The provider-free Account discovery and explicit selection slice is ready for
+implementation after exact ready-commit CI. Exactly two comment-only target
+surfaces define environment/Principal-scoped, visibility-safe Account rows,
+ready/partial/stale/authoritative-empty discovery, deterministic remembered-
+first presentation with no automatic selection, exact-snapshot-bound local
+selection intent, canonical restart/refusal and one narrow query port. All 168
+existing target tests in 39 suites, graph/contracts, both staging builds and
+clean artifacts pass locally. A-007/A-016/O-023, current authorization,
+physical workspace activation/switching, membership/Account writers,
+schema/RLS/Sync, app/MCP, migration, hosted resources and production remain
+excluded; `EVID-ACCOUNT-DISCOVERY-SELECTION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
@@ -244,7 +255,7 @@ summary or select a different slice merely because the prior reasoning is gone.
   reviewed canonical-target, current-product, historical-evidence,
   decision-log, architecture, or conversion-control authorities.
 - `product-authority-audit.generated.json` and `.md` prove that every stable
-  surface resolves through its batch to an authority set and that all seven
+  surface resolves through its batch to an authority set and that all nine
   registered target specs remain represented. Generated artifacts must not be
   edited.
 - `implementation-slices/*.json` contains one machine-readable dossier per

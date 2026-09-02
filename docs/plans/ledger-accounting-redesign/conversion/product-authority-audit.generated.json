@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T18:02:51.041Z",
+  "generatedFromManifestSync": "2026-09-02T18:17:05.574Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 783,
-    "targetRelevantSurfaces": 521,
+    "surfaces": 785,
+    "targetRelevantSurfaces": 523,
     "batches": 18,
-    "productScopeSurfaces": 629,
+    "productScopeSurfaces": 631,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 416,
-      "targetRelevantSurfaceCount": 300
+      "surfaceCount": 418,
+      "targetRelevantSurfaceCount": 302
     },
     {
       "path": "docs/specs/projects.md",
@@ -91,12 +91,20 @@
       "targetRelevantSurfaceCount": 117
     },
     {
+      "path": "docs/specs/account-discovery-and-workspace-selection.md",
+      "batchIds": [
+        "M0-IDENTITY-LIFECYCLE-001"
+      ],
+      "surfaceCount": 15,
+      "targetRelevantSurfaceCount": 12
+    },
+    {
       "path": "docs/specs/session-ending-pending-work.md",
       "batchIds": [
         "M0-IDENTITY-LIFECYCLE-001"
       ],
-      "surfaceCount": 13,
-      "targetRelevantSurfaceCount": 10
+      "surfaceCount": 15,
+      "targetRelevantSurfaceCount": 12
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -586,11 +594,15 @@
       "title": "Identity, account session, and operation lifecycle dossier surfaces",
       "scope": "product",
       "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
-      "surfaceCount": 13,
-      "targetRelevantSurfaceCount": 10,
+      "surfaceCount": 15,
+      "targetRelevantSurfaceCount": 12,
       "authorities": [
         {
           "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/account-discovery-and-workspace-selection.md",
           "role": "canonical_target"
         },
         {
@@ -644,8 +656,10 @@
         "SWIFT-3B7DE77EA8E4",
         "SWIFT-BECC3329E3AA",
         "SWIFT-C05952F542AD",
+        "SWIFT-C1B994920894",
         "SWIFT-D871AB13C6B1",
         "SWIFT-F84D40FBC375",
+        "TEST-11AC450D596A",
         "TEST-80E13A744139",
         "TEST-95498CCCD467"
       ]

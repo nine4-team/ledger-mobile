@@ -8,6 +8,7 @@
     "docs/specs/client-identity-and-project-transfers.md",
     "docs/specs/projects.md",
     "docs/specs/spaces.md",
+    "docs/specs/account-discovery-and-workspace-selection.md",
     "docs/specs/session-ending-pending-work.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
@@ -104,6 +105,7 @@
       "rationale": "Account selection, authorization, logout, and operation durability are reconciled with the new Client identity model and offline-access requirements.",
       "authorities": [
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/account-discovery-and-workspace-selection.md", "role": "canonical_target" },
         { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
         { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
         { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },

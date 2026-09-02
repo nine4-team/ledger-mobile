@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 136
+State version: 137
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SESSION-ENDING-PENDING-WORK-VERIFIED
+- Checkpoint: ACCOUNT-DISCOVERY-SELECTION-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2034,6 +2034,28 @@ modifying the running Firebase application before hard cutover.
   both staging builds and clean tracked artifacts. All five obligations pass;
   exactly the two session-ending surfaces are now `verified`, and 84 target
   surfaces are implemented or later.
+- The session-ending verification-document commit
+  `41d96d7dd4d935bf6f320e55dcfe277b28ff3c9b` passed immutable Actions run
+  `33664894237`: conversion traceability passed in 10 seconds and the isolated
+  target environment passed in 2 minutes 23 seconds with all 168 then-existing
+  tests, both staging builds and clean tracked artifacts.
+- Audited Account discovery/selection against the canonicalized product spec,
+  reviewed identity dossier, architecture and current app/MCP sources. The
+  bounded target contract corrects discovery-error-as-empty, arbitrary/first/
+  fallback selection and selection-as-listener-state without deciding Auth,
+  offline lease, current membership or physical workspace activation.
+- Added exactly two comment-only target surfaces,
+  `account-discovery-and-selection-contracts`, and
+  `EVID-ACCOUNT-DISCOVERY-SELECTION-001`. The ready dossier freezes eight
+  requirements and five deterministic obligations. The ledger records 785
+  surfaces / 770 discovered, 359 mapped / 164 residual / 43 blockers; 40
+  slices claim 101 of 523 target-relevant surfaces while 84 are implementation-
+  advanced.
+- The complete local ready gate passes with all 168 existing target tests in 39
+  suites, both staging builds, unchanged repeatable target graph, target
+  isolation/generated contracts, conversion/capability/query/residual controls,
+  M0 and clean formatting. M1/M2 retain the expected 2/164 blockers with zero
+  structural errors. Exact ready-commit CI remains before implementation.
 
 ## Next Action
 
@@ -2110,9 +2132,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SESSION-ENDING-POLICY-001` as the sole provider-free safety authority
    for exact pending-work summaries and clean/sync-first/destructive session
    dispositions. Its exact implementation commit and both CI jobs are
-   verified. Audit the next smallest decision-independent dependency and apply
-   the same ready-gate, local-implementation, exact-commit verification process.
-   Keep
+   verified. Treat the ready `account-discovery-and-selection-contracts`
+   dossier and `EVID-ACCOUNT-DISCOVERY-SELECTION-001` as the sole authority for
+   the next bounded implementation. Commit/push the exact comment-only ready
+   gate, require both immutable CI jobs, then implement only the frozen
+   provider-free discovery/selection-intent boundary and repeat the local and
+   exact-commit verification gates. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

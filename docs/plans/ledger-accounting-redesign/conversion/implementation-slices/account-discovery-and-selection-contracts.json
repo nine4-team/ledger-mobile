@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "account-discovery-and-selection-contracts",
+  "title": "Discover visible Accounts and express explicit workspace choice without creating authorization",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Identity, Membership, and Workspace Context",
+  "surfaceIds": ["SWIFT-C1B994920894", "TEST-11AC450D596A"],
+  "requirements": [
+    {
+      "id": "ACCOUNTSELECT-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Authorized Account Discovery",
+      "invariant": "One authorized-Account snapshot is bound to exactly one compiled target environment and stable Ledger Principal and contains only unique stable Account IDs plus visibility-safe nonblank display names; duplicate names remain valid distinct Accounts.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Authorized Account Discovery",
+      "invariant": "The snapshot carries exact completeness, ready/partial/stale quality, local-data version and finite observation time so complete ready zero is distinct from loading, partial, stale, unavailable or failed discovery and local evidence never claims fresh server authority.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Authorized Account Discovery",
+      "invariant": "Presentation order is deterministic by normalized display value and stable Account ID, except that a remembered ID currently present may be placed first; a missing remembered ID is ignored and equal display names remain distinct.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Explicit Workspace Selection",
+      "invariant": "Zero, one and many results all require an explicit choice. Selection creates one environment-, Principal-, Account- and exact-snapshot-bound local intent only for a visible row; discovery, ordering and remembered state never auto-select.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Failure and Privacy Contract",
+      "invariant": "Unknown, removed, rebound, changed-snapshot, malformed or tampered selection evidence fails atomically through stable bounded non-enumerating outcomes and never reveals provider, Auth, membership, financial, invite, logo, token or endpoint data.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Account discovery uses one authorized local read model, remembered state is convenience only, first-result and hardcoded fallbacks are retired, and selection remains separate from membership enforcement and ordered workspace activation.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Account discovery and membership",
+      "invariant": "AccountQuerying exposes typed authorized local discovery while selection is an application-shell workspace transition rather than a server active-Account record or authorization claim; feature code receives no provider object or generic backend access.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    },
+    {
+      "id": "ACCOUNTSELECT-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 contract is executable only with deterministic provider-free evidence while the shipped Firebase app stays unchanged; it creates no Auth, membership, activation, schema, RLS, Sync, app/MCP, migration, hosted-resource or production behavior.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTSELECT-TEST-001", "ACCOUNTSELECT-TEST-002", "ACCOUNTSELECT-TEST-003", "ACCOUNTSELECT-TEST-004", "ACCOUNTSELECT-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "AccountDisplayName accepts nonblank visibility-safe display text and derives a deterministic comparison value without making names identity. AccountSummary carries only stable AccountID and that display value.",
+        "AuthorizedAccountListSnapshot binds TargetEnvironmentIdentity, PrincipalID, unique Account rows, completeness, ListSnapshotQuality, LocalDataVersion, finite as-of time and a canonical SHA-256 fingerprint. Ready quality requires complete evidence.",
+        "orderedForPresentation(rememberedAccountId:) moves only a remembered ID present in the snapshot to the front, then orders by normalized display and stable ID; it returns rows only and creates no intent.",
+        "WorkspaceSelectionIntent binds one explicit visible Account choice to the exact snapshot fingerprint, environment, Principal, local-data version and finite request time. Construction and decoding revalidate every field.",
+        "AccountSelectionPolicy creates no default selection, refuses unlisted/scope/snapshot changes through bounded non-enumerating failures, and AccountQuerying exposes only the scoped discovery-update stream."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No accounts, memberships, principals, auth_identities, workspace-state or preference table, constraint, index, view, trigger or migration is created."},
+    "serverHandlers": {"items": [], "notApplicable": "No Account discovery RPC, selection command, create/update Account, membership/invite operation, Auth callback or workspace activation handler is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "An authorized-list value or selection intent is not authorization. No membership/financial policy, RLS helper, USING/WITH CHECK clause or database non-enumeration claim is introduced."},
+    "syncStreams": {"items": [], "notApplicable": "No identity-bootstrap or Account-catalog PowerSync Stream, subscription predicate, local table, connector, membership refresh, revocation or workspace stream lifecycle is implemented."},
+    "localOffline": {
+      "items": [
+        "Snapshot, discovery update and selection intent are canonical Codable values with exact environment/Principal/version/time/readiness and deterministic fingerprint evidence; decoding reconstructs through the same validators and byte-identical structured restart is required.",
+        "Complete-ready empty, ready one/many, partial, stale, waiting and failed-with-optional-cache states remain distinct. Discovery failure cannot fabricate an empty snapshot or a successful selection.",
+        "A deterministic in-memory AccountQuerying reference port may prove exact scope and failure/no-false-snapshot behavior; it cannot prove encrypted persistence, physical restart, local unlock, lease validity, current membership, revocation, stream switch or network behavior."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "AccountSummary deliberately omits logo AttachmentID and bytes. No upload, cache, signed URL, reference detach, O-023 retention or deletion behavior is present."},
+    "appMcp": {"items": [], "notApplicable": "No Account gate/list UI, remembered-state persistence, root coordinator, MCP list/select tool, request/session binding, transport or contract-catalog registration is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Account/member document, Auth UID/session, listener, UserDefaults value, root mcpUserState, source export row or production membership is decoded, transformed or reconciled."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no discovery/selection signal, metric, audit sink, alert or recovery runbook is activated."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authenticate, prove or mutate membership, grant access, decide offline lease, activate/switch/clear a workspace, persist remembered state, create an Account, define schema/RLS/Sync/provider behavior, migrate source state, deploy, release or cut over.",
+        "A-007/A-016, O-023, physical encrypted persistence/switching, app/MCP integration, hosted resources, staging credentials, production profiling and production authorization remain outside this boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ACCOUNTSELECT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AccountDiscoveryAndSelectionTests.swift",
+      "covers": ["ACCOUNTSELECT-REQ-001", "ACCOUNTSELECT-REQ-002", "ACCOUNTSELECT-REQ-003", "ACCOUNTSELECT-REQ-004", "ACCOUNTSELECT-REQ-005", "ACCOUNTSELECT-REQ-006", "ACCOUNTSELECT-REQ-007", "ACCOUNTSELECT-REQ-008"],
+      "expected": "Synthetic complete zero/one/many and equal-name snapshots preserve exact scope/readiness/version/time, deterministic remembered ordering, no automatic selection and one exact explicit visible-Account intent containing no provider or authorization data.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ACCOUNTSELECT-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AccountDiscoveryAndSelectionTests.swift",
+      "covers": ["ACCOUNTSELECT-REQ-001", "ACCOUNTSELECT-REQ-002", "ACCOUNTSELECT-REQ-003", "ACCOUNTSELECT-REQ-004", "ACCOUNTSELECT-REQ-005", "ACCOUNTSELECT-REQ-006", "ACCOUNTSELECT-REQ-008"],
+      "expected": "Ready/partial/stale/authoritative-empty snapshots, cached failure and explicit selection round-trip byte-identically with exact environment/Principal/Account/fingerprint/version/time/readiness evidence and no Auth, role, permission, logo, token, path or endpoint field.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ACCOUNTSELECT-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AccountDiscoveryAndSelectionTests.swift",
+      "covers": ["ACCOUNTSELECT-REQ-001", "ACCOUNTSELECT-REQ-002", "ACCOUNTSELECT-REQ-003", "ACCOUNTSELECT-REQ-004", "ACCOUNTSELECT-REQ-005", "ACCOUNTSELECT-REQ-006", "ACCOUNTSELECT-REQ-007", "ACCOUNTSELECT-REQ-008"],
+      "expected": "Blank/control names, duplicate IDs, invalid time/readiness/fingerprint, unknown Account, cross-environment/Principal and changed-snapshot evidence fail atomically through stable bounded non-enumerating diagnostic codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ACCOUNTSELECT-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/AccountDiscoveryAndSelectionTests.swift",
+      "covers": ["ACCOUNTSELECT-REQ-001", "ACCOUNTSELECT-REQ-002", "ACCOUNTSELECT-REQ-004", "ACCOUNTSELECT-REQ-005", "ACCOUNTSELECT-REQ-006", "ACCOUNTSELECT-REQ-007", "ACCOUNTSELECT-REQ-008"],
+      "expected": "A deterministic provider-free AccountQuerying port streams only the requested environment/Principal discovery sequence; wrong scope and a failing port produce no false snapshot or successful selection, and no Account is activated.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ACCOUNTSELECT-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["ACCOUNTSELECT-REQ-001", "ACCOUNTSELECT-REQ-002", "ACCOUNTSELECT-REQ-003", "ACCOUNTSELECT-REQ-004", "ACCOUNTSELECT-REQ-005", "ACCOUNTSELECT-REQ-006", "ACCOUNTSELECT-REQ-007", "ACCOUNTSELECT-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming Auth, membership, physical switching, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-ACCOUNT-DISCOVERY-SELECTION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 discovery/selection-intent contract only. The canonical target spec and reviewed identity architecture settle visibility-safe scoped discovery, explicit no-default choice, deterministic remembered ordering, exact-snapshot binding and non-enumerating refusal. A-007/A-016/O-023, fresh server authorization, physical workspace activation/switching, pending-work coordination during switch, Account/membership/invite writers, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access and cutover remain fully gated because this boundary performs none of them."
+}
+

@@ -14,25 +14,27 @@
 
 ## Result
 
-All 779 conversion surfaces resolve through their one reviewed classification
+All 785 conversion surfaces resolve through their one reviewed classification
 batch to an explicit authority set in `product-authority-crosswalk.json`:
 
-- 625 surfaces are in product-governed batches;
+- 631 surfaces are in product-governed batches;
 - 154 are platform, query/profiling, cutover, residual, or conversion-control
   surfaces governed by technical authorities;
-- all 517 target-relevant surfaces resolve to one of those reviewed scopes; and
-- all seven canonical target specs are explicitly present and distinguished from
+- all 523 target-relevant surfaces resolve to one of those reviewed scopes; and
+- all nine canonical target specs are explicitly present and distinguished from
   current-product and historical-evidence documents.
 
-The seven target specs are:
+The nine target specs are:
 
 1. `docs/specs/invoice-centered-project-accounting.md`;
 2. `docs/specs/inventory-item-invoicing-lifecycle.md`;
 3. `docs/specs/proto-item-capture.md`;
 4. `docs/specs/client-identity-and-project-transfers.md`;
 5. `docs/specs/projects.md`;
-6. `docs/specs/spaces.md`; and
-7. `docs/plans/non-item-receipt-lines/design.md`.
+6. `docs/specs/spaces.md`;
+7. `docs/specs/account-discovery-and-workspace-selection.md`;
+8. `docs/specs/session-ending-pending-work.md`; and
+9. `docs/plans/non-item-receipt-lines/design.md`.
 
 The sixth entry corrects authority metadata rather than choosing new behavior:
 `spaces.md` already declared itself a target-state spec and already stated the
@@ -42,7 +44,7 @@ canonical for both the Spaces/review and Project/Client/reference batches, so a
 later slice cannot preserve the source hard-delete, checked-state-copy or no-op
 template defects as target behavior.
 
-The seventh-spec audit made the analogous correction for `projects.md`. That
+The `projects.md` audit made the analogous correction. That
 document already separates an explicit Target Redesign Requirements section
 from the Firebase mechanics retained below it as current/migration evidence.
 The Project-details dependency audit made the preserved optional-description
@@ -61,6 +63,14 @@ The Space-details dependency audit additionally registers the reviewed Spaces/
 review capability dossier as conversion-control evidence for that batch. It
 supports the preserve/correct operation split and cannot override canonical
 `spaces.md` behavior or grant implementation authority by itself.
+
+The identity/lifecycle audit now gives both Account selection and session
+ending dedicated canonical target specs. The Account-selection spec records
+only the already-reviewed provider-neutral contract: readiness-labeled visible
+Account discovery, explicit no-default selection, remembered state as ordering
+convenience, exact scope binding and no selection-as-authorization. It does not
+resolve A-007, A-016, membership policy, physical workspace activation or any
+hosted implementation.
 
 The conversion check now fails when a classification batch has no authority
 entry, a referenced authority file disappears, a product batch lacks a

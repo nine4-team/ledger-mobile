@@ -532,6 +532,104 @@
           "Self-tests prove the backend-neutral safety boundary without claiming provider signout, local deletion, synchronization, app UI, migration or production evidence"
         ]
       }
+    },
+    {
+      "id": "SWIFT-C1B994920894",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "f84b92866a982f2acad887883e27e8e509b0c9923feddbd4d144988fa053d96e",
+      "currentBehavior": "Defines only the comment scaffold for the provider-free authorized Account discovery and explicit workspace-selection contract; executable behavior is absent pending the exact ready gate.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001",
+        "EVID-ACCOUNT-DISCOVERY-SELECTION-001"
+      ],
+      "notes": "Target-only Phase 1 comment scaffold. The bounded contract separates readiness-labeled discovery and explicit selection intent from provider Auth, authorization, Account activation and persistence. A-007/A-016/O-023, physical switching, schema/RLS/Sync, app/MCP, migration, hosted resources and production remain unadvanced until their own gates.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "AccountDisplayName",
+          "AccountSummary",
+          "AuthorizedAccountListSnapshot",
+          "AuthorizedAccountDiscoveryUpdate",
+          "WorkspaceSelectionIntent",
+          "AccountSelectionPolicy",
+          "AccountQuerying"
+        ],
+        "securityRequirements": [
+          "Every snapshot and intent is bound to one target environment and stable Principal; typed scope is evidence, not fresh server authorization",
+          "Selection can name only a row in the exact presented snapshot and unknown/rebound/changed evidence fails without enumerating Account existence",
+          "Rows expose only stable Account ID and safe display name; Auth subjects, membership administration, financial access, invite data, logos and provider metadata are absent"
+        ],
+        "syncRequirements": [
+          "Ready, partial, stale, unavailable and authoritative-empty discovery remain distinct across canonical restart",
+          "Remembered state may reorder a currently visible Account but never auto-selects, grants access or survives membership loss as authority",
+          "Actual workspace activation, stream switching and offline authority are deferred to separately gated coordinators and adapters"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only selection contract and import no Firebase membership, Account document, provider session, UserDefaults value, listener, mcpUserState row or fallback context.",
+        "reconciliation": [
+          "Later identity/import slices must correlate every Account membership to one stable Principal and accept remembered state only when it resolves inside the authorized target projection"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AccountDiscoveryAndSelectionTests"
+        ],
+        "acceptance": [
+          "Synthetic zero/one/many, remembered ordering, restart, scope/tamper/refusal and exact provider-free port tests pass without authenticating, authorizing or activating an Account"
+        ]
+      }
+    },
+    {
+      "id": "TEST-11AC450D596A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "75591273d8606cb6055e5011f036a8e063aff71ef48dde64a9ed1d16a37a863d",
+      "currentBehavior": "Defines only the comment scaffold for deterministic provider-free Account discovery, restart, refusal, explicit-selection and narrow-port tests; executable tests are absent pending the exact ready gate.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-IDENTITY-001",
+        "EVID-M2-IDENTITY-001",
+        "EVID-ACCOUNT-DISCOVERY-SELECTION-001"
+      ],
+      "notes": "Target-only Phase 1 comment scaffold. Planned tests prove deterministic discovery and exact explicit selection intent only; they cannot authorize or activate an Account or simulate physical offline behavior.",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "AccountDiscoveryAndSelectionTests",
+          "zero/one/many and duplicate-name fixtures",
+          "remembered-ordering/no-auto-selection fixtures",
+          "canonical restart and malformed/scope/tamper refusal fixtures",
+          "provider-free AccountQuerying fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production environment, Principal and Account values and prove remembered or arbitrary IDs cannot create access",
+          "Negative results are bounded and non-enumerating and contain no provider error, Auth subject, token, role, financial value, invite or attachment data"
+        ],
+        "syncRequirements": [
+          "Tests distinguish complete ready empty from loading/partial/stale/failure and prove canonical snapshot/intent restart without a physical database or network",
+          "No fixture claims current server membership, offline lease validity, stream activation or cross-Account queue switching"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and read no Firebase Account/member/Auth/cache/UserDefaults/mcpUserState source or export profile.",
+        "reconciliation": [
+          "Equivalent discovery and selection evidence must round-trip byte-identically while duplicate, malformed, unlisted, changed-snapshot or rebound evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AccountDiscoveryAndSelectionTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free discovery/selection-intent boundary and cannot establish Auth, membership, local activation, schema/RLS/Sync, app/MCP, migration or production behavior"
+        ]
+      }
     }
   ]
 }
