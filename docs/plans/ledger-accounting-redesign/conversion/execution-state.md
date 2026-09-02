@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 67
+State version: 68
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TRANSACTION-TAXONOMY-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: TRANSFER-DESTINATION-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -846,6 +846,24 @@ modifying the running Firebase application before hard cutover.
   taxonomy obligations and exactly its two target-only surfaces are now
   `verified`; every excluded writer/accounting/provider/migration surface
   remains unadvanced.
+- Audited the next Phase 1/domain dependency after exact Client/Project and
+  Transfer-route verification and selected
+  `transfer-destination-selection-contracts` as the smallest user-meaningful,
+  decision-independent read boundary. D-003/D-005/D-006 and the canonical
+  picker story settle exact same-Account/same-Client/distinct active-Project
+  eligibility without choosing Items, amount, Invoice, Space, tag, correction,
+  credit, persistence or provider behavior.
+- Created exactly two comment-only target scaffolds in the provider-free core/
+  test roots and a complete ready dossier for exact-ID filtering, validated
+  candidate routes, source-bound directory/query fingerprints, deterministic
+  order, available versus authoritative-empty versus incomplete local evidence,
+  canonical restart and stable tamper/refusal behavior.
+- Postgres, handlers, Data API, RLS, Sync Streams, local persistence, media,
+  concrete app/MCP, source migration, observability and activation are explicit
+  nonapplicabilities. Locally valid eligibility is not authorization. No
+  behavioral code, current picker/app/MCP surface, Firebase change, provider,
+  hosted resource, migration or production operation exists at this ready
+  checkpoint.
 
 ## Next Action
 
@@ -859,13 +877,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
    Transaction classification, scope, route and pair identity. Do not recreate
    or extend that meaning independently in app, MCP, SQL or adapters.
-3. Audit the remaining Phase 1/domain dependency order and select the smallest
-   decision-independent slice whose
-   exact product/architecture authority is closed. Create and pass its ready
-   dossier before behavior. Do not implement Transaction writers, money sign or
-   posting bounds, Item/Invoice/Space effects, corrections/lifecycle, schema/
-   RLS/Sync/provider behavior, legacy mapping, app/MCP wiring, production access
-   or any open product/architecture decision.
+3. Implement only the ready `transfer-destination-selection-contracts` dossier
+   inside the provider-free core/test targets: exact-ID candidate filtering,
+   validated routes, source-bound directory/query fingerprints, deterministic
+   order, available/authoritative-empty/incomplete states, the small local read
+   port, decode revalidation, canonical restart and stable refusal. Do not
+   implement Item selection, a Transfer command/pair write, D-017 amount,
+   Invoice/Space/tag/correction/credit effects, schema/RLS/Sync/provider
+   behavior, legacy mapping, current app/MCP wiring, production access or any
+   open product/architecture decision.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

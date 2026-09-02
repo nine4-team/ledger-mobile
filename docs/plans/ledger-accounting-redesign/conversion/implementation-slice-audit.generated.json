@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T03:11:18.080Z",
+  "generatedFromManifestSync": "2026-09-02T03:17:56.090Z",
   "totals": {
-    "slices": 16,
-    "claimedTargetSurfaces": 53,
+    "slices": 17,
+    "claimedTargetSurfaces": 55,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 38
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 15,
@@ -224,6 +224,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-taxonomy-and-transfer-identity.json"
+    },
+    {
+      "sliceId": "transfer-destination-selection-contracts",
+      "title": "Select exact same-Client Transfer destinations from local directory evidence",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Transfer Destination Selection",
+      "surfaceIds": [
+        "SWIFT-1A05F36246B4",
+        "TEST-C01243D7B782"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-selection-contracts.json"
     },
     {
       "sliceId": "typed-edit-draft-and-submission",

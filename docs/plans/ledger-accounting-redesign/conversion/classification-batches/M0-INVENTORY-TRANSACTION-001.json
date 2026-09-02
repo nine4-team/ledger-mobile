@@ -1992,6 +1992,100 @@
           "Self-tests prove only the provider-free taxonomy and pair-identity boundary without claiming handler, schema, RLS, Sync, app/MCP, migration or production evidence"
         ]
       }
+    },
+    {
+      "id": "SWIFT-1A05F36246B4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d2d1109e2cb045055675d62b619f719c15a60a76939fa6601c90772ec8899e1d",
+      "currentBehavior": "Provides a comment-only target scaffold for exact same-Client Transfer destination selection, local directory readiness, and validated route evidence; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001",
+        "EVID-TRANSFER-DESTINATION-001"
+      ],
+      "notes": "Target-only Phase 1 destination-selection foundation. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
+      "target": {
+        "owner": "Transfer Destination Selection",
+        "surfaces": [
+          "TransferDestinationCandidate",
+          "TransferDestinationSelectionSnapshot",
+          "TransferDestinationAvailability",
+          "TransferDestinationSelectionQuerying",
+          "TransferDestinationSelectionFailure"
+        ],
+        "securityRequirements": [
+          "Candidate construction uses exact AccountID, ClientID and distinct ProjectID values only; names never create identity or eligibility",
+          "Locally valid eligibility is not authorization: the future handler and download boundary must independently prove current membership, financial access and route identity"
+        ],
+        "syncRequirements": [
+          "The snapshot preserves the source-bound query fingerprint, source directory fingerprint, completeness, ready/partial/stale quality, LocalDataVersion and as-of evidence across restart",
+          "No PowerSync Stream, local table, provider subscription or optimistic command is created by this projection-only slice"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only destination-selection values over validated Client/Project identity; do not infer ClientID from Firebase clientName or decode any legacy picker row.",
+        "reconciliation": [
+          "Later migration/provider slices prove that every selectable target destination resolves to a reviewed Client relationship and that unresolved or ambiguous source Projects remain unavailable"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransferDestinationSelectionTests"
+        ],
+        "acceptance": [
+          "Synthetic local directory evidence yields only other active Projects with the exact same AccountID and ClientID, while authoritative empty and incomplete local scope remain distinct"
+        ]
+      }
+    },
+    {
+      "id": "TEST-C01243D7B782",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "acd23bdb8365c692eed39ad41b8c2c69bb1e9f7e3dc9d7691a5c76a313265f31",
+      "currentBehavior": "Provides a comment-only target scaffold for exact destination filtering, incomplete-versus-authoritative-empty evidence, canonical restart, and invalid/tampered selection refusal; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001",
+        "EVID-TRANSFER-DESTINATION-001"
+      ],
+      "notes": "Target-only destination-selection self-test scaffold. It cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
+      "target": {
+        "owner": "Transfer Destination Selection",
+        "surfaces": [
+          "TransferDestinationSelectionTests",
+          "same-Client/different-Client/equal-name fixtures",
+          "ready/partial/authoritative-empty directory fixtures",
+          "restart and tampered-selection fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic Account/Client/Project identities and prove equal display names never produce an eligible destination",
+          "Negative tests assert stable bounded selection failures without names, paths, queries, tokens or provider payloads"
+        ],
+        "syncRequirements": [
+          "All fixtures run without database, PowerSync, network or hosted services and preserve exact source-bound candidate/readiness evidence across canonical restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only directory values and load no Firebase Project, clientName, export or production-derived identity.",
+        "reconciliation": [
+          "Equivalent selection evidence round-trips identically while source/directory mismatch, invalid route/candidate identity, duplicate destinations and tampered fingerprints fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransferDestinationSelectionTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free destination projection and readiness boundary without claiming command, handler, schema, RLS, Sync, app/MCP, migration or production evidence"
+        ]
+      }
     }
   ]
 }

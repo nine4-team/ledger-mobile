@@ -244,7 +244,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 | Task | Status | Required behavior |
 |---|---|---|
 | Bulk Item selection from source project | not started | All Items still in source at commit |
-| Destination picker filters exact same `clientId` | not started | Exclude source/inventory/other Clients |
+| Destination picker filters exact same `clientId` | ready | Two target-only core/test scaffolds map exact active same-Account/same-Client destinations, source/inventory/archive/other-Client exclusion, source-bound local readiness/fingerprints, canonical restart and stable refusal. No current picker wiring or Transfer write/effect is claimed; `EVID-TRANSFER-DESTINATION-001` |
 | One trusted idempotent Transfer command | blocked | Target Client and Transfer schema/handler |
 | Create both linked records atomically | blocked | One Postgres transaction; never expose independent writes |
 | Move Item directly between project IDs | not started | No inventory intermediate state |

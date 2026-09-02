@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 311 of 475 target-relevant
+Status: M0 inventory classification complete; 313 of 477 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -8,8 +8,9 @@ evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit
-`031a240a`. Broader app/schema/provider and migration surfaces remain
-unadvanced.
+`031a240a`. The provider-free exact same-Client Transfer destination-selection
+slice is ready for implementation. Broader app/schema/provider and migration
+surfaces remain unadvanced.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
