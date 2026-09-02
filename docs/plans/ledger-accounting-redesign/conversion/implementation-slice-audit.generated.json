@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T00:08:07.181Z",
+  "generatedFromManifestSync": "2026-09-02T00:41:45.084Z",
   "totals": {
     "slices": 11,
     "claimedTargetSurfaces": 46,
     "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 29
+    "implementationAdvancedTargetSurfaces": 31
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 9,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -54,7 +54,7 @@
       "sliceId": "operational-health-and-objective-registry",
       "title": "Make local health, service objectives, alert candidates, and runbooks explicit without activating operations",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Operational Health and Objective Registry",
       "surfaceIds": [
         "SWIFT-D9A560340CA9",

@@ -3,7 +3,7 @@
   "sliceId": "operational-health-and-objective-registry",
   "title": "Make local health, service objectives, alert candidates, and runbooks explicit without activating operations",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Operational Health and Objective Registry",
   "surfaceIds": [
     "SWIFT-D9A560340CA9",
@@ -141,8 +141,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/OperationalHealthTests.swift",
       "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005", "OPHEALTH-REQ-006"],
       "expected": "The exact measurement/objective/alert/runbook topology validates in canonical order; health preserves separate component truth, objective evaluation requires complete typed evidence, runbooks are structurally complete and every policy remains evidence-only/candidate-only.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
     },
     {
       "id": "OPHEALTH-TEST-002",
@@ -150,8 +150,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/OperationalHealthTests.swift",
       "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005"],
       "expected": "Canonical health and registry evidence round-trips offline; reordered inputs normalize identically; disconnected-ready and online-unsynchronized fixtures restore the same component states without claiming objective satisfaction.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
     },
     {
       "id": "OPHEALTH-TEST-003",
@@ -159,8 +159,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/OperationalHealthTests.swift",
       "covers": ["OPHEALTH-REQ-001", "OPHEALTH-REQ-002", "OPHEALTH-REQ-003", "OPHEALTH-REQ-004", "OPHEALTH-REQ-005", "OPHEALTH-REQ-006"],
       "expected": "Negative counts/ages, time regression, missing/duplicate definitions, unknown/nonreciprocal references, incomplete evidence or runbooks, invented spike thresholds, activation claims, noncanonical bytes, digest tamper and oversized values fail with stable codes and no partial accepted state.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-OPERATIONAL-HEALTH-001"]
     },
     {
       "id": "OPHEALTH-TEST-004",
@@ -172,7 +172,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-OPERATIONAL-HEALTH-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent technical-control foundation derived from the reviewed platform capability dossier and verified readiness/telemetry contracts. It stops before any metric emitter/sink, database/file persistence, provider SDK, hosted dashboard/alert, operator action, numeric spike outcome, app/MCP lifecycle wiring, incident response, deployment, production monitoring, release or cutover authority."

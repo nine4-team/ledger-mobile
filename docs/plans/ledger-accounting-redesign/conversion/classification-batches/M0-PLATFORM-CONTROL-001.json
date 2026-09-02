@@ -3564,17 +3564,17 @@
     {
       "id": "SWIFT-D9A560340CA9",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5e7a38df34952b719b70fe16c0ff458c754b6befe9167038085f404b06a9c320",
-      "currentBehavior": "Comment-only target scaffold reserving the provider-free operational health, objective, alert-candidate and runbook registry boundary; it emits no metric, activates no policy and performs no operational action.",
+      "acknowledgeSourceHash": "660337d993a7a378c6c959b5961d3014ff29c60492b4c3aee8580d0fde08b15d",
+      "currentBehavior": "Defines a provider-free operational health snapshot derived from validated SyncHealthSnapshot truth plus a complete closed measurement, exact-zero service-objective, alert-candidate, runbook and spike-pending performance-budget registry. Canonical bounded evidence, explicit missing objective evidence, stable failures and candidateOnly/evidenceOnly authority cannot emit a metric, activate an alert, approve a numeric threshold or execute an operator action.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATIONAL-HEALTH-001"
       ],
-      "notes": "Target-only comment scaffold. Behavior starts only after operational-health-and-objective-registry passes its ready gate; current app/MCP diagnostics and broader mapped observability surfaces remain unadvanced.",
+      "notes": "Target-only provider-free values and validators. Current app/MCP diagnostics, emitters, sinks, provider adapters, hosted policies, numeric thresholds and broader mapped observability surfaces remain unadvanced. Exact-commit external CI remains before verification.",
       "target": {
         "owner": "Operational Health and Objective Registry",
         "surfaces": [
@@ -3610,17 +3610,17 @@
     {
       "id": "TEST-D534C0EDD709",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "2007fc5dc2d26fffe8ffb702b45ec8d9034c5aa626d98ac1a912cf3a87d1e304",
-      "currentBehavior": "Comment-only target scaffold reserving deterministic operational health and registry contract fixtures; it executes no test behavior and contacts no file, network, provider or hosted service.",
+      "acknowledgeSourceHash": "837eacbab8685417447faf2dace264fa0c73f6a6f1ab164f5dceb17e845ae4ee",
+      "currentBehavior": "Exercises exact registry topology, reciprocal references, offline-ready versus online-unsynchronized health, derived ages, complete evidence-gated objective assessment, canonical restart and reordering, invalid counts/times/policies/runbooks/evidence, digest/noncanonical/size tamper and permanent candidate-only non-authority using synthetic provider-free values.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATIONAL-HEALTH-001"
       ],
-      "notes": "Target-only comment scaffold. Planned fixtures use synthetic time/count/code/evidence values and cannot activate operational behavior or claim a threshold/objective is met.",
+      "notes": "Four provider-free focused tests and all 59 target package tests pass locally. Fixtures use synthetic time/count/code/evidence values, contact no file/network/provider/hosted service and cannot activate operational behavior or claim a production threshold. Exact-commit external CI remains before verification.",
       "target": {
         "owner": "Operational Health and Objective Registry",
         "surfaces": [

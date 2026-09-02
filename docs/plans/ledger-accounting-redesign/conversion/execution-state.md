@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 49
+State version: 50
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: OPERATIONAL-HEALTH-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: OPERATIONAL-HEALTH-IMPLEMENTED-EXACT-CI-PENDING-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -600,6 +600,26 @@ modifying the running Firebase application before hard cutover.
   discovered surfaces, 301 mapped, 164 residual and 43 blockers, with only the
   three documented retired-path warnings. No behavioral code, metric emission,
   hosted alert, provider, production threshold or operational action exists.
+- Implemented the ready operational-health slice with one validated health
+  snapshot over the shared SyncHealthSnapshot, explicit nonnegative ages and
+  separate connectivity/Auth/subscription/checkpoint/queue/attachment/rejection/
+  write/transient components. Online and synchronized remain independent,
+  including offline-ready and online-unsynchronized states.
+- Added the complete closed client/server/replication/cross-cutting measurement
+  registry, seven exact-zero evidence-gated service objectives, twelve grouped/
+  rate-limited alert candidates, twelve structurally complete runbook topics
+  and twelve performance-budget measurements that remain pending the vertical
+  spike with no numeric production threshold.
+- Added bounded canonical health/registry evidence and stable refusal for
+  invalid time/count, duplicate/missing/reference/policy/evidence, digest,
+  canonical and size failures. Every policy remains candidate-only and every
+  registry remains evidence-only; no type can emit/acknowledge/resolve an alert,
+  execute a runbook or approve a threshold.
+- Four focused operational-health tests and all 59 target package tests pass
+  locally. Three of four slice obligations pass; exact-commit operational CI
+  remains planned, so exactly the two target-only surfaces are `implemented`
+  and the broader current observability/performance surfaces remain
+  `target_mapped`.
 
 ## Next Action
 
@@ -609,14 +629,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready `operational-health-and-objective-registry`
-   provider-free contract in the two target scaffolds. Build on the verified
-   SyncHealthSnapshot and privacy-safe telemetry authorities; add pure tests for
-   online-versus-synchronized health, canonical restart, exact registry and
-   reciprocal-reference completeness, missing-evidence refusal, spike-pending
-   thresholds, tamper/size failures and candidate-only non-authority. Do not add
-   a sink, SDK, hosted alert, production threshold, operator action, app/MCP
-   lifecycle wiring or advance the broader current observability surfaces.
+2. Commit and push the implemented
+   `operational-health-and-objective-registry` checkpoint, then require an
+   immutable GitHub Actions run on that exact implementation commit. Advance
+   the slice and exactly its two target-only surfaces to `verified` only if both
+   conversion and isolated-target jobs pass all 59 tests, graph/generated-
+   contract guards, both target builds and clean artifacts. Do not add a sink,
+   SDK, hosted alert, production threshold, operator action, app/MCP lifecycle
+   wiring or advance the broader current observability surfaces from this
+   registry evidence.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
