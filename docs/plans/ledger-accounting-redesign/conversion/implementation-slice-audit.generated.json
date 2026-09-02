@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T00:02:09.715Z",
+  "generatedFromManifestSync": "2026-09-02T00:08:07.181Z",
   "totals": {
-    "slices": 10,
-    "claimedTargetSurfaces": 44,
+    "slices": 11,
+    "claimedTargetSurfaces": 46,
     "unclaimedTargetSurfaces": 419,
     "implementationAdvancedTargetSurfaces": 29
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 9,
@@ -49,6 +49,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operation-lifecycle-and-readiness.json"
+    },
+    {
+      "sliceId": "operational-health-and-objective-registry",
+      "title": "Make local health, service objectives, alert candidates, and runbooks explicit without activating operations",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Operational Health and Objective Registry",
+      "surfaceIds": [
+        "SWIFT-D9A560340CA9",
+        "TEST-D534C0EDD709"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/operational-health-and-objective-registry.json"
     },
     {
       "sliceId": "privacy-safe-telemetry-and-correlation",

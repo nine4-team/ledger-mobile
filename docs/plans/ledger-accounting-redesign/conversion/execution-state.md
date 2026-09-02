@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 48
+State version: 49
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: MIGRATION-RUN-INTEGRITY-VERIFIED-OPERATIONAL-HEALTH-READY-GATE-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: OPERATIONAL-HEALTH-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -586,6 +586,20 @@ modifying the running Firebase application before hard cutover.
   graph guards, macOS and generic iOS Simulator builds and clean tracked
   artifacts. All six migration-run obligations and exactly its two target-only
   surfaces are now `verified`.
+- Selected `operational-health-and-objective-registry` only after auditing the
+  architecture and reviewed `MAN-OBS-001`, `SWIFT-7B159D426B1D`,
+  `SWIFT-2703ADAB66C5` and `TEST-ECE08B24ADCE` mappings. Those broader source
+  outcomes remain `target_mapped`: a registry without actual emitters,
+  lifecycle wiring, adapters, approved thresholds and physical evidence is not
+  their replacement.
+- Created exactly two comment-only target scaffolds and a ready dossier for
+  provider-free health derivation, complete measurement/objective/alert/runbook
+  topology, evidence-gated objective evaluation, spike-pending numeric budgets,
+  canonical restart evidence and permanent candidate-only/non-authority.
+  Conversion sync/check and residual controls pass at 727 recorded / 712
+  discovered surfaces, 301 mapped, 164 residual and 43 blockers, with only the
+  three documented retired-path warnings. No behavioral code, metric emission,
+  hosted alert, provider, production threshold or operational action exists.
 
 ## Next Action
 
@@ -595,14 +609,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Create and pass the `ready` gate for the next decision-independent technical
-   slice, `operational-health-and-objective-registry`. Audit exact architecture
-   headings and the reviewed `MAN-OBS-001`, `SWIFT-7B159D426B1D` and
-   `TEST-ECE08B24ADCE` mappings before claiming them; add only comment-only
-   target scaffolds until the dossier passes. The slice may define provider-free
-   health snapshots, bounded objective/alert/runbook registration and pure
-   contract tests using the existing readiness/telemetry authorities, but no
-   sink, SDK, hosted alert, production threshold claim or provider adapter.
+2. Implement only the ready `operational-health-and-objective-registry`
+   provider-free contract in the two target scaffolds. Build on the verified
+   SyncHealthSnapshot and privacy-safe telemetry authorities; add pure tests for
+   online-versus-synchronized health, canonical restart, exact registry and
+   reciprocal-reference completeness, missing-evidence refusal, spike-pending
+   thresholds, tamper/size failures and candidate-only non-authority. Do not add
+   a sink, SDK, hosted alert, production threshold, operator action, app/MCP
+   lifecycle wiring or advance the broader current observability surfaces.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -4,7 +4,8 @@
   "reviewedAt": "2026-08-31",
   "evidence": [
     "EVID-CAPABILITY-PLATFORM-CONTROL-001",
-    "EVID-MIGRATION-RUN-INTEGRITY-001"
+    "EVID-MIGRATION-RUN-INTEGRITY-001",
+    "EVID-OPERATIONAL-HEALTH-001"
   ],
   "surfaces": [
     {
@@ -3557,6 +3558,97 @@
         ],
         "acceptance": [
           "All migration-integrity, restart, interruption, reconciliation, tamper and non-authority obligations pass in the separate LedgerTargetMigrationCore module"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-D9A560340CA9",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "5e7a38df34952b719b70fe16c0ff458c754b6befe9167038085f404b06a9c320",
+      "currentBehavior": "Comment-only target scaffold reserving the provider-free operational health, objective, alert-candidate and runbook registry boundary; it emits no metric, activates no policy and performs no operational action.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATIONAL-HEALTH-001"
+      ],
+      "notes": "Target-only comment scaffold. Behavior starts only after operational-health-and-objective-registry passes its ready gate; current app/MCP diagnostics and broader mapped observability surfaces remain unadvanced.",
+      "target": {
+        "owner": "Operational Health and Objective Registry",
+        "surfaces": [
+          "OperationalHealthSnapshot derivation",
+          "OperationalControlRegistry",
+          "service-objective and alert-candidate definitions",
+          "operational runbook registry and canonical evidence"
+        ],
+        "securityRequirements": [
+          "Registry and snapshot values use closed stable codes, bounded counts/ages and already-safe error summaries with no raw identifiers, credentials, URLs, notes, media, financial payloads or provider messages",
+          "Every policy is evidence-only/candidate-only and cannot represent an active alert, approved operator action, production threshold or release decision"
+        ],
+        "syncRequirements": [
+          "Health derives from the existing backend-neutral SyncHealthSnapshot without opening a provider or creating a PowerSync Stream",
+          "Online and synchronized remain independent; missing measurement/objective evidence stays explicit"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only health and operational-control values; migrate no source logs, metrics, alerts, incidents or provider configuration.",
+        "reconciliation": [
+          "The exact architecture-required measurement/objective/alert/runbook topology must be complete, unique and reciprocally referenced before accepted registry evidence exists"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "OperationalHealthTests"
+        ],
+        "acceptance": [
+          "Provider-free fixtures prove health derivation, exact registry completeness, evidence-gated objectives, pending spike thresholds, canonical restart and permanent non-authority"
+        ]
+      }
+    },
+    {
+      "id": "TEST-D534C0EDD709",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "2007fc5dc2d26fffe8ffb702b45ec8d9034c5aa626d98ac1a912cf3a87d1e304",
+      "currentBehavior": "Comment-only target scaffold reserving deterministic operational health and registry contract fixtures; it executes no test behavior and contacts no file, network, provider or hosted service.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-OPERATIONAL-HEALTH-001"
+      ],
+      "notes": "Target-only comment scaffold. Planned fixtures use synthetic time/count/code/evidence values and cannot activate operational behavior or claim a threshold/objective is met.",
+      "target": {
+        "owner": "Operational Health and Objective Registry",
+        "surfaces": [
+          "OperationalHealthTests",
+          "offline canonical health/registry restart fixtures",
+          "registry completeness and reciprocal-reference fixtures",
+          "threshold/evidence/activation/tamper rejection fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures contain only synthetic stable codes, bounded counts/times and fake evidence digests; no production endpoint, credential, identity or payload may appear",
+          "Tests distinguish structural registry proof from actual metric collection, objective satisfaction, alert activation and runbook execution"
+        ],
+        "syncRequirements": [
+          "All fixtures run offline and preserve online-versus-synchronized truth without a PowerSync process, local database or provider SDK"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic evidence and do not load current Firebase/MCP diagnostics or production operational artifacts.",
+        "reconciliation": [
+          "Equivalent definitions normalize identically and every incomplete, duplicate, unknown, nonreciprocal, invented-threshold or authority-bearing candidate fails with stable codes"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter OperationalHealthTests"
+        ],
+        "acceptance": [
+          "All health, registry, restart, evidence-gating, threshold-pending, tamper and non-authority obligations pass in LedgerTargetCore"
         ]
       }
     }
