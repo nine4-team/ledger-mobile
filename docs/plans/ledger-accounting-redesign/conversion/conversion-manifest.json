@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T08:59:55.953Z",
+    "lastSynchronizedAt": "2026-09-02T09:12:38.455Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -25265,12 +25265,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ClientRenameOperation.swift"
         }
       ],
-      "observedSourceHash": "f39db0f014a16f919717f2ff2b5e9039d6860fde300df8594270e19aa3eae4c4",
-      "acknowledgedSourceHash": "f39db0f014a16f919717f2ff2b5e9039d6860fde300df8594270e19aa3eae4c4",
+      "observedSourceHash": "021a016ca9b77c93275d4b060381d2f5c1df30acdd9c6c6aa87365af37f5ab00",
+      "acknowledgedSourceHash": "021a016ca9b77c93275d4b060381d2f5c1df30acdd9c6c6aa87365af37f5ab00",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for one expected-revision Client display-name change; no executable behavior exists at the ready checkpoint.",
+      "currentBehavior": "Implements a provider-free Client rename draft, exact Client/name payload, same-subject expected revision, shared-envelope command, derived Client subject/fingerprint validation, exact receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Rename Operation Contracts",
@@ -25305,14 +25305,14 @@
           "Synthetic commands prove exact Client identity/name/revision intent, canonical restart, atomic rebound refusal and shared replay without a database, provider, Project update or production resource"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-RENAME-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may preserve one stable Account/Client identity, validated replacement display name, expected revision and shared operation lifecycle. It cannot update a row or Project projection, rewrite frozen history, authorize the actor, archive/delete/merge Clients, reassign Projects, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source text or activate production. O-024/O-025 remain open.",
+      "notes": "Target-only Phase 1 implementation. It preserves one stable Account/Client identity, validated replacement display name, expected revision and shared operation lifecycle. It cannot update a row or Project projection, rewrite frozen history, authorize the actor, archive/delete/merge Clients, reassign Projects, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source text or activate production. O-024/O-025 remain open.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35510,12 +35510,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ClientRenameOperationTests.swift"
         }
       ],
-      "observedSourceHash": "b2e411c67e491db94b79bfe04c6327ac91823b1d893b170960092bb26ef0e512",
-      "acknowledgedSourceHash": "b2e411c67e491db94b79bfe04c6327ac91823b1d893b170960092bb26ef0e512",
+      "observedSourceHash": "a5d6a97f6bd800d3b3610c16c447b781d9b56d417499c249a76196f18df842eb",
+      "acknowledgedSourceHash": "a5d6a97f6bd800d3b3610c16c447b781d9b56d417499c249a76196f18df842eb",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Defines only the comment-scaffolded target tests for exact Client rename scope, expected revision, canonical restart, rebound refusal and shared replay semantics; no executable test exists at the ready checkpoint.",
+      "currentBehavior": "Executes four deterministic target-only tests for exact Client/name/revision command shape, canonical restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Rename Operation Contracts",
@@ -35548,14 +35548,14 @@
           "Self-tests prove the backend-neutral Client rename command boundary without claiming Client row/projection, frozen-history rewrite, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-RENAME-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Client/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Client/Project projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Implemented deterministic tests prove exact Account/Client/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Client/Project projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T08:59:55.953Z",
+  "generatedFromManifestSync": "2026-09-02T09:12:38.455Z",
   "totals": {
     "slices": 26,
     "claimedTargetSurfaces": 73,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 56
+    "implementationAdvancedTargetSurfaces": 58
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 24,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -81,7 +81,7 @@
       "sliceId": "client-rename-operation-contracts",
       "title": "Rename one stable Client without rewriting identity or frozen history",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Client Rename Operation Contracts",
       "surfaceIds": [
         "SWIFT-9CB51D74D41C",

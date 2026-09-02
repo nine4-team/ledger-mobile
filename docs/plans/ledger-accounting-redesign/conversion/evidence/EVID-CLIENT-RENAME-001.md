@@ -1,18 +1,19 @@
 # EVID-CLIENT-RENAME-001 — Client Rename Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation planning / provider-free Client rename command
+- Class: implementation / provider-free Client rename command
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-9CB51D74D41C`, `TEST-D1C8EFBDFDDE`
 - Slice dossier:
   `conversion/implementation-slices/client-rename-operation-contracts.json`
-- Verification state: ready; behavioral implementation has not started
-- Ready scaffold hashes:
+- Verification state: implemented; four local behavioral obligations pass and
+  exact-implementation-commit CI remains planned
+- Implementation hashes:
   - `ClientRenameOperation.swift`:
-    `f39db0f014a16f919717f2ff2b5e9039d6860fde300df8594270e19aa3eae4c4`
+    `021a016ca9b77c93275d4b060381d2f5c1df30acdd9c6c6aa87365af37f5ab00`
   - `ClientRenameOperationTests.swift`:
-    `b2e411c67e491db94b79bfe04c6327ac91823b1d893b170960092bb26ef0e512`
+    `a5d6a97f6bd800d3b3610c16c447b781d9b56d417499c249a76196f18df842eb`
 
 ## Selection and Scope
 
@@ -95,6 +96,42 @@ executable behavior to either comment-only scaffold.
 
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
+
+## Implemented Contract
+
+- `ExpectedClientRevision` carries one exact unsigned revision for the stable
+  Client subject.
+- `ClientRenameDraft` binds one Account, actor, contract version, OperationID,
+  stable ClientID, validated replacement `ClientDisplayName`, expected revision
+  and finite capture time. `RenameClientPayload` contains only ClientID and the
+  new display name.
+- `RenameClientCommand` uses the shared `OperationEnvelope`, derives the exact
+  Client subject and fingerprint, requires exactly one same-subject expected-
+  revision precondition, and decodes only through the same validation path.
+- The command has no Project, prior-name, archive, delete, merge, reassignment,
+  child, accounting, frozen-history or correction inputs and therefore cannot
+  decide O-024/O-025 or rewrite snapshots.
+- `ClientRenaming` is the narrow provider-free operation port. Exact receipt
+  validation is limited to the shared OperationID lifecycle and makes no
+  authoritative Client-row or current-Project projection claim.
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact Client/name/revision
+command shape, canonical byte-identical restart, stable refusal of malformed or
+rebound Account/actor/contract/Client/name/revision/subject/precondition/
+fingerprint/receipt evidence, shared `OperationJournal` replay and changed-
+intent mismatch behavior, and no false receipt from a failing port.
+
+The complete local gate also passes: all 116 target tests in 26 suites, target
+environment isolation, generated app/MCP contracts, macOS staging build,
+generic iOS Simulator staging build, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The synchronized ledger remains at 757
+recorded / 742 discovered surfaces, 331 mapped / 164 residual / 43 blockers.
+M1 and M2 retain exactly their expected 2 and 164 blockers.
+
+The exact-implementation-commit operational obligation remains planned until
+immutable hosted CI passes for the committed checkpoint.
 
 ## Permanent Limits
 

@@ -3,7 +3,7 @@
   "sliceId": "client-rename-operation-contracts",
   "title": "Rename one stable Client without rewriting identity or frozen history",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client Rename Operation Contracts",
   "surfaceIds": [
     "SWIFT-9CB51D74D41C",
@@ -184,8 +184,10 @@
         "CLIENTRENAME-REQ-006"
       ],
       "expected": "A valid synthetic draft produces one typed exact-scope RenameClient command with one same-subject expected revision; the payload contains only stable Client identity and validated new display text and cannot carry Project, archive, merge, alias, reassignment or frozen-history input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
     },
     {
       "id": "CLIENTRENAME-TEST-002",
@@ -200,8 +202,10 @@
         "CLIENTRENAME-REQ-006"
       ],
       "expected": "Representative rename commands round-trip byte-identically with exact Account/actor/contract/Operation/Client/name/revision/time/subject/fingerprint evidence and no backend path, provider, credential, Project projection or server-result claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
     },
     {
       "id": "CLIENTRENAME-TEST-003",
@@ -216,8 +220,10 @@
         "CLIENTRENAME-REQ-006"
       ],
       "expected": "Blank display text, invalid time and changed Account/actor/contract/Client/name/revision/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Client-rename stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
     },
     {
       "id": "CLIENTRENAME-TEST-004",
@@ -232,8 +238,10 @@
         "CLIENTRENAME-REQ-006"
       ],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed Client/name/revision is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-CLIENT-RENAME-001"
+      ]
     },
     {
       "id": "CLIENTRENAME-TEST-005",

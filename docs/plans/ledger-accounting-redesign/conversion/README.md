@@ -40,10 +40,12 @@ or production behavior. The provider-free Project category configuration read
 slice is verified at exact implementation commit `40d20efb`, including all 112
 target tests and both staging builds. It defines no budget arithmetic, hidden
 visibility, mutation, provider, migration or production behavior.
-The provider-free Client rename command slice is ready, with exactly two
-comment-only target surfaces. It preserves stable Client identity, replacement
-display text and expected revision without deciding Client archive/merge,
-Project reassignment, provider, migration or production behavior.
+The provider-free Client rename command slice is implemented locally in exactly
+two target-only surfaces. Four deterministic tests preserve stable Client
+identity, replacement display text, expected revision and the shared operation
+lifecycle without deciding Client archive/merge, Project reassignment,
+provider, migration or production behavior. Exact-implementation-commit CI is
+still required before the slice is verified.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

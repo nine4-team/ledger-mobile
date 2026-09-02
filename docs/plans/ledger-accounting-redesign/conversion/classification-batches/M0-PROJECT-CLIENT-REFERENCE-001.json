@@ -1944,17 +1944,17 @@
     {
       "id": "SWIFT-9CB51D74D41C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "f39db0f014a16f919717f2ff2b5e9039d6860fde300df8594270e19aa3eae4c4",
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for one expected-revision Client display-name change; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "021a016ca9b77c93275d4b060381d2f5c1df30acdd9c6c6aa87365af37f5ab00",
+      "currentBehavior": "Implements a provider-free Client rename draft, exact Client/name payload, same-subject expected revision, shared-envelope command, derived Client subject/fingerprint validation, exact receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-RENAME-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may preserve one stable Account/Client identity, validated replacement display name, expected revision and shared operation lifecycle. It cannot update a row or Project projection, rewrite frozen history, authorize the actor, archive/delete/merge Clients, reassign Projects, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source text or activate production. O-024/O-025 remain open.",
+      "notes": "Target-only Phase 1 implementation. It preserves one stable Account/Client identity, validated replacement display name, expected revision and shared operation lifecycle. It cannot update a row or Project projection, rewrite frozen history, authorize the actor, archive/delete/merge Clients, reassign Projects, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source text or activate production. O-024/O-025 remain open.",
       "target": {
         "owner": "Client Rename Operation Contracts",
         "surfaces": [
@@ -1992,17 +1992,17 @@
     {
       "id": "TEST-D1C8EFBDFDDE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b2e411c67e491db94b79bfe04c6327ac91823b1d893b170960092bb26ef0e512",
-      "currentBehavior": "Defines only the comment-scaffolded target tests for exact Client rename scope, expected revision, canonical restart, rebound refusal and shared replay semantics; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "a5d6a97f6bd800d3b3610c16c447b781d9b56d417499c249a76196f18df842eb",
+      "currentBehavior": "Executes four deterministic target-only tests for exact Client/name/revision command shape, canonical restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-RENAME-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Client/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Client/Project projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Implemented deterministic tests prove exact Account/Client/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Client/Project projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Client Rename Operation Contracts",
         "surfaces": [

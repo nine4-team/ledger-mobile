@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 95
+State version: 96
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-RENAME-READY
+- Checkpoint: CLIENT-RENAME-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1324,6 +1324,25 @@ modifying the running Firebase application before hard cutover.
   schema/RLS/Sync/Auth/provider, current/target app/MCP, source migration,
   hosted resource or production operation exists at ready. O-024/O-025 remain
   open and unchanged.
+- Implemented only the frozen provider-free Client rename boundary: validated
+  stable Client/new-display-name intent, one exact Client revision, shared
+  Account/actor/contract/Operation/time/subject/precondition/fingerprint/
+  receipt lifecycle, decode-through-validation and one narrow operation port.
+- Added four deterministic tests covering exact payload/command shape,
+  byte-identical restart, malformed/rebound/tampered refusal, shared journal
+  replay/mismatch behavior and no false receipt from a failing port. Four
+  focused/all 116 target tests in 26 suites pass locally, as do target
+  environment/generated-contract controls, macOS and generic iOS Simulator
+  staging builds, conversion/capability/query/residual controls, M0 and diff
+  formatting. M1/M2 retain exactly their expected 2/164 blockers.
+- `CLIENTRENAME-TEST-001` through `-004` pass locally. Exact-implementation-
+  commit hosted `CLIENTRENAME-TEST-005` remains planned, so exactly the two
+  Client rename surfaces are `implemented`, not `verified`.
+- No Client row/current-Project projection, frozen-history rewrite, archive/
+  delete/merge/reassignment, physical persistence, authoritative authorization
+  or revision apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration,
+  hosted resource or production operation was introduced. O-024/O-025 remain
+  open and unchanged.
 
 ## Next Action
 
@@ -1362,13 +1381,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-CATEGORY-CONFIGURATION-001` as the sole shared read semantics
    for exact Account/Project/category configuration state, absent/null/zero/
    positive allocation, incomplete relationship evidence and configuration
-   revision. Implement only the ready `client-rename-operation-contracts`
-   dossier: stable Account/Client identity, validated replacement display text,
-   one expected Client revision, exact shared operation binding/restart/refusal
-   and one narrow operation port. Do not add Client row/current-Project
-   projection, frozen-history rewrite, archive/delete/merge/reassignment,
-   physical persistence, schema/RLS/Sync/Auth/provider behavior, current app/MCP,
-   migration, hosted resources or production access.
+   revision. Preserve the implemented `client-rename-operation-contracts`
+   slice, run its complete local gate, commit and push the exact implementation,
+   require immutable hosted CI, and only then mark its five obligations and two
+   surfaces verified. Do not add Client row/current-Project projection, frozen-
+   history rewrite, archive/delete/merge/reassignment, physical persistence,
+   schema/RLS/Sync/Auth/provider behavior, current app/MCP, migration, hosted
+   resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
