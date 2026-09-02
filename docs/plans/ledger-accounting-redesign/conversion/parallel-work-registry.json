@@ -5,7 +5,7 @@
   "integrationOwner": "primary-agent",
   "maximumConcurrentWriters": 2,
   "enhancedPilotReviewsRequired": 2,
-  "enhancedPilotReviewsCompleted": 1,
+  "enhancedPilotReviewsCompleted": 2,
   "assignments": [
     {
       "assignmentId": "SUBAGENT-PILOT-001",
@@ -62,7 +62,7 @@
       "assignmentId": "SUBAGENT-PILOT-002",
       "pilotOrdinal": 2,
       "sliceId": "project-budget-segment-read-contracts",
-      "status": "integrated_pending_ci",
+      "status": "completed",
       "baseCommit": "43189f1abe6e023f4d29b00f190b40464ce7a3e5",
       "readyCiRun": 33687191592,
       "branch": "codex/supabase-slice-project-budget-segment",
@@ -109,9 +109,9 @@
         ],
         "focusedRetest": "passed: integration agent and independent reviewer each passed 5 tests in 1 suite",
         "completeLocalGate": "passed: conversion/capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, five focused and all 189 tests in 44 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
-        "exactIntegrationCommitCi": "pending"
+        "exactIntegrationCommitCi": "passed: 8fce53b75029133b39fe182031df25ef011fc35e in immutable Actions run 33689446640"
       },
-      "integrationDisposition": "candidate integrated as ddbe7d7b after every-line integration review and independent adversarial review; implementation and operational verification remain pending complete local gates and exact integration-checkpoint CI"
+      "integrationDisposition": "accepted and verified at 8fce53b75029133b39fe182031df25ef011fc35e after every-line integration review, independent adversarial review, complete local gates and immutable Actions run 33689446640; the clean pilot worktree was removed after verification while the branch and candidate commit remain recoverable"
     }
   ],
   "preflightFindings": [

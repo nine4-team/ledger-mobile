@@ -1483,14 +1483,14 @@
       "acknowledgeSourceHash": "321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1",
       "currentBehavior": "Defines the provider-free exact Account/Project/currency budget-segment request, signed paid/unpaid category values, derived recognized arithmetic, validated local snapshot, bounded failures and narrow query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Implemented Phase 1 target contract pending exact integration-commit operational CI. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths; the integration agent reviewed every line and an independent adversarial reviewer found no P0-P3 defect. Focused and full tests pass. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
+      "notes": "Verified Phase 1 target contract. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths; the integration agent reviewed every line and an independent adversarial reviewer found no P0-P3 defect. Focused and full tests passed, and exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
       "target": {
         "owner": "Project Budget Segment Read Contracts",
         "surfaces": [
@@ -1530,14 +1530,14 @@
       "acknowledgeSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
       "currentBehavior": "Implements five deterministic provider-free tests for exact signed segment arithmetic, canonical readiness/restart, bounded rejection, exact-request/upstream-failure port behavior, cancellation and frozen encoded shape.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Implemented Phase 1 synthetic tests pending exact integration-commit operational CI. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites pass before integration. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified Phase 1 synthetic tests. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites passed locally, and exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Project Budget Segment Read Contracts",
         "surfaces": [

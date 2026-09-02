@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-42C7BDDCD714`, `TEST-A0B2D5B97695`
 - Slice dossier:
   `conversion/implementation-slices/project-budget-segment-read-contracts.json`
-- Verification state: implemented and fully reviewed locally; exact integrated-
-  checkpoint operational CI remains open
+- Verification state: verified after enhanced second-pilot review, complete
+  local gates and immutable exact-integration-checkpoint CI
 - Ready scaffold hashes:
   - `ProjectBudgetSegmentData.swift`:
     `74231d9920e803381789c0b342ce09273de40216cf9d673c65e78c4637251dd2`
@@ -115,8 +115,8 @@ exact parent and path scope, reread product/architecture authority and every
 changed line, ran five focused and all 189 target tests in 44 suites plus target
 isolation, and found no P0-P3 defect. Its environment lacked a worktree-local
 `tsc`, so it could not repeat the MCP TypeScript subcheck there; the ready-
-commit CI already passed that check and the integration full gate must repeat
-it before operational verification.
+commit CI already passed that check and the integration full gate repeated it
+successfully before operational verification.
 
 The bounded implementation defines the exact fingerprinted request, signed
 category segments with overflow-safe internally derived and decode-verified
@@ -130,7 +130,14 @@ encoded shape. The candidate was integrated as `ddbe7d7b`. The complete
 integration gate passes conversion/capability/query/residual/M0 controls,
 target isolation and generated app/MCP contracts, five focused and all 189
 tests in 44 suites, repeatable project generation, both staging builds and
-clean formatting. Immutable exact-checkpoint CI remains pending.
+clean formatting. Exact integration checkpoint
+`8fce53b75029133b39fe182031df25ef011fc35e` then passed immutable Actions
+run `33689446640`: conversion traceability passed in 11 seconds, and the
+isolated target environment passed in 2 minutes 30 seconds with all 189 tests
+in 44 suites, generated contracts, both staging builds and clean artifacts.
+The second enhanced write-capable pilot is therefore accepted and verified.
+Its clean isolated worktree was removed after verification; the branch and
+candidate commit remain recoverable.
 
 ## Permanent Limits
 

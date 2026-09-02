@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 154
+State version: 155
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-BUDGET-SEGMENT-IMPLEMENTED-INTEGRATION-CI-PENDING
+- Checkpoint: PROJECT-BUDGET-SEGMENT-VERIFIED-PILOT-002-COMPLETE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2324,6 +2324,16 @@ modifying the running Firebase application before hard cutover.
   recorded from that exact base in its own branch/worktree with only the two
   scaffold Swift paths writable. No provider, Firebase or production action
   occurred.
+- Exact integration checkpoint
+  `8fce53b75029133b39fe182031df25ef011fc35e` passed immutable Actions run
+  `33689446640`: conversion traceability passed in 11 seconds and the isolated
+  target environment passed in 2 minutes 30 seconds with all 189 tests in 44
+  suites, generated contracts, both staging builds and clean tracked artifacts.
+  Promoted exactly the Project budget segment dossier and its two surfaces to
+  `verified`. `SUBAGENT-PILOT-002` is complete, and both required enhanced
+  write-capable pilots now preserve worker, every-line integration and
+  independent adversarial review evidence. No provider, Firebase or production
+  action occurred.
 
 ## Next Action
 
@@ -2414,16 +2424,17 @@ Continue without waiting on the two M1 evidence blockers:
    are verified. Treat the verified `space-assignment-destination-read-contracts`
    dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
-   assignment-destination read semantics. Preserve the completed first-pilot
-   review record. Do not implement Inventory destination planning until O-038
-   is explicitly approved in canonical product authority. Finish the complete
-   local ready gate and immutable exact-ready-commit CI for
-   `project-budget-segment-read-contracts`; only then launch
-   `SUBAGENT-PILOT-002` from that exact commit in its isolated worktree with the
-   two Swift paths as its complete allowlist. Review every changed line, obtain
-   an independent adversarial implementation review, rerun focused/full local
-   gates and require exact integrated-commit CI before verification or any
-   delegation-policy change.
+   assignment-destination read semantics. Treat the verified
+   `project-budget-segment-read-contracts` dossier and
+   `EVID-PROJECT-BUDGET-SEGMENT-001` as the sole provider-free source for exact
+   Project category client-paid/invoicing-unpaid segments and their internally
+   derived recognized value. Preserve both completed enhanced-pilot review
+   records. Do not implement Inventory destination planning until O-038 is
+   explicitly approved in canonical product authority. Both enhanced pilots
+   passed; retain the conductor, isolated-worktree, frozen-slice, path-allowlist,
+   independent review and exact-integration-SHA CI controls, and apply review
+   depth according to novelty and accounting/security risk without allowing a
+   worker to promote its own status or edit canonical integration controls.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T22:13:10.596Z",
+    "lastSynchronizedAt": "2026-09-02T22:19:41.859Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19754,14 +19754,14 @@
           "Synthetic target-only fixtures prove exact signed arithmetic, no-double-count collection exchange, scope/currency validation, readiness/restart and exact-request refusal without selecting unresolved presentation or source eligibility"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Implemented Phase 1 target contract pending exact integration-commit operational CI. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths; the integration agent reviewed every line and an independent adversarial reviewer found no P0-P3 defect. Focused and full tests pass. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
+      "notes": "Verified Phase 1 target contract. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths; the integration agent reviewed every line and an independent adversarial reviewer found no P0-P3 defect. Focused and full tests passed, and exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
@@ -36460,14 +36460,14 @@
           "Self-tests prove only the provider-free segment read boundary and do not claim server, database, provider, migration or UI evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Implemented Phase 1 synthetic tests pending exact integration-commit operational CI. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites pass before integration. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified Phase 1 synthetic tests. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites passed locally, and exact integration checkpoint 8fce53b75029133b39fe182031df25ef011fc35e passed immutable Actions run 33689446640. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
