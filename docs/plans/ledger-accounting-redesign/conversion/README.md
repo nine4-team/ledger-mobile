@@ -37,9 +37,9 @@ budget-category reference read slice is verified at exact implementation commit
 `713dcf57`, including all 108 target tests and both staging builds. It defines
 no hidden fee visibility, mutation, server authorization, provider, migration
 or production behavior. The provider-free Project category configuration read
-slice is implemented locally: four focused/all 112 target tests and both staging
-builds pass. Exact-commit operational evidence remains before its two target
-surfaces become verified.
+slice is verified at exact implementation commit `40d20efb`, including all 112
+target tests and both staging builds. It defines no budget arithmetic, hidden
+visibility, mutation, provider, migration or production behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

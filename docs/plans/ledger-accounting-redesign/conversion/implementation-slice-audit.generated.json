@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T08:43:01.374Z",
+  "generatedFromManifestSync": "2026-09-02T08:48:35.169Z",
   "totals": {
     "slices": 25,
     "claimedTargetSurfaces": 71,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 23,
+    "implemented": 0,
+    "verified": 24,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -201,7 +201,7 @@
       "sliceId": "project-category-configuration-read-contracts",
       "title": "Read exact Project category configuration without inventing budget authority",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Category Configuration Read Contracts",
       "surfaceIds": [
         "SWIFT-E084EBB4EBFF",

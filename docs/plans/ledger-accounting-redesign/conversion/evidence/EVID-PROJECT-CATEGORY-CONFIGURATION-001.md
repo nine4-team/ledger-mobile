@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-E084EBB4EBFF`, `TEST-DB57E9433EB6`
 - Slice dossier:
   `conversion/implementation-slices/project-category-configuration-read-contracts.json`
-- Verification state: implemented; four local obligations pass and exact-commit
-  operational verification remains planned
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `40d20efb9fce0873008b29fec783f2bc28ba30c0`
 - Implementation hashes:
   - `ProjectCategoryConfigurationData.swift`:
     `7adb9fc7946223eaa3003a0526d4522d03e1d6e89ca0229a43b3c35c4633d9f8`
@@ -154,9 +154,25 @@ passes four tests in one suite. It proves:
 
 `PROJECTCATEGORY-TEST-001` through `-004` pass locally. The complete 112-test
 target suite in 25 suites, target graph and generated contracts, macOS and
-generic iOS Simulator staging builds and diff formatting also pass. Exact-
-implementation-commit hosted evidence required by `PROJECTCATEGORY-TEST-005`
-remains planned, so the two claimed surfaces are `implemented`, not `verified`.
+generic iOS Simulator staging builds and diff formatting also pass.
+
+## Hosted Exact-Commit Verification
+
+Exact implementation commit
+`40d20efb9fce0873008b29fec783f2bc28ba30c0` passed immutable GitHub Actions run
+`33610276267` on 2026-09-02:
+
+- conversion state and traceability passed in 10 seconds;
+- the isolated target job passed in 1 minute 54 seconds;
+- all 112 target tests, target dependency/environment and generated app/MCP
+  contract checks, macOS and generic iOS Simulator staging builds passed; and
+- the workflow confirmed those checks did not rewrite tracked artifacts.
+
+`PROJECTCATEGORY-TEST-005` therefore passes. All five obligations and exactly
+the two claimed target surfaces are verified. This hosted proof remains
+provider-free and does not establish physical offline durability, financial
+authorization, server apply, schema/RLS/Sync behavior, migration or production
+readiness.
 
 ## Permanent Limits
 

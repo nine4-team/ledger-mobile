@@ -2229,7 +2229,7 @@
       "acknowledgeSourceHash": "7adb9fc7946223eaa3003a0526d4522d03e1d6e89ca0229a43b3c35c4633d9f8",
       "currentBehavior": "Defines the provider-free Project category configuration read boundary: exact Account/Project/revision scope, no relationship, enabled without allocation, enabled with explicit zero or positive Money, incomplete relationship evidence, canonical local readiness/restart, atomic validation and one narrow read port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -2276,7 +2276,7 @@
       "acknowledgeSourceHash": "70178188e8f417c833e22b5f9f3127647056911cb2f8e5dbe9f33cbde79af4ce",
       "currentBehavior": "Defines four deterministic provider-free tests for exact Project category relationship/allocation states, category evidence, ready/partial/stale/authoritative-empty restart, invalid/scope/duplicate/count/completeness refusal and exact Account/Project read-port behavior.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",

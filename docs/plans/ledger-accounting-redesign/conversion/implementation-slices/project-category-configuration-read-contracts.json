@@ -3,7 +3,7 @@
   "sliceId": "project-category-configuration-read-contracts",
   "title": "Read exact Project category configuration without inventing budget authority",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Category Configuration Read Contracts",
   "surfaceIds": [
     "SWIFT-E084EBB4EBFF",
@@ -272,8 +272,10 @@
         "PROJECTCATEGORY-REQ-007"
       ],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming budget, server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
     }
   ],
   "implementationEvidence": [

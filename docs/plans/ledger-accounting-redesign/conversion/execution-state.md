@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 93
+State version: 94
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-READ-IMPLEMENTED
+- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-READ-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1291,6 +1291,15 @@ modifying the running Firebase application before hard cutover.
   schema/RLS/Sync/Auth/provider, current/target app/MCP, source migration,
   hosted resource or production operation was introduced. O-026 remains open
   and unchanged.
+- Exact implementation commit
+  `40d20efb9fce0873008b29fec783f2bc28ba30c0` passed immutable GitHub Actions
+  run `33610276267`: conversion traceability passed in 10 seconds and the
+  isolated-target job passed in 1 minute 54 seconds with all 112 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five Project category configuration obligations
+  and exactly its two target-only surfaces are now `verified`; every excluded
+  budget, mutation, authorization, provider, migration and production surface
+  remains unadvanced.
 
 ## Next Action
 
@@ -1324,16 +1333,16 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `budget-category-reference-read-contracts` dossier and
    `EVID-BUDGET-CATEGORY-REFERENCE-001` as the sole shared read semantics for
    category identity/kind/lifecycle/system/exclusion/order/revision,
-   eligibility, visible-count privacy and local readiness. Preserve the locally
-   implemented `project-category-configuration-read-contracts` boundary exactly
-   as scoped, commit it and require immutable exact-commit CI for
-   `PROJECTCATEGORY-TEST-005`. If it passes, record the run, advance only its two
-   target surfaces to `verified`, rerun the ledger controls and select the next
-   smallest complete decision-independent Phase 1 outcome. Do not add budget
-   arithmetic, hidden category/allocation visibility or counts, category or
-   Project configuration mutation, physical persistence, schema/RLS/Sync/Auth/
-   provider behavior, current app/MCP, migration, hosted resources or production
-   access.
+   eligibility, visible-count privacy and local readiness. Treat the verified
+   `project-category-configuration-read-contracts` dossier and
+   `EVID-PROJECT-CATEGORY-CONFIGURATION-001` as the sole shared read semantics
+   for exact Account/Project/category configuration state, absent/null/zero/
+   positive allocation, incomplete relationship evidence and configuration
+   revision. Audit the remaining Phase 1 dependency graph and select the next
+   smallest complete decision-independent outcome. Do not add budget arithmetic,
+   hidden category/allocation visibility or counts, category or Project
+   configuration mutation, physical persistence, schema/RLS/Sync/Auth/provider
+   behavior, current app/MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

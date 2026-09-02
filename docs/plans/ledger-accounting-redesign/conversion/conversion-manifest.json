@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T08:43:01.374Z",
+    "lastSynchronizedAt": "2026-09-02T08:48:35.169Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -29887,7 +29887,7 @@
           "Synthetic snapshots prove exact Project/category configuration distinctions, authorized local readiness/restart and atomic invalid/scope/duplicate refusal without a database, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -35600,7 +35600,7 @@
           "Self-tests prove the backend-neutral Project category configuration read boundary without claiming budget arithmetic, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
