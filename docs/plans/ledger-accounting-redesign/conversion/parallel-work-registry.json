@@ -116,7 +116,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-003",
       "sliceId": "space-core-details-read-contracts",
-      "status": "active",
+      "status": "integration_gate",
       "baseCommit": "8849344dc66d71d9dd9b9ba589a76deb007f3172",
       "readyCiRun": 33693232878,
       "branch": "codex/supabase-slice-space-core-details",
@@ -144,8 +144,41 @@
         "exactIntegrationCommitCi": true,
         "reason": "The user requested early quality-control sampling, and this slice composes several shared Space, checklist, offline-readiness and failure semantics."
       },
-      "handoff": null,
-      "integrationDisposition": "pending untrusted candidate implementation; worker cannot edit control-plane files or promote status"
+      "handoff": {
+        "candidateCommit": "1920389d28a71fff3b3233bef2971fe9525bc6e3",
+        "candidateCommits": [
+          "290bc64b6062328e1b3564bed3662b7c9cbcd0b1",
+          "19794b4107ef8f0a0ac8a773bc6d767a508a935b",
+          "1920389d28a71fff3b3233bef2971fe9525bc6e3"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 199 tests in 46 suites by worker and primary agent; independently confirmed",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Exact createdAt/updatedAt values do not claim audit provenance, actor identity, immutability, event semantics or ordering."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_three_corrected_findings",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_one_corrected_p3",
+        "findings": [
+          "Primary review required direct decode-refusal tests for noncanonical notes, checklist names and checklist-item text.",
+          "Primary review required independent proof that both AccountID and SpaceID alter the request fingerprint.",
+          "Primary review required the fixture port itself to validate request binding before yielding, with a raw consumer proving the behavior.",
+          "Independent P3 review required exact literal and uniqueness assertions for all 18 public diagnostic codes."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after final correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 199 tests in 46 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
+        "exactIntegrationCommitCi": "pending"
+      },
+      "integrationDisposition": "candidate accepted after every-line and independent adversarial review and integrated as 72b24afa/503b3839/05509124; complete local gate and exact-integration-checkpoint immutable CI remain required before verification"
     }
   ],
   "preflightFindings": [

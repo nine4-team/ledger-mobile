@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 161
+State version: 162
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CORE-DETAILS-WORKER-ACTIVE
+- Checkpoint: SPACE-CORE-DETAILS-INTEGRATION-GATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2412,6 +2412,19 @@ modifying the running Firebase application before hard cutover.
   review, independent adversarial review, complete local gates and exact
   integrated-SHA CI remain mandatory. No provider, Firebase or production
   action occurred.
+- Space core-details candidate `1920389d28a71fff3b3233bef2971fe9525bc6e3`
+  was integrated as `72b24afa`/`503b3839`/`05509124` after the primary agent
+  reviewed every source/test line and an independent adversarial reviewer
+  checked the exact frozen-base diff. The review process caught four concrete
+  test-quality gaps: direct normalization refusal for notes/checklist names/item
+  text, independent AccountID/SpaceID fingerprint binding, port-side request
+  validation, and exact unique diagnostic-code stability. Each was corrected,
+  re-reviewed and retested. Six focused and all 199 target tests in 46 suites,
+  target isolation/generated-contract checks, repeatable project generation,
+  both staging builds and clean diff checks pass with no remaining P0-P3
+  finding. The slice and its two surfaces are `implemented`, not `verified`;
+  immutable CI on the exact integration checkpoint remains. No provider,
+  Firebase or production action occurred.
 
 ## Next Action
 
@@ -2522,13 +2535,12 @@ Continue without waiting on the two M1 evidence blockers:
    actual Link routes/commands, Purchase choice/eligibility, acquisition
    handling, correction/relink behavior, transient UI state, Accounted-item
    actions, app/MCP and provider/migration behavior outside this slice.
-   Treat ready `space-core-details-read-contracts` and
-   `EVID-SPACE-CORE-DETAILS-001` as the frozen next implementation boundary.
-   Before delegation, pass the complete local ready gate and immutable CI on
-   the exact comment-only ready commit. Then give one isolated worker only the
-   two scaffold paths; review every changed line, require an independent
-   adversarial review and rerun the focused/full/integration gates before any
-   status promotion. Do not let that slice acquire timestamp provenance,
+   Treat implemented `space-core-details-read-contracts` and
+   `EVID-SPACE-CORE-DETAILS-001` as the current exact integration boundary.
+   Preserve the completed every-line and independent adversarial reviews and
+   their four corrected findings. Pass the complete integrated local gate,
+   commit/push the exact checkpoint, and require immutable CI before promoting
+   the slice or either surface to `verified`. Do not let that slice acquire timestamp provenance,
    authoritative partial counts, percentage policy, archive effects,
    Item/media/review/template/accounting, provider/schema/RLS/Sync, app/MCP,
    migration or production behavior.

@@ -7,13 +7,19 @@
 - Claimed target surfaces: `SWIFT-02BF0EA3C433`, `TEST-377B0FDAF4D4`
 - Slice dossier:
   `conversion/implementation-slices/space-core-details-read-contracts.json`
-- Verification state: ready contract; implementation withheld until exact-ready-
-  commit immutable CI passes
+- Verification state: implemented after enhanced review and complete local gates;
+  immutable CI on the exact integration checkpoint remains required before
+  verification
 - Ready scaffold hashes:
   - `SpaceCoreDetailsData.swift`:
     `d9e4335368aa7d9d7b9a0616f0dbf851f39a58f0ecf9ccef5ef66c0b1fe742b5`
   - `SpaceCoreDetailsDataTests.swift`:
     `e336e5cd42808d3dd5784bacc4ace3e54f3567145538af02ab7b088e240302eb`
+- Implemented source hashes:
+  - `SpaceCoreDetailsData.swift`:
+    `2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669`
+  - `SpaceCoreDetailsDataTests.swift`:
+    `92522cb15998005b3729d0c2cf7cf16bd33ef2bcc05fd478debf47ced94c8100`
 
 ## Independent Scope Preflight
 
@@ -95,9 +101,54 @@ generated contracts, both staging builds and clean tracked artifacts. The
 ready gate therefore authorizes only the frozen two-path candidate
 implementation in the isolated worker worktree.
 
+## Enhanced Worker Review and Implementation
+
+The worker started from exact green ready commit `8849344d` in the isolated
+`codex/supabase-slice-space-core-details` branch/worktree and changed exactly
+the two allowlisted Swift paths. It made no documentation, control, generated,
+project/package, MCP, Firebase, provider, hosted-resource, production or
+integration-branch change.
+
+The candidate was not accepted from its own report. Primary every-line review
+found three concrete test-quality gaps: missing direct normalization-refusal
+cases for Space notes, checklist names and checklist-item text; no independent
+proof that both AccountID and SpaceID alter the request fingerprint; and a
+fixture port that did not itself reject a mismatched request. Candidate
+`19794b4107ef8f0a0ac8a773bc6d767a508a935b` corrected all three. An independent
+read-only adversarial review then found one P3 gap: the diagnostic test did not
+pin every public failure case to an exact unique stable code. Test-only commit
+`1920389d28a71fff3b3233bef2971fe9525bc6e3` corrected it. Primary and independent
+rechecks confirmed that all four findings are resolved and that no P0-P3
+finding remains.
+
+The bounded implementation defines a fingerprinted exact Account/Space
+request, validated Project-or-Business-Inventory core snapshot, canonical
+ordered checklist hierarchy with derived counts, explicit local
+readiness/completeness/absence evidence, bounded update/failure states and one
+narrow request-exact watch port. Tests cover active and archived rows, empty
+and populated checklists, valid repeated item IDs across different checklists,
+ready/incomplete/partial/stale found and empty states, authoritative absence,
+canonical restart, scope/cardinality/count/time/content/order/fingerprint
+tampering, non-enumerating failures, port-side request rejection, upstream
+failure, cancellation, exact stable diagnostics and forbidden encoded fields.
+
+The worker and both reviewers passed all six focused tests. The worker, primary
+agent and independent reviewer passed all 199 target tests in 46 suites as
+applicable. The three candidate commits were integrated as `72b24afa`,
+`503b3839` and `05509124`. The complete integration gate then passed conversion
+sync/check/report, capability/query/residual freshness and M0; target isolation
+and generated app/MCP contracts; all 199 tests; repeatable XcodeGen output with
+project hash
+`0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53`
+and scheme hash
+`388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`;
+macOS and generic iOS Simulator staging builds; and clean formatting/artifacts.
+Immutable CI on the exact integration checkpoint remains the sole prerequisite
+for operational verification and status promotion.
+
 ## Permanent Limits
 
-Ready status proves only that the authority, boundary and tests are internally
-traceable. It proves no executable read behavior, physical offline durability,
+Implemented status proves only the provider-free executable contract and
+synthetic evidence described above. It proves no physical offline durability,
 authorization, synchronization, database policy, migration reconciliation,
 app/MCP behavior, hosted resource, production behavior, release or cutover.

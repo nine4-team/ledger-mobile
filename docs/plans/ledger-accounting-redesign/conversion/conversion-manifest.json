@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T23:02:00.896Z",
+    "lastSynchronizedAt": "2026-09-02T23:32:35.992Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -15806,12 +15806,12 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift"
         }
       ],
-      "observedSourceHash": "d9e4335368aa7d9d7b9a0616f0dbf851f39a58f0ecf9ccef5ef66c0b1fe742b5",
-      "acknowledgedSourceHash": "d9e4335368aa7d9d7b9a0616f0dbf851f39a58f0ecf9ccef5ef66c0b1fe742b5",
+      "observedSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
+      "acknowledgedSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
       "metadata": {
-        "firebaseCoupling": "none_detected"
+        "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Contains the comment-only ready-gate scaffold for a provider-free single-Space core-details local read contract.",
+      "currentBehavior": "Defines the implemented provider-free request, validated core Space snapshot, explicit local readiness/absence evidence, bounded update/failure states and narrow exact-request query port.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details Read Contracts",
@@ -15846,14 +15846,14 @@
           "Synthetic single-Space fixtures prove exact scope/core/checklist/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CORE-DETAILS-001"
       ],
-      "notes": "Ready scaffold only. The frozen slice is limited to exact Account/Space identity, immutable Project-or-Business-Inventory scope, normalized core details, lifecycle/revision/timestamps, canonical checklist state and counts, explicit local completeness/freshness/failure truth, restart and one narrow query port. It cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented provider-free target contract after primary every-line review, independent adversarial review, four corrected test-quality findings, 6 focused and 199 full target tests. Immutable exact-integration-checkpoint CI remains required before verification. The boundary cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -34270,12 +34270,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
         }
       ],
-      "observedSourceHash": "e336e5cd42808d3dd5784bacc4ace3e54f3567145538af02ab7b088e240302eb",
-      "acknowledgedSourceHash": "e336e5cd42808d3dd5784bacc4ace3e54f3567145538af02ab7b088e240302eb",
+      "observedSourceHash": "92522cb15998005b3729d0c2cf7cf16bd33ef2bcc05fd478debf47ced94c8100",
+      "acknowledgedSourceHash": "92522cb15998005b3729d0c2cf7cf16bd33ef2bcc05fd478debf47ced94c8100",
       "metadata": {
-        "firebaseCoupled": false
+        "firebaseCoupled": true
       },
-      "currentBehavior": "Contains the comment-only ready-gate test scaffold for the provider-free single-Space core-details local read contract.",
+      "currentBehavior": "Tests the implemented provider-free single-Space core-details contract across Project/Inventory scope, lifecycle, checklist/count evidence, offline readiness/absence/restart, exact request binding, bounded failure, cancellation and encoded exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Core Details Read Contracts",
@@ -34308,14 +34308,14 @@
           "Tests prove only the provider-free single-Space core-details contract and explicitly exclude archive effects, Items, media, review, templates, accounting, provider, migration and production claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CORE-DETAILS-001"
       ],
-      "notes": "Ready scaffold only. Planned tests cover Project/Inventory scope, normalized details, lifecycle/revision/timestamps, stable ordered checklist evidence and derived counts, explicit completeness/freshness/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure and cancellation. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Immutable exact-integration-checkpoint CI remains required before verification; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
