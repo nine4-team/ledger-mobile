@@ -1185,6 +1185,102 @@
           "Self-tests prove the backend-neutral Space-details boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       }
+    },
+    {
+      "id": "SWIFT-4B007A00C393",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "beb965fd5d36a8d73fedbd390d0ff26a6e2ae8ae9af459ceb592f7537db09f5b",
+      "currentBehavior": "Contains only the reviewed ready-gate scaffold for a provider-free AssignItemsToSpace operation; no executable assignment behavior exists.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one exact same-scope nonempty bulk AssignItemsToSpace intent with stable Space/Item identities, exact revisions, canonical typed preconditions, shared operation binding/receipt validation and a narrow port. It cannot clear placement, move Item scope, archive a Space, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037 remains open.",
+      "target": {
+        "owner": "Space Item Assignment Operation Contracts",
+        "surfaces": [
+          "ItemPlacementScope",
+          "ExpectedItemPlacementRevision",
+          "ItemSpaceAssignmentCandidate",
+          "ItemSpaceAssignmentDraft",
+          "AssignItemsToSpacePayload",
+          "AssignItemsToSpaceCommand",
+          "ItemSpaceAssigning",
+          "ItemSpaceAssignmentFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, destination SpaceID/revision/scope and canonical nonempty stable ItemID/revision set while carrying no path, display-name or authorization claim",
+          "Construction and restart reject changed Account, actor, contract, destination, scope, revision, Item set, payload, typed preconditions, subject or fingerprint; a later trusted handler must revalidate current membership and every same-scope row atomically"
+        ],
+        "syncRequirements": [
+          "The assignment intent reuses the shared operation fingerprint/receipt/replay lifecycle and deterministic Space-active/revision/scope plus per-Item revision/scope preconditions",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, optimistic placement, authoritative row updates or synchronized visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only Item-to-Space assignment contract and decode no Firebase Item/Space document, generic field dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable same-scope Item/Space placement, revision/audit and source correlation while quarantining missing, archived or cross-scope references according to approved policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/Inventory destination scope, nonempty canonical Item/revision sets, deterministic preconditions, restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-51D893DD949E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "01a7478e70c6f0c0581791a3842e0b0a51262e26e31417d6995ad50a12af95c5",
+      "currentBehavior": "Contains only the reviewed ready-gate scaffold for deterministic provider-free AssignItemsToSpace tests; no executable assignment test exists.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove Project/Inventory same-scope assignment, stable Space/Item identities, exact revisions and typed preconditions, input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. They cannot claim physical placement, clear/scope/archive/accounting behavior, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Item Assignment Operation Contracts",
+        "surfaces": [
+          "ItemSpaceAssignmentOperationTests",
+          "Project and Business Inventory placement fixtures",
+          "single and canonical bulk Item/revision fixtures",
+          "typed Space and Item precondition fixtures",
+          "canonical command restart/replay/refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Principal, Operation, Project, Space and Item identities and prove no path/name/provider/accounting field can rebind placement identity or authority",
+          "Negative tests expose only stable bounded codes and no source paths, credentials, provider payloads, financial values or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local assignment receipt from physical persistence, authoritative placement and synchronized Item/Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Item/Space/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent reordered Item input round-trips to identical canonical evidence while changed scope/revision/identity/payload/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral AssignItemsToSpace boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
     }
   ]
 }

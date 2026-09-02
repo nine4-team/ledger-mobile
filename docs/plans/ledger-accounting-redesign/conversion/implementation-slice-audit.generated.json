@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T18:45:52.056Z",
+  "generatedFromManifestSync": "2026-09-02T18:56:39.690Z",
   "totals": {
-    "slices": 40,
-    "claimedTargetSurfaces": 101,
+    "slices": 41,
+    "claimedTargetSurfaces": 103,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 86
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 39,
@@ -151,6 +151,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/exact-money-and-domain-identity.json"
+    },
+    {
+      "sliceId": "item-space-assignment-operation-contracts",
+      "title": "Assign an exact Item set to one same-scope Space atomically without changing accounting",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Item Assignment Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-4B007A00C393",
+        "TEST-51D893DD949E"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-operation-contracts.json"
     },
     {
       "sliceId": "migration-run-plan-and-journal-integrity",

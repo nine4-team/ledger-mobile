@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 353 of 517 target-relevant
+Status: M0 inventory classification complete; 361 of 525 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -179,6 +179,17 @@ A-007/A-016/O-023,
 current authorization, physical workspace activation/switching, membership/
 Account writers, schema/RLS/Sync, app/MCP, migration, hosted resources and
 production remain excluded; `EVID-ACCOUNT-DISCOVERY-SELECTION-001`.
+The provider-free Item-to-Space assignment slice is ready for exact-commit CI.
+Exactly two comment-only target surfaces freeze one story-specific
+`AssignItemsToSpace` intent: exact Account/actor/Operation scope, one stable
+Project-or-Business-Inventory destination Space and revision, a canonical
+nonempty duplicate-free Item/revision set, deterministic active/revision/scope
+preconditions, atomic refusal, restart/replay and one narrow port. All 172
+existing target tests in 40 suites, graph/contracts, both staging builds,
+repeatable project generation and local controls pass. O-037 remains open
+because archive is excluded; Item scope/accounting, physical persistence,
+schema/RLS/Sync, app/MCP, migration, hosted resources and production remain
+absent; `EVID-ITEM-SPACE-ASSIGNMENT-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

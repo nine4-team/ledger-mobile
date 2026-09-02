@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 139
+State version: 140
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ACCOUNT-DISCOVERY-SELECTION-VERIFIED
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2083,6 +2083,34 @@ modifying the running Firebase application before hard cutover.
   40 suites, graph/generated-contract checks, both staging builds and clean
   tracked artifacts. All five obligations pass; exactly the two Account-
   discovery/selection surfaces are now `verified`.
+- Exact Account-discovery verification-document commit
+  `4102365871ba3bde9b42e6132f98a02a1bbd3d69` passed immutable Actions run
+  `33669255726`: conversion traceability passed in 9 seconds and the isolated
+  target environment passed in 2 minutes 51 seconds with all 172 then-existing
+  target tests, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts.
+- Audited Item-to-Space assignment against canonical `spaces.md`, the one-Item
+  identity/accounting boundary, the reviewed Spaces dossier, architecture and
+  current Firebase assignment callers. The target keeps stable physical Item
+  identity and same-scope placement while replacing independent writes and
+  generic field updates with one atomic typed operation; it does not preserve
+  Firebase mechanics.
+- Selected `AssignItemsToSpace` as the next smallest complete decision-
+  independent slice. O-037 remains open because archive/delete is absent;
+  O-007/O-015 do not block a command that cannot change occurrence, provenance
+  or accounting state. Clear assignment, scope movement, media and review are
+  separate operations.
+- Added exactly two comment-only target surfaces,
+  `item-space-assignment-operation-contracts`, and
+  `EVID-ITEM-SPACE-ASSIGNMENT-001`. The ready dossier freezes eight requirements
+  and five deterministic obligations. The ledger records 787 surfaces / 772
+  discovered, 361 mapped / 164 residual / 43 blockers; 41 slices claim 103 of
+  525 target-relevant surfaces while 86 are implementation-advanced.
+- The complete local ready gate passes with all 172 existing target tests in 40
+  suites, both staging builds, unchanged repeatable target graph, target
+  isolation/generated contracts, conversion/capability/query/residual controls,
+  M0 and clean formatting. M1/M2 retain the expected 2/164 blockers with zero
+  structural errors. Exact ready-commit CI remains before implementation.
 
 ## Next Action
 
@@ -2162,11 +2190,12 @@ Continue without waiting on the two M1 evidence blockers:
    verified. Treat the verified `account-discovery-and-selection-contracts`
    dossier and `EVID-ACCOUNT-DISCOVERY-SELECTION-001` as the sole authority for
    the bounded provider-free discovery/selection-intent boundary. Its exact
-   implementation commit and both CI jobs are verified. Audit the next highest-
-   value decision-independent target slice against its canonical product
-   authority and reviewed source dossier, then create only its comment-only
-   scaffolds/dossier/evidence and pass the complete ready gate before adding
-   executable behavior. Keep
+   implementation commit and both CI jobs are verified. Treat the ready
+   `item-space-assignment-operation-contracts` dossier and
+   `EVID-ITEM-SPACE-ASSIGNMENT-001` as the sole authority for the next bounded
+   implementation. Commit/push the exact comment-only ready gate, require both
+   immutable CI jobs, then implement only the frozen provider-free
+   AssignItemsToSpace boundary and repeat the local/exact-commit gates. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

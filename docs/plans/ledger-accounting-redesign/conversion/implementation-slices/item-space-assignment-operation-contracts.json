@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "item-space-assignment-operation-contracts",
+  "title": "Assign an exact Item set to one same-scope Space atomically without changing accounting",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Space Item Assignment Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-4B007A00C393",
+    "TEST-51D893DD949E"
+  ],
+  "requirements": [
+    {
+      "id": "ITEMSPACEASSIGN-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "AssignItemsToSpace replaces each selected Item's optional Space placement with one exact destination Space. Every selected Item and the destination must still belong to the same Project or Business Inventory scope, and one authoritative operation applies the complete nonempty selection atomically and idempotently.",
+      "decisionIds": ["O-037"],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Item assignment is separate from Space create/details/checklist/template/media/review/lifecycle operations and cannot create or change a Transaction, occurrence, Invoice, category, budget contribution, payer, source, price, acquisition or other accounting evidence. O-037 remains wholly open because this command cannot archive a Space.",
+      "decisionIds": ["O-037"],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Current Behavior and Defects",
+      "invariant": "The target retires fire-and-forget independent bulk Item writes and generic field updates. One typed command carries stable destination Space identity, immutable scope, an exact expected Space revision and a canonical nonempty duplicate-free set of stable Item identities with exact expected revisions.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "AssignItemsToSpace records one story-specific placement intent with typed Ledger IDs and scope values. It exposes no generic item update, nullable field dictionary, backend path, SQL, route label, copied Project/Space name, clear-assignment variant, scope-changing Item movement or accounting mutation.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The command binds one OperationID, contract version, AccountID, actor PrincipalID and finite capture time to one canonical payload and deterministic precondition set: destination Space active/revision/scope plus every Item revision/scope. Changed membership, scope or revision is later rejected atomically rather than partially applying a stale offline selection.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Context-specific operations",
+      "invariant": "One narrow backend-neutral ItemSpaceAssigning port accepts only the typed AssignItemsToSpace command and returns the shared OperationReceipt. Local scope/revision evidence is a conflict precondition, never membership or authorization proof; a later trusted handler must revalidate current Account, Project/Inventory, Space and every Item.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Lifecycle",
+      "invariant": "The complete canonical command and shared queued/applied/rejected receipt survive structured offline restart. Duplicate/reordered Item input normalizes to one exact intent, while changed Account/actor/contract/destination/scope/revision/Item/precondition/subject/fingerprint/receipt evidence fails atomically without inventing authoritative placement.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    },
+    {
+      "id": "ITEMSPACEASSIGN-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged. It creates no Item/Space row, physical optimistic write, schema/RLS/Sync policy, Auth/provider adapter, app/MCP wiring, source transform, hosted resource, migration or production authority.",
+      "decisionIds": [],
+      "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ItemPlacementScope is exactly one ProjectID or Business Inventory and derives one canonical scope reference/relation without a copied display name or nullable scope pair.",
+        "ExpectedItemPlacementRevision and ItemSpaceAssignmentCandidate bind each stable ItemID to one exact revision. ItemSpaceAssignmentDraft binds one Account, actor, contract, destination Space, immutable scope, expected Space revision, canonical nonempty duplicate-free Item candidate set and finite capture time.",
+        "AssignItemsToSpacePayload contains only destination SpaceID, scope and canonical Item IDs. AssignItemsToSpaceCommand derives the Space subject, payload, canonical active/revision/scope and per-Item revision/scope preconditions, shared fingerprint and receipt validation.",
+        "ItemSpaceAssigning exposes only assignItemsToSpace(_:) and returns the shared OperationReceipt. ItemSpaceAssignmentFailure provides stable bounded empty/duplicate/time/scope/payload/precondition/subject/fingerprint/receipt/local-acceptance/encoding diagnostics."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "No Item or Space table, account/project foreign key, optional space_id column, revision/audit column, constraint, index, view, trigger, function or migration is created or changed."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative AssignItemsToSpace handler, membership/capability derivation, Account/Project/Inventory/Space/Item lock, scope/revision validation, row update, audit event or idempotency-result storage exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/actor/scope evidence is not authorization. No membership, financial-visibility, existing/result-row, Project/Inventory/Space/Item predicate, grant or cross-account database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Item/Space table, optimistic placement projection, upload connector, conflict restoration, authenticated download predicate or synchronized apply proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The command is canonical Codable evidence over draft, shared envelope, exact typed subjects/preconditions and fingerprint; decoding reconstructs through the same validators and byte-identical structured restart is required.",
+        "Input order canonicalizes by stable ItemID. Duplicate/empty Items and changed Account/actor/contract/Space/scope/revision/Item/payload/precondition/subject/fingerprint/receipt evidence fail atomically.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/mismatch/receipt semantics; this is not physical durable-store, process/device restart, optimistic row mutation or authoritative server-apply evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Item placement carries no attachment identity, byte, upload, cache, URL, retention, deletion or media-reference behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Space detail picker, bulk Item-selection UI, Item/Space context mutation, MCP schema/tool, transport handler, capability registration or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase item.spaceId, Project/Inventory scope, archived/missing Space, generic field update, source export row or migration disposition is decoded, normalized, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize, persist, present or apply an Item placement; clear an assignment; move Item scope; archive a Space; mutate accounting; define schema/RLS/Sync/provider/migration behavior; activate a feature; deploy, release or cut over.",
+        "O-037 remains fully open because archive behavior is absent. O-007/O-015/O-023/O-032, A-003/A-004/A-007/A-016, physical offline verification, canonical production profiling and all hosted-resource authority remain outside this boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "ITEMSPACEASSIGN-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
+      "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
+      "expected": "Synthetic Project and Business Inventory commands preserve one exact same-scope destination, expected Space revision, canonical nonempty Item/revision set, deterministic typed scope/revision/active preconditions, shared operation evidence and no clear/scope/accounting/provider field.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ITEMSPACEASSIGN-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
+      "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
+      "expected": "Project/Inventory, single/bulk and differently ordered equivalent inputs round-trip byte-identically with exact Account/actor/contract/Operation/Space/scope/revision/Item/time/subject/precondition/fingerprint evidence and no authoritative placement claim.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ITEMSPACEASSIGN-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
+      "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
+      "expected": "Empty/duplicate Items, invalid time and changed Account/actor/contract/Space/scope/revision/Item/payload/precondition/subject/fingerprint/receipt evidence fail atomically through stable bounded diagnostics.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ITEMSPACEASSIGN-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
+      "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed destination/scope/Item/revision is refused by the shared lifecycle, and a failing port returns no false receipt or partial-success evidence.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "ITEMSPACEASSIGN-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming physical placement, accounting, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready decision-independent Phase 1 command boundary. The canonical Space spec and reviewed capability/architecture contracts settle stable same-scope placement, complete nonempty bulk intent, exact optimistic revisions, atomicity, idempotency, accounting independence and shared operation semantics. O-037 stays open because Space archive is excluded. O-007/O-015 do not block this organizational placement-only command because it cannot alter occurrence/provenance/accounting state. The slice stops before executable behavior, physical persistence, authoritative apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+}
