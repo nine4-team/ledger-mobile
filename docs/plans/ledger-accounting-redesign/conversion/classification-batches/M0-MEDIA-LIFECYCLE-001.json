@@ -1067,16 +1067,17 @@
     {
       "id": "SWIFT-D8174F26DDD5",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for stable attachment capture identity and scoped local-durability receipt evidence; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "012166fe94aae403c2b0dd9a8fda740209155b2fc4811f7e7fc22a01ffb326ed",
+      "currentBehavior": "Implements provider-free non-Codable local capture input, exact environment/Principal/Account/parent scope, stable Attachment/local-object identity, SHA-256/byte evidence matching, canonical path-free local-durability receipts, a narrow capture-store port and stable bounded refusal.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-MEDIA-001",
         "EVID-M2-MEDIA-001",
         "EVID-ATTACHMENT-CAPTURE-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define capture input, exact byte evidence, stable AttachmentID/scope, a path-free receipt and a narrow storage port. It cannot claim physical persistence/encryption, upload, private remote access, display caching, metadata policy, detach/delete/retention, provider behavior, migration, app/MCP wiring or production authority.",
+      "notes": "Target-only Phase 1 receipt boundary implemented locally. Four focused/all 92 target tests, graph/contracts and both staging builds pass; exact-commit CI remains required. The deterministic adapter test proves only result-shape semantics, not physical persistence. The slice cannot claim filesystem persistence/encryption, upload, private remote access, display caching, metadata policy, detach/delete/retention, provider behavior, migration, app/MCP wiring or production authority.",
       "target": {
         "owner": "Attachment Local Capture Contracts",
         "surfaces": [
@@ -1115,16 +1116,17 @@
     {
       "id": "TEST-BA04EFCE369C",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Defines only the comment-scaffolded target tests for stable attachment capture and local-durability receipt contracts; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "7e74a6fad5769a72b8c3653a2ac8f19b7006599f7bd945c689d73bf9e0c07baa",
+      "currentBehavior": "Executes four deterministic target-only tests for exact scoped receipt construction, Attachment identity independent of opaque local-object identity, raw-byte/path/URL exclusion, canonical restart, cross-scope/identity/byte/tamper refusal, every stable diagnostic and no false-success receipt from a failing test adapter.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-MEDIA-001",
         "EVID-M2-MEDIA-001",
         "EVID-ATTACHMENT-CAPTURE-001"
       ],
-      "notes": "Ready-gate test surface only. Planned deterministic tests prove value/port semantics, canonical restart and fail-closed evidence validation; they explicitly do not prove actual filesystem protection, process/device restart durability, upload, provider security, retention, migration or production behavior.",
+      "notes": "Four focused/all 92 target tests, graph/contracts and both staging builds pass locally; exact-commit CI remains required. The tests prove value/port semantics, canonical structured restart and fail-closed evidence validation only; they explicitly do not prove actual filesystem protection, process/device restart durability, upload, provider security, retention, migration or production behavior.",
       "target": {
         "owner": "Attachment Local Capture Contracts",
         "surfaces": [

@@ -7,7 +7,13 @@
 - Claimed target surfaces: `SWIFT-D8174F26DDD5`, `TEST-BA04EFCE369C`
 - Slice dossier:
   `conversion/implementation-slices/attachment-capture-and-local-durability-receipt.json`
-- Verification state: ready; behavioral implementation and tests have not begun
+- Verification state: implemented locally; exact-commit hosted CI remains
+  planned
+- Implementation hashes:
+  - `AttachmentCaptureReceipt.swift`:
+    `012166fe94aae403c2b0dd9a8fda740209155b2fc4811f7e7fc22a01ffb326ed`
+  - `AttachmentCaptureReceiptTests.swift`:
+    `7e74a6fad5769a72b8c3653a2ac8f19b7006599f7bd945c689d73bf9e0c07baa`
 
 ## Selection and Scope
 
@@ -78,6 +84,47 @@ The ready gate passed from the dedicated Supabase worktree on 2026-09-01:
 
 That ready gate authorizes only the bounded provider-free implementation named
 in the dossier.
+
+## Implemented Contract
+
+`AttachmentCaptureReceipt.swift` now provides:
+
+- `LocalAttachmentCapture`, which preallocates one stable Attachment ID and
+  binds nonempty raw bytes to exact environment/Principal/Account/parent scope
+  and integer epoch-millisecond capture time without becoming Codable;
+- distinct validated opaque local-object ID, content SHA-256, timestamp and
+  receipt-fingerprint values;
+- `AttachmentPersistedLocalObjectEvidence`, which reports positive byte count,
+  digest and persistence time for the exact same scope and Attachment;
+- `AttachmentLocalDurabilityReceipt`, which exists only when capture and
+  adapter-reported evidence match exactly and whose fingerprint covers the
+  complete path-free structured evidence;
+- decode-through-validation that rejects malformed, cross-scope, changed-byte
+  and tampered receipt evidence atomically; and
+- the narrow `AttachmentCaptureStoring` port plus a closed stable failure
+  taxonomy, including a path-free local-persistence failure.
+
+The receipt is an adapter contract assertion, not proof that this repository
+has written or encrypted a file. The production implementation must earn that
+claim through the later physical adapter and SPIKE-MED-001 evidence.
+
+## Local Implementation Verification
+
+The implementation checkpoint ran from the dedicated Supabase worktree on
+2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter AttachmentCaptureReceiptTests`
+  — pass, four focused tests;
+- `swift test --package-path LedgeriOS` — pass, all 92 tests in 20 suites;
+- target environment and generated-contract checks — pass;
+- macOS and generic iOS Simulator staging builds — pass;
+- conversion sync/check/report, capability/query/residual controls and M0 —
+  pass at 745 recorded / 730 discovered, 319 mapped / 164 residual / 43
+  blockers, with only the three documented retired-path warnings; and
+- M1/M2 — expected blocks at the unchanged 2/164 prerequisites.
+
+`ATTACHCAP-TEST-001` through `-004` therefore pass with this evidence.
+`ATTACHCAP-TEST-005` remains planned until immutable exact-commit CI succeeds.
 
 ## Permanent Limits
 

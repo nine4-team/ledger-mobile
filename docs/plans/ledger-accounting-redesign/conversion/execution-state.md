@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 77
+State version: 78
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ATTACHMENT-CAPTURE-RECEIPT-READY
+- Checkpoint: ATTACHMENT-CAPTURE-RECEIPT-IMPLEMENTED-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1020,6 +1020,21 @@ modifying the running Firebase application before hard cutover.
   operation. A-003/A-004/A-016, O-022, SPIKE-MED-001, content/size/derivative
   policy, physical local durability, upload/display/provider, app/MCP,
   migration and production behavior remain explicitly outside the boundary.
+- Implemented only the ready provider-free attachment receipt boundary:
+  non-Codable raw capture bytes, stable Attachment and opaque local-object IDs,
+  exact environment/Principal/Account/parent scope, integer timestamp, positive
+  byte count/SHA-256 matching, canonical path-free fingerprinted receipt, a
+  narrow capture-store port and closed bounded failures.
+- Added four deterministic tests for matching scope/byte evidence, Attachment
+  identity independent of opaque local-object identity, raw-byte/path/URL
+  exclusion, byte-identical structured restart, every scope/identity/byte/
+  malformed/tamper rejection and no false-success receipt from a failing test
+  adapter. Four focused/all 92 target tests, graph/contracts and both staging
+  builds pass locally.
+- `ATTACHCAP-TEST-001` through `-004` pass. Exact-commit hosted
+  `ATTACHCAP-TEST-005` remains planned, so exactly the two attachment surfaces
+  are `implemented`, not `verified`. Deterministic receipt tests are not
+  physical encrypted-filesystem or process/device-restart evidence.
 
 ## Next Action
 
@@ -1040,13 +1055,13 @@ Continue without waiting on the two M1 evidence blockers:
    verified `project-item-accounting-section-contracts` and
    `EVID-PROJECT-ITEM-ACCOUNTING-001` as the sole shared read semantics for
    relationship-derived Project Item sections. Implement only the ready
-   `attachment-capture-and-local-durability-receipt` dossier: stable scoped
-   capture input, exact adapter-reported byte evidence, canonical path-free
-   receipt, narrow capture-store port, closed failures and the five planned
-   tests. Do not claim or add filesystem persistence/encryption, process/device
-   restart proof, upload/display/Storage, content/size/derivative policy,
-   detach/delete/retention, schema/RLS/Sync/provider behavior, current app/MCP,
-   migration, hosted resources or production access.
+   `attachment-capture-and-local-durability-receipt` dossier. Commit the exact
+   implementation checkpoint, push it, require immutable pull-request CI for
+   `ATTACHCAP-TEST-005`, and advance only its two surfaces to verified after the
+   exact commit passes. Do not claim or add filesystem persistence/encryption,
+   process/device restart proof, upload/display/Storage, content/size/derivative
+   policy, detach/delete/retention, schema/RLS/Sync/provider behavior, current
+   app/MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

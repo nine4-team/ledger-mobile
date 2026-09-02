@@ -19,9 +19,11 @@ verified at exact implementation commit `92e0b565`, including all 88 target
 tests and both staging builds. It chooses no Item/Link, occurrence persistence,
 credit settlement, media, provider or migration behavior. Broader app/schema/
 provider and migration surfaces remain unadvanced. The next provider-free
-attachment capture/local-durability receipt slice has passed its ready mapping;
-it explicitly does not claim physical byte persistence, encryption, upload,
-display, Storage, retention or provider behavior.
+attachment capture/local-durability receipt slice is implemented locally with
+four focused/all 92 target tests and both builds passing; exact-commit hosted CI
+remains before verification. It explicitly does not claim physical byte
+persistence, encryption, upload, display, Storage, retention or provider
+behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

@@ -3,7 +3,7 @@
   "sliceId": "attachment-capture-and-local-durability-receipt",
   "title": "Accept attachment capture only with scoped local-durability evidence",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Attachment Local Capture Contracts",
   "surfaceIds": [
     "SWIFT-D8174F26DDD5",
@@ -139,8 +139,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
       "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
       "expected": "Matching synthetic capture and persisted-object evidence yields one stable path-free receipt whose Attachment identity is independent of opaque local-object identity and whose structured form excludes raw bytes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
     },
     {
       "id": "ATTACHCAP-TEST-002",
@@ -148,8 +148,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
       "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
       "expected": "A representative receipt round-trips byte-identically with exact scope, Attachment/local-object identity, byte count, digest, time and fingerprint while carrying no raw bytes or provider locator.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
     },
     {
       "id": "ATTACHCAP-TEST-003",
@@ -157,8 +157,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
       "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
       "expected": "Empty capture, invalid time/identity/digest, cross-scope or changed Attachment/parent/size/checksum evidence, malformed encoding and fingerprint tamper fail atomically with stable bounded codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
     },
     {
       "id": "ATTACHCAP-TEST-004",
@@ -166,8 +166,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentCaptureReceiptTests.swift",
       "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
       "expected": "A deterministic failing capture-store adapter returns an error and no receipt while an evidence adapter returns only an exact validated receipt; the test records that it is not physical durability proof.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
     },
     {
       "id": "ATTACHCAP-TEST-005",
@@ -179,7 +179,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-ATTACHMENT-CAPTURE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 attachment receipt/value boundary only. It does not prove actual protected local persistence or any upload/display/provider behavior. O-023 remains fully open because no reference-removal or byte-deletion capability exists."
