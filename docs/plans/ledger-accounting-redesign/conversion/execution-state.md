@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 118
+State version: 119
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-TEMPLATE-READ-VERIFIED
+- Checkpoint: CLIENT-ARCHIVE-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1734,6 +1734,29 @@ modifying the running Firebase application before hard cutover.
   33 seconds with all 144 tests in 33 suites, graph/generated-contract checks,
   both staging builds and clean tracked artifacts. All five dossier obligations
   now pass; 72 target surfaces are implemented or later.
+- Exact Space-template verification-document commit
+  `58a7c406a0f35d510b57cbb3604623a9aea8c1bd` passed immutable Actions run
+  `33636886779`: conversion traceability passed in 8 seconds and the isolated
+  target environment passed in 2 minutes 25 seconds.
+- Audited the next Project/Client/reference dependency against canonical target
+  authority and selected Client archive. The spec defines archive as hiding one
+  stable Client from new-project selection without deleting history; O-025
+  continues to block merge and Project reassignment, not this exact intent.
+- Added exactly two target-only comment scaffolds and a ready dossier for one
+  expected-revision-aware `ArchiveClient` command. The frozen boundary cannot
+  cascade to Projects, restore/delete/merge/rename a Client, rewrite frozen
+  history or reassign a Project, and introduces no executable behavior before
+  immutable ready-commit CI.
+- The synchronized ledger now records 773 surfaces / 758 discovered, 347 mapped-
+  or-later target-relevant surfaces, 164 residual surfaces and 43 validated
+  blockers. Thirty-four slices claim 89 target surfaces; 72 target surfaces are
+  implemented or later. M0 passes; M1/M2 retain exactly their expected 2/164
+  blockers.
+- The complete local Client-archive ready gate passes with all 144 existing
+  target tests in 33 suites while both new files remain comment-only, target
+  environment/generated contracts, both staging builds, conversion/capability/
+  query/residual controls, M0 and clean diff formatting. Immutable exact-ready-
+  commit CI remains the only prerequisite to bounded implementation.
 
 ## Next Action
 
@@ -1792,8 +1815,10 @@ Continue without waiting on the two M1 evidence blockers:
    suggestion read semantics. Treat the verified
    `space-template-reference-read-contracts` dossier and
    `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
-   Audit the next smallest complete decision-independent dependency before
-   creating another ready slice. Keep
+   Treat the ready `client-archive-operation-contracts` dossier and
+   `EVID-CLIENT-ARCHIVE-001` as the exact bounded implementation plan. Commit
+   only its comment scaffolds/control evidence, require immutable ready-commit
+   CI, then implement and verify only that frozen provider-free command. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

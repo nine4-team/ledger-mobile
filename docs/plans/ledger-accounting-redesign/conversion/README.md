@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 345 of 509 target-relevant
+Status: M0 inventory classification complete; 347 of 511 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -98,6 +98,13 @@ contract checks, both staging builds and clean artifacts.
 O-026 mutation authority, template apply/save, Space creation, physical
 persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
 production remain excluded.
+The provider-free Client archive operation slice is ready. Exactly two comment-
+only target surfaces freeze one stable Client archive intent, exact expected-
+revision precondition, shared operation lifecycle and explicit no-cascade/no-
+delete/no-merge/no-reassignment boundary. Executable implementation remains
+absent until the exact ready commit passes immutable pull-request CI. O-025,
+physical persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP,
+migration and production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
