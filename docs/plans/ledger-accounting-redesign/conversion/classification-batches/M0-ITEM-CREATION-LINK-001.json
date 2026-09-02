@@ -1131,14 +1131,14 @@
       "acknowledgeSourceHash": "24a613a720b06d4d7022ba7a1f16d15fec281aa9b86195298b9e7929acb33003",
       "currentBehavior": "Implements provider-free stable Purchase-relationship and billable-occurrence evidence, exact Account/Project/Client/Item validation, relationship-derived accounting resolution, ordered Unaccounted For / Accounted For sections, explicit unresolved incomplete-local rows, canonical fingerprinted restart evidence and bounded refusal.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-ACCOUNTING-001"
       ],
-      "notes": "Target-only Phase 1 Project Item read foundation. Four focused tests and all 88 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. Present qualifying evidence may prove Accounted For from an incomplete snapshot, but missing evidence never proves Unaccounted For until the relationship working set is authoritative. The fingerprint detects deterministic corruption/order changes, not authorization or authenticity. This boundary cannot create or Link an Item, define occurrence persistence, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
+      "notes": "Target-only Phase 1 Project Item read foundation verified at exact implementation commit 92e0b565 by immutable Actions run 33591275648. Four focused/all 88 target tests, graph/contracts, both staging builds and clean artifacts pass. Present qualifying evidence may prove Accounted For from an incomplete snapshot, but missing evidence never proves Unaccounted For until the relationship working set is authoritative. The fingerprint detects deterministic corruption/order changes, not authorization or authenticity. This boundary cannot create or Link an Item, define occurrence persistence, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
       "target": {
         "owner": "Project Item Accounting Sections",
         "surfaces": [
@@ -1183,14 +1183,14 @@
       "acknowledgeSourceHash": "e6e3e3987e1461c1abc2aa4e9868ebae3c7f3806ea2e820dea498bc8c1424c77",
       "currentBehavior": "Executes four deterministic target-only tests for Purchase/occurrence-derived ordered sections, Space/polarity/available-live-frozen independence, authoritative-empty versus explicit incomplete-local resolution, byte-identical restart through the scoped query port, and atomic invalid/cross-scope/duplicate/derived/fingerprint refusal.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-ACCOUNTING-001"
       ],
-      "notes": "Four focused accounting-section tests and all 88 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. These target-only tests cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
+      "notes": "Four focused accounting-section tests and all 88 target tests pass locally and at exact implementation commit 92e0b565 in immutable Actions run 33591275648 with graph/contracts, both staging builds and clean artifacts. These target-only tests cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
       "target": {
         "owner": "Project Item Accounting Sections",
         "surfaces": [

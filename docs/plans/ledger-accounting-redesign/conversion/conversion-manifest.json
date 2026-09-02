@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T04:32:45.012Z",
+    "lastSynchronizedAt": "2026-09-02T04:36:47.100Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -15721,14 +15721,14 @@
           "Synthetic complete local evidence places only relationship-backed project Items in Accounted For and relationship-free Items in Unaccounted For; incomplete absence remains unresolved, and Space/occurrence presentation state stays non-authoritative without choosing schema, settlement or Link behavior"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-ACCOUNTING-001"
       ],
-      "notes": "Target-only Phase 1 Project Item read foundation. Four focused tests and all 88 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. Present qualifying evidence may prove Accounted For from an incomplete snapshot, but missing evidence never proves Unaccounted For until the relationship working set is authoritative. The fingerprint detects deterministic corruption/order changes, not authorization or authenticity. This boundary cannot create or Link an Item, define occurrence persistence, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
+      "notes": "Target-only Phase 1 Project Item read foundation verified at exact implementation commit 92e0b565 by immutable Actions run 33591275648. Four focused/all 88 target tests, graph/contracts, both staging builds and clean artifacts pass. Present qualifying evidence may prove Accounted For from an incomplete snapshot, but missing evidence never proves Unaccounted For until the relationship working set is authoritative. The fingerprint detects deterministic corruption/order changes, not authorization or authenticity. This boundary cannot create or Link an Item, define occurrence persistence, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {
@@ -31813,14 +31813,14 @@
           "Self-tests prove only the provider-free accounting-state/read-section boundary without claiming Item creation/Link, occurrence persistence, RLS, Sync, app/MCP, migration or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-ACCOUNTING-001"
       ],
-      "notes": "Four focused accounting-section tests and all 88 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. These target-only tests cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
+      "notes": "Four focused accounting-section tests and all 88 target tests pass locally and at exact implementation commit 92e0b565 in immutable Actions run 33591275648 with graph/contracts, both staging builds and clean artifacts. These target-only tests cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {

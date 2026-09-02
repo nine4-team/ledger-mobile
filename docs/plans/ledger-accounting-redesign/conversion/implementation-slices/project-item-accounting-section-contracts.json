@@ -3,7 +3,7 @@
   "sliceId": "project-item-accounting-section-contracts",
   "title": "Derive Project Item accounting state and ordered local sections",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Item Accounting Sections",
   "surfaceIds": [
     "SWIFT-008B49A474D1",
@@ -171,8 +171,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming Item/Link, schema, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"],

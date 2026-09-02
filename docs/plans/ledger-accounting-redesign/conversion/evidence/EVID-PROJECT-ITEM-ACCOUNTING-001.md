@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-008B49A474D1`, `TEST-0E4B478B0C55`
 - Slice dossier:
   `conversion/implementation-slices/project-item-accounting-section-contracts.json`
-- Implementation state: implemented locally; exact-commit hosted CI remains
-  pending before verification
+- Verification state: verified at exact implementation commit
+  `92e0b565d02f9a2ad3f96f195327bc2b12ae0e56`
 - Implementation hashes:
   - `ProjectItemAccountingSections.swift`:
     `24a613a720b06d4d7022ba7a1f16d15fec281aa9b86195298b9e7929acb33003`
@@ -135,9 +135,24 @@ The implementation checkpoint ran from the dedicated Supabase worktree on
 - `git diff --check` — pass.
 
 `ITEMACCOUNT-TEST-001` through `-004` therefore pass with this evidence.
-`ITEMACCOUNT-TEST-005` remains planned until the exact implementation commit
-passes both required pull-request jobs; the slice and its two surfaces remain
-`implemented`, not `verified`, until then.
+## Hosted Exact-Commit Verification
+
+Immutable GitHub Actions run
+[`33591275648`](https://github.com/nine4-team/ledger-mobile/actions/runs/33591275648)
+passed for exact implementation commit
+`92e0b565d02f9a2ad3f96f195327bc2b12ae0e56`:
+
+- `Conversion state and traceability` — pass in 11 seconds;
+- `Isolated target environment` — pass in 1 minute 26 seconds, including the
+  complete 88-test target suite, dependency/source-isolation and generated-
+  contract checks, macOS build, generic iOS Simulator build and clean tracked
+  artifacts; and
+- the only annotation was GitHub's Node action-runtime deprecation notice; no
+  Ledger failure or waiver occurred.
+
+`ITEMACCOUNT-TEST-005` now passes. All five obligations and exactly the two
+claimed target-only surfaces are verified; no excluded current-app, provider,
+migration or production surface advances with them.
 
 ## Permanent Limits
 

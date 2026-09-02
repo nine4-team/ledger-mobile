@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T04:32:45.012Z",
+  "generatedFromManifestSync": "2026-09-02T04:36:47.100Z",
   "totals": {
     "slices": 19,
     "claimedTargetSurfaces": 59,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 17,
+    "implemented": 0,
+    "verified": 18,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -141,7 +141,7 @@
       "sliceId": "project-item-accounting-section-contracts",
       "title": "Derive Project Item accounting state and ordered local sections",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Item Accounting Sections",
       "surfaceIds": [
         "SWIFT-008B49A474D1",
