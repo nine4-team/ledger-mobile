@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 83
+State version: 84
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SETUP-OPERATION-READY
+- Checkpoint: PROJECT-SETUP-OPERATION-IMPLEMENTED-AWAITING-EXACT-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1112,6 +1112,26 @@ modifying the running Firebase application before hard cutover.
   M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 96 target
   tests, graph/contracts, both staging builds and diff formatting pass with no
   executable Project-setup behavior claimed.
+- Implemented only the ready provider-free Project setup boundary: stable
+  existing/new Client selection, distinct BudgetCategoryID, exact non-negative
+  nullable Money, canonical duplicate-free category state, Account/actor/
+  contract/Project/name/description/time draft, precondition-free shared
+  operation envelope, derived Project subject/fingerprint, receipt validator,
+  narrow operation port and closed stable failures.
+- Added four deterministic tests for stable existing/new Client and Project
+  identity, empty/absent/null/zero category state, order-independent canonical
+  encoding, byte-identical structured restart, provider/media/path/credential
+  exclusion, every invalid/binding/precondition/subject/fingerprint/receipt/
+  malformed refusal and shared OperationJournal replay/mismatch behavior.
+- Four focused/all 100 target tests, graph/contracts and both staging builds pass
+  locally. `PROJECTSETUP-TEST-001` through `-004` pass; exact-commit hosted
+  `PROJECTSETUP-TEST-005` remains planned, so exactly the two Project-setup
+  surfaces are `implemented`, not `verified`.
+- No Project/Client/category row, authoritative apply, physical local
+  durability, membership/category authorization, shared reference mutation,
+  Project edit/reassignment/archive/delete, hero media, schema/RLS/Sync/Auth/
+  provider, current/target app/MCP, migration, hosted resource or production
+  operation was introduced; O-023/O-024/O-025/O-026 remain open.
 
 ## Next Action
 

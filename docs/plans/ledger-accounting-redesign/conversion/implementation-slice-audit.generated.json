@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T06:06:21.108Z",
+  "generatedFromManifestSync": "2026-09-02T06:31:07.670Z",
   "totals": {
     "slices": 22,
     "claimedTargetSurfaces": 65,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 48
+    "implementationAdvancedTargetSurfaces": 50
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 20,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -186,7 +186,7 @@
       "sliceId": "project-setup-operation-contracts",
       "title": "Create one Project with authoritative Client identity and exact category setup",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Setup Operation Contracts",
       "surfaceIds": [
         "SWIFT-C1C5DFC81448",

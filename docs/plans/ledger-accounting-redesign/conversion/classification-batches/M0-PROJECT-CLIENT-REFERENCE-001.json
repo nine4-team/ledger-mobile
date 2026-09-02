@@ -1940,17 +1940,17 @@
     {
       "id": "SWIFT-C1C5DFC81448",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "21cbed117d3b60dfaad58c8959b63fec532adad7a5adb8d1917634c9c3e40eb1",
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for one atomic Project setup command with stable Client identity and exact nullable category allocations; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "c38ff0c4c8c8a17c94d9a3db91f50905141dcf8461facd709d3a1d0d28a56ab5",
+      "currentBehavior": "Implements a provider-free Project setup draft, stable existing/new Client selection, canonical complete category state with exact nullable non-negative Money, typed shared-envelope command, derived Project subject/fingerprint validation, exact receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-SETUP-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define existing/new Client selection, stable Project identity/name/description, a complete canonical selected-category set with absent/null/zero distinction, shared operation binding/receipt validation and a narrow port. It cannot create rows, authorize Client/category access, mutate category definitions, attach media, edit/reassign/archive/delete a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production.",
+      "notes": "Target-only Phase 1 implementation passes four focused/all 100 local target tests, graph/contracts and both staging builds. Exact-commit hosted CI remains pending, so the surface is implemented rather than verified. It creates no rows, authorizes no Client/category access, mutates no category definitions, attaches no media, edits/reassigns/archives/deletes no Project, and defines no schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Project Setup Operation Contracts",
         "surfaces": [
@@ -1990,17 +1990,17 @@
     {
       "id": "TEST-99B322EB971A",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "67a4b1320bb3fb409c01ab4362005035f15fefd086308b03f35948830749c647",
-      "currentBehavior": "Defines only the comment-scaffolded target tests for Project setup identity, category-state, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "74f4a44b8f3b0a43777dd8832e374f6d5c1359c84fa52211195277335537d094",
+      "currentBehavior": "Executes four deterministic provider-free tests for existing/new Client selection, stable Project identity, empty/absent/null/zero category state, canonical order/restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-SETUP-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests distinguish stable existing/new Client identity and empty/null/zero category states, then prove shared operation restart/replay/refusal without claiming physical local durability, membership/category authorization, server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, media, migration or production behavior.",
+      "notes": "Four focused/all 100 local target tests, graph/contracts and both staging builds pass. Exact-commit hosted CI remains pending, so the test surface is implemented rather than verified. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, media, migration or production behavior.",
       "target": {
         "owner": "Project Setup Operation Contracts",
         "surfaces": [

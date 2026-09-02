@@ -7,12 +7,13 @@
 - Claimed target surfaces: `SWIFT-C1C5DFC81448`, `TEST-99B322EB971A`
 - Slice dossier:
   `conversion/implementation-slices/project-setup-operation-contracts.json`
-- Verification state: ready; behavioral implementation has not started
-- Ready scaffold hashes:
+- Verification state: implemented locally; exact-commit hosted verification is
+  pending
+- Implementation hashes:
   - `ProjectSetupOperation.swift`:
-    `21cbed117d3b60dfaad58c8959b63fec532adad7a5adb8d1917634c9c3e40eb1`
+    `c38ff0c4c8c8a17c94d9a3db91f50905141dcf8461facd709d3a1d0d28a56ab5`
   - `ProjectSetupOperationTests.swift`:
-    `67a4b1320bb3fb409c01ab4362005035f15fefd086308b03f35948830749c647`
+    `74f4a44b8f3b0a43777dd8832e374f6d5c1359c84fa52211195277335537d094`
 
 ## Selection and Scope
 
@@ -101,9 +102,59 @@ The ready checkpoint ran from the dedicated Supabase worktree on 2026-09-01:
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
 
+## Implemented Contract
+
+`ProjectSetupOperation.swift` now provides:
+
+- a stable `BudgetCategoryID` distinct from Project, Client and other domain
+  identities;
+- `ProjectClientSelectionInput`, which distinguishes an existing ClientID from
+  a preallocated new Client payload and gives only the new case a validated
+  display name;
+- `NullableCategoryAllocation`, which preserves exact typed non-negative Money
+  or null for one stable category;
+- `ProjectSetupDraft`, which binds exact Account, actor, contract, preallocated
+  Project, Client selection, Project name, optional description, finite capture
+  time and the canonical duplicate-free complete category set;
+- `CreateProjectPayload` and `CreateProjectCommand`, whose public construction
+  creates a precondition-free shared `OperationEnvelope`, derives the exact
+  Project subject and operation fingerprint, and whose decoder revalidates
+  every duplicated binding rather than trusting serialized derived evidence;
+- exact `OperationReceipt` validation for the command's Operation ID;
+- the narrow `ProjectSetupOperating` provider-free port; and
+- a closed stable failure taxonomy for invalid selection/allocation/time,
+  duplicate category identity, scope/actor/contract/payload/precondition/
+  subject/fingerprint/receipt mismatches, malformed evidence and local
+  acceptance failure.
+
+The implementation reuses `CreateClientPayload` for a nested new-Client intent
+and `OperationJournal` only through a deterministic test adapter. It does not
+claim physical durable storage, authorization, authoritative row creation,
+synchronized visibility or hero-media processing.
+
+## Local Implementation Verification
+
+The implementation checkpoint ran from the dedicated Supabase worktree on
+2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter ProjectSetupOperationTests` —
+  pass, four focused tests;
+- `swift test --package-path LedgeriOS` — pass, all 100 tests in 22 suites;
+- target environment and generated-contract checks — pass;
+- macOS and generic iOS Simulator staging builds — pass;
+- conversion sync/check/report, capability/query/residual controls and M0 —
+  pass at 749 recorded / 734 discovered surfaces and 323 mapped / 164 residual /
+  43 blockers, with only the three documented retired-path warnings;
+- M1/M2 — expected blocks at the unchanged 2/164 prerequisites; and
+- `git diff --check` — pass.
+
+`PROJECTSETUP-TEST-001` through `-004` therefore pass with this evidence.
+Exact-commit `PROJECTSETUP-TEST-005` remains planned, so exactly the two claimed
+target-only surfaces are `implemented`, not `verified`.
+
 ## Permanent Limits
 
-This ready plan cannot:
+This provider-free implementation cannot:
 
 - create a local/server Project, Client, category or allocation row;
 - authorize Account membership, an existing/new Client, or selected categories;

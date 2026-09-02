@@ -3,7 +3,7 @@
   "sliceId": "project-setup-operation-contracts",
   "title": "Create one Project with authoritative Client identity and exact category setup",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Setup Operation Contracts",
   "surfaceIds": [
     "SWIFT-C1C5DFC81448",
@@ -222,8 +222,10 @@
         "PROJECTSETUP-REQ-008"
       ],
       "expected": "Valid synthetic existing/new Client drafts produce exact-scope typed CreateProject commands; stable IDs, same-name distinction, empty/absent/null/zero category states and optional description remain exact, while no media, lifecycle, correction, provider or generic-write field enters the payload.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
     },
     {
       "id": "PROJECTSETUP-TEST-002",
@@ -239,8 +241,10 @@
         "PROJECTSETUP-REQ-008"
       ],
       "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/Client/name/description/category/time/subject/fingerprint evidence; equivalent category order canonicalizes identically and no backend/media/path/credential/server-result claim appears.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
     },
     {
       "id": "PROJECTSETUP-TEST-003",
@@ -257,8 +261,10 @@
         "PROJECTSETUP-REQ-008"
       ],
       "expected": "Blank required names, malformed Client selection, duplicate category identity, invalid allocation and changed Account/actor/contract/Project/Client/category/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Project-setup stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
     },
     {
       "id": "PROJECTSETUP-TEST-004",
@@ -274,8 +280,10 @@
         "PROJECTSETUP-REQ-008"
       ],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Project/Client/category payload is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
     },
     {
       "id": "PROJECTSETUP-TEST-005",
