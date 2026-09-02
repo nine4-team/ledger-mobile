@@ -7,13 +7,18 @@
 - Claimed target surfaces: `SWIFT-A2FCAF3E6103`, `TEST-F63806A8047A`
 - Slice dossier:
   `conversion/implementation-slices/project-item-link-presentation-contracts.json`
-- Verification state: ready; implementation and exact-commit verification are
-  intentionally withheld
+- Verification state: implemented and independently reviewed locally; exact
+  implementation-checkpoint CI remains open
 - Ready scaffold hashes:
   - `ProjectItemLinkPresentation.swift`:
     `f83b017c6902a682f931aee3df6c0441a321103d904da8b62f5dde11e002e971`
   - `ProjectItemLinkPresentationTests.swift`:
     `b0c93bfa0c3e6f177ec74c68e5e78648a067c6701c26c692790b0e9d644b77d4`
+- Implemented source hashes:
+  - `ProjectItemLinkPresentation.swift`:
+    `87c045cde2aefd81c78e456a9474c272283f14bd8e8c53bfd9f78436b081665f`
+  - `ProjectItemLinkPresentationTests.swift`:
+    `b93321983708579c99bbdfe31c58dcaf35bdbb4cfa1d73ba39303e1e4e566048`
 
 ## Independent Scope Preflight
 
@@ -63,7 +68,38 @@ capability, query, residual and M0 controls are current; target isolation and
 generated app/MCP contracts pass; all 189 existing target tests in 44 suites
 pass; two project generations produce the identical project hash; both staging
 builds succeed; and tracked artifacts are clean. Immutable CI on the exact
-ready commit remains required before implementation.
+ready commit remains required before implementation. Exact ready commit
+`47f8fe0d148de617154e40da22bf02d2b47aefc2` then passed immutable Actions run
+`33690917866`: conversion traceability passed in 9 seconds and the isolated
+target environment passed in 2 minutes 14 seconds with all 189 existing tests,
+generated contracts, both staging builds and clean tracked artifacts.
+
+## Implementation and Review
+
+The implementation changes only the two frozen Swift paths. It projects exact
+section labels in the verified snapshot's existing order, returns a Link
+descriptor only for a verified `.unaccountedFor` row, exposes the exact action,
+question and two payer meanings as an unordered `Set`, and represents dismissal
+only as `.noAction`. Accounted and relationship-evidence-incomplete rows fail
+through two bounded stable diagnostics. No presentation value is `Codable`, no
+new port exists, and no route, command, Purchase identity or mutation can be
+constructed from the API.
+
+The primary agent reviewed every implementation/test line. A separate read-only
+adversarial reviewer found no P0-P2 defect and one P3 test-hardening issue: the
+initial payer-membership assertion compared the descriptor with the same
+production constant used to build it. The implementation now derives canonical
+membership from `Set(allCases)`, explicitly states that declaration order is not
+UI order, and the test independently asserts all cases and descriptor membership
+against the literal two-case set. The reviewer reran the focused suite and
+confirmed the finding resolved with no remaining issue.
+
+Four focused tests and all 193 target tests in 45 suites pass. Target isolation,
+generated app/MCP contracts, repeatable project generation and both staging
+builds also pass locally. Conversion synchronization, capability/query/
+residual controls and M0 must be rerun after status/hash reconciliation, and
+immutable CI on the final implementation checkpoint remains required before
+verification.
 
 ## Permanent Limits
 

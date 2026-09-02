@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T22:31:21.321Z",
+    "lastSynchronizedAt": "2026-09-02T22:44:44.351Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -26354,12 +26354,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectItemLinkPresentation.swift"
         }
       ],
-      "observedSourceHash": "f83b017c6902a682f931aee3df6c0441a321103d904da8b62f5dde11e002e971",
-      "acknowledgedSourceHash": "f83b017c6902a682f931aee3df6c0441a321103d904da8b62f5dde11e002e971",
+      "observedSourceHash": "87c045cde2aefd81c78e456a9474c272283f14bd8e8c53bfd9f78436b081665f",
+      "acknowledgedSourceHash": "87c045cde2aefd81c78e456a9474c272283f14bd8e8c53bfd9f78436b081665f",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains the comment-only ready scaffold for the provider-free Project Item accounting labels and Link payer-choice presentation contract.",
+      "currentBehavior": "Implements the provider-free stateless Project Item accounting-section labels, exact Link payer-choice presentation, authoritative Unaccounted-only availability, bounded refusal and no-action dismissal.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Item Link Presentation",
@@ -26393,14 +26393,14 @@
           "Synthetic verified accounting rows produce only the exact approved target labels and Unaccounted-only Link payer presentation, with dismissal producing no route or mutation"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-LINK-PRESENTATION-001"
       ],
-      "notes": "Ready scaffold only. The frozen slice may project exact canonical labels, Unaccounted-only Link availability, the two semantic payer choices and side-effect-free dismissal from the verified accounting rows. It cannot add Link commands/routes, Purchase selection, acquisition handling, transient-state persistence, Accounted-item actions, app/MCP wiring, provider behavior, migration or production authority.",
+      "notes": "Implemented provider-free presentation leaf pending exact implementation-commit CI. Primary every-line review and an independent adversarial review found no P0-P2 defect; one P3 test-exhaustiveness finding was corrected and independently confirmed. Four focused/all 193 target tests in 45 suites, isolation, contracts and both staging builds pass locally. It cannot add Link commands/routes, Purchase selection, acquisition handling, transient-state persistence, Accounted-item actions, app/MCP wiring, provider behavior, migration or production authority.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {
@@ -38473,12 +38473,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "b0c93bfa0c3e6f177ec74c68e5e78648a067c6701c26c692790b0e9d644b77d4",
-      "acknowledgedSourceHash": "b0c93bfa0c3e6f177ec74c68e5e78648a067c6701c26c692790b0e9d644b77d4",
+      "observedSourceHash": "b93321983708579c99bbdfe31c58dcaf35bdbb4cfa1d73ba39303e1e4e566048",
+      "acknowledgedSourceHash": "b93321983708579c99bbdfe31c58dcaf35bdbb4cfa1d73ba39303e1e4e566048",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains the comment-only ready scaffold for deterministic Project Item accounting-label and Link payer-choice presentation tests.",
+      "currentBehavior": "Implements four deterministic provider-free tests for exact section/action/question/payer vocabulary, unordered exhaustive choice membership, fail-closed Accounted/incomplete rows, stateless dismissal/restart and reuse of the verified accounting query boundary.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Item Link Presentation",
@@ -38511,14 +38511,14 @@
           "Tests prove only the stateless presentation boundary and explicitly cannot prove Link routing, commands, persistence, app/MCP, provider, migration or production behavior"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-LINK-PRESENTATION-001"
       ],
-      "notes": "Ready test scaffold only. Planned tests cover exact labels/choice membership, authoritative Unaccounted-only availability, fail-closed Accounted/incomplete rows, forbidden vocabulary, side-effect-free dismissal and re-projection after restart without asserting payer display order or any actual Link behavior.",
+      "notes": "Implemented synthetic tests pending exact implementation-commit CI. An independent reviewer found one P3 self-referential choice-membership assertion; CaseIterable plus a literal unordered two-case assertion corrected it and the reviewer confirmed resolution. Four focused/all 193 target tests in 45 suites pass locally without asserting payer display order or any actual Link behavior.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {

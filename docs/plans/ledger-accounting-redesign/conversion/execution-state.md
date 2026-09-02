@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 156
+State version: 157
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ITEM-LINK-PRESENTATION-READY-CI-PENDING
+- Checkpoint: PROJECT-ITEM-LINK-PRESENTATION-IMPLEMENTED-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2363,6 +2363,20 @@ modifying the running Firebase application before hard cutover.
   two identical project generations, macOS and iOS staging builds and clean
   formatting. The slice remains comment-only and cannot enter implementation
   until immutable CI passes on the exact ready commit.
+- Exact ready commit `47f8fe0d148de617154e40da22bf02d2b47aefc2`
+  passed immutable Actions run `33690917866`: conversion traceability passed in
+  9 seconds and the isolated target environment passed in 2 minutes 14 seconds
+  with all 189 existing tests, generated contracts, both staging builds and
+  clean artifacts. Implemented only the two frozen presentation paths. The
+  primary agent reviewed every changed line; an independent adversarial review
+  found no P0-P2 defect and one P3 self-referential payer-membership assertion.
+  That assertion now independently proves exhaustive enum membership and the
+  literal unordered two-choice descriptor set; the reviewer confirmed the fix.
+  Four focused/all 193 target tests in 45 suites, isolation, generated app/MCP
+  contracts, repeatable project generation and both staging builds pass
+  locally. The slice is `implemented`, not verified, until final synchronized
+  controls and immutable exact-implementation-checkpoint CI pass. No provider,
+  Firebase or production action occurred.
 
 ## Next Action
 
@@ -2466,8 +2480,9 @@ Continue without waiting on the two M1 evidence blockers:
    worker to promote its own status or edit canonical integration controls.
    Treat the verified `project-item-accounting-section-contracts` resolution as
    the sole input authority for the ready
-   `project-item-link-presentation-contracts` leaf. Finish its complete local
-   ready gate and immutable exact-ready-commit CI before implementation. Keep
+   `project-item-link-presentation-contracts` leaf. Finish its synchronized
+   complete local gate and immutable exact-implementation-commit CI before
+   verification. Keep
    actual Link routes/commands, Purchase choice/eligibility, acquisition
    handling, correction/relink behavior, transient UI state, Accounted-item
    actions, app/MCP and provider/migration behavior outside this slice.

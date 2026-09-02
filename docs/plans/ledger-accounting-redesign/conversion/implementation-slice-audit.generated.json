@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T22:31:21.321Z",
+  "generatedFromManifestSync": "2026-09-02T22:44:44.351Z",
   "totals": {
     "slices": 45,
     "claimedTargetSurfaces": 111,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 94
+    "implementationAdvancedTargetSurfaces": 96
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 43,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -336,7 +336,7 @@
       "sliceId": "project-item-link-presentation-contracts",
       "title": "Present exact Project Item accounting labels and Unaccounted-only Link payer choices",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Item Link Presentation",
       "surfaceIds": [
         "SWIFT-A2FCAF3E6103",

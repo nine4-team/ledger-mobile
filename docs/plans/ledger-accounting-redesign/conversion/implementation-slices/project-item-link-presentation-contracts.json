@@ -3,7 +3,7 @@
   "sliceId": "project-item-link-presentation-contracts",
   "title": "Present exact Project Item accounting labels and Unaccounted-only Link payer choices",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Item Link Presentation",
   "surfaceIds": [
     "SWIFT-A2FCAF3E6103",
@@ -134,8 +134,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
       "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
       "expected": "Verified Unaccounted-before-Accounted sections project exact canonical labels, and an authoritative Unaccounted row projects exact Link/action/question text with an exhaustive unordered semantic choice set containing only Client paid and Business paid.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
     },
     {
       "id": "ITEMLINKPRES-TEST-002",
@@ -143,8 +143,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
       "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
       "expected": "Accounted and relationship-evidence-incomplete rows fail closed through stable bounded codes; public presentation contains none of Not sure yet, Sell from Business Inventory, Assign Item, Needs Assignment, Linked Items, Unlinked Items or occurrence/movement terminology.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
     },
     {
       "id": "ITEMLINKPRES-TEST-003",
@@ -152,8 +152,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
       "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
       "expected": "Canonical encode/decode of the verified accounting snapshot re-projects identical labels and Link descriptor; projection and dismissal leave the source row/snapshot byte-identical and serialize no transient modal/payer state.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
     },
     {
       "id": "ITEMLINKPRES-TEST-004",
@@ -161,8 +161,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemLinkPresentationTests.swift",
       "covers": ["ITEMLINKPRES-REQ-001", "ITEMLINKPRES-REQ-002", "ITEMLINKPRES-REQ-003", "ITEMLINKPRES-REQ-004", "ITEMLINKPRES-REQ-005", "ITEMLINKPRES-REQ-006"],
       "expected": "The existing provider-free ProjectItemAccountingQuerying boundary emits a validated local snapshot whose section and authoritative Unaccounted rows project identically without a second port; cancellation/failure semantics remain owned by the verified dependency and no Link command or provider is invoked.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"]
     },
     {
       "id": "ITEMLINKPRES-TEST-005",
@@ -174,8 +174,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-ITEM-LINK-PRESENTATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready decision-independent Phase 1 presentation leaf only. A fresh primary-agent and independent read-only preflight approved exact product vocabulary, authoritative Unaccounted-only Link availability, exact prompt/two-choice membership and no-side-effect dismissal. Broader Link-flow behavior is explicitly NO-GO. The implementation must consume the verified Project Item accounting resolution, persist no transient state, add no query port and avoid asserting payer display order or Accounted-item actions. The two paths remain comment-only until this exact ready commit passes immutable CI."
+  "notes": "Implemented decision-independent Phase 1 presentation leaf pending exact implementation-commit CI. Exact ready commit 47f8fe0d148de617154e40da22bf02d2b47aefc2 passed immutable Actions run 33690917866. The implementation consumes verified Project Item accounting resolution, exposes payer membership as an unordered Set, persists no transient state and adds no query port. Independent review found one P3 self-referential membership assertion, which was corrected with explicit exhaustive CaseIterable/literal-set evidence and independently confirmed; declaration order is expressly not UI order. Four focused/all 193 target tests in 45 suites, isolation, generated contracts, repeatable generation and both staging builds pass locally. Broader Link-flow behavior remains NO-GO; exact implementation CI is required before verification."
 }
