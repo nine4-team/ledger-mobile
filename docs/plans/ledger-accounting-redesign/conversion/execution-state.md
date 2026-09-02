@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 88
+State version: 89
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ARCHIVE-OPERATION-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: BUDGET-CATEGORY-REFERENCE-READ-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1191,6 +1191,25 @@ modifying the running Firebase application before hard cutover.
   two target-only surfaces are now `verified`; every excluded lifecycle-row,
   server, authorization, history-preservation, provider, migration and
   production surface remains unadvanced.
+- Audited the next Phase 1 dependency graph and selected
+  `budget-category-reference-read-contracts` because Project setup, Project
+  category configuration and Item/Transaction routing depend on stable category
+  identity/type/lifecycle/order before their later operations can be safe.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for stable Account/category identity, bounded display name, canonical general/
+  itemized/fee kind, active/archived and system state, overall-budget exclusion,
+  unique presentation order/revision, active/non-system/itemized eligibility and
+  shared local-list readiness/restart/refusal.
+- Kept financial visibility as an already-authorized visible subset: the local
+  contract neither authorizes rows nor exposes hidden fee-category counts.
+  O-026 remains open because no category Create/Update/Archive/Reorder command or
+  administration capability exists; Project allocation configuration is also
+  excluded.
+- Ready-gate sync/check and capability/query/residual controls pass at 753
+  recorded / 738 discovered surfaces, 327 mapped / 164 residual / 43 blockers;
+  M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 104 target
+  tests, graph/contracts, both staging builds and diff formatting pass with no
+  executable budget-category reference behavior claimed.
 
 ## Next Action
 
@@ -1221,14 +1240,14 @@ Continue without waiting on the two M1 evidence blockers:
    existing/new Client selection and complete absent/null/zero category intent.
    Treat the verified `project-archive-operation-contracts` dossier and
    `EVID-PROJECT-ARCHIVE-001` as the sole ArchiveProject semantic authority.
-   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
-   decision-independent user/operational outcome, create exactly its target-only
-   scaffolds and complete its ready dossier before beginning the next behavior.
-   Do not add Project rows/handlers, authoritative history-preservation claims,
-   membership/Project authorization, restore/delete/edit/reassignment, Client/
-   category/media/accounting mutation, physical persistence, schema/RLS/Sync/
-   Auth/provider behavior, current app/MCP, migration, hosted resources or
-   production access without the applicable gates.
+   Implement only the ready `budget-category-reference-read-contracts` dossier:
+   stable visible Account/category name/kind/lifecycle/system/exclusion/order/
+   revision values, exact eligibility, shared local-list readiness/restart,
+   atomic invalid/scope/duplicate refusal and one narrow reference read port.
+   Do not add hidden fee visibility/counts, category administration, Project
+   allocation configuration, physical persistence, schema/RLS/Sync/Auth/
+   provider behavior, current app/MCP, migration, hosted resources or production
+   access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

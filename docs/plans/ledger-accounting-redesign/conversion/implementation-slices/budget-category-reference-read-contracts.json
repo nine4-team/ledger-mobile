@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "budget-category-reference-read-contracts",
+  "title": "Read authorized budget-category reference data with stable offline semantics",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Budget Category Reference Read Contracts",
+  "surfaceIds": [
+    "SWIFT-8351FACDBE06",
+    "TEST-61925915E20E"
+  ],
+  "requirements": [
+    {
+      "id": "CATEGORYREFERENCE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "Later paid/unpaid budget progress groups exact contributions by stable project category without double counting. This reference slice preserves category identity/context only and cannot calculate, cache or alter accounting contributions.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    },
+    {
+      "id": "CATEGORYREFERENCE-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Each Account budget category has stable identity, bounded display text, exactly one canonical general/itemized/fee kind, explicit active/archived and system state, explicit overall-budget exclusion and deterministic order/revision. Reference reads expose freshness rather than treating a cache as authority, and malformed or duplicate identity/name/order is explicit refusal.",
+      "decisionIds": [
+        "O-026"
+      ],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    },
+    {
+      "id": "CATEGORYREFERENCE-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Security and Sync Requirements for Later Target Mapping",
+      "invariant": "The local snapshot contains only the principal-authorized visible subset. It neither performs authorization nor reveals hidden fee-category rows or counts; missing or ambiguous fee visibility fails closed at later server/download boundaries.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    },
+    {
+      "id": "CATEGORYREFERENCE-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Stable category definitions and conflict-safe authorized reads are preserved, while Create/Update/Archive/Reorder category administration remains unavailable until O-026 defines the mutation authority and no Project allocation mutation is implied.",
+      "decisionIds": [
+        "O-026"
+      ],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    },
+    {
+      "id": "CATEGORYREFERENCE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral budget-category reference query port exposes Account-scoped local snapshots using domain and standard Swift types only; it contains no generic CRUD, provider listener, authorization implementation or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    },
+    {
+      "id": "CATEGORYREFERENCE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "Reference data is an immutable local read model with stable query identity, LocalDataVersion, readiness/quality and as-of evidence; authorized empty, incomplete and stale local scope remain distinct and reconstruct only through the same validators.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    },
+    {
+      "id": "CATEGORYREFERENCE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no category table, RLS policy, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": [
+        "CATEGORYREFERENCE-TEST-001",
+        "CATEGORYREFERENCE-TEST-002",
+        "CATEGORYREFERENCE-TEST-003",
+        "CATEGORYREFERENCE-TEST-004",
+        "CATEGORYREFERENCE-TEST-005"
+      ]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "BudgetCategoryName is bounded, trimmed, nonblank product display text only; it cannot produce BudgetCategoryID, AccountID, visibility or authority.",
+        "BudgetCategoryKind has exactly general, itemized and fee. BudgetCategoryDefinitionSnapshot binds stable BudgetCategoryID, AccountID, display name, kind, active/archived lifecycle, system flag, overall-budget exclusion, unique presentation order and revision.",
+        "Project-configuration eligibility is derived only for active non-system visible rows; itemized workflow eligibility additionally requires kind itemized. Archived and system rows remain available for historical rendering but cannot enter those choices.",
+        "BudgetCategoryReferenceSnapshot wraps the shared validated ListLocalSnapshot contract, requires one AccountID, refuses duplicate category identity, normalized name and presentation order, and treats visibleRowCountBeforeFiltering as the already-authorized visible count only.",
+        "BudgetCategoryReferenceQuerying exposes only watchBudgetCategories(accountId:) local read streams; BudgetCategoryReferenceFailure provides stable safe name/account/duplicate/order/request codes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 provider-free contract creates no category table, enum, column, check, unique constraint, index, view or migration; the complete target vertical slice must define those after applicable gates."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No Create/Update/Archive/Reorder category command, Project allocation command, transaction, lock, idempotency result or server read handler is implemented; O-026 remains open."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Account/value validation and visible-subset shape are not authorization. No server rows, membership/financial-visibility predicate, grants or RLS policies exist in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "The read port consumes local snapshots but defines no PowerSync Stream, bucket parameter, local table, fee-visibility download rule or provider readiness proof."
+    },
+    "localOffline": {
+      "items": [
+        "Category values and snapshots are immutable Codable evidence and reconstruct only through the same name/type/account/identity/name/order validators.",
+        "The shared ListLocalSnapshot contract retains query fingerprint, bounded already-authorized rows/count, completeness, ready/partial/stale quality, LocalDataVersion and canonical as-of time across restart.",
+        "Cross-Account rows, duplicate category IDs/names/orders, invalid names/types/revisions and incomplete-authoritative claims fail atomically without returning a partial reference snapshot."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Budget-category reference values contain no image URL, AttachmentPath, byte reference, cache, upload, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The shared read values and port semantics are defined, but no concrete Swift form/context, MCP TypeScript projection, transport handler, capability registration or entry point is wired in this foundation slice."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase preset/category/order array is transformed and no metadata default or duplicate is repaired. Later migration must admit or quarantine every legacy category explicitly."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failure codes are contract values only; no telemetry emission, metric, alert or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside the existing provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "This slice cannot activate reference-data features, authorize fee visibility, choose category administrators, mutate Project allocations, provision a database, import source data, deploy, release or cut over."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CATEGORYREFERENCE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/BudgetCategoryReferenceDataTests.swift",
+      "covers": [
+        "CATEGORYREFERENCE-REQ-001",
+        "CATEGORYREFERENCE-REQ-002",
+        "CATEGORYREFERENCE-REQ-003",
+        "CATEGORYREFERENCE-REQ-004",
+        "CATEGORYREFERENCE-REQ-005",
+        "CATEGORYREFERENCE-REQ-006",
+        "CATEGORYREFERENCE-REQ-007"
+      ],
+      "expected": "Valid synthetic visible rows preserve stable category identity, exact general/itemized/fee kind, lifecycle/system/exclusion/order/revision and exact active/non-system/itemized eligibility without an authorization or provider dependency.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CATEGORYREFERENCE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/BudgetCategoryReferenceDataTests.swift",
+      "covers": [
+        "CATEGORYREFERENCE-REQ-001",
+        "CATEGORYREFERENCE-REQ-002",
+        "CATEGORYREFERENCE-REQ-003",
+        "CATEGORYREFERENCE-REQ-004",
+        "CATEGORYREFERENCE-REQ-005",
+        "CATEGORYREFERENCE-REQ-006",
+        "CATEGORYREFERENCE-REQ-007"
+      ],
+      "expected": "Ready, partial, stale and authoritative-empty authorized snapshots round-trip byte-identically with stable presentation order, query fingerprint, LocalDataVersion and as-of evidence and no hidden-row/provider claim.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CATEGORYREFERENCE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/BudgetCategoryReferenceDataTests.swift",
+      "covers": [
+        "CATEGORYREFERENCE-REQ-001",
+        "CATEGORYREFERENCE-REQ-002",
+        "CATEGORYREFERENCE-REQ-003",
+        "CATEGORYREFERENCE-REQ-004",
+        "CATEGORYREFERENCE-REQ-005",
+        "CATEGORYREFERENCE-REQ-006",
+        "CATEGORYREFERENCE-REQ-007"
+      ],
+      "expected": "Invalid names/types/revisions, cross-Account rows, duplicate IDs/case-insensitive names/orders, malformed decoded rows and incomplete-as-authoritative snapshots fail atomically through stable budget-category reference codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CATEGORYREFERENCE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/BudgetCategoryReferenceDataTests.swift",
+      "covers": [
+        "CATEGORYREFERENCE-REQ-001",
+        "CATEGORYREFERENCE-REQ-002",
+        "CATEGORYREFERENCE-REQ-003",
+        "CATEGORYREFERENCE-REQ-004",
+        "CATEGORYREFERENCE-REQ-005",
+        "CATEGORYREFERENCE-REQ-006",
+        "CATEGORYREFERENCE-REQ-007"
+      ],
+      "expected": "A deterministic reference port returns only the exact Account snapshot, refuses a mismatched Account request without yielding rows and a failing port yields no false snapshot.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CATEGORYREFERENCE-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": [
+        "CATEGORYREFERENCE-REQ-001",
+        "CATEGORYREFERENCE-REQ-002",
+        "CATEGORYREFERENCE-REQ-003",
+        "CATEGORYREFERENCE-REQ-004",
+        "CATEGORYREFERENCE-REQ-005",
+        "CATEGORYREFERENCE-REQ-006",
+        "CATEGORYREFERENCE-REQ-007"
+      ],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [
+    "EVID-BUDGET-CATEGORY-REFERENCE-001"
+  ],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 authorized-read contract only. O-026 remains fully open because no category definition or order mutation exists. Financial visibility is modeled as an already-authorized visible subset and is not decided locally. The slice stops before Project allocation configuration, physical durable storage, server/download authorization, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}
