@@ -5,7 +5,8 @@ target-mapped or later. Seventeen schema/validation/Link/import/projection/
 retention surfaces remain honestly withheld on their named decisions; O-021 is
 UI-only and does not block architecture mapping or implementation sequencing.
 The provider-free Project Item accounting-section read boundary is separately
-controlled by `project-item-accounting-section-contracts`.
+controlled by `project-item-accounting-section-contracts`; its two target-only
+surfaces are implemented locally and await exact-commit CI before verification.
 
 ## Outcome
 

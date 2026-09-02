@@ -1128,25 +1128,27 @@
     {
       "id": "SWIFT-008B49A474D1",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "2a71ddf0a854ed4de6ba802f84740b3eb68569ddf6922c1c37a6080359f63db7",
-      "currentBehavior": "Provides a comment-only target scaffold for exact relationship-derived Project Item accounting state and Unaccounted For / Accounted For section evidence; no executable behavior exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "24a613a720b06d4d7022ba7a1f16d15fec281aa9b86195298b9e7929acb33003",
+      "currentBehavior": "Implements provider-free stable Purchase-relationship and billable-occurrence evidence, exact Account/Project/Client/Item validation, relationship-derived accounting resolution, ordered Unaccounted For / Accounted For sections, explicit unresolved incomplete-local rows, canonical fingerprinted restart evidence and bounded refusal.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-ACCOUNTING-001"
       ],
-      "notes": "Target-only Phase 1 Project Item read foundation. It cannot create or Link an Item, define the occurrence schema, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
+      "notes": "Target-only Phase 1 Project Item read foundation. Four focused tests and all 88 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. Present qualifying evidence may prove Accounted For from an incomplete snapshot, but missing evidence never proves Unaccounted For until the relationship working set is authoritative. The fingerprint detects deterministic corruption/order changes, not authorization or authenticity. This boundary cannot create or Link an Item, define occurrence persistence, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
       "target": {
         "owner": "Project Item Accounting Sections",
         "surfaces": [
           "ItemAccountingConnectionID",
           "BillableItemOccurrenceID",
           "ClientPaidPurchaseAccountingConnection",
-          "BillableItemAccountingConnection",
+          "BillableItemAccountingOccurrence",
+          "ProjectItemAccountingEvidence",
           "ProjectItemAccountingRow",
+          "ProjectItemAccountingSection",
           "ProjectItemAccountingSectionsSnapshot",
           "ProjectItemAccountingQuerying",
           "ProjectItemAccountingSectionFailure"
@@ -1156,7 +1158,7 @@
           "Locally valid relationship evidence is not authorization: future handlers and download boundaries independently prove membership, financial visibility and current relationship access"
         ],
         "syncRequirements": [
-          "The local snapshot distinguishes authoritative empty from incomplete/partial/stale evidence before deriving Unaccounted For and preserves exact relationship identity across restart",
+          "The local snapshot distinguishes authoritative empty from incomplete/partial/stale evidence, keeps relationship-free incomplete rows outside both product sections, and preserves exact relationship identity across restart",
           "No PowerSync Stream, local table, provider subscription, writer or optimistic Link operation is created by this provider-free read slice"
         ]
       },
@@ -1171,24 +1173,24 @@
           "swift test --package-path LedgeriOS --filter ProjectItemAccountingSectionsTests"
         ],
         "acceptance": [
-          "Synthetic complete local evidence places only relationship-backed project Items in Accounted For, places relationship-free Items in Unaccounted For, and keeps Space/detail/Invoice presentation state non-authoritative without choosing schema or Link behavior"
+          "Synthetic complete local evidence places only relationship-backed project Items in Accounted For and relationship-free Items in Unaccounted For; incomplete absence remains unresolved, and Space/occurrence presentation state stays non-authoritative without choosing schema, settlement or Link behavior"
         ]
       }
     },
     {
       "id": "TEST-0E4B478B0C55",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c13a84f00fb3d98a4de32a84a93c85f5ce0c45b0535ea9c7ac175648e1b0d7d3",
-      "currentBehavior": "Provides a comment-only target scaffold for deterministic relationship-derived accounting state, section order, canonical restart, incomplete-evidence handling and invalid/cross-scope/tampered evidence refusal; no executable test exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "e6e3e3987e1461c1abc2aa4e9868ebae3c7f3806ea2e820dea498bc8c1424c77",
+      "currentBehavior": "Executes four deterministic target-only tests for Purchase/occurrence-derived ordered sections, Space/polarity/available-live-frozen independence, authoritative-empty versus explicit incomplete-local resolution, byte-identical restart through the scoped query port, and atomic invalid/cross-scope/duplicate/derived/fingerprint refusal.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-ITEM-CREATION-001",
         "EVID-M2-ITEM-CREATION-001",
         "EVID-PROJECT-ITEM-ACCOUNTING-001"
       ],
-      "notes": "Target-only Project Item accounting-section self-test scaffold. It cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
+      "notes": "Four focused accounting-section tests and all 88 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. These target-only tests cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
       "target": {
         "owner": "Project Item Accounting Sections",
         "surfaces": [

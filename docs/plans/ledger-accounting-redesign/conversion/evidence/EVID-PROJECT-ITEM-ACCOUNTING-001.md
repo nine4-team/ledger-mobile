@@ -7,8 +7,13 @@
 - Claimed target surfaces: `SWIFT-008B49A474D1`, `TEST-0E4B478B0C55`
 - Slice dossier:
   `conversion/implementation-slices/project-item-accounting-section-contracts.json`
-- Ready-gate state: ready; behavior and executable self-tests are not yet
-  implemented
+- Implementation state: implemented locally; exact-commit hosted CI remains
+  pending before verification
+- Implementation hashes:
+  - `ProjectItemAccountingSections.swift`:
+    `24a613a720b06d4d7022ba7a1f16d15fec281aa9b86195298b9e7929acb33003`
+  - `ProjectItemAccountingSectionsTests.swift`:
+    `e6e3e3987e1461c1abc2aa4e9868ebae3c7f3806ea2e820dea498bc8c1424c77`
 
 ## Selection and Scope
 
@@ -83,7 +88,56 @@ All ready-gate commands ran from the dedicated Supabase worktree on 2026-09-01:
 - macOS and generic iOS Simulator staging builds — pass; and
 - `git diff --check` — pass.
 
-Behavioral implementation may now begin only within the exact ready dossier.
+That ready gate authorized only the bounded implementation recorded below.
+
+## Implemented Contract
+
+`ProjectItemAccountingSections.swift` now provides:
+
+- distinct stable Purchase-relationship and billable-occurrence identities;
+- a validated client-paid connection that accepts only a standalone current-
+  Project Purchase with exact Account, Project, Client and Item identity;
+- billable charge/credit occurrence evidence for available-to-Invoice, live-
+  Invoice and frozen-paid history, with no amount, settlement or transition
+  policy;
+- one immutable Item evidence value with optional Space, duplicate-free typed
+  relationships and exact cross-scope/cross-Item refusal;
+- a two-state product model plus an explicit local-read resolution for missing
+  relationship evidence that is not yet authoritative;
+- deterministic Unaccounted For first / Accounted For second sections that
+  preserve source order, while unresolved rows remain outside both product
+  sections;
+- authoritative-empty versus incomplete/partial/stale snapshot evidence with
+  local version, as-of time and an Account/Project-scoped watch port; and
+- a canonical SHA-256 evidence fingerprint over contract version, scope,
+  ordered relationship inputs, derived rows/sections/unresolved rows,
+  completeness/readiness and local version/time. It detects deterministic
+  corruption/order changes; it is not authorization or external authenticity.
+
+Present qualifying relationship evidence may prove Accounted For in an
+incomplete snapshot. Missing relationship evidence cannot prove Unaccounted For
+until the relationship working set is authoritative. Frozen credit/charge
+evidence carries only the qualifying occurrence/Invoice phase needed by this
+read projection and deliberately does not choose O-003 settlement behavior.
+
+## Local Implementation Verification
+
+The implementation checkpoint ran from the dedicated Supabase worktree on
+2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter ProjectItemAccountingSectionsTests`
+  — pass, 4 focused tests;
+- `swift test --package-path LedgeriOS` — pass, all 88 tests in 19 suites;
+- `npm run target:environment:check` — pass;
+- `npm run target:contracts:check` — pass;
+- `npm run target:staging:build:macos` — pass;
+- `npm run target:staging:build:ios` — pass; and
+- `git diff --check` — pass.
+
+`ITEMACCOUNT-TEST-001` through `-004` therefore pass with this evidence.
+`ITEMACCOUNT-TEST-005` remains planned until the exact implementation commit
+passes both required pull-request jobs; the slice and its two surfaces remain
+`implemented`, not `verified`, until then.
 
 ## Permanent Limits
 

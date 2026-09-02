@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 74
+State version: 75
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ITEM-ACCOUNTING-READY-IMPLEMENTATION-NEXT
+- Checkpoint: PROJECT-ITEM-ACCOUNTING-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -972,6 +972,33 @@ modifying the running Firebase application before hard cutover.
   three documented retired-path warnings. No behavioral code, Firebase change,
   provider, hosted resource, migration or production operation exists at this
   ready checkpoint.
+- Implemented only the ready provider-free Project Item accounting-section
+  boundary: distinct Purchase-relationship/occurrence IDs, exact Account/
+  Project/Client/Item-bound relationship evidence, charge/credit occurrences
+  across available/live/frozen phases, relationship-derived product state, two
+  deterministic ordered sections, explicit unresolved incomplete-local rows,
+  local readiness/version/time and a canonical evidence fingerprint.
+- A present qualifying relationship may prove Accounted For from partial/stale
+  evidence. Missing relationship evidence proves Unaccounted For only when the
+  relationship working set is authoritative; otherwise the Item stays outside
+  both product sections as `relationshipEvidenceIncomplete`. Space never changes
+  the resolution. Frozen occurrence evidence carries no amount or collection-
+  transaction settlement semantics and therefore does not choose O-003.
+- Added four deterministic accounting-section tests. They prove standalone
+  current-Project Purchase classification, charge/credit and available/live/
+  frozen qualification, one Item identity, source-order sectioning, Space
+  independence, authoritative-empty versus incomplete/partial/stale truth,
+  byte-identical restart through the scoped query port, every stable diagnostic,
+  and atomic scope/Item/duplicate/phase/derived/fingerprint/malformed refusal.
+- All four focused tests and all 88 target package tests pass locally, as do
+  target graph/generated-contract checks, macOS and generic-iOS-Simulator
+  staging builds and diff formatting. `ITEMACCOUNT-TEST-001` through `-004`
+  pass; exact-commit hosted `ITEMACCOUNT-TEST-005` remains planned, so exactly
+  the two Item-accounting surfaces are `implemented`, not `verified`.
+- No Item writer/Link, occurrence persistence or transition, amount/category/
+  budget effect, credit settlement, schema/RLS/Sync/provider, current app/MCP,
+  source migration, Firebase change, hosted resource or production operation
+  was introduced; O-003/O-007/O-015/O-016/O-021/O-023/O-027 remain open.
 
 ## Next Action
 
@@ -988,16 +1015,17 @@ Continue without waiting on the two M1 evidence blockers:
 3. Treat `non-item-receipt-line-reconstruction-contracts` and
    `EVID-RECEIPT-RECONSTRUCTION-001` as the sole shared semantic source for
    embedded receipt lines and exact reconstruction evidence. Do not recreate
-   or extend that meaning independently in app, MCP, SQL or adapters. Implement
-   only the ready `project-item-accounting-section-contracts` dossier inside the
-   provider-free core/test targets: typed relationship identity, validated
-   current-Project client-paid Purchase evidence, billable charge/credit
-   occurrence evidence across available/live/frozen phases, derived accounting
-   state, Unaccounted For first / Accounted For second, deterministic order,
-   local readiness/completeness, canonical restart and stable refusal. Do not
-   add Item creation/Link, occurrence persistence, credit settlement, amount/
-   category/budget effects, schema/RLS/Sync/provider behavior, legacy mapping,
-   current app/MCP wiring, production access or any other open decision.
+   or extend that meaning independently in app, MCP, SQL or adapters. Commit and
+   push only the implemented `project-item-accounting-section-contracts`
+   checkpoint, then require the exact implementation SHA to pass both pull-
+   request jobs before advancing `ITEMACCOUNT-TEST-005`, the dossier or its two
+   surfaces to `verified`. If either job fails, repair the same slice without
+   weakening a gate. After immutable CI evidence is recorded, select the next
+   smallest decision-independent slice through the same ready/implement/verify
+   process. Do not add Item creation/Link, occurrence persistence, credit
+   settlement, amount/category/budget effects, schema/RLS/Sync/provider
+   behavior, legacy mapping, current app/MCP wiring, production access or any
+   other open decision.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

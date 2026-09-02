@@ -3,7 +3,7 @@
   "sliceId": "project-item-accounting-section-contracts",
   "title": "Derive Project Item accounting state and ordered local sections",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Item Accounting Sections",
   "surfaceIds": [
     "SWIFT-008B49A474D1",
@@ -68,7 +68,7 @@
   "contracts": {
     "domain": {
       "items": [
-        "ItemAccountingConnectionID and BillableItemOccurrenceID are distinct stable IDs; typed client-paid Purchase and billable occurrence evidence bind exact Account/Project/Item identity and only the product-approved qualifying relationship kinds.",
+        "ItemAccountingConnectionID and BillableItemOccurrenceID are distinct stable IDs; typed ClientPaidPurchaseAccountingConnection and BillableItemAccountingOccurrence evidence bind exact Account/Project/Item identity and only the product-approved qualifying relationship kinds/phases.",
         "ProjectItemAccountingRow retains one stable Item identity and optional Space evidence while deriving accountedFor from the presence of duplicate-free qualifying relationships, unaccountedFor only from authoritative relationship absence, or relationshipEvidenceIncomplete as a local-read resolution that is not a third product accounting state; no mutable cached boolean is accepted as authority.",
         "ProjectItemAccountingSectionsSnapshot preserves deterministic source order within Unaccounted For first and Accounted For second, keeps unresolved rows outside both product sections, rejects duplicate/cross-scope rows, and exposes authoritative-empty versus incomplete/partial/stale local evidence.",
         "ProjectItemAccountingQuerying is an Account/Project-scoped local watch port; ProjectItemAccountingSectionFailure exposes closed stable validation, scope, duplicate, readiness, derived-evidence, fingerprint and malformed-encoding codes."
@@ -135,8 +135,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
       "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
       "expected": "Complete synthetic Project evidence places relationship-free real Items in Unaccounted For first and client-paid Purchase or available/live/frozen billable-occurrence Items in Accounted For second while preserving one Item identity and deterministic order.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
     },
     {
       "id": "ITEMACCOUNT-TEST-002",
@@ -144,8 +144,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
       "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
       "expected": "Changing optional Space or non-authoritative presentation evidence does not change accounting state; charge and credit occurrence polarity and available/live/frozen phase all remain qualifying without choosing settlement, amount, budget or Invoice-lifecycle policy.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
     },
     {
       "id": "ITEMACCOUNT-TEST-003",
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
       "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
       "expected": "Representative complete, authoritative-empty, partial and stale section evidence round-trips byte-identically with relationship identity, row/section/unresolved order, optional Space, local version, as-of, readiness/completeness, derived resolution and fingerprints intact without local or remote state; incomplete relationship absence is never encoded in either product section.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
     },
     {
       "id": "ITEMACCOUNT-TEST-004",
@@ -162,8 +162,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
       "covers": ["ITEMACCOUNT-REQ-001", "ITEMACCOUNT-REQ-002", "ITEMACCOUNT-REQ-003", "ITEMACCOUNT-REQ-004", "ITEMACCOUNT-REQ-005", "ITEMACCOUNT-REQ-006"],
       "expected": "Invalid Purchase classification, cross-Account/Project/Item relationship, duplicate relationship/Item identity, false authoritative absence, malformed values and tampered state/order/fingerprint evidence fail atomically with stable bounded codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"]
     },
     {
       "id": "ITEMACCOUNT-TEST-005",
@@ -175,7 +175,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-ITEM-ACCOUNTING-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 Project Item read foundation only. It implements confirmed D-019/D-022/D-023 accounting-state and one-identity projection semantics over typed relationship evidence, but no Item writer/Link, occurrence persistence, credit settlement, amount/category/budget effect, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior. O-003/O-007/O-015/O-016/O-021/O-023/O-027 remain fully open outside the slice."
