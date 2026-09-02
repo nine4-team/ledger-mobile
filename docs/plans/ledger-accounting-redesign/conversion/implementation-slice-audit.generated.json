@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T19:20:59.331Z",
+  "generatedFromManifestSync": "2026-09-02T19:43:51.461Z",
   "totals": {
-    "slices": 41,
-    "claimedTargetSurfaces": 103,
+    "slices": 42,
+    "claimedTargetSurfaces": 105,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 88
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 40,
@@ -166,6 +166,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-operation-contracts.json"
+    },
+    {
+      "sliceId": "item-space-clearing-operation-contracts",
+      "title": "Clear an exact same-scope Item placement set atomically without changing accounting or deleting media",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Item Clearing Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-4C7158974133",
+        "TEST-0AB198EB6935"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json"
     },
     {
       "sliceId": "migration-run-plan-and-journal-integrity",

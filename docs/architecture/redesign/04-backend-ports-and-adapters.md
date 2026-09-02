@@ -286,7 +286,6 @@ protocol ItemOperations: Sendable {
     func updateDetails(
         _ command: UpdateItemDetailsCommand
     ) async throws -> OperationReceipt
-    func setSpace(_ command: SetItemSpaceCommand) async throws -> OperationReceipt
     func setStatus(_ command: SetItemStatusCommand) async throws -> OperationReceipt
     func setBookmark(
         _ command: SetItemBookmarkCommand
@@ -354,6 +353,9 @@ protocol SpaceOperations: Sendable {
     ) async throws -> OperationReceipt
     func assignItems(
         _ command: AssignItemsToSpaceCommand
+    ) async throws -> OperationReceipt
+    func clearItemAssignments(
+        _ command: ClearItemSpaceAssignmentsCommand
     ) async throws -> OperationReceipt
     func archive(_ command: ArchiveSpaceCommand) async throws -> OperationReceipt
 }

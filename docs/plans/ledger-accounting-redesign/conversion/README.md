@@ -192,6 +192,20 @@ implementation commit `c5fdf5c7` in immutable run `33672006836`. O-037 remains
 open because archive is excluded; Item scope/
 accounting, physical persistence, schema/RLS/Sync, app/MCP, migration, hosted
 resources and production remain absent; `EVID-ITEM-SPACE-ASSIGNMENT-001`.
+The provider-free Item Space-clearing slice is ready for exact-commit CI.
+Exactly two comment-only target surfaces freeze one story-specific
+`ClearItemSpaceAssignments` intent: exact Account/actor/Operation scope, one
+immutable Project-or-Business-Inventory scope, a canonical nonempty duplicate-
+free Item/revision/current-Space set that may span different source Spaces,
+deterministic scope/current-placement preconditions, atomic refusal, restart/
+replay, marker-relationship closure without media deletion and one narrow port.
+All 176 existing target tests in 41 suites, graph/contracts, both staging
+builds, repeatable project generation and local controls pass. O-037 remains
+open because archive is
+excluded; O-023 remains open because no attachment reference or byte is removed;
+destination assignment, Item scope/accounting, physical persistence, schema/
+RLS/Sync, app/MCP, migration, hosted resources and production remain absent;
+`EVID-ITEM-SPACE-CLEARING-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

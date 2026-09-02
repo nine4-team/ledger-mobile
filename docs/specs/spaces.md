@@ -148,10 +148,19 @@ Items are assigned to spaces via `item.spaceId`:
 ### Bulk Assignment
 
 Multiple Items may be assigned or cleared through one durable typed operation.
-The authoritative handler validates that every Item and destination Space still
-belong to the same Project or Business Inventory scope and applies the complete
-selection atomically/idempotently. Scope-changing Item commands separately
-validate or clear incompatible Space assignments.
+Assignment validates that every Item and the destination Space still belong to
+the same Project or Business Inventory scope. Clear validates each Item's exact
+revision, current Space, and common scope; one clear operation may include Items
+from different current Spaces in that scope. The authoritative handler applies
+the complete selection atomically/idempotently. Scope-changing Item commands
+separately validate or clear incompatible Space assignments.
+
+Clearing or replacing placement closes affected green Item-linked checkmark
+relationships on the old Space photos without deleting the photos or their
+bytes. The handler derives those relationships from authoritative state; the
+client does not submit copied attachment data or marker lists. Space review-note
+red markers remain separate evidence, and no placement operation changes
+accounting.
 
 ## Space in Budget Context
 

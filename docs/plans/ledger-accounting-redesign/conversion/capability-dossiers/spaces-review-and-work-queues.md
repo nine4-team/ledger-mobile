@@ -97,8 +97,10 @@ Typed operations include:
 
 - `CreateSpace` and `UpdateSpaceDetails`;
 - `ReviseSpaceChecklists` with expected revision and stable nested IDs;
-- `AssignItemsToSpace` / `ClearItemsFromSpace` with one scope-validating atomic
-  handler and durable result;
+- `AssignItemsToSpace` / `ClearItemSpaceAssignments` with one scope-validating
+  atomic handler and durable result; the clear command supports one exact bulk
+  selection across different current Spaces in the same Project or Business
+  Inventory scope;
 - `ArchiveSpace`, gated by O-037 for assigned Items and any physical deletion;
 - `CreateSpaceReviewNote`, `ReviseSpaceReviewNote`, and
   `RemoveSpaceReviewNote` with server actor/time and revision/audit; and
@@ -108,6 +110,12 @@ Typed operations include:
 A Space operation never writes Transaction, occurrence, Invoice, budget, payer,
 or accounting state. Item movement commands may validate/clear destination-
 incompatible Space IDs as part of their own atomic scope change.
+
+Clearing or replacing placement also closes the affected green Item-linked
+checkmark relationships on the old Space photos as an authoritative derived
+effect. The client does not submit attachment URLs, copied image values, marker
+lists, or deletion instructions, and the operation never deletes media bytes.
+Space-review-note red markers remain separate evidence.
 
 Review visual references store stable `attachment_id` plus marker coordinates
 and optional immutable display metadata. They reuse the parent Space attachment;

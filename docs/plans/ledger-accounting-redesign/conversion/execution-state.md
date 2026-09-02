@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 142
+State version: 143
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-VERIFIED
+- Checkpoint: ITEM-SPACE-CLEARING-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2133,6 +2133,35 @@ modifying the running Firebase application before hard cutover.
   in 41 suites, graph/generated-contract checks, both staging builds and clean
   tracked artifacts. All five obligations pass; exactly the two Item-to-Space
   assignment surfaces are now `verified`.
+- The Item-to-Space verification-document commit
+  `6ff51992726a7a2d88739bf9e8a689bffe4b6de4` passed immutable Actions run
+  `33672821325`: conversion traceability passed in 8 seconds and the isolated
+  target environment passed in 3 minutes 5 seconds with all 176 then-existing
+  target tests, both staging builds and clean tracked artifacts.
+- Audited explicit Item Space clearing against canonical Space/Item authority,
+  D-019/D-023, reviewed Spaces/media dossiers, architecture and current Item/
+  Inventory/Project/Space/Search callers. The target replaces generic
+  `spaceId: NSNull()` dictionaries, silent duplicate removal and independently
+  chunked writes with one atomic typed operation while preserving authoritative
+  closure of old green Item-linked Space-photo checkmark relationships without
+  accepting marker data or deleting media bytes.
+- Selected `ClearItemSpaceAssignments` as the next smallest complete decision-
+  independent slice. O-037 remains open because archive/delete is absent and
+  clear is explicit; O-023 remains open because no attachment reference or byte
+  is removed; O-007/O-015 do not block non-accounting placement clear.
+- Added exactly two comment-only target surfaces,
+  `item-space-clearing-operation-contracts`, and
+  `EVID-ITEM-SPACE-CLEARING-001`. The ready dossier freezes eight requirements
+  and five deterministic obligations. The synchronized ledger records 789
+  surfaces / 774 discovered, 363 mapped / 164 residual / 43 blockers; 42 slices
+  claim 105 of 527 target-relevant surfaces while 88 are implementation-
+  advanced.
+- The complete local Item Space-clearing ready gate passes with all 176 existing
+  target tests in 41 suites, both staging builds, unchanged repeatable target
+  graph, target isolation/generated contracts, conversion/capability/query/
+  residual controls, M0 and clean formatting. M1/M2 retain the expected 2/164
+  blockers with zero structural errors. Exact ready-commit CI remains before
+  implementation.
 
 ## Next Action
 
@@ -2216,10 +2245,13 @@ Continue without waiting on the two M1 evidence blockers:
    `item-space-assignment-operation-contracts` dossier and
    `EVID-ITEM-SPACE-ASSIGNMENT-001` as the sole authority for the bounded
    provider-free AssignItemsToSpace boundary. Its exact implementation commit
-   and both CI jobs are verified. Audit the next smallest complete decision-
-   independent product slice against canonical specs, reviewed capability
-   evidence, source callers and open-decision gates before creating its ready
-   dossier. Keep
+   and both CI jobs are verified. Treat the ready
+   `item-space-clearing-operation-contracts` dossier and
+   `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for the next bounded
+   implementation. Finish the complete local ready gate, commit/push the exact
+   comment-only checkpoint, require both immutable CI jobs, then implement only
+   the frozen provider-free ClearItemSpaceAssignments boundary and repeat the
+   local/exact-commit gates. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

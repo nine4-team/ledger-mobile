@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T19:20:59.331Z",
+    "lastSynchronizedAt": "2026-09-02T19:43:51.461Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -20396,6 +20396,68 @@
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
+      "id": "SWIFT-4C7158974133",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ItemSpaceClearingOperation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ItemSpaceClearingOperation.swift"
+        }
+      ],
+      "observedSourceHash": "a5580c3efb9fa0e8569bc2813b4545e13b65a585bd1f6c842b6f2856e690a42c",
+      "acknowledgedSourceHash": "a5580c3efb9fa0e8569bc2813b4545e13b65a585bd1f6c842b6f2856e690a42c",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed ready-gate scaffold for a provider-free ClearItemSpaceAssignments operation; no executable clear behavior exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Item Clearing Operation Contracts",
+        "surfaces": [
+          "ItemSpaceClearingCandidate",
+          "ItemSpaceClearingDraft",
+          "ClearItemSpaceAssignmentsPayload",
+          "ClearItemSpaceAssignmentsCommand",
+          "ItemSpaceAssignmentClearing",
+          "ItemSpaceClearingFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, immutable scope and canonical nonempty stable ItemID/revision/current-Space set while carrying no path, display-name, marker payload, accounting value or authorization claim",
+          "Construction and restart reject changed Account, actor, contract, scope, revision, current Space, Item set, payload, typed preconditions, subject or fingerprint; a later trusted handler must revalidate current membership, every same-scope row and affected item-linked marker relationship atomically"
+        ],
+        "syncRequirements": [
+          "The clear intent reuses the shared operation fingerprint/receipt/replay lifecycle and deterministic distinct-Space scope plus per-Item revision/scope/current-placement preconditions",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, optimistic placement/marker mutation, authoritative row updates or synchronized visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only Item Space-clearing contract and decode no Firebase Item/Space document, embedded photo marker, generic null dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable same-scope Item/Space placement and marker relationships, revision/audit and source correlation while quarantining missing, archived or cross-scope references according to approved policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceClearingOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/Inventory scope, nonempty canonical Item/revision/current-Space sets including mixed source Spaces, deterministic preconditions, restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one exact same-scope nonempty bulk ClearItemSpaceAssignments intent with stable Item/current-Space identities, exact Item revisions, canonical typed preconditions, shared operation binding/receipt validation, derived marker-closure semantics and a narrow port. It cannot assign a destination, move Item scope, archive a Space, accept or delete media, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023 remain open.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "SWIFT-4C8A8E236450",
       "kind": "swift_view",
       "name": "LedgeriOS/LedgeriOS/Views/Inventory/InventoryItemsSubTab.swift",
@@ -33065,6 +33127,66 @@
       ],
       "notes": "Target-only directory contract self-tests and exact-commit hosted CI pass with all 72 target tests, both staging builds and clean artifacts. They cannot establish provider authorization/download absence, physical offline behavior, source migration correctness or concrete app/MCP integration.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-0AB198EB6935",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingOperationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingOperationTests.swift"
+        }
+      ],
+      "observedSourceHash": "04724d17f1fd927c8734e5fe7e7372c702fb612f59464f2cf44e9ad47e295a41",
+      "acknowledgedSourceHash": "04724d17f1fd927c8734e5fe7e7372c702fb612f59464f2cf44e9ad47e295a41",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the reviewed ready-gate scaffold for deterministic provider-free ClearItemSpaceAssignments tests; no executable clear test exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Item Clearing Operation Contracts",
+        "surfaces": [
+          "ItemSpaceClearingOperationTests",
+          "Project and Business Inventory clearing fixtures",
+          "single and mixed-Space bulk Item/revision/current-Space fixtures",
+          "typed scope and current-placement precondition fixtures",
+          "canonical command restart/replay/refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Principal, Operation, Project, Space and Item identities and prove no path/name/provider/accounting/marker field can rebind placement identity or authority",
+          "Negative tests expose only stable bounded codes and no source paths, credentials, provider payloads, financial values, attachment URLs/bytes or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local clear receipt from physical persistence, marker mutation, authoritative placement and synchronized Item/Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Item/Space/marker/generic null/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent reordered Item input round-trips to identical canonical evidence while changed scope/revision/current-Space/identity/payload/precondition/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceClearingOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral ClearItemSpaceAssignments boundary without claiming server, marker, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-CAPABILITY-MEDIA-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove Project/Inventory same-scope clearing, stable Item/current-Space identities, exact revisions and typed preconditions, mixed-Space/input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. They cannot claim physical placement/marker mutation, destination/scope/archive/accounting behavior, attachment deletion, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-0AD8A0619179",

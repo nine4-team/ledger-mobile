@@ -168,6 +168,7 @@ Examples with unambiguous business intent:
 - `CreateSpace`;
 - `ReviseSpaceChecklists`;
 - `AssignItemsToSpace`;
+- `ClearItemSpaceAssignments`;
 - `CreateSpaceReviewNote`;
 - `ReviseSpaceReviewNote`;
 - `PlaceInventoryItemInProject`;
