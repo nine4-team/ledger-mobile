@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 120
+State version: 121
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-ARCHIVE-IMPLEMENTED-LOCAL
+- Checkpoint: CLIENT-ARCHIVE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1774,6 +1774,14 @@ modifying the running Firebase application before hard cutover.
   target tests in 34 suites, graph/generated contracts, both staging builds,
   conversion/capability/query/residual controls, M0 and clean artifacts pass
   locally. Exactly two surfaces are `implemented`; exact-commit CI remains.
+- Exact implementation commit
+  `e10be9ec731ee68ed14ff6e2b6d004b6d00d5baf` passed immutable GitHub Actions
+  run `33639210706`: conversion traceability passed in 13 seconds and the
+  isolated target environment passed in 2 minutes 58 seconds with all 148 tests
+  in 34 suites, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts. All five obligations pass and exactly the two Client-
+  archive surfaces are now `verified`; 74 target surfaces are implemented or
+  later.
 
 ## Next Action
 
@@ -1832,10 +1840,10 @@ Continue without waiting on the two M1 evidence blockers:
    suggestion read semantics. Treat the verified
    `space-template-reference-read-contracts` dossier and
    `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
-   Treat the implemented `client-archive-operation-contracts` dossier and
-   `EVID-CLIENT-ARCHIVE-001` as the exact bounded implementation authority.
-   Commit only this frozen provider-free implementation, require immutable
-   exact-commit CI, then advance exactly its two surfaces to verified. Keep
+   Treat the verified `client-archive-operation-contracts` dossier and
+   `EVID-CLIENT-ARCHIVE-001` as the sole ArchiveClient semantic authority.
+   Audit the next smallest complete decision-independent dependency before
+   creating another ready slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

@@ -3,7 +3,7 @@
   "sliceId": "client-archive-operation-contracts",
   "title": "Archive one Client without deleting identity, Projects, or history",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Client Archive Operation Contracts",
   "surfaceIds": [
     "SWIFT-82AD18E41C5C",
@@ -154,8 +154,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["CLIENTARCHIVE-REQ-001", "CLIENTARCHIVE-REQ-002", "CLIENTARCHIVE-REQ-003", "CLIENTARCHIVE-REQ-004", "CLIENTARCHIVE-REQ-005", "CLIENTARCHIVE-REQ-006", "CLIENTARCHIVE-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-001"]
     }
   ],
   "implementationEvidence": ["EVID-CLIENT-ARCHIVE-001"],

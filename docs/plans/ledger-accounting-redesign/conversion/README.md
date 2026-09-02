@@ -98,13 +98,14 @@ contract checks, both staging builds and clean artifacts.
 O-026 mutation authority, template apply/save, Space creation, physical
 persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
 production remain excluded.
-The provider-free Client archive operation slice is implemented locally.
+The provider-free Client archive operation slice is verified.
 Exactly two target surfaces define one stable Client archive intent, exact
 expected-revision precondition, shared operation lifecycle and explicit no-
 cascade/no-delete/no-merge/no-reassignment boundary. Exact ready commit
 `9f3a03dd` and immutable Actions run `33638235220` pass all 144 then-existing
-tests and both builds; four focused/all 148 tests and the complete gate pass
-locally after implementation. Exact implementation-commit CI remains planned.
+tests and both builds. Exact implementation commit `e10be9ec` and immutable
+Actions run `33639210706` pass four focused/all 148 target tests, graph/
+generated-contract checks, both staging builds and clean artifacts.
 O-025, physical persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP,
 migration and production remain excluded.
 

@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-82AD18E41C5C`, `TEST-DAD87DF6C1DB`
 - Slice dossier:
   `conversion/implementation-slices/client-archive-operation-contracts.json`
-- Verification state: implemented locally; four of five obligations pass and
-  exact-implementation-commit pull-request CI remains planned
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `e10be9ec731ee68ed14ff6e2b6d004b6d00d5baf`
 - Ready scaffold hashes:
   - `ClientArchiveOperation.swift`:
     `9df1f684216df501b959cd2cb31e5116fd50181ddcc16627599bdbf9ac0698e1`
@@ -159,8 +159,25 @@ controls, M0 and clean diff formatting. The ledger remains at 773 recorded / 758
 discovered, 347 mapped-or-later / 164 residual / 43 blockers; 74 target surfaces
 are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
 
-`CLIENTARCHIVE-TEST-001` through `-004` therefore pass. The exact-implementation-
-commit operational obligation remains planned until immutable CI completes.
+`CLIENTARCHIVE-TEST-001` through `-004` therefore pass.
+
+## Immutable Exact-Commit Verification
+
+GitHub Actions run `33639210706` verified exact implementation commit
+`e10be9ec731ee68ed14ff6e2b6d004b6d00d5baf`:
+
+- conversion traceability passed in 13 seconds;
+- the isolated target environment passed in 2 minutes 58 seconds;
+- all 148 target tests in 34 suites passed;
+- target dependency/provider/source-project isolation and generated app/MCP
+  contracts passed;
+- macOS and generic iOS Simulator staging builds passed; and
+- tracked-artifact cleanliness passed.
+
+`CLIENTARCHIVE-TEST-005` therefore passes. All five obligations and exactly the
+two claimed target-only surfaces are verified. Hosted evidence adds no server,
+physical persistence, authorization, history-preservation, provider, migration
+or production claim.
 
 ## Permanent Limits
 
