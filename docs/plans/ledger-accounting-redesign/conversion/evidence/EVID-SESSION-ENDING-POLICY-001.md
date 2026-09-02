@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-1599BDC0D574`, `TEST-95498CCCD467`
 - Slice dossier:
   `conversion/implementation-slices/session-ending-pending-work-contracts.json`
-- Verification state: ready; executable behavior remains absent pending exact
-  ready-commit CI
+- Verification state: implemented locally; exact implementation-commit CI is
+  still required before either claimed surface can become verified
 - Ready scaffold hashes:
   - `SessionEndingPolicy.swift`:
     `e2f8dacf9569a97893673777b04aedef33c345b5f76526b327b1abce30af8d4e`
@@ -141,6 +141,68 @@ The complete local ready gate passes:
 
 Passing immutable exact-ready-commit CI may authorize only the bounded
 provider-free implementation named here.
+
+Exact comment-only ready commit
+`caa9a9003c13782780d6107df805b95f2f9240ba` passed immutable GitHub Actions
+run `33662071456`: conversion traceability passed in 10 seconds and the
+isolated target environment passed in 2 minutes 23 seconds with all 164 then-
+existing tests, graph/generated-contract checks, both staging builds and clean
+tracked artifacts. That gate authorized only the frozen provider-free
+implementation.
+
+## Implemented Contract
+
+- `PendingLocalWorkSummary` binds one target environment, stable Principal and
+  Account, supplied snapshot revision, finite observation time, and exact
+  queued/applying/unresolved-rejected/unverified-attachment counts. A canonical
+  SHA-256 fingerprint covers every field and `hasBlockingWork` derives only
+  whether any count is nonzero.
+- `SessionEndDisposition` distinguishes ordinary clean logout, synchronize-
+  then-logout, and remove-from-device-discarding-pending-work.
+  `SessionEndChoice.cancel` produces no request.
+- `DestructiveLocalRemovalConfirmation` embeds the exact confirmed summary and
+  confirmation time. `SessionEndRequest` binds disposition, expected summary,
+  optional confirmation and request time in a second canonical fingerprint;
+  construction and decoding reject pending clean logout, missing/mismatched
+  destructive confirmation, invalid chronology and tamper.
+- `SessionEndPolicy` requires exact unchanged current evidence for clean and
+  destructive teardown. Sync-first accepts only nonregressing same-scope
+  summaries, reports synchronization-required while any work remains, and
+  becomes teardown-ready only at a fresh all-zero summary.
+- `AccountSessionEnding` is the sole narrow provider-neutral inspection/end
+  port. `SessionEndingFailure` provides stable bounded diagnostics for invalid,
+  stale, rebound, incomplete and failed behavior.
+
+The contract contains no identity-provider object, token, filesystem path,
+encryption key, operation payload, attachment bytes, database/provider call, or
+authoritative cleanup result. The deterministic test port mutates only in-memory
+synthetic state and is not a production adapter.
+
+Implementation hashes:
+
+- `SessionEndingPolicy.swift`:
+  `dd66111bdf6597114b4be7b49198c679352bc35d61b3a297c4e3151c2007ffe7`
+- `SessionEndingPolicyTests.swift`:
+  `72230b9f5351b835c807526e3fe077722a40815cf165526879cde2f7f9990f84`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact count separation;
+clean/sync-first/destructive/cancel choices; clean-zero and sync-to-zero
+evaluation; exact destructive confirmation; byte-identical summary,
+confirmation and request restart; stable invalid/tampered/scope/stale/
+regression diagnostics; cancellation no-call; stale destructive refusal; and
+no false completion from an incomplete-sync or failing port.
+
+The complete local implementation gate passes: all 168 target tests in 39
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The ledger remains at 783 recorded /
+768 discovered and 357 mapped-or-later / 164 residual / 43 blockers; 84 target
+surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
+
+`SESSIONEND-TEST-001` through `-004` pass locally. `-005` remains planned until
+immutable exact-implementation-commit CI passes.
 
 ## Permanent Limits
 

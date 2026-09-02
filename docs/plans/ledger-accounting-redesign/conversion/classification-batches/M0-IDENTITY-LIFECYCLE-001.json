@@ -442,17 +442,17 @@
     {
       "id": "SWIFT-1599BDC0D574",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e2f8dacf9569a97893673777b04aedef33c345b5f76526b327b1abce30af8d4e",
-      "currentBehavior": "Defines only the ready-gate scaffold for an environment-, Principal-, and Account-scoped pending-work summary and session-ending safety policy; executable behavior is intentionally absent before the exact ready checkpoint passes.",
+      "acknowledgeSourceHash": "dd66111bdf6597114b4be7b49198c679352bc35d61b3a297c4e3151c2007ffe7",
+      "currentBehavior": "Defines the implemented provider-free environment-, Principal-, and Account-scoped pending-work summary, exact confirmation/request fingerprints, clean/sync-first/destructive evaluation policy, cancellation no-request behavior, stable failures and narrow AccountSessionEnding port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-IDENTITY-001",
         "EVID-M2-IDENTITY-001",
         "EVID-SESSION-ENDING-POLICY-001"
       ],
-      "notes": "Target-only Phase 1 ready scaffold. The bounded contract freezes only loss-prevention, exact summary/confirmation and session-ending port semantics. It chooses no Auth provider, offline lease, UI copy, physical store/key mechanism, revocation retention, adapter, hosted resource or production behavior.",
+      "notes": "Target-only Phase 1 implemented surface. Exact ready commit caa9a9003c13782780d6107df805b95f2f9240ba passed immutable Actions run 33662071456. Four focused/all 168 target tests, both builds and local controls pass for the implementation. The bounded contract owns only loss-prevention, exact summary/confirmation and session-ending port semantics; it chooses no Auth provider, offline lease, UI copy, physical store/key mechanism, revocation retention, adapter, hosted resource or production behavior. Exact implementation-commit CI remains before verification.",
       "target": {
         "owner": "Session Ending and Pending-Work Policy",
         "surfaces": [
@@ -490,17 +490,17 @@
     {
       "id": "TEST-95498CCCD467",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b2ca691096664a6a7d4d245fcf09ea5a8472ddcfa25078840d060ec58f30a50b",
-      "currentBehavior": "Defines only the ready-gate scaffold for deterministic session-ending pending-work contract tests; executable tests are intentionally absent before the exact ready checkpoint passes.",
+      "acknowledgeSourceHash": "72230b9f5351b835c807526e3fe077722a40815cf165526879cde2f7f9990f84",
+      "currentBehavior": "Defines four deterministic provider-free tests for exact pending-work counts and dispositions, canonical restart, malformed/rebound/stale/tampered refusal, cancellation no-call, sync-first completion, destructive-summary invalidation and narrow-port failure behavior.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-IDENTITY-001",
         "EVID-M2-IDENTITY-001",
         "EVID-SESSION-ENDING-POLICY-001"
       ],
-      "notes": "Target-only Phase 1 planned test surface. It will prove only the provider-free pending-work/session-ending contract and cannot authorize or simulate destructive device cleanup.",
+      "notes": "Target-only Phase 1 implemented test surface. Four focused/all 168 target tests and both builds pass locally after exact ready commit caa9a9003c13782780d6107df805b95f2f9240ba / immutable run 33662071456. It proves only the provider-free pending-work/session-ending contract and cannot authorize or simulate destructive device cleanup. Exact implementation-commit CI remains before verification.",
       "target": {
         "owner": "Session Ending and Pending-Work Policy",
         "surfaces": [

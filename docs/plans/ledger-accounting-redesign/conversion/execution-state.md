@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 134
+State version: 135
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SESSION-ENDING-PENDING-WORK-READY-LOCAL
+- Checkpoint: SESSION-ENDING-PENDING-WORK-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2010,6 +2010,24 @@ modifying the running Firebase application before hard cutover.
   ledger records 783 surfaces / 768 discovered, 357 mapped / 164 residual / 43
   blockers; M1/M2 retain the expected 2/164 blockers with zero structural
   errors.
+- Exact comment-only session-ending ready commit
+  `caa9a9003c13782780d6107df805b95f2f9240ba` passed immutable GitHub Actions
+  run `33662071456`: conversion traceability passed in 10 seconds and the
+  isolated target environment passed in 2 minutes 23 seconds with all 164 then-
+  existing tests, graph/generated-contract checks, both staging builds and
+  clean tracked artifacts.
+- Implemented only the frozen provider-free session-ending safety boundary:
+  exact scoped four-class pending-work summaries; canonical summary/request
+  fingerprints; clean/sync-first/exact-confirmed-destructive dispositions;
+  cancellation no-request; fresh-summary, stale/regression and scope checks;
+  stable diagnostics; and one narrow port. It contains no Auth, physical
+  synchronization/cleanup, provider, media-retention, schema/RLS/Sync, app/MCP,
+  migration or production behavior.
+- Four focused and all 168 target tests in 39 suites pass locally, along with
+  target isolation/generated contracts, both staging builds and clean diff
+  formatting. Exact source hashes are acknowledged; 84 target surfaces are
+  implementation-advanced. Exact implementation-commit CI remains before
+  verification.
 
 ## Next Action
 
@@ -2085,9 +2103,10 @@ Continue without waiting on the two M1 evidence blockers:
    `session-ending-pending-work-contracts` dossier and
    `EVID-SESSION-ENDING-POLICY-001` as the sole provider-free safety authority
    for exact pending-work summaries and clean/sync-first/destructive session
-   dispositions. Finish its local ready gate, commit/push only the comment
-   scaffolds and frozen documentation, and require exact-ready-commit CI before
-   implementing any executable behavior. Keep
+   dispositions. Its exact ready commit and both CI jobs pass. Finish the local
+   implementation gate, commit/push only the frozen provider-free boundary,
+   and require exact-implementation-commit CI before marking either surface
+   verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

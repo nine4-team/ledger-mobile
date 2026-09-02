@@ -3,7 +3,7 @@
   "sliceId": "session-ending-pending-work-contracts",
   "title": "End or remove one local Account session without silently losing accepted offline work",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Session Ending and Pending-Work Policy",
   "surfaceIds": ["SWIFT-1599BDC0D574", "TEST-95498CCCD467"],
   "requirements": [
@@ -124,8 +124,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SessionEndingPolicyTests.swift",
       "covers": ["SESSIONEND-REQ-001", "SESSIONEND-REQ-002", "SESSIONEND-REQ-003", "SESSIONEND-REQ-004", "SESSIONEND-REQ-005", "SESSIONEND-REQ-006", "SESSIONEND-REQ-007", "SESSIONEND-REQ-008"],
       "expected": "Exact synthetic summaries keep all four work classes distinct; clean zero, pending sync-first and exact-confirmed destructive requests produce only their typed dispositions, while cancellation produces no request and no backend call.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SESSION-ENDING-POLICY-001"]
     },
     {
       "id": "SESSIONEND-TEST-002",
@@ -133,8 +133,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SessionEndingPolicyTests.swift",
       "covers": ["SESSIONEND-REQ-001", "SESSIONEND-REQ-003", "SESSIONEND-REQ-004", "SESSIONEND-REQ-006", "SESSIONEND-REQ-008"],
       "expected": "Summary, confirmation and all request dispositions round-trip byte-identically with exact environment/Principal/Account/revision/time/count/fingerprint evidence and no provider, credential, path, payload or server-success claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SESSION-ENDING-POLICY-001"]
     },
     {
       "id": "SESSIONEND-TEST-003",
@@ -142,8 +142,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SessionEndingPolicyTests.swift",
       "covers": ["SESSIONEND-REQ-001", "SESSIONEND-REQ-002", "SESSIONEND-REQ-003", "SESSIONEND-REQ-004", "SESSIONEND-REQ-005", "SESSIONEND-REQ-006", "SESSIONEND-REQ-007", "SESSIONEND-REQ-008"],
       "expected": "Invalid time, clean-with-pending, missing/mismatched/stale destructive confirmation, changed environment/Principal/Account/count/revision/fingerprint and malformed evidence fail atomically with stable bounded diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SESSION-ENDING-POLICY-001"]
     },
     {
       "id": "SESSIONEND-TEST-004",
@@ -151,8 +151,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SessionEndingPolicyTests.swift",
       "covers": ["SESSIONEND-REQ-001", "SESSIONEND-REQ-002", "SESSIONEND-REQ-003", "SESSIONEND-REQ-004", "SESSIONEND-REQ-005", "SESSIONEND-REQ-006", "SESSIONEND-REQ-007", "SESSIONEND-REQ-008"],
       "expected": "A deterministic reference AccountSessionEnding port receives only policy-ready requests: pending clean refuses, sync-first remains incomplete until a fresh zero summary, exact destructive confirmation passes, a changed summary refuses, cancellation does not call, and a failing port yields no false completion.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SESSION-ENDING-POLICY-001"]
     },
     {
       "id": "SESSIONEND-TEST-005",
@@ -164,7 +164,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-SESSION-ENDING-POLICY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 safety contract only. Canonical specs and reviewed architecture already require ordinary logout to preserve accepted offline work, sync-first to await authoritative/resolved outcomes, and destructive removal to use exact explicit confirmation. Exact UX copy/policy, A-007 Auth, A-016 offline lease, O-023 media retention, physical persistence/cleanup, schema/RLS/Sync/provider, app/MCP, source migration, hosted resources, production access and cutover remain fully open or gated because this boundary performs none of them."
