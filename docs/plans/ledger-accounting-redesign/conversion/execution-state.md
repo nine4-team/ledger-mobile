@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 85
+State version: 86
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SETUP-OPERATION-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: PROJECT-ARCHIVE-OPERATION-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1141,6 +1141,28 @@ modifying the running Firebase application before hard cutover.
   two target-only surfaces are now `verified`; every excluded server,
   authorization, media, provider, migration and production surface remains
   unadvanced.
+- Audited the next Phase 1 dependency graph and selected
+  `project-archive-operation-contracts` as the next smallest user-meaningful
+  operation. The reviewed capability contract defines ArchiveProject as a
+  distinct always-safe history-preserving intent, and the exact target mapping
+  already names its expected Project revision and shared operation receipt.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for stable Project identity, finite Account/actor/contract/time binding, one
+  exact same-subject expected-revision precondition, shared operation
+  fingerprint/receipt/replay and stable mismatch/tamper/local-failure refusal.
+  No behavioral Project-archive code or executable test exists at ready.
+- Explicitly excluded a generic lifecycle toggle, restore/unarchive and physical
+  delete. O-024 remains open because no delete/discard/tombstone behavior is
+  chosen; O-025 remains open because no Client relation/correction is carried.
+- Postgres, authoritative history preservation, handlers, Data API grants, RLS,
+  Sync Streams, physical local durability, authorization, Auth/provider choice,
+  current/target app/MCP, source migration, hosted resources and production
+  remain explicit nonapplicabilities.
+- Ready-gate sync/check and capability/query/residual controls pass at 751
+  recorded / 736 discovered surfaces, 325 mapped / 164 residual / 43 blockers;
+  M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 100 target
+  tests, graph/contracts, both staging builds and diff formatting pass with no
+  executable Project-archive behavior claimed.
 
 ## Next Action
 
@@ -1169,14 +1191,15 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-setup-operation-contracts` dossier and
    `EVID-PROJECT-SETUP-001` as the sole CreateProject semantic authority for
    existing/new Client selection and complete absent/null/zero category intent.
-   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
-   decision-independent user/operational outcome, create exactly its target-only
-   scaffolds and complete its ready dossier before beginning the next behavior.
-   Do not add Project/Client/category rows or handlers, membership/category
-   authorization, category-definition mutation, Project edit/reassignment/
-   archive/delete, hero media, physical persistence, schema/RLS/Sync/Auth/
-   provider behavior, current app/MCP, migration, hosted resources or
-   production access without the applicable gates.
+   Implement only the ready `project-archive-operation-contracts` dossier:
+   stable Project archive draft/payload/command, one exact expected-revision
+   precondition, shared-envelope subject/fingerprint binding, narrow operation
+   port, receipt validation, canonical restart and the five planned tests. Do
+   not add Project rows/handlers, authoritative history-preservation claims,
+   membership/Project authorization, restore/delete/edit/reassignment, Client/
+   category/media/accounting mutation, physical persistence, schema/RLS/Sync/
+   Auth/provider behavior, current app/MCP, migration, hosted resources or
+   production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

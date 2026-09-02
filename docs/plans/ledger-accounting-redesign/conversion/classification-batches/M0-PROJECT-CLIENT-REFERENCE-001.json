@@ -5,7 +5,8 @@
   "evidence": [
     "EVID-CAPABILITY-PROJECT-REFERENCE-001",
     "EVID-CLIENT-PROJECT-DIRECTORY-001",
-    "EVID-PROJECT-SETUP-001"
+    "EVID-PROJECT-SETUP-001",
+    "EVID-PROJECT-ARCHIVE-001"
   ],
   "surfaces": [
     {
@@ -2030,6 +2031,100 @@
         ],
         "acceptance": [
           "Self-tests prove the backend-neutral Project setup command boundary without claiming server, RLS, Sync Stream, app/MCP, media, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-10A07B52B82D",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "ccb34eadc48d27d994388d893b1b8b8489111a0ab3907f572548a3d42e7c6b78",
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for a revision-aware Project archive command that preserves identity/history and cannot physically delete; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-ARCHIVE-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one stable Project archive intent, exact expected-revision precondition, shared operation binding/receipt validation and a narrow port. It cannot restore, delete, rename, edit or reassign a Project; change Client/category/media/accounting evidence; create rows; authorize access; define schema/RLS/Sync/provider behavior; wire app/MCP; migrate source data; or activate production. O-024/O-025 remain open.",
+      "target": {
+        "owner": "Project Archive Operation Contracts",
+        "surfaces": [
+          "ExpectedProjectRevision",
+          "ProjectArchiveDraft",
+          "ArchiveProjectPayload",
+          "ArchiveProjectCommand",
+          "ProjectArchiving",
+          "ProjectArchiveFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable ProjectID and expected Project revision; it carries no caller-authored Account path, Client relation, child list or authorization claim",
+          "Construction and restart reject changed scope, actor, contract, Project payload, revision precondition, subject or fingerprint; local value validity never substitutes for later trusted membership and Project authorization"
+        ],
+        "syncRequirements": [
+          "The archive intent is canonical structured evidence and reuses the shared operation fingerprint/receipt/replay lifecycle; revision mismatch remains a later authoritative conflict rather than last-write-wins",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, authoritative archive apply, child/history preservation in storage or synchronized Project visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only archive intent and decode no Firebase Project document, isArchived value, child scan, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must prove an applied archive changes only lifecycle/audit revision while preserving exact Project/Client identity and every child/accounting/history reference"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectArchiveOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove stable Project identity, exact expected-revision binding, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-756CB57BD6CA",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7dbcee77d28a2f8e9e508c0977b315e87c3b59f3054d3e0a72c121287b326fdf",
+      "currentBehavior": "Defines only the comment-scaffolded target tests for Project archive identity, revision, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-ARCHIVE-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove stable Project archive intent, expected revision, restart/replay/refusal and absence of delete/edit/reassignment without claiming physical local durability, authorization, server apply/history retention, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Project Archive Operation Contracts",
+        "surfaces": [
+          "ProjectArchiveOperationTests",
+          "stable Project archive fixtures",
+          "expected-revision precondition fixtures",
+          "canonical command restart/replay fixtures",
+          "scope/payload/precondition/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation and Project identities and prove no Client/category/child/display text can rebind archive identity or authority",
+          "Negative tests expose only stable bounded codes and no source names, paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local archive-operation receipt from physical persistence, authoritative archive state and synchronized Project visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Project/isArchived/child/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent archive evidence round-trips byte-identically while changed Account/actor/contract/Project/revision/subject/precondition/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectArchiveOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Project archive command boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       }
     }
