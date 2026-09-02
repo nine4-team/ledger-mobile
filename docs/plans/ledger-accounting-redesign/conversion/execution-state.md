@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 68
+State version: 69
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TRANSFER-DESTINATION-READY-IMPLEMENTATION-NEXT
+- Checkpoint: TRANSFER-DESTINATION-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -864,6 +864,26 @@ modifying the running Firebase application before hard cutover.
   behavioral code, current picker/app/MCP surface, Firebase change, provider,
   hosted resource, migration or production operation exists at this ready
   checkpoint.
+- Implemented the ready Transfer destination-selection slice with exact
+  same-Account/same-Client active-Project filtering, source and Business
+  Inventory exclusion, validated direct routes, source-directory/query
+  fingerprints, deterministic order, distinct available/authoritative-empty/
+  incomplete states, decode revalidation and stable bounded failures. Partial
+  or stale evidence may expose an already validated candidate while retaining
+  its non-ready quality; an empty partial/stale directory never becomes an
+  authoritative empty result.
+- Added four focused domain/restart/refusal tests. They prove equal-name/
+  different-Client exclusion, directory-order preservation, source/directory
+  rebinding, ready/partial/stale evidence, byte-identical restart through the
+  local read port, cross-Account/route/duplicate/completeness/fingerprint/
+  malformed refusal and every public diagnostic code.
+- All four focused tests and all 80 target package tests pass locally, as do
+  target graph/generated-contract checks, macOS and generic-iOS-Simulator
+  staging builds and diff formatting. Four of five obligations pass; exact-
+  commit hosted CI remains planned, so exactly its two target-only surfaces are
+  `implemented`. No Item selection, Transfer writer, server authorization,
+  schema/RLS/Sync/provider, app/MCP wiring, Firebase change, migration, hosted
+  resource or production operation was introduced.
 
 ## Next Action
 
@@ -877,15 +897,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
    Transaction classification, scope, route and pair identity. Do not recreate
    or extend that meaning independently in app, MCP, SQL or adapters.
-3. Implement only the ready `transfer-destination-selection-contracts` dossier
-   inside the provider-free core/test targets: exact-ID candidate filtering,
-   validated routes, source-bound directory/query fingerprints, deterministic
-   order, available/authoritative-empty/incomplete states, the small local read
-   port, decode revalidation, canonical restart and stable refusal. Do not
-   implement Item selection, a Transfer command/pair write, D-017 amount,
-   Invoice/Space/tag/correction/credit effects, schema/RLS/Sync/provider
-   behavior, legacy mapping, current app/MCP wiring, production access or any
-   open product/architecture decision.
+3. Commit and push the implemented
+   `transfer-destination-selection-contracts` checkpoint, require both pull-
+   request jobs to pass for that exact immutable commit, and then advance only
+   `SWIFT-1A05F36246B4`, `TEST-C01243D7B782`, `DESTINATION-TEST-005` and the
+   dossier to `verified` with the exact run URL. Do not advance any current
+   picker/app/MCP, command/write, authorization, schema/RLS/Sync/provider,
+   migration or production surface from that operational evidence.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

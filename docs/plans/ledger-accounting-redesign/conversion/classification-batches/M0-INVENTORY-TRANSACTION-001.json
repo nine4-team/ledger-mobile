@@ -1996,10 +1996,10 @@
     {
       "id": "SWIFT-1A05F36246B4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "d2d1109e2cb045055675d62b619f719c15a60a76939fa6601c90772ec8899e1d",
-      "currentBehavior": "Provides a comment-only target scaffold for exact same-Client Transfer destination selection, local directory readiness, and validated route evidence; no executable behavior exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "eb79e780e2391ad1fadd2eb6ce04ae3240af341d433cdabcdde4dc188c82744b",
+      "currentBehavior": "Implements provider-free exact same-Client Transfer destination candidates, source-bound filtering over validated local Project directory evidence, deterministic order, available/authoritative-empty/incomplete states, query fingerprints, canonical decoding, and stable bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -2007,7 +2007,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSFER-DESTINATION-001"
       ],
-      "notes": "Target-only Phase 1 destination-selection foundation. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
+      "notes": "Target-only Phase 1 destination-selection foundation. Four focused tests and all 80 target tests, graph/contracts, and both staging builds pass locally; exact-commit hosted CI remains required before verification. It cannot authorize a user, create or queue a Transfer, choose Item/Invoice/Space/budget effects, define schema/RLS/Sync/provider behavior, wire app/MCP entry points, migrate source data or activate production.",
       "target": {
         "owner": "Transfer Destination Selection",
         "surfaces": [
@@ -2044,10 +2044,10 @@
     {
       "id": "TEST-C01243D7B782",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "acd23bdb8365c692eed39ad41b8c2c69bb1e9f7e3dc9d7691a5c76a313265f31",
-      "currentBehavior": "Provides a comment-only target scaffold for exact destination filtering, incomplete-versus-authoritative-empty evidence, canonical restart, and invalid/tampered selection refusal; no executable test exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "8b3c09fd7db046e9a28ac561a3d453fc56eb2210bc72057bf7573de0fe458e04",
+      "currentBehavior": "Executes four deterministic target-only tests for exact destination filtering, available/authoritative-empty/incomplete evidence, source-bound query changes, canonical restart through an in-memory port, and invalid/duplicate/tampered selection refusal.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -2055,7 +2055,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSFER-DESTINATION-001"
       ],
-      "notes": "Target-only destination-selection self-test scaffold. It cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
+      "notes": "Target-only destination-selection self-tests pass locally as part of all 80 target tests; exact-commit hosted CI remains required before verification. They cannot establish server authorization, Transfer atomicity, physical offline sync, concrete UI/accessibility, app/MCP parity, source migration or production behavior.",
       "target": {
         "owner": "Transfer Destination Selection",
         "surfaces": [

@@ -9,8 +9,9 @@ by this directory. The Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit
 `031a240a`. The provider-free exact same-Client Transfer destination-selection
-slice is ready for implementation. Broader app/schema/provider and migration
-surfaces remain unadvanced.
+slice is implemented locally with all 80 target tests and both staging builds
+passing; exact-commit hosted CI remains required before verification. Broader
+app/schema/provider and migration surfaces remain unadvanced.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

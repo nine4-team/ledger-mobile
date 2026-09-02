@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T03:17:56.090Z",
+  "generatedFromManifestSync": "2026-09-02T03:28:33.414Z",
   "totals": {
     "slices": 17,
     "claimedTargetSurfaces": 55,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 38
+    "implementationAdvancedTargetSurfaces": 40
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 15,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -229,7 +229,7 @@
       "sliceId": "transfer-destination-selection-contracts",
       "title": "Select exact same-Client Transfer destinations from local directory evidence",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Transfer Destination Selection",
       "surfaceIds": [
         "SWIFT-1A05F36246B4",
