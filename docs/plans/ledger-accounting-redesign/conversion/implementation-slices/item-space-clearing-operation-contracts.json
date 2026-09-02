@@ -3,7 +3,7 @@
   "sliceId": "item-space-clearing-operation-contracts",
   "title": "Clear an exact same-scope Item placement set atomically without changing accounting or deleting media",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Item Clearing Operation Contracts",
   "surfaceIds": [
     "SWIFT-4C7158974133",
@@ -162,12 +162,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["ITEMSPACECLEAR-REQ-001", "ITEMSPACECLEAR-REQ-002", "ITEMSPACECLEAR-REQ-003", "ITEMSPACECLEAR-REQ-004", "ITEMSPACECLEAR-REQ-005", "ITEMSPACECLEAR-REQ-006", "ITEMSPACECLEAR-REQ-007", "ITEMSPACECLEAR-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming physical placement/marker mutation, accounting, schema/RLS/Sync, app/MCP, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-CLEARING-001"]
     }
   ],
   "implementationEvidence": ["EVID-ITEM-SPACE-CLEARING-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally as a decision-independent Phase 1 command boundary after exact ready commit 2a201de4109891323e51bbd273ed33723d970508 passed immutable Actions run 33675190031. Canonical Space/Item authority and reviewed Spaces/media/architecture contracts settle explicit bulk clear, exact current placement, atomicity, idempotency, accounting independence and preservation of current item-linked Space-photo checkmark cleanup without deleting bytes. Four focused/all 180 target tests in 42 suites plus complete local implementation gates pass; exact implementation-commit CI remains required. O-037 stays open because Space archive is excluded; the command supports only explicit user-requested clear and does not define archive effects. O-023 stays open because no attachment reference or byte is removed. The slice stops before physical persistence, authoritative apply/marker cleanup, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified decision-independent Phase 1 command boundary. Exact ready commit 2a201de4109891323e51bbd273ed33723d970508 passed immutable Actions run 33675190031; exact implementation commit f5a7ac7598f77859239b66666bc703ee4639c233 passed immutable Actions run 33677087616 with conversion traceability in 8 seconds and the isolated target environment in 2 minutes 25 seconds, including four focused/all 180 target tests in 42 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. Canonical Space/Item authority and reviewed Spaces/media/architecture contracts settle explicit bulk clear, exact current placement, atomicity, idempotency, accounting independence and preservation of current item-linked Space-photo checkmark cleanup without deleting bytes. O-037 stays open because Space archive is excluded; the command supports only explicit user-requested clear and does not define archive effects. O-023 stays open because no attachment reference or byte is removed. The slice stops before physical persistence, authoritative apply/marker cleanup, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

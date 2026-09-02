@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-4C7158974133`, `TEST-0AB198EB6935`
 - Slice dossier:
   `conversion/implementation-slices/item-space-clearing-operation-contracts.json`
-- Verification state: implemented locally; exact implementation-commit CI is
-  required before verification
+- Verification state: verified at exact implementation commit
+  `f5a7ac7598f77859239b66666bc703ee4639c233`
 - Ready scaffold hashes:
   - `ItemSpaceClearingOperation.swift`:
     `a5580c3efb9fa0e8569bc2813b4545e13b65a585bd1f6c842b6f2856e690a42c`
@@ -196,8 +196,15 @@ the source application project is unchanged. M1/M2 retain exactly their expected
 still records 789 surfaces / 774 discovered, 363 mapped-or-later target-relevant
 surfaces, 164 residual surfaces and 43 validated blockers. Forty-two slices
 claim 105 of 527 target-relevant surfaces; 90 are implemented or later. The
-exact implementation commit and immutable CI run remain pending, so this slice
-is not yet verified.
+exact implementation commit below preserves those same counts and limits.
+
+The exact implementation commit
+`f5a7ac7598f77859239b66666bc703ee4639c233` passed immutable GitHub Actions run
+`33677087616`: conversion traceability passed in 8 seconds and the isolated
+target environment passed in 2 minutes 25 seconds with all 180 target tests in
+42 suites, target dependency/generated-contract checks, both staging builds and
+clean tracked artifacts. All five dossier obligations pass, and exactly
+`SWIFT-4C7158974133` and `TEST-0AB198EB6935` are promoted to `verified`.
 
 ## Permanent Limits
 

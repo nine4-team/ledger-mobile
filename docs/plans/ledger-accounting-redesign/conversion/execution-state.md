@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 144
+State version: 145
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-CLEARING-IMPLEMENTED-LOCAL
+- Checkpoint: ITEM-SPACE-CLEARING-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2178,7 +2178,14 @@ modifying the running Firebase application before hard cutover.
   query/residual controls, M0, clean formatting and repeatable project/scheme
   hashes. M1/M2 retain exactly 2/164 blockers with zero structural errors. The
   source application project is unchanged; exact implementation-commit CI
-  remains.
+  was required before promotion.
+- Exact implementation commit
+  `f5a7ac7598f77859239b66666bc703ee4639c233` passed immutable Actions run
+  `33677087616`: conversion traceability passed in 8 seconds and the isolated
+  target environment passed in 2 minutes 25 seconds with all 180 target tests
+  in 42 suites, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts. All five obligations pass; exactly the two Item Space-
+  clearing surfaces are now `verified`.
 
 ## Next Action
 
@@ -2265,10 +2272,10 @@ Continue without waiting on the two M1 evidence blockers:
    and both CI jobs are verified. Treat the ready
    `item-space-clearing-operation-contracts` dossier and
    `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for the next bounded
-   implementation. The exact ready checkpoint and both immutable CI jobs passed;
-   finish the implementation checkpoint, commit/push the exact implementation,
-   require both immutable CI jobs, and then promote only the two claimed
-   surfaces to verified. Keep
+   implementation. Its exact implementation commit and both CI jobs are
+   verified. Audit the next smallest complete decision-independent target slice
+   against canonical product authority and current-source behavior before
+   creating its ready dossier and comment-only checkpoint. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
