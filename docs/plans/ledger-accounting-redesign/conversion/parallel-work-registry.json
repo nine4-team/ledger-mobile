@@ -112,6 +112,40 @@
         "exactIntegrationCommitCi": "passed: 8fce53b75029133b39fe182031df25ef011fc35e in immutable Actions run 33689446640"
       },
       "integrationDisposition": "accepted and verified at 8fce53b75029133b39fe182031df25ef011fc35e after every-line integration review, independent adversarial review, complete local gates and immutable Actions run 33689446640; the clean pilot worktree was removed after verification while the branch and candidate commit remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-003",
+      "sliceId": "space-core-details-read-contracts",
+      "status": "active",
+      "baseCommit": "8849344dc66d71d9dd9b9ba589a76deb007f3172",
+      "readyCiRun": 33693232878,
+      "branch": "codex/supabase-slice-space-core-details",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_core_details",
+      "workerAgent": "/root/space_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceCoreDetailsDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user requested early quality-control sampling, and this slice composes several shared Space, checklist, offline-readiness and failure semantics."
+      },
+      "handoff": null,
+      "integrationDisposition": "pending untrusted candidate implementation; worker cannot edit control-plane files or promote status"
     }
   ],
   "preflightFindings": [

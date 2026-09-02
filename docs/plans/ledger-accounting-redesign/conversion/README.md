@@ -265,7 +265,8 @@ Sync, app/MCP, migration and production behavior. Implementation remains
 withheld until the exact ready checkpoint passes immutable CI. The complete
 local ready gate passes all 193 existing target tests in 45 suites, conversion/
 target/generated-contract checks, repeatable project generation and both
-staging builds;
+staging builds. Exact ready commit `8849344d` passed immutable Actions run
+`33693232878`, authorizing only the frozen two-path isolated worker candidate;
 `EVID-SPACE-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long

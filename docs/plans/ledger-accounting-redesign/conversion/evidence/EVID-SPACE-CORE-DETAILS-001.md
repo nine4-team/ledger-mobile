@@ -84,8 +84,16 @@ gate passes:
 - macOS and generic iOS Simulator staging builds; and
 - clean formatting and no source application-project change.
 
-Immutable CI on the exact ready commit must still pass before a worker may
-replace the scaffolds.
+Immutable CI on the exact ready commit was the final prerequisite before a
+worker could replace the scaffolds.
+
+Exact ready commit
+`8849344dc66d71d9dd9b9ba589a76deb007f3172` passed immutable Actions run
+`33693232878`: conversion traceability passed in 12 seconds and the isolated
+target environment passed in 2 minutes 32 seconds with all 193 existing tests,
+generated contracts, both staging builds and clean tracked artifacts. The
+ready gate therefore authorizes only the frozen two-path candidate
+implementation in the isolated worker worktree.
 
 ## Permanent Limits
 

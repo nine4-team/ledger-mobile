@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 160
+State version: 161
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CORE-DETAILS-READY
+- Checkpoint: SPACE-CORE-DETAILS-WORKER-ACTIVE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2397,9 +2397,21 @@ modifying the running Firebase application before hard cutover.
   167 residual / 44 blockers, and 46 slices claim 113 of 535 target-relevant
   surfaces. The complete local ready gate passes conversion/target/generated-
   contract controls, all 193 existing tests in 45 suites, repeatable XcodeGen
-  output and both staging builds. No worker implementation, provider, Firebase
-  or production action has occurred; exact-ready-SHA immutable CI remains
-  required.
+  output and both staging builds. At that local checkpoint no worker
+  implementation, provider, Firebase or production action had occurred;
+  exact-ready-SHA immutable CI was the remaining prerequisite.
+- Exact ready commit
+  `8849344dc66d71d9dd9b9ba589a76deb007f3172` passed immutable Actions run
+  `33693232878`: conversion traceability passed in 12 seconds and isolated
+  target verification passed in 2 minutes 32 seconds with all 193 existing
+  tests, generated contracts, both builds and clean tracked artifacts.
+  `SUBAGENT-WORK-003` is recorded from that exact base in isolated branch/
+  worktree `codex/supabase-slice-space-core-details` /
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_core_details`, with
+  only the two Space core-details scaffold paths writable. Every-line primary
+  review, independent adversarial review, complete local gates and exact
+  integrated-SHA CI remain mandatory. No provider, Firebase or production
+  action occurred.
 
 ## Next Action
 
