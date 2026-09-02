@@ -3,7 +3,7 @@
   "sliceId": "project-details-update-operation-contracts",
   "title": "Replace or clear one Project description without changing other Project state",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Details Update Operation Contracts",
   "surfaceIds": ["SWIFT-1A34CF88E95E", "TEST-22878D176671"],
   "requirements": [
@@ -160,8 +160,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTDETAILS-REQ-001", "PROJECTDETAILS-REQ-002", "PROJECTDETAILS-REQ-003", "PROJECTDETAILS-REQ-004", "PROJECTDETAILS-REQ-005", "PROJECTDETAILS-REQ-006", "PROJECTDETAILS-REQ-007", "PROJECTDETAILS-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-DETAILS-UPDATE-001"],

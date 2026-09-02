@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-1A34CF88E95E`, `TEST-22878D176671`
 - Slice dossier:
   `conversion/implementation-slices/project-details-update-operation-contracts.json`
-- Verification state: implemented locally; four of five obligations pass and
-  exact-implementation-commit pull-request CI remains planned
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `a532ac9dee5bedca6ade576657fc4fd971841854`
 - Ready scaffold hashes:
   - `ProjectDetailsUpdateOperation.swift`:
     `f80752de441941d33245a4d7c260fc6b9100a05a3099a015db1a65c9faf00532`
@@ -179,9 +179,24 @@ controls, M0 and clean diff formatting. The ledger remains at 775 recorded / 760
 discovered, 349 mapped-or-later / 164 residual / 43 blockers; 76 target surfaces
 are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
 
-`PROJECTDETAILS-TEST-001` through `-004` therefore pass. The exact-
-implementation-commit operational obligation remains planned until immutable
-CI completes.
+`PROJECTDETAILS-TEST-001` through `-004` therefore pass.
+
+## Immutable Exact-Commit Verification
+
+GitHub Actions run `33642777864` verified exact implementation commit
+`a532ac9dee5bedca6ade576657fc4fd971841854`:
+
+- conversion traceability passed in 10 seconds;
+- the isolated target environment passed in 2 minutes 51 seconds;
+- all 152 target tests in 35 suites passed;
+- target dependency/provider/source-project isolation and generated app/MCP
+  contracts passed;
+- macOS and generic iOS Simulator staging builds passed; and
+- tracked-artifact cleanliness passed.
+
+`PROJECTDETAILS-TEST-005` therefore passes. All five obligations and exactly the
+two claimed target-only surfaces are verified. Hosted evidence adds no server,
+physical persistence, authorization, provider, migration or production claim.
 
 ## Permanent Limits
 

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 123
+State version: 124
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-DETAILS-UPDATE-IMPLEMENTED-LOCAL
+- Checkpoint: PROJECT-DETAILS-UPDATE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1827,6 +1827,14 @@ modifying the running Firebase application before hard cutover.
   staging builds, conversion/capability/query/residual controls, M0 and clean
   artifacts pass locally. Exactly two surfaces are `implemented`; 76 target
   surfaces are implementation-advanced and exact-commit CI remains.
+- Exact implementation commit
+  `a532ac9dee5bedca6ade576657fc4fd971841854` passed immutable GitHub Actions
+  run `33642777864`: conversion traceability passed in 10 seconds and the
+  isolated target environment passed in 2 minutes 51 seconds with all 152 tests
+  in 35 suites, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts. All five obligations pass and exactly the two Project-
+  details surfaces are now `verified`; 76 target surfaces are implemented or
+  later.
 
 ## Next Action
 
@@ -1887,11 +1895,10 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SPACE-TEMPLATE-REFERENCE-001` as the sole Space-template read semantics.
    Treat the verified `client-archive-operation-contracts` dossier and
    `EVID-CLIENT-ARCHIVE-001` as the sole ArchiveClient semantic authority.
-   Treat the implemented `project-details-update-operation-contracts` dossier
-   and `EVID-PROJECT-DETAILS-UPDATE-001` as the exact bounded implementation
-   authority. Commit only this frozen provider-free implementation, require
-   immutable exact-commit CI, then advance exactly its two surfaces to verified.
-   Keep
+   Treat the verified `project-details-update-operation-contracts` dossier and
+   `EVID-PROJECT-DETAILS-UPDATE-001` as the sole UpdateProjectDetails semantic
+   authority. Audit the next smallest complete decision-independent dependency
+   before creating another ready slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
