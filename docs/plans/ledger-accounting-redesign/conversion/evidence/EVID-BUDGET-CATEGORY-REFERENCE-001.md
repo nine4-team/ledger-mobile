@@ -1,18 +1,19 @@
 # EVID-BUDGET-CATEGORY-REFERENCE-001 — Budget Category Reference Read Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation planning / provider-free budget-category reference read
+- Class: implementation / provider-free budget-category reference read
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-8351FACDBE06`, `TEST-61925915E20E`
 - Slice dossier:
   `conversion/implementation-slices/budget-category-reference-read-contracts.json`
-- Verification state: ready; behavioral implementation has not started
-- Ready scaffold hashes:
+- Verification state: implemented; four local obligations pass and exact-commit
+  hosted operational CI remains planned
+- Implementation hashes:
   - `BudgetCategoryReferenceData.swift`:
-    `1a92b7ba856a4f6a204a2d671996f913b4f671025512a80ecc65066d3243e053`
+    `110f0b12f529131e929dbad4532e66e7925544c2359321e7faae82622f2ebcb8`
   - `BudgetCategoryReferenceDataTests.swift`:
-    `ca36532c54ee7627aef3a93cf519a846a571f9d21d6a6c2f139a4211ad050f89`
+    `7a703a6d369b112f2758b7f31dc8cdb0a3178e64e879756c341575f237cdf611`
 
 ## Selection and Scope
 
@@ -91,9 +92,56 @@ The ready checkpoint ran from the dedicated Supabase worktree on 2026-09-02:
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
 
+## Implemented Contract
+
+The provider-free target core now defines:
+
+- `BudgetCategoryName`, which trims surrounding whitespace, rejects blank,
+  control-character and over-100-character display text, and never carries
+  identity or authority;
+- the closed `BudgetCategoryKind` set `general`, `itemized`, and `fee`;
+- `BudgetCategoryDefinitionSnapshot`, binding exact category and Account IDs to
+  name, kind, active/archived lifecycle, system and overall-budget-exclusion
+  flags, unique presentation order and revision;
+- eligibility derived only for active non-system visible rows, with itemized
+  eligibility additionally requiring the itemized kind;
+- `BudgetCategoryReferenceSnapshot`, which validates exact Account scope,
+  rejects duplicate identity/case-insensitive name/order, requires its visible
+  count to equal the already-authorized rows actually present, canonicalizes
+  presentation order and reconstructs through the same validators; and
+- the narrow `BudgetCategoryReferenceQuerying.watchBudgetCategories(accountId:)`
+  port plus stable bounded diagnostic failures.
+
+This implementation deliberately contains no generic CRUD, authorization
+decision, hidden-row count, Project allocation command, provider listener or
+backend SDK type.
+
+## Local Implementation Verification
+
+The focused command
+`swift test --package-path LedgeriOS --filter BudgetCategoryReferenceDataTests`
+passes four tests in one suite. It proves:
+
+- exact category type/lifecycle/system/exclusion/order/revision and eligibility;
+- already-authorized visible-count privacy and exclusion of provider/Auth/
+  credential material from encoded evidence;
+- ready, partial, stale and authoritative-empty canonical restart;
+- atomic refusal for invalid name/type/revision/time, cross-Account rows,
+  duplicate IDs/case-insensitive names/orders, count mismatch, malformed
+  encoding and incomplete-authoritative local evidence; and
+- exact-Account port behavior with no false rows on mismatch or local failure.
+
+`CATEGORYREFERENCE-TEST-001` through `-004` pass locally. The complete 108-test
+target suite in 24 suites, target graph and generated contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and diff formatting also pass locally. M1 and M2 retain their
+expected two and 164 blockers with zero structural errors. Immutable exact-
+commit CI still has to pass before `CATEGORYREFERENCE-TEST-005` and the slice
+can advance to `verified`.
+
 ## Permanent Limits
 
-This ready plan cannot:
+This implemented provider-free boundary cannot:
 
 - authorize, download or reveal a budget category or hidden fee-category count;
 - create, update, archive, reorder or delete a category;

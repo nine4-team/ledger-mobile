@@ -33,8 +33,9 @@ production behavior. The provider-free Project archive operation slice is
 verified at exact implementation commit `7b30bd25`, including all 104 target
 tests and both staging builds, without introducing lifecycle storage,
 authorization, providers, migration or production behavior. The provider-free
-budget-category reference read slice is ready, with exactly two comment-only
-target surfaces and no executable behavior yet.
+budget-category reference read slice is implemented locally, with four focused
+tests passing across exactly two target surfaces. Exact-commit hosted CI remains
+required before verification.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

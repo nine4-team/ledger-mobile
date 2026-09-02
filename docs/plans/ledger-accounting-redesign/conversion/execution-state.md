@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 89
+State version: 90
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: BUDGET-CATEGORY-REFERENCE-READ-READY
+- Checkpoint: BUDGET-CATEGORY-REFERENCE-READ-IMPLEMENTED-AWAITING-EXACT-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1210,6 +1210,30 @@ modifying the running Firebase application before hard cutover.
   M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 104 target
   tests, graph/contracts, both staging builds and diff formatting pass with no
   executable budget-category reference behavior claimed.
+- Implemented only the ready provider-free budget-category reference boundary:
+  bounded normalized display name, exact general/itemized/fee kind, stable
+  Account/category identity, lifecycle/system/overall-budget-exclusion/order/
+  revision evidence, active/non-system/itemized eligibility, Account-exact
+  local-list snapshots, visible-count privacy, canonical restart, one narrow
+  query port and closed stable failures.
+- A visible count is valid only when it equals the already-authorized rows
+  actually present. The local contract cannot reveal hidden fee rows or counts,
+  authorize a download or infer complete Account data beyond its explicit
+  readiness evidence.
+- Added four deterministic tests for exact visible category semantics, ready/
+  partial/stale/authoritative-empty restart, invalid name/type/revision/time,
+  scope/identity/name/order/count/malformed refusal and exact-Account port
+  failure safety. Four focused/all 108 target tests in 24 suites pass locally,
+  as do conversion/capability/query/residual controls, M0, graph/contracts,
+  macOS and generic iOS Simulator staging builds and diff formatting.
+- `CATEGORYREFERENCE-TEST-001` through `-004` pass locally. Exact-commit hosted
+  `CATEGORYREFERENCE-TEST-005` remains planned, so exactly the two category-
+  reference surfaces are `implemented`, not `verified`.
+- No hidden fee visibility, category administration, Project allocation or
+  budget calculation, physical local persistence, server/download
+  authorization, schema/RLS/Sync/Auth/provider, current/target app/MCP, source
+  migration, hosted resource or production operation was introduced. O-026
+  remains open and unchanged.
 
 ## Next Action
 
@@ -1240,14 +1264,16 @@ Continue without waiting on the two M1 evidence blockers:
    existing/new Client selection and complete absent/null/zero category intent.
    Treat the verified `project-archive-operation-contracts` dossier and
    `EVID-PROJECT-ARCHIVE-001` as the sole ArchiveProject semantic authority.
-   Implement only the ready `budget-category-reference-read-contracts` dossier:
-   stable visible Account/category name/kind/lifecycle/system/exclusion/order/
-   revision values, exact eligibility, shared local-list readiness/restart,
-   atomic invalid/scope/duplicate refusal and one narrow reference read port.
-   Do not add hidden fee visibility/counts, category administration, Project
-   allocation configuration, physical persistence, schema/RLS/Sync/Auth/
-   provider behavior, current app/MCP, migration, hosted resources or production
-   access.
+   Treat the implemented `budget-category-reference-read-contracts` dossier and
+   `EVID-BUDGET-CATEGORY-REFERENCE-001` as the sole shared read semantics for
+   category identity/kind/lifecycle/system/exclusion/order/revision,
+   eligibility, visible-count privacy and local readiness. Commit and push the
+   exact implementation checkpoint, wait for immutable hosted conversion and
+   isolated-target CI, and advance only its two surfaces/tests to `verified` if
+   that exact commit passes. Do not add hidden fee visibility/counts, category
+   administration, Project allocation configuration, physical persistence,
+   schema/RLS/Sync/Auth/provider behavior, current app/MCP, migration, hosted
+   resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
