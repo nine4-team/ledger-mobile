@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T23:32:35.992Z",
+  "generatedFromManifestSync": "2026-09-02T23:38:44.372Z",
   "totals": {
     "slices": 46,
     "claimedTargetSurfaces": 113,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 44,
+    "implemented": 0,
+    "verified": 45,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -546,7 +546,7 @@
       "sliceId": "space-core-details-read-contracts",
       "title": "Read one Space's provider-free core details with explicit offline truth",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Space Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-02BF0EA3C433",

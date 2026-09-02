@@ -7,9 +7,8 @@
 - Claimed target surfaces: `SWIFT-02BF0EA3C433`, `TEST-377B0FDAF4D4`
 - Slice dossier:
   `conversion/implementation-slices/space-core-details-read-contracts.json`
-- Verification state: implemented after enhanced review and complete local gates;
-  immutable CI on the exact integration checkpoint remains required before
-  verification
+- Verification state: verified after enhanced review, complete local gates and
+  immutable CI on the exact integration checkpoint
 - Ready scaffold hashes:
   - `SpaceCoreDetailsData.swift`:
     `d9e4335368aa7d9d7b9a0616f0dbf851f39a58f0ecf9ccef5ef66c0b1fe742b5`
@@ -143,8 +142,13 @@ project hash
 and scheme hash
 `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`;
 macOS and generic iOS Simulator staging builds; and clean formatting/artifacts.
-Immutable CI on the exact integration checkpoint remains the sole prerequisite
-for operational verification and status promotion.
+Exact integration checkpoint
+`d5afa699ce09c105a82b187f9953e06a09ac2b10` then passed immutable Actions run
+`33695588031`: conversion traceability passed in 10 seconds and the isolated
+target environment passed in 3 minutes 16 seconds with all 199 tests, generated
+contracts, both staging builds and clean tracked artifacts. The slice and its
+two surfaces are therefore verified. The clean worker worktree may now be
+removed while its branch and candidate commits remain recoverable.
 
 ## Permanent Limits
 

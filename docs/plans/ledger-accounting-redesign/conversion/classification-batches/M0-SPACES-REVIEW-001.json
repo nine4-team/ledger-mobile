@@ -1479,14 +1479,14 @@
       "acknowledgeSourceHash": "2d02cbd351cce52a163fda48381f6e10eeea953d17af637e24860ce0ca6b7669",
       "currentBehavior": "Defines the implemented provider-free request, validated core Space snapshot, explicit local readiness/absence evidence, bounded update/failure states and narrow exact-request query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CORE-DETAILS-001"
       ],
-      "notes": "Implemented provider-free target contract after primary every-line review, independent adversarial review, four corrected test-quality findings, 6 focused and 199 full target tests. Immutable exact-integration-checkpoint CI remains required before verification. The boundary cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified provider-free target contract after primary every-line review, independent adversarial review, four corrected test-quality findings, 6 focused and 199 full target tests, complete local gates and immutable Actions run 33695588031 on exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10. The boundary cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Space Core Details Read Contracts",
         "surfaces": [
@@ -1527,14 +1527,14 @@
       "acknowledgeSourceHash": "92522cb15998005b3729d0c2cf7cf16bd33ef2bcc05fd478debf47ced94c8100",
       "currentBehavior": "Tests the implemented provider-free single-Space core-details contract across Project/Inventory scope, lifecycle, checklist/count evidence, offline readiness/absence/restart, exact request binding, bounded failure, cancellation and encoded exclusions.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CORE-DETAILS-001"
       ],
-      "notes": "Implemented tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Immutable exact-integration-checkpoint CI remains required before verification; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10 passed immutable Actions run 33695588031; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Space Core Details Read Contracts",
         "surfaces": [

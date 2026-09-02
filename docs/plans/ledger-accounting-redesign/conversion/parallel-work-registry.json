@@ -116,7 +116,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-003",
       "sliceId": "space-core-details-read-contracts",
-      "status": "integration_gate",
+      "status": "completed",
       "baseCommit": "8849344dc66d71d9dd9b9ba589a76deb007f3172",
       "readyCiRun": 33693232878,
       "branch": "codex/supabase-slice-space-core-details",
@@ -176,9 +176,9 @@
         ],
         "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after final correction",
         "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 199 tests in 46 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
-        "exactIntegrationCommitCi": "pending"
+        "exactIntegrationCommitCi": "passed: d5afa699ce09c105a82b187f9953e06a09ac2b10 in immutable Actions run 33695588031"
       },
-      "integrationDisposition": "candidate accepted after every-line and independent adversarial review and integrated as 72b24afa/503b3839/05509124; complete local gate and exact-integration-checkpoint immutable CI remain required before verification"
+      "integrationDisposition": "accepted and verified at d5afa699ce09c105a82b187f9953e06a09ac2b10 after every-line primary review, independent adversarial review, four corrected quality findings, complete local gates and immutable Actions run 33695588031; worker branch and candidate commits remain recoverable"
     }
   ],
   "preflightFindings": [

@@ -252,7 +252,7 @@ provider behavior remain excluded. Four focused/all 193 tests, generated
 contracts, both staging builds and clean artifacts pass; the one P3 test-
 exhaustiveness finding was corrected and independently confirmed;
 `EVID-PROJECT-ITEM-LINK-PRESENTATION-001`.
-The provider-free single-Space core-details read slice is implemented with
+The provider-free single-Space core-details read slice is verified with
 exactly two target surfaces, eight frozen requirements and six obligations.
 Primary and independent adversarial preflight approved exact Account/Space
 identity, immutable Project-or-Business-Inventory scope, normalized name/notes,
@@ -266,10 +266,11 @@ immutable Actions run `33693232878`, authorizing only the frozen two-path
 isolated worker candidate. Primary every-line and independent adversarial
 review caught and corrected four test-quality gaps across request binding,
 normalization refusal, port-side validation and stable diagnostics. Candidate
-`1920389d` is integrated as `72b24afa`/`503b3839`/`05509124`; 6 focused and all
-199 tests in 46 suites plus target isolation pass with no remaining P0-P3
-finding. Exact-integration-checkpoint immutable CI remains required before
-verification; `EVID-SPACE-CORE-DETAILS-001`.
+`1920389d` was integrated as `72b24afa`/`503b3839`/`05509124`; 6 focused and all
+199 tests in 46 suites plus complete local gates passed with no remaining P0-P3
+finding. Exact integration checkpoint `d5afa699` then passed immutable Actions
+run `33695588031`, including both staging builds;
+`EVID-SPACE-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

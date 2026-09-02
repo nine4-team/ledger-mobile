@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 162
+State version: 163
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CORE-DETAILS-INTEGRATION-GATE
+- Checkpoint: SPACE-CORE-DETAILS-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2422,9 +2422,13 @@ modifying the running Firebase application before hard cutover.
   re-reviewed and retested. Six focused and all 199 target tests in 46 suites,
   target isolation/generated-contract checks, repeatable project generation,
   both staging builds and clean diff checks pass with no remaining P0-P3
-  finding. The slice and its two surfaces are `implemented`, not `verified`;
-  immutable CI on the exact integration checkpoint remains. No provider,
-  Firebase or production action occurred.
+  finding. Exact integration checkpoint
+  `d5afa699ce09c105a82b187f9953e06a09ac2b10` then passed immutable Actions
+  run `33695588031`: conversion traceability passed in 10 seconds and isolated
+  target verification passed in 3 minutes 16 seconds with all 199 tests,
+  generated contracts, both builds and clean tracked artifacts. The slice and
+  its two surfaces are `verified`. No provider, Firebase or production action
+  occurred.
 
 ## Next Action
 
@@ -2535,12 +2539,11 @@ Continue without waiting on the two M1 evidence blockers:
    actual Link routes/commands, Purchase choice/eligibility, acquisition
    handling, correction/relink behavior, transient UI state, Accounted-item
    actions, app/MCP and provider/migration behavior outside this slice.
-   Treat implemented `space-core-details-read-contracts` and
-   `EVID-SPACE-CORE-DETAILS-001` as the current exact integration boundary.
-   Preserve the completed every-line and independent adversarial reviews and
-   their four corrected findings. Pass the complete integrated local gate,
-   commit/push the exact checkpoint, and require immutable CI before promoting
-   the slice or either surface to `verified`. Do not let that slice acquire timestamp provenance,
+   Treat verified `space-core-details-read-contracts` and
+   `EVID-SPACE-CORE-DETAILS-001` as the sole provider-free single-Space core
+   detail read authority. Preserve the completed every-line and independent
+   adversarial reviews, their four corrected findings and exact integration
+   run `33695588031`. Do not let later slices recreate or extend timestamp provenance,
    authoritative partial counts, percentage policy, archive effects,
    Item/media/review/template/accounting, provider/schema/RLS/Sync, app/MCP,
    migration or production behavior.

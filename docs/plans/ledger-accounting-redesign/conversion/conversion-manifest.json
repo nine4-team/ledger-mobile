@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T23:32:35.992Z",
+    "lastSynchronizedAt": "2026-09-02T23:38:44.372Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -15846,14 +15846,14 @@
           "Synthetic single-Space fixtures prove exact scope/core/checklist/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CORE-DETAILS-001"
       ],
-      "notes": "Implemented provider-free target contract after primary every-line review, independent adversarial review, four corrected test-quality findings, 6 focused and 199 full target tests. Immutable exact-integration-checkpoint CI remains required before verification. The boundary cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified provider-free target contract after primary every-line review, independent adversarial review, four corrected test-quality findings, 6 focused and 199 full target tests, complete local gates and immutable Actions run 33695588031 on exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10. The boundary cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -34308,14 +34308,14 @@
           "Tests prove only the provider-free single-Space core-details contract and explicitly exclude archive effects, Items, media, review, templates, accounting, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CORE-DETAILS-001"
       ],
-      "notes": "Implemented tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Immutable exact-integration-checkpoint CI remains required before verification; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified tests passed 6 focused and all 199 target tests after primary and independent review. The review loop corrected missing normalization negatives, independent fingerprint-binding proof, port-side request validation and exact unique diagnostic-code assertions. Exact integration checkpoint d5afa699ce09c105a82b187f9953e06a09ac2b10 passed immutable Actions run 33695588031; these tests do not prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
