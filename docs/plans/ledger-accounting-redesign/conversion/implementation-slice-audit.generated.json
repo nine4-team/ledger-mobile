@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T14:57:40.836Z",
+  "generatedFromManifestSync": "2026-09-02T15:12:26.352Z",
   "totals": {
     "slices": 36,
     "claimedTargetSurfaces": 93,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 76
+    "implementationAdvancedTargetSurfaces": 78
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 34,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -426,7 +426,7 @@
       "sliceId": "space-creation-operation-contracts",
       "title": "Create one Project or Business Inventory Space without unrelated effects",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Creation Operation Contracts",
       "surfaceIds": [
         "SWIFT-F61D38406022",

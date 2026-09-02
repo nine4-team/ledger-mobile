@@ -119,15 +119,15 @@ pass four focused/all 152 target tests, graph/generated-contract checks, both
 staging builds and clean artifacts. O-023/O-024/O-025, physical persistence,
 schema/RLS/Sync/Auth/provider behavior, app/MCP, migration and production remain
 excluded.
-The provider-free direct Space creation slice is ready. Exactly two comment-only
-target surfaces and one machine-readable dossier freeze a stable Space ID,
-exact Project-or-Business-Inventory scope, normalized required name and optional
-notes, zero expected-revision preconditions, shared operation lifecycle, and a
-narrow port. No executable Space-create behavior exists before exact-ready-
-commit CI; checklist/template/media/Item/review/lifecycle/accounting mutation,
-authorization, persistence, schema/RLS/Sync/provider behavior, app/MCP,
-migration and production remain excluded. O-023/O-026/O-037 stay open;
-`EVID-SPACE-CREATION-001`.
+The provider-free direct Space creation slice is implemented locally and awaits
+exact-implementation-commit CI. Exactly two target surfaces implement a stable
+Space ID, exact Project-or-Business-Inventory scope, normalized required name
+and optional notes, zero expected-revision preconditions, shared operation
+lifecycle, canonical restart/refusal and a narrow port. Four focused/all 156
+target tests and both staging builds pass locally. Checklist/template/media/
+Item/review/lifecycle/accounting mutation, authorization, physical persistence,
+schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
+excluded. O-023/O-026/O-037 stay open; `EVID-SPACE-CREATION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

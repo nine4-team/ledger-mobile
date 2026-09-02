@@ -1,14 +1,14 @@
 # EVID-SPACE-CREATION-001 — Space Creation Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation plan / provider-free direct Space creation
+- Class: implementation / provider-free direct Space creation
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-F61D38406022`, `TEST-F46861BCC21A`
 - Slice dossier:
   `conversion/implementation-slices/space-creation-operation-contracts.json`
-- Verification state: ready locally; executable behavior remains absent until
-  the exact comment-only ready commit passes immutable pull-request CI
+- Verification state: implemented locally; exact implementation-commit CI is
+  still required before either claimed surface can become verified
 - Ready scaffold hashes:
   - `SpaceCreationOperation.swift`:
     `3a9649300ded0cfa08608c5cec10a0bbfd5e314792e651c2c18e87427dbe9d34`
@@ -123,9 +123,65 @@ The complete local ready gate passes:
 Passing immutable exact-ready-commit CI may authorize only the bounded
 provider-free implementation named here.
 
+Exact comment-only ready commit
+`fd81c8aed1a88a3cbd8be742a784dd3d1ab72e93` passed immutable GitHub Actions
+run `33645504076`: conversion traceability passed in 20 seconds and the isolated
+target environment passed in 2 minutes 32 seconds with all 152 then-existing
+tests, graph/generated-contract checks, both staging builds and clean tracked
+artifacts. That gate authorized only the frozen provider-free implementation.
+
+## Implemented Contract
+
+- `SpaceCreationScope` is exactly either `project(ProjectID)` or
+  `businessInventory` and uses a canonical encoding that rejects a missing
+  Project ID, a Project ID on inventory, or an unknown scope.
+- `SpaceDisplayName` trims outer whitespace, requires a nonblank result,
+  preserves interior text, imposes no unapproved maximum, and rejects
+  noncanonical serialized values. `SpaceCreationNotes` applies the same outer
+  normalization while mapping nil/whitespace-only to explicit absence.
+- `SpaceCreationDraft` binds exact Account, actor, operation contract, stable
+  Space, immutable scope, canonical name/notes and finite capture time.
+  `CreateSpacePayload` contains only Space ID, scope, name and notes.
+- `CreateSpaceCommand` derives one Space subject and zero expected-revision
+  preconditions through the shared envelope, fingerprint, receipt and replay
+  lifecycle and revalidates all duplicated evidence on decode.
+- `SpaceCreating` is one narrow provider-free operation port.
+  `SpaceCreationFailure` supplies stable bounded codes for invalid values,
+  scope/encoding, binding/precondition/subject/fingerprint/receipt mismatch and
+  local acceptance failure.
+
+The deterministic adapter uses only the shared `OperationJournal`. It does not
+persist a Space row, prove physical local durability, authorize a Project or
+Account, or apply anything to a server.
+
+Implementation hashes:
+
+- `SpaceCreationOperation.swift`:
+  `1512b0809cd1b32c65c9db28fd72d7fa3a95bb65fe233f69d1469ecae43e374c`
+- `SpaceCreationOperationTests.swift`:
+  `72de7d9a3db2c8ae5b507e37b44c8348f786e0ad28471c0faecd98d7c49b450d`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact Project and Business
+Inventory scope, normalized name/notes and duplicate-name identity; canonical
+byte-identical restart; atomic blank/noncanonical/malformed/rebound/tampered
+evidence refusal with stable diagnostics; shared replay/Operation-ID mismatch
+semantics; and no false receipt from a failing port.
+
+The complete local implementation gate also passes: all 156 target tests in 36
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The ledger remains at 777 recorded / 762
+discovered and 351 mapped-or-later / 164 residual / 43 blockers; 78 target
+surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
+
+`SPACECREATE-TEST-001` through `-004` therefore pass. `-005` remains planned
+until immutable exact-implementation-commit CI passes.
+
 ## Permanent Limits
 
-This ready plan cannot:
+This implementation cannot:
 
 - visibly or authoritatively create any Space;
 - create or modify a local/server Space row, scope, revision or audit field;

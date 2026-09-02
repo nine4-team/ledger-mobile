@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T14:57:40.836Z",
+    "lastSynchronizedAt": "2026-09-02T15:12:26.352Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -31948,12 +31948,12 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceCreationOperation.swift"
         }
       ],
-      "observedSourceHash": "3a9649300ded0cfa08608c5cec10a0bbfd5e314792e651c2c18e87427dbe9d34",
-      "acknowledgedSourceHash": "3a9649300ded0cfa08608c5cec10a0bbfd5e314792e651c2c18e87427dbe9d34",
+      "observedSourceHash": "1512b0809cd1b32c65c9db28fd72d7fa3a95bb65fe233f69d1469ecae43e374c",
+      "acknowledgedSourceHash": "1512b0809cd1b32c65c9db28fd72d7fa3a95bb65fe233f69d1469ecae43e374c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for direct stable-ID Space creation in one Project or Business Inventory scope with normalized name/notes; no executable behavior exists at the ready checkpoint.",
+      "currentBehavior": "Defines the implemented provider-free boundary for direct stable-ID Space creation in one Project or Business Inventory scope with canonical name/notes, exact operation binding, restart/refusal validation and a narrow operation port.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Creation Operation Contracts",
@@ -31990,7 +31990,7 @@
           "Synthetic commands prove exact Project/Inventory direct-create scope, normalized name/notes, zero preconditions, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -37400,12 +37400,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceCreationOperationTests.swift"
         }
       ],
-      "observedSourceHash": "99a735a4001179d517c128d444ca16550604d8ca0410c9ca32f53df0f6d92d57",
-      "acknowledgedSourceHash": "99a735a4001179d517c128d444ca16550604d8ca0410c9ca32f53df0f6d92d57",
+      "observedSourceHash": "72de7d9a3db2c8ae5b507e37b44c8348f786e0ad28471c0faecd98d7c49b450d",
+      "acknowledgedSourceHash": "72de7d9a3db2c8ae5b507e37b44c8348f786e0ad28471c0faecd98d7c49b450d",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Defines only the comment-scaffolded target tests for direct Space Project/Inventory scope, normalized name/notes, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "currentBehavior": "Defines deterministic provider-free tests for direct Space Project/Inventory scope, canonical name/notes, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Creation Operation Contracts",
@@ -37438,7 +37438,7 @@
           "Self-tests prove the backend-neutral direct Space-create boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",

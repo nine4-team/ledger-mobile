@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 125
+State version: 126
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CREATION-READY
+- Checkpoint: SPACE-CREATION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1861,6 +1861,24 @@ modifying the running Firebase application before hard cutover.
   environment/generated contracts, both staging builds, conversion/capability/
   query/residual controls, M0 and clean diff formatting. Immutable exact-ready-
   commit CI is the only prerequisite to bounded implementation.
+- Exact comment-only Space-create ready commit
+  `fd81c8aed1a88a3cbd8be742a784dd3d1ab72e93` passed immutable GitHub Actions
+  run `33645504076`: conversion traceability passed in 20 seconds and the
+  isolated target environment passed in 2 minutes 32 seconds with all 152 then-
+  existing tests, graph/generated-contract checks, both staging builds and
+  clean tracked artifacts.
+- Implemented only the frozen provider-free direct Space-create boundary:
+  stable Space identity; exact Project-or-Business-Inventory scope; canonical
+  required name and optional notes; zero expected-revision preconditions;
+  shared envelope/fingerprint/receipt/replay; canonical restart/refusal; stable
+  diagnostics; and one narrow port. It contains no child, template, media,
+  assignment, review, lifecycle, accounting, provider or authoritative-apply
+  concern.
+- Four focused and all 156 target tests in 36 suites pass locally, along with
+  target isolation/generated contracts, both staging builds and clean diff
+  formatting. The implementation acknowledges exact source hashes; 78 target
+  surfaces are now implementation-advanced. Exact implementation-commit CI
+  remains before verification.
 
 ## Next Action
 
@@ -1924,12 +1942,12 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-details-update-operation-contracts` dossier and
    `EVID-PROJECT-DETAILS-UPDATE-001` as the sole UpdateProjectDetails semantic
    authority. Treat `space-creation-operation-contracts` and
-   `EVID-SPACE-CREATION-001` as the complete ready plan for the direct provider-
-   free CreateSpace boundary. Commit only that comment-only ready checkpoint,
-   push it, and require both exact-commit CI jobs to pass. Then implement only
-   its frozen scope, run every focused/cumulative/control/build gate, record
-   exact implementation evidence, and require exact-commit CI before marking
-   either Space surface verified. Keep
+   `EVID-SPACE-CREATION-001` as the sole direct provider-free CreateSpace
+   semantic authority. Synchronize and validate the locally implemented
+   checkpoint, commit and push it, and require both exact-implementation-commit
+   CI jobs to pass before marking either claimed Space surface verified. Then
+   record immutable verification evidence and audit the next smallest complete
+   decision-independent dependency. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
