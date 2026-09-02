@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T21:47:28.500Z",
+  "generatedFromManifestSync": "2026-09-02T22:13:10.596Z",
   "totals": {
     "slices": 44,
     "claimedTargetSurfaces": 109,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 92
+    "implementationAdvancedTargetSurfaces": 94
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 42,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -276,7 +276,7 @@
       "sliceId": "project-budget-segment-read-contracts",
       "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Budget Segment Read Contracts",
       "surfaceIds": [
         "SWIFT-42C7BDDCD714",

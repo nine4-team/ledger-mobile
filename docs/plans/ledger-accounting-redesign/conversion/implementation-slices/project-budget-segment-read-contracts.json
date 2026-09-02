@@ -3,7 +3,7 @@
   "sliceId": "project-budget-segment-read-contracts",
   "title": "Read exact Project category paid and invoicing-unpaid segments offline with recognized value derived once",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Budget Segment Read Contracts",
   "surfaceIds": [
     "SWIFT-42C7BDDCD714",
@@ -144,8 +144,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
       "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
       "expected": "Synthetic categories preserve exact signed client-paid and invoicing/unpaid Money, derive recognized once with overflow safety, and prove an equal collection segment exchange leaves recognized unchanged without an Invoice/Transaction/source/provider field.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
     },
     {
       "id": "BUDGETSEG-TEST-002",
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
       "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
       "expected": "Ready, authoritative-empty, partial and stale exact-scope snapshots plus equivalent reordered input round-trip byte-identically with category order, signed values, derived recognized, completeness, LocalDataVersion, accounting-authority/projection revision and finite as-of evidence; empty incomplete snapshots never mean authoritative zero.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
     },
     {
       "id": "BUDGETSEG-TEST-003",
@@ -162,8 +162,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
       "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-002", "BUDGETSEG-REQ-003", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
       "expected": "Cross-Account, currency-mismatched, duplicate category identity/order, hidden-count, nonfinite-time, incomplete-as-authoritative, arithmetic-overflow, malformed-derived and rebound request/snapshot evidence fails atomically through stable bounded diagnostics.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
     },
     {
       "id": "BUDGETSEG-TEST-004",
@@ -171,8 +171,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift",
       "covers": ["BUDGETSEG-REQ-001", "BUDGETSEG-REQ-004", "BUDGETSEG-REQ-005", "BUDGETSEG-REQ-006", "BUDGETSEG-REQ-007"],
       "expected": "A deterministic reference port streams only the exact Account/Project/currency request, refuses rebound or mismatched snapshots, stops delivery on cancellation and surfaces upstream failure without a false snapshot, cross-scope fallback, authorization, contribution resolution or false completeness.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"]
     },
     {
       "id": "BUDGETSEG-TEST-005",
@@ -184,8 +184,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-BUDGET-SEGMENT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready decision-independent Phase 1 query boundary. Canonical Budget Progress and D-012 settle the exact signed paid/unpaid meanings, derived sum and no-change-on-collection invariant while explicitly leaving visual treatment open. The slice carries no source-kind or contribution eligibility, budget limit/remaining/over/source count, Invoice/Transaction command, negative-credit presentation, Postgres/RLS/PowerSync/Auth/provider, app/MCP, migration, hosted-resource, production or cutover behavior. O-005 therefore remains open rather than being selected by this nonvisual semantic read contract. Exact ready commit 43189f1abe6e023f4d29b00f190b40464ce7a3e5 passed immutable Actions run 33687191592. The second write-capable subagent pilot must start from that commit and remains subject to complete integration-agent line review, independent adversarial review, full local gates and exact integrated-commit CI."
+  "notes": "Implemented decision-independent Phase 1 query boundary pending exact integration-commit operational CI. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths from exact green ready commit 43189f1abe6e023f4d29b00f190b40464ce7a3e5. The integration agent reviewed every changed line and reran five focused tests; an independent adversarial reviewer verified exact ancestry/scope and found no P0-P3 defect after five focused/all 189 target tests, target isolation and source review. The candidate was integrated at ddbe7d7b. The complete local integration gate passes conversion/capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, five focused/all 189 tests, repeatable project generation, both staging builds and clean formatting. Canonical Budget Progress and D-012 settle the exact signed paid/unpaid meanings, derived sum and no-change-on-collection invariant while visual treatment remains open. The slice carries no source-kind/contribution eligibility, budget/remaining/over/source count, Invoice/Transaction command, negative-credit presentation, Postgres/RLS/PowerSync/Auth/provider, app/MCP, migration, hosted-resource, production or cutover behavior. O-005 remains open. Exact integrated-commit CI remains required before verification."
 }

@@ -224,17 +224,20 @@ immutable Actions run `33682239349` records both CI jobs.
 Authorization, physical persistence, schema/RLS/Sync,
 assignment mutation, app/MCP, migration, hosted resources and production remain
 excluded; `EVID-SPACE-ASSIGNMENT-DESTINATION-001`.
-The provider-free Project budget paid/unpaid segment read slice is ready for
-the second isolated write-capable pilot. Exactly two comment-only target
-surfaces are frozen around pre-existing Budget Progress/D-012 authority: exact
+The provider-free Project budget paid/unpaid segment read slice is implemented
+and fully reviewed locally, pending exact-SHA CI.
+Exactly two target surfaces implement pre-existing Budget Progress/D-012
+authority: exact
 Account/Project/currency, signed client-paid and invoicing/unpaid Money, derived
 recognized value, equal collection-segment exchange, category order, distinct
 local and accounting-authority versions, readiness/restart/refusal and one
 narrow query port. A strict rescout and independent adversarial preflight both
 approved only this bounded foundation and rejected complete-budget,
 contribution-resolution, visual, provider or migration claims. Exact ready
-commit `43189f1a` passed immutable run `33687191592`; the isolated second pilot
-is now tracked and the full enhanced implementation reviews remain required;
+commit `43189f1a` passed immutable run `33687191592`; candidate `dc9f2601`
+changed only the two allowlisted paths, was simplified after a precommit size
+review, passed every-line integration review, and received an independent
+adversarial review with no P0-P3 finding before integration as `ddbe7d7b`;
 `EVID-PROJECT-BUDGET-SEGMENT-001`.
 
 This directory makes whole-application conversion progress durable across long

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T21:47:28.500Z",
+    "lastSynchronizedAt": "2026-09-02T22:13:10.596Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19715,12 +19715,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectBudgetSegmentData.swift"
         }
       ],
-      "observedSourceHash": "74231d9920e803381789c0b342ce09273de40216cf9d673c65e78c4637251dd2",
-      "acknowledgedSourceHash": "74231d9920e803381789c0b342ce09273de40216cf9d673c65e78c4637251dd2",
+      "observedSourceHash": "321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1",
+      "acknowledgedSourceHash": "321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Ready comment-only scaffold for the provider-free exact Account/Project/currency budget paid/unpaid segment read contract.",
+      "currentBehavior": "Defines the provider-free exact Account/Project/currency budget-segment request, signed paid/unpaid category values, derived recognized arithmetic, validated local snapshot, bounded failures and narrow query port.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Budget Segment Read Contracts",
@@ -19754,14 +19754,14 @@
           "Synthetic target-only fixtures prove exact signed arithmetic, no-double-count collection exchange, scope/currency validation, readiness/restart and exact-request refusal without selecting unresolved presentation or source eligibility"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Ready-only Phase 1 target scaffold. The frozen slice may define signed client-paid and invoicing/unpaid category segments plus their derived sum, exact scope/currency, local readiness/restart and a narrow query port. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
+      "notes": "Implemented Phase 1 target contract pending exact integration-commit operational CI. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths; the integration agent reviewed every line and an independent adversarial reviewer found no P0-P3 defect. Focused and full tests pass. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
@@ -36422,12 +36422,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectBudgetSegmentDataTests.swift"
         }
       ],
-      "observedSourceHash": "1cb753600e1fafbca077f410059b7dc522b9c48ac53e7f53eeb1dd504395f1ba",
-      "acknowledgedSourceHash": "1cb753600e1fafbca077f410059b7dc522b9c48ac53e7f53eeb1dd504395f1ba",
+      "observedSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
+      "acknowledgedSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Ready comment-only scaffold for deterministic Project budget segment domain, restart, refusal and exact-request port tests.",
+      "currentBehavior": "Implements five deterministic provider-free tests for exact signed segment arithmetic, canonical readiness/restart, bounded rejection, exact-request/upstream-failure port behavior, cancellation and frozen encoded shape.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Budget Segment Read Contracts",
@@ -36460,14 +36460,14 @@
           "Self-tests prove only the provider-free segment read boundary and do not claim server, database, provider, migration or UI evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Ready-only Phase 1 synthetic test scaffold. It may prove signed paid/unpaid/recognized arithmetic, equal collection exchange, exact scope/currency, canonical restart/readiness and bounded port refusal. It cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented Phase 1 synthetic tests pending exact integration-commit operational CI. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites pass before integration. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 153
+State version: 154
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-BUDGET-SEGMENT-PILOT-002-IN-PROGRESS
+- Checkpoint: PROJECT-BUDGET-SEGMENT-IMPLEMENTED-INTEGRATION-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2299,6 +2299,21 @@ modifying the running Firebase application before hard cutover.
   discovered, 364 mapped-or-later / 167 residual / 44 blockers, 44 slices
   claiming 109 of 531 target-relevant surfaces, and only the three documented
   retired-path warnings. No worker, provider, Firebase or production action has
+  occurred.
+- `SUBAGENT-PILOT-002` produced candidate `dc9f2601` from the exact green ready
+  base and changed only the two allowlisted Swift paths. A precommit size check
+  required simplification from approximately 1,076 to 768 added lines without
+  dropping frozen coverage. The integration agent reviewed every changed line
+  and reran five focused tests. An independent read-only adversarial reviewer
+  verified exact ancestry/path scope, product authority, arithmetic, tamper,
+  restart, exact-port/upstream-failure/cancellation and isolation behavior,
+  passed five focused and all 189 target tests in 44 suites plus isolation, and
+  found no P0-P3 defect. The candidate is integrated as `ddbe7d7b`; the slice
+  is `implemented`, not verified. The complete local integration gate passes
+  conversion/capability/query/residual/M0 controls, target isolation/generated
+  app-MCP contracts, five focused/all 189 tests in 44 suites, repeatable project
+  generation, both staging builds and clean formatting. Immutable exact-
+  checkpoint CI remains required. No provider, Firebase or production action
   occurred.
 - The complete local ready gate passed all 184 target tests in 43 suites,
   target isolation/contracts, repeatable project generation, both staging

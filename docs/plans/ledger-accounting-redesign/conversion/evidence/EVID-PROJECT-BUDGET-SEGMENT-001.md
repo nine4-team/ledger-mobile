@@ -7,14 +7,18 @@
 - Claimed target surfaces: `SWIFT-42C7BDDCD714`, `TEST-A0B2D5B97695`
 - Slice dossier:
   `conversion/implementation-slices/project-budget-segment-read-contracts.json`
-- Verification state: exact ready commit
-  `43189f1abe6e023f4d29b00f190b40464ce7a3e5` passed immutable Actions run
-  `33687191592`; enhanced second-pilot implementation review remains open
+- Verification state: implemented and fully reviewed locally; exact integrated-
+  checkpoint operational CI remains open
 - Ready scaffold hashes:
   - `ProjectBudgetSegmentData.swift`:
     `74231d9920e803381789c0b342ce09273de40216cf9d673c65e78c4637251dd2`
   - `ProjectBudgetSegmentDataTests.swift`:
     `1cb753600e1fafbca077f410059b7dc522b9c48ac53e7f53eeb1dd504395f1ba`
+- Implemented source hashes:
+  - `ProjectBudgetSegmentData.swift`:
+    `321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1`
+  - `ProjectBudgetSegmentDataTests.swift`:
+    `e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40`
 
 ## Selection and Authority Audit
 
@@ -95,7 +99,40 @@ only the two allowlisted Swift paths, receive integration-agent review of every
 changed line plus a separate adversarial review, pass focused and full local
 gates, and pass immutable CI on the final integrated SHA before verification.
 
-## Permanent Ready-State Limits
+## Enhanced Second-Pilot Review and Implementation
+
+The worker started from exact green ready commit `43189f1a` in the isolated
+`codex/supabase-slice-project-budget-segment` branch/worktree. Candidate
+`dc9f2601b2610746c68f4efbd1be4f09540d0943` changed exactly the two allowlisted
+Swift paths. It made no documentation, control, generated, project/package,
+MCP, Firebase, provider, hosted-resource, production or integration-branch
+change. A precommit size review required simplification from approximately
+1,076 to 768 added lines while retaining every frozen obligation.
+
+The integration agent reviewed every changed source and test line and reran all
+five focused tests. The independent read-only adversarial reviewer verified the
+exact parent and path scope, reread product/architecture authority and every
+changed line, ran five focused and all 189 target tests in 44 suites plus target
+isolation, and found no P0-P3 defect. Its environment lacked a worktree-local
+`tsc`, so it could not repeat the MCP TypeScript subcheck there; the ready-
+commit CI already passed that check and the integration full gate must repeat
+it before operational verification.
+
+The bounded implementation defines the exact fingerprinted request, signed
+category segments with overflow-safe internally derived and decode-verified
+recognized value, validated canonical local snapshot with distinct local and
+accounting-projection versions, stable failures and a narrow watch port. Tests
+cover positive/zero/negative arithmetic, positive collection exchange, scope/
+currency/duplicate/order/count/time/revision/overflow/fingerprint/encoding
+refusal, ready/authoritative-empty/incomplete-empty/partial/stale byte-identical
+restart, exact-request streaming, upstream failure, cancellation and forbidden
+encoded shape. The candidate was integrated as `ddbe7d7b`. The complete
+integration gate passes conversion/capability/query/residual/M0 controls,
+target isolation and generated app/MCP contracts, five focused and all 189
+tests in 44 suites, repeatable project generation, both staging builds and
+clean formatting. Immutable exact-checkpoint CI remains pending.
+
+## Permanent Limits
 
 This evidence does not prove any calculation from real source facts, financial
 authorization, physical local durability, authenticated synchronization,

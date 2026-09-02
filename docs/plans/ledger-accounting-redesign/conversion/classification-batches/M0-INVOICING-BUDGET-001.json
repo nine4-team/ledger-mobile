@@ -1480,16 +1480,17 @@
     {
       "id": "SWIFT-42C7BDDCD714",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Ready comment-only scaffold for the provider-free exact Account/Project/currency budget paid/unpaid segment read contract.",
+      "acknowledgeSourceHash": "321e57d77b2ee49c1c8cc4d4c16ed1fb2d4c1e4e55770611ccd49f566ef8dcd1",
+      "currentBehavior": "Defines the provider-free exact Account/Project/currency budget-segment request, signed paid/unpaid category values, derived recognized arithmetic, validated local snapshot, bounded failures and narrow query port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Ready-only Phase 1 target scaffold. The frozen slice may define signed client-paid and invoicing/unpaid category segments plus their derived sum, exact scope/currency, local readiness/restart and a narrow query port. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
+      "notes": "Implemented Phase 1 target contract pending exact integration-commit operational CI. Candidate dc9f2601b2610746c68f4efbd1be4f09540d0943 changed only the two allowlisted paths; the integration agent reviewed every line and an independent adversarial reviewer found no P0-P3 defect. Focused and full tests pass. It cannot select contribution eligibility, negative-credit presentation, budgets/remaining/over, source counts, provider behavior, migration or production authority.",
       "target": {
         "owner": "Project Budget Segment Read Contracts",
         "surfaces": [
@@ -1526,16 +1527,17 @@
     {
       "id": "TEST-A0B2D5B97695",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Ready comment-only scaffold for deterministic Project budget segment domain, restart, refusal and exact-request port tests.",
+      "acknowledgeSourceHash": "e0fcf2c6489ec2f1421e6a7138bc0331ea644b19f219a70eb4af2dd25680eb40",
+      "currentBehavior": "Implements five deterministic provider-free tests for exact signed segment arithmetic, canonical readiness/restart, bounded rejection, exact-request/upstream-failure port behavior, cancellation and frozen encoded shape.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001",
         "EVID-PROJECT-BUDGET-SEGMENT-001"
       ],
-      "notes": "Ready-only Phase 1 synthetic test scaffold. It may prove signed paid/unpaid/recognized arithmetic, equal collection exchange, exact scope/currency, canonical restart/readiness and bounded port refusal. It cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented Phase 1 synthetic tests pending exact integration-commit operational CI. Integration-agent and independent reviews found no P0-P3 defect; five focused and all 189 target tests in 44 suites pass before integration. They cannot prove contribution-source correctness, authorization, physical persistence, schema/RLS/Sync, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Project Budget Segment Read Contracts",
         "surfaces": [
