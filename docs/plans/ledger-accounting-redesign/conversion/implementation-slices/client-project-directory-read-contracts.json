@@ -3,7 +3,7 @@
   "sliceId": "client-project-directory-read-contracts",
   "title": "Define authoritative Client/Project identity and local directory read contracts",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client and Project Domain Read Contracts",
   "surfaceIds": [
     "SWIFT-401EBD892749",
@@ -135,8 +135,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientProjectDirectoryTests.swift",
       "covers": ["DIRECTORY-REQ-001", "DIRECTORY-REQ-002", "DIRECTORY-REQ-003", "DIRECTORY-REQ-004", "DIRECTORY-REQ-005", "DIRECTORY-REQ-006"],
       "expected": "Valid Account-scoped Client/Project summaries and local list snapshots preserve exact stable ID relationships, display text, lifecycle, timestamps and shared list metadata without a provider dependency.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-001"]
     },
     {
       "id": "DIRECTORY-TEST-002",
@@ -144,8 +144,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientProjectDirectoryTests.swift",
       "covers": ["DIRECTORY-REQ-001", "DIRECTORY-REQ-002", "DIRECTORY-REQ-003", "DIRECTORY-REQ-004", "DIRECTORY-REQ-005", "DIRECTORY-REQ-006"],
       "expected": "Representative ready/partial/authoritative-empty Client and Project directory evidence round-trips byte-identically through canonical restart and an in-memory read port without opening disk, network or provider state.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-001"]
     },
     {
       "id": "DIRECTORY-TEST-003",
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientProjectDirectoryTests.swift",
       "covers": ["DIRECTORY-REQ-001", "DIRECTORY-REQ-002", "DIRECTORY-REQ-003", "DIRECTORY-REQ-004", "DIRECTORY-REQ-005", "DIRECTORY-REQ-006"],
       "expected": "Blank display names, reversed Client audit times, cross-Account or mismatched Project/Client relationship, duplicate IDs, malformed decoded rows and incomplete-as-authoritative snapshots fail atomically with stable non-enumerating codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-001"]
     },
     {
       "id": "DIRECTORY-TEST-004",
@@ -166,7 +166,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-CLIENT-PROJECT-DIRECTORY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 read-domain foundation only. It implements current Client/Project identity and local list semantics but no product command, Client merge/reassignment/deletion behavior, schema/RLS/Sync/provider, app/MCP entry point, migration, hosted resource, production access or cutover. O-024/O-025 remain fully open for the excluded mutation/lifecycle surfaces."

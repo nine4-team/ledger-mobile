@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 62
+State version: 63
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-PROJECT-DIRECTORY-READY-IMPLEMENTATION-NEXT
+- Checkpoint: CLIENT-PROJECT-DIRECTORY-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -770,6 +770,24 @@ modifying the running Firebase application before hard cutover.
   documented retired-path warnings. No behavioral code, source app/MCP surface,
   provider, database, hosted resource, migration or production operation exists
   at this ready checkpoint.
+- Implemented the ready Client/Project directory slice with exact nonblank
+  display values, finite ordered Client audit time, Account-scoped Client
+  summaries, same-Account/exact-Client Project summaries, duplicate-free local
+  Client/Project snapshots and the backend-neutral
+  `ClientProjectDirectoryQuerying` watch port. Display names remain display-only:
+  two equal names never collapse identity or repair a relationship.
+- Added three focused domain/restart/refusal tests. They prove ready, partial and
+  authoritative-empty local evidence, byte-identical canonical restart,
+  construction/decode revalidation, same-name distinct Clients and atomic stable
+  refusal for blank names, invalid time, Account/relationship mismatch,
+  duplicate identity, incomplete authority and wrong-Account port use.
+- All three focused tests and all 72 target tests pass locally, as do the target
+  graph/generated-contract checks and macOS/generic-iOS-Simulator staging
+  builds. Three of four slice obligations pass; exact-commit hosted CI remains
+  planned, so exactly the two target-only directory surfaces are `implemented`.
+  Current Project/app/MCP, schema/RLS/Sync/provider and migration surfaces remain
+  unadvanced; no Firebase change, hosted resource or production operation was
+  introduced.
 
 ## Next Action
 
@@ -779,16 +797,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready `client-project-directory-read-contracts` dossier
-   inside the provider-free core/test targets: exact nonblank Client/Project
-   display values, Account-scoped ClientSummary, same-Account ProjectSummary,
-   duplicate-free ClientListSnapshot/ProjectListSnapshot over the verified
-   local list contract, stable directory failures and the exact
-   `ClientProjectDirectoryQuerying` watch port. Add deterministic domain,
-   restart and invalid/cross-Account/duplicate/incomplete-readiness tests. Do
-   not implement Create/Rename/Archive/ChangeClient/Delete, choose O-024/O-025,
-   create schema/RLS/Sync/provider behavior, transform `clientName`, wire app/
-   MCP, access production or modify either application project.
+2. Commit and push the implemented `client-project-directory-read-contracts`
+   checkpoint, then require an immutable pull-request run for that exact commit.
+   Advance only `SWIFT-401EBD892749` and `TEST-0911D1BF8A05` plus their dossier
+   to `verified` after both conversion-traceability and isolated-target jobs
+   pass all 72 tests, graph/contracts, both staging builds and clean artifacts.
+   Do not implement Create/Rename/Archive/ChangeClient/Delete, choose O-024/
+   O-025, create schema/RLS/Sync/provider behavior, transform `clientName`, wire
+   app/MCP, access production or modify either application project.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

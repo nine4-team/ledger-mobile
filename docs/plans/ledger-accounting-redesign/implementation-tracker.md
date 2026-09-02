@@ -156,7 +156,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 
 | Task | Status | Current surfaces |
 |---|---|---|
-| Swift Client domain/read models, query port, and context | ready | Two target-only core/test scaffolds map Account-scoped Client/Project summaries, exact `clientId` relationship validation, readiness/versioned local list snapshots and `ClientProjectDirectoryQuerying`. O-024/O-025 mutations, schema/RLS/Sync/provider, app/MCP and migration remain excluded; `EVID-CLIENT-PROJECT-DIRECTORY-001` |
+| Swift Client domain/read models, query port, and context | implemented | Two target-only core/test surfaces implement Account-scoped Client/Project summaries, exact `clientId` relationship validation, duplicate-free readiness/versioned local list snapshots, deterministic restart, stable refusal and `ClientProjectDirectoryQuerying`. Three focused/all 72 target tests and both staging builds pass locally; exact-commit hosted CI remains before verification. O-024/O-025 mutations, schema/RLS/Sync/provider, app/MCP and migration remain excluded; `EVID-CLIENT-PROJECT-DIRECTORY-001` |
 | Target Client table, FK, indexes, RLS, and Sync Streams | not started | Supabase/Postgres and PowerSync only |
 | MCP Client types/resources/commands | not started | Same target contracts and authorization as app |
 | Project creation: select/create Client | not started | `NewProjectView`, `ProjectService` |

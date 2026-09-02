@@ -5,7 +5,9 @@ surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
-by this directory
+by this directory. The current Client/Project directory read-contract slice is
+implemented and locally verified; exact-commit hosted CI remains before its
+target-only surfaces advance to `verified`
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

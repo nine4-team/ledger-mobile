@@ -1,14 +1,14 @@
 # EVID-CLIENT-PROJECT-DIRECTORY-001 — Client/Project Directory Read Contracts
 
 - Timestamp: 2026-09-01
-- Class: implementation planning / provider-free Client and Project read domain
+- Class: implementation / provider-free Client and Project read domain
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-401EBD892749`, `TEST-0911D1BF8A05`
 - Slice dossier:
   `conversion/implementation-slices/client-project-directory-read-contracts.json`
-- Ready-gate state: ready; behavior and executable self-tests are not yet
-  implemented
+- Slice state: implemented; local semantic and build verification passes, while
+  exact-commit hosted CI remains before `verified`
 
 ## Selection and Scope
 
@@ -20,13 +20,13 @@ local Client/Project snapshots. These read contracts can be made executable
 without choosing a provider, authentication system, schema, mutation policy or
 any open accounting rule.
 
-Exactly two target-only comment scaffolds are claimed in the existing
+Exactly two target-only implementation surfaces are claimed in the existing
 provider-free core/test targets. Existing Project models, views, MCP tools and
 all Firebase code remain unadvanced. The slice deliberately stops before
 creation, rename, archive commands, Client merge, Project reassignment or
 physical deletion; O-024/O-025 therefore remain untouched.
 
-## Ready-Gate Contract
+## Implemented Contract
 
 The dossier freezes six exact canonical/architecture requirements and requires:
 
@@ -43,22 +43,64 @@ The dossier freezes six exact canonical/architecture requirements and requires:
 - stable restart/refusal proof with no database, PowerSync, network, provider,
   app/MCP entry point, source transform or production behavior.
 
+`ClientDisplayName` and `ProjectDisplayName` preserve exact nonblank text while
+never acting as identity. `ClientSummary` carries stable Client/Account identity,
+lifecycle and finite ordered audit timestamps. `ProjectSummary` retains an exact
+`clientId` plus an immutable current Client summary and refuses Account or Client
+ID disagreement both at construction and decode.
+
+`ClientListSnapshot` and `ProjectListSnapshot` reuse the shared
+`ListLocalSnapshot` query/readiness/version/as-of evidence, reject duplicate row
+identity, and revalidate Account/relationship boundaries after restart. The
+architecture-named `ClientProjectDirectoryQuerying` protocol exposes only the
+two Account-scoped Client and Project watch streams. Stable directory failures
+contain no display name, query, path or vendor payload.
+
 Postgres, handlers, Data API, RLS, Sync Streams, media, concrete app/MCP wiring,
-migration and observability are explicit non-applicabilities. Later vertical
+migration and observability remain explicit non-applicabilities. Later vertical
 slices remain responsible for authorization/download absence, server schema and
 query implementations, migration correlation and actual user-facing wiring.
 
-## Ready-Gate Verification
+## Local Verification
 
-The two comment-only hashes are acknowledged through the reviewed Project/
-Client batch and both surfaces are `target_mapped`. The dossier has no blocker;
-every requirement is reciprocally covered by domain, offline-restart,
-offline-rejection and exact-commit operational obligations. Conversion checking
-must pass before behavioral implementation begins.
+The reviewed Project/Client batch acknowledges only these exact implementation
+hashes:
+
+- `ClientProjectDirectory.swift` —
+  `d6fcb4ae91d358433ef1f492d6df9a8f185b419c0741a7b400e53efe715a4cc5`
+- `ClientProjectDirectoryTests.swift` —
+  `28b22dd21d195f41f7efc30a242d1631b827f1c99f26f98207c2489b8b8bd174`
+
+The three focused tests prove:
+
+- exact Account/Client/Project identity, including two same-name Clients that
+  remain distinct and one exact Project relationship;
+- byte-identical restart for ready, partial and authoritative-empty local
+  evidence; and
+- atomic refusal of blank names, reversed/nonfinite audit time, cross-Account
+  embedding, mismatched Client ID, duplicate identity, malformed decoded rows,
+  incomplete-as-authoritative evidence and wrong-Account port use, with every
+  stable diagnostic code asserted.
+
+Local commands passed on 2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter ClientProjectDirectoryTests` —
+  3 tests passed;
+- `swift test --package-path LedgeriOS` — 72 tests in 15 suites passed;
+- `npm run target:environment:check` — isolated graph/source boundary passed;
+- `npm run target:contracts:check` — generated catalog and strict TypeScript
+  compilation passed; and
+- `npm run target:staging:build:macos` and
+  `npm run target:staging:build:ios` — both unsigned staging builds passed.
+
+`DIRECTORY-TEST-001` through `003` therefore pass. The exact implementation
+commit and immutable pull-request run do not yet exist, so
+`DIRECTORY-TEST-004` remains planned and both surfaces honestly remain
+`implemented` rather than `verified`.
 
 ## Permanent Limits
 
-This ready gate and later read-contract implementation cannot:
+This read-contract implementation cannot:
 
 - use Client or Project names as identity, authorization or Transfer evidence;
 - choose Client merge, Project reassignment, physical deletion, creation/edit
