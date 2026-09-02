@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 59
+State version: 60
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: EXACT-MONEY-DOMAIN-IDENTITY-READY-IMPLEMENTATION-NEXT
+- Checkpoint: EXACT-MONEY-DOMAIN-IDENTITY-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -724,6 +724,25 @@ modifying the running Firebase application before hard cutover.
   overflow refusal. No behavior, product command/read model, app/MCP link,
   database, provider, hosted resource, source transform, migration or
   production operation exists at this checkpoint.
+- Implemented the ready exact-money/domain-identity slice with distinct typed
+  Client/Project/Item/Invoice/Transaction/Expense/Fee/Space/Attachment IDs,
+  exactly-three-uppercase-ASCII-letter CurrencyCode, signed Int64-minor-unit
+  Money, checked same-currency amount equality/order/add/subtract/negate, decode-
+  through-validation and stable bounded failures.
+- Three focused primitive tests and all 69 target package tests pass locally,
+  as do the target graph/generated-contract checks and macOS/generic-iOS-
+  Simulator staging builds. Canonical restart evidence emits exact integer
+  boundaries; fractional numeric input, malformed identity/currency, cross-
+  currency operations and every arithmetic overflow edge fail atomically.
+- The evidence deliberately does not claim lexical rejection of every exactly
+  integral decimal-form JSON token because Swift's standard Int64 decoder may
+  accept a spelling such as `1.0`; canonical target encoding remains integer-
+  only and the domain never stores or calculates floating-point money.
+- Three of four slice obligations pass. Exact-commit hosted CI remains planned,
+  so exactly the two target-only primitive surfaces are `implemented`, not
+  `verified`. No product sign/bound/currency/rounding/tax policy, app/MCP link,
+  database, provider, migration, hosted resource or production operation was
+  introduced.
 
 ## Next Action
 
@@ -733,14 +752,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready `exact-money-and-domain-identity` dossier inside
-   the provider-free core/test targets: distinct stable typed IDs, exactly
-   three-uppercase-ASCII-letter CurrencyCode, signed Int64-minor-unit Money,
-   checked same-currency equality/order/add/subtract/negate behavior, decode-
-   through-validation and deterministic restart/invalid/cross-currency/overflow
-   tests. Do not choose product signs/bounds, Account/default currency, ISO
-   registry, locale formatting, exchange, allocation, tax, rounding or posting;
-   do not create app/MCP, database/provider, migration or production behavior.
+2. Preserve the implemented `exact-money-and-domain-identity` boundary exactly,
+   commit and push its implementation checkpoint, and require the immutable
+   exact-commit pull-request run to pass conversion traceability, graph/
+   generated-contract checks, all 69 target tests, both target builds and clean
+   tracked artifacts. Only then advance its dossier and exactly
+   `SWIFT-3AC58A64B789` / `TEST-15ECC49577C0` to `verified`. Do not choose product
+   signs/bounds, Account/default currency, ISO registry, locale formatting,
+   exchange, allocation, tax, rounding or posting; do not create app/MCP,
+   database/provider, migration or production behavior.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

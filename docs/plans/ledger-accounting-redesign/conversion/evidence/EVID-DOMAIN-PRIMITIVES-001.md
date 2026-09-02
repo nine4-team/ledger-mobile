@@ -1,14 +1,14 @@
 # EVID-DOMAIN-PRIMITIVES-001 — Exact Money and Domain Identity
 
 - Timestamp: 2026-09-01
-- Class: implementation planning / provider-free domain primitives
+- Class: implementation / provider-free domain primitives
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and released application remain unchanged
 - Claimed target surfaces: `SWIFT-3AC58A64B789`, `TEST-15ECC49577C0`
 - Slice dossier:
   `conversion/implementation-slices/exact-money-and-domain-identity.json`
-- Ready-gate state: ready; behavior and executable self-tests are not yet
-  implemented
+- Slice state: implemented; local obligations pass and exact-commit hosted CI
+  remains pending before verification
 
 ## Selection and Scope
 
@@ -19,10 +19,10 @@ mechanics independently. This boundary is decision-independent because it does
 not choose any product amount sign, bound, allocation, tax, rounding, posting,
 currency-default or lifecycle policy.
 
-Exactly two target-only comment scaffolds are claimed inside the already
+Exactly two target-only implementation surfaces are claimed inside the already
 provider-free core/test package. No current Firebase model, formatter,
-calculation, app, MCP, provider, schema or migration surface is advanced by the
-scaffold.
+calculation, app, MCP, provider, schema or migration surface is advanced by
+this representation boundary.
 
 ## Ready-Gate Contract
 
@@ -46,13 +46,63 @@ migration and operations are explicit non-applicabilities. Later slices remain
 responsible for mapping stable IDs to text and Money to bigint minor units plus
 currency and for proving their own accounting semantics.
 
+## Implemented Contract
+
+`LedgerTargetCore/DomainPrimitives.swift` now provides:
+
+- distinct `ClientID`, `ProjectID`, `ItemID`, `InvoiceID`, `TransactionID`,
+  `ExpenseID`, `FeeID`, `SpaceID` and `AttachmentID` types over the existing
+  bounded provider-free identifier validation;
+- `CurrencyCode` validation for exactly three uppercase ASCII letters, including
+  decode-through-validation and stable direct/encoded failure categories;
+- signed Int64-minor-unit `Money` with explicit currency, zero/sign inspection,
+  checked same-currency amount equality and ordering, and overflow-checked add,
+  subtract and negate operations;
+- deterministic Codable boundaries whose canonical evidence emits integer minor
+  units and revalidates identifiers and currency after restart; and
+- stable bounded `DomainPrimitiveFailure` values for malformed identifiers,
+  currency and encoded money, currency mismatch and operation-specific overflow.
+
+The types contain no clock, UUID generator, locale, decimal/floating-point
+calculation, database, network, provider SDK or global state. They establish
+representation only; they do not define product signs, bounds, currency policy,
+formatting, exchange, allocation, tax, rounding or posting.
+
+## Local Verification
+
+Local results on 2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter DomainPrimitivesTests`: pass,
+  three focused tests;
+- `swift test --package-path LedgeriOS`: pass, 69 tests across fourteen suites;
+- `npm run target:environment:check`: pass; package edges, provider-import scan
+  and application/source-project exclusion remain valid;
+- `npm run target:contracts:check`: pass; generated Swift/TypeScript/MCP
+  projections remain current;
+- `npm run target:staging:build:macos`: pass; and
+- `npm run target:staging:build:ios`: pass for generic iOS Simulator.
+
+The focused tests cover every new entity-ID type, CurrencyCode boundaries,
+positive/negative/zero Money, exact same-currency amount comparison and checked
+arithmetic, deterministic Int64-min/max restart bytes, malformed decoded values,
+cross-currency refusal and all addition/subtraction/negation overflow edges.
+Canonical encoding contains integer minor-unit tokens; fractional numeric input
+is rejected. Swift's standard JSON integer decoder may accept an exactly integral
+JSON spelling such as `1.0`, so this evidence deliberately does not claim lexical
+rejection of every decimal-form token.
+
+`PRIMITIVE-TEST-001`, `PRIMITIVE-TEST-002` and `PRIMITIVE-TEST-003` pass locally.
+`PRIMITIVE-TEST-004` remains planned until an immutable hosted run passes on the
+exact implementation commit, so the slice and exactly its two target-only
+surfaces remain `implemented`, not `verified`.
+
 ## Ready-Gate Verification
 
-The two comment-only hashes are acknowledged through the reviewed platform
-batch and both surfaces are `target_mapped`. The dossier has no blocker; every
-requirement is reciprocally covered by domain, offline-restart,
-offline-rejection and exact-commit operational obligations. Conversion checking
-must pass before behavioral implementation begins.
+The original comment-only hashes were acknowledged through the reviewed
+platform batch before implementation. The dossier has no blocker; every
+requirement remains reciprocally covered by domain, offline-restart,
+offline-rejection and exact-commit operational obligations. The implementation
+hashes are acknowledged only after code review and local verification.
 
 ## Permanent Limits
 

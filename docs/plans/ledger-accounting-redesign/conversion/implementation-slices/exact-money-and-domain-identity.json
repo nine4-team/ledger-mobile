@@ -3,7 +3,7 @@
   "sliceId": "exact-money-and-domain-identity",
   "title": "Make target entity identity and money representation exact before product accounting slices",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Exact Money and Domain Identity",
   "surfaceIds": [
     "SWIFT-3AC58A64B789",
@@ -24,7 +24,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
       "section": "Entities",
-      "invariant": "Every target Account, Client, Project, Item, Invoice, Transaction, Expense, Fee, Space, Attachment and Operation identity is a stable client-boundary text value generated independently of connectivity and cannot encode a Firestore path, Postgres sequence, Account name or UI order.",
+      "invariant": "Every target Account, Client, Project, Item, Invoice, Transaction, Expense, Fee, Space, Attachment and Operation identity is a stable client-boundary text value generated independently of connectivity; the typed representation carries no Firestore path, Postgres sequence, Account-name or UI-order field and refuses path-shaped syntax.",
       "decisionIds": [],
       "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
     },
@@ -69,9 +69,9 @@
     "domain": {
       "items": [
         "CurrencyCode accepts exactly three uppercase ASCII letters and revalidates during decoding; it does not claim an ISO registry, locale, exchange-rate, default-currency or Account policy.",
-        "Money stores signed Int64 minor units and one CurrencyCode, offers zero and sign inspection, and permits equality/order/add/subtract/negate only through explicit checked operations that reject currency mismatch and integer overflow.",
-        "ClientID, ProjectID, ItemID, InvoiceID, TransactionID, ExpenseID, FeeID, SpaceID and AttachmentID are distinct LedgerIdentifier specializations with the same bounded opaque validation already used by AccountID, PrincipalID, EntityID and OperationID.",
-        "MoneyContractFailure distinguishes currency mismatch, arithmetic overflow and malformed currency through stable bounded diagnostics without embedding raw values."
+        "Money stores signed Int64 minor units and one CurrencyCode, offers zero, sign and structural value inspection, and permits numeric same-amount equality/order/add/subtract/negate only through explicit checked operations that reject currency mismatch and integer overflow.",
+        "ClientID, ProjectID, ItemID, InvoiceID, TransactionID, ExpenseID, FeeID, SpaceID and AttachmentID are distinct domain-identifier specializations that validate through the same bounded provider-free rules already used by AccountID, PrincipalID, EntityID and OperationID.",
+        "DomainPrimitiveFailure distinguishes malformed entity/currency/encoded money, currency mismatch and arithmetic overflow through stable bounded diagnostics without embedding raw values."
       ],
       "notApplicable": ""
     },
@@ -135,8 +135,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
       "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
       "expected": "Distinct stable typed IDs and exact Money/CurrencyCode values validate; same-currency equality, ordering and checked arithmetic produce exact Int64 results with no provider, locale or floating-point dependency.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DOMAIN-PRIMITIVES-001"]
     },
     {
       "id": "PRIMITIVE-TEST-002",
@@ -144,17 +144,17 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
       "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
       "expected": "Representative and Int64-boundary identifiers and Money values encode to deterministic integer/currency evidence and restore through the same validators with identical types and bytes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DOMAIN-PRIMITIVES-001"]
     },
     {
       "id": "PRIMITIVE-TEST-003",
       "kind": "offline_rejection",
       "owner": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
       "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
-      "expected": "Whitespace/path/oversized identifiers, lowercase/non-ASCII/wrong-length currency, floating-point decoded money, cross-currency comparison/arithmetic, and every Int64 overflow edge fail atomically with stable safe codes.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Whitespace/path/oversized identifiers, lowercase/non-ASCII/wrong-length currency, fractional decoded money, cross-currency comparison/arithmetic, and every Int64 overflow edge fail atomically with stable safe codes.",
+      "status": "passed",
+      "evidence": ["EVID-DOMAIN-PRIMITIVES-001"]
     },
     {
       "id": "PRIMITIVE-TEST-004",
@@ -166,7 +166,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-DOMAIN-PRIMITIVES-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 technical foundation only. Signed integer representation permits later charges, credits and adjustments but does not authorize any product sign rule. Currency is a validated transport/domain identity, not an approved ISO list, Account default, exchange, locale, tax or rounding policy. The slice stops before product commands/read models, Postgres/PowerSync, app/MCP wiring, provider/hosted resources, migration, production access or cutover."

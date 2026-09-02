@@ -3855,27 +3855,27 @@
     {
       "id": "SWIFT-3AC58A64B789",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "bfd6e2b15db11adc7a003573ca037b3e6357c48dc8a0ecd081ed460d2524e46a",
-      "currentBehavior": "Provides a comment-only target scaffold for exact integer-minor-unit Money, validated currency identity and stable backend-neutral domain entity IDs; no executable behavior exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "a71ba8bd6ea7e008b44d714aa103f2b36832c6ef962c8b7b916748a9aec39401",
+      "currentBehavior": "Implements provider-free CurrencyCode, signed Int64-minor-unit Money, checked same-currency amount comparison/arithmetic, distinct stable backend-neutral entity IDs, decode-through-validation and stable bounded domain failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-DOMAIN-PRIMITIVES-001"
       ],
-      "notes": "Target-only domain primitive scaffold claimed by exact-money-and-domain-identity. It defines representation and safe arithmetic only; product-specific signs, amount bounds, allocation, tax, rounding, posting, currency policy and migration remain in their owning slices.",
+      "notes": "Target-only domain primitive implementation claimed by exact-money-and-domain-identity. It defines representation and safe arithmetic only; product-specific signs, amount bounds, allocation, tax, rounding, posting, currency policy and migration remain in their owning slices.",
       "target": {
         "owner": "Exact Money and Domain Identity",
         "surfaces": [
           "Money",
           "CurrencyCode",
           "stable typed Client/Project/Item/Invoice/Transaction/Expense/Fee/Space/Attachment identifiers",
-          "MoneyContractFailure"
+          "DomainPrimitiveFailure"
         ],
         "securityRequirements": [
-          "Domain identifiers contain only bounded opaque values and cannot encode a Firestore path, Postgres sequence, Account name, endpoint, credential or UI order",
+          "Domain identifier values are bounded and provider-free; their types carry no Firestore path, Postgres sequence, Account-name, endpoint, credential or UI-order field, and slash/whitespace path-shaped values are refused",
           "Money and identifier failures expose only stable field/category codes and never provider payloads or private values"
         ],
         "syncRequirements": [
@@ -3901,17 +3901,17 @@
     {
       "id": "TEST-15ECC49577C0",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "9ae49cb9064ac3e67c00e939ca401fcb36dc1c535f77847206887fc6f326119e",
-      "currentBehavior": "Provides a comment-only target scaffold for stable-ID, exact-money, canonical restart and malformed/cross-currency/overflow refusal tests; no executable test exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "1a6c5a93363be7edc9a61d9c80cacefe4ca983d8a32c957dd23bac1dc5f807ed",
+      "currentBehavior": "Executes provider-free tests for all distinct entity-ID types, exact same-currency Money behavior, Int64-boundary canonical restart and atomic malformed/fractional/cross-currency/overflow refusal with stable diagnostics.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-DOMAIN-PRIMITIVES-001"
       ],
-      "notes": "Target-only primitive self-test scaffold. It cannot establish any product amount rule, locale formatter, database mapping, provider fidelity, migration correctness or app/MCP integration.",
+      "notes": "Target-only primitive self-tests. They cannot establish any product amount rule, locale formatter, database mapping, provider fidelity, migration correctness or app/MCP integration.",
       "target": {
         "owner": "Exact Money and Domain Identity",
         "surfaces": [
