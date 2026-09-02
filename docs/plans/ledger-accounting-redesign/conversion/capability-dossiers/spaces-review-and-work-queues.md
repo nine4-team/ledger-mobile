@@ -93,6 +93,14 @@ summaries, readiness/integrity and allowed action capabilities. Project/
 Inventory lists and detail query the local database; route context cannot grant
 scope or create a second backend authority.
 
+`SpaceAssignmentDestinationQuerying` is a smaller operation-specific read port
+for the Set Space picker. Its request binds one Account and exact Project-or-
+Business-Inventory scope. Its local directory contains only active stable Space
+IDs, normalized display names and exact revisions in deterministic name/ID
+order, while preserving authoritative-empty, partial, stale and failure truth.
+An Account-wide listener result or route-provided array cannot become an
+assignment capability, and local rows never replace trusted authorization.
+
 Typed operations include:
 
 - `CreateSpace` and `UpdateSpaceDetails`;

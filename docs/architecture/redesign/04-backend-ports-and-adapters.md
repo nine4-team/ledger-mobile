@@ -192,6 +192,12 @@ protocol SpaceQuerying: Sendable {
         -> AsyncThrowingStream<SpaceWorkspaceSnapshot, Error>
 }
 
+protocol SpaceAssignmentDestinationQuerying: Sendable {
+    func watchEligibleDestinations(
+        _ request: SpaceAssignmentDestinationRequest
+    ) -> AsyncThrowingStream<SpaceAssignmentDestinationDirectorySnapshot, Error>
+}
+
 protocol ClientOperations: Sendable {
     func create(_ command: CreateClientCommand) async throws -> OperationReceipt
     func rename(_ command: RenameClientCommand) async throws -> OperationReceipt
@@ -695,6 +701,7 @@ struct AppDependencies: Sendable {
     let invoiceQueries: any InvoiceQuerying
     let billingSummary: any BillingSummaryQuerying
     let spaceQueries: any SpaceQuerying
+    let spaceAssignmentDestinations: any SpaceAssignmentDestinationQuerying
     let inventory: any InventoryWorkspaceQuerying
     let search: any UniversalSearchQuerying
     let lookups: any EntityLookupQuerying

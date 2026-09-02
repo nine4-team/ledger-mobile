@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T20:08:23.248Z",
+    "lastSynchronizedAt": "2026-09-02T20:28:18.946Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17166,6 +17166,67 @@
       ],
       "notes": "Target-only Phase 1 verified surface. Exact implementation commit bf9a00ca45c8054018ab6f021aab13386ba24872 passed immutable Actions run 33663785835 with four focused/all 168 target tests in 39 suites, graph/contracts, both staging builds and clean artifacts. The bounded contract owns only loss-prevention, exact summary/confirmation and session-ending port semantics; it chooses no Auth provider, offline lease, UI copy, physical store/key mechanism, revocation retention, adapter, hosted resource or production behavior.",
       "classificationBatch": "M0-IDENTITY-LIFECYCLE-001"
+    },
+    {
+      "id": "SWIFT-164554FA1456",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift"
+        }
+      ],
+      "observedSourceHash": "00a2fcca41b9b42c8b6ae6f7f08b4ebbaea73458158a6b5077ed8953ea0344de",
+      "acknowledgedSourceHash": "00a2fcca41b9b42c8b6ae6f7f08b4ebbaea73458158a6b5077ed8953ea0344de",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed ready-gate scaffold for a provider-free Space assignment-destination directory; no executable query behavior exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Assignment Destination Read Contracts",
+        "surfaces": [
+          "SpaceAssignmentDestinationRequest",
+          "SpaceAssignmentDestinationSnapshot",
+          "SpaceAssignmentDestinationDirectorySnapshot",
+          "SpaceAssignmentDestinationQuerying",
+          "SpaceAssignmentDestinationFailure"
+        ],
+        "securityRequirements": [
+          "Every request and row binds one exact AccountID and immutable Project-or-Business-Inventory scope; cross-Account, cross-scope, inactive, duplicate and hidden-count evidence fails without enumerating other rows",
+          "Cached local destination rows and revisions are selection/conflict evidence only; current membership and destination eligibility are re-authorized by the trusted assignment handler"
+        ],
+        "syncRequirements": [
+          "The directory preserves deterministic active Space ID/name/revision order plus authoritative-empty, partial, stale and failed local truth across structured restart",
+          "A deterministic reference port proves only exact scoped streaming and refusal semantics, not physical local persistence, Sync download authorization or synchronized placement"
+        ]
+      },
+      "migration": {
+        "rule": "Define a target-only Space assignment-destination read contract and decode no Firebase Space document, AccountContext array, route value, listener snapshot, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable active same-scope Space identity/name/revision and source correlation while quarantining missing, archived, cross-Account or cross-scope rows according to approved policy"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests"
+        ],
+        "acceptance": [
+          "Synthetic Project/Inventory directories prove exact active same-scope rows, duplicate-name deterministic order, readiness/restart and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one operation-specific local destination directory with exact Account and Project-or-Business-Inventory scope, active stable Space IDs/names/revisions, deterministic order, explicit readiness/completeness and a narrow query port. It cannot grant authorization, assign or clear an Item, expose an Account-wide Space array, define full Space detail/archive/review/media state, create rows, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023/O-032 remain outside the slice.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "SWIFT-1772D7B7CE10",
@@ -36308,6 +36369,66 @@
         "EVID-SPACE-CHECKLIST-REVISION-001"
       ],
       "notes": "Target-only Phase 1 verified tests. Exact implementation commit 8131e8570cda2d9ffa5a4e445bd6dfd50b8aefed passed immutable GitHub Actions run 33659853864, including four focused/all 164 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-A3D73145E3EC",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "624e573e5cc5a9f08c06fb1debdbdc9e6143d126025631fcfba877723c949ad5",
+      "acknowledgedSourceHash": "624e573e5cc5a9f08c06fb1debdbdc9e6143d126025631fcfba877723c949ad5",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the reviewed ready-gate scaffold for deterministic provider-free Space assignment-destination directory tests; no executable query test exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Assignment Destination Read Contracts",
+        "surfaces": [
+          "SpaceAssignmentDestinationDataTests",
+          "Project and Business Inventory eligible-destination fixtures",
+          "active duplicate-name Space identity/revision/order fixtures",
+          "ready, authoritative-empty, partial, stale and failed local fixtures",
+          "canonical directory restart and exact-scope port-refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project and Space identities and prove no Account-wide array, path/name/provider/accounting/media field can rebind query identity or authority",
+          "Negative tests expose only stable bounded codes and no source paths, credentials, provider payloads, financial values, attachment metadata or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic local destination evidence from physical persistence, authenticated Sync visibility, current authorization and authoritative assignment"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space DTO, AccountContext array, route state, listener callback, export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent reordered input canonicalizes identically while changed Account/scope/lifecycle/revision/identity/count/readiness/fingerprint evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral eligible-Space directory boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/Inventory query scope, active stable Space ID/name/revision rows, duplicate-name canonical ordering, authoritative-empty/partial/stale/failure truth, byte-identical restart, atomic refusal and narrow-port scope isolation. They cannot claim authorization, physical persistence, placement mutation, full Space/archive/review/media behavior, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

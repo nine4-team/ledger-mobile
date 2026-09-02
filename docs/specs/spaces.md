@@ -155,6 +155,16 @@ from different current Spaces in that scope. The authoritative handler applies
 the complete selection atomically/idempotently. Scope-changing Item commands
 separately validate or clear incompatible Space assignments.
 
+The assignment destination picker reads an operation-specific local directory,
+not an Account-wide Space array supplied by a screen. It contains only active
+Spaces in the exact Account and Project-or-Business-Inventory scope and carries
+stable Space ID, normalized display name, and exact revision. Duplicate names
+remain valid and rows use deterministic case-insensitive name order with stable
+Space ID as the final tiebreaker. Authoritative empty, incomplete/partial, stale,
+and failed local reads remain distinct; a missing row in incomplete local data
+cannot prove that no destination exists. Cached scope/revision evidence supports
+offline selection and conflict detection but never grants authorization.
+
 Clearing or replacing placement closes affected green Item-linked checkmark
 relationships on the old Space photos without deleting the photos or their
 bytes. The handler derives those relationships from authoritative state; the

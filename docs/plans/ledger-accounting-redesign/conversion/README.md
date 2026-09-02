@@ -207,6 +207,18 @@ remains open because archive is excluded; O-023 remains open because no
 attachment reference or byte is removed; destination assignment, Item scope/
 accounting, physical persistence, schema/RLS/Sync, app/MCP, migration, hosted
 resources and production remain absent; `EVID-ITEM-SPACE-CLEARING-001`.
+The provider-free Space assignment-destination directory slice is ready for
+implementation. Exactly two comment-only target surfaces are mapped to one
+exact Account and Project-or-Business-Inventory request, active stable Space
+identity/name/revision rows, deterministic duplicate-name ordering, explicit
+ready/authoritative-empty/partial/stale/failure truth, canonical restart,
+bounded refusal and one narrow query port. The complete local ready gate passes
+all 180 existing target tests in 42 suites, graph/generated-contract checks,
+both staging builds, repeatable project generation and clean source-project
+isolation. Executable behavior remains prohibited until the exact ready commit
+passes both CI jobs. Authorization, physical persistence, schema/RLS/Sync,
+assignment mutation, app/MCP, migration, hosted resources and production remain
+excluded; `EVID-SPACE-ASSIGNMENT-DESTINATION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

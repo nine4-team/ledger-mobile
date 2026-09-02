@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 145
+State version: 146
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-CLEARING-VERIFIED
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2186,6 +2186,35 @@ modifying the running Firebase application before hard cutover.
   in 42 suites, graph/generated-contract checks, both staging builds and clean
   tracked artifacts. All five obligations pass; exactly the two Item Space-
   clearing surfaces are now `verified`.
+- The Item Space-clearing verification-document commit
+  `2fd9ccaa183d7a840aa578192c7da3bf2b40c0db` passed immutable Actions run
+  `33677528131`: conversion traceability passed in 9 seconds and the isolated
+  target environment passed in 3 minutes 21 seconds with all 180 then-existing
+  target tests, both staging builds and clean tracked artifacts.
+- Audited the Space assignment destination picker against canonical Space/Item
+  authority, the reviewed Spaces dossier, local-first architecture, the
+  verified assignment operation and current Firebase callers. Some current
+  callers supply exact Project/Inventory-filtered arrays while shared search
+  flows may supply Account-wide Spaces; the target replaces caller-owned
+  filtering with one exact operation-specific local directory.
+- Selected `space-assignment-destination-read-contracts` as the next smallest
+  complete decision-independent slice. O-037 does not block a directory that
+  exposes only active destinations and cannot archive; O-023/O-032 do not block
+  rows that carry no media or review state.
+- Added exactly two comment-only target surfaces and the complete ready dossier.
+  It freezes eight requirements and five domain/restart/rejection/port/
+  operational obligations over exact Account/scope, active Space identity/name/
+  revision, valid duplicate names, deterministic ordering and explicit local
+  readiness without treating cached rows as authorization.
+- Conversion synchronization and generated residuals pass at 791 recorded / 776
+  discovered surfaces, 365 mapped / 164 residual / 43 blockers. Forty-three
+  slices claim 107 of 529 target-relevant surfaces and 90 are implementation-
+  advanced. The only warnings are the same three evidenced retired paths.
+- The complete local ready gate passes all 180 existing target tests in 42
+  suites, both staging builds, target isolation/generated contracts, conversion/
+  capability/query/residual controls, M0, clean formatting and repeatable target
+  project/scheme hashes. The source application project is unchanged. M1/M2
+  retain exactly 2/164 coverage blockers with zero structural errors.
 
 ## Next Action
 
@@ -2269,13 +2298,18 @@ Continue without waiting on the two M1 evidence blockers:
    `item-space-assignment-operation-contracts` dossier and
    `EVID-ITEM-SPACE-ASSIGNMENT-001` as the sole authority for the bounded
    provider-free AssignItemsToSpace boundary. Its exact implementation commit
-   and both CI jobs are verified. Treat the ready
+   and both CI jobs are verified. Treat the verified
    `item-space-clearing-operation-contracts` dossier and
-   `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for the next bounded
-   implementation. Its exact implementation commit and both CI jobs are
-   verified. Audit the next smallest complete decision-independent target slice
-   against canonical product authority and current-source behavior before
-   creating its ready dossier and comment-only checkpoint. Keep
+   `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for explicit
+   Item-placement clearing. Its exact implementation commit and both CI jobs
+   are verified. Treat the ready
+   `space-assignment-destination-read-contracts` dossier and
+   `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the frozen contract for the next
+   bounded implementation. Commit and push the comment-only ready checkpoint;
+   require both pull-request jobs to pass at that exact commit before adding
+   executable behavior. Then implement only the claimed provider-free directory
+   and deterministic tests, run the complete local gate, obtain exact
+   implementation-commit CI, and promote exactly its two surfaces. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

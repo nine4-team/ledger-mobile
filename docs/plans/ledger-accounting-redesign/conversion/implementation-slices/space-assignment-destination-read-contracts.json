@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-assignment-destination-read-contracts",
+  "title": "Read exact active same-scope Space assignment destinations offline without treating cached rows as authority",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Space Assignment Destination Read Contracts",
+  "surfaceIds": [
+    "SWIFT-164554FA1456",
+    "TEST-A3D73145E3EC"
+  ],
+  "requirements": [
+    {
+      "id": "SPACEDEST-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "The assignment destination picker reads an operation-specific local directory containing only active Spaces in one exact Account and Project-or-Business-Inventory scope; an Account-wide Space array supplied by route or screen state cannot define eligibility.",
+      "decisionIds": ["O-037"],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "Each eligible row carries stable SpaceID, normalized Space display name and exact revision. Duplicate names remain valid, and rows canonicalize by case-insensitive name, exact name and stable SpaceID so equivalent input has one deterministic presentation order.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Item Assignment",
+      "invariant": "Authoritative empty, incomplete partial, stale and failed local reads remain distinct. Absence from incomplete local data is not authoritative, and cached scope/revision evidence supports offline selection and conflict detection but never grants authorization.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Current Behavior and Defects",
+      "invariant": "The target replaces Firebase listeners and caller-filtered AccountContext arrays, including callers that pass all Account Spaces, with one scoped local read contract. It does not preserve nullable projectId matching, route authority, duplicate listener graphs, silent archived filtering or provider callbacks.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow SpaceAssignmentDestinationQuerying port watches only a typed SpaceAssignmentDestinationRequest and returns SpaceAssignmentDestinationDirectorySnapshot updates; it exposes no generic Space list, persistence DTO, provider listener, mutation or authorization decision.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Data Authority",
+      "invariant": "Local query state drives offline presentation but is never server truth or authorization. Cross-Account, cross-scope, inactive, duplicate, hidden-count, malformed or rebound evidence fails atomically through stable bounded diagnostics without leaking other scopes.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Project and Business Inventory destination directories, canonical ordering, exact scope/revisions and explicit readiness/completeness survive structured restart byte-identically. A deterministic reference port proves exact request isolation and local failure without claiming physical durability or synchronized visibility.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    },
+    {
+      "id": "SPACEDEST-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 boundary is executable only with deterministic provider-free synthetic evidence while the shipped app remains unchanged. It creates no Space/Item row, physical local store, schema/RLS/Sync policy, Auth/provider adapter, app/MCP wiring, source transform, hosted resource, migration or production authority.",
+      "decisionIds": [],
+      "verificationIds": ["SPACEDEST-TEST-001", "SPACEDEST-TEST-002", "SPACEDEST-TEST-003", "SPACEDEST-TEST-004", "SPACEDEST-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceAssignmentDestinationRequest binds one exact AccountID and ItemPlacementScope without route names, nullable scope pairs or backend paths.",
+        "SpaceAssignmentDestinationSnapshot binds one stable active SpaceID to the same Account/scope, normalized SpaceDisplayName and exact revision. Duplicate names are valid; inactive rows are ineligible.",
+        "SpaceAssignmentDestinationDirectorySnapshot validates finite local time, exact Account/scope rows, no duplicate Space identity or hidden pre-filter count, canonical name/name/ID order and explicit ListLocalSnapshot completeness/quality.",
+        "SpaceAssignmentDestinationQuerying exposes only watchEligibleDestinations(_:). SpaceAssignmentDestinationFailure provides stable bounded scope/lifecycle/duplicate/count/time/read/encoding diagnostics."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "No Space table, account/project foreign key, lifecycle/revision column, constraint, index, view, function, trigger or migration is created or changed."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative eligible-destination handler, membership/capability derivation, Account/Project/Inventory/Space validation, audit event or assignment apply exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/scope rows are not authorization. No membership, existing/result-row, Project/Inventory/Space predicate, grant or cross-account database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Space table, authenticated download predicate, subscription, upload connector or synchronized visibility proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The request, rows and directory are canonical Codable evidence over stable IDs, exact scope/revisions and ListLocalSnapshot readiness; decoding reconstructs through the same validators and byte-identical structured restart is required.",
+        "Equivalent input canonicalizes by case-insensitive name, exact name and SpaceID. Changed Account/scope/lifecycle/revision/identity/count/readiness or malformed evidence fails atomically, and incomplete absence never becomes authoritative empty.",
+        "A deterministic reference adapter may stream exact request-matching snapshots and bounded local failure; this is not physical durable-store, process/device restart, authenticated Sync or current authorization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Eligible destination rows carry no AttachmentID, object locator, URL, byte, marker, upload, cache, retention or deletion behavior; O-023 remains open outside the slice."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Set Space picker view, Item create/edit/bulk/search integration, MCP schema/tool, transport handler, capability registration or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Space DTO, projectId-null scope, AccountContext array, route state, listener snapshot, archived record, source export row or migration disposition is decoded, normalized, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize, persist, present or synchronize destination rows; assign/clear Items; define full Space detail/archive/review/media behavior; define schema/RLS/Sync/provider/migration behavior; activate a feature; deploy, release or cut over.",
+        "O-037/O-023/O-032 and A-003/A-004/A-007/A-016 remain outside this boundary. Physical offline verification, canonical production profiling and all hosted-resource authority remain gated."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACEDEST-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
+      "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
+      "expected": "Synthetic Project and Business Inventory directories preserve exact Account/scope, only active stable Space ID/name/revision rows, valid duplicate names, canonical name/name/ID order and no Account-wide/provider/accounting/media field.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEDEST-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
+      "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
+      "expected": "Project/Inventory ready, authoritative-empty, partial and stale directories plus differently ordered equivalent inputs round-trip byte-identically with exact scope/revision/readiness/completeness evidence and no authoritative assignment claim.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEDEST-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
+      "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
+      "expected": "Cross-Account, cross-scope, inactive, duplicate, hidden-count, nonfinite-time, incomplete-as-authoritative, malformed and rebound evidence fails atomically through stable bounded diagnostics.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEDEST-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
+      "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
+      "expected": "A deterministic reference port streams only exact Account/scope snapshots, refuses mismatched requests and surfaces bounded local failure without returning cross-scope rows, false completeness, authorization or assignment evidence.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACEDEST-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming authorization, physical local/Sync, assignment, schema/RLS, app/MCP, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready decision-independent Phase 1 query boundary. Canonical Space authority, the verified assignment operation and reviewed Spaces/offline/port contracts settle exact active same-scope destination identity, revision, deterministic order and explicit local readiness without deciding archive effects, media retention, review state, Auth, Postgres or PowerSync. O-037 stays open because archived Spaces are ineligible and archive behavior is absent; O-023/O-032 stay open because the directory carries no media or review state. The slice stops before executable behavior, physical persistence, authenticated Sync/authorization, assignment mutation, full Space detail, schema/RLS/provider, app/MCP, migration, hosted resources, production access or cutover."
+}
