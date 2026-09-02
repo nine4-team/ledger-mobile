@@ -207,16 +207,21 @@ remains open because archive is excluded; O-023 remains open because no
 attachment reference or byte is removed; destination assignment, Item scope/
 accounting, physical persistence, schema/RLS/Sync, app/MCP, migration, hosted
 resources and production remain absent; `EVID-ITEM-SPACE-CLEARING-001`.
-The provider-free Space assignment-destination directory slice is ready for
-implementation. Exactly two comment-only target surfaces are mapped to one
+The provider-free Space assignment-destination directory slice is implemented
+pending the complete integration gate and exact integration-commit CI. Exactly
+two target surfaces now define one
 exact Account and Project-or-Business-Inventory request, active stable Space
 identity/name/revision rows, deterministic duplicate-name ordering, explicit
 ready/authoritative-empty/partial/stale/failure truth, canonical restart,
-bounded refusal and one narrow query port. The complete local ready gate passes
-all 180 existing target tests in 42 suites, graph/generated-contract checks,
-both staging builds, repeatable project generation and clean source-project
-isolation. Executable behavior remains prohibited until the exact ready commit
-passes both CI jobs. Authorization, physical persistence, schema/RLS/Sync,
+bounded refusal and one narrow query port. The exact ready commit passed both
+CI jobs. The first isolated worker candidate changed only the two allowlisted
+files; the integration agent reviewed every line and reran four focused/all 184
+tests, and an independent adversarial reviewer found no P0-P2 defect. One P3
+documentation ambiguity was corrected so legitimate later revisions/readiness
+are not described as tamper. The complete local integration gate passes all
+184 tests in 43 suites, conversion/target checks, repeatable generation and
+both staging builds; exact integration-commit CI remains pending.
+Authorization, physical persistence, schema/RLS/Sync,
 assignment mutation, app/MCP, migration, hosted resources and production remain
 excluded; `EVID-SPACE-ASSIGNMENT-DESTINATION-001`.
 

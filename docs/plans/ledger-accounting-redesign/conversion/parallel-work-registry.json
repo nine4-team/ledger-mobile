@@ -11,12 +11,12 @@
       "assignmentId": "SUBAGENT-PILOT-001",
       "pilotOrdinal": 1,
       "sliceId": "space-assignment-destination-read-contracts",
-      "status": "assigned",
+      "status": "integrated_pending_verification",
       "baseCommit": "5f4867af1cba9b860efe9de2a914782bb8010278",
       "readyCiRun": 33679542831,
       "branch": "codex/supabase-slice-space-assignment-destination",
       "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_assignment_destination",
-      "workerAgent": null,
+      "workerAgent": "/root/space_destination_pilot",
       "ownedPaths": [
         "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
         "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift"
@@ -33,23 +33,30 @@
       ],
       "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationDataTests",
       "handoff": {
-        "candidateCommit": null,
-        "changedPaths": [],
-        "focusedTests": "pending",
-        "requirementsAccountedFor": false,
-        "forbiddenFilesConfirmedUntouched": false,
-        "risks": []
+        "candidateCommit": "dd48f23557ed204244a68c4cf6896a58133276f4",
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/SpaceAssignmentDestinationData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift"
+        ],
+        "focusedTests": "passed: 4 tests in 1 suite",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, PowerSync visibility, authorization, app integration, or migration behavior."
+        ]
       },
       "enhancedReview": {
-        "integrationAgentLineReview": "pending",
-        "independentReviewer": null,
-        "independentAdversarialReview": "pending",
-        "findings": [],
-        "focusedRetest": "pending",
-        "completeLocalGate": "pending",
+        "integrationAgentLineReview": "passed",
+        "independentReviewer": "/root/space_destination_review",
+        "independentAdversarialReview": "passed_with_nonblocking_documentation_clarification",
+        "findings": [
+          "P3: clarified that legitimate later snapshots may change revision/readiness while malformed, rebound, or internally inconsistent evidence fails closed; no content-integrity proof is claimed."
+        ],
+        "focusedRetest": "passed: 4 tests in 1 suite",
+        "completeLocalGate": "passed: conversion/capability/query/residual/M0 controls, target isolation/contracts, 184 tests in 43 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
         "exactIntegrationCommitCi": "pending"
       },
-      "integrationDisposition": "pending"
+      "integrationDisposition": "integrated at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7; full local gate passed and exact integration-commit CI is pending"
     }
   ]
 }

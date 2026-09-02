@@ -1381,10 +1381,10 @@
     {
       "id": "SWIFT-164554FA1456",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "00a2fcca41b9b42c8b6ae6f7f08b4ebbaea73458158a6b5077ed8953ea0344de",
-      "currentBehavior": "Contains only the reviewed ready-gate scaffold for a provider-free Space assignment-destination directory; no executable query behavior exists.",
+      "acknowledgeSourceHash": "4ce6ea0cbdb263fe3d31bc811e448bc3486c7faa5ecaf7460f91822904da6121",
+      "currentBehavior": "Defines the provider-free exact Account/Project-or-Business-Inventory assignment-destination request, active Space ID/name/revision rows, validated canonical local directory, bounded failures, and narrow query port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -1392,7 +1392,7 @@
         "EVID-ITEM-SPACE-ASSIGNMENT-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one operation-specific local destination directory with exact Account and Project-or-Business-Inventory scope, active stable Space IDs/names/revisions, deterministic order, explicit readiness/completeness and a narrow query port. It cannot grant authorization, assign or clear an Item, expose an Account-wide Space array, define full Space detail/archive/review/media state, create rows, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023/O-032 remain outside the slice.",
+      "notes": "Target-only Phase 1 implementation pending exact integration-commit CI. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 passed integration-agent line review, independent adversarial review, four focused and all 184 target tests before integration at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7. It defines one operation-specific local destination directory with exact Account and Project-or-Business-Inventory scope, active stable Space IDs/names/revisions, deterministic order, explicit readiness/completeness and a narrow query port. It cannot grant authorization, assign or clear an Item, expose an Account-wide Space array, define full Space detail/archive/review/media state, create rows, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023/O-032 remain outside the slice.",
       "target": {
         "owner": "Space Assignment Destination Read Contracts",
         "surfaces": [
@@ -1429,10 +1429,10 @@
     {
       "id": "TEST-A3D73145E3EC",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "624e573e5cc5a9f08c06fb1debdbdc9e6143d126025631fcfba877723c949ad5",
-      "currentBehavior": "Contains only the reviewed ready-gate scaffold for deterministic provider-free Space assignment-destination directory tests; no executable query test exists.",
+      "acknowledgeSourceHash": "d41afcc7cb1ecab6a369401d84f98ae7255d57fae87da0c7a260b3144eac1573",
+      "currentBehavior": "Implements four deterministic provider-free tests for exact active assignment destinations, canonical restart/readiness, bounded rejection, and exact-request query-port behavior.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -1440,7 +1440,7 @@
         "EVID-ITEM-SPACE-ASSIGNMENT-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/Inventory query scope, active stable Space ID/name/revision rows, duplicate-name canonical ordering, authoritative-empty/partial/stale/failure truth, byte-identical restart, atomic refusal and narrow-port scope isolation. They cannot claim authorization, physical persistence, placement mutation, full Space/archive/review/media behavior, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Target-only Phase 1 implementation pending exact integration-commit CI. Four deterministic tests pass for exact Account/Project/Inventory query scope, active stable Space ID/name/revision rows, duplicate-name canonical ordering, authoritative-empty/partial/stale/failure truth, byte-identical restart, atomic refusal and narrow-port scope isolation. Integration-agent and independent adversarial reviews found no P0-P2 defect; the review's P3 documentation ambiguity was corrected without claiming content-integrity proof. These tests cannot claim authorization, physical persistence, placement mutation, full Space/archive/review/media behavior, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Space Assignment Destination Read Contracts",
         "surfaces": [
@@ -1461,7 +1461,7 @@
       "migration": {
         "rule": "Use synthetic target-only values and load no Firebase Space DTO, AccountContext array, route state, listener callback, export/profile or source-to-target mapping.",
         "reconciliation": [
-          "Equivalent reordered input canonicalizes identically while changed Account/scope/lifecycle/revision/identity/count/readiness/fingerprint evidence fails atomically"
+          "Equivalent reordered input canonicalizes identically; malformed, rebound, or internally inconsistent Account/scope/lifecycle/identity/count/readiness/fingerprint evidence fails atomically, while legitimate later revisions and readiness updates remain valid snapshots"
         ]
       },
       "verification": {

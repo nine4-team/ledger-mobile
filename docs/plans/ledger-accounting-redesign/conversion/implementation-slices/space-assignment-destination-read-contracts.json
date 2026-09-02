@@ -3,7 +3,7 @@
   "sliceId": "space-assignment-destination-read-contracts",
   "title": "Read exact active same-scope Space assignment destinations offline without treating cached rows as authority",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space Assignment Destination Read Contracts",
   "surfaceIds": [
     "SWIFT-164554FA1456",
@@ -116,7 +116,7 @@
     "localOffline": {
       "items": [
         "The request, rows and directory are canonical Codable evidence over stable IDs, exact scope/revisions and ListLocalSnapshot readiness; decoding reconstructs through the same validators and byte-identical structured restart is required.",
-        "Equivalent input canonicalizes by case-insensitive name, exact name and SpaceID. Changed Account/scope/lifecycle/revision/identity/count/readiness or malformed evidence fails atomically, and incomplete absence never becomes authoritative empty.",
+        "Equivalent input canonicalizes by case-insensitive name, exact name and SpaceID. Malformed, rebound or internally inconsistent Account/scope/lifecycle/identity/count/readiness evidence fails atomically, while a legitimate later snapshot may carry a new revision or readiness state; incomplete absence never becomes authoritative empty.",
         "A deterministic reference adapter may stream exact request-matching snapshots and bounded local failure; this is not physical durable-store, process/device restart, authenticated Sync or current authorization evidence."
       ],
       "notApplicable": ""
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
       "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
       "expected": "Synthetic Project and Business Inventory directories preserve exact Account/scope, only active stable Space ID/name/revision rows, valid duplicate names, canonical name/name/ID order and no Account-wide/provider/accounting/media field.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"]
     },
     {
       "id": "SPACEDEST-TEST-002",
@@ -162,8 +162,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
       "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
       "expected": "Project/Inventory ready, authoritative-empty, partial and stale directories plus differently ordered equivalent inputs round-trip byte-identically with exact scope/revision/readiness/completeness evidence and no authoritative assignment claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"]
     },
     {
       "id": "SPACEDEST-TEST-003",
@@ -171,8 +171,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
       "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
       "expected": "Cross-Account, cross-scope, inactive, duplicate, hidden-count, nonfinite-time, incomplete-as-authoritative, malformed and rebound evidence fails atomically through stable bounded diagnostics.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"]
     },
     {
       "id": "SPACEDEST-TEST-004",
@@ -180,8 +180,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceAssignmentDestinationDataTests.swift",
       "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
       "expected": "A deterministic reference port streams only exact Account/scope snapshots, refuses mismatched requests and surfaces bounded local failure without returning cross-scope rows, false completeness, authorization or assignment evidence.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"]
     },
     {
       "id": "SPACEDEST-TEST-005",
@@ -196,5 +196,5 @@
   "implementationEvidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready decision-independent Phase 1 query boundary. Canonical Space authority, the verified assignment operation and reviewed Spaces/offline/port contracts settle exact active same-scope destination identity, revision, deterministic order and explicit local readiness without deciding archive effects, media retention, review state, Auth, Postgres or PowerSync. O-037 stays open because archived Spaces are ineligible and archive behavior is absent; O-023/O-032 stay open because the directory carries no media or review state. The slice stops before executable behavior, physical persistence, authenticated Sync/authorization, assignment mutation, full Space detail, schema/RLS/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Implemented decision-independent Phase 1 query boundary pending exact integration-commit operational CI. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 was restricted to the two allowlisted files, reviewed line by line by the integration agent, independently reviewed adversarially with no P0-P2 finding, and integrated at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7. The complete local integration gate passes four focused/all 184 target tests in 43 suites, conversion/capability/query/residual/M0 controls, target isolation/contracts, repeatable project generation, both staging builds and clean formatting. Canonical Space authority, the verified assignment operation and reviewed Spaces/offline/port contracts settle exact active same-scope destination identity, revision, deterministic order and explicit local readiness without deciding archive effects, media retention, review state, Auth, Postgres or PowerSync. O-037 stays open because archived Spaces are ineligible and archive behavior is absent; O-023/O-032 stay open because the directory carries no media or review state. The slice stops before physical persistence, authenticated Sync/authorization, assignment mutation, full Space detail, schema/RLS/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

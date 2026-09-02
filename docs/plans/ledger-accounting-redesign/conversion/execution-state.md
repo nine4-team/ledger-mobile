@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 147
+State version: 149
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SUBAGENT-PILOT-001-ASSIGNED
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-EXACT-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2236,6 +2236,28 @@ modifying the running Firebase application before hard cutover.
   the two Space assignment-destination implementation/test scaffolds; Firebase,
   docs/control/generated files, package/project graphs, MCP and hosted systems
   are forbidden.
+- Completed the first isolated implementation candidate at
+  `dd48f23557ed204244a68c4cf6896a58133276f4`. Its clean branch is descended
+  from the exact ready commit and changes exactly the two allowlisted files.
+- Applied the enhanced first-pilot quality gate: the integration agent reviewed
+  every changed line and independently reran four focused and all 184 target
+  tests in 43 suites; a separate read-only adversarial reviewer repeated the
+  authority, negative, restart, scope and exclusion audit and found no P0-P2
+  defect.
+- Resolved the reviewer's nonblocking P3 documentation finding by clarifying
+  that legitimate later revision/readiness snapshots remain valid while
+  malformed, rebound or internally inconsistent evidence fails closed; no
+  content-integrity or authorization proof is claimed.
+- Integrated the candidate into the canonical branch at
+  `0cca411d78d41281f3fb1f1d5c08c6518e2003b7`. The dossier and exactly its two
+  surfaces are `implemented`, not `verified`.
+- The complete local integration gate passes conversion sync/check/report,
+  capability/query/residual controls, M0, target isolation/generated contracts,
+  four focused/all 184 tests in 43 suites, repeatable project generation, both
+  staging builds and clean formatting. Project/scheme hashes remain unchanged;
+  M1/M2 retain exactly 2/164 coverage blockers and zero structural errors.
+- Exact integration-commit CI remains mandatory before the slice, surfaces or
+  first enhanced pilot can be promoted to `verified`/complete.
 
 ## Next Action
 
@@ -2327,11 +2349,13 @@ Continue without waiting on the two M1 evidence blockers:
    `space-assignment-destination-read-contracts` dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the frozen contract for the next
    bounded implementation. Its exact ready commit and both pull-request jobs
-   are verified. Execute `SUBAGENT-PILOT-001` only in the registry's isolated
-   worktree and allowlisted files. Treat its candidate commit as untrusted:
-   complete the enhanced first-pilot line and independent adversarial reviews,
-   integrate only after all findings are resolved, run the complete local gate,
-   obtain exact integration-commit CI, and promote exactly its two surfaces.
+   are verified. Treat the implemented
+   `space-assignment-destination-read-contracts` slice as unverified until its
+   complete local integration gate and a fresh exact integration-commit CI pass.
+   Then promote exactly its two surfaces and dossier to `verified`, complete
+   `SUBAGENT-PILOT-001` in the registry, preserve its enhanced-review record,
+   and remove the isolated worktree only after its candidate is durably
+   integrated.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

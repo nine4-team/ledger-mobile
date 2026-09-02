@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T20:28:18.946Z",
+  "generatedFromManifestSync": "2026-09-02T20:55:25.132Z",
   "totals": {
     "slices": 43,
     "claimedTargetSurfaces": 107,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 90
+    "implementationAdvancedTargetSurfaces": 92
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 41,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -486,7 +486,7 @@
       "sliceId": "space-assignment-destination-read-contracts",
       "title": "Read exact active same-scope Space assignment destinations offline without treating cached rows as authority",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Assignment Destination Read Contracts",
       "surfaceIds": [
         "SWIFT-164554FA1456",
