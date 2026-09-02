@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 112
+State version: 113
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-UPDATE-VERIFIED
+- Checkpoint: VENDOR-SUGGESTION-READ-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1634,6 +1634,31 @@ modifying the running Firebase application before hard cutover.
   29 seconds with all 136 tests in 31 suites, graph/generated-contract checks,
   both staging builds and clean tracked artifacts. All five dossier obligations
   now pass and `SWIFT-8668DE2251DE` plus `TEST-AC9956AE9D5C` are verified.
+- Exact Project-preference-update verification-document commit
+  `da5cfa4a5ad8941656475644202b510c1ee593ad` passed immutable GitHub Actions
+  run `33629389877`: conversion traceability passed in 8 seconds and the full
+  isolated target environment passed in 2 minutes 32 seconds.
+- Audited the next Project/Client/reference dependency and selected the
+  vendor-suggestion reference read as the smallest complete decision-independent
+  slice. O-026 governs mutation authority, not an already-authorized Account-
+  scoped read; suggestion selection remains free-text source evidence rather
+  than Vendor or accounting identity.
+- Froze seven exact requirements and five verification obligations over stable
+  suggestion identity, preserved bounded spelling, normalized comparison,
+  lifecycle/revision/order, explicit local readiness/restart, atomic refusal and
+  one narrow Account-exact query port.
+- Exactly two comment-only target surfaces are `target_mapped` under the ready
+  dossier: `SWIFT-111A94B464D5` and `TEST-A73A49564E8C`. Suggestion mutation,
+  O-026 roles/capabilities, default seeding, canonical Vendor identity, physical
+  persistence, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted
+  resources and production remain unadvanced.
+- The ready ledger records 769 surfaces / 754 discovered, with 343 mapped, 164
+  residual and 43 blockers. Thirty-two slices claim 85 target surfaces and 68
+  are implemented or later. All 136 existing target tests in 31 suites,
+  target isolation/generated contracts, both staging builds, repeatable
+  XcodeGen/source-project stability, conversion/capability/query/residual
+  controls, M0 and clean diff formatting pass; M1/M2 retain exactly their
+  expected 2/164 blockers.
 
 ## Next Action
 
@@ -1687,8 +1712,9 @@ Continue without waiting on the two M1 evidence blockers:
    preference read semantics. Treat the verified
    `project-preference-update-operation-contracts` dossier and
    `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
-   semantics. Audit the next smallest complete decision-independent dependency
-   before creating another ready slice. Keep
+   semantics. Implement only the ready
+   `vendor-suggestion-reference-read-contracts` dossier, then require exact
+   local and immutable-CI evidence before advancing its two surfaces. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

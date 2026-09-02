@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T12:19:49.802Z",
+    "lastSynchronizedAt": "2026-09-02T12:38:01.396Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16856,6 +16856,67 @@
         "EVID-PROJECT-ARCHIVE-001"
       ],
       "notes": "Target-only Phase 1 command boundary verified at exact implementation commit 7b30bd25 by immutable Actions run 33601516220. Four focused/all 104 target tests, graph/contracts, both staging builds and clean artifacts pass. It cannot restore, delete, rename, edit or reassign a Project; change Client/category/media/accounting evidence; create rows; authorize access; define schema/RLS/Sync/provider behavior; wire app/MCP; migrate source data; or activate production. O-024/O-025 remain open.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-111A94B464D5",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/VendorSuggestionReferenceData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/VendorSuggestionReferenceData.swift"
+        }
+      ],
+      "observedSourceHash": "463c20fe2a864a3b71cdb06bc62990ea1463c61220039470a0b11fe50cd316c1",
+      "acknowledgedSourceHash": "463c20fe2a864a3b71cdb06bc62990ea1463c61220039470a0b11fe50cd316c1",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target scaffold for a provider-free Account-scoped vendor-suggestion read model with stable identity, display text, normalized duplicate detection, lifecycle, order, revision, local readiness and a narrow query port.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Reference Read Contracts",
+        "surfaces": [
+          "VendorSuggestionID",
+          "VendorSuggestionDisplayValue",
+          "VendorSuggestionSnapshot",
+          "VendorSuggestionReferenceSnapshot",
+          "VendorSuggestionQuerying",
+          "VendorSuggestionReferenceFailure"
+        ],
+        "securityRequirements": [
+          "The read model accepts only already-authorized rows for one exact Account and exposes no membership, role, capability, hidden-row count, credential or service identity",
+          "O-026 remains open for every create, rename, merge, archive, reactivate and reorder operation; reading or selecting a suggestion cannot grant mutation authority"
+        ],
+        "syncRequirements": [
+          "Stable suggestion identity, preserved display spelling, normalized comparison, lifecycle, revision and unique deterministic order survive canonical structured restart",
+          "Ready, partial, stale and authoritative-empty local snapshots remain distinct; this contract does not claim a physical database or synchronized download"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only read values and decode no Firebase vendors document, hardcoded default list, source Transaction/Item, export row or source-to-target correlation.",
+        "reconciliation": [
+          "A later importer must preserve source spelling/order, assign stable identity/revision, classify normalized duplicates and anomalies, and never rewrite historical free-text source evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionReferenceDataTests"
+        ],
+        "acceptance": [
+          "Synthetic contracts prove only exact Account scope, stable ordered suggestion values, source-text selection semantics, local readiness/restart and atomic refusal without mutation, a provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-VENDOR-SUGGESTION-REFERENCE-001"
+      ],
+      "notes": "Ready target-only Phase 1 read contract. O-026 does not block an already-authorized read boundary, but all suggestion mutation, capability assignment and RLS policy remain excluded. The scaffold contains no executable behavior, provider type, default seed, persistence, app/MCP wiring, migration, hosted resource or production access.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35265,6 +35326,65 @@
         "EVID-PROJECT-SETUP-001"
       ],
       "notes": "Four focused/all 100 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 8d8cd30f in immutable Actions run 33599214652. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, media, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-A73A49564E8C",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/VendorSuggestionReferenceDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/VendorSuggestionReferenceDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "d183163d42499c3164b2ae3e564ccd09013158a25bca514b55423842e831c786",
+      "acknowledgedSourceHash": "d183163d42499c3164b2ae3e564ccd09013158a25bca514b55423842e831c786",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target scaffold for deterministic vendor-suggestion read contract tests covering exact values, source-text semantics, canonical readiness/restart, bounded refusal and Account-exact port failure behavior.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Vendor Suggestion Reference Read Contracts",
+        "surfaces": [
+          "VendorSuggestionReferenceDataTests",
+          "ordered active/archive suggestion fixtures",
+          "ready/partial/stale/authoritative-empty restart fixtures",
+          "scope/identity/value/order/count/time refusal fixtures",
+          "Account-exact reference-port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account and suggestion identities and cannot exercise a credential, membership row, capability grant or hidden data",
+          "Negative tests expose only stable bounded codes and no source value, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured restart/readiness evidence from physical local persistence, authenticated authorization and synchronized target projection"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase vendor-default document, seeded list, source Transaction/Item, profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent snapshots round-trip byte-identically while changed Account, duplicate identity/normalized value/order, count, time and malformed evidence fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionReferenceDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral vendor-suggestion read boundary without claiming writer authorization, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-VENDOR-SUGGESTION-REFERENCE-001"
+      ],
+      "notes": "Ready target-only deterministic test scaffold. It cannot prove authentication, O-026 mutation policy, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

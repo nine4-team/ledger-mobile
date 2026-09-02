@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "vendor-suggestion-reference-read-contracts",
+  "title": "Read ordered vendor suggestions offline without creating Vendor identity or write authority",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Vendor Suggestion Reference Read Contracts",
+  "surfaceIds": [
+    "SWIFT-111A94B464D5",
+    "TEST-A73A49564E8C"
+  ],
+  "requirements": [
+    {
+      "id": "VENDORSUGGESTION-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Receipt Details",
+      "invariant": "Vendor/source evidence remains a captured value on its owning Item, Expense or Transaction. Reading or selecting a reusable suggestion cannot create accounting activity, change money, or replace the owning record's source snapshot.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    },
+    {
+      "id": "VENDORSUGGESTION-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Vendor suggestions are Account-scoped ordered reference entries with stable identity, preserved display spelling, explicit lifecycle and revision, and deterministic order. A suggestion remains convenience data rather than canonical Vendor or historical accounting identity.",
+      "decisionIds": ["O-026"],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    },
+    {
+      "id": "VENDORSUGGESTION-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Migration Contract",
+      "invariant": "Each visible entry has stable VendorSuggestionID, exact AccountID, bounded display value, normalized comparison key, active or archived lifecycle, unique presentation order and revision. Selection yields only the preserved free-text source value and never a Vendor relationship.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    },
+    {
+      "id": "VENDORSUGGESTION-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral VendorSuggestionQuerying port streams already-authorized local snapshots for exactly one Account. Read access is separate from O-026 mutation capability and carries no role, credential, backend path, generic CRUD or writer method.",
+      "decisionIds": ["O-026"],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    },
+    {
+      "id": "VENDORSUGGESTION-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "The local result explicitly preserves query fingerprint, ready/partial/stale quality, completeness, visible-row count, local data version and finite as-of time. An empty complete snapshot is authoritative empty while an incomplete empty snapshot is not treated as no suggestions configured.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    },
+    {
+      "id": "VENDORSUGGESTION-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "The target read contract is synthetic and provider-free. It exposes immutable query results only and cannot become a mutation path; later import and writer slices separately own source normalization, durable commands and authorization.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    },
+    {
+      "id": "VENDORSUGGESTION-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged. It creates no default seed, mutation command, authorization policy, table, Sync Stream, provider choice, source transform, hosted resource or production authority.",
+      "decisionIds": [],
+      "verificationIds": ["VENDORSUGGESTION-TEST-001", "VENDORSUGGESTION-TEST-002", "VENDORSUGGESTION-TEST-003", "VENDORSUGGESTION-TEST-004", "VENDORSUGGESTION-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "VendorSuggestionID is a stable typed identity. VendorSuggestionDisplayValue trims surrounding whitespace, collapses internal whitespace for comparison, rejects empty/control/oversized values and preserves the accepted display spelling separately from its normalized lowercase comparison key.",
+        "VendorSuggestionSnapshot binds stable ID, AccountID, display value, active/archive lifecycle, unique UInt32 presentation order and UInt64 revision. Its selectable source value is only the display string; no Vendor, Item, Expense, Transaction, amount, category or relationship identity is present.",
+        "VendorSuggestionReferenceSnapshot rejects cross-Account rows, duplicate IDs, normalized values or presentation orders, mismatched visible counts and non-finite as-of evidence, then exposes deterministic order and active selectable entries without hiding archive state from the already-authorized snapshot.",
+        "VendorSuggestionQuerying exposes only watchVendorSuggestions(accountId:) and VendorSuggestionReferenceFailure supplies stable bounded value/scope/duplicate/count/time/local-read/encoding failures."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates or changes no vendor_suggestions table, normalized key, order/revision/archive column, uniqueness rule, index, view, trigger or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No SuggestVendor, rename, merge, archive, reactivate, reorder, default-seed, normalization-owner or authoritative read handler exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account scope and an already-authorized local snapshot are not authorization proof. No membership, role, O-026 capability, grant, USING/WITH CHECK policy or cross-account database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local vendor-suggestion table, authenticated download predicate, upload connector, conflict handling or synchronized completeness proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The complete snapshot is canonical Codable evidence over Account scope plus ListLocalSnapshot query fingerprint, rows, visible count, completeness, quality, version and finite as-of time; decode reconstructs through the same validators and byte-identical structured restart is required.",
+        "Ready, partial, stale and authoritative-empty states remain distinct. Duplicate stable identity, normalized value or order and cross-Account/count/time/malformed evidence fail atomically rather than being silently deduplicated or treated as ready.",
+        "A deterministic reference port may stream one exact synthetic Account snapshot or fail without yielding a false snapshot; this is not physical durable-store, process/device restart, authenticated Sync or provider evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Vendor suggestions contain no attachment identity, local bytes, upload, cache, URL, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No picker/settings UI, fixed/excluded option composition, free-text form control, save-as-suggestion capability gate, MCP resource/tool, transport handler or catalog registration is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase vendors array, hardcoded default, duplicate string, source order, Transaction/Item source, export record or production row is decoded, normalized, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation must remain inside provider-free LedgerTargetCore and tests and cannot change or link either application project.",
+        "The slice cannot authorize a reader or writer, seed defaults, mutate or persist suggestions, resolve O-026, create Vendor identity, change historical source text, define schema/RLS/Sync/provider/migration behavior, activate a feature, deploy, release or cut over.",
+        "A-003/A-004/A-007/A-016, physical offline verification, canonical production vendor-default profiling and all hosted-resource authority remain outside this read boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "VENDORSUGGESTION-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/VendorSuggestionReferenceDataTests.swift",
+      "covers": ["VENDORSUGGESTION-REQ-001", "VENDORSUGGESTION-REQ-002", "VENDORSUGGESTION-REQ-003", "VENDORSUGGESTION-REQ-004", "VENDORSUGGESTION-REQ-005", "VENDORSUGGESTION-REQ-006", "VENDORSUGGESTION-REQ-007"],
+      "expected": "Valid synthetic entries preserve exact stable ID, Account, display spelling, normalized comparison, lifecycle, order and revision; deterministic order and active selection yield only free-text source values and carry no Vendor/accounting identity, backend field or write capability.",
+      "status": "planned",
+      "evidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"]
+    },
+    {
+      "id": "VENDORSUGGESTION-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/VendorSuggestionReferenceDataTests.swift",
+      "covers": ["VENDORSUGGESTION-REQ-001", "VENDORSUGGESTION-REQ-002", "VENDORSUGGESTION-REQ-003", "VENDORSUGGESTION-REQ-004", "VENDORSUGGESTION-REQ-005", "VENDORSUGGESTION-REQ-006", "VENDORSUGGESTION-REQ-007"],
+      "expected": "Ready, partial, stale and authoritative-empty local snapshots round-trip byte-identically with exact query fingerprint, row order, visible count, completeness, quality, data version and finite as-of evidence.",
+      "status": "planned",
+      "evidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"]
+    },
+    {
+      "id": "VENDORSUGGESTION-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/VendorSuggestionReferenceDataTests.swift",
+      "covers": ["VENDORSUGGESTION-REQ-001", "VENDORSUGGESTION-REQ-002", "VENDORSUGGESTION-REQ-003", "VENDORSUGGESTION-REQ-004", "VENDORSUGGESTION-REQ-005", "VENDORSUGGESTION-REQ-006", "VENDORSUGGESTION-REQ-007"],
+      "expected": "Empty/control/oversized display values, cross-Account rows, duplicate IDs, normalized values or orders, count/time mismatches and malformed encodings fail atomically through stable diagnostic codes.",
+      "status": "planned",
+      "evidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"]
+    },
+    {
+      "id": "VENDORSUGGESTION-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/VendorSuggestionReferenceDataTests.swift",
+      "covers": ["VENDORSUGGESTION-REQ-001", "VENDORSUGGESTION-REQ-002", "VENDORSUGGESTION-REQ-003", "VENDORSUGGESTION-REQ-004", "VENDORSUGGESTION-REQ-005", "VENDORSUGGESTION-REQ-006", "VENDORSUGGESTION-REQ-007"],
+      "expected": "A deterministic provider-free reference port streams only its exact Account snapshot; a different Account and a failing port yield no false snapshot and return stable bounded failures.",
+      "status": "planned",
+      "evidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"]
+    },
+    {
+      "id": "VENDORSUGGESTION-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["VENDORSUGGESTION-REQ-001", "VENDORSUGGESTION-REQ-002", "VENDORSUGGESTION-REQ-003", "VENDORSUGGESTION-REQ-004", "VENDORSUGGESTION-REQ-005", "VENDORSUGGESTION-REQ-006", "VENDORSUGGESTION-REQ-007"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming suggestion mutation, authentication, physical persistence, schema/RLS/Sync/provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready decision-independent Phase 1 read boundary. Personal/current transaction and item source text plus reviewed capability/architecture contracts settle stable ordered Account-scoped suggestions, explicit archive/revision/readiness and the rule that selection remains free text rather than Vendor/accounting identity. O-026 remains fully open for suggestion creation, curation, archive/reactivation, merge, reorder and authorization. The slice stops before default policy, fixed/excluded picker composition, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
+}

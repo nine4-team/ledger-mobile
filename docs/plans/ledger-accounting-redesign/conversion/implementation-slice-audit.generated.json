@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T12:19:49.802Z",
+  "generatedFromManifestSync": "2026-09-02T12:38:01.396Z",
   "totals": {
-    "slices": 31,
-    "claimedTargetSurfaces": 83,
+    "slices": 32,
+    "claimedTargetSurfaces": 85,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 68
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 30,
@@ -479,6 +479,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/validated-target-composition.json"
+    },
+    {
+      "sliceId": "vendor-suggestion-reference-read-contracts",
+      "title": "Read ordered vendor suggestions offline without creating Vendor identity or write authority",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Vendor Suggestion Reference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-111A94B464D5",
+        "TEST-A73A49564E8C"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/vendor-suggestion-reference-read-contracts.json"
     },
     {
       "sliceId": "versioned-contract-catalog",

@@ -11,7 +11,8 @@
     "EVID-PROJECT-SETUP-001",
     "EVID-PROJECT-ARCHIVE-001",
     "EVID-BUDGET-CATEGORY-REFERENCE-001",
-    "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+    "EVID-PROJECT-CATEGORY-CONFIGURATION-001",
+    "EVID-VENDOR-SUGGESTION-REFERENCE-001"
   ],
   "surfaces": [
     {
@@ -2880,6 +2881,100 @@
         ],
         "acceptance": [
           "Self-tests prove only the backend-neutral preference update intent boundary without claiming authentication, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-111A94B464D5",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "463c20fe2a864a3b71cdb06bc62990ea1463c61220039470a0b11fe50cd316c1",
+      "currentBehavior": "Comment-only target scaffold for a provider-free Account-scoped vendor-suggestion read model with stable identity, display text, normalized duplicate detection, lifecycle, order, revision, local readiness and a narrow query port.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-VENDOR-SUGGESTION-REFERENCE-001"
+      ],
+      "notes": "Ready target-only Phase 1 read contract. O-026 does not block an already-authorized read boundary, but all suggestion mutation, capability assignment and RLS policy remain excluded. The scaffold contains no executable behavior, provider type, default seed, persistence, app/MCP wiring, migration, hosted resource or production access.",
+      "target": {
+        "owner": "Vendor Suggestion Reference Read Contracts",
+        "surfaces": [
+          "VendorSuggestionID",
+          "VendorSuggestionDisplayValue",
+          "VendorSuggestionSnapshot",
+          "VendorSuggestionReferenceSnapshot",
+          "VendorSuggestionQuerying",
+          "VendorSuggestionReferenceFailure"
+        ],
+        "securityRequirements": [
+          "The read model accepts only already-authorized rows for one exact Account and exposes no membership, role, capability, hidden-row count, credential or service identity",
+          "O-026 remains open for every create, rename, merge, archive, reactivate and reorder operation; reading or selecting a suggestion cannot grant mutation authority"
+        ],
+        "syncRequirements": [
+          "Stable suggestion identity, preserved display spelling, normalized comparison, lifecycle, revision and unique deterministic order survive canonical structured restart",
+          "Ready, partial, stale and authoritative-empty local snapshots remain distinct; this contract does not claim a physical database or synchronized download"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only read values and decode no Firebase vendors document, hardcoded default list, source Transaction/Item, export row or source-to-target correlation.",
+        "reconciliation": [
+          "A later importer must preserve source spelling/order, assign stable identity/revision, classify normalized duplicates and anomalies, and never rewrite historical free-text source evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionReferenceDataTests"
+        ],
+        "acceptance": [
+          "Synthetic contracts prove only exact Account scope, stable ordered suggestion values, source-text selection semantics, local readiness/restart and atomic refusal without mutation, a provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-A73A49564E8C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d183163d42499c3164b2ae3e564ccd09013158a25bca514b55423842e831c786",
+      "currentBehavior": "Comment-only target scaffold for deterministic vendor-suggestion read contract tests covering exact values, source-text semantics, canonical readiness/restart, bounded refusal and Account-exact port failure behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-VENDOR-SUGGESTION-REFERENCE-001"
+      ],
+      "notes": "Ready target-only deterministic test scaffold. It cannot prove authentication, O-026 mutation policy, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
+      "target": {
+        "owner": "Vendor Suggestion Reference Read Contracts",
+        "surfaces": [
+          "VendorSuggestionReferenceDataTests",
+          "ordered active/archive suggestion fixtures",
+          "ready/partial/stale/authoritative-empty restart fixtures",
+          "scope/identity/value/order/count/time refusal fixtures",
+          "Account-exact reference-port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account and suggestion identities and cannot exercise a credential, membership row, capability grant or hidden data",
+          "Negative tests expose only stable bounded codes and no source value, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured restart/readiness evidence from physical local persistence, authenticated authorization and synchronized target projection"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase vendor-default document, seeded list, source Transaction/Item, profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent snapshots round-trip byte-identically while changed Account, duplicate identity/normalized value/order, count, time and malformed evidence fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter VendorSuggestionReferenceDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral vendor-suggestion read boundary without claiming writer authorization, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
         ]
       }
     }

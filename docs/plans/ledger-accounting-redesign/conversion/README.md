@@ -80,6 +80,13 @@ generated-contract checks, both staging builds and clean artifacts.
 Authentication, category mutation/resolution, defaults, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded.
+The provider-free vendor-suggestion reference read slice is ready. Exactly two
+comment-only target surfaces freeze stable Account-scoped suggestion identity,
+preserved display spelling, normalized duplicate detection, lifecycle/revision/
+order, explicit local readiness and source-text-only selection. O-026 mutation
+authority, default seeding, physical persistence, schema/RLS/Sync/provider
+behavior, app/MCP, migration and production remain excluded until executable
+evidence advances the slice.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
