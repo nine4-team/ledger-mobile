@@ -179,6 +179,38 @@
         "exactIntegrationCommitCi": "passed: d5afa699ce09c105a82b187f9953e06a09ac2b10 in immutable Actions run 33695588031"
       },
       "integrationDisposition": "accepted and verified at d5afa699ce09c105a82b187f9953e06a09ac2b10 after every-line primary review, independent adversarial review, four corrected quality findings, complete local gates and immutable Actions run 33695588031; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-004",
+      "sliceId": "project-core-details-read-contracts",
+      "status": "assigned",
+      "baseCommit": "4fd81f477f87de9528c25559d0950dbdd0136717",
+      "readyCiRun": 33697079580,
+      "branch": "codex/supabase-slice-project-core-details",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_core_details",
+      "workerAgent": "/root/project_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectCoreDetailsDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user requested early quality-control sampling, and this slice composes shared Project/Client identity, canonical description, revision and offline-readiness semantics."
+      }
     }
   ],
   "preflightFindings": [

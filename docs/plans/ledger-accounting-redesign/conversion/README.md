@@ -282,8 +282,10 @@ slice expressly excludes the complete Project workspace, children, media,
 accounting, mutations, authorization, provider/schema/RLS/Sync, app/MCP,
 migration and production behavior. The complete local ready gate passes with
 all 199 existing target tests in 46 suites, repeatable generation, both staging
-builds and clean isolation. Immutable CI on the exact ready commit remains
-required before delegation; `EVID-PROJECT-CORE-DETAILS-001`.
+builds and clean isolation. Exact ready commit `4fd81f47` passed immutable
+Actions run `33697079580`; only the registered two-path isolated assignment is
+authorized, and every-line primary plus independent adversarial review remain
+mandatory before integration; `EVID-PROJECT-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

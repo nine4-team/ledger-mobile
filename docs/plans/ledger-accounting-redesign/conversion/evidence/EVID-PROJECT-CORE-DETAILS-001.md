@@ -8,8 +8,9 @@
 - Slice dossier:
   `conversion/implementation-slices/project-core-details-read-contracts.json`
 - Verification state: ready contract; complete local ready gate passed and
-  implementation remains withheld until immutable CI passes on the exact ready
-  commit
+  immutable CI passed on exact ready commit
+  `4fd81f477f87de9528c25559d0950dbdd0136717`; implementation is authorized
+  only inside the registered two-path isolated worker assignment
 - Ready scaffold hashes:
   - `ProjectCoreDetailsData.swift`:
     `cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e`
@@ -89,8 +90,14 @@ gate passes:
 - macOS and generic iOS Simulator staging builds; and
 - clean formatting and no source application-project change.
 
-Immutable CI on the exact ready checkpoint remains the final prerequisite
-before an isolated worker may replace the scaffolds.
+Exact ready commit `4fd81f477f87de9528c25559d0950dbdd0136717`
+passed immutable GitHub Actions run `33697079580`: conversion state and
+traceability passed in 13 seconds and the isolated target environment passed in
+2 minutes 51 seconds, including the complete existing test suite, generated
+contracts, both staging builds and clean-artifact verification. This authorizes
+only registered assignment `SUBAGENT-WORK-004` to replace the two scaffolds;
+every-line primary review, independent adversarial review, complete integration
+gates and exact integration-commit CI remain mandatory before acceptance.
 
 ## Permanent Limits
 

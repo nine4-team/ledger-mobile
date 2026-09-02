@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 164
+State version: 165
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-CORE-DETAILS-READY-GATE
+- Checkpoint: PROJECT-CORE-DETAILS-ISOLATED-WORKER
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2442,8 +2442,16 @@ modifying the running Firebase application before hard cutover.
   paths contain comments only. The complete local ready gate passes: all 199
   existing target tests in 46 suites, repeatable XcodeGen output, both staging
   builds, target isolation/generated contracts and clean-artifact checks pass.
-  Immutable CI on the exact ready commit remains the sole prerequisite before
-  delegation. No provider, Firebase or production action occurred.
+  Exact ready commit `4fd81f477f87de9528c25559d0950dbdd0136717`
+  passed immutable Actions run `33697079580`: traceability passed in 13 seconds
+  and isolated target verification passed in 2 minutes 51 seconds. Registered
+  `SUBAGENT-WORK-004` on branch
+  `codex/supabase-slice-project-core-details` in isolated worktree
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_core_details`,
+  with only the two scaffold paths writable. Every-line primary review,
+  independent adversarial review, complete integration gates and exact
+  integration-commit CI remain mandatory. No provider, Firebase or production
+  action occurred.
 
 ## Next Action
 
@@ -2564,9 +2572,10 @@ Continue without waiting on the two M1 evidence blockers:
    migration or production behavior.
    Treat ready `project-core-details-read-contracts` and
    `EVID-PROJECT-CORE-DETAILS-001` as the next frozen implementation boundary.
-   First pass complete local ready gates and immutable CI on the exact comment-
-   only ready checkpoint. Then assign only its two paths to one isolated worker
-   and retain primary every-line plus independent adversarial review because
+   Exact comment-only ready commit `4fd81f47` passed complete local gates and
+   immutable Actions run `33697079580`. Continue only through registered
+   `SUBAGENT-WORK-004`, limited to its two paths, and retain primary every-line
+   plus independent adversarial review because
    the slice composes shared Project/Client, canonical-description, revision and
    offline-readiness semantics. Do not let it become a Project workspace or
    acquire children, media, accounting, mutation, authorization, provider,
