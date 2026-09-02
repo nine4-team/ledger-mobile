@@ -26,9 +26,11 @@ display, Storage, retention or provider behavior. The provider-free Client
 creation operation slice is verified at exact implementation commit `3b837af3`,
 including all 96 target tests and both staging builds. It defines no server row,
 authorization, Auth/provider, schema, Sync, app/MCP, migration or production
-behavior. The provider-free Project setup operation slice is implemented
-locally with all 100 target tests and both staging builds passing; exact-commit
-hosted verification remains pending.
+behavior. The provider-free Project setup operation slice is verified at exact
+implementation commit `8d8cd30f`, including all 100 target tests and both
+staging builds, without introducing rows, authorization, media, providers or
+production behavior. The next decision-independent Phase 1 slice must be
+selected from the reviewed dependency graph.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

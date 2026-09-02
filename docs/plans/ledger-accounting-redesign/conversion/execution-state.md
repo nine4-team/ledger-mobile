@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 84
+State version: 85
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SETUP-OPERATION-IMPLEMENTED-AWAITING-EXACT-CI
+- Checkpoint: PROJECT-SETUP-OPERATION-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1132,6 +1132,15 @@ modifying the running Firebase application before hard cutover.
   Project edit/reassignment/archive/delete, hero media, schema/RLS/Sync/Auth/
   provider, current/target app/MCP, migration, hosted resource or production
   operation was introduced; O-023/O-024/O-025/O-026 remain open.
+- Exact implementation commit
+  `8d8cd30f3b2ff8f582b8117f4799f732cca854a5` passed immutable GitHub Actions
+  run `33599214652`: conversion traceability passed in 8 seconds and the
+  isolated-target job passed in 2 minutes 53 seconds with all 100 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five Project-setup obligations and exactly its
+  two target-only surfaces are now `verified`; every excluded server,
+  authorization, media, provider, migration and production surface remains
+  unadvanced.
 
 ## Next Action
 
@@ -1157,15 +1166,17 @@ Continue without waiting on the two M1 evidence blockers:
    capture identity, exact local-byte evidence and success-shaped receipts.
    Treat the verified `client-creation-operation-contracts` dossier and
    `EVID-CLIENT-CREATION-001` as the sole Client-create semantic authority.
-   Implement only the ready `project-setup-operation-contracts` dossier:
-   existing/new Client selection, stable Project identity/name/description,
-   canonical complete category state with absent/null/zero allocation, exact
-   shared-envelope subject/fingerprint binding, narrow operation port, receipt
-   validation, canonical restart and the five planned tests. Do not add Project/
-   Client/category rows or handlers, membership/category authorization,
-   category-definition mutation, Project edit/reassignment/archive/delete,
-   hero media, physical persistence, schema/RLS/Sync/Auth/provider behavior,
-   current app/MCP, migration, hosted resources or production access.
+   Treat the verified `project-setup-operation-contracts` dossier and
+   `EVID-PROJECT-SETUP-001` as the sole CreateProject semantic authority for
+   existing/new Client selection and complete absent/null/zero category intent.
+   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
+   decision-independent user/operational outcome, create exactly its target-only
+   scaffolds and complete its ready dossier before beginning the next behavior.
+   Do not add Project/Client/category rows or handlers, membership/category
+   authorization, category-definition mutation, Project edit/reassignment/
+   archive/delete, hero media, physical persistence, schema/RLS/Sync/Auth/
+   provider behavior, current app/MCP, migration, hosted resources or
+   production access without the applicable gates.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

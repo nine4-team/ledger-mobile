@@ -1943,14 +1943,14 @@
       "acknowledgeSourceHash": "c38ff0c4c8c8a17c94d9a3db91f50905141dcf8461facd709d3a1d0d28a56ab5",
       "currentBehavior": "Implements a provider-free Project setup draft, stable existing/new Client selection, canonical complete category state with exact nullable non-negative Money, typed shared-envelope command, derived Project subject/fingerprint validation, exact receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-SETUP-001"
       ],
-      "notes": "Target-only Phase 1 implementation passes four focused/all 100 local target tests, graph/contracts and both staging builds. Exact-commit hosted CI remains pending, so the surface is implemented rather than verified. It creates no rows, authorizes no Client/category access, mutates no category definitions, attaches no media, edits/reassigns/archives/deletes no Project, and defines no schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
+      "notes": "Target-only Phase 1 command boundary verified at exact implementation commit 8d8cd30f by immutable Actions run 33599214652. Four focused/all 100 target tests, graph/contracts, both staging builds and clean artifacts pass. It creates no rows, authorizes no Client/category access, mutates no category definitions, attaches no media, edits/reassigns/archives/deletes no Project, and defines no schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Project Setup Operation Contracts",
         "surfaces": [
@@ -1993,14 +1993,14 @@
       "acknowledgeSourceHash": "74f4a44b8f3b0a43777dd8832e374f6d5c1359c84fa52211195277335537d094",
       "currentBehavior": "Executes four deterministic provider-free tests for existing/new Client selection, stable Project identity, empty/absent/null/zero category state, canonical order/restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-SETUP-001"
       ],
-      "notes": "Four focused/all 100 local target tests, graph/contracts and both staging builds pass. Exact-commit hosted CI remains pending, so the test surface is implemented rather than verified. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, media, migration or production behavior.",
+      "notes": "Four focused/all 100 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 8d8cd30f in immutable Actions run 33599214652. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, media, migration or production behavior.",
       "target": {
         "owner": "Project Setup Operation Contracts",
         "surfaces": [

@@ -3,7 +3,7 @@
   "sliceId": "project-setup-operation-contracts",
   "title": "Create one Project with authoritative Client identity and exact category setup",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Setup Operation Contracts",
   "surfaceIds": [
     "SWIFT-C1C5DFC81448",
@@ -300,8 +300,10 @@
         "PROJECTSETUP-REQ-008"
       ],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, media, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-SETUP-001"
+      ]
     }
   ],
   "implementationEvidence": [
