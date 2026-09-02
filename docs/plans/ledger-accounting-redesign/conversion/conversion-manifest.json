@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T03:53:51.163Z",
+    "lastSynchronizedAt": "2026-09-02T03:58:33.204Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -26706,7 +26706,7 @@
           "Synthetic Purchase/Return evidence preserves stable ordered lines and reconstructs exact increase, decrease, net, final and variance Money while refusing invalid or ambiguous evidence without choosing open billing, rounding, tax-allocation or posting policy"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -26714,7 +26714,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-RECEIPT-RECONSTRUCTION-001"
       ],
-      "notes": "Target-only Phase 1 receipt-evidence foundation. Four focused tests and all 84 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. The fingerprint binds canonical evidence/order for deterministic corruption detection, not authorization or authenticity. This boundary cannot create or edit a Transaction, declare a one-cent completeness policy, allocate tax, decide billability, create an Item/Expense/Invoice effect, define schema/RLS/Sync/provider behavior, migrate source receipts, wire app/MCP entry points or activate production.",
+      "notes": "Target-only Phase 1 receipt-evidence foundation. Four focused tests and all 84 target tests pass locally and at exact implementation commit 594aec1e68747fefe9fffd6a80d550c55d0c555d in immutable GitHub Actions run 33588870600 with graph/contracts, both staging builds and clean artifacts. The fingerprint binds canonical evidence/order for deterministic corruption detection, not authorization or authenticity. This boundary cannot create or edit a Transaction, declare a one-cent completeness policy, allocate tax, decide billability, create an Item/Expense/Invoice effect, define schema/RLS/Sync/provider behavior, migrate source receipts, wire app/MCP entry points or activate production.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -32669,7 +32669,7 @@
           "Self-tests prove only provider-free embedded receipt-line and exact reconstruction semantics without claiming completion policy, writer, schema, RLS, Sync, app/MCP, migration or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -32677,7 +32677,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-RECEIPT-RECONSTRUCTION-001"
       ],
-      "notes": "Four focused receipt-evidence tests and all 84 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. These target-only tests cannot establish persistence, server authorization, Transaction posting/completeness, physical offline sync, app/MCP parity, legacy receipt migration, production behavior or any O-008/O-030/O-031/O-032 decision.",
+      "notes": "Four focused receipt-evidence tests and all 84 target tests pass locally and at exact implementation commit 594aec1e68747fefe9fffd6a80d550c55d0c555d in immutable GitHub Actions run 33588870600 with graph/contracts, both staging builds and clean artifacts. These target-only tests cannot establish persistence, server authorization, Transaction posting/completeness, physical offline sync, app/MCP parity, legacy receipt migration, production behavior or any O-008/O-030/O-031/O-032 decision.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {

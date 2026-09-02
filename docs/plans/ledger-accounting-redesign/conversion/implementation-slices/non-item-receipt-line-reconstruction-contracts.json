@@ -3,7 +3,7 @@
   "sliceId": "non-item-receipt-line-reconstruction-contracts",
   "title": "Represent ordered non-item receipt lines and exact reconstruction evidence",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Receipt Line Reconstruction",
   "surfaceIds": [
     "SWIFT-B687382A0772",
@@ -172,8 +172,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-004", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming completion, billing, schema, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-RECEIPT-RECONSTRUCTION-001"]
     }
   ],
   "implementationEvidence": ["EVID-RECEIPT-RECONSTRUCTION-001"],

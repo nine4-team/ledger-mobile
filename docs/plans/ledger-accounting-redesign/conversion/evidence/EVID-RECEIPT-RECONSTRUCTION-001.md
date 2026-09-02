@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-B687382A0772`, `TEST-4CDC064BC93C`
 - Slice dossier:
   `conversion/implementation-slices/non-item-receipt-line-reconstruction-contracts.json`
-- Implementation state: implemented locally; exact-commit hosted CI remains
-  pending before verification
+- Verification state: verified at exact implementation commit
+  `594aec1e68747fefe9fffd6a80d550c55d0c555d`
 - Implementation hashes:
   - `ReceiptLineReconstruction.swift`:
     `2d5ce505a18fbb9cfeeb4b556e36784203469da6ca545192d2b1c77a6204d23e`
@@ -123,9 +123,25 @@ The implementation checkpoint ran from the dedicated Supabase worktree on
 - `git diff --check` — pass.
 
 `RECEIPT-TEST-001` through `RECEIPT-TEST-004` therefore pass with this evidence.
-`RECEIPT-TEST-005` remains planned until the exact implementation commit passes
-both required pull-request jobs; the slice and its two surfaces remain
-`implemented`, not `verified`, until then.
+
+## Hosted Exact-Commit Verification
+
+Immutable GitHub Actions run
+[`33588870600`](https://github.com/nine4-team/ledger-mobile/actions/runs/33588870600)
+passed for exact implementation commit
+`594aec1e68747fefe9fffd6a80d550c55d0c555d`:
+
+- `Conversion state and traceability` — pass in 11 seconds;
+- `Isolated target environment` — pass in 1 minute 31 seconds, including the
+  complete 84-test target suite, dependency/source-isolation and generated-
+  contract checks, macOS build, generic iOS Simulator build and clean tracked
+  artifacts; and
+- the only annotation was GitHub's Node action-runtime deprecation notice; no
+  Ledger failure or waiver occurred.
+
+`RECEIPT-TEST-005` now passes. All five obligations and exactly the two claimed
+target-only surfaces are verified; no excluded current-app, provider, migration
+or production surface advances with them.
 
 ## Permanent Limits
 

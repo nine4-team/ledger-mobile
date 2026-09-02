@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 72
+State version: 73
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: RECEIPT-RECONSTRUCTION-IMPLEMENTED-EXACT-CI-NEXT
+- Checkpoint: RECEIPT-RECONSTRUCTION-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -939,6 +939,14 @@ modifying the running Firebase application before hard cutover.
   Transaction writer/posting/sign policy, Item basis/tax allocation, billing,
   schema/RLS/Sync/provider, app/MCP, migration, Firebase change, hosted resource
   or production operation was introduced; O-008/O-030/O-031/O-032 remain open.
+- Exact implementation commit
+  `594aec1e68747fefe9fffd6a80d550c55d0c555d` passed immutable GitHub Actions
+  run `33588870600`: conversion traceability passed in 11 seconds and the
+  isolated-target job passed in 1 minute 31 seconds with all 84 target tests,
+  graph/generated-contract checks, macOS and generic-iOS-Simulator builds and
+  clean tracked artifacts. All five receipt obligations and exactly its two
+  target-only surfaces are now `verified`; every excluded writer, current app/
+  MCP, provider, migration and production surface remains unadvanced.
 
 ## Next Action
 
@@ -952,17 +960,17 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
    Transaction classification, scope, route and pair identity. Do not recreate
    or extend that meaning independently in app, MCP, SQL or adapters.
-3. Commit and push only the implemented
-   `non-item-receipt-line-reconstruction-contracts` checkpoint, then require the
-   exact implementation SHA to pass both pull-request jobs before advancing
-   `RECEIPT-TEST-005`, the dossier, or its two surfaces to `verified`. If either
-   job fails, repair the same slice without weakening a gate. After immutable
-   CI evidence is recorded, select the next smallest decision-independent slice
-   through the same ready/implement/verify process. Do not add a Transaction
-   writer/posting/completeness verdict, Item-history basis, O-008 billing,
-   O-030 rounding behavior, O-031 tax/basis, O-032 posting policy, schema/RLS/
-   Sync/provider behavior, legacy mapping, current app/MCP wiring, production
-   access or any other open decision.
+3. Treat `non-item-receipt-line-reconstruction-contracts` and
+   `EVID-RECEIPT-RECONSTRUCTION-001` as the sole shared semantic source for
+   embedded receipt lines and exact reconstruction evidence. Do not recreate
+   or extend that meaning independently in app, MCP, SQL or adapters. Select the
+   next smallest decision-independent Phase 1 slice by auditing the remaining
+   mapped surfaces against confirmed product authority, dependencies and open
+   blockers; create and pass its ready dossier before behavioral code. Do not
+   add a Transaction writer/posting/completeness verdict, Item-history basis,
+   O-008 billing, O-030 rounding behavior, O-031 tax/basis, O-032 posting policy,
+   schema/RLS/Sync/provider behavior, legacy mapping, current app/MCP wiring,
+   production access or any other open decision.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

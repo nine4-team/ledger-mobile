@@ -11,9 +11,9 @@ taxonomy/Transfer-identity slice is verified at exact implementation commit
 `031a240a`. The provider-free exact same-Client Transfer destination-selection
 slice is verified at exact implementation commit `6dc7d0c2`, including all 80
 target tests and both staging builds. The provider-free non-item receipt-line/
-exact-reconstruction slice is implemented locally with all 84 target tests and
-both staging builds passing; exact-commit CI remains before verification, and
-no billing, rounding, Item-tax-basis or Transaction-posting policy was chosen.
+exact-reconstruction slice is verified at exact implementation commit
+`594aec1e`, including all 84 target tests and both staging builds, without
+choosing billing, rounding, Item-tax-basis or Transaction-posting policy.
 Broader app/schema/provider and migration surfaces remain unadvanced.
 
 This directory makes whole-application conversion progress durable across long
