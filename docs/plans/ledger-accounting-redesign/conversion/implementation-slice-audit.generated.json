@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T08:00:49.963Z",
+  "generatedFromManifestSync": "2026-09-02T08:23:01.137Z",
   "totals": {
-    "slices": 24,
-    "claimedTargetSurfaces": 69,
+    "slices": 25,
+    "claimedTargetSurfaces": 71,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 54
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 23,
@@ -196,6 +196,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-category-configuration-read-contracts",
+      "title": "Read exact Project category configuration without inventing budget authority",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Category Configuration Read Contracts",
+      "surfaceIds": [
+        "SWIFT-E084EBB4EBFF",
+        "TEST-DB57E9433EB6"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-category-configuration-read-contracts.json"
     },
     {
       "sliceId": "project-item-accounting-section-contracts",

@@ -2222,6 +2222,99 @@
           "Self-tests prove the backend-neutral budget-category reference read boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       }
+    },
+    {
+      "id": "SWIFT-E084EBB4EBFF",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "625c7b4209814892595793bb57ede2c57c9f5b6bee925feaadfcd952f2cc2cf4",
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for an authorized Project category configuration snapshot; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may combine the verified visible category definitions with exact Project enablement state, preserve no relationship versus enabled/null versus explicit-zero allocation, retain incomplete local truth and expose one narrow read port. It cannot calculate spend, authorize financial data, mutate categories or Project configuration, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open and no writer is introduced.",
+      "target": {
+        "owner": "Project Category Configuration Read Contracts",
+        "surfaces": [
+          "ProjectCategoryConfigurationState",
+          "ProjectCategoryConfigurationRow",
+          "ProjectCategoryConfigurationSnapshot",
+          "ProjectCategoryConfigurationQuerying",
+          "ProjectCategoryConfigurationFailure"
+        ],
+        "securityRequirements": [
+          "The snapshot binds one exact AccountID and ProjectID and contains only category definitions and allocation values already authorized for the requesting principal; local validation never grants financial visibility",
+          "Construction and restart reject cross-Account categories, duplicate category identity/name/order, negative allocation and contradictory readiness without carrying a membership claim, service credential or caller-authored authorization field"
+        ],
+        "syncRequirements": [
+          "Stable category identity and Project configuration state preserve no relationship versus enabled without allocation versus enabled with exact zero/nonzero Money plus explicit incomplete evidence across structured restart",
+          "A deterministic query port proves only provider-free local snapshot semantics, not physical durability, PowerSync download authorization, server configuration state or synchronized Account completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Project configuration read values and decode no Firebase allocation document, Fee installment, cached budget summary, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must reconcile every visible category's Project relationship absence/presence, nullable-versus-zero allocation, exact currency value and source anomaly without importing cached Transaction-only spend as authority"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectCategoryConfigurationDataTests"
+        ],
+        "acceptance": [
+          "Synthetic snapshots prove exact Project/category configuration distinctions, authorized local readiness/restart and atomic invalid/scope/duplicate refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-DB57E9433EB6",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7717c1c54f2011989105a08e80e98d9d587df06277d35530957a5ffb987b35b8",
+      "currentBehavior": "Defines only the comment-scaffolded target tests for Project category relationship absence, enabled null/zero allocation, incomplete readiness, restart and refusal semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/category scope, no-row/null/zero distinctions, incomplete-local truth, canonical restart and atomic invalid/duplicate/contradictory refusal without claiming physical local durability, authorization, spend calculation, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Project Category Configuration Read Contracts",
+        "surfaces": [
+          "ProjectCategoryConfigurationDataTests",
+          "no-row/enabled-null/enabled-zero configuration fixtures",
+          "ready/partial/stale/incomplete restart fixtures",
+          "category scope/identity/order/allocation refusal fixtures",
+          "exact Account/Project read-port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Project and category identities and model an already-authorized visible subset without hidden category or allocation counts",
+          "Negative tests expose only stable bounded codes and no source names, paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic local configuration evidence from physical persistence, financial authorization, server apply and synchronized Project completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase allocation/category/Fee/budget-summary/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent configuration evidence round-trips byte-identically while changed Account/Project/category/readiness/allocation evidence and mismatched port requests fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectCategoryConfigurationDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Project category configuration read boundary without claiming budget arithmetic, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
     }
   ]
 }

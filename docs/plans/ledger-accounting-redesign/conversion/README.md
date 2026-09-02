@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 327 of 491 target-relevant
+Status: M0 inventory classification complete; 329 of 493 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -36,7 +36,9 @@ authorization, providers, migration or production behavior. The provider-free
 budget-category reference read slice is verified at exact implementation commit
 `713dcf57`, including all 108 target tests and both staging builds. It defines
 no hidden fee visibility, mutation, server authorization, provider, migration
-or production behavior.
+or production behavior. The provider-free Project category configuration read
+slice is ready, with exactly two comment-only target surfaces and no executable
+behavior yet.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

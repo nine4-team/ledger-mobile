@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 91
+State version: 92
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: BUDGET-CATEGORY-REFERENCE-READ-VERIFIED
+- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-READ-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1243,6 +1243,31 @@ modifying the running Firebase application before hard cutover.
   its two target-only surfaces are now `verified`; every excluded mutation,
   server/authorization, provider, migration and production surface remains
   unadvanced.
+- Audited the remaining Phase 1 Project/reference dependency graph and selected
+  `project-category-configuration-read-contracts` as the next smallest complete
+  user outcome. The verified Project setup contract already preserves the
+  complete selected-category set, and the verified budget-category reference
+  contract supplies stable visible category identity/type/lifecycle/order.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for exact Account/Project/category scope, one configuration revision,
+  no-relationship versus enabled-without-allocation versus enabled-with-explicit-
+  zero/positive Money, explicit incomplete relationship evidence, authorized
+  visible-count privacy, shared local readiness/restart and one narrow read port.
+- The slice cannot calculate paid/unpaid/recognized budget values or import
+  current cached/Transaction-only spend as authority. It exposes no shared
+  category or Project configuration writer; O-026 remains fully open and
+  unchanged.
+- Postgres, handlers, Data API grants, RLS, Sync Streams, physical local
+  durability, financial authorization, Auth/provider choice, current/target
+  app/MCP, source migration, hosted resources and production remain explicit
+  nonapplicabilities. No behavioral code or executable Project configuration
+  test exists at ready.
+- The ready gate passes at 755 recorded / 740 discovered surfaces, 329 mapped /
+  164 residual / 43 blockers. Conversion, capability, query, residual, M0,
+  target-environment and generated-contract controls pass; M1/M2 retain their
+  expected 2/164 blockers. All existing 108 target tests in 24 suites, macOS and
+  generic iOS Simulator staging builds, and diff formatting pass while the two
+  scaffolds remain comment-only.
 
 ## Next Action
 
@@ -1276,13 +1301,16 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `budget-category-reference-read-contracts` dossier and
    `EVID-BUDGET-CATEGORY-REFERENCE-001` as the sole shared read semantics for
    category identity/kind/lifecycle/system/exclusion/order/revision,
-   eligibility, visible-count privacy and local readiness. Audit the remaining
-   decision-independent Phase 1 mappings and select the smallest next complete
-   user outcome whose product authority and dependencies are settled. Do not
-   add hidden fee visibility/counts, category administration, Project
-   allocation configuration, physical persistence, schema/RLS/Sync/Auth/
+   eligibility, visible-count privacy and local readiness. Implement only the
+   ready `project-category-configuration-read-contracts` dossier: exact visible
+   Account/Project/category configuration state, no-row/null/zero/positive
+   allocation distinctions, configuration revision, explicit incomplete
+   relationship evidence, shared local readiness/restart, atomic invalid/scope/
+   duplicate/contradictory refusal and one narrow query port. Do not add budget
+   arithmetic, hidden category/allocation visibility or counts, category or
+   Project configuration mutation, physical persistence, schema/RLS/Sync/Auth/
    provider behavior, current app/MCP, migration, hosted resources or production
-   access while their named gates remain open.
+   access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
