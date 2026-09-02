@@ -207,9 +207,8 @@ remains open because archive is excluded; O-023 remains open because no
 attachment reference or byte is removed; destination assignment, Item scope/
 accounting, physical persistence, schema/RLS/Sync, app/MCP, migration, hosted
 resources and production remain absent; `EVID-ITEM-SPACE-CLEARING-001`.
-The provider-free Space assignment-destination directory slice is implemented
-pending the complete integration gate and exact integration-commit CI. Exactly
-two target surfaces now define one
+The provider-free Space assignment-destination directory slice is verified.
+Exactly two target surfaces define one
 exact Account and Project-or-Business-Inventory request, active stable Space
 identity/name/revision rows, deterministic duplicate-name ordering, explicit
 ready/authoritative-empty/partial/stale/failure truth, canonical restart,
@@ -218,9 +217,10 @@ CI jobs. The first isolated worker candidate changed only the two allowlisted
 files; the integration agent reviewed every line and reran four focused/all 184
 tests, and an independent adversarial reviewer found no P0-P2 defect. One P3
 documentation ambiguity was corrected so legitimate later revisions/readiness
-are not described as tamper. The complete local integration gate passes all
-184 tests in 43 suites, conversion/target checks, repeatable generation and
-both staging builds; exact integration-commit CI remains pending.
+are not described as tamper. The complete local integration gate and exact
+checkpoint `b0ffef83` both pass all 184 tests in 43 suites, conversion/target
+checks, repeatable generation, both staging builds and clean artifacts;
+immutable Actions run `33682239349` records both CI jobs.
 Authorization, physical persistence, schema/RLS/Sync,
 assignment mutation, app/MCP, migration, hosted resources and production remain
 excluded; `EVID-SPACE-ASSIGNMENT-DESTINATION-001`.

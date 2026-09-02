@@ -5,13 +5,13 @@
   "integrationOwner": "primary-agent",
   "maximumConcurrentWriters": 2,
   "enhancedPilotReviewsRequired": 2,
-  "enhancedPilotReviewsCompleted": 0,
+  "enhancedPilotReviewsCompleted": 1,
   "assignments": [
     {
       "assignmentId": "SUBAGENT-PILOT-001",
       "pilotOrdinal": 1,
       "sliceId": "space-assignment-destination-read-contracts",
-      "status": "integrated_pending_verification",
+      "status": "completed",
       "baseCommit": "5f4867af1cba9b860efe9de2a914782bb8010278",
       "readyCiRun": 33679542831,
       "branch": "codex/supabase-slice-space-assignment-destination",
@@ -54,9 +54,9 @@
         ],
         "focusedRetest": "passed: 4 tests in 1 suite",
         "completeLocalGate": "passed: conversion/capability/query/residual/M0 controls, target isolation/contracts, 184 tests in 43 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
-        "exactIntegrationCommitCi": "pending"
+        "exactIntegrationCommitCi": "passed: b0ffef836cc82f6011b802a5cb5f6a6ade05680a in immutable Actions run 33682239349"
       },
-      "integrationDisposition": "integrated at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7; full local gate passed and exact integration-commit CI is pending"
+      "integrationDisposition": "accepted and verified at b0ffef836cc82f6011b802a5cb5f6a6ade05680a after the full enhanced review and immutable Actions run 33682239349"
     }
   ]
 }

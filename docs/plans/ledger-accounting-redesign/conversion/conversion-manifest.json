@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T20:55:25.132Z",
+    "lastSynchronizedAt": "2026-09-02T21:01:41.928Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17217,7 +17217,7 @@
           "Synthetic Project/Inventory directories prove exact active same-scope rows, duplicate-name deterministic order, readiness/restart and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -17225,7 +17225,7 @@
         "EVID-ITEM-SPACE-ASSIGNMENT-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
       ],
-      "notes": "Target-only Phase 1 implementation pending exact integration-commit CI. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 passed integration-agent line review, independent adversarial review, four focused and all 184 target tests before integration at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7. It defines one operation-specific local destination directory with exact Account and Project-or-Business-Inventory scope, active stable Space IDs/names/revisions, deterministic order, explicit readiness/completeness and a narrow query port. It cannot grant authorization, assign or clear an Item, expose an Account-wide Space array, define full Space detail/archive/review/media state, create rows, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023/O-032 remain outside the slice.",
+      "notes": "Target-only Phase 1 verified surface. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 passed integration-agent line review, independent adversarial review, four focused and all 184 target tests before integration; exact checkpoint b0ffef836cc82f6011b802a5cb5f6a6ade05680a passed immutable Actions run 33682239349 with both CI jobs, both staging builds and clean artifacts. It defines one operation-specific local destination directory with exact Account and Project-or-Business-Inventory scope, active stable Space IDs/names/revisions, deterministic order, explicit readiness/completeness and a narrow query port. It cannot grant authorization, assign or clear an Item, expose an Account-wide Space array, define full Space detail/archive/review/media state, create rows, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023/O-032 remain outside the slice.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -36420,7 +36420,7 @@
           "Self-tests prove the backend-neutral eligible-Space directory boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -36428,7 +36428,7 @@
         "EVID-ITEM-SPACE-ASSIGNMENT-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001"
       ],
-      "notes": "Target-only Phase 1 implementation pending exact integration-commit CI. Four deterministic tests pass for exact Account/Project/Inventory query scope, active stable Space ID/name/revision rows, duplicate-name canonical ordering, authoritative-empty/partial/stale/failure truth, byte-identical restart, atomic refusal and narrow-port scope isolation. Integration-agent and independent adversarial reviews found no P0-P2 defect; the review's P3 documentation ambiguity was corrected without claiming content-integrity proof. These tests cannot claim authorization, physical persistence, placement mutation, full Space/archive/review/media behavior, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Target-only Phase 1 verified tests. Four deterministic tests pass for exact Account/Project/Inventory query scope, active stable Space ID/name/revision rows, duplicate-name canonical ordering, authoritative-empty/partial/stale/failure truth, byte-identical restart, atomic refusal and narrow-port scope isolation. Integration-agent and independent adversarial reviews found no P0-P2 defect; the review's P3 documentation ambiguity was corrected without claiming content-integrity proof. Exact checkpoint b0ffef836cc82f6011b802a5cb5f6a6ade05680a passed immutable Actions run 33682239349 with all 184 tests in 43 suites, both builds and clean artifacts. These tests cannot claim authorization, physical persistence, placement mutation, full Space/archive/review/media behavior, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

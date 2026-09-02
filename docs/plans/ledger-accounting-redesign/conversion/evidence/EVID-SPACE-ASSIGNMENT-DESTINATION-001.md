@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-164554FA1456`, `TEST-A3D73145E3EC`
 - Slice dossier:
   `conversion/implementation-slices/space-assignment-destination-read-contracts.json`
-- Verification state: implemented after enhanced pilot review and complete
-  local gate; exact integration-commit CI pending
+- Verification state: verified at exact integration checkpoint
+  `b0ffef836cc82f6011b802a5cb5f6a6ade05680a`
 - Ready scaffold hashes:
   - `SpaceAssignmentDestinationData.swift`:
     `00a2fcca41b9b42c8b6ae6f7f08b4ebbaea73458158a6b5077ed8953ea0344de`
@@ -192,9 +192,15 @@ the source application project is unchanged. The ledger remains at 791 recorded
 claim 107 of 529 target-relevant surfaces and 92 are implementation-advanced.
 M1/M2 retain exactly 2/164 coverage blockers with zero structural errors.
 
-These are local results, not final operational verification. Exact integration-
-commit CI remains required before the slice or either surface may become
-`verified`.
+Exact integration checkpoint
+`b0ffef836cc82f6011b802a5cb5f6a6ade05680a` passed immutable GitHub Actions
+run `33682239349`: conversion state and traceability passed in 10 seconds and
+the isolated target environment passed in 3 minutes 2 seconds. The latter
+included target dependency/environment and generated app/MCP contract checks,
+all 184 target tests in 43 suites, macOS and generic iOS Simulator staging
+builds, and clean tracked artifacts. All five obligations pass, exactly
+`SWIFT-164554FA1456` and `TEST-A3D73145E3EC` are promoted to `verified`, and
+`SUBAGENT-PILOT-001` satisfies the first enhanced pilot gate.
 
 ## Permanent Limits
 

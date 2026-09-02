@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T20:55:25.132Z",
+  "generatedFromManifestSync": "2026-09-02T21:01:41.928Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
     "surfaces": 791,

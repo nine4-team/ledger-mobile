@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 149
+State version: 150
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-EXACT-CI-PENDING
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-VERIFIED-PILOT-001-COMPLETE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2256,8 +2256,15 @@ modifying the running Firebase application before hard cutover.
   four focused/all 184 tests in 43 suites, repeatable project generation, both
   staging builds and clean formatting. Project/scheme hashes remain unchanged;
   M1/M2 retain exactly 2/164 coverage blockers and zero structural errors.
-- Exact integration-commit CI remains mandatory before the slice, surfaces or
-  first enhanced pilot can be promoted to `verified`/complete.
+- Exact integration checkpoint
+  `b0ffef836cc82f6011b802a5cb5f6a6ade05680a` passed immutable Actions run
+  `33682239349`: traceability passed in 10 seconds and the isolated target job
+  passed in 3 minutes 2 seconds with all 184 tests in 43 suites, target graph/
+  contracts, both staging builds and clean artifacts.
+- Promoted exactly the Space assignment-destination dossier and its two
+  surfaces to `verified`; `SUBAGENT-PILOT-001` is complete with its worker,
+  integration-agent and independent-review evidence preserved. One of two
+  enhanced write pilots has now passed.
 
 ## Next Action
 
@@ -2350,12 +2357,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the frozen contract for the next
    bounded implementation. Its exact ready commit and both pull-request jobs
    are verified. Treat the implemented
-   `space-assignment-destination-read-contracts` slice as unverified until its
-   complete local integration gate and a fresh exact integration-commit CI pass.
-   Then promote exactly its two surfaces and dossier to `verified`, complete
-   `SUBAGENT-PILOT-001` in the registry, preserve its enhanced-review record,
-   and remove the isolated worktree only after its candidate is durably
-   integrated.
+   `space-assignment-destination-read-contracts` dossier and
+   `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
+   assignment-destination read semantics. Preserve the completed first-pilot
+   review record. Select the next smallest decision-independent slice from the
+   read-only scout's evidence, prepare its complete ready dossier and exact
+   ready CI, then use the same enhanced review for `SUBAGENT-PILOT-002` before
+   changing the delegation policy.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

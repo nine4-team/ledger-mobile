@@ -3,7 +3,7 @@
   "sliceId": "space-assignment-destination-read-contracts",
   "title": "Read exact active same-scope Space assignment destinations offline without treating cached rows as authority",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Assignment Destination Read Contracts",
   "surfaceIds": [
     "SWIFT-164554FA1456",
@@ -189,12 +189,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPACEDEST-REQ-001", "SPACEDEST-REQ-002", "SPACEDEST-REQ-003", "SPACEDEST-REQ-004", "SPACEDEST-REQ-005", "SPACEDEST-REQ-006", "SPACEDEST-REQ-007", "SPACEDEST-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming authorization, physical local/Sync, assignment, schema/RLS, app/MCP, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-ASSIGNMENT-DESTINATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented decision-independent Phase 1 query boundary pending exact integration-commit operational CI. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 was restricted to the two allowlisted files, reviewed line by line by the integration agent, independently reviewed adversarially with no P0-P2 finding, and integrated at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7. The complete local integration gate passes four focused/all 184 target tests in 43 suites, conversion/capability/query/residual/M0 controls, target isolation/contracts, repeatable project generation, both staging builds and clean formatting. Canonical Space authority, the verified assignment operation and reviewed Spaces/offline/port contracts settle exact active same-scope destination identity, revision, deterministic order and explicit local readiness without deciding archive effects, media retention, review state, Auth, Postgres or PowerSync. O-037 stays open because archived Spaces are ineligible and archive behavior is absent; O-023/O-032 stay open because the directory carries no media or review state. The slice stops before physical persistence, authenticated Sync/authorization, assignment mutation, full Space detail, schema/RLS/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified decision-independent Phase 1 query boundary. Candidate dd48f23557ed204244a68c4cf6896a58133276f4 was restricted to the two allowlisted files, reviewed line by line by the integration agent, independently reviewed adversarially with no P0-P2 finding, and integrated at 0cca411d78d41281f3fb1f1d5c08c6518e2003b7. Exact integration checkpoint b0ffef836cc82f6011b802a5cb5f6a6ade05680a passed immutable Actions run 33682239349, including both CI jobs, all 184 tests in 43 suites, target isolation/contracts, both staging builds and clean artifacts. Canonical Space authority, the verified assignment operation and reviewed Spaces/offline/port contracts settle exact active same-scope destination identity, revision, deterministic order and explicit local readiness without deciding archive effects, media retention, review state, Auth, Postgres or PowerSync. O-037 stays open because archived Spaces are ineligible and archive behavior is absent; O-023/O-032 stay open because the directory carries no media or review state. The slice stops before physical persistence, authenticated Sync/authorization, assignment mutation, full Space detail, schema/RLS/provider, app/MCP, migration, hosted resources, production access or cutover."
 }
