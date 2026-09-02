@@ -2792,17 +2792,17 @@
     {
       "id": "SWIFT-8668DE2251DE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c4a7b0e2ded21ec3e58d31879f6e0a928c3caeb154ea9e5b6013f81e2e3bf2d5",
-      "currentBehavior": "Provides a comment-only target scaffold for the provider-free current-Principal Project preference update operation; it contains no executable mutation or provider behavior.",
+      "acknowledgeSourceHash": "fe54fb28fe1e772c222976a2953402f267faa1e6c95fa48a1433e21b6abbc2c8",
+      "currentBehavior": "Implements a provider-free current-Principal Project preference update draft, complete ordered pin-replacement payload, explicit not-stored or revision precondition, derived exact subject, shared operation fingerprint/receipt lifecycle, canonical restart, stable failures and one narrow port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-UPDATE-001"
       ],
-      "notes": "Ready-gate scaffold only. The reviewed dossier freezes one own-Principal complete ordered pin replacement with explicit not-stored versus expected-revision concurrency and the shared operation lifecycle. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
+      "notes": "Implemented target-only Phase 1 command at the post-ready local checkpoint. It binds one own-Principal Account/Project, complete ordered unique pins, absent/revision concurrency and the shared operation lifecycle. Four focused/all 136 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
       "target": {
         "owner": "Project Preference Update Operation Contracts",
         "surfaces": [
@@ -2840,17 +2840,17 @@
     {
       "id": "TEST-AC9956AE9D5C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "4be5b489939234919cc3c5ad3e5f1f1d949ef36a6ebbfb8f4f8ba0a05d1f3f2a",
-      "currentBehavior": "Provides a comment-only target verification scaffold for the provider-free Project preference update operation; it adds no executable test or provider evidence.",
+      "acknowledgeSourceHash": "6af5561e63199d40831281b6c1eb4ffd7ba68f5926916f9269849aed78b93292",
+      "currentBehavior": "Implements four deterministic tests for exact own-Principal scope and ordered replacement, absent/revision/stored-empty restart, duplicate/rebound/tampered refusal, shared operation-journal replay/mismatch semantics and no false receipt.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-PREFERENCE-UPDATE-001"
       ],
-      "notes": "Ready-gate test scaffold only. Planned deterministic tests cover exact scope/payload/preconditions, restart, malformed/tampered refusal, shared replay/mismatch behavior and no false receipt. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
+      "notes": "Implemented target-only deterministic tests at the post-ready local checkpoint. Four focused/all 136 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Project Preference Update Operation Contracts",
         "surfaces": [

@@ -3,7 +3,7 @@
   "sliceId": "project-preference-update-operation-contracts",
   "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Preference Update Operation Contracts",
   "surfaceIds": [
     "SWIFT-8668DE2251DE",
@@ -144,7 +144,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
       "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
       "expected": "Valid absent and revisioned synthetic drafts create exact own-Principal complete pin-replacement commands with ordered unique stable IDs, matching same-subject preconditions and no category definition, label, lifecycle, budget value, user path or provider field.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
     },
     {
@@ -153,7 +153,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
       "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-007"],
       "expected": "Not-stored, revisioned, reordered and stored-empty replacement commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/pins/expected-state/time/subject/fingerprint evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
     },
     {
@@ -162,7 +162,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
       "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
       "expected": "Duplicate pins, invalid time and changed Account/actor/contract/Project/pin order/expected state/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
     },
     {
@@ -171,7 +171,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
       "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed Project/pins/expected state is refused by the shared lifecycle, and a failing port returns no false receipt.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
     },
     {
@@ -187,5 +187,5 @@
   "implementationEvidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready decision-independent Phase 1 command boundary only. Personal pinning and the reviewed capability/architecture contracts settle a complete current-Principal replacement plus explicit absent/revision concurrency. O-026 remains fully open because this operation cannot mutate shared category definitions or grant reference-data authority. The slice stops before authentication, category resolution/defaults, physical durability, authoritative server apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Implemented decision-independent Phase 1 command boundary after exact ready commit 30a131e8305b838f32854601db44ae5aeacbfe7b passed immutable Actions run 33626533989. Four deterministic obligations pass locally; exact-implementation-commit operational evidence remains planned, so the slice is not verified. Personal pinning and the reviewed capability/architecture contracts settle a complete current-Principal replacement plus explicit absent/revision concurrency. O-026 remains fully open because this operation cannot mutate shared category definitions or grant reference-data authority. The slice stops before authentication, category resolution/defaults, physical durability, authoritative server apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

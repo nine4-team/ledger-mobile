@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T11:46:55.200Z",
+  "generatedFromManifestSync": "2026-09-02T12:11:55.459Z",
   "totals": {
     "slices": 31,
     "claimedTargetSurfaces": 83,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 66
+    "implementationAdvancedTargetSurfaces": 68
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 29,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -291,7 +291,7 @@
       "sliceId": "project-preference-update-operation-contracts",
       "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Preference Update Operation Contracts",
       "surfaceIds": [
         "SWIFT-8668DE2251DE",

@@ -71,13 +71,14 @@ identities, revision, exact Account/Principal/Project binding and authoritative
 absence versus incomplete local evidence. Preference writes,
 authentication, schema/RLS/Sync/provider behavior, category resolution, budget
 calculation, app/MCP, migration and production remain excluded.
-The provider-free current-Principal Project preference update slice is ready.
-Exactly two comment-only target surfaces freeze a complete ordered pin
-replacement, explicit not-stored versus exact-revision concurrency and the
-shared operation lifecycle. Authentication, category mutation/resolution,
-defaults, physical persistence, schema/RLS/Sync/provider behavior, app/MCP,
-migration and production remain excluded until implementation evidence advances
-the slice.
+The provider-free current-Principal Project preference update slice is
+implemented locally. Exactly two target surfaces define a complete ordered pin
+replacement, explicit not-stored versus exact-revision concurrency, canonical
+restart/refusal and the shared operation lifecycle; four focused/all 136 tests
+pass locally. Exact-implementation-commit CI remains planned, so the slice is
+not verified. Authentication, category mutation/resolution, defaults, physical
+persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
+production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

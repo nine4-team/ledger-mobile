@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 110
+State version: 111
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-UPDATE-READY
+- Checkpoint: PROJECT-PREFERENCE-UPDATE-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1608,6 +1608,26 @@ modifying the running Firebase application before hard cutover.
   XcodeGen/source-project stability, conversion/capability/query/residual
   controls, M0 and clean diff formatting. M1/M2 retain exactly their expected
   2/164 blockers.
+- Exact ready commit `30a131e8305b838f32854601db44ae5aeacbfe7b`
+  passed immutable GitHub Actions run `33626533989`: conversion traceability
+  passed in 10 seconds and the isolated target environment passed in 2 minutes
+  25 seconds with all 132 then-existing tests, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts.
+- Implemented only the frozen provider-free Project preference update boundary:
+  one exact Account/actor/Project, complete ordered duplicate-free pin
+  replacement, explicit not-stored or exact-revision precondition, derived
+  reference-data subject, shared operation lifecycle, canonical restart,
+  stable bounded failures and one narrow update port.
+- Added four deterministic tests for exact current-Principal payload/scope,
+  absent/revision/stored-empty/reordered restart, duplicate/rebound/tampered
+  refusal, shared OperationJournal replay/mismatch behavior and no false
+  receipt.
+- `PROJECTPREFERENCEUPDATE-TEST-001` through `-004` pass locally. All 136 target
+  tests in 31 suites, target graph/generated contracts, both staging builds,
+  conversion/capability/query/residual controls, M0 and clean artifacts pass.
+  Exact-implementation-commit hosted `PROJECTPREFERENCEUPDATE-TEST-005`
+  remains planned, so exactly the two claimed target surfaces are
+  `implemented`, not `verified`.
 
 ## Next Action
 
@@ -1658,9 +1678,10 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
    authority. Treat the verified `project-preference-read-contracts` dossier
    and `EVID-PROJECT-PREFERENCE-READ-001` as the sole current-Principal Project
-   preference read semantics. Implement only the ready
-   `project-preference-update-operation-contracts` dossier, then require exact
-   local and immutable-CI evidence before advancing its two surfaces. Keep
+   preference read semantics. Treat the implemented
+   `project-preference-update-operation-contracts` dossier as the sole
+   UpdateProjectPreferences semantics and obtain immutable-CI evidence before
+   advancing its two surfaces to verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
