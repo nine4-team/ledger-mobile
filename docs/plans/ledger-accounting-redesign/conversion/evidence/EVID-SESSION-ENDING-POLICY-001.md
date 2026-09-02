@@ -1,14 +1,15 @@
 # EVID-SESSION-ENDING-POLICY-001 — Session Ending and Pending-Work Contracts
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free session-ending safety policy
+- Class: verification / provider-free session-ending safety policy
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-1599BDC0D574`, `TEST-95498CCCD467`
 - Slice dossier:
   `conversion/implementation-slices/session-ending-pending-work-contracts.json`
-- Verification state: implemented locally; exact implementation-commit CI is
-  still required before either claimed surface can become verified
+- Verification state: verified at exact implementation commit
+  `bf9a00ca45c8054018ab6f021aab13386ba24872` by immutable GitHub Actions run
+  `33663785835`
 - Ready scaffold hashes:
   - `SessionEndingPolicy.swift`:
     `e2f8dacf9569a97893673777b04aedef33c345b5f76526b327b1abce30af8d4e`
@@ -201,8 +202,21 @@ controls, M0 and clean diff formatting. The ledger remains at 783 recorded /
 768 discovered and 357 mapped-or-later / 164 residual / 43 blockers; 84 target
 surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
 
-`SESSIONEND-TEST-001` through `-004` pass locally. `-005` remains planned until
-immutable exact-implementation-commit CI passes.
+`SESSIONEND-TEST-001` through `-004` pass locally.
+
+## Immutable Exact-Commit Verification
+
+Exact implementation commit
+`bf9a00ca45c8054018ab6f021aab13386ba24872` passed immutable GitHub Actions
+run `33663785835`. Conversion state and traceability passed in 15 seconds. The
+isolated target environment passed in 2 minutes 32 seconds with all 168 target
+tests in 39 suites, target environment and generated app/MCP contract checks,
+macOS and generic iOS Simulator staging builds, and clean tracked artifacts.
+
+All five dossier obligations pass. `SESSIONEND-TEST-005` is satisfied by that
+exact-commit run, and exactly `SWIFT-1599BDC0D574` and `TEST-95498CCCD467` are
+now verified. This verification establishes only the bounded provider-free
+policy described above.
 
 ## Permanent Limits
 

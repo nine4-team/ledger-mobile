@@ -152,15 +152,16 @@ Scope/details/template/media/Item/review/Space-completion/
 lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
 Sync/provider behavior, app/MCP, migration and production remain excluded.
 O-023/O-026/O-032/O-037 stay open; `EVID-SPACE-CHECKLIST-REVISION-001`.
-The provider-free session-ending pending-work slice is implemented locally and
-awaits exact implementation-commit CI. Exactly two target surfaces define one
+The provider-free session-ending pending-work slice is verified. Exactly two
+target surfaces define one
 environment/Principal/Account-scoped
 summary with exact queued, applying, unresolved-rejected and unverified-
 attachment counts, plus clean, sync-first and exact-confirmed destructive
 dispositions, canonical fingerprint/restart/refusal, cancellation no-call and
 one narrow port. Exact ready commit `caa9a900` / run `33662071456` and four
-focused/all 168 local target tests plus both staging builds pass. Auth provider
-and offline lease choices, final UI copy/policy,
+focused/all 168 target tests in 39 suites, graph/contracts, both staging builds,
+and clean artifacts pass at exact implementation commit `bf9a00ca` in immutable
+run `33663785835`. Auth provider and offline lease choices, final UI copy/policy,
 physical synchronization/cleanup, O-023 media retention, schema/RLS/Sync,
 app/MCP, migration, hosted resources and production remain excluded;
 `EVID-SESSION-ENDING-POLICY-001`.

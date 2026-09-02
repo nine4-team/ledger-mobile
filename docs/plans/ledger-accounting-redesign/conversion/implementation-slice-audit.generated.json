@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T17:52:07.422Z",
+  "generatedFromManifestSync": "2026-09-02T18:02:51.041Z",
   "totals": {
     "slices": 39,
     "claimedTargetSurfaces": 99,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 37,
+    "implemented": 0,
+    "verified": 38,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -411,7 +411,7 @@
       "sliceId": "session-ending-pending-work-contracts",
       "title": "End or remove one local Account session without silently losing accepted offline work",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Session Ending and Pending-Work Policy",
       "surfaceIds": [
         "SWIFT-1599BDC0D574",

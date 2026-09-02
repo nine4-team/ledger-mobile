@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 135
+State version: 136
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SESSION-ENDING-PENDING-WORK-IMPLEMENTED-LOCAL
+- Checkpoint: SESSION-ENDING-PENDING-WORK-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2025,9 +2025,15 @@ modifying the running Firebase application before hard cutover.
   migration or production behavior.
 - Four focused and all 168 target tests in 39 suites pass locally, along with
   target isolation/generated contracts, both staging builds and clean diff
-  formatting. Exact source hashes are acknowledged; 84 target surfaces are
-  implementation-advanced. Exact implementation-commit CI remains before
-  verification.
+  formatting. Exact source hashes are acknowledged.
+- Exact session-ending implementation commit
+  `bf9a00ca45c8054018ab6f021aab13386ba24872` passed immutable GitHub Actions
+  run `33663785835`: conversion traceability passed in 15 seconds and the
+  isolated target environment passed in 2 minutes 32 seconds with all four
+  focused/all 168 target tests in 39 suites, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts. All five obligations pass;
+  exactly the two session-ending surfaces are now `verified`, and 84 target
+  surfaces are implemented or later.
 
 ## Next Action
 
@@ -2099,14 +2105,14 @@ Continue without waiting on the two M1 evidence blockers:
    `space-checklist-revision-operation-contracts` and
    `EVID-SPACE-CHECKLIST-REVISION-001` as the sole provider-free
    ReviseSpaceChecklists semantic authority. Its exact implementation commit and
-   both CI jobs are verified. Treat the ready
+   both CI jobs are verified. Treat the verified
    `session-ending-pending-work-contracts` dossier and
    `EVID-SESSION-ENDING-POLICY-001` as the sole provider-free safety authority
    for exact pending-work summaries and clean/sync-first/destructive session
-   dispositions. Its exact ready commit and both CI jobs pass. Finish the local
-   implementation gate, commit/push only the frozen provider-free boundary,
-   and require exact-implementation-commit CI before marking either surface
-   verified. Keep
+   dispositions. Its exact implementation commit and both CI jobs are
+   verified. Audit the next smallest decision-independent dependency and apply
+   the same ready-gate, local-implementation, exact-commit verification process.
+   Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

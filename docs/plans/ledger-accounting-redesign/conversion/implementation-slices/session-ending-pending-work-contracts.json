@@ -3,7 +3,7 @@
   "sliceId": "session-ending-pending-work-contracts",
   "title": "End or remove one local Account session without silently losing accepted offline work",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Session Ending and Pending-Work Policy",
   "surfaceIds": ["SWIFT-1599BDC0D574", "TEST-95498CCCD467"],
   "requirements": [
@@ -160,8 +160,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SESSIONEND-REQ-001", "SESSIONEND-REQ-002", "SESSIONEND-REQ-003", "SESSIONEND-REQ-004", "SESSIONEND-REQ-005", "SESSIONEND-REQ-006", "SESSIONEND-REQ-007", "SESSIONEND-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming physical cleanup, Auth, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SESSION-ENDING-POLICY-001"]
     }
   ],
   "implementationEvidence": ["EVID-SESSION-ENDING-POLICY-001"],
