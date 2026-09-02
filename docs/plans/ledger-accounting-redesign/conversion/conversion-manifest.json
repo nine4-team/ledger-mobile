@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T22:49:16.996Z",
+    "lastSynchronizedAt": "2026-09-02T23:02:00.896Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -15794,6 +15794,67 @@
       ],
       "notes": "M2 withheld: O-015/O-030/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "SWIFT-02BF0EA3C433",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SpaceCoreDetailsData.swift"
+        }
+      ],
+      "observedSourceHash": "d9e4335368aa7d9d7b9a0616f0dbf851f39a58f0ecf9ccef5ef66c0b1fe742b5",
+      "acknowledgedSourceHash": "d9e4335368aa7d9d7b9a0616f0dbf851f39a58f0ecf9ccef5ef66c0b1fe742b5",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains the comment-only ready-gate scaffold for a provider-free single-Space core-details local read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Core Details Read Contracts",
+        "surfaces": [
+          "SpaceCoreDetailsRequest",
+          "SpaceCoreDetailsSnapshot",
+          "SpaceCoreDetailsLocalSnapshot",
+          "SpaceCoreDetailsUpdate",
+          "SpaceCoreDetailsQuerying",
+          "SpaceCoreDetailsFailure"
+        ],
+        "securityRequirements": [
+          "Every request and returned row binds one exact AccountID and SpaceID; cross-Account, rebound, malformed and incomplete-as-authoritative evidence fails without revealing whether another scoped Space exists",
+          "Cached scope, lifecycle, revision, timestamps and checklist state are local evidence only; current membership and authorization remain server responsibilities"
+        ],
+        "syncRequirements": [
+          "Canonical local state distinguishes authoritative absence from incomplete absence and preserves ready, partial, stale, unavailable, retryable and required-update truth across restart",
+          "A provider-free reference port proves exact request/update/cancellation semantics only, not physical persistence, authenticated PowerSync download or hosted behavior"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Space detail values and decode no Firebase Space document, nullable project path, embedded randomized checklist ID, URL, listener snapshot, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Space/checklist identities, immutable scope, normalized content, lifecycle/revision/timestamps and source correlation or quarantine invalid evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Synthetic single-Space fixtures prove exact scope/core/checklist/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CORE-DETAILS-001"
+      ],
+      "notes": "Ready scaffold only. The frozen slice is limited to exact Account/Space identity, immutable Project-or-Business-Inventory scope, normalized core details, lifecycle/revision/timestamps, canonical checklist state and counts, explicit local completeness/freshness/failure truth, restart and one narrow query port. It cannot define media, Items/assignment, review, templates, archive effects, accounting, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "SWIFT-031CFF3A66C3",
@@ -34197,6 +34258,65 @@
       ],
       "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-377B0FDAF4D4",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "e336e5cd42808d3dd5784bacc4ace3e54f3567145538af02ab7b088e240302eb",
+      "acknowledgedSourceHash": "e336e5cd42808d3dd5784bacc4ace3e54f3567145538af02ab7b088e240302eb",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains the comment-only ready-gate test scaffold for the provider-free single-Space core-details local read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Core Details Read Contracts",
+        "surfaces": [
+          "SpaceCoreDetailsDataTests",
+          "Project and Business Inventory Space fixtures",
+          "active and archived lifecycle fixtures",
+          "empty and populated canonical checklist/count fixtures",
+          "readiness, authoritative-absence, restart, refusal and cancellation fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic identities/content and require unavailable states and bounded failures to avoid enumerating inaccessible or nonexistent Spaces",
+          "Tests treat local detail evidence as non-authorizing and include no credential, provider payload, URL, attachment or production identifier"
+        ],
+        "syncRequirements": [
+          "All tests run provider-free and distinguish structured contract restart from physical local database durability or authenticated synchronization"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase DTO, listener result, randomized checklist fallback, source export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent canonical input restarts identically while Account/Space/request/scope/time/order/identity/completeness tampering fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Tests prove only the provider-free single-Space core-details contract and explicitly exclude archive effects, Items, media, review, templates, accounting, provider, migration and production claims"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CORE-DETAILS-001"
+      ],
+      "notes": "Ready scaffold only. Planned tests cover Project/Inventory scope, normalized details, lifecycle/revision/timestamps, stable ordered checklist evidence and derived counts, explicit completeness/freshness/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure and cancellation. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-3885FE2E9453",

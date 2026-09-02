@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-core-details-read-contracts",
+  "title": "Read one Space's provider-free core details with explicit offline truth",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Space Core Details Read Contracts",
+  "surfaceIds": ["SWIFT-02BF0EA3C433", "TEST-377B0FDAF4D4"],
+  "requirements": [
+    {
+      "id": "SPACECORE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One query request binds an exact AccountID and stable SpaceID. A found Space binds the same identities and exactly one immutable Project-or-Business-Inventory creation scope; copied names, paths, nullable scope pairs and provider locators cannot define or rebind identity.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space Fields",
+      "invariant": "Core detail preserves canonical nonblank display name, canonical optional notes, active-or-archived lifecycle, exact UInt64 Space revision and finite createdAt/updatedAt field values. Timestamps are exact record fields only and do not claim server-authored provenance, actor identity, immutability, ordering between the two times or lifecycle-event semantics.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklists",
+      "invariant": "Core detail preserves the complete available ordered checklist hierarchy through stable checklist IDs, normalized nonblank names, explicit checklist order, stable checklist-item IDs unique within each checklist, normalized nonblank item text, explicit item order and checked state. The same item ID in different checklists is valid; duplicate names/text remain valid and no unapproved length cap exists.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklist Progress",
+      "invariant": "Completed and total item counts are derived from checked states for each checklist and the whole Space; caller-authored totals do not exist. Zero checklists and zero-item checklists produce exact 0/0 counts. No percentage is defined, and counts carried by incomplete local evidence remain explicitly non-authoritative.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "Cached single-Space data is immediately usable without server acknowledgement while preserving exact local data version, finite as-of time, readiness and completeness evidence. Ready found, ready authoritative absence, incomplete found/empty, partial found/empty and stale found/empty remain distinguishable; incomplete or stale empty evidence never proves absence.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Workspace queries",
+      "invariant": "One narrow backend-neutral query port streams updates for the exact request. Waiting, unavailable, retryable and required-update states are explicit; unavailable cannot reveal whether a Space is nonexistent or inaccessible, cached failures cannot rebind the request, upstream failure/cancellation cannot yield a false row or authoritative absence, and local evidence never grants current authorization.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-007",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space in Budget Context",
+      "invariant": "Space is optional organizational placement and independent of Item accounting state. This read contains no Item/assignment, review, media, template, legacy completion, Transaction, Invoice, Purchase, occurrence, budget or accounting evidence and cannot infer any of them from Space scope, lifecycle, checklists or progress.",
+      "decisionIds": ["D-023"],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    },
+    {
+      "id": "SPACECORE-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable only with deterministic provider-free synthetic evidence while the Firebase application remains unchanged. It defines no archive command/effects, persistence, authorization, Postgres schema/handler/grant/RLS, PowerSync Stream, Auth/provider, app/MCP, migration, hosted resource, release or production behavior.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECORE-TEST-001", "SPACECORE-TEST-002", "SPACECORE-TEST-003", "SPACECORE-TEST-004", "SPACECORE-TEST-005", "SPACECORE-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceCoreDetailsRequest binds exact AccountID and SpaceID to a deterministic versioned query fingerprint and revalidates that binding after decode.",
+        "SpaceCoreDetailsSnapshot reuses verified Space scope/name/notes/checklist/lifecycle/identity primitives and adds exact Space revision plus finite createdAt/updatedAt fields; it canonicalizes hierarchy order through the existing checklist collection and exposes only derived completed/total counts.",
+        "SpaceCoreDetailsLocalSnapshot represents at most one exact-request row with exact cardinality/completeness, ListSnapshotQuality, LocalDataVersion and finite as-of evidence. Only a complete ready empty result is authoritative absence; found and absent archived state remain distinct.",
+        "SpaceCoreDetailsUpdate and SpaceCoreDetailsFailure expose bounded waiting/snapshot/unavailable/retryable/required-update/refusal semantics without path, query, provider, authorization or existence detail. SpaceCoreDetailsQuerying is the sole narrow port."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "No spaces/checklist table, Account/Project foreign key, lifecycle/revision/timestamp column, constraint, index, view, function, trigger or migration is created or changed."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative get-Space handler, membership/capability derivation, audit provenance, archive effect, mutation or reconciliation exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/Space/scope evidence is not authorization. No membership, existing-row, Project/Inventory/Space predicate, grant or cross-account database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local Space/checklist table, authenticated download predicate, subscription, upload connector or synchronized visibility proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "Request, core row, local snapshot and updates are canonical Codable evidence over stable IDs, scope, normalized content, lifecycle/revision/timestamps, canonical checklist state, readiness/completeness, local version and as-of time; canonical decode/encode is byte-identical.",
+        "At-most-one cardinality, exact request/row binding and explicit completeness prevent an empty incomplete cache from becoming authoritative absence. Derived progress is final only when the enclosing evidence is complete.",
+        "A deterministic reference port may stream exact request-matching updates and bounded failures and prove cancellation; this is not physical durable storage, process/device persistence, current authorization or authenticated synchronization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Core details carry no AttachmentID, object locator, URL, image/PDF byte, marker, upload, cache, retention or deletion behavior; O-023 remains open."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Space detail SwiftUI view, navigation, checklist control, archive action, MCP schema/tool/resource/handler, transport or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase Space DTO, nullable projectId, randomized missing checklist ID, client timestamp, listener result, URL, export row or migration disposition is decoded or transformed."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize, persist, synchronize or present a production Space; archive/restore/delete, assign/clear Items, attach media, create review evidence, apply/save templates, change accounting, activate a feature, deploy, release or cut over.",
+        "O-023/O-026/O-037 and A-003/A-004/A-007/A-015/A-016 remain outside this boundary. Physical offline verification, production profiling and all hosted-resource authority remain gated."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACECORE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift",
+      "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
+      "expected": "Project and Business Inventory rows preserve exact identity/scope, normalized name/notes, active/archived state, revision, finite exact timestamps, stable ordered nested checklist state and exact derived per-checklist/aggregate counts, including valid empty 0/0 and same item ID in different checklists.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+    },
+    {
+      "id": "SPACECORE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift",
+      "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
+      "expected": "Ready found, ready authoritative-absent, ready incomplete found/empty, partial found/empty and stale found/empty fixtures round-trip byte-identically with exact request/local version/as-of/readiness/completeness evidence; archived found never becomes absent and incomplete counts remain labeled non-authoritative.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+    },
+    {
+      "id": "SPACECORE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift",
+      "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
+      "expected": "Account/Space/request/scope/fingerprint mismatch, multiple-row or hidden-count evidence, incomplete-as-authoritative state, nonfinite row/as-of time, malformed/noncanonical content and duplicate checklist/order or within-checklist item/order evidence fail atomically through stable bounded diagnostics.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+    },
+    {
+      "id": "SPACECORE-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift",
+      "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
+      "expected": "Unavailable is non-enumerating and yields no row/absence detail; retryable and required-update remain distinct; cached failure evidence must match the exact request and cannot grant authorization or upgrade incompleteness.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+    },
+    {
+      "id": "SPACECORE-TEST-005",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCoreDetailsDataTests.swift",
+      "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
+      "expected": "A deterministic reference port streams only exact Account/Space request updates, propagates bounded upstream failure, rejects rebound cached data and stops delivery on cancellation without emitting a false row or false authoritative absence.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+    },
+    {
+      "id": "SPACECORE-TEST-006",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPACECORE-REQ-001", "SPACECORE-REQ-002", "SPACECORE-REQ-003", "SPACECORE-REQ-004", "SPACECORE-REQ-005", "SPACECORE-REQ-006", "SPACECORE-REQ-007", "SPACECORE-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming provider, migration, hosted or production behavior.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready-gate only. Primary and independent adversarial preflight approved this bounded provider-free read and explicitly rejected timestamp provenance/order, percentage, archive-effect, Item/assignment, media, review, template, legacy completion, accounting, provider/schema/RLS/Sync, app/MCP, migration and production claims. O-023/O-026/O-037 remain open. The complete local ready gate passes all 193 existing tests in 45 suites, conversion/target/generated-contract controls, repeatable project generation and both staging builds; implementation is withheld until the exact ready commit passes immutable CI."
+}

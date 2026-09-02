@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T22:49:16.996Z",
+  "generatedFromManifestSync": "2026-09-02T23:02:00.896Z",
   "totals": {
-    "slices": 45,
-    "claimedTargetSurfaces": 111,
+    "slices": 46,
+    "claimedTargetSurfaces": 113,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 96
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 44,
@@ -541,6 +541,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-revision-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-core-details-read-contracts",
+      "title": "Read one Space's provider-free core details with explicit offline truth",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Core Details Read Contracts",
+      "surfaceIds": [
+        "SWIFT-02BF0EA3C433",
+        "TEST-377B0FDAF4D4"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-core-details-read-contracts.json"
     },
     {
       "sliceId": "space-creation-operation-contracts",

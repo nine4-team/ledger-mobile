@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 158
+State version: 160
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ITEM-LINK-PRESENTATION-VERIFIED
+- Checkpoint: SPACE-CORE-DETAILS-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2386,6 +2386,20 @@ modifying the running Firebase application before hard cutover.
   its two surfaces to `verified`. The broader Link flow remains unimplemented
   and blocked from this leaf. No provider, Firebase or production action
   occurred.
+- Prepared `space-core-details-read-contracts` as a bounded provider-free read
+  with exactly two comment-only target paths, eight requirements and six
+  planned obligations. Primary and independent adversarial preflight approved
+  the slice only after clarifying that exact timestamps are not audit
+  provenance, incomplete checklist counts are not authoritative, archived
+  detail is not absence, nested Item IDs are unique within a checklist rather
+  than globally, and zero-item progress has counts but no invented percentage.
+  Deterministic state is 797 recorded / 782 discovered, 368 mapped-or-later /
+  167 residual / 44 blockers, and 46 slices claim 113 of 535 target-relevant
+  surfaces. The complete local ready gate passes conversion/target/generated-
+  contract controls, all 193 existing tests in 45 suites, repeatable XcodeGen
+  output and both staging builds. No worker implementation, provider, Firebase
+  or production action has occurred; exact-ready-SHA immutable CI remains
+  required.
 
 ## Next Action
 
@@ -2496,6 +2510,16 @@ Continue without waiting on the two M1 evidence blockers:
    actual Link routes/commands, Purchase choice/eligibility, acquisition
    handling, correction/relink behavior, transient UI state, Accounted-item
    actions, app/MCP and provider/migration behavior outside this slice.
+   Treat ready `space-core-details-read-contracts` and
+   `EVID-SPACE-CORE-DETAILS-001` as the frozen next implementation boundary.
+   Before delegation, pass the complete local ready gate and immutable CI on
+   the exact comment-only ready commit. Then give one isolated worker only the
+   two scaffold paths; review every changed line, require an independent
+   adversarial review and rerun the focused/full/integration gates before any
+   status promotion. Do not let that slice acquire timestamp provenance,
+   authoritative partial counts, percentage policy, archive effects,
+   Item/media/review/template/accounting, provider/schema/RLS/Sync, app/MCP,
+   migration or production behavior.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

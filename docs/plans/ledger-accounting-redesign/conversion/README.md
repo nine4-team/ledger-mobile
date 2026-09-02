@@ -252,6 +252,21 @@ provider behavior remain excluded. Four focused/all 193 tests, generated
 contracts, both staging builds and clean artifacts pass; the one P3 test-
 exhaustiveness finding was corrected and independently confirmed;
 `EVID-PROJECT-ITEM-LINK-PRESENTATION-001`.
+The provider-free single-Space core-details read slice is ready with exactly two
+comment-only target surfaces, eight frozen requirements and six planned
+obligations. Primary and independent adversarial preflight approved exact
+Account/Space identity, immutable Project-or-Business-Inventory scope,
+normalized name/notes, active-or-archived evidence, revision, finite exact
+timestamps, stable ordered checklist state, derived counts and explicit local
+readiness/completeness/failure truth. The review expressly withheld timestamp
+provenance/order, authoritative counts from incomplete evidence, percentages,
+archive effects, Items/media/review/templates/accounting, provider/schema/RLS/
+Sync, app/MCP, migration and production behavior. Implementation remains
+withheld until the exact ready checkpoint passes immutable CI. The complete
+local ready gate passes all 193 existing target tests in 45 suites, conversion/
+target/generated-contract checks, repeatable project generation and both
+staging builds;
+`EVID-SPACE-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
