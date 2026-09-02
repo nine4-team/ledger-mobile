@@ -6,6 +6,7 @@
     "EVID-CAPABILITY-PROJECT-REFERENCE-001",
     "EVID-CLIENT-PROJECT-DIRECTORY-001",
     "EVID-CLIENT-RENAME-001",
+    "EVID-PROJECT-NOTE-READ-001",
     "EVID-PROJECT-RENAME-001",
     "EVID-PROJECT-SETUP-001",
     "EVID-PROJECT-ARCHIVE-001",
@@ -2033,6 +2034,101 @@
         ],
         "acceptance": [
           "Self-tests prove the backend-neutral Client rename command boundary without claiming Client row/projection, frozen-history rewrite, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-B3DBE3375ACE",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "6b3cf7b3430b34455a2286516484c0a5cbd7a46da4e2d596704ed3a9819b8d5f",
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for stable bounded Project-note pages and explicit local-history evidence; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-NOTE-READ-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may preserve already-authorized Account/Project/note identity, content-or-tombstone state, immutable creator/creation/source evidence, revision/edit audit, deterministic newest-first order, structured continuation and explicit offline-history readiness. It cannot authorize or mutate notes, choose roles/retention, define schema/RLS/Sync/provider behavior, wire app/MCP/search, migrate source data or activate production.",
+      "target": {
+        "owner": "Project Note Read Contracts",
+        "surfaces": [
+          "ProjectNoteID",
+          "ProjectNoteSnapshot",
+          "ProjectNoteCursor",
+          "ProjectNotePageRequest",
+          "ProjectNotePage",
+          "ProjectNoteQuerying",
+          "ProjectNoteDataFailure"
+        ],
+        "securityRequirements": [
+          "Every request and row binds one exact AccountID and ProjectID; names, copied Client text, creator labels and caller-supplied IDs are never authorization evidence",
+          "The local value contains only already-authorized rows/counts and exposes stable non-enumerating validation failures without membership, role, hidden-count, provider-path or credential data"
+        ],
+        "syncRequirements": [
+          "Stable note ID, content/tombstone state, creator/creation/source/revision/edit audit, newest-first (createdAt,id) order, structured continuation and complete/incomplete Project-history truth survive canonical structured restart",
+          "A deterministic reference adapter proves only provider-free request/page behavior, not physical persistence, RLS, PowerSync download authorization, retention, indexed search or mutation conflict behavior"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only note read values and decode or rewrite no Firebase embedded/nested note, missing parent/actor/timestamp variant, source export or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must map every source note once or quarantine it and reconcile parent, text hash, source, creator, audit, revision/tombstone and deterministic order"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectNoteDataTests"
+        ],
+        "acceptance": [
+          "Synthetic pages prove exact Account/Project/note/audit/order/cursor/history-readiness truth, canonical restart, atomic malformed/rebound refusal and exact request matching without a database, note mutation or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-E8DC4AE52ED7",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "f37383a496fc9c5a3b2ae6491c9441f2d4ff1e1489df28b7e91efedd198adbc0",
+      "currentBehavior": "Defines only the comment-scaffolded target tests for Project-note page shape, audit/order/readiness, canonical restart, atomic refusal and exact read-port request matching; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-NOTE-READ-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/note/content-or-tombstone/audit/order/cursor/history-readiness truth and malformed/rebound refusal without claiming physical local durability, authorization, note mutation, schema/RLS/Sync/provider behavior, app/MCP/search parity, migration or production behavior.",
+      "target": {
+        "owner": "Project Note Read Contracts",
+        "surfaces": [
+          "ProjectNoteDataTests",
+          "active, edited and tombstoned note fixtures",
+          "newest-first tie-break and structured cursor fixtures",
+          "complete/partial/stale restart fixtures",
+          "exact and failing ProjectNoteQuerying fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Project, Principal and note identities and contain no Client name, provider path, role claim or credential",
+          "Negative tests expose only stable bounded codes and no hidden note/actor/dependency count, source payload, provider error or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured local evidence from physical persistence, authoritative download scope, server mutation and synchronized search/history retention"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Project/note/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent note pages round-trip byte-identically while changed scope/audit/order/cursor/fingerprint/history-readiness evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectNoteDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Project-note read boundary without claiming mutation, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       }
     },

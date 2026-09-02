@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 100
+State version: 101
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-RENAME-VERIFIED
+- Checkpoint: PROJECT-NOTE-READ-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1407,6 +1407,31 @@ modifying the running Firebase application before hard cutover.
   obligations and exactly its two target-only surfaces are now `verified`;
   every excluded relationship, details, lifecycle, provider, migration and
   production surface remains unadvanced.
+- Audited the next Phase 1 Project/Client/reference dependency and selected
+  `project-note-read-contracts` as the smallest complete decision-independent
+  outcome. The reviewed target contract already settles stable note identity,
+  creator/creation/source and revision/edit/tombstone evidence, deterministic
+  bounded order and explicit incomplete local-history truth.
+- Deliberately excluded Add/Edit/Remove commands, edit/delete role policy,
+  physical persistence, RLS/Sync, indexed search, app/MCP wiring and Firebase
+  note migration. The read values consume only already-authorized local rows and
+  cannot make any of those decisions implicitly.
+- Created exactly two comment-only target scaffolds plus one reciprocal seven-
+  requirement/five-verification dossier. The planned implementation binds exact
+  Account/Project/note scope, active-versus-tombstone content, immutable creator/
+  creation/source evidence, revision and paired edit audit, newest-first
+  `(createdAt,id)` order, structured continuation, local query identity and
+  complete/incomplete Project-history readiness.
+- The ready checkpoint records 761 surfaces, including 746 currently
+  discovered, with 335 of 499 target-relevant surfaces mapped or later and 164
+  residual surfaces under 43 explicit blockers. No executable Project-note
+  behavior, provider connection, hosted resource, production read/mutation,
+  app change, migration, deployment or cutover exists.
+- Conversion, capability, query, residual, M0, target-environment and generated-
+  contract checks pass. M1/M2 retain their expected 2/164 blockers. All 120
+  existing target tests in 27 suites, macOS and generic iOS Simulator staging
+  builds, generated target-project stability and diff formatting pass while
+  both Project-note scaffolds remain comment-only.
 
 ## Next Action
 
@@ -1448,12 +1473,11 @@ Continue without waiting on the two M1 evidence blockers:
    revision. Treat the verified `client-rename-operation-contracts` dossier and
    `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority.
    Treat the verified `project-rename-operation-contracts` dossier and
-   `EVID-PROJECT-RENAME-001` as the sole RenameProject semantic authority. Audit
-   the next smallest complete decision-independent Phase 1 dependency against
-   canonical specs and the residual register, then prepare its ready dossier
-   before implementing it. Do not add Client relationship correction, Project
-   deletion, physical persistence, schema/RLS/Sync/Auth/provider behavior,
-   current app/MCP, migration, hosted resources or production access.
+   `EVID-PROJECT-RENAME-001` as the sole RenameProject semantic authority.
+   Implement only the ready `project-note-read-contracts` dossier after its
+   exact ready commit passes immutable CI. Keep Add/Edit/Remove, role policy,
+   physical persistence, schema/RLS/Sync/Auth/provider behavior, app/MCP/search,
+   migration, hosted resources and production access excluded.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
