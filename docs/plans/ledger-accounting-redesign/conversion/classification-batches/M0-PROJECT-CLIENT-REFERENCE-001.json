@@ -5,9 +5,11 @@
   "evidence": [
     "EVID-CAPABILITY-PROJECT-REFERENCE-001",
     "EVID-CLIENT-PROJECT-DIRECTORY-001",
+    "EVID-CLIENT-RENAME-001",
     "EVID-PROJECT-SETUP-001",
     "EVID-PROJECT-ARCHIVE-001",
-    "EVID-BUDGET-CATEGORY-REFERENCE-001"
+    "EVID-BUDGET-CATEGORY-REFERENCE-001",
+    "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
   ],
   "surfaces": [
     {
@@ -1936,6 +1938,100 @@
         ],
         "acceptance": [
           "Self-tests prove the backend-neutral Client-creation command boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-9CB51D74D41C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "f39db0f014a16f919717f2ff2b5e9039d6860fde300df8594270e19aa3eae4c4",
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for one expected-revision Client display-name change; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-RENAME-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may preserve one stable Account/Client identity, validated replacement display name, expected revision and shared operation lifecycle. It cannot update a row or Project projection, rewrite frozen history, authorize the actor, archive/delete/merge Clients, reassign Projects, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source text or activate production. O-024/O-025 remain open.",
+      "target": {
+        "owner": "Client Rename Operation Contracts",
+        "surfaces": [
+          "ExpectedClientRevision",
+          "ClientRenameDraft",
+          "RenameClientPayload",
+          "RenameClientCommand",
+          "ClientRenaming",
+          "ClientRenameFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, stable ClientID and expected Client revision; display text is never identity, relationship or authorization evidence",
+          "Construction and restart reject rebound Account/actor/contract/Client/name/revision/subject/precondition/fingerprint evidence without carrying membership, role, service credential, Project relation or historical dependency input"
+        ],
+        "syncRequirements": [
+          "Stable operation identity, Client target, replacement display text and expected revision survive canonical structured restart and exact replay through the shared operation lifecycle",
+          "A deterministic reference adapter proves only provider-free acceptance/replay semantics, not physical durability, optimistic Client display, PowerSync conflict behavior, authoritative revision enforcement or current Project projection updates"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Client rename command values and decode or rewrite no Firebase project.clientName, Client cluster, frozen display snapshot, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must distinguish current Client display from every frozen Invoice/report/paid-history/audit snapshot and must never infer Client identity from equal or normalized names"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientRenameOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Client identity/name/revision intent, canonical restart, atomic rebound refusal and shared replay without a database, provider, Project update or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-D1C8EFBDFDDE",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "b2e411c67e491db94b79bfe04c6327ac91823b1d893b170960092bb26ef0e512",
+      "currentBehavior": "Defines only the comment-scaffolded target tests for exact Client rename scope, expected revision, canonical restart, rebound refusal and shared replay semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-RENAME-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Client/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Client/Project projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Client Rename Operation Contracts",
+        "surfaces": [
+          "ClientRenameOperationTests",
+          "exact Client/name/revision command fixtures",
+          "canonical restart and tamper fixtures",
+          "shared OperationJournal replay fixtures",
+          "failing Client rename port fixture"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation and Client identities and contain no Project relationship, historical display, provider path or credential",
+          "Negative tests expose only stable bounded codes and no source payload, role claim, hidden dependency count, provider error or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured operation evidence from physical persistence, optimistic projection, server apply and synchronized current Project display"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Project/Client/export/profile/name cluster or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent Client rename evidence round-trips byte-identically while changed Account/actor/contract/Client/name/revision/subject/precondition/fingerprint evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientRenameOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Client rename command boundary without claiming Client row/projection, frozen-history rewrite, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       }
     },

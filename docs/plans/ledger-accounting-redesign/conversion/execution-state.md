@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 94
+State version: 95
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-READ-VERIFIED
+- Checkpoint: CLIENT-RENAME-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1300,6 +1300,30 @@ modifying the running Firebase application before hard cutover.
   and exactly its two target-only surfaces are now `verified`; every excluded
   budget, mutation, authorization, provider, migration and production surface
   remains unadvanced.
+- Audited the remaining Phase 1 Project/Client/reference dependency graph and
+  selected `client-rename-operation-contracts` as the next smallest complete
+  user outcome. Stable Client identity, creation and directory reads are already
+  verified, and the canonical Client spec settles mutable current display text
+  without making name an identity key.
+- Deliberately did not select Client archive: whether active Projects block that
+  operation remains part of the unapproved O-024/O-025 lifecycle packet. Client
+  merge and Project reassignment also remain excluded. A rename carries no
+  archive/delete/merge/reassignment or dependency-policy input.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for exact Account/actor/contract/Operation/Client/new-name/time binding, one
+  same-subject expected Client revision, derived subject/fingerprint, canonical
+  restart, atomic rebound refusal and one narrow rename port.
+- The ready gate passes at 757 recorded / 742 discovered surfaces, 331 mapped /
+  164 residual / 43 blockers. Conversion, capability, query, residual, M0,
+  target-environment and generated-contract controls pass; M1/M2 retain their
+  expected 2/164 blockers. All existing 112 target tests in 25 suites, macOS and
+  generic iOS Simulator staging builds, and diff formatting pass while the two
+  scaffolds remain comment-only.
+- No executable Client rename, Client row/current-Project projection, frozen-
+  history rewrite, physical persistence, server authorization/revision apply,
+  schema/RLS/Sync/Auth/provider, current/target app/MCP, source migration,
+  hosted resource or production operation exists at ready. O-024/O-025 remain
+  open and unchanged.
 
 ## Next Action
 
@@ -1338,11 +1362,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-CATEGORY-CONFIGURATION-001` as the sole shared read semantics
    for exact Account/Project/category configuration state, absent/null/zero/
    positive allocation, incomplete relationship evidence and configuration
-   revision. Audit the remaining Phase 1 dependency graph and select the next
-   smallest complete decision-independent outcome. Do not add budget arithmetic,
-   hidden category/allocation visibility or counts, category or Project
-   configuration mutation, physical persistence, schema/RLS/Sync/Auth/provider
-   behavior, current app/MCP, migration, hosted resources or production access.
+   revision. Implement only the ready `client-rename-operation-contracts`
+   dossier: stable Account/Client identity, validated replacement display text,
+   one expected Client revision, exact shared operation binding/restart/refusal
+   and one narrow operation port. Do not add Client row/current-Project
+   projection, frozen-history rewrite, archive/delete/merge/reassignment,
+   physical persistence, schema/RLS/Sync/Auth/provider behavior, current app/MCP,
+   migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
