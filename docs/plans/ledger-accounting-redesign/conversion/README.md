@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 362 of 529 target-relevant
+Status: M0 inventory classification complete; 364 of 531 target-relevant
 surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -224,6 +224,17 @@ immutable Actions run `33682239349` records both CI jobs.
 Authorization, physical persistence, schema/RLS/Sync,
 assignment mutation, app/MCP, migration, hosted resources and production remain
 excluded; `EVID-SPACE-ASSIGNMENT-DESTINATION-001`.
+The provider-free Project budget paid/unpaid segment read slice is ready for
+the second isolated write-capable pilot. Exactly two comment-only target
+surfaces are frozen around pre-existing Budget Progress/D-012 authority: exact
+Account/Project/currency, signed client-paid and invoicing/unpaid Money, derived
+recognized value, equal collection-segment exchange, category order, distinct
+local and accounting-authority versions, readiness/restart/refusal and one
+narrow query port. A strict rescout and independent adversarial preflight both
+approved only this bounded foundation and rejected complete-budget,
+contribution-resolution, visual, provider or migration claims. Exact ready-
+commit CI and the full enhanced second-pilot reviews remain required;
+`EVID-PROJECT-BUDGET-SEGMENT-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

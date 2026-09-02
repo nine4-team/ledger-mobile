@@ -362,6 +362,14 @@ projection. A stored Postgres projection is permitted for performance only if
 it is rebuildable, revisioned, never client-written, and continuously compared
 with canonical contribution rows.
 
+The provider-free Phase 1 `ProjectBudgetSegmentSnapshot` is deliberately only
+a leaf foundation for that complete contract. It may establish exact
+Account/Project/currency query identity, category identity/order, signed paid
+and unpaid values, derived recognized arithmetic, explicit local plus
+accounting-authority versions, readiness/restart and bounded refusal. It does
+not resolve contribution sources, calculate budget/remaining/over/source
+counts, choose presentation, or create a competing app/MCP budget authority.
+
 ## Offline and Sync Contract
 
 The Project workspace Sync Stream must include all authorized rows needed to

@@ -76,6 +76,24 @@
         "Broad batch-level canonical-spec association allowed three planning surfaces to appear target-mapped without feature-specific canonical authority."
       ],
       "disposition": "Speculative scaffolds were removed; three surfaces were demoted, O-038 was added to all five affected surfaces, premature architecture ports were removed, and a proposed decision packet was created. No worker was launched and no behavioral implementation was accepted."
+    },
+    {
+      "findingId": "SUBAGENT-PILOT-002-PREFLIGHT-002",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "project-budget-segment-read-contracts",
+      "status": "go_with_narrowed_boundary_before_ready",
+      "reviewers": [
+        "primary-agent",
+        "/root/next_slice_scout",
+        "/root/budget_segment_preflight"
+      ],
+      "findings": [
+        "Pre-existing Budget Progress authority and D-012 support signed client-paid and invoicing/unpaid category values, internally derived recognized arithmetic, and equal positive collection exchange with no recognized change.",
+        "The boundary must remain ProjectBudgetSegmentSnapshot rather than the complete ProjectBudgetSnapshot and cannot resolve contributions, settlement, budgets/remaining/over, source counts, reports or presentation.",
+        "The request fingerprint must bind Account, Project and currency; snapshots require explicit completeness plus distinct LocalDataVersion and accounting-authority/projection revision.",
+        "The concurrent architecture clarification is technical documentation only and cannot bootstrap product authority because it did not exist at the independently reviewed base."
+      ],
+      "disposition": "Prepared a two-path comment-only ready scaffold and dossier with the narrowed product boundary, negative/restart/port obligations and all provider, migration and production behavior excluded. No writer may start until the exact ready commit passes immutable CI."
     }
   ]
 }

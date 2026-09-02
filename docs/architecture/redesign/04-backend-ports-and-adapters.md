@@ -331,9 +331,17 @@ protocol FeeOperations: Sendable {
 
 protocol BudgetQuerying: Sendable {
     func watchProjectBudget(
-        _ id: ProjectID
+        _ request: ProjectBudgetRequest
     ) -> AsyncThrowingStream<ProjectBudgetSnapshot, Error>
 }
+
+`ProjectBudgetRequest` binds the exact Account, Project, and currency. The
+provider-free Phase 1 segment boundary may first expose only category identity,
+`clientPaid`, `invoicingUnpaid`, derived `recognized`, local readiness, and
+projection version evidence. That narrower boundary is a foundation for, not a
+second authority beside, the eventual complete `ProjectBudgetSnapshot` above;
+budget limits, remaining/over values, source counts, contribution resolution,
+and presentation stay outside it until their owning slices are approved.
 
 protocol SpaceOperations: Sendable {
     func create(_ command: CreateSpaceCommand) async throws -> OperationReceipt

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T21:28:53.741Z",
+  "generatedFromManifestSync": "2026-09-02T21:47:28.500Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 791,
-    "targetRelevantSurfaces": 529,
+    "surfaces": 793,
+    "targetRelevantSurfaces": 531,
     "batches": 18,
-    "productScopeSurfaces": 637,
+    "productScopeSurfaces": 639,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 509,
-      "targetRelevantSurfaceCount": 357
+      "surfaceCount": 511,
+      "targetRelevantSurfaceCount": 359
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 468,
-      "targetRelevantSurfaceCount": 312
+      "surfaceCount": 470,
+      "targetRelevantSurfaceCount": 314
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 527,
-      "targetRelevantSurfaceCount": 342
+      "surfaceCount": 529,
+      "targetRelevantSurfaceCount": 344
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -117,8 +117,8 @@
         "M0-ITEM-CREATION-LINK-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 423,
-      "targetRelevantSurfaceCount": 273
+      "surfaceCount": 425,
+      "targetRelevantSurfaceCount": 275
     }
   ],
   "batches": [
@@ -832,8 +832,8 @@
       "title": "Invoicing, collection, and budget authority",
       "scope": "product",
       "rationale": "Invoice, collection, source membership, Expense/Fee, and budget surfaces are governed by the invoice-centered model and the related Item/receipt lifecycle.",
-      "surfaceCount": 62,
-      "targetRelevantSurfaceCount": 44,
+      "surfaceCount": 64,
+      "targetRelevantSurfaceCount": 46,
       "authorities": [
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
@@ -862,6 +862,22 @@
         {
           "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
           "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/invoicing-collection-and-budget-authority.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
         }
       ],
       "surfaceIds": [
@@ -897,6 +913,7 @@
         "SWIFT-31DB4E9B5136",
         "SWIFT-37B70FDD1318",
         "SWIFT-38F4A97A4FCB",
+        "SWIFT-42C7BDDCD714",
         "SWIFT-47AEA80908AD",
         "SWIFT-4B46ED85F85E",
         "SWIFT-4CAE3EA7812A",
@@ -924,6 +941,7 @@
         "TEST-43E8D2F232DE",
         "TEST-49D678CB6929",
         "TEST-688E9434074D",
+        "TEST-A0B2D5B97695",
         "TEST-B14A5E3340E7",
         "TEST-E5D06AC5D785",
         "TEST-F86623DF8B57"

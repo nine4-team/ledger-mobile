@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 151
+State version: 152
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: INVENTORY-PLANNING-AUTHORITY-CORRECTED-PILOT-002-RESELECT
+- Checkpoint: PROJECT-BUDGET-SEGMENT-READY-PILOT-002-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2278,6 +2278,28 @@ modifying the running Firebase application before hard cutover.
   packet. Current deterministic state is 791 recorded / 776 discovered, 362
   mapped-or-later / 167 residual / 44 blockers with only the three documented
   retired-path warnings. No worker implementation was accepted.
+- Re-ran the next-slice search under the strengthened feature-specific
+  authority rule. Media primary/order and Project-note search were rejected as
+  insufficiently specified. A strict scout and independent read-only
+  adversarial preflight approved only a narrow provider-free Project budget
+  segment DTO/query foundation from the pre-existing Budget Progress spec and
+  D-012. The preflight required exact Account/Project/currency identity, signed
+  client-paid and invoicing/unpaid Money, internally derived recognized value,
+  positive collection-segment exchange with no recognized change, stable
+  category order, distinct LocalDataVersion and accounting-authority/projection
+  revision, explicit incomplete/empty truth, restart/refusal and exact-request
+  port behavior. It prohibited calling the result the complete
+  ProjectBudgetSnapshot or adding source resolution, settlement, reports,
+  visual policy, providers or migration.
+- Prepared `project-budget-segment-read-contracts` as `ready` with exactly two
+  comment-only target surfaces, seven requirements and five planned
+  verification obligations. The accompanying architecture clarification records
+  technical request/port scope only; it is not product authority and did not
+  exist at the reviewed base. Current deterministic state is 793 recorded / 778
+  discovered, 364 mapped-or-later / 167 residual / 44 blockers, 44 slices
+  claiming 109 of 531 target-relevant surfaces, and only the three documented
+  retired-path warnings. No worker, provider, Firebase or production action has
+  occurred.
 
 ## Next Action
 
@@ -2370,10 +2392,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
    assignment-destination read semantics. Preserve the completed first-pilot
    review record. Do not implement Inventory destination planning until O-038
-   is explicitly approved in canonical product authority. Select a different
-   smallest decision-independent slice, prepare its complete ready dossier and
-   exact ready CI, then use the same enhanced review for
-   `SUBAGENT-PILOT-002` before changing the delegation policy.
+   is explicitly approved in canonical product authority. Finish the complete
+   local ready gate and immutable exact-ready-commit CI for
+   `project-budget-segment-read-contracts`; only then launch
+   `SUBAGENT-PILOT-002` from that exact commit in its isolated worktree with the
+   two Swift paths as its complete allowlist. Review every changed line, obtain
+   an independent adversarial implementation review, rerun focused/full local
+   gates and require exact integrated-commit CI before verification or any
+   delegation-policy change.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
