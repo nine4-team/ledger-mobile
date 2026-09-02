@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T09:37:17.519Z",
+    "lastSynchronizedAt": "2026-09-02T09:41:09.576Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -22674,14 +22674,14 @@
           "Synthetic commands prove exact Project identity/name/revision intent, canonical restart, atomic rebound refusal and shared replay without a database, Client/category/media update or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-RENAME-001"
       ],
-      "notes": "Target-only Phase 1 implementation. It preserves one stable Account/Project identity, validated replacement display name, exact expected Project revision and shared operation lifecycle. It cannot change Client identity/relationship, update a row or projection, edit description/category/media/history, archive/restore/delete a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
+      "notes": "Verified target-only Phase 1 implementation at exact commit 7f395bbe99bdd4a564eef1fdbee664cb03519595 and immutable Actions run 33615145061. It preserves one stable Account/Project identity, validated replacement display name, exact expected Project revision and shared operation lifecycle. It cannot change Client identity/relationship, update a row or projection, edit description/category/media/history, archive/restore/delete a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33031,14 +33031,14 @@
           "Self-tests prove the backend-neutral Project rename command boundary without claiming Project row/projection, Client/category/media/history rewrite, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-RENAME-001"
       ],
-      "notes": "Implemented deterministic tests prove exact Account/Project/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Project/downstream projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Verified deterministic tests at exact commit 7f395bbe99bdd4a564eef1fdbee664cb03519595 and immutable Actions run 33615145061 prove exact Account/Project/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Project/downstream projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

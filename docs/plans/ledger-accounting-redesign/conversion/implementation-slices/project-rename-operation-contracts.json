@@ -3,7 +3,7 @@
   "sliceId": "project-rename-operation-contracts",
   "title": "Rename one stable Project without changing its Client relationship",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Rename Operation Contracts",
   "surfaceIds": [
     "SWIFT-797909434B82",
@@ -273,8 +273,10 @@
         "PROJECTRENAME-REQ-007"
       ],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming Project row/projection, server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-RENAME-001"
+      ]
     }
   ],
   "implementationEvidence": [

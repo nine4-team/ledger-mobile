@@ -2042,14 +2042,14 @@
       "acknowledgeSourceHash": "8fff3525aa272d8659d23487a48bea388f0a9c525feb097f877f468fd55dfaf7",
       "currentBehavior": "Implements a provider-free Project rename draft, exact Project/name payload, same-subject expected revision, shared-envelope command, derived Project subject/fingerprint validation, exact receipt validation, narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-RENAME-001"
       ],
-      "notes": "Target-only Phase 1 implementation. It preserves one stable Account/Project identity, validated replacement display name, exact expected Project revision and shared operation lifecycle. It cannot change Client identity/relationship, update a row or projection, edit description/category/media/history, archive/restore/delete a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
+      "notes": "Verified target-only Phase 1 implementation at exact commit 7f395bbe99bdd4a564eef1fdbee664cb03519595 and immutable Actions run 33615145061. It preserves one stable Account/Project identity, validated replacement display name, exact expected Project revision and shared operation lifecycle. It cannot change Client identity/relationship, update a row or projection, edit description/category/media/history, archive/restore/delete a Project, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-024/O-025 remain open.",
       "target": {
         "owner": "Project Rename Operation Contracts",
         "surfaces": [
@@ -2089,14 +2089,14 @@
       "acknowledgeSourceHash": "c5e2bdbb661ebf867ecae418e9fe51f7c1f2167ae1b01c997bdfdef2429c362a",
       "currentBehavior": "Executes four deterministic target-only tests for exact Project/name/revision command shape, canonical restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-RENAME-001"
       ],
-      "notes": "Implemented deterministic tests prove exact Account/Project/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Project/downstream projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Verified deterministic tests at exact commit 7f395bbe99bdd4a564eef1fdbee664cb03519595 and immutable Actions run 33615145061 prove exact Account/Project/name/revision command truth, canonical restart and atomic malformed/rebound/precondition refusal without claiming physical local durability, authoritative Project/downstream projection, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Project Rename Operation Contracts",
         "surfaces": [

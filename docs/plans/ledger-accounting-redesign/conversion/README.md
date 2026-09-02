@@ -46,12 +46,11 @@ staging builds. It preserves stable Client identity, replacement display text,
 expected revision and the shared operation lifecycle without deciding Client
 archive/merge, Project reassignment, provider, migration or production
 behavior.
-The provider-free Project rename command slice is implemented locally in
-exactly two target-only surfaces. Four deterministic tests preserve stable
-Project identity, replacement display text, expected revision and Client-
-relationship separation without deciding Project deletion, Client
-reassignment, provider, migration or production behavior. Exact-
-implementation-commit CI is still required before the slice is verified.
+The provider-free Project rename command slice is verified at exact
+implementation commit `7f395bbe`, including all 120 target tests and both
+staging builds. It preserves stable Project identity, replacement display text,
+expected revision and Client-relationship separation without deciding Project
+deletion, Client reassignment, provider, migration or production behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
