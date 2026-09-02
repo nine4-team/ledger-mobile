@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T12:51:01.979Z",
+  "generatedFromManifestSync": "2026-09-02T12:56:41.615Z",
   "totals": {
     "slices": 32,
     "claimedTargetSurfaces": 85,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 30,
+    "implemented": 0,
+    "verified": 31,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -484,7 +484,7 @@
       "sliceId": "vendor-suggestion-reference-read-contracts",
       "title": "Read ordered vendor suggestions offline without creating Vendor identity or write authority",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Vendor Suggestion Reference Read Contracts",
       "surfaceIds": [
         "SWIFT-111A94B464D5",

@@ -1,14 +1,14 @@
 # EVID-VENDOR-SUGGESTION-REFERENCE-001 — Vendor Suggestion Reference Read Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation plan / provider-free vendor-suggestion reference read
+- Class: verification / provider-free vendor-suggestion reference read
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-111A94B464D5`, `TEST-A73A49564E8C`
 - Slice dossier:
   `conversion/implementation-slices/vendor-suggestion-reference-read-contracts.json`
-- Verification state: implemented; four deterministic obligations pass locally,
-  exact-implementation-commit operational evidence remains planned
+- Verification state: verified; all five obligations pass at exact implementation
+  commit `519b4338c7cbe8cc63a01820116bef5283a8625a`
 - Ready scaffold hashes:
   - `VendorSuggestionReferenceData.swift`:
     `463c20fe2a864a3b71cdb06bc62990ea1463c61220039470a0b11fe50cd316c1`
@@ -144,9 +144,12 @@ controls, M0 and clean diff formatting. The synchronized ledger remains at 769
 recorded / 754 discovered surfaces, 343 mapped / 164 residual / 43 blockers.
 M1 and M2 retain exactly their expected 2 and 164 blockers.
 
-Exact-implementation-commit CI remains planned, so all four deterministic
-obligations pass but the operational obligation and two claimed surfaces remain
-`implemented`, not `verified`.
+Exact implementation commit `519b4338c7cbe8cc63a01820116bef5283a8625a`
+passed immutable GitHub Actions run `33632364285`: conversion traceability
+passed in 10 seconds and the isolated target environment passed in 2 minutes
+38 seconds with all 140 tests in 32 suites, graph/generated-contract checks,
+macOS and generic iOS Simulator staging builds and clean tracked artifacts. All
+five obligations pass, and both claimed target surfaces are `verified`.
 
 ## Permanent Limits
 

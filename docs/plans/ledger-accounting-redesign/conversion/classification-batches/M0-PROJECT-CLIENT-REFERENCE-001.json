@@ -2890,14 +2890,14 @@
       "acknowledgeSourceHash": "74c6498bf389803c4af562d55d4b3d02d15aa2449f8761ddc0519df0538bf22d",
       "currentBehavior": "Implements a provider-free Account-scoped vendor-suggestion read model with stable identity, bounded display text, normalized duplicate detection, lifecycle, order, revision, explicit local readiness and a narrow query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-VENDOR-SUGGESTION-REFERENCE-001"
       ],
-      "notes": "Implemented target-only Phase 1 read contract after exact ready commit 3abee18e8011943e74185e43d1630aeb9fa2bff7 passed immutable Actions run 33631062466. Four focused/all 140 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. O-026 mutation authority, default seeding, canonical Vendor identity, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resources and production remain excluded.",
+      "notes": "Verified target-only Phase 1 read contract at exact implementation commit 519b4338c7cbe8cc63a01820116bef5283a8625a and immutable Actions run 33632364285. Four focused/all 140 tests, graph/contracts, both staging builds and clean tracked artifacts pass. O-026 mutation authority, default seeding, canonical Vendor identity, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resources and production remain excluded.",
       "target": {
         "owner": "Vendor Suggestion Reference Read Contracts",
         "surfaces": [
@@ -2938,14 +2938,14 @@
       "acknowledgeSourceHash": "fb9f247ee1728ee2bad0e35a24938528edd1c2810f068614e7d313dff64f3fb5",
       "currentBehavior": "Implements four deterministic vendor-suggestion read contract tests covering exact values/source-text semantics, canonical readiness/restart, bounded refusal and Account-exact port failure behavior.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-VENDOR-SUGGESTION-REFERENCE-001"
       ],
-      "notes": "Implemented target-only deterministic tests after exact ready commit 3abee18e8011943e74185e43d1630aeb9fa2bff7 passed immutable Actions run 33631062466. Four focused/all 140 tests, graph/contracts, both staging builds and clean artifacts pass locally; exact-implementation-commit CI remains planned. They cannot prove authentication, O-026 mutation policy, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
+      "notes": "Verified target-only deterministic tests at exact implementation commit 519b4338c7cbe8cc63a01820116bef5283a8625a and immutable Actions run 33632364285. Four focused/all 140 tests, graph/contracts, both staging builds and clean tracked artifacts pass. They cannot prove authentication, O-026 mutation policy, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
       "target": {
         "owner": "Vendor Suggestion Reference Read Contracts",
         "surfaces": [

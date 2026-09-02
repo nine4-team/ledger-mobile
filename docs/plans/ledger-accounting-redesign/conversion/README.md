@@ -80,14 +80,15 @@ generated-contract checks, both staging builds and clean artifacts.
 Authentication, category mutation/resolution, defaults, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded.
-The provider-free vendor-suggestion reference read slice is implemented
-locally. Exactly two target surfaces define stable Account-scoped suggestion
-identity, bounded preserved display spelling, normalized duplicate detection,
-lifecycle/revision/order, canonical readiness/restart/refusal and source-text-
-only selection; four focused/all 140 tests pass locally. Exact-implementation-
-commit CI remains planned, so the slice is not verified. O-026 mutation
-authority, default seeding, physical persistence, schema/RLS/Sync/provider
-behavior, app/MCP, migration and production remain excluded.
+The provider-free vendor-suggestion reference read slice is verified. Exactly
+two target surfaces define stable Account-scoped suggestion identity, bounded
+preserved display spelling, normalized duplicate detection, lifecycle/revision/
+order, canonical readiness/restart/refusal and source-text-only selection.
+Exact implementation commit `519b4338` and immutable Actions run `33632364285`
+pass all 140 target tests, graph/generated-contract checks, both staging builds
+and clean artifacts. O-026 mutation authority, default seeding, physical
+persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
+production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

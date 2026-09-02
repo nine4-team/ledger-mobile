@@ -3,7 +3,7 @@
   "sliceId": "vendor-suggestion-reference-read-contracts",
   "title": "Read ordered vendor suggestions offline without creating Vendor identity or write authority",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Vendor Suggestion Reference Read Contracts",
   "surfaceIds": [
     "SWIFT-111A94B464D5",
@@ -180,12 +180,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["VENDORSUGGESTION-REQ-001", "VENDORSUGGESTION-REQ-002", "VENDORSUGGESTION-REQ-003", "VENDORSUGGESTION-REQ-004", "VENDORSUGGESTION-REQ-005", "VENDORSUGGESTION-REQ-006", "VENDORSUGGESTION-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming suggestion mutation, authentication, physical persistence, schema/RLS/Sync/provider, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"]
     }
   ],
   "implementationEvidence": ["EVID-VENDOR-SUGGESTION-REFERENCE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented decision-independent Phase 1 read boundary after exact ready commit 3abee18e8011943e74185e43d1630aeb9fa2bff7 passed immutable Actions run 33631062466. Four deterministic obligations pass locally; exact-implementation-commit operational evidence remains planned, so the slice is not verified. Personal/current transaction and item source text plus reviewed capability/architecture contracts settle stable ordered Account-scoped suggestions, explicit archive/revision/readiness and the rule that selection remains free text rather than Vendor/accounting identity. O-026 remains fully open for suggestion creation, curation, archive/reactivation, merge, reorder and authorization. The slice stops before default policy, fixed/excluded picker composition, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified decision-independent Phase 1 read boundary. Exact implementation commit 519b4338c7cbe8cc63a01820116bef5283a8625a passed immutable Actions run 33632364285: conversion traceability in 10 seconds and the isolated target environment in 2 minutes 38 seconds with all 140 tests in 32 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. Personal/current transaction and item source text plus reviewed capability/architecture contracts settle stable ordered Account-scoped suggestions, explicit archive/revision/readiness and the rule that selection remains free text rather than Vendor/accounting identity. O-026 remains fully open for suggestion creation, curation, archive/reactivation, merge, reorder and authorization. The slice stops before default policy, fixed/excluded picker composition, authentication, mutation, physical durability, schema/RLS/Sync/provider behavior, app/MCP, migration, hosted resources, production access or cutover."
 }

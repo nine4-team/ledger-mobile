@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 114
+State version: 115
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: VENDOR-SUGGESTION-READ-IMPLEMENTED-LOCAL
+- Checkpoint: VENDOR-SUGGESTION-READ-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1679,6 +1679,12 @@ modifying the running Firebase application before hard cutover.
   Exact-implementation-commit hosted `VENDORSUGGESTION-TEST-005` remains
   planned, so exactly the two claimed surfaces are `implemented`, not
   `verified`.
+- Exact implementation commit `519b4338c7cbe8cc63a01820116bef5283a8625a`
+  passed immutable GitHub Actions run `33632364285`: conversion traceability
+  passed in 10 seconds and the isolated target environment passed in 2 minutes
+  38 seconds with all 140 tests in 32 suites, graph/generated-contract checks,
+  both staging builds and clean tracked artifacts. All five dossier obligations
+  now pass and `SWIFT-111A94B464D5` plus `TEST-A73A49564E8C` are verified.
 
 ## Next Action
 
@@ -1732,9 +1738,10 @@ Continue without waiting on the two M1 evidence blockers:
    preference read semantics. Treat the verified
    `project-preference-update-operation-contracts` dossier and
    `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
-   semantics. Treat the implemented `vendor-suggestion-reference-read-contracts`
-   dossier as the sole vendor-suggestion read semantics and obtain immutable-CI
-   evidence before advancing its two surfaces to verified. Keep
+   semantics. Treat the verified `vendor-suggestion-reference-read-contracts`
+   dossier and `EVID-VENDOR-SUGGESTION-REFERENCE-001` as the sole vendor-
+   suggestion read semantics. Audit the next smallest complete decision-
+   independent dependency before creating another ready slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
