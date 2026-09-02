@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T02:55:52.929Z",
+  "generatedFromManifestSync": "2026-09-02T03:06:44.820Z",
   "totals": {
     "slices": 16,
     "claimedTargetSurfaces": 53,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 36
+    "implementationAdvancedTargetSurfaces": 38
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 14,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -214,7 +214,7 @@
       "sliceId": "transaction-taxonomy-and-transfer-identity",
       "title": "Define canonical Transaction taxonomy, scope meaning, and Transfer pair identity",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Transaction Taxonomy and Transfer Identity",
       "surfaceIds": [
         "SWIFT-C7C58265EA19",

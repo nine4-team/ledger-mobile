@@ -3,7 +3,7 @@
   "sliceId": "transaction-taxonomy-and-transfer-identity",
   "title": "Define canonical Transaction taxonomy, scope meaning, and Transfer pair identity",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Transaction Taxonomy and Transfer Identity",
   "surfaceIds": [
     "SWIFT-C7C58265EA19",
@@ -136,8 +136,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
       "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
       "expected": "Exactly three canonical types derive the correct scope-owner/non-cash meanings; standalone Purchase/Return validate in Project and Inventory scope while legacy types and caller-authored meaning remain unrepresentable.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
     },
     {
       "id": "TAXONOMY-TEST-002",
@@ -145,8 +145,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
       "covers": ["TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
       "expected": "A direct same-Account/same-Client/distinct-Project active-destination route and one Operation-bound distinct source/destination Transaction pair preserve exact typed identity and roles without Business Inventory or name authority.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
     },
     {
       "id": "TAXONOMY-TEST-003",
@@ -154,8 +154,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
       "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
       "expected": "Representative classifications, route and pair identity round-trip byte-identically through canonical restart and re-run all structural validation without opening local or remote state.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
     },
     {
       "id": "TAXONOMY-TEST-004",
@@ -163,8 +163,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift",
       "covers": ["TAXONOMY-REQ-001", "TAXONOMY-REQ-002", "TAXONOMY-REQ-003", "TAXONOMY-REQ-004", "TAXONOMY-REQ-005", "TAXONOMY-REQ-006"],
       "expected": "Inventory Transfer, incompatible roles, cross-Account/cross-Client/same-Project/archived-destination routes, duplicate pair record IDs and malformed decoded combinations fail atomically with stable non-enumerating codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TRANSACTION-TAXONOMY-001"]
     },
     {
       "id": "TAXONOMY-TEST-005",
@@ -176,7 +176,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-TRANSACTION-TAXONOMY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 value foundation only. It implements the confirmed D-001–D-007 classification/scope and structural D-004 pair identity, but no money amount/sign, Item membership, allocation, Invoice/live-charge, Space, correction, lifecycle, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior. D-017 amount conservation and all O-002/O-011–O-015/O-028–O-032 effects remain outside this slice."

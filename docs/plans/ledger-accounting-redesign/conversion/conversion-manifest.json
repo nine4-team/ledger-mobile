@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T02:55:52.929Z",
+    "lastSynchronizedAt": "2026-09-02T03:06:44.820Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27591,12 +27591,12 @@
           "path": "LedgeriOS/LedgerTargetCore/TransactionTaxonomy.swift"
         }
       ],
-      "observedSourceHash": "2875a2d9bc4e33e2db4e7006cfe89415098de52c23eed84815318401b09ed492",
-      "acknowledgedSourceHash": "2875a2d9bc4e33e2db4e7006cfe89415098de52c23eed84815318401b09ed492",
+      "observedSourceHash": "63c7836292efe4211e8ed7b5cf8d5ac446b05daf1df94bfc44f9c6689430e54f",
+      "acknowledgedSourceHash": "63c7836292efe4211e8ed7b5cf8d5ac446b05daf1df94bfc44f9c6689430e54f",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides a comment-only target scaffold for the exact Purchase/Return/Transfer taxonomy, scope-owner meaning, same-Client Transfer route and pair identity; no executable behavior exists before the slice ready gate passes.",
+      "currentBehavior": "Implements the provider-free closed Purchase/Return/Transfer taxonomy, validated Business Inventory or Account/Project/Client scope, derived economic meaning, compatible record roles, exact same-Account/same-Client active-destination Transfer route, Operation-bound distinct pair identity, canonical decoding, and stable bounded failures.",
       "disposition": "redesign",
       "target": {
         "owner": "Transaction Taxonomy and Transfer Identity",
@@ -27633,14 +27633,14 @@
           "Synthetic values prove exact three-type decoding, scope-owner meaning, project-only non-cash Transfer, exact-ID route eligibility and distinct paired record identity without provider dependencies"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
         "EVID-M2-INVENTORY-TRANSACTION-001",
         "EVID-TRANSACTION-TAXONOMY-001"
       ],
-      "notes": "Target-only Phase 1 taxonomy foundation. It cannot define money-record minimum evidence, Transaction lifecycle, amount/line/category basis, Transfer Item/Invoice/Space effects, correction, schema, RLS, Sync, provider adapters, app/MCP wiring or migration.",
+      "notes": "Target-only Phase 1 taxonomy foundation. Four focused tests and all 76 target tests, graph/contracts, and both staging builds pass locally; exact-commit hosted CI remains required before verification. It cannot define money-record minimum evidence, Transaction lifecycle, amount/line/category basis, Transfer Item/Invoice/Space effects, correction, schema, RLS, Sync, provider adapters, app/MCP wiring or migration.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -32043,12 +32043,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/TransactionTaxonomyTests.swift"
         }
       ],
-      "observedSourceHash": "39d2847e98e6dc672139c1dce1afa16d8904749393bd82412cf9113fa370b9b5",
-      "acknowledgedSourceHash": "39d2847e98e6dc672139c1dce1afa16d8904749393bd82412cf9113fa370b9b5",
+      "observedSourceHash": "ba3e2bc22208c6fefc8c6c895fbf91135c42f842e04042c326a46eaf5ff10064",
+      "acknowledgedSourceHash": "ba3e2bc22208c6fefc8c6c895fbf91135c42f842e04042c326a46eaf5ff10064",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Provides a comment-only target scaffold for valid taxonomy/scope meanings, exact same-Client Transfer routing and pair identity, deterministic restart and invalid-combination refusal; no executable test exists before the slice ready gate passes.",
+      "currentBehavior": "Executes four deterministic target-only tests for exact taxonomy/scope meanings, same-Client Transfer routing and pair identity, byte-identical canonical restart, and atomic stable refusal of invalid type/scope/role/route/pair inputs.",
       "disposition": "redesign",
       "target": {
         "owner": "Transaction Taxonomy and Transfer Identity",
@@ -32080,14 +32080,14 @@
           "Self-tests prove only the provider-free taxonomy and pair-identity boundary without claiming handler, schema, RLS, Sync, app/MCP, migration or production evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
         "EVID-M2-INVENTORY-TRANSACTION-001",
         "EVID-TRANSACTION-TAXONOMY-001"
       ],
-      "notes": "Target-only taxonomy self-test scaffold. It cannot establish server atomicity, pair persistence, authorization/download absence, physical offline behavior, legacy import correctness or concrete app/MCP integration.",
+      "notes": "Target-only taxonomy self-tests pass locally as part of all 76 target tests; exact-commit hosted CI remains required before verification. They cannot establish server atomicity, pair persistence, authorization/download absence, physical offline behavior, legacy import correctness or concrete app/MCP integration.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {

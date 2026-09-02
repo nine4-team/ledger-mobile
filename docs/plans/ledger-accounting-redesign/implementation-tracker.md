@@ -172,7 +172,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 
 | Task | Status | Current dependency |
 |---|---|---|
-| Define target Transaction taxonomy, scope meaning, and Transfer pair identity | ready | Two target-only core/test scaffolds map the exact Purchase/Return/Transfer set, scope-owner meaning, project-only roles, exact-ID same-Client route and Operation-bound distinct pair identity. Amount/line/Item/Invoice/Space/correction/lifecycle semantics, schema/provider, app/MCP and migration remain excluded; `EVID-TRANSACTION-TAXONOMY-001` |
+| Define target Transaction taxonomy, scope meaning, and Transfer pair identity | implemented | Provider-free values and four focused tests implement the exact Purchase/Return/Transfer set, scope-owner meaning, project-only roles, exact-ID same-Client route, Operation-bound distinct pair identity, canonical restart and stable refusal. All 76 target tests, graph/contracts and both builds pass locally; exact-commit CI remains before verification. Amount/line/Item/Invoice/Space/correction/lifecycle semantics, schema/provider, app/MCP and migration remain excluded; `EVID-TRANSACTION-TAXONOMY-001` |
 | Define Firebase-source enum migration mapping | not started | Export transformer maps every legacy value with blocker reporting; target app has no Firestore DTO |
 | Define target Postgres Transaction type/scope constraints | not started | Purchase/Return scope-relative; Transfer project-only |
 | Change target Invoice collection output to Purchase | not started | Supabase command handler and target collection semantics |

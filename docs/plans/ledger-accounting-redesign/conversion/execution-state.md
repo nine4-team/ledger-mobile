@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 65
+State version: 66
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TRANSACTION-TAXONOMY-READY-IMPLEMENTATION-NEXT
+- Checkpoint: TRANSACTION-TAXONOMY-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -819,6 +819,25 @@ modifying the running Firebase application before hard cutover.
   blocked by the unchanged two and 164 prerequisites. No behavioral code,
   source app/MCP surface, provider, database, hosted resource, migration or
   production operation exists at this ready checkpoint.
+- Implemented the ready Transaction taxonomy slice with the exact closed
+  Purchase/Return/Transfer type, validated Inventory/Project owner scope,
+  derived economic meaning, compatible standalone/source/destination roles,
+  exact-ID same-Account/same-Client/distinct-Project active-destination route,
+  Operation-bound distinct Transfer pair identity, decode revalidation and
+  stable bounded failures. Display names carry no route authority.
+- Added four focused domain/restart/refusal tests. They prove all valid scope-
+  relative meanings, byte-identical canonical restart, equal-name/different-
+  Client refusal, Inventory/cross-Account/cross-Client/same-Project/archived-
+  destination refusal, duplicate pair refusal, malformed aggregate decoding
+  and every stable diagnostic code.
+- All four focused tests and all 76 target package tests pass locally, as do
+  target graph/generated-contract checks and macOS/generic-iOS-Simulator
+  staging builds. Four of five slice obligations pass; exact-commit hosted CI
+  remains planned, so exactly the two target-only taxonomy surfaces are
+  `implemented`. No writer, money rule, Item/Invoice/Space effect, correction/
+  lifecycle behavior, schema/RLS/Sync/provider, app/MCP wiring, legacy import,
+  Firebase change, hosted resource, migration or production operation was
+  introduced.
 
 ## Next Action
 
@@ -828,44 +847,48 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Implement only the ready `transaction-taxonomy-and-transfer-identity`
-   dossier inside the provider-free core/test targets: the exact three-value
-   type, explicit Inventory/Project scope owner, derived economic meaning,
-   compatible standalone/Transfer roles, exact-ID same-Client active-destination
-   route, Operation-bound distinct source/destination pair, decode revalidation,
-   canonical restart and stable refusal. Do not implement Transaction writers,
-   money amount/sign, Item lines, Invoice/Space effects, corrections/lifecycle,
-   schema/RLS/Sync/provider behavior, legacy mapping, app/MCP wiring, production
-   access or either open product/architecture decision.
-3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
+2. Commit and push the implemented
+   `transaction-taxonomy-and-transfer-identity` slice, then require the exact
+   implementation SHA to pass both immutable pull-request jobs before advancing
+   only `SWIFT-C7C58265EA19`, `TEST-28D11BDABC0A`, `TAXONOMY-TEST-005`, and the
+   dossier to `verified`. Do not infer verification from local success or a
+   different commit.
+3. After exact-commit verification, audit the remaining Phase 1/domain
+   dependency order and select the smallest decision-independent slice whose
+   exact product/architecture authority is closed. Create and pass its ready
+   dossier before behavior. Do not implement Transaction writers, money sign or
+   posting bounds, Item/Invoice/Space effects, corrections/lifecycle, schema/
+   RLS/Sync/provider behavior, legacy mapping, app/MCP wiring, production access
+   or any open product/architecture decision.
+4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
-4. Keep `target-environment-isolation` in progress with successful external CI
+5. Keep `target-environment-isolation` in progress with successful external CI
    recorded. Complete only the later signed/visual/physical staging and actual
    hosted-resource projection portions when their credentials/resources and
    authorization exist; do not wait on those gates before continuing other
    decision-independent target foundations and do not reattach target files to
    `LedgeriOS.xcodeproj`.
-5. Keep the target projection explicitly `unprovisioned` until isolated hosted
+6. Keep the target projection explicitly `unprovisioned` until isolated hosted
    resource IDs, staging-only credentials, maximum spend/run-rate, cleanup
    owner, and the applicable spike authorization are explicit. Do not replace
    synthetic IDs with guesses or production identifiers.
-6. Preserve the decision-packet queue as proposals until product approval. Every
+7. Preserve the decision-packet queue as proposals until product approval. Every
    generated product blocker now has a packet; O-021 remains an explicit UI-only
    UX experiment rather than a schema gate.
-7. Do not execute the prepared vertical-spike protocol until isolated hosted
+8. Do not execute the prepared vertical-spike protocol until isolated hosted
    resources, staging-only credentials, maximum spend/run-rate, cleanup owner,
    device matrix, and pre-measurement hard caps are explicitly authorized. When
    authorized, begin at S0 and stop fail-closed on any unknown/production ID.
-8. When the user approves a product decision, update its canonical spec and
+9. When the user approves a product decision, update its canonical spec and
    decision log first, then traceability, architecture, affected batch mappings/
    evidence and this state. Keep one target operation/query authority across app
    and MCP and do not create a Firebase application adapter.
-9. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
+10. Keep A-003/A-004 proposed until the isolated vertical spike passes. The spike
    may use synthetic staging only and must prove encrypted local durability,
    scoped Sync Streams, idempotent operations/rejection, media restart, RLS, and
    offline provenance before provider-specific architecture is approved.
-10. When an external chmod-600 service-account JSON whose `project_id` is exactly
+11. When an external chmod-600 service-account JSON whose `project_id` is exactly
    `ledger-nine4`, or a separately proven canonical immutable production export,
    becomes available, run the fail-closed read-only profiling/reconciliation
    flow. Do not copy credentials into the repository, substitute authorized-user
