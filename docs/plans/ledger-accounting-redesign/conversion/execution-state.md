@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 131
+State version: 132
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CHECKLIST-REVISION-READY-LOCAL
+- Checkpoint: SPACE-CHECKLIST-REVISION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1959,6 +1959,25 @@ modifying the running Firebase application before hard cutover.
   query/residual controls, M0 and clean diff formatting. M1/M2 retain exactly
   their expected 2/164 prerequisite blockers. Immutable exact-ready-commit CI
   remains required before bounded implementation.
+- Exact comment-only Space-checklist ready commit
+  `68d2b4d071fdf96911d5cc0c1b6e71cd1b3c53b2` passed immutable GitHub Actions
+  run `33658088408`: conversion traceability passed in 18 seconds and the
+  isolated target environment passed in 2 minutes 6 seconds with all 160 then-
+  existing target tests, graph/generated-contract checks, both staging builds
+  and clean tracked artifacts.
+- Implemented only the frozen provider-free checklist boundary: distinct stable
+  checklist/item identities; canonical nonblank names/text; complete
+  deterministic nested order; checked-state progress; valid empty clear and
+  zero-item checklists; exact same-Space revision; shared envelope/fingerprint/
+  receipt/replay; canonical restart/refusal; stable diagnostics; and one narrow
+  port. It contains no scope/details/template/media/assignment/review/Space-
+  completion/lifecycle/accounting/provider or authoritative-apply concern.
+- Four focused and all 164 target tests in 38 suites pass locally, along with
+  target isolation/generated contracts, conversion/capability/query/residual
+  controls, M0, both staging builds and clean diff formatting. The
+  implementation acknowledges exact source hashes; 82 target surfaces are
+  implementation-advanced. Exact implementation-commit CI remains before
+  verification.
 
 ## Next Action
 
@@ -2029,9 +2048,10 @@ Continue without waiting on the two M1 evidence blockers:
    both CI jobs are verified. Treat
    `space-checklist-revision-operation-contracts` and
    `EVID-SPACE-CHECKLIST-REVISION-001` as the sole provider-free
-   ReviseSpaceChecklists semantic authority. Finish and commit its ready gate,
-   require both exact-ready-commit CI jobs, then implement only the frozen
-   provider-free boundary. Keep
+   ReviseSpaceChecklists semantic authority. Its exact ready commit and both CI
+   jobs pass. Finish the local implementation gate, commit and push only the
+   frozen provider-free boundary, and require both exact-implementation-commit
+   CI jobs before marking either claimed surface verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

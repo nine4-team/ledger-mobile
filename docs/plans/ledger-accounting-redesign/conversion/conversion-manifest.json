@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T16:56:50.043Z",
+    "lastSynchronizedAt": "2026-09-02T17:14:04.037Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -31427,12 +31427,12 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceChecklistRevisionOperation.swift"
         }
       ],
-      "observedSourceHash": "351c778e83be64ae8b456c3863af293a07aca86ca8a1c770b67a76ebcd40f693",
-      "acknowledgedSourceHash": "351c778e83be64ae8b456c3863af293a07aca86ca8a1c770b67a76ebcd40f693",
+      "observedSourceHash": "11862dcb6771efc7ba0f9c61d7001d41426e50e9d1b2b06252f5768ddbc5bb8a",
+      "acknowledgedSourceHash": "11862dcb6771efc7ba0f9c61d7001d41426e50e9d1b2b06252f5768ddbc5bb8a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the comment-only ready-gate surface for a provider-free complete Space checklist revision operation.",
+      "currentBehavior": "Defines the implemented provider-free boundary for revision-aware replacement of one Space's complete canonical ordered checklist hierarchy with stable nested identities, checked-state progress, exact operation binding, restart/refusal validation and a narrow operation port.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Checklist Revision Operation Contracts",
@@ -31473,14 +31473,14 @@
           "Synthetic commands prove complete canonical ordered hierarchy replacement, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-REVISION-001"
       ],
-      "notes": "Target-only Phase 1 ready scaffold. The bounded implementation may define one ReviseSpaceChecklists intent with stable Space/checklist/item identities, complete canonical ordered hierarchy replacement, exact expected Space revision, shared operation binding/receipt validation and a narrow port. It cannot change scope/details, apply/save templates, attach media, assign Items, create review evidence, set Space completion/lifecycle or mutate accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production.",
+      "notes": "Target-only Phase 1 implemented surface. The bounded implementation defines one ReviseSpaceChecklists intent with stable Space/checklist/item identities, complete canonical ordered hierarchy replacement, exact expected Space revision, shared operation binding/receipt validation and a narrow port. It cannot change scope/details, apply/save templates, attach media, assign Items, create review evidence, set Space completion/lifecycle or mutate accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -35774,12 +35774,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift"
         }
       ],
-      "observedSourceHash": "7b8c967eb0d77259cc32d19ff596d3fd0fd752ca8446e18665293616a697bbcb",
-      "acknowledgedSourceHash": "7b8c967eb0d77259cc32d19ff596d3fd0fd752ca8446e18665293616a697bbcb",
+      "observedSourceHash": "9340c1bbd40347661b1514c7072a75d46b99f066261ddf5ec65b4f76f738e5d8",
+      "acknowledgedSourceHash": "9340c1bbd40347661b1514c7072a75d46b99f066261ddf5ec65b4f76f738e5d8",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Defines the comment-only ready-gate surface for deterministic provider-free Space checklist revision contract tests.",
+      "currentBehavior": "Defines deterministic provider-free tests for complete canonical ordered Space checklist replacement, stable nested identities, progress, exact same-Space revision, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Checklist Revision Operation Contracts",
@@ -35812,14 +35812,14 @@
           "Self-tests prove the backend-neutral checklist revision boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-REVISION-001"
       ],
-      "notes": "Target-only Phase 1 ready scaffold. Planned tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
+      "notes": "Target-only Phase 1 implemented tests cover one complete ordered checklist replacement, stable nested identities, checked-state progress, empty clear/empty checklist, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal. They cannot claim a physical local/server row, authorization, schema/RLS/Sync/provider behavior, template/media/Item/review/Space-completion/lifecycle/accounting behavior, app/MCP integration, migration or production activation.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

@@ -3,7 +3,7 @@
   "sliceId": "space-checklist-revision-operation-contracts",
   "title": "Replace one Space's complete ordered checklist hierarchy without changing other Space state",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space Checklist Revision Operation Contracts",
   "surfaceIds": ["SWIFT-EB8803C0864A", "TEST-9A22BFF16437"],
   "requirements": [
@@ -124,8 +124,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
       "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
       "expected": "Valid synthetic replace and clear inputs produce one typed exact-Space command with canonical complete ordered hierarchy, stable nested identities, checked-state progress and one same-Space revision, containing no scope/details/template/media/Item/review/Space-completion/lifecycle/accounting/generic-write input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
     },
     {
       "id": "SPACECHECKLIST-TEST-002",
@@ -133,8 +133,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
       "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-008"],
       "expected": "Replace and clear commands round-trip byte-identically with exact Account/actor/contract/Operation/Space/hierarchy/revision/time/subject/fingerprint evidence and no scope override, backend path, provider, credential or authoritative result claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
     },
     {
       "id": "SPACECHECKLIST-TEST-003",
@@ -142,8 +142,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
       "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
       "expected": "Blank/noncanonical text, duplicate nested identity/order, invalid time and changed Account/actor/contract/Space/hierarchy/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
     },
     {
       "id": "SPACECHECKLIST-TEST-004",
@@ -151,8 +151,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionOperationTests.swift",
       "covers": ["SPACECHECKLIST-REQ-001", "SPACECHECKLIST-REQ-002", "SPACECHECKLIST-REQ-003", "SPACECHECKLIST-REQ-004", "SPACECHECKLIST-REQ-005", "SPACECHECKLIST-REQ-006", "SPACECHECKLIST-REQ-007", "SPACECHECKLIST-REQ-008"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Space/hierarchy/revision is refused, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CHECKLIST-REVISION-001"]
     },
     {
       "id": "SPACECHECKLIST-TEST-005",
@@ -164,7 +164,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-SPACE-CHECKLIST-REVISION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 Space-checklist command only. Canonical Space authority and the reviewed capability dossier preserve checklist edit/check/reorder outcomes while replacing random decoded IDs and last-write-wins embedded arrays with one complete revisioned hierarchy intent. O-023/O-026/O-032/O-037 remain fully open because this command carries no media, template, Space-completion/review, assignment/archive or lifecycle concern. The slice stops before physical durable storage, authoritative server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T16:56:50.043Z",
+  "generatedFromManifestSync": "2026-09-02T17:14:04.037Z",
   "totals": {
     "slices": 38,
     "claimedTargetSurfaces": 97,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 80
+    "implementationAdvancedTargetSurfaces": 82
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 36,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -426,7 +426,7 @@
       "sliceId": "space-checklist-revision-operation-contracts",
       "title": "Replace one Space's complete ordered checklist hierarchy without changing other Space state",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Checklist Revision Operation Contracts",
       "surfaceIds": [
         "SWIFT-EB8803C0864A",

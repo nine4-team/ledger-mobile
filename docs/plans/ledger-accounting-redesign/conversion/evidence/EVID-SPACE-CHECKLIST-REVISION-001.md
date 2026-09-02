@@ -1,14 +1,14 @@
 # EVID-SPACE-CHECKLIST-REVISION-001 — Space Checklist Revision Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free Space checklist revision
+- Class: implementation / provider-free Space checklist revision
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-EB8803C0864A`, `TEST-9A22BFF16437`
 - Slice dossier:
   `conversion/implementation-slices/space-checklist-revision-operation-contracts.json`
-- Verification state: ready scaffold only; executable behavior remains absent
-  until immutable exact-ready-commit CI passes
+- Verification state: implemented locally; exact implementation-commit CI is
+  still required before either claimed surface can become verified
 - Ready scaffold hashes:
   - `SpaceChecklistRevisionOperation.swift`:
     `351c778e83be64ae8b456c3863af293a07aca86ca8a1c770b67a76ebcd40f693`
@@ -138,9 +138,73 @@ The complete local ready gate passes:
 Passing immutable exact-ready-commit CI may authorize only the bounded
 provider-free implementation named here.
 
+Exact comment-only ready commit
+`68d2b4d071fdf96911d5cc0c1b6e71cd1b3c53b2` passed immutable GitHub Actions
+run `33658088408`: conversion traceability passed in 18 seconds and the
+isolated target environment passed in 2 minutes 6 seconds with all 160 then-
+existing tests, graph/generated-contract checks, both staging builds and clean
+tracked artifacts. That gate authorized only the frozen provider-free
+implementation.
+
+## Implemented Contract
+
+- `SpaceChecklistID` and `SpaceChecklistItemID` are distinct stable typed
+  identities. `SpaceChecklistName` and `SpaceChecklistItemText` outer-trim
+  and reject blank values while preserving accepted interior text without a
+  target length cap.
+- `SpaceChecklistItemState` carries only identity, text, checked state and
+  explicit presentation order. `SpaceChecklistState` rejects duplicate
+  item identity/order and canonicalizes its complete item order.
+- `SpaceChecklistCollection` rejects duplicate checklist identity/order,
+  canonicalizes the complete checklist order, permits empty clear and zero-item
+  checklists, and derives exact completed and total item counts without any
+  Space completion field.
+- `SpaceChecklistRevisionDraft` binds exact Account, actor, operation
+  contract, stable Space, complete collection, expected Space revision and
+  finite capture time. `ReviseSpaceChecklistsCommand` derives exactly one
+  Space subject and same-Space expected-revision precondition through the
+  shared envelope, fingerprint, receipt and replay lifecycle and revalidates
+  duplicated evidence on decode.
+- `SpaceChecklistRevising` is one narrow provider-free operation port.
+  `SpaceChecklistRevisionFailure` supplies stable bounded codes for invalid
+  values/hierarchy, malformed evidence, binding/precondition/subject/
+  fingerprint/receipt mismatch and local acceptance failure.
+
+The command contains no Space scope/details, template/media/Item/review/
+reconciliation/lifecycle/accounting mutation, generic field map or
+authoritative update result. Its deterministic adapter uses only the shared
+`OperationJournal`; it is not a physical local or server implementation.
+
+Implementation hashes:
+
+- `SpaceChecklistRevisionOperation.swift`:
+  `11862dcb6771efc7ba0f9c61d7001d41426e50e9d1b2b06252f5768ddbc5bb8a`
+- `SpaceChecklistRevisionOperationTests.swift`:
+  `9340c1bbd40347661b1514c7072a75d46b99f066261ddf5ec65b4f76f738e5d8`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove complete canonical replace/
+clear hierarchy, stable distinct nested IDs, explicit order, checked progress,
+zero-item checklists, duplicate-label identity and exact same-Space revision;
+canonical byte-identical restart; atomic blank/noncanonical/duplicate/
+malformed/rebound/tampered evidence refusal with stable diagnostics; shared
+exact replay/Operation-ID mismatch semantics; and no false receipt from a
+failing port.
+
+The complete local implementation gate passes: all 164 target tests in 38
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The ledger remains at 781 recorded /
+766 discovered and 355 mapped-or-later / 164 residual / 43 blockers; 82 target
+surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
+
+`SPACECHECKLIST-TEST-001` through `-004` therefore pass. `-005` remains
+planned until immutable exact-implementation-commit CI passes.
+
 ## Permanent Limits
 
-This ready checkpoint cannot:
+This implementation cannot:
 
 - visibly or authoritatively update any checklist or Space;
 - create or modify a local/server Space/checklist row, revision or audit field;
