@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T04:58:35.025Z",
+    "lastSynchronizedAt": "2026-09-02T05:07:01.721Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -29044,14 +29044,14 @@
           "Synthetic matching capture/persistence evidence yields one canonical path-free receipt while scope/identity/size/digest/timestamp/fingerprint mismatch yields no accepted receipt"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-MEDIA-001",
         "EVID-M2-MEDIA-001",
         "EVID-ATTACHMENT-CAPTURE-001"
       ],
-      "notes": "Target-only Phase 1 receipt boundary implemented locally. Four focused/all 92 target tests, graph/contracts and both staging builds pass; exact-commit CI remains required. The deterministic adapter test proves only result-shape semantics, not physical persistence. The slice cannot claim filesystem persistence/encryption, upload, private remote access, display caching, metadata policy, detach/delete/retention, provider behavior, migration, app/MCP wiring or production authority.",
+      "notes": "Target-only Phase 1 receipt boundary verified at exact implementation commit 1792a862 by immutable Actions run 33593116980. Four focused/all 92 target tests, graph/contracts, both staging builds and clean artifacts pass. The deterministic adapter test proves only result-shape semantics, not physical persistence. The slice cannot claim filesystem persistence/encryption, upload, private remote access, display caching, metadata policy, detach/delete/retention, provider behavior, migration, app/MCP wiring or production authority.",
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
@@ -34612,14 +34612,14 @@
           "Self-tests prove only the provider-free receipt boundary and retain an explicit no-physical-durability limitation"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-MEDIA-001",
         "EVID-M2-MEDIA-001",
         "EVID-ATTACHMENT-CAPTURE-001"
       ],
-      "notes": "Four focused/all 92 target tests, graph/contracts and both staging builds pass locally; exact-commit CI remains required. The tests prove value/port semantics, canonical structured restart and fail-closed evidence validation only; they explicitly do not prove actual filesystem protection, process/device restart durability, upload, provider security, retention, migration or production behavior.",
+      "notes": "Four focused/all 92 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 1792a862 in immutable Actions run 33593116980. The tests prove value/port semantics, canonical structured restart and fail-closed evidence validation only; they explicitly do not prove actual filesystem protection, process/device restart durability, upload, provider security, retention, migration or production behavior.",
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {

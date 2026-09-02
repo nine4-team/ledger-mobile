@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T04:58:35.025Z",
+  "generatedFromManifestSync": "2026-09-02T05:07:01.721Z",
   "totals": {
     "slices": 20,
     "claimedTargetSurfaces": 61,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 18,
+    "implemented": 0,
+    "verified": 19,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -21,7 +21,7 @@
       "sliceId": "attachment-capture-and-local-durability-receipt",
       "title": "Accept attachment capture only with scoped local-durability evidence",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Attachment Local Capture Contracts",
       "surfaceIds": [
         "SWIFT-D8174F26DDD5",

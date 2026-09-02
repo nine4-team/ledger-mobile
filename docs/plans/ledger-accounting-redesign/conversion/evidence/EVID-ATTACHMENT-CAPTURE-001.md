@@ -1,14 +1,14 @@
 # EVID-ATTACHMENT-CAPTURE-001 — Attachment Capture and Local-Durability Receipt Contracts
 
 - Timestamp: 2026-09-01
-- Class: implementation planning / provider-free attachment capture boundary
+- Class: verification / provider-free attachment capture boundary
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-D8174F26DDD5`, `TEST-BA04EFCE369C`
 - Slice dossier:
   `conversion/implementation-slices/attachment-capture-and-local-durability-receipt.json`
-- Verification state: implemented locally; exact-commit hosted CI remains
-  planned
+- Verification state: verified at exact implementation commit
+  `1792a86292d1553a11d78ff977736f63f12cbbe4`
 - Implementation hashes:
   - `AttachmentCaptureReceipt.swift`:
     `012166fe94aae403c2b0dd9a8fda740209155b2fc4811f7e7fc22a01ffb326ed`
@@ -124,7 +124,25 @@ The implementation checkpoint ran from the dedicated Supabase worktree on
 - M1/M2 — expected blocks at the unchanged 2/164 prerequisites.
 
 `ATTACHCAP-TEST-001` through `-004` therefore pass with this evidence.
-`ATTACHCAP-TEST-005` remains planned until immutable exact-commit CI succeeds.
+
+## Hosted Exact-Commit Verification
+
+Immutable GitHub Actions run
+[`33593116980`](https://github.com/nine4-team/ledger-mobile/actions/runs/33593116980)
+passed for exact implementation commit
+`1792a86292d1553a11d78ff977736f63f12cbbe4`:
+
+- `Conversion state and traceability` — pass in 8 seconds;
+- `Isolated target environment` — pass in 1 minute 33 seconds, including the
+  complete 92-test target suite, dependency/source-isolation and generated-
+  contract checks, macOS build, generic iOS Simulator build and clean tracked
+  artifacts; and
+- the only annotation was GitHub's Node action-runtime deprecation notice; no
+  Ledger failure or waiver occurred.
+
+`ATTACHCAP-TEST-005` now passes. All five obligations and exactly the two
+claimed target-only surfaces are verified; no excluded filesystem, provider,
+current-app, migration or production surface advances with them.
 
 ## Permanent Limits
 

@@ -3,7 +3,7 @@
   "sliceId": "attachment-capture-and-local-durability-receipt",
   "title": "Accept attachment capture only with scoped local-durability evidence",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Attachment Local Capture Contracts",
   "surfaceIds": [
     "SWIFT-D8174F26DDD5",
@@ -175,8 +175,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["ATTACHCAP-REQ-001", "ATTACHCAP-REQ-002", "ATTACHCAP-REQ-003", "ATTACHCAP-REQ-004", "ATTACHCAP-REQ-005", "ATTACHCAP-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming physical media/provider behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"]
     }
   ],
   "implementationEvidence": ["EVID-ATTACHMENT-CAPTURE-001"],

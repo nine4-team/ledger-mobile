@@ -18,12 +18,12 @@ The provider-free Project Item relationship-derived accounting-section slice is
 verified at exact implementation commit `92e0b565`, including all 88 target
 tests and both staging builds. It chooses no Item/Link, occurrence persistence,
 credit settlement, media, provider or migration behavior. Broader app/schema/
-provider and migration surfaces remain unadvanced. The next provider-free
-attachment capture/local-durability receipt slice is implemented locally with
-four focused/all 92 target tests and both builds passing; exact-commit hosted CI
-remains before verification. It explicitly does not claim physical byte
-persistence, encryption, upload, display, Storage, retention or provider
-behavior.
+provider and migration surfaces remain unadvanced. The provider-free attachment
+capture/local-durability receipt slice is verified at exact implementation
+commit `1792a862`, including all 92 target tests and both staging builds. It
+explicitly does not claim physical byte persistence, encryption, upload,
+display, Storage, retention or provider behavior. The next decision-independent
+slice must be selected from the reviewed Phase 1 dependency graph.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
