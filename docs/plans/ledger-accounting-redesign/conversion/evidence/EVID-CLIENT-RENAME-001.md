@@ -7,8 +7,9 @@
 - Claimed target surfaces: `SWIFT-9CB51D74D41C`, `TEST-D1C8EFBDFDDE`
 - Slice dossier:
   `conversion/implementation-slices/client-rename-operation-contracts.json`
-- Verification state: implemented; four local behavioral obligations pass and
-  exact-implementation-commit CI remains planned
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `3282f8e38784e96d46e34f94fb045997f3f19bd3`
+  and immutable Actions run `33612902860`
 - Implementation hashes:
   - `ClientRenameOperation.swift`:
     `021a016ca9b77c93275d4b060381d2f5c1df30acdd9c6c6aa87365af37f5ab00`
@@ -130,8 +131,13 @@ controls, M0 and clean diff formatting. The synchronized ledger remains at 757
 recorded / 742 discovered surfaces, 331 mapped / 164 residual / 43 blockers.
 M1 and M2 retain exactly their expected 2 and 164 blockers.
 
-The exact-implementation-commit operational obligation remains planned until
-immutable hosted CI passes for the committed checkpoint.
+Exact implementation commit
+`3282f8e38784e96d46e34f94fb045997f3f19bd3` passed immutable GitHub Actions
+run `33612902860`: conversion state and traceability passed in 9 seconds; the
+isolated target environment passed in 2 minutes 20 seconds with all 116 tests,
+target graph/generated-contract controls, macOS and generic iOS Simulator
+staging builds, and clean tracked artifacts. All five obligations and exactly
+the two Client rename target surfaces are therefore verified.
 
 ## Permanent Limits
 

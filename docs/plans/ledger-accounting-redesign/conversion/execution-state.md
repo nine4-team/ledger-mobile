@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 96
+State version: 97
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-RENAME-IMPLEMENTED
+- Checkpoint: CLIENT-RENAME-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1343,6 +1343,14 @@ modifying the running Firebase application before hard cutover.
   or revision apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration,
   hosted resource or production operation was introduced. O-024/O-025 remain
   open and unchanged.
+- Exact implementation commit
+  `3282f8e38784e96d46e34f94fb045997f3f19bd3` passed immutable GitHub Actions
+  run `33612902860`: conversion traceability passed in 9 seconds and the
+  isolated-target job passed in 2 minutes 20 seconds with all 116 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five Client rename obligations and exactly its
+  two target-only surfaces are now `verified`; every excluded lifecycle,
+  history, provider, migration and production surface remains unadvanced.
 
 ## Next Action
 
@@ -1381,13 +1389,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-CATEGORY-CONFIGURATION-001` as the sole shared read semantics
    for exact Account/Project/category configuration state, absent/null/zero/
    positive allocation, incomplete relationship evidence and configuration
-   revision. Preserve the implemented `client-rename-operation-contracts`
-   slice, run its complete local gate, commit and push the exact implementation,
-   require immutable hosted CI, and only then mark its five obligations and two
-   surfaces verified. Do not add Client row/current-Project projection, frozen-
-   history rewrite, archive/delete/merge/reassignment, physical persistence,
-   schema/RLS/Sync/Auth/provider behavior, current app/MCP, migration, hosted
-   resources or production access.
+   revision. Treat the verified `client-rename-operation-contracts` dossier and
+   `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority. Audit
+   the next smallest complete decision-independent Phase 1 dependency against
+   canonical specs and the residual register, then prepare its ready dossier
+   before implementing it. Do not add Client lifecycle/merge/reassignment,
+   frozen-history rewrite, physical persistence, schema/RLS/Sync/Auth/provider
+   behavior, current app/MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
