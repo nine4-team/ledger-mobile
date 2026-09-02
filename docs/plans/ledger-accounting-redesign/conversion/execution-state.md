@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 140
+State version: 141
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-READY-LOCAL
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2110,7 +2110,23 @@ modifying the running Firebase application before hard cutover.
   suites, both staging builds, unchanged repeatable target graph, target
   isolation/generated contracts, conversion/capability/query/residual controls,
   M0 and clean formatting. M1/M2 retain the expected 2/164 blockers with zero
-  structural errors. Exact ready-commit CI remains before implementation.
+  structural errors.
+- Exact ready commit `30f4ab88cd526b89b09dc22f1f26cd66884b0b33`
+  passed immutable Actions run `33670383410`: conversion traceability passed in
+  14 seconds and the isolated target environment passed in 2 minutes 8 seconds
+  with all 172 then-existing target tests, graph/generated-contract checks, both
+  staging builds and clean tracked artifacts.
+- Replaced exactly those two comment-only scaffolds with the bounded provider-
+  free implementation. `ItemPlacementScope`, exact Space/Item revision inputs,
+  canonical nonempty duplicate-free candidate sets, typed active/revision/scope
+  preconditions, command/fingerprint/receipt reconstruction, 16 stable failure
+  codes and the narrow `ItemSpaceAssigning` port now exist.
+- Four focused/all 176 target tests in 41 suites pass locally, along with both
+  staging builds, target isolation/generated contracts, conversion/capability/
+  query/residual controls, M0, clean formatting and repeatable project/scheme
+  hashes. M1/M2 retain exactly 2/164 blockers with zero structural errors. The
+  source application project is unchanged; exact implementation-commit CI
+  remains.
 
 ## Next Action
 
@@ -2192,10 +2208,11 @@ Continue without waiting on the two M1 evidence blockers:
    the bounded provider-free discovery/selection-intent boundary. Its exact
    implementation commit and both CI jobs are verified. Treat the ready
    `item-space-assignment-operation-contracts` dossier and
-   `EVID-ITEM-SPACE-ASSIGNMENT-001` as the sole authority for the next bounded
-   implementation. Commit/push the exact comment-only ready gate, require both
-   immutable CI jobs, then implement only the frozen provider-free
-   AssignItemsToSpace boundary and repeat the local/exact-commit gates. Keep
+   `EVID-ITEM-SPACE-ASSIGNMENT-001` as the sole authority for the bounded
+   provider-free AssignItemsToSpace boundary. The exact ready commit and both
+   immutable CI jobs passed; finish the complete local implementation gate,
+   commit/push the exact implementation, require both immutable CI jobs, and
+   then promote only the two claimed surfaces to verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

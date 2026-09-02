@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T18:56:39.690Z",
+    "lastSynchronizedAt": "2026-09-02T19:12:44.132Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -20204,12 +20204,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ItemSpaceAssignmentOperation.swift"
         }
       ],
-      "observedSourceHash": "beb965fd5d36a8d73fedbd390d0ff26a6e2ae8ae9af459ceb592f7537db09f5b",
-      "acknowledgedSourceHash": "beb965fd5d36a8d73fedbd390d0ff26a6e2ae8ae9af459ceb592f7537db09f5b",
+      "observedSourceHash": "7ef831428fc83d66642c460404460e22ee364c8410b384def4b20a5124f529a4",
+      "acknowledgedSourceHash": "7ef831428fc83d66642c460404460e22ee364c8410b384def4b20a5124f529a4",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed ready-gate scaffold for a provider-free AssignItemsToSpace operation; no executable assignment behavior exists.",
+      "currentBehavior": "Implements the reviewed provider-free AssignItemsToSpace operation contract with canonical same-scope Item membership, exact Space/Item revisions and deterministic operation evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Item Assignment Operation Contracts",
@@ -20246,14 +20246,14 @@
           "Synthetic commands prove exact Project/Inventory destination scope, nonempty canonical Item/revision sets, deterministic preconditions, restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-ITEM-SPACE-ASSIGNMENT-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one exact same-scope nonempty bulk AssignItemsToSpace intent with stable Space/Item identities, exact revisions, canonical typed preconditions, shared operation binding/receipt validation and a narrow port. It cannot clear placement, move Item scope, archive a Space, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037 remains open.",
+      "notes": "Target-only Phase 1 implementation. One exact same-scope nonempty bulk AssignItemsToSpace intent has stable Space/Item identities, exact revisions, canonical typed preconditions, shared operation binding/receipt validation and a narrow port. Exact ready commit 30f4ab88 and immutable Actions run 33670383410 passed; four focused/all 176 target tests in 41 suites and complete local gates pass, while exact implementation-commit CI remains. It cannot clear placement, move Item scope, archive a Space, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037 remains open.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -34389,12 +34389,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift"
         }
       ],
-      "observedSourceHash": "01a7478e70c6f0c0581791a3842e0b0a51262e26e31417d6995ad50a12af95c5",
-      "acknowledgedSourceHash": "01a7478e70c6f0c0581791a3842e0b0a51262e26e31417d6995ad50a12af95c5",
+      "observedSourceHash": "023122a0906a9b5bf9a485bc629b51d997fcdbebfdcce00ac4a8b9e8ba81fbc1",
+      "acknowledgedSourceHash": "023122a0906a9b5bf9a485bc629b51d997fcdbebfdcce00ac4a8b9e8ba81fbc1",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the reviewed ready-gate scaffold for deterministic provider-free AssignItemsToSpace tests; no executable assignment test exists.",
+      "currentBehavior": "Implements four deterministic provider-free AssignItemsToSpace contract tests covering exact scope/preconditions, restart canonicalization, tamper refusal and shared operation replay.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Item Assignment Operation Contracts",
@@ -34427,14 +34427,14 @@
           "Self-tests prove the backend-neutral AssignItemsToSpace boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-ITEM-SPACE-ASSIGNMENT-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove Project/Inventory same-scope assignment, stable Space/Item identities, exact revisions and typed preconditions, input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. They cannot claim physical placement, clear/scope/archive/accounting behavior, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Implemented target test surface. Four deterministic tests prove Project/Inventory same-scope assignment, stable Space/Item identities, exact revisions and typed preconditions, input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. Exact ready commit 30f4ab88 and immutable Actions run 33670383410 passed; four focused/all 176 target tests in 41 suites and complete local gates pass, while exact implementation-commit CI remains. They cannot claim physical placement, clear/scope/archive/accounting behavior, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

@@ -3,7 +3,7 @@
   "sliceId": "item-space-assignment-operation-contracts",
   "title": "Assign an exact Item set to one same-scope Space atomically without changing accounting",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space Item Assignment Operation Contracts",
   "surfaceIds": [
     "SWIFT-4B007A00C393",
@@ -69,7 +69,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
       "section": "Operation Lifecycle",
-      "invariant": "The complete canonical command and shared queued/applied/rejected receipt survive structured offline restart. Duplicate/reordered Item input normalizes to one exact intent, while changed Account/actor/contract/destination/scope/revision/Item/precondition/subject/fingerprint/receipt evidence fails atomically without inventing authoritative placement.",
+      "invariant": "The complete canonical command and shared queued/applied/rejected receipt survive structured offline restart. Differently ordered unique Item input normalizes to one exact intent, while duplicate Item identity or changed Account/actor/contract/destination/scope/revision/Item/precondition/subject/fingerprint/receipt evidence fails atomically without inventing authoritative placement.",
       "decisionIds": [],
       "verificationIds": ["ITEMSPACEASSIGN-TEST-001", "ITEMSPACEASSIGN-TEST-002", "ITEMSPACEASSIGN-TEST-003", "ITEMSPACEASSIGN-TEST-004", "ITEMSPACEASSIGN-TEST-005"]
     },
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
       "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
       "expected": "Synthetic Project and Business Inventory commands preserve one exact same-scope destination, expected Space revision, canonical nonempty Item/revision set, deterministic typed scope/revision/active preconditions, shared operation evidence and no clear/scope/accounting/provider field.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"]
     },
     {
       "id": "ITEMSPACEASSIGN-TEST-002",
@@ -162,8 +162,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
       "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
       "expected": "Project/Inventory, single/bulk and differently ordered equivalent inputs round-trip byte-identically with exact Account/actor/contract/Operation/Space/scope/revision/Item/time/subject/precondition/fingerprint evidence and no authoritative placement claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"]
     },
     {
       "id": "ITEMSPACEASSIGN-TEST-003",
@@ -171,8 +171,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
       "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
       "expected": "Empty/duplicate Items, invalid time and changed Account/actor/contract/Space/scope/revision/Item/payload/precondition/subject/fingerprint/receipt evidence fail atomically through stable bounded diagnostics.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"]
     },
     {
       "id": "ITEMSPACEASSIGN-TEST-004",
@@ -180,8 +180,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentOperationTests.swift",
       "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed destination/scope/Item/revision is refused by the shared lifecycle, and a failing port returns no false receipt or partial-success evidence.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"]
     },
     {
       "id": "ITEMSPACEASSIGN-TEST-005",
@@ -196,5 +196,5 @@
   "implementationEvidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready decision-independent Phase 1 command boundary. The canonical Space spec and reviewed capability/architecture contracts settle stable same-scope placement, complete nonempty bulk intent, exact optimistic revisions, atomicity, idempotency, accounting independence and shared operation semantics. O-037 stays open because Space archive is excluded. O-007/O-015 do not block this organizational placement-only command because it cannot alter occurrence/provenance/accounting state. The slice stops before executable behavior, physical persistence, authoritative apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Implemented locally as a decision-independent Phase 1 command boundary after exact ready commit 30f4ab88cd526b89b09dc22f1f26cd66884b0b33 passed immutable Actions run 33670383410. The canonical Space spec and reviewed capability/architecture contracts settle stable same-scope placement, complete nonempty bulk intent, exact optimistic revisions, atomicity, idempotency, accounting independence and shared operation semantics. Four focused and all 176 target tests in 41 suites plus complete local implementation gates pass; exact implementation-commit CI remains required. O-037 stays open because Space archive is excluded. O-007/O-015 do not block this organizational placement-only command because it cannot alter occurrence/provenance/accounting state. The slice stops before physical persistence, authoritative apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

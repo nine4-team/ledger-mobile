@@ -1,14 +1,14 @@
 # EVID-ITEM-SPACE-ASSIGNMENT-001 — Item-to-Space Assignment Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free Item-to-Space assignment intent
+- Class: implementation / provider-free Item-to-Space assignment intent
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-4B007A00C393`, `TEST-51D893DD949E`
 - Slice dossier:
   `conversion/implementation-slices/item-space-assignment-operation-contracts.json`
-- Verification state: ready locally; exact ready-commit CI is required before
-  executable behavior may be added
+- Verification state: implemented locally; exact implementation-commit CI is
+  required before verification
 - Ready scaffold hashes:
   - `ItemSpaceAssignmentOperation.swift`:
     `beb965fd5d36a8d73fedbd390d0ff26a6e2ae8ae9af459ceb592f7537db09f5b`
@@ -109,12 +109,72 @@ retain exactly their expected 2/164 coverage blockers with zero structural
 errors. The synchronized ledger records 787 surfaces / 772 discovered, 361
 mapped-or-later target-relevant surfaces, 164 residual surfaces and 43 validated
 blockers. Forty-one slices claim 103 of 525 target-relevant surfaces; 86 are
-implemented or later. No implementation may begin before this ready evidence is
-committed, pushed and both immutable CI jobs pass.
+implemented or later. No implementation was allowed to begin before this ready
+evidence was committed, pushed and both immutable CI jobs passed.
+
+The exact ready commit
+`30f4ab88cd526b89b09dc22f1f26cd66884b0b33` passed immutable GitHub Actions
+run `33670383410`: conversion traceability passed in 14 seconds and the isolated
+target environment passed in 2 minutes 8 seconds with all 172 then-existing
+target tests, graph/generated-contract checks, both staging builds and clean
+tracked artifacts. That immutable pass authorized only the frozen provider-free
+implementation below.
+
+## Implemented Contract
+
+The bounded implementation now defines:
+
+- `ItemPlacementScope`, exactly one stable Project or Business Inventory scope,
+  with one deterministic typed relationship target and no copied name or
+  nullable scope pair;
+- `ExpectedItemPlacementRevision`, `ItemSpaceAssignmentCandidate` and
+  `ItemSpaceAssignmentDraft`, binding one Account, actor, contract, destination
+  Space/revision, finite capture time and canonical nonempty duplicate-free
+  Item/revision set;
+- `AssignItemsToSpacePayload`, containing only destination Space, scope and
+  stable Item IDs, plus `AssignItemsToSpaceCommand`, which derives the Space
+  subject, exact deterministic Space-active/revision/scope and per-Item
+  revision/scope preconditions, fingerprint and receipt validation;
+- fail-closed reconstruction for malformed, rebound or tampered scope, draft,
+  payload, precondition, subject, fingerprint and receipt evidence through 16
+  bounded stable diagnostic codes; and
+- one narrow provider-free `ItemSpaceAssigning` port reusing the shared queued,
+  exact-replay and changed-intent-refusal lifecycle.
+
+The exact implementation source hashes are:
+
+- `ItemSpaceAssignmentOperation.swift`:
+  `7ef831428fc83d66642c460404460e22ee364c8410b384def4b20a5124f529a4`
+- `ItemSpaceAssignmentOperationTests.swift`:
+  `023122a0906a9b5bf9a485bc629b51d997fcdbebfdcce00ac4a8b9e8ba81fbc1`
+
+## Local Implementation Verification
+
+All four focused Item-to-Space assignment tests pass locally. They cover exact
+Project and Business Inventory scope, single and canonical bulk selection,
+input-order normalization, complete deterministic preconditions, byte-identical
+restart, empty/duplicate/time/rebinding/tamper refusal, all 16 stable diagnostic
+codes, exact queued replay, changed-intent rejection and no false receipt from a
+failing port.
+
+The complete local implementation gate passes all 176 target tests in 41 suites,
+both macOS and generic iOS Simulator staging builds, target isolation/generated
+contracts, conversion sync/check/report, capability/query/residual controls, M0
+and clean diff formatting. Repeatable XcodeGen output preserves exact project
+hash `0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53`
+and scheme hash
+`388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`;
+the source application project is unchanged. M1/M2 retain exactly their expected
+2/164 coverage blockers with zero structural errors. The synchronized ledger
+still records 787 surfaces / 772 discovered, 361 mapped-or-later target-relevant
+surfaces, 164 residual surfaces and 43 validated blockers. Forty-one slices
+claim 103 of 525 target-relevant surfaces; 88 are implemented or later. The
+exact implementation commit and immutable CI run remain pending, so this slice
+is not yet verified.
 
 ## Permanent Limits
 
-This ready evidence cannot verify or authorize Item/Space row mutation, physical
+This implementation cannot verify or authorize Item/Space row mutation, physical
 offline durability, optimistic presentation, current membership/authorization,
 clear assignment, Item scope movement, Space archive/delete, occurrence or
 accounting changes, Postgres/RLS/PowerSync, app/MCP integration, Firebase
