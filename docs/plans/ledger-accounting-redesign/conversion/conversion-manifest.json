@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T03:58:33.204Z",
+    "lastSynchronizedAt": "2026-09-02T04:14:20.045Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -15665,6 +15665,69 @@
       ],
       "notes": "M2 withheld: O-007/O-015 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation.",
       "classificationBatch": "M0-BACKEND-RULES-001"
+    },
+    {
+      "id": "SWIFT-008B49A474D1",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectItemAccountingSections.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectItemAccountingSections.swift"
+        }
+      ],
+      "observedSourceHash": "2a71ddf0a854ed4de6ba802f84740b3eb68569ddf6922c1c37a6080359f63db7",
+      "acknowledgedSourceHash": "2a71ddf0a854ed4de6ba802f84740b3eb68569ddf6922c1c37a6080359f63db7",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for exact relationship-derived Project Item accounting state and Unaccounted For / Accounted For section evidence; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Item Accounting Sections",
+        "surfaces": [
+          "ItemAccountingConnectionID",
+          "BillableItemOccurrenceID",
+          "ClientPaidPurchaseAccountingConnection",
+          "BillableItemAccountingConnection",
+          "ProjectItemAccountingRow",
+          "ProjectItemAccountingSectionsSnapshot",
+          "ProjectItemAccountingQuerying",
+          "ProjectItemAccountingSectionFailure"
+        ],
+        "securityRequirements": [
+          "Every relationship and row binds exact AccountID, ProjectID and ItemID values; names, Space, category, status, detail completeness and cached section state never establish scope or authorization",
+          "Locally valid relationship evidence is not authorization: future handlers and download boundaries independently prove membership, financial visibility and current relationship access"
+        ],
+        "syncRequirements": [
+          "The local snapshot distinguishes authoritative empty from incomplete/partial/stale evidence before deriving Unaccounted For and preserves exact relationship identity across restart",
+          "No PowerSync Stream, local table, provider subscription, writer or optimistic Link operation is created by this provider-free read slice"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only accounting-section values; do not decode Firebase Item.transactionId, proto status, Invoice badges or lineage and do not infer an authoritative Link from category, Space, price, display state or source text.",
+        "reconciliation": [
+          "Later migration/provider slices correlate each qualifying Purchase or billable occurrence relationship to one Item and retain unresolved/ambiguous source evidence without falsely marking the Item Accounted For"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemAccountingSectionsTests"
+        ],
+        "acceptance": [
+          "Synthetic complete local evidence places only relationship-backed project Items in Accounted For, places relationship-free Items in Unaccounted For, and keeps Space/detail/Invoice presentation state non-authoritative without choosing schema or Link behavior"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-ACCOUNTING-001"
+      ],
+      "notes": "Target-only Phase 1 Project Item read foundation. It cannot create or Link an Item, define the occurrence schema, settle credits, change Space, contribute budget value, wire app/MCP, define RLS/Sync/provider behavior, migrate source Items or activate production.",
+      "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {
       "id": "SWIFT-01845C0E7003",
@@ -31699,6 +31762,64 @@
       ],
       "notes": "New target package test surface claimed by target-environment-isolation; it compiles against LedgerTargetCore only, while a passing unit suite still does not close the compiled staging-app projection or all operational obligations.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-0E4B478B0C55",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectItemAccountingSectionsTests.swift"
+        }
+      ],
+      "observedSourceHash": "c13a84f00fb3d98a4de32a84a93c85f5ce0c45b0535ea9c7ac175648e1b0d7d3",
+      "acknowledgedSourceHash": "c13a84f00fb3d98a4de32a84a93c85f5ce0c45b0535ea9c7ac175648e1b0d7d3",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for deterministic relationship-derived accounting state, section order, canonical restart, incomplete-evidence handling and invalid/cross-scope/tampered evidence refusal; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Item Accounting Sections",
+        "surfaces": [
+          "ProjectItemAccountingSectionsTests",
+          "client-paid Purchase and billable occurrence fixtures",
+          "Unaccounted For first / Accounted For second section fixtures",
+          "readiness, restart, cross-scope, duplicate and tamper fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic Account/Project/Item/Transaction/Invoice/occurrence identities and non-sensitive values only",
+          "Negative tests assert stable bounded failures without names, paths, queries, credentials, provider payloads or authorization claims"
+        ],
+        "syncRequirements": [
+          "All fixtures run without database, PowerSync, network or hosted services and preserve exact local relationship/readiness evidence across canonical restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Item, proto, Transaction, Invoice, lineage, export or production-derived identity.",
+        "reconciliation": [
+          "Equivalent accounting-section evidence round-trips identically while incomplete, cross-Account/cross-Project/cross-Item, duplicate, invalid relationship and tampered derived evidence fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectItemAccountingSectionsTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free accounting-state/read-section boundary without claiming Item creation/Link, occurrence persistence, RLS, Sync, app/MCP, migration or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-ITEM-CREATION-001",
+        "EVID-M2-ITEM-CREATION-001",
+        "EVID-PROJECT-ITEM-ACCOUNTING-001"
+      ],
+      "notes": "Target-only Project Item accounting-section self-test scaffold. It cannot establish persistence, server authorization, Link atomicity, physical offline sync, app/MCP parity, source migration, production behavior or any O-003/O-007/O-015/O-016/O-021/O-023/O-027 decision.",
+      "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {
       "id": "TEST-0F5D4C2D5F32",

@@ -1,9 +1,11 @@
 # Capability Dossier — Unified Item Creation, Accounting Link, and Legacy Capture
 
-Status: reviewed static characterization; 14 of 31 target-relevant surfaces are
-exactly target-mapped. Seventeen schema/validation/Link/import/projection/
+Status: reviewed static characterization; 16 of 33 target-relevant surfaces are
+target-mapped or later. Seventeen schema/validation/Link/import/projection/
 retention surfaces remain honestly withheld on their named decisions; O-021 is
-UI-only and does not block architecture mapping or implementation sequencing
+UI-only and does not block architecture mapping or implementation sequencing.
+The provider-free Project Item accounting-section read boundary is separately
+controlled by `project-item-accounting-section-contracts`.
 
 ## Outcome
 

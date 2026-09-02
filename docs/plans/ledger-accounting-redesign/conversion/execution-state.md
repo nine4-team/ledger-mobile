@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 73
+State version: 74
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: RECEIPT-RECONSTRUCTION-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: PROJECT-ITEM-ACCOUNTING-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -947,6 +947,31 @@ modifying the running Firebase application before hard cutover.
   clean tracked artifacts. All five receipt obligations and exactly its two
   target-only surfaces are now `verified`; every excluded writer, current app/
   MCP, provider, migration and production surface remains unadvanced.
+- Audited the remaining mapped Phase 1 product boundaries and selected
+  `project-item-accounting-section-contracts` as the smallest next user-visible,
+  decision-independent Item slice. D-019/D-022/D-023 and the canonical Item
+  spec settle relationship-derived Unaccounted For / Accounted For state, one
+  physical Item identity and Space/detail independence without choosing Item
+  creation/Link, occurrence persistence, credit settlement or provider design.
+- Created exactly two comment-only target scaffolds in the provider-free core/
+  test roots and a complete ready dossier for exact Account/Project/Item-bound
+  client-paid Purchase and billable charge/credit occurrence evidence,
+  relationship-derived state, Unaccounted For first / Accounted For second,
+  deterministic order, authoritative-empty versus incomplete/partial/stale
+  local evidence, explicit unresolved rows when relationship absence is not
+  authoritative, canonical restart and stable cross-scope/duplicate/tamper
+  refusal.
+- Extended only the reviewed Item-creation authority set with the Phase 1
+  domain/read-model architecture files required by these two target surfaces.
+  O-003/O-007/O-015/O-016/O-021/O-023/O-027 remain fully open and outside the
+  slice. Postgres, handlers, Data API, RLS, Sync Streams, local persistence,
+  media, current app/MCP, source migration, observability and activation are
+  explicit nonapplicabilities.
+- Sync/report pass at 743 recorded / 728 discovered surfaces, 317 target-mapped
+  or later / 481 target-relevant, 164 residual and 43 blockers, with only the
+  three documented retired-path warnings. No behavioral code, Firebase change,
+  provider, hosted resource, migration or production operation exists at this
+  ready checkpoint.
 
 ## Next Action
 
@@ -963,14 +988,16 @@ Continue without waiting on the two M1 evidence blockers:
 3. Treat `non-item-receipt-line-reconstruction-contracts` and
    `EVID-RECEIPT-RECONSTRUCTION-001` as the sole shared semantic source for
    embedded receipt lines and exact reconstruction evidence. Do not recreate
-   or extend that meaning independently in app, MCP, SQL or adapters. Select the
-   next smallest decision-independent Phase 1 slice by auditing the remaining
-   mapped surfaces against confirmed product authority, dependencies and open
-   blockers; create and pass its ready dossier before behavioral code. Do not
-   add a Transaction writer/posting/completeness verdict, Item-history basis,
-   O-008 billing, O-030 rounding behavior, O-031 tax/basis, O-032 posting policy,
-   schema/RLS/Sync/provider behavior, legacy mapping, current app/MCP wiring,
-   production access or any other open decision.
+   or extend that meaning independently in app, MCP, SQL or adapters. Implement
+   only the ready `project-item-accounting-section-contracts` dossier inside the
+   provider-free core/test targets: typed relationship identity, validated
+   current-Project client-paid Purchase evidence, billable charge/credit
+   occurrence evidence across available/live/frozen phases, derived accounting
+   state, Unaccounted For first / Accounted For second, deterministic order,
+   local readiness/completeness, canonical restart and stable refusal. Do not
+   add Item creation/Link, occurrence persistence, credit settlement, amount/
+   category/budget effects, schema/RLS/Sync/provider behavior, legacy mapping,
+   current app/MCP wiring, production access or any other open decision.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

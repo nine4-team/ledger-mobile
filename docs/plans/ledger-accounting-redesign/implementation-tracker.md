@@ -189,6 +189,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 
 | Task | Status | Required behavior |
 |---|---|---|
+| Define Project Item accounting-section read contracts | ready | Two target-only core/test scaffolds map exact relationship-derived Unaccounted For / Accounted For state, one physical Item identity, non-authoritative Space/detail state, local completeness/readiness, canonical restart and refusal. No Item writer/Link, occurrence schema, credit settlement, budget effect, provider, current app/MCP or migration is claimed; `EVID-PROJECT-ITEM-ACCOUNTING-001` |
 | Merge provisional Quick Add and New Item paths | design | One wizard and one Item writer; former proto fields first; optional details continue |
 | Adopt one minimum Item-evidence validation rule | blocked | O-027; current full and Quick Add forms disagree |
 | Stop new-version `protoItems` creation | blocked | Real Unaccounted For Item shape plus production compatibility gate |
