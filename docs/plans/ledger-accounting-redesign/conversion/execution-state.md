@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 104
+State version: 105
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-CREATION-READY
+- Checkpoint: PROJECT-NOTE-CREATION-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1486,11 +1486,34 @@ modifying the running Firebase application before hard cutover.
   contract checks pass. M1/M2 retain their expected 2/164 blockers. All 124
   existing target tests in 28 suites, macOS and generic iOS Simulator staging
   builds, XcodeGen/source-project stability and diff formatting pass while both
-  new scaffolds remain comment-only. Exact ready-checkpoint CI is pending.
+  new scaffolds remain comment-only. Exact ready commit
+  `d84dc10998981b54c847b112cf1e063bd1e74c29` passed immutable Actions run
+  `33620363089`: conversion traceability passed in 11 seconds and the isolated
+  target environment passed in 3 minutes 33 seconds.
 - No physical local persistence, parent authorization, server audit assignment,
   schema/RLS/Sync/Auth/provider behavior, shipped-app/MCP change, source note
   migration, hosted resource, production read/mutation, deployment, release or
   cutover occurred.
+- Implemented only the frozen provider-free AddProjectNote boundary:
+  `ProjectNoteCreationDraft`, exact payload, precondition-free shared envelope,
+  derived parent Project reference, canonical fingerprint/receipt validation,
+  narrow create port and stable bounded failures.
+- The command includes stable note identity, nonblank text and
+  `requestedSource` intent, but excludes creator display, authoritative
+  creation time, revision, edit audit, deletion evidence and authorization
+  claims. Client actor/time/source intent cannot become authoritative without
+  later trusted verification and assignment.
+- Added four deterministic tests for exact command/payload/parent shape,
+  byte-identical restart, blank/malformed/rebound/tampered refusal, shared
+  OperationJournal replay/mismatch semantics and no false receipt.
+- `PROJECTNOTECREATE-TEST-001` through `-004` pass locally. All 128 target
+  tests in 29 suites, target graph/generated contracts, both staging builds,
+  conversion/capability/query/residual controls, M0 and clean artifacts pass.
+  M1/M2 retain exactly their expected 2/164 blockers.
+- Exact-implementation-commit hosted `PROJECTNOTECREATE-TEST-005` remains
+  planned, so exactly the two new target surfaces are `implemented`, not
+  `verified`. No excluded parent-authorization/audit/provider behavior was
+  introduced.
 
 ## Next Action
 
@@ -1536,17 +1559,15 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-note-read-contracts` dossier and
    `EVID-PROJECT-NOTE-READ-001` as the sole shared read semantics for stable
    Project-note identity, audit/tombstone evidence, deterministic bounded order
-   and explicit offline-history completeness. After exact ready-checkpoint CI
-   passes, implement only the frozen `project-note-creation-operation-contracts`
-   dossier in its two claimed target surfaces: typed AddProjectNote draft/
-   payload/command, exact parent Project reference, shared fingerprint/receipt/
-   replay validation, narrow create port, stable failures and the four planned
-   deterministic tests. Preserve requested source as non-authoritative intent;
-   do not accept creator display, server creation time, revision, edit/deletion
-   audit or authorization input. Keep physical persistence, authoritative parent
-   preflight/audit assignment, edit/remove/role policy, schema/RLS/Sync/Auth/
-   provider behavior, app/MCP/search, migration, hosted resources and production
-   access excluded.
+   and explicit offline-history completeness. Verify exact implementation commit
+   CI for the frozen `project-note-creation-operation-contracts` dossier. If
+   both jobs pass, record immutable run evidence and advance only its two claimed
+   surfaces plus all five obligations to `verified`. Then audit the next
+   smallest complete decision-independent Phase 1 dependency before creating a
+   new ready dossier. Keep physical persistence, authoritative parent preflight/
+   audit assignment, edit/remove/role policy, schema/RLS/Sync/Auth/provider
+   behavior, app/MCP/search, migration, hosted resources and production access
+   excluded.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

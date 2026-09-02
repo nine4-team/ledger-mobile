@@ -3,7 +3,7 @@
   "sliceId": "project-note-creation-operation-contracts",
   "title": "Add one Project note through a stable shared operation contract",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Note Creation Operation Contracts",
   "surfaceIds": [
     "SWIFT-9CDB2BCAC71B",
@@ -144,7 +144,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
       "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
       "expected": "A valid synthetic draft produces one exact-scope AddProjectNote command with a stable preallocated note identity, nonblank text, requested source and Project parent reference, while its payload excludes caller-authored creator display, authoritative creation/edit/deletion time, revision and authorization claims.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
     },
     {
@@ -153,7 +153,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
       "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-007"],
       "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/note/text/requested-source/client-time/parent/fingerprint evidence and no backend path, credential, server audit/result or provider claim.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
     },
     {
@@ -162,7 +162,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
       "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
       "expected": "Blank text, malformed requested source, invalid time and changed Account/actor/contract/Project/note/text/source/parent/precondition/fingerprint/receipt evidence fail atomically through verified shared or Project-note-creation stable diagnostic codes.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
     },
     {
@@ -171,7 +171,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
       "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed note intent is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
     },
     {
@@ -184,7 +184,7 @@
       "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-NOTE-CREATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 AddProjectNote command boundary only. It preallocates stable note identity, binds exact parent/text/requested-source intent and reuses the shared operation lifecycle. Requested source and client actor/time remain non-authoritative; a later trusted handler owns authenticated actor derivation, non-enumerating Project preflight and final creator/time/source evidence. Edit/remove role and revision policy, physical persistence, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access and cutover remain excluded."

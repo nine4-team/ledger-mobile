@@ -7,7 +7,8 @@
 - Claimed target surfaces: `SWIFT-9CDB2BCAC71B`, `TEST-DB2559406D3D`
 - Slice dossier:
   `conversion/implementation-slices/project-note-creation-operation-contracts.json`
-- Verification state: ready; executable implementation has not started
+- Verification state: implemented; four local obligations pass and exact-
+  implementation-commit CI remains planned
 - Ready scaffold hashes:
   - `ProjectNoteCreationOperation.swift`:
     `18a49e7175ac8a112ac1c7301e1797e09945fd1168815079dd6322c54a7c47cd`
@@ -116,6 +117,64 @@ warnings remain.
 Passing this local ready gate authorizes only the bounded provider-free
 implementation named in the dossier. Exact-commit CI remains required and will
 be attached after the ready checkpoint is pushed.
+
+Exact ready commit d84dc10998981b54c847b112cf1e063bd1e74c29
+passed immutable GitHub Actions run
+[33620363089](https://github.com/nine4-team/ledger-mobile/actions/runs/33620363089):
+conversion traceability passed in 11 seconds and the isolated-target job passed
+in 3 minutes 33 seconds with all 124 then-existing tests, graph/generated-
+contract checks, macOS and generic iOS Simulator builds and clean tracked
+artifacts.
+
+## Implemented Contract
+
+ProjectNoteCreationOperation.swift now provides:
+
+- ProjectNoteCreationDraft, which binds one preallocated ProjectNoteID,
+  nonblank text and requested source to exact Account, actor, operation-
+  contract, Project and finite client capture-time intent;
+- AddProjectNotePayload, which contains only ProjectID, ProjectNoteID,
+  ProjectNoteText and requestedSource;
+- AddProjectNoteCommand, whose public construction creates a precondition-free
+  shared OperationEnvelope, derives the exact parent Project reference and
+  operation fingerprint, and whose decoder revalidates every duplicated binding
+  rather than trusting serialized derived evidence;
+- exact OperationReceipt validation for the command's OperationID;
+- the narrow ProjectNoteCreating provider-free port; and
+- a closed stable failure taxonomy for invalid client time, scope/actor/
+  contract/payload/precondition/parent/fingerprint/receipt mismatch, malformed
+  command evidence and local acceptance failure.
+
+Creator display, authoritative creation time, revision, edit audit, deletion
+state and authorization claims are absent. actorPrincipalId,
+clientCreatedAt and requestedSource remain intent/evidence for a later trusted
+handler to verify or resolve; none becomes authoritative merely because the
+command is valid or locally queued.
+
+Implementation hashes:
+
+- ProjectNoteCreationOperation.swift:
+  bd9f1a1351f22276fef8322627ee99344855761de1a91803adac6032970217d5
+- ProjectNoteCreationOperationTests.swift:
+  38b3d2fc20ef768b572ba95f96431e967bc26ed4a756c5b20dcf3f4f0aae1740
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact command/payload/parent
+shape and excluded authoritative audit; byte-identical canonical restart;
+stable refusal of blank text, malformed source, invalid time, rebound Account/
+actor/contract/Project/note/text/source/parent/precondition/fingerprint/receipt
+evidence; exact OperationJournal replay/mismatch behavior; and no false receipt
+from a failing port.
+
+The complete local gate passes with all 128 target tests in 29 suites, target
+environment isolation, generated app/MCP contracts, macOS and generic iOS
+Simulator staging builds, conversion/capability/query/residual controls, M0 and
+clean diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
+
+PROJECTNOTECREATE-TEST-001 through -004 therefore pass. Exact-
+implementation-commit hosted PROJECTNOTECREATE-TEST-005 remains planned, so
+exactly the two claimed target surfaces are implemented, not verified.
 
 ## Permanent Limits
 

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T10:33:56.027Z",
+  "generatedFromManifestSync": "2026-09-02T10:54:00.684Z",
   "totals": {
     "slices": 29,
     "claimedTargetSurfaces": 79,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 62
+    "implementationAdvancedTargetSurfaces": 64
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 27,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -246,7 +246,7 @@
       "sliceId": "project-note-creation-operation-contracts",
       "title": "Add one Project note through a stable shared operation contract",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Note Creation Operation Contracts",
       "surfaceIds": [
         "SWIFT-9CDB2BCAC71B",

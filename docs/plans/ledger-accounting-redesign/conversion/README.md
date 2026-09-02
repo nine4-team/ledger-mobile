@@ -57,13 +57,13 @@ Exactly two target surfaces preserve stable Account/Project/note identity,
 audit and tombstone evidence, deterministic bounded order and explicit offline-
 history readiness without authorizing mutation, provider, migration or
 production behavior.
-The provider-free Project-note creation slice is ready with exactly two
-comment-only target surfaces. Its reviewed contract preallocates stable note
-identity, binds exact Project/text/requested-source intent to the shared
-operation lifecycle, excludes caller-authored authoritative creator/time/source
-evidence and reserves non-enumerating parent preflight for a later trusted
-handler. No executable command, provider, app/MCP, migration or production
-behavior exists at this checkpoint.
+The provider-free Project-note creation slice is implemented pending exact-
+commit CI, with four focused/all 128 local target tests and both staging builds
+passing. Exactly two target surfaces preallocate stable note identity, bind
+exact Project/text/requested-source intent to the shared operation lifecycle,
+exclude caller-authored authoritative creator/time/source evidence and reserve
+non-enumerating parent preflight for a later trusted handler. No note row,
+provider, app/MCP, migration or production behavior exists at this checkpoint.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
