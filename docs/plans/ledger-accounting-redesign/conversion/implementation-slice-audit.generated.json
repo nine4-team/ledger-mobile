@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T02:15:28.525Z",
+  "generatedFromManifestSync": "2026-09-02T02:22:44.532Z",
   "totals": {
     "slices": 14,
     "claimedTargetSurfaces": 49,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 12,
+    "implemented": 0,
+    "verified": 13,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -36,7 +36,7 @@
       "sliceId": "exact-money-and-domain-identity",
       "title": "Make target entity identity and money representation exact before product accounting slices",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Exact Money and Domain Identity",
       "surfaceIds": [
         "SWIFT-3AC58A64B789",

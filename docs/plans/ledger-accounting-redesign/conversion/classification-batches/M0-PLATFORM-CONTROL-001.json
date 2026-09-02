@@ -3858,7 +3858,7 @@
       "acknowledgeSourceHash": "a71ba8bd6ea7e008b44d714aa103f2b36832c6ef962c8b7b916748a9aec39401",
       "currentBehavior": "Implements provider-free CurrencyCode, signed Int64-minor-unit Money, checked same-currency amount comparison/arithmetic, distinct stable backend-neutral entity IDs, decode-through-validation and stable bounded domain failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
@@ -3904,7 +3904,7 @@
       "acknowledgeSourceHash": "1a6c5a93363be7edc9a61d9c80cacefe4ca983d8a32c957dd23bac1dc5f807ed",
       "currentBehavior": "Executes provider-free tests for all distinct entity-ID types, exact same-currency Money behavior, Int64-boundary canonical restart and atomic malformed/fractional/cross-currency/overflow refusal with stable diagnostics.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",

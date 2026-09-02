@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 60
+State version: 61
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: EXACT-MONEY-DOMAIN-IDENTITY-IMPLEMENTED-EXACT-CI-NEXT
+- Checkpoint: EXACT-MONEY-DOMAIN-IDENTITY-VERIFIED-NEXT-FOUNDATION-AUDIT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -743,6 +743,14 @@ modifying the running Firebase application before hard cutover.
   `verified`. No product sign/bound/currency/rounding/tax policy, app/MCP link,
   database, provider, migration, hosted resource or production operation was
   introduced.
+- Exact implementation commit
+  `7133aef5a17f946f0f01c084015145592d7bc4ce` passed immutable GitHub Actions
+  run `33582602647`: conversion traceability and isolated-target jobs both
+  passed, including graph/generated-contract checks, all 69 target tests,
+  macOS and generic iOS Simulator builds and clean tracked artifacts. All four
+  primitive obligations and exactly its two target-only surfaces are now
+  `verified`; all product accounting, current app/MCP, database/provider,
+  migration and production surfaces remain unadvanced.
 
 ## Next Action
 
@@ -752,15 +760,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Preserve the implemented `exact-money-and-domain-identity` boundary exactly,
-   commit and push its implementation checkpoint, and require the immutable
-   exact-commit pull-request run to pass conversion traceability, graph/
-   generated-contract checks, all 69 target tests, both target builds and clean
-   tracked artifacts. Only then advance its dossier and exactly
-   `SWIFT-3AC58A64B789` / `TEST-15ECC49577C0` to `verified`. Do not choose product
-   signs/bounds, Account/default currency, ISO registry, locale formatting,
-   exchange, allocation, tax, rounding or posting; do not create app/MCP,
-   database/provider, migration or production behavior.
+2. Treat `exact-money-and-domain-identity` and `EVID-DOMAIN-PRIMITIVES-001` as
+   the shared representation dependency for later product/database/migration
+   slices. Audit the remaining Phase 1 target-mapped surfaces and select the
+   smallest next decision-independent vertical foundation whose exact
+   architecture authority, contracts, verification and non-applicabilities can
+   pass a new ready dossier without choosing an O-/A-gated product/provider
+   behavior. Create only its target scaffolds and ready checkpoint before
+   behavioral implementation.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

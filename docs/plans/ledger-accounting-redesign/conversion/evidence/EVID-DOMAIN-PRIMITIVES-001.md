@@ -7,8 +7,7 @@
 - Claimed target surfaces: `SWIFT-3AC58A64B789`, `TEST-15ECC49577C0`
 - Slice dossier:
   `conversion/implementation-slices/exact-money-and-domain-identity.json`
-- Slice state: implemented; local obligations pass and exact-commit hosted CI
-  remains pending before verification
+- Slice state: verified; every local and exact-commit hosted obligation passes
 
 ## Selection and Scope
 
@@ -91,10 +90,23 @@ is rejected. Swift's standard JSON integer decoder may accept an exactly integra
 JSON spelling such as `1.0`, so this evidence deliberately does not claim lexical
 rejection of every decimal-form token.
 
-`PRIMITIVE-TEST-001`, `PRIMITIVE-TEST-002` and `PRIMITIVE-TEST-003` pass locally.
-`PRIMITIVE-TEST-004` remains planned until an immutable hosted run passes on the
-exact implementation commit, so the slice and exactly its two target-only
-surfaces remain `implemented`, not `verified`.
+## Hosted Verification
+
+Exact implementation commit
+`7133aef5a17f946f0f01c084015145592d7bc4ce` passed immutable GitHub Actions run
+[`33582602647`](https://github.com/nine4-team/ledger-mobile/actions/runs/33582602647).
+Both required jobs passed:
+
+- `Conversion state and traceability` validated the complete conversion control
+  plane and proved that checks did not rewrite tracked artifacts; and
+- `Isolated target environment` validated graph/source/provider isolation,
+  generated contracts, all 69 target tests, macOS and generic iOS Simulator
+  builds, and clean tracked artifacts.
+
+All four `PRIMITIVE-TEST-*` obligations now pass. The dossier and exactly
+`SWIFT-3AC58A64B789` / `TEST-15ECC49577C0` are `verified`; no broader current
+model, formatter, application, MCP, provider, persistence or migration surface
+is advanced by this evidence.
 
 ## Ready-Gate Verification
 

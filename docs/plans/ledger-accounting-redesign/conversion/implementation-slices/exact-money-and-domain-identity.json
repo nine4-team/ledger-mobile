@@ -3,7 +3,7 @@
   "sliceId": "exact-money-and-domain-identity",
   "title": "Make target entity identity and money representation exact before product accounting slices",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Exact Money and Domain Identity",
   "surfaceIds": [
     "SWIFT-3AC58A64B789",
@@ -162,8 +162,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming product, database, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-DOMAIN-PRIMITIVES-001"]
     }
   ],
   "implementationEvidence": ["EVID-DOMAIN-PRIMITIVES-001"],

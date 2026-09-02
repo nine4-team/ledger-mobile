@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T02:15:28.525Z",
+    "lastSynchronizedAt": "2026-09-02T02:22:44.532Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18685,7 +18685,7 @@
           "Typed IDs and exact Money construct, compare, encode and perform checked same-currency arithmetic deterministically while malformed IDs/currency, cross-currency arithmetic and overflow fail atomically"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
@@ -31552,7 +31552,7 @@
           "Self-tests prove stable type separation, exact same-currency arithmetic, deterministic restart encoding and atomic invalid/cross-currency/overflow refusal without external dependencies"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
