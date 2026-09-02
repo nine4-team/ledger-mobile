@@ -5,7 +5,8 @@
   "evidence": [
     "EVID-CAPABILITY-PLATFORM-CONTROL-001",
     "EVID-MIGRATION-RUN-INTEGRITY-001",
-    "EVID-OPERATIONAL-HEALTH-001"
+    "EVID-OPERATIONAL-HEALTH-001",
+    "EVID-DETERMINISTIC-TEST-SUPPORT-001"
   ],
   "surfaces": [
     {
@@ -3649,6 +3650,99 @@
         ],
         "acceptance": [
           "All health, registry, restart, evidence-gating, threshold-pending, tamper and non-authority obligations pass in LedgerTargetCore"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-8AB5414F20CE",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "5c7da514d1fd6f7e2c0f49a8b44c59eb3c5ec7e371c1c4e1b590bf55eb05cd26",
+      "currentBehavior": "Provides a comment-only target scaffold for provider-free deterministic test context, value generation, scripted reference adapters and canonical scenario evidence; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+      ],
+      "notes": "Target-only scaffold claimed by deterministic-target-test-support. It does not claim or advance current Swift factory TEST-6A6B0926E2EE or current MCP helper FILE-F29942C1A7F4, which require later domain fixture and concrete app/MCP/local/staging harness coverage.",
+      "target": {
+        "owner": "Deterministic Target Test Support",
+        "surfaces": [
+          "DeterministicTargetTestContext",
+          "DeterministicTargetValueSource",
+          "ScriptedOperationQueryAdapter",
+          "ScriptedSyncHealthAdapter",
+          "canonical scenario evidence"
+        ],
+        "securityRequirements": [
+          "Every context is bound to an already validated non-production TargetEnvironmentManifest plus explicit synthetic Principal and Account identities; production environments, endpoints, credentials and nonfixture identities are rejected before a script is exposed",
+          "Scenario evidence contains only bounded target types and stable safe failure codes; no provider payload, secret, URL, raw database value or production identifier is accepted"
+        ],
+        "syncRequirements": [
+          "Finite immutable scripts drive OperationQuerying and SyncHealthProviding through local, queued, authoritative, rejected, retry, required-update, maintenance and context-switch outcomes without a database, network or provider process",
+          "Canonical scenario evidence reconstructs the same fixed clock, IDs, revisions and scripted outcomes after restart and refuses exhaustion, ambiguity, tamper and cross-Account access"
+        ]
+      },
+      "migration": {
+        "rule": "Create target-only reference test support and import no Firebase factory, document, emulator helper, export fixture or production-derived value.",
+        "reconciliation": [
+          "Equivalent scenario definitions normalize to identical identities and canonical bytes while duplicate, conflicting, unsafe, noncanonical or cross-Account definitions fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "DeterministicTargetTestSupportTests"
+        ],
+        "acceptance": [
+          "The provider-free reference adapters reproduce exact use-case operation and readiness stories across restart without linking either Ledger application or claiming current app/MCP test-helper replacement"
+        ]
+      }
+    },
+    {
+      "id": "TEST-77875A971729",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "e6396d3ffeea6a1bf45ce5c6632b541d43f6a61dfc148de8eda5056ae37278b9",
+      "currentBehavior": "Provides a comment-only target scaffold for self-tests of deterministic fixture identity, scripted adapter outcomes, restart reconstruction and refusal; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+      ],
+      "notes": "Target-only self-test scaffold. The tests use synthetic provider-free inputs and cannot establish app/MCP parity, local database fidelity, hosted target behavior, physical offline durability or replacement of current Firebase-era helpers.",
+      "target": {
+        "owner": "Deterministic Target Test Support",
+        "surfaces": [
+          "DeterministicTargetTestSupportTests",
+          "fixed context/value fixtures",
+          "scripted operation/readiness/failure fixtures",
+          "restart/tamper/environment refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures contain only explicit synthetic environment, Principal, Account, time, identifier, revision and safe result values",
+          "Negative tests prove production binding, credential/provider material, nonfixture identity and cross-Account script access are refused"
+        ],
+        "syncRequirements": [
+          "All scenarios run offline with finite immutable scripts and prove local versus authoritative state without creating a PowerSync database or process",
+          "Restart and input-reordering fixtures preserve exact outputs; exhausted, duplicate, conflicting and out-of-order scripts fail with stable codes and no partial advancement"
+        ]
+      },
+      "migration": {
+        "rule": "Use new target-only synthetic fixtures; current Swift/MCP factory behavior and Firebase exports are not loaded or reclassified by this test slice.",
+        "reconciliation": [
+          "Canonical scenario bytes, fingerprints and emitted sequences agree before and after restart and every invalid scenario produces the same bounded refusal"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DeterministicTargetTestSupportTests"
+        ],
+        "acceptance": [
+          "Self-tests prove deterministic context, values, scripted port behavior, restart reconstruction, Account isolation and provider/production refusal without external dependencies"
         ]
       }
     }

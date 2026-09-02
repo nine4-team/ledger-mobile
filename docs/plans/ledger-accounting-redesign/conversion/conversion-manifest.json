@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T00:53:04.827Z",
+    "lastSynchronizedAt": "2026-09-02T01:04:03.081Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2126,10 +2126,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "5028736af14eeb48db09867498da41d386eee1a2f510b82340393079505223f5",
-      "acknowledgedSourceHash": "5028736af14eeb48db09867498da41d386eee1a2f510b82340393079505223f5",
+      "observedSourceHash": "b89d3e61a254eff7e51894572e115666d3d0495588417fee301ee00502ccb93d",
+      "acknowledgedSourceHash": "b89d3e61a254eff7e51894572e115666d3d0495588417fee301ee00502ccb93d",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, the separately isolated target migration-core/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target migration-core/tests and target test-support/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -2176,7 +2176,7 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. The separately compiled migration-control module is discovered without placing it in the application runtime.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate migration-control and test-support module roots are discovered without placing them in the application runtime.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -23523,6 +23523,66 @@
       "classificationBatch": "M0-BACKEND-STORAGE-001"
     },
     {
+      "id": "SWIFT-8AB5414F20CE",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetTestSupport/DeterministicTargetTestSupport.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetTestSupport/DeterministicTargetTestSupport.swift"
+        }
+      ],
+      "observedSourceHash": "5c7da514d1fd6f7e2c0f49a8b44c59eb3c5ec7e371c1c4e1b590bf55eb05cd26",
+      "acknowledgedSourceHash": "5c7da514d1fd6f7e2c0f49a8b44c59eb3c5ec7e371c1c4e1b590bf55eb05cd26",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for provider-free deterministic test context, value generation, scripted reference adapters and canonical scenario evidence; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Deterministic Target Test Support",
+        "surfaces": [
+          "DeterministicTargetTestContext",
+          "DeterministicTargetValueSource",
+          "ScriptedOperationQueryAdapter",
+          "ScriptedSyncHealthAdapter",
+          "canonical scenario evidence"
+        ],
+        "securityRequirements": [
+          "Every context is bound to an already validated non-production TargetEnvironmentManifest plus explicit synthetic Principal and Account identities; production environments, endpoints, credentials and nonfixture identities are rejected before a script is exposed",
+          "Scenario evidence contains only bounded target types and stable safe failure codes; no provider payload, secret, URL, raw database value or production identifier is accepted"
+        ],
+        "syncRequirements": [
+          "Finite immutable scripts drive OperationQuerying and SyncHealthProviding through local, queued, authoritative, rejected, retry, required-update, maintenance and context-switch outcomes without a database, network or provider process",
+          "Canonical scenario evidence reconstructs the same fixed clock, IDs, revisions and scripted outcomes after restart and refuses exhaustion, ambiguity, tamper and cross-Account access"
+        ]
+      },
+      "migration": {
+        "rule": "Create target-only reference test support and import no Firebase factory, document, emulator helper, export fixture or production-derived value.",
+        "reconciliation": [
+          "Equivalent scenario definitions normalize to identical identities and canonical bytes while duplicate, conflicting, unsafe, noncanonical or cross-Account definitions fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "DeterministicTargetTestSupportTests"
+        ],
+        "acceptance": [
+          "The provider-free reference adapters reproduce exact use-case operation and readiness stories across restart without linking either Ledger application or claiming current app/MCP test-helper replacement"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+      ],
+      "notes": "Target-only scaffold claimed by deterministic-target-test-support. It does not claim or advance current Swift factory TEST-6A6B0926E2EE or current MCP helper FILE-F29942C1A7F4, which require later domain fixture and concrete app/MCP/local/staging harness coverage.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "SWIFT-8B02CBB9672C",
       "kind": "swift_application_file",
       "name": "LedgeriOS/LedgeriOS/Theme/BrandColors.swift",
@@ -32609,6 +32669,65 @@
       ],
       "notes": "Do not port provider construction, raw writes, listener mechanics, or superseded tests; cover the same valid user outcome through target handlers and local projections. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-77875A971729",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetTestSupportTests/DeterministicTargetTestSupportTests.swift"
+        }
+      ],
+      "observedSourceHash": "e6396d3ffeea6a1bf45ce5c6632b541d43f6a61dfc148de8eda5056ae37278b9",
+      "acknowledgedSourceHash": "e6396d3ffeea6a1bf45ce5c6632b541d43f6a61dfc148de8eda5056ae37278b9",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for self-tests of deterministic fixture identity, scripted adapter outcomes, restart reconstruction and refusal; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Deterministic Target Test Support",
+        "surfaces": [
+          "DeterministicTargetTestSupportTests",
+          "fixed context/value fixtures",
+          "scripted operation/readiness/failure fixtures",
+          "restart/tamper/environment refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures contain only explicit synthetic environment, Principal, Account, time, identifier, revision and safe result values",
+          "Negative tests prove production binding, credential/provider material, nonfixture identity and cross-Account script access are refused"
+        ],
+        "syncRequirements": [
+          "All scenarios run offline with finite immutable scripts and prove local versus authoritative state without creating a PowerSync database or process",
+          "Restart and input-reordering fixtures preserve exact outputs; exhausted, duplicate, conflicting and out-of-order scripts fail with stable codes and no partial advancement"
+        ]
+      },
+      "migration": {
+        "rule": "Use new target-only synthetic fixtures; current Swift/MCP factory behavior and Firebase exports are not loaded or reclassified by this test slice.",
+        "reconciliation": [
+          "Canonical scenario bytes, fingerprints and emitted sequences agree before and after restart and every invalid scenario produces the same bounded refusal"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DeterministicTargetTestSupportTests"
+        ],
+        "acceptance": [
+          "Self-tests prove deterministic context, values, scripted port behavior, restart reconstruction, Account isolation and provider/production refusal without external dependencies"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-DETERMINISTIC-TEST-SUPPORT-001"
+      ],
+      "notes": "Target-only self-test scaffold. The tests use synthetic provider-free inputs and cannot establish app/MCP parity, local database fidelity, hosted target behavior, physical offline durability or replacement of current Firebase-era helpers.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "TEST-7D6F49F784FB",

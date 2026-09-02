@@ -170,7 +170,8 @@ function swiftKind(filePath) {
   const rel = relative(filePath);
   if (
     rel.includes("/LedgerTargetCore/") ||
-    rel.includes("/LedgerTargetMigrationCore/")
+    rel.includes("/LedgerTargetMigrationCore/") ||
+    rel.includes("/LedgerTargetTestSupport/")
   ) {
     return "swift_platform";
   }
@@ -1109,6 +1110,7 @@ function discoverSwiftApplication() {
     path.join(ROOT, "LedgeriOS/LedgerTargetApp"),
     path.join(ROOT, "LedgeriOS/LedgerTargetCore"),
     path.join(ROOT, "LedgeriOS/LedgerTargetMigrationCore"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetTestSupport"),
   ];
   return directories.flatMap((directory) =>
     walk(directory, (filePath) => filePath.endsWith(".swift")),
@@ -1143,6 +1145,7 @@ function discoverSwiftTests() {
     path.join(ROOT, "LedgeriOS/LedgeriOSTests"),
     path.join(ROOT, "LedgeriOS/LedgerTargetCoreTests"),
     path.join(ROOT, "LedgeriOS/LedgerTargetMigrationCoreTests"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetTestSupportTests"),
   ];
   return directories.flatMap((directory) =>
     walk(directory, (filePath) => filePath.endsWith(".swift")),

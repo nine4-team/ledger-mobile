@@ -6,8 +6,8 @@ This register is the deterministic queue for target-relevant surfaces that canno
 
 ## Summary
 
-- Target-relevant surfaces: 465
-- Target-mapped or later: 301
+- Target-relevant surfaces: 467
+- Target-mapped or later: 303
 - Residual surfaces: 164
 - Distinct blockers: 43
 

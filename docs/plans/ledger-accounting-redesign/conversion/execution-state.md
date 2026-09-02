@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 52
+State version: 53
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: EARLY-SLICE-CLAIM-SCOPE-CORRECTED-TEST-SUPPORT-READY-GATE-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: DETERMINISTIC-TEST-SUPPORT-READY-IMPLEMENTATION-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -636,6 +636,17 @@ modifying the running Firebase application before hard cutover.
   `target_mapped`, removed them from the operation slice, retained only the two
   actual target files as verified, and updated evidence/tracker counts. No code
   or already-passing operation behavior changed.
+- Extended conversion discovery to separate target test-support and self-test
+  roots, acknowledged only the exact reviewed control-script hash, created two
+  comment-only target scaffolds, and passed their deterministic-target-test-
+  support ready mapping. The dossier binds validated synthetic environment/
+  Principal/Account context, fixed clock/IDs/revisions, immutable scripted
+  operation/readiness/failure adapters, canonical restart evidence and stable
+  production/provider/tamper refusal to domain, offline and operational tests.
+  Current Swift helper `TEST-6A6B0926E2EE` and MCP helper
+  `FILE-F29942C1A7F4` remain `target_mapped`; no behavior, package target,
+  application link, database, provider, hosted resource, product fixture,
+  migration or production operation exists at this ready checkpoint.
 
 ## Next Action
 
@@ -645,17 +656,18 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Create the `deterministic-target-test-support` ready gate from the reviewed
-   `TEST-6A6B0926E2EE` / Target Contract Test Infrastructure mapping and Phase 1
-   architecture. Claim only new target-only test-support code/test surfaces;
-   leave the current Swift and MCP helper surfaces `target_mapped`. Define
-   deterministic environment/Principal/Account/clock/ID/revision fixtures,
-   immutable scripted operation/readiness/failure adapters, canonical restart
-   evidence and provider/production refusal with self-tests. Stop before domain-
-   specific product fixtures, app/MCP entry-point parity, local database,
-   provider SDK, hosted staging, A-003/A-004/A-007/A-015/A-016 or any open
-   product decision. Implement behavior only after the comment-only scaffolds,
-   exact dossier and conversion ready gate pass.
+2. Implement only the ready `deterministic-target-test-support` dossier. Add a
+   separate Swift package target that depends only on `LedgerTargetCore`, a
+   matching self-test target, and graph/source-contamination checks proving that
+   neither application links it. Implement validated synthetic context,
+   deterministic fixed clock/ID/revision schedules, finite immutable scripted
+   `OperationQuerying`/`SyncHealthProviding` reference adapters, bounded
+   canonical restart evidence and stable unsafe/production/cross-Account/
+   exhaustion/tamper refusal. Run the focused and complete target suites, both
+   target builds and conversion checks. Keep `TEST-6A6B0926E2EE` and
+   `FILE-F29942C1A7F4` target-mapped and stop before domain-specific product
+   fixtures, app/MCP entry-point parity, local database, provider SDK, hosted
+   staging, A-003/A-004/A-007/A-015/A-016 or any open product decision.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
