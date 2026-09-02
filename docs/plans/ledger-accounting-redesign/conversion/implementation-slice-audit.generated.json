@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T09:26:45.818Z",
+  "generatedFromManifestSync": "2026-09-02T09:37:17.519Z",
   "totals": {
     "slices": 27,
     "claimedTargetSurfaces": 75,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 58
+    "implementationAdvancedTargetSurfaces": 60
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 25,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -246,7 +246,7 @@
       "sliceId": "project-rename-operation-contracts",
       "title": "Rename one stable Project without changing its Client relationship",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Rename Operation Contracts",
       "surfaceIds": [
         "SWIFT-797909434B82",

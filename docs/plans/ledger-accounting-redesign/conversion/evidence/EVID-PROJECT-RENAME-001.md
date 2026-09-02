@@ -1,18 +1,19 @@
 # EVID-PROJECT-RENAME-001 — Project Rename Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation planning / provider-free Project rename command
+- Class: implementation / provider-free Project rename command
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-797909434B82`, `TEST-3CE7B387E9B7`
 - Slice dossier:
   `conversion/implementation-slices/project-rename-operation-contracts.json`
-- Verification state: ready; behavioral implementation has not started
-- Ready scaffold hashes:
+- Verification state: implemented; four local behavioral obligations pass and
+  exact-implementation-commit CI remains planned
+- Implementation hashes:
   - `ProjectRenameOperation.swift`:
-    `fa45aece2ec71137b919a37a303f00bff9e1c601d012d9594957ce5bdb38464b`
+    `8fff3525aa272d8659d23487a48bea388f0a9c525feb097f877f468fd55dfaf7`
   - `ProjectRenameOperationTests.swift`:
-    `6a26ee4bc3d7c33447ff01e6efa5d3d058b95189d27b823b4d1ab3b78e8bdee2`
+    `c5e2bdbb661ebf867ecae418e9fe51f7c1f2167ae1b01c997bdfdef2429c362a`
 
 ## Selection and Scope
 
@@ -96,6 +97,46 @@ executable behavior to either comment-only scaffold.
 
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
+
+Exact ready commit `18ab228379e9d81db1dc35c16bf6eecc867b64cc`
+passed immutable GitHub Actions run `33614187250`: conversion traceability
+passed in 9 seconds and the isolated target job passed in 3 minutes 1 second
+with all 116 then-existing tests, graph/generated-contract checks, macOS and
+generic iOS Simulator builds and clean tracked artifacts.
+
+## Implemented Contract
+
+- `ProjectRenameDraft` binds one Account, actor, contract version, OperationID,
+  stable ProjectID, validated replacement `ProjectDisplayName`, the existing
+  typed `ExpectedProjectRevision`, and finite capture time.
+- `RenameProjectPayload` contains only ProjectID and the new display name.
+  `RenameProjectCommand` uses the shared `OperationEnvelope`, derives the exact
+  Project subject and fingerprint, requires exactly one same-subject expected-
+  revision precondition, and decodes only through the same validation path.
+- The command has no Client, prior-name, description, category, media,
+  lifecycle, child, accounting, history or correction input. Equal Project or
+  Client names therefore cannot change identity, relationship or authority.
+- `ProjectRenaming` is the narrow provider-free operation port. Exact receipt
+  validation is limited to the shared OperationID lifecycle and makes no
+  authoritative Project-row or downstream-projection claim.
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove exact Project/name/revision
+command shape, canonical byte-identical restart, stable refusal of malformed or
+rebound Account/actor/contract/Project/name/revision/subject/precondition/
+fingerprint/receipt evidence, shared `OperationJournal` replay and changed-
+intent mismatch behavior, and no false receipt from a failing port.
+
+The complete local gate also passes: all 120 target tests in 27 suites, target
+environment isolation, generated app/MCP contracts, macOS staging build,
+generic iOS Simulator staging build, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The synchronized ledger remains at 759
+recorded / 744 discovered surfaces, 333 mapped / 164 residual / 43 blockers.
+M1 and M2 retain exactly their expected 2 and 164 blockers.
+
+The exact-implementation-commit operational obligation remains planned until
+immutable hosted CI passes for the committed checkpoint.
 
 ## Permanent Limits
 

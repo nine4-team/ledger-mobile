@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 98
+State version: 99
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-RENAME-READY
+- Checkpoint: PROJECT-RENAME-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1375,6 +1375,30 @@ modifying the running Firebase application before hard cutover.
   server authorization/revision apply, schema/RLS/Sync/Auth/provider,
   current/target app/MCP, source migration, hosted resource or production
   operation exists at ready. O-024/O-025 remain open and unchanged.
+- Exact ready commit `18ab228379e9d81db1dc35c16bf6eecc867b64cc`
+  passed immutable GitHub Actions run `33614187250`: conversion traceability
+  passed in 9 seconds and the isolated-target job passed in 3 minutes 1 second
+  with all 116 then-existing target tests, graph/generated-contract checks,
+  macOS and generic iOS Simulator builds and clean tracked artifacts.
+- Implemented only the frozen provider-free Project rename boundary: validated
+  stable Project/new-display-name intent, one exact Project revision, shared
+  Account/actor/contract/Operation/time/subject/precondition/fingerprint/
+  receipt lifecycle, decode-through-validation and one narrow operation port.
+- Added four deterministic tests covering exact payload/command shape,
+  byte-identical restart, malformed/rebound/tampered refusal, shared journal
+  replay/mismatch behavior and no false receipt from a failing port. Four
+  focused/all 120 target tests in 27 suites pass locally, as do target
+  environment/generated-contract controls, macOS and generic iOS Simulator
+  staging builds, conversion/capability/query/residual controls, M0 and diff
+  formatting. M1/M2 retain exactly their expected 2/164 blockers.
+- `PROJECTRENAME-TEST-001` through `-004` pass locally. Exact-implementation-
+  commit hosted `PROJECTRENAME-TEST-005` remains planned, so exactly the two
+  Project rename surfaces are `implemented`, not `verified`.
+- No Project row/downstream projection, Client/description/category/media/
+  history/lifecycle change, physical persistence, authoritative authorization
+  or revision apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration,
+  hosted resource or production operation was introduced. O-024/O-025 remain
+  open and unchanged.
 
 ## Next Action
 
@@ -1415,12 +1439,12 @@ Continue without waiting on the two M1 evidence blockers:
    positive allocation, incomplete relationship evidence and configuration
    revision. Treat the verified `client-rename-operation-contracts` dossier and
    `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority.
-   Implement only the ready `project-rename-operation-contracts` dossier:
-   stable Account/Project identity, validated replacement display text, one
-   expected Project revision, exact shared operation binding/restart/refusal and
-   one narrow operation port. Do not add Client/description/category/media/
-   history/lifecycle change, physical persistence, schema/RLS/Sync/Auth/provider
-   behavior, current app/MCP, migration, hosted resources or production access.
+   Preserve the implemented `project-rename-operation-contracts` slice, run its
+   complete local gate, commit and push the exact implementation, require
+   immutable hosted CI, and only then mark its five obligations and two surfaces
+   verified. Do not add Client/description/category/media/history/lifecycle
+   change, physical persistence, schema/RLS/Sync/Auth/provider behavior, current
+   app/MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

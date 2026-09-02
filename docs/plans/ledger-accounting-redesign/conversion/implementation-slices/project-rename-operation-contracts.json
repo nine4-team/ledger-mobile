@@ -3,7 +3,7 @@
   "sliceId": "project-rename-operation-contracts",
   "title": "Rename one stable Project without changing its Client relationship",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Rename Operation Contracts",
   "surfaceIds": [
     "SWIFT-797909434B82",
@@ -198,8 +198,10 @@
         "PROJECTRENAME-REQ-007"
       ],
       "expected": "A valid synthetic draft produces one typed exact-scope RenameProject command with one same-subject expected revision; the payload contains only stable Project identity and validated new display text and cannot carry Client, description, category, media, lifecycle, child, accounting or historical input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-RENAME-001"
+      ]
     },
     {
       "id": "PROJECTRENAME-TEST-002",
@@ -214,8 +216,10 @@
         "PROJECTRENAME-REQ-007"
       ],
       "expected": "Representative rename commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/name/revision/time/subject/fingerprint evidence and no backend path, provider, credential, Client relationship, downstream projection or server-result claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-RENAME-001"
+      ]
     },
     {
       "id": "PROJECTRENAME-TEST-003",
@@ -231,8 +235,10 @@
         "PROJECTRENAME-REQ-007"
       ],
       "expected": "Blank display text, invalid time and changed Account/actor/contract/Project/name/revision/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through existing or Project-rename stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-RENAME-001"
+      ]
     },
     {
       "id": "PROJECTRENAME-TEST-004",
@@ -248,8 +254,10 @@
         "PROJECTRENAME-REQ-007"
       ],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed Project/name/revision is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-RENAME-001"
+      ]
     },
     {
       "id": "PROJECTRENAME-TEST-005",
