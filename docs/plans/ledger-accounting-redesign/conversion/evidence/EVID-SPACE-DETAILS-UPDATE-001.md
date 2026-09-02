@@ -7,8 +7,9 @@
 - Claimed target surfaces: `SWIFT-EDFA6A1EF8C3`, `TEST-E8832A105D5C`
 - Slice dossier:
   `conversion/implementation-slices/space-details-update-operation-contracts.json`
-- Verification state: implemented locally; exact implementation-commit CI is
-  still required before either claimed surface can become verified
+- Verification state: verified at exact implementation commit
+  `1c8c12b4c593a43b3743fec41331dd852edbc10b` by immutable GitHub Actions run
+  `33654631876`
 - Ready scaffold hashes:
   - `SpaceDetailsUpdateOperation.swift`:
     `17d858d85970e165a22db02d9e3b7d3956245be5fd21b9c48eeb4be9941ad9c8`
@@ -175,8 +176,24 @@ controls, M0 and clean diff formatting. The ledger remains at 779 recorded / 764
 discovered and 353 mapped-or-later / 164 residual / 43 blockers; 80 target
 surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
 
-`SPACEDETAILS-TEST-001` through `-004` therefore pass. `-005` remains planned
-until immutable exact-implementation-commit CI passes.
+`SPACEDETAILS-TEST-001` through `-004` therefore pass locally.
+
+## Immutable Exact-Commit Verification
+
+Exact implementation commit
+`1c8c12b4c593a43b3743fec41331dd852edbc10b` passed immutable GitHub Actions
+run `33654631876`:
+
+- conversion state and traceability passed in 8 seconds;
+- the isolated target environment passed in 2 minutes 31 seconds;
+- all four focused tests and all 160 target tests in 37 suites passed;
+- target graph and generated app/MCP contract checks passed;
+- macOS and generic iOS Simulator staging builds passed; and
+- tracked artifacts remained clean.
+
+All five dossier obligations now pass. Exactly the two claimed Space-details
+surfaces are `verified`; this evidence does not advance any excluded provider,
+application, migration, authorization, production or cutover behavior.
 
 ## Permanent Limits
 

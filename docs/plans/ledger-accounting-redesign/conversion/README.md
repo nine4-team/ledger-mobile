@@ -130,12 +130,14 @@ artifacts. Checklist/template/media/
 Item/review/lifecycle/accounting mutation, authorization, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded. O-023/O-026/O-037 stay open; `EVID-SPACE-CREATION-001`.
-The provider-free Space details update slice is implemented locally and awaits
-exact-implementation-commit CI. Exactly two target surfaces implement one
+The provider-free Space details update slice is verified. Exactly two target
+surfaces implement one
 complete normalized name/optional-notes replacement, stable Space identity,
 exact same-Space expected revision, shared operation lifecycle, canonical
-restart/refusal and a narrow port. Four focused/all 160 target tests and both
-staging builds pass locally. Scope/checklist/template/media/Item/review/
+restart/refusal and a narrow port. Exact implementation commit `1c8c12b4` and
+immutable Actions run `33654631876` pass four focused/all 160 target tests,
+graph/generated-contract checks, both staging builds and clean artifacts.
+Scope/checklist/template/media/Item/review/
 lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
 Sync/provider behavior, app/MCP, migration and production remain excluded.
 O-023/O-026/O-037 stay open; `EVID-SPACE-DETAILS-UPDATE-001`.

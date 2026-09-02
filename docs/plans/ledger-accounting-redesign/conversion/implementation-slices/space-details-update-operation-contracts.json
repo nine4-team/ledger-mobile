@@ -3,7 +3,7 @@
   "sliceId": "space-details-update-operation-contracts",
   "title": "Replace one Space's complete mutable details without changing scope or child state",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Details Update Operation Contracts",
   "surfaceIds": ["SWIFT-EDFA6A1EF8C3", "TEST-E8832A105D5C"],
   "requirements": [
@@ -159,8 +159,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-DETAILS-UPDATE-001"],

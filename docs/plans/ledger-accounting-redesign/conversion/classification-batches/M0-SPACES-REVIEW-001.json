@@ -998,14 +998,14 @@
       "acknowledgeSourceHash": "3bf0031d1ec90f369482d09dab740900a279911e36eab3c5b6980cc5dc78284f",
       "currentBehavior": "Defines the implemented provider-free boundary for revision-aware replacement of one Space's complete canonical name-and-optional-notes pair with exact operation binding, restart/refusal validation and a narrow operation port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one UpdateSpaceDetails intent with stable Space identity, complete canonical name/notes replacement, exact expected revision, shared operation binding/receipt validation and a narrow port. It cannot change scope, checklists, templates, media, Item assignment, review/completion/lifecycle state or accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
+      "notes": "Target-only Phase 1 verified surface. Exact implementation commit 1c8c12b4c593a43b3743fec41331dd852edbc10b passed immutable GitHub Actions run 33654631876, including four focused/all 160 target tests, graph/generated-contract checks, both staging builds and clean artifacts. The implementation defines one UpdateSpaceDetails intent with stable Space identity, complete canonical name/notes replacement, exact expected revision, shared operation binding/receipt validation and a narrow port. It cannot change scope, checklists, templates, media, Item assignment, review/completion/lifecycle state or accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
       "target": {
         "owner": "Space Details Update Operation Contracts",
         "surfaces": [
@@ -1046,14 +1046,14 @@
       "acknowledgeSourceHash": "1c453a32feba17ec47de517145369c0e29709dc99a05aa0262205202cf66ef9b",
       "currentBehavior": "Defines deterministic provider-free tests for complete canonical Space detail replacement, exact same-Space revision, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove complete canonical Space name/notes replacement, same-Space revision, restart/replay/refusal and absence of scope/checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Verified target-only test surface. Exact implementation commit 1c8c12b4c593a43b3743fec41331dd852edbc10b passed immutable GitHub Actions run 33654631876, including four focused/all 160 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Deterministic tests prove complete canonical Space name/notes replacement, same-Space revision, restart/replay/refusal and absence of scope/checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Space Details Update Operation Contracts",
         "surfaces": [

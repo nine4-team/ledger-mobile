@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T16:21:23.734Z",
+    "lastSynchronizedAt": "2026-09-02T16:31:33.092Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -31507,14 +31507,14 @@
           "Synthetic commands prove complete normalized name/notes replacement, exact same-Space revision, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one UpdateSpaceDetails intent with stable Space identity, complete canonical name/notes replacement, exact expected revision, shared operation binding/receipt validation and a narrow port. It cannot change scope, checklists, templates, media, Item assignment, review/completion/lifecycle state or accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
+      "notes": "Target-only Phase 1 verified surface. Exact implementation commit 1c8c12b4c593a43b3743fec41331dd852edbc10b passed immutable GitHub Actions run 33654631876, including four focused/all 160 target tests, graph/generated-contract checks, both staging builds and clean artifacts. The implementation defines one UpdateSpaceDetails intent with stable Space identity, complete canonical name/notes replacement, exact expected revision, shared operation binding/receipt validation and a narrow port. It cannot change scope, checklists, templates, media, Item assignment, review/completion/lifecycle state or accounting; create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -37302,14 +37302,14 @@
           "Self-tests prove the backend-neutral Space-details boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove complete canonical Space name/notes replacement, same-Space revision, restart/replay/refusal and absence of scope/checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Verified target-only test surface. Exact implementation commit 1c8c12b4c593a43b3743fec41331dd852edbc10b passed immutable GitHub Actions run 33654631876, including four focused/all 160 target tests, graph/generated-contract checks, both staging builds and clean artifacts. Deterministic tests prove complete canonical Space name/notes replacement, same-Space revision, restart/replay/refusal and absence of scope/checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
