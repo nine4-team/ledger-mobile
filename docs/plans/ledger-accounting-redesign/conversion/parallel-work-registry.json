@@ -56,7 +56,26 @@
         "completeLocalGate": "passed: conversion/capability/query/residual/M0 controls, target isolation/contracts, 184 tests in 43 suites, repeatable project generation, macOS and iOS staging builds, clean formatting",
         "exactIntegrationCommitCi": "passed: b0ffef836cc82f6011b802a5cb5f6a6ade05680a in immutable Actions run 33682239349"
       },
-      "integrationDisposition": "accepted and verified at b0ffef836cc82f6011b802a5cb5f6a6ade05680a after the full enhanced review and immutable Actions run 33682239349"
+      "integrationDisposition": "accepted and verified at b0ffef836cc82f6011b802a5cb5f6a6ade05680a after the full enhanced review and immutable Actions run 33682239349; the clean pilot worktree was removed after verification while the branch and candidate commit remain recoverable"
+    }
+  ],
+  "preflightFindings": [
+    {
+      "findingId": "SUBAGENT-PILOT-002-CANDIDATE-REJECTION-001",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "inventory-purchase-planning-operation-contracts",
+      "status": "rejected_before_ready_or_delegation",
+      "reviewers": [
+        "primary-agent",
+        "/root/purchase_intent_authority_review"
+      ],
+      "findings": [
+        "The shipped purchase-intent specification is current behavior and migration evidence, not canonical target authority.",
+        "Legacy intended budget category conflicts with D-013 Furnishings authority for target Project Item charges and credits.",
+        "Target retention, Purchase-versus-Item granularity, multi-destination behavior, and set/change/clear/resolve/reopen lifecycle are unresolved.",
+        "Broad batch-level canonical-spec association allowed three planning surfaces to appear target-mapped without feature-specific canonical authority."
+      ],
+      "disposition": "Speculative scaffolds were removed; three surfaces were demoted, O-038 was added to all five affected surfaces, premature architecture ports were removed, and a proposed decision packet was created. No worker was launched and no behavioral implementation was accepted."
     }
   ]
 }

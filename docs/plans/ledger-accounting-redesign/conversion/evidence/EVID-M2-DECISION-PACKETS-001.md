@@ -3,7 +3,8 @@
 - Timestamp: 2026-08-31
 - Class: target mapping design / product-decision preparation
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
-  on `dev`; shared worktree was already dirty
+  from the history now carried by `firebase`; the historical audit began from a
+  dirty source checkout
 - Production reads or mutations: none
 - Target implementation/deployment/migration changes: none
 - Product decisions approved by this evidence: none
@@ -11,8 +12,8 @@
 
 ## Result
 
-The deterministic 164-surface M2 residual was grouped under 43 exact blockers.
-Sixteen reviewable packets now cover all 35 product blockers in the generated
+The deterministic 167-surface M2 residual is grouped under 44 exact blockers.
+Seventeen reviewable packets now cover all 36 product blockers in the generated
 queue:
 
 | Packet | Decisions | Unique surfaces in packet cluster |
@@ -33,9 +34,10 @@ queue:
 | Proto migration and authority cutover | O-018/O-019/O-020/O-022 | 5 |
 | Project and Client lifecycle | O-024/O-025 | 7 |
 | Vendor adjustment and credit balance | O-028 | 2 |
+| Inventory destination planning | O-038 | 5 |
 
 Because surfaces can depend on multiple decisions, these clusters overlap.
-Together they touch all 157 residual surfaces that have any product-decision
+Together they touch all 160 residual surfaces that have any product-decision
 blocker. The other seven surfaces depend only on architecture/spike, physical-
 target verification, or canonical-production-evidence blockers. This means a
 proposal is available for every product blocker; it does **not** mean those
@@ -73,7 +75,7 @@ The generated register validates every blocker against the product/architecture
 authority and lists every exact affected surface. Packet links are recorded in
 the decision log and product-to-architecture traceability rows.
 
-A structural audit of all sixteen packet files also verified each contains the
+A structural audit of all seventeen packet files also verified each contains the
 decision requested, confirmed constraints, mutually exclusive options,
 conceptual target ownership, authorization/Sync treatment, migration/
 reconciliation, acceptance tests, approval consequences, and checklist.

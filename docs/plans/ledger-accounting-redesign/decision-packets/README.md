@@ -1,7 +1,7 @@
 # Product Decision Packets
 
 Status: proposed recommendations; not product authority
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-02
 
 These packets turn exact conversion blockers into reviewable senior-level
 choices. They exist so the implementation does not guess product behavior or
@@ -66,6 +66,7 @@ recommendation alone does not reduce the residual count.
 | O-006/O-033 | [Expense locks and collection payment](O-006-O-033-expense-locks-and-collection-payment.md) | Proposed: field-state matrix and exact positive payment equality |
 | O-035/O-036 | [Client Summary and shared evidence](O-035-O-036-client-summary-and-shared-evidence.md) | Proposed: paid/open/recognized report plus explicit sanitized evidence package |
 | O-037 | [Space archive and Item assignment](O-037-space-archive-and-item-assignment.md) | Proposed: archive-only, retained resolvable assignments, explicit move/clear |
+| O-038 | [Inventory destination planning](O-038-inventory-destination-planning.md) | Proposed: Item-level Project plans with a non-authoritative Purchase default, no category authority, and explicit lifecycle |
 | O-002/O-011–O-014 | [Transfer edge policy](O-002-O-011-O-014-transfer-edge-policy.md) | Proposed: sent revision, contextual tag/Space, paired reversal, current-Project credit |
 | O-016/O-017/O-027 | [Item capture and acquisition readiness](O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) | Proposed: name/photo/note minimum, no persisted hint, explicit unresolved acquisition |
 | O-018/O-019/O-020/O-022 | [Proto migration and authority cutover](O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Proposed: deterministic Item/review mapping and hard freeze/import/reconcile/activate |

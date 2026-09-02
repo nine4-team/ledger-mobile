@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T21:01:41.928Z",
+  "generatedFromManifestSync": "2026-09-02T21:28:53.741Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
     "surfaces": 791,
@@ -374,6 +374,10 @@
           "role": "canonical_target"
         },
         {
+          "path": "docs/specs/purchase-handling-and-inventory-intent.md",
+          "role": "current_product"
+        },
+        {
           "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
           "role": "decision_authority"
         },
@@ -694,6 +698,10 @@
         },
         {
           "path": "docs/specs/2026-08-30-correct-transaction-and-its-items.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/purchase-handling-and-inventory-intent.md",
           "role": "current_product"
         },
         {

@@ -9,9 +9,9 @@
   },
   "summary": {
     "targetRelevant": 529,
-    "targetMapped": 365,
-    "residualSurfaces": 164,
-    "distinctBlockers": 43
+    "targetMapped": 362,
+    "residualSurfaces": 167,
+    "distinctBlockers": 44
   },
   "blockers": [
     {
@@ -3088,6 +3088,52 @@
           "disposition": "replace",
           "status": "characterized",
           "currentBehavior": "Provides generic Firestore Project get/create/update/delete and unfiltered account listeners. Creation generates a Project with free-text clientName; update accepts arbitrary field dictionaries; delete removes only the Project document."
+        }
+      ]
+    },
+    {
+      "id": "O-038",
+      "kind": "product decision",
+      "owner": "Inventory destination planning",
+      "requirement": "Approved retention/granularity/lifecycle and source migration, plus D-013 category isolation, offline, race, security and no-accounting-effect tests",
+      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
+      "count": 5,
+      "surfaces": [
+        {
+          "batchId": "M0-BACKEND-FUNCTIONS-001",
+          "id": "FUNCMOD-E7CB6889A620",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Pure helper selects budgetCategoryId or fallback intendedBudgetCategoryId when evaluating legacy transaction completeness."
+        },
+        {
+          "batchId": "M0-INVENTORY-TRANSACTION-001",
+          "id": "MCPMOD-D14DD1E83CFE",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Reads/updates Inventory Purchase planning intent and corrects an acquisition into the current project-reimbursement model."
+        },
+        {
+          "batchId": "M0-INVENTORY-TRANSACTION-001",
+          "id": "MCPTOOL-42E5CABFC6F6",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Lists Inventory resale Purchases with intended Project/category and derives follow-up state from Items and lineage."
+        },
+        {
+          "batchId": "M0-INVENTORY-TRANSACTION-001",
+          "id": "MCPTOOL-4FF3862CBCD5",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Sets, clears or resolves intended Project/category metadata on current Inventory resale Purchases."
+        },
+        {
+          "batchId": "M0-INVENTORY-TRANSACTION-001",
+          "id": "SWIFT-34855F53F580",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Derives a current completeness checklist from category, amount, receipt, Items, payer and positive tax-rate fields plus inventory-purchase intent state."
         }
       ]
     },

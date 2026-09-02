@@ -168,11 +168,6 @@ protocol ItemHistoryQuerying: Sendable {
         -> AsyncThrowingStream<ProjectHistoryPage, Error>
 }
 
-protocol InventoryPlanningQuerying: Sendable {
-    func watchPlannedPurchases(accountId: AccountID)
-        -> AsyncThrowingStream<InventoryPlanningSnapshot, Error>
-}
-
 protocol InvoiceQuerying: Sendable {
     func watchInvoices(_ request: InvoiceListRequest)
         -> AsyncThrowingStream<InvoiceListSnapshot, Error>
@@ -306,15 +301,6 @@ protocol BulkItemOperations: Sendable {
     ) async throws -> BulkOperationReceipt
 }
 
-protocol InventoryPlanningOperations: Sendable {
-    func setIntent(
-        _ command: SetInventoryPurchaseIntentCommand
-    ) async throws -> OperationReceipt
-    func clearIntent(
-        _ command: ClearInventoryPurchaseIntentCommand
-    ) async throws -> OperationReceipt
-}
-
 protocol VendorDocumentIntakeOperations: Sendable {
     func commit(
         _ command: CommitVendorDocumentDraftCommand
@@ -440,6 +426,13 @@ Purchase/Return, physical placement, billing credit, Transfer and correction
 have different validation and audit effects. A future `VoidTransaction` or
 `DeleteSupersededTransaction` is advertised only after O-029 closes and cannot
 be implemented as a status/delete field mutation.
+
+There is currently no target Inventory purchase-planning query or operation
+port. O-038 must first decide whether the shipped planning feature survives,
+whether it belongs to a Purchase or individual Items, what destination data it
+carries, and how set/change/clear/resolve/reopen behave. Raw Firebase intent is
+migration evidence only; architecture prose cannot promote it into product
+behavior.
 
 There is likewise no `markInvoicePaid`, selected-line collection, generic
 Invoice-line CRUD, or client-supplied source-amount port. Created-Invoice
@@ -697,7 +690,6 @@ struct AppDependencies: Sendable {
     let projectItemAccounting: any ProjectItemAccountingQuerying
     let transactions: any TransactionQuerying
     let itemHistory: any ItemHistoryQuerying
-    let inventoryPlanning: any InventoryPlanningQuerying
     let invoiceQueries: any InvoiceQuerying
     let billingSummary: any BillingSummaryQuerying
     let spaceQueries: any SpaceQuerying
@@ -717,7 +709,6 @@ struct AppDependencies: Sendable {
     let projectPreferences: any ProjectPreferenceOperations
     let items: any ItemOperations
     let bulkItems: any BulkItemOperations
-    let inventoryPlanningOperations: any InventoryPlanningOperations
     let vendorDocumentIntake: any VendorDocumentIntakeOperations
     let invoices: any InvoiceOperations
     let expenses: any ExpenseOperations

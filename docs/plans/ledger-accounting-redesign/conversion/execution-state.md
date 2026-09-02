@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 150
+State version: 151
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-VERIFIED-PILOT-001-COMPLETE
+- Checkpoint: INVENTORY-PLANNING-AUTHORITY-CORRECTED-PILOT-002-RESELECT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -196,11 +196,12 @@ modifying the running Firebase application before hard cutover.
   tests. Seventeen decision-sensitive writer/schema/import/retention surfaces
   remain honestly held; O-021 is explicitly UI-only; see
   `EVID-M2-ITEM-CREATION-001`.
-- Exactly mapped 25 of 66 target-relevant Inventory/Transaction surfaces to
+- Exactly mapped 23 of 66 target-relevant Inventory/Transaction surfaces to
   typed Transaction boundaries, versioned local/MCP read models, offline-ready
-  provenance history, nonfinancial Inventory planning, typed corrections,
-  exact-cent audit and semantic target tests. Forty-one decision-sensitive
-  writer/schema/lifecycle surfaces remain honestly held; see
+  provenance history, typed corrections, exact-cent audit and semantic target
+  tests. Forty-three decision-sensitive writer/schema/lifecycle/planning
+  surfaces remain honestly held; O-038 now owns Inventory destination-planning
+  retention, granularity and lifecycle; see
   `EVID-M2-INVENTORY-TRANSACTION-001`.
 - Exactly mapped 21 of 44 target-relevant Invoicing/budget surfaces to stable
   contribution identity, Invoice/billing read models, download-time financial
@@ -218,21 +219,22 @@ modifying the running Firebase application before hard cutover.
   export snapshots, protected artifact lifecycle and semantic tests. Eighteen
   report-semantic/delivery/posting surfaces remain honestly held; see
   `EVID-M2-REPORTING-SEARCH-001`.
-- Exactly mapped 32 of 62 target-relevant backend/Auth/Functions/rules/Storage/
+- Exactly mapped 31 of 62 target-relevant backend/Auth/Functions/rules/Storage/
   query-control surfaces to capability-specific identity/handlers/RLS/Sync,
   private attachment Storage, query/index control and source-to-target
-  migration contracts. Thirty decision/evidence-sensitive backend surfaces
+  migration contracts. Thirty-one decision/evidence-sensitive backend surfaces
   remain honestly held; see `EVID-M2-BACKEND-CONTROL-001`.
-- Audited all 427 target-relevant surfaces: 263 are exactly mapped, 164 retain
+- Audited all 427 target-relevant source/control surfaces: 260 are exactly
+  mapped, 167 retain
   explicit mapping-changing blockers, zero mapped entries lack any required
   field and zero residual entries have an empty blocker list; see
   `EVID-M2-WHOLE-MANIFEST-001`.
 - Added a deterministic M2 residual generator/check and generated JSON/Markdown
-  queue: 164 residual surfaces grouped under 43 validated product, architecture,
+  queue: 167 residual surfaces grouped under 44 validated product, architecture,
   spike, or production-evidence blockers. Unknown blockers and stale artifacts
   fail `npm run conversion:residuals:check`.
-- Drafted sixteen senior-level product decision packets covering all 35 product
-  blockers and all 157 product-dependent residual surfaces: O-007/O-015
+- Drafted seventeen senior-level product decision packets covering all 36 product
+  blockers and all 160 product-dependent residual surfaces: O-007/O-015
   explicit Item facts/provenance; O-029/O-032 Transaction post/lifecycle;
   O-023 attachment
   retention; O-026 reference-data capabilities; O-031 Item tax/basis; O-009/
@@ -242,8 +244,9 @@ modifying the running Firebase application before hard cutover.
   collection payment; O-035/O-036 Client Summary/shared evidence; and O-037
   Space archive/assignment; O-002/O-011–O-014 Transfer edges; and O-016/O-017/
   O-027 Item capture/acquisition readiness; O-018/O-019/O-020/O-022 proto
-  migration/authority cutoff; O-024/O-025 Project/Client lifecycle; and O-028
-  non-cash vendor adjustment/conserved balance. O-021 is explicitly UI-only and
+  migration/authority cutoff; O-024/O-025 Project/Client lifecycle; O-028
+  non-cash vendor adjustment/conserved balance; and O-038 Inventory destination
+  planning retention/granularity/lifecycle. O-021 is explicitly UI-only and
   deferred to UX testing. These are proposals, not approvals;
   see `EVID-M2-DECISION-PACKETS-001`.
 - Applied Supabase Postgres design guidance to the proposals: explicit relational
@@ -2265,6 +2268,16 @@ modifying the running Firebase application before hard cutover.
   surfaces to `verified`; `SUBAGENT-PILOT-001` is complete with its worker,
   integration-agent and independent-review evidence preserved. One of two
   enhanced write pilots has now passed.
+- Rejected the proposed Inventory purchase-planning second pilot before a ready
+  dossier or worker launch. Root and independent authority review found that
+  the shipped spec is current/migration evidence only, D-013 conflicts with
+  legacy intended-category authority, and retention/granularity/lifecycle are
+  unresolved. Removed the speculative scaffolds, demoted the two MCP planning
+  tools and legacy category helper, added O-038 to all five affected surfaces,
+  removed premature planning ports, and created a non-authoritative decision
+  packet. Current deterministic state is 791 recorded / 776 discovered, 362
+  mapped-or-later / 167 residual / 44 blockers with only the three documented
+  retired-path warnings. No worker implementation was accepted.
 
 ## Next Action
 
@@ -2352,18 +2365,15 @@ Continue without waiting on the two M1 evidence blockers:
    `item-space-clearing-operation-contracts` dossier and
    `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for explicit
    Item-placement clearing. Its exact implementation commit and both CI jobs
-   are verified. Treat the ready
-   `space-assignment-destination-read-contracts` dossier and
-   `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the frozen contract for the next
-   bounded implementation. Its exact ready commit and both pull-request jobs
-   are verified. Treat the implemented
-   `space-assignment-destination-read-contracts` dossier and
+   are verified. Treat the verified `space-assignment-destination-read-contracts`
+   dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
    assignment-destination read semantics. Preserve the completed first-pilot
-   review record. Select the next smallest decision-independent slice from the
-   read-only scout's evidence, prepare its complete ready dossier and exact
-   ready CI, then use the same enhanced review for `SUBAGENT-PILOT-002` before
-   changing the delegation policy.
+   review record. Do not implement Inventory destination planning until O-038
+   is explicitly approved in canonical product authority. Select a different
+   smallest decision-independent slice, prepare its complete ready dossier and
+   exact ready CI, then use the same enhanced review for
+   `SUBAGENT-PILOT-002` before changing the delegation policy.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

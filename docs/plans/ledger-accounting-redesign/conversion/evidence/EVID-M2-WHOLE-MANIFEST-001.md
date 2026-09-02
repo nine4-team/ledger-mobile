@@ -3,7 +3,8 @@
 - Timestamp: 2026-08-31
 - Class: target mapping design / coverage control
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
-  on `dev`; shared worktree was already dirty
+  from the history now carried by `firebase`; the historical audit began from a
+  dirty source checkout
 - Production reads or mutations: none
 - Target implementation/deployment/migration changes: none
 - Operator: Codex
@@ -15,15 +16,15 @@ Across the 17 batches containing target-relevant surfaces, within the current
 18-batch manifest of 686 recorded surfaces:
 
 - 427 surfaces have `replace`, `redesign`, or `migrate` dispositions;
-- 263 are exactly `target_mapped`;
-- 164 remain characterized/blocked with at least one explicit mapping-changing
+- 260 are exactly `target_mapped`;
+- 167 remain characterized/blocked with at least one explicit mapping-changing
   decision, spike or production-evidence blocker;
 - zero mapped surfaces are missing owner, target surface, security, Sync,
   migration rule, reconciliation, tests or acceptance fields; and
 - zero remaining target-relevant surfaces have an empty blocker list.
 
 This is not an M2 pass: the deterministic M2 gate correctly remains blocked by
-164 surfaces. It is proof that the residual is explicit rather than forgotten
+167 surfaces. It is proof that the residual is explicit rather than forgotten
 or represented by generic “implement target” placeholders.
 
 The residual is also published as deterministic machine-readable and reviewable
@@ -46,13 +47,13 @@ architecture decision authority, and fails on drift or an unknown blocker.
 | Platform/control | 38 | 3 |
 | Clients/Projects/reference | 36 | 16 |
 | Item creation/Link | 14 | 17 |
-| Inventory/Transactions/provenance | 25 | 41 |
+| Inventory/Transactions/provenance | 23 | 43 |
 | Invoicing/collection/budget | 21 | 23 |
 | Spaces/review | 16 | 11 |
 | Reporting/search/export | 19 | 18 |
-| Backend/Auth/Functions/rules/Storage/query | 32 | 30 |
+| Backend/Auth/Functions/rules/Storage/query | 31 | 31 |
 | Cutover control | 0 | 1 |
-| **Total** | **263** | **164** |
+| **Total** | **260** | **167** |
 
 The largest residual dependencies are O-015 (46 surfaces), O-007 (31), O-032
 (23), O-023 (22), O-005 and O-029 (20 each), O-026 (19), O-031 (16), and
@@ -63,7 +64,7 @@ frequencies do not sum to 164.
 
 - M0 passes: every source surface is classified.
 - M1 remains blocked by exactly `MAN-DATA-001` and `MAN-CUTOVER-001`.
-- M2 remains blocked by 164 explicit residual surfaces.
+- M2 remains blocked by 167 explicit residual surfaces.
 - A-003/A-004 remain proposed until the isolated vertical spike passes.
 - This mapping audit is not production migration authorization and creates no
   Firebase adapter or Firebase v2 implementation.
@@ -75,5 +76,5 @@ npm run conversion:residuals:check
 npm run conversion:check
 npm run conversion:gate:m0
 npm run conversion:gate:m1  # expected to fail on two evidence blockers
-npm run conversion:gate:m2  # expected to fail on the 164-surface residual
+npm run conversion:gate:m2  # expected to fail on the 167-surface residual
 ```

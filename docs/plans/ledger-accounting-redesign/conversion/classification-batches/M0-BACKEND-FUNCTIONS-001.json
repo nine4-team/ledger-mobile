@@ -464,39 +464,32 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Pure helper selects budgetCategoryId or fallback intendedBudgetCategoryId when evaluating legacy transaction completeness.",
       "disposition": "redesign",
-      "status": "target_mapped",
-      "blockers": [],
-      "evidence": [
-        "EVID-SOURCE-BACKEND-001",
-        "EVID-M2-BACKEND-CONTROL-001"
+      "status": "characterized",
+      "blockers": [
+        "O-038"
       ],
-      "notes": "Target must model intended versus authoritative category explicitly. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "evidence": [
+        "EVID-SOURCE-BACKEND-001"
+      ],
+      "notes": "M2 withheld: O-038 decides whether source purchase-planning intent has a target feature at all. The legacy fallback cannot become target category authority because D-013 fixes Project Item charges/credits to Furnishings.",
       "target": {
-        "owner": "Inventory Planning and Receipt Completeness",
-        "surfaces": [
-          "ActualCategoryRelationship",
-          "InventoryPlanningIntent",
-          "ReceiptCompletenessSnapshot"
-        ],
-        "securityRequirements": [
-          "Planning/category evidence follows Transaction/Inventory visibility and cannot grant Project/category access or create accounting effects"
-        ],
-        "syncRequirements": [
-          "Actual category and nonfinancial intended category are separate revisioned fields/projections with explicit readiness"
-        ]
+        "owner": "",
+        "surfaces": [],
+        "securityRequirements": [],
+        "syncRequirements": []
       },
       "migration": {
-        "rule": "Separate source budgetCategoryId and intendedBudgetCategoryId into actual accounting category versus planning intent, preserving source values/correlation and reporting invalid fallbacks.",
+        "rule": "Preserve the raw actual/intended category values and fallback behavior as source evidence; never translate intendedBudgetCategoryId into target Item-charge category authority, and wait for O-038 for its final disposition.",
         "reconciliation": [
-          "Every source actual/intended category value maps to the correct typed relationship or explicit anomaly without one substituting for the other"
+          "Every source actual/intended category value is retained with correlation and receives an approved target mapping, source-only retention or explicit anomaly after O-038"
         ]
       },
       "verification": {
         "tests": [
-          "Actual versus intended category, no-accounting-effect, invalid reference, planning resolution and migration tests"
+          "D-013 Furnishings authority, source-intent preservation, no-accounting-effect and O-038 migration-disposition tests"
         ],
         "acceptance": [
-          "Planning intent can guide follow-up but never satisfies accounting completeness or changes spend by itself"
+          "Legacy intended category never satisfies target accounting completeness, changes spend or overrides Furnishings"
         ]
       }
     }

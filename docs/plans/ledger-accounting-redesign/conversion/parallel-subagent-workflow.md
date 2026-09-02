@@ -29,6 +29,15 @@ A write-capable assignment may begin only when all of the following are true:
 6. no production, credential, spend, hosted-resource, migration-execution,
    release or cutover authority is required.
 
+For a product slice, the integration agent and an independent read-only
+reviewer must also confirm that every promised user-visible outcome appears in
+a canonical target spec or confirmed D decision. Batch-level association with
+broad target specs, current shipped behavior, an architecture interface, a
+capability dossier, or an existing `target_mapped` status is not sufficient.
+Authority must be feature-specific and must not be created during ready-gate
+preparation merely to justify the proposed slice. If the audit discovers a new
+product choice, add an O blocker/decision packet and select another slice.
+
 Read-only exploration, test design and adversarial review may run earlier when
 their scope is bounded and they do not mutate a checkout or external system.
 
@@ -97,6 +106,13 @@ The first two write-capable assignments receive enhanced review:
 - any critical finding, repeated major finding, out-of-scope edit or evidence
   overclaim suspends further write-capable delegation until this workflow is
   corrected and revalidated.
+
+Candidate selection itself is part of the pilot: a proposed slice rejected
+before worker launch is recorded as a preflight finding, not counted as a
+completed write pilot. The 2026-09-02 Inventory destination-planning candidate
+demonstrates this guard: independent review found no canonical target decision,
+a D-013 category conflict, and unresolved granularity/lifecycle, so the
+scaffolds were discarded and O-038 was opened before any implementation.
 
 After two clean pilots, line review, full local verification and exact-commit CI
 remain mandatory. The extra independent review may be risk-based, but security,

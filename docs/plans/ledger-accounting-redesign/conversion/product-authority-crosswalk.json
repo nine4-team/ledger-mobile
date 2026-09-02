@@ -51,6 +51,7 @@
         { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
         { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
+        { "path": "docs/specs/purchase-handling-and-inventory-intent.md", "role": "current_product" },
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
         { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" }
       ]
@@ -128,6 +129,7 @@
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
         { "path": "docs/plans/non-item-receipt-lines/design.md", "role": "canonical_target" },
         { "path": "docs/specs/2026-08-30-correct-transaction-and-its-items.md", "role": "current_product" },
+        { "path": "docs/specs/purchase-handling-and-inventory-intent.md", "role": "current_product" },
         { "path": "docs/specs/inventory-as-store.md", "role": "current_product" },
         { "path": "docs/specs/lineage-tracking.md", "role": "current_product" },
         { "path": "docs/specs/vendor-credits.md", "role": "historical_evidence" },

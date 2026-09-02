@@ -37,6 +37,15 @@ If sources disagree, stop the affected slice. Update the canonical spec and
 decision log when authority is clear, or record a blocker. Never resolve the
 conflict only in SQL, Swift, TypeScript, RLS, Sync rules, or tests.
 
+Before a product slice becomes `ready`, perform a feature-specific authority
+audit: every promised user-visible outcome must already appear in a canonical
+target-spec heading or confirmed D decision. Batch-level association with broad
+specs, current shipped behavior, an architecture interface, a capability
+dossier, or a `target_mapped` manifest status does not establish that outcome.
+Do not add new target-spec language during ready preparation merely to make a
+candidate appear authorized; when the missing language represents a product
+choice, record an O blocker/decision packet and select another slice.
+
 ## Unit of Delivery
 
 A vertical slice is the smallest user-meaningful or operational outcome that
@@ -137,9 +146,10 @@ has reached the corresponding status.
 
 1. **Select the slice.** Identify stable manifest surfaces and owning capability
    dossier. Do not organize work around Firebase files or target tables.
-2. **Freeze authority for the slice.** Record exact canonical spec headings,
-   invariants, confirmed decisions and blockers. An open mapping-changing
-   decision keeps the slice `draft`.
+2. **Freeze authority for the slice.** Independently confirm that the exact
+   feature exists in pre-existing canonical target authority, then record its
+   headings, invariants, confirmed decisions and blockers. An open or newly
+   discovered mapping-changing decision keeps the slice `draft`.
 3. **Complete the contract map.** Name domain/application contracts first, then
    schema/handlers/RLS/Sync/local/app-MCP/migration/operations. Record explicit
    non-applicability instead of silent omission.

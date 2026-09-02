@@ -7,9 +7,9 @@ This register is the deterministic queue for target-relevant surfaces that canno
 ## Summary
 
 - Target-relevant surfaces: 529
-- Target-mapped or later: 365
-- Residual surfaces: 164
-- Distinct blockers: 43
+- Target-mapped or later: 362
+- Residual surfaces: 167
+- Distinct blockers: 44
 
 A surface may depend on more than one blocker, so blocker counts do not sum to the residual-surface count.
 
@@ -47,19 +47,20 @@ A surface may depend on more than one blocker, so blocker counts do not sum to t
 | 28 | `Canonical production reference/object profile` | 5 | production evidence | Attachment source profiling and migration | Approve and hash the production Firestore-reference/Storage-object graph, including shared, dangling, missing and retained evidence variants. |
 | 29 | `O-024` | 5 | product decision | Project lifecycle | Approved archive/delete policy plus empty, child-bearing, financial-history, offline-retry and concurrent-child tests |
 | 30 | `O-025` | 5 | product decision | Client/Project correction | Approved mutability boundaries plus cross-Client, prior-Transfer, paid-history, retry and concurrent-change tests |
-| 31 | `A-007` | 4 | architecture decision | Architecture and target spike | proposed: Choose Supabase Auth at launch or a temporary Firebase Auth integration |
-| 32 | `O-002` | 4 | product decision | Transfer and live Invoice membership | Approved recall/removal rule plus concurrency and audit tests |
-| 33 | `O-018` | 3 | product decision | Proto migration and Compatibility | Mapping policy, unresolved queue, source-freeze gate, rollback, and no-loss tests |
-| 34 | `O-019` | 3 | product decision | Item reconciliation | Deterministic identity winner, relationship/media merge, audit, and retry tests |
-| 35 | `Canonical production profile` | 2 | production evidence | Source data profiling and migration | Approve and hash a canonical immutable production export/profile that proves extant paths, shapes, variants, orphans and counts. |
-| 36 | `O-016` | 2 | product decision | Inventory acquisition evidence | Approved state and later-resolution command without fabricated Purchase |
-| 37 | `O-020` | 2 | product decision | Compatibility | Target accounting-contract/budget evidence, migration reconciliation, and O-022 source cutoff |
-| 38 | `O-022` | 2 | product decision | Compatibility and Cutover | Approved quiescence, source-freeze, and recovery plan; proof late Firebase writes cannot bypass or be lost after final delta |
-| 39 | `O-028` | 2 | product decision | Vendor cancellation/non-cash credit | Approved representation that adds no fourth Transaction, conserves every credit cent, and creates Return only for actual money received |
-| 40 | `A-003` | 1 | architecture decision | Architecture and target spike | proposed: Supabase Postgres becomes target server authority |
-| 41 | `A-004` | 1 | architecture decision | Architecture and target spike | proposed: PowerSync SQLite becomes the target local data plane |
-| 42 | `O-017` | 1 | product decision | Item Creation UI/domain boundary | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
-| 43 | `Physical target verification` | 1 | target verification | Offline target spike and physical-device acceptance | Run the isolated Supabase/PowerSync target on physical devices and prove restart, offline lease, queue, readiness and reconnect behavior. |
+| 31 | `O-038` | 5 | product decision | Inventory destination planning | Approved retention/granularity/lifecycle and source migration, plus D-013 category isolation, offline, race, security and no-accounting-effect tests |
+| 32 | `A-007` | 4 | architecture decision | Architecture and target spike | proposed: Choose Supabase Auth at launch or a temporary Firebase Auth integration |
+| 33 | `O-002` | 4 | product decision | Transfer and live Invoice membership | Approved recall/removal rule plus concurrency and audit tests |
+| 34 | `O-018` | 3 | product decision | Proto migration and Compatibility | Mapping policy, unresolved queue, source-freeze gate, rollback, and no-loss tests |
+| 35 | `O-019` | 3 | product decision | Item reconciliation | Deterministic identity winner, relationship/media merge, audit, and retry tests |
+| 36 | `Canonical production profile` | 2 | production evidence | Source data profiling and migration | Approve and hash a canonical immutable production export/profile that proves extant paths, shapes, variants, orphans and counts. |
+| 37 | `O-016` | 2 | product decision | Inventory acquisition evidence | Approved state and later-resolution command without fabricated Purchase |
+| 38 | `O-020` | 2 | product decision | Compatibility | Target accounting-contract/budget evidence, migration reconciliation, and O-022 source cutoff |
+| 39 | `O-022` | 2 | product decision | Compatibility and Cutover | Approved quiescence, source-freeze, and recovery plan; proof late Firebase writes cannot bypass or be lost after final delta |
+| 40 | `O-028` | 2 | product decision | Vendor cancellation/non-cash credit | Approved representation that adds no fourth Transaction, conserves every credit cent, and creates Return only for actual money received |
+| 41 | `A-003` | 1 | architecture decision | Architecture and target spike | proposed: Supabase Postgres becomes target server authority |
+| 42 | `A-004` | 1 | architecture decision | Architecture and target spike | proposed: PowerSync SQLite becomes the target local data plane |
+| 43 | `O-017` | 1 | product decision | Item Creation UI/domain boundary | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
+| 44 | `Physical target verification` | 1 | target verification | Offline target spike and physical-device acceptance | Run the isolated Supabase/PowerSync target on physical devices and prove restart, offline lease, queue, readiness and reconnect behavior. |
 
 ## Exact Affected Surfaces
 
@@ -781,6 +782,22 @@ Affected surfaces:
 - `SWIFT-27CA6EAC7092` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Defines the Project service seam in Firebase ListenerRegistration and untyped field dictionaries, including free-text clientName creation and unconditional delete.
 - `SWIFT-CF459111B7BB` — `M0-PROJECT-CLIENT-REFERENCE-001` — redesign/characterized: Edits Project name, free-text clientName, description, category selection/allocation and hero image, dismissing before independent Project, per-category and media tasks finish while suppressing their errors.
 - `SWIFT-E1A771F6A409` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Provides generic Firestore Project get/create/update/delete and unfiltered account listeners. Creation generates a Project with free-text clientName; update accepts arbitrary field dictionaries; delete removes only the Project document.
+
+### O-038 — 5 surfaces
+
+- Kind: product decision
+- Owning context: Inventory destination planning
+- Required closure: Approved retention/granularity/lifecycle and source migration, plus D-013 category isolation, offline, race, security and no-accounting-effect tests
+- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
+- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
+
+Affected surfaces:
+
+- `FUNCMOD-E7CB6889A620` — `M0-BACKEND-FUNCTIONS-001` — redesign/characterized: Pure helper selects budgetCategoryId or fallback intendedBudgetCategoryId when evaluating legacy transaction completeness.
+- `MCPMOD-D14DD1E83CFE` — `M0-INVENTORY-TRANSACTION-001` — redesign/characterized: Reads/updates Inventory Purchase planning intent and corrects an acquisition into the current project-reimbursement model.
+- `MCPTOOL-42E5CABFC6F6` — `M0-INVENTORY-TRANSACTION-001` — replace/characterized: Lists Inventory resale Purchases with intended Project/category and derives follow-up state from Items and lineage.
+- `MCPTOOL-4FF3862CBCD5` — `M0-INVENTORY-TRANSACTION-001` — replace/characterized: Sets, clears or resolves intended Project/category metadata on current Inventory resale Purchases.
+- `SWIFT-34855F53F580` — `M0-INVENTORY-TRANSACTION-001` — redesign/characterized: Derives a current completeness checklist from category, amount, receipt, Items, payer and positive tax-rate fields plus inventory-purchase intent state.
 
 ### A-007 — 4 surfaces
 

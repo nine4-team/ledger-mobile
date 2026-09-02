@@ -3,7 +3,8 @@
 - Timestamp: 2026-08-31
 - Class: target mapping design evidence
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
-  on `dev`; shared worktree was already dirty
+  from the history now carried by `firebase`; the historical audit began from a
+  dirty source checkout
 - Production reads or mutations: none
 - Target implementation/schema/RLS/Storage/Sync Stream changes: none
 - Operator: Codex
@@ -15,7 +16,7 @@
 ## Scope and Result
 
 The five batches contain 62 `replace`, `redesign`, or `migrate` surfaces.
-Thirty-two now have complete target maps. Thirty remain deliberately unresolved
+Thirty-one now have complete target maps. Thirty-one remain deliberately unresolved
 because a named product/architecture decision or the canonical production
 profile can still change/discover their exact security, lifecycle, data or
 migration mapping. `MAN-DATA-001` remains `blocked`, preserving the M1 evidence
@@ -49,7 +50,7 @@ gate; no prose mapping was allowed to bypass it.
 
 ## Withheld Surfaces
 
-The 30 held entries name only A/O decisions or canonical production-profile
+The 31 held entries name only A/O decisions or canonical production-profile
 evidence. They include occurrence/Transaction/Invoice/Space/reference-writer
 rules and trigger behavior, Auth/offline session choices, proto migration,
 object retention, unprofiled dynamic data and the blocked production data
@@ -58,7 +59,7 @@ business authority.
 
 ## Verification
 
-Required per-batch outcomes are: Auth 7 mapped/3 held; Functions 6/9; rules and
+Required per-batch outcomes are: Auth 7 mapped/3 held; Functions 5/10; rules and
 manual data/index 11/16; Storage 6/2; query profile 2/0. Every mapped entry has
 non-empty owner, target surfaces, security, Sync, migration rule,
 reconciliation, tests and acceptance fields.

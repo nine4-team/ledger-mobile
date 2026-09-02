@@ -199,13 +199,13 @@ handlers and RLS/capability model used by the app.
 
 | Classification | Decision |
 |---|---|
-| Preserve | Scope-relative money meaning; vendor/date/amount/source/notes/payment evidence; physical Item identity; purchase/project price bases; explicit inventory intent; fast batch selection; dry-run previews for destructive/corrective work; explainable history; exact dependency preflight and immutable deletion evidence if deletion remains |
+| Preserve | Scope-relative money meaning; vendor/date/amount/source/notes/payment evidence; physical Item identity; purchase/project price bases; raw source inventory-intent evidence for migration; fast batch selection; dry-run previews for destructive/corrective work; explainable history; exact dependency preflight and immutable deletion evidence if deletion remains |
 | Correct | Project Purchase fabricated by Inventory sale; physical movement fabricated as Return; two-hop same-Client movement; Sale/paymentToBusiness/fee/expense target writes; generic Return/association; source-label origin authority; optional/drop-on-decode lineage; type-only canonical money record; percentage receipt tolerance; field-name drift; silent async failure; cancellation without dependency validation; inconsistent app/MCP deletion |
 | Improve | One operation ID and authoritative result per story; typed values instead of dynamic patches; deterministic cursor ordering; complete local provenance/readiness; conflict receipts; explicit pending/rejected UI; shared app/MCP validation and authorization; immutable line snapshots instead of reconstructing from mutable Item state |
 | Redesign | Split placement, money, open billing, credit, Transfer and correction commands; store exact occurrence relationships; preserve historical Transaction membership; reconstruct final receipt totals from Items plus `NonItemReceiptLine`; make server transaction the only accounting authority |
 | Retire | Target generic Transaction CRUD/update/bulk update; public `itemIds` replacement; current sell/return/reassign command names; project `sale`, `paymentToBusiness`, `fee`, `expense` and `to inventory` writes; target source-label heuristics; target client-written lineage; target Firebase Functions/rules/Admin SDK composition |
 | Source only | Existing Firebase services, views, tools, rules, Functions, migration/repair scripts, legacy movement flags/snapshots, deletion tombstones and lineage after source freeze |
-| Open | O-002–O-015, O-023 where attachments affect deletion, O-028–O-032, A-003/A-004/A-015 and production shape/profile evidence |
+| Open | O-002–O-015, O-023 where attachments affect deletion, O-028–O-032, O-038 Inventory planning retention/granularity/lifecycle, A-003/A-004/A-015 and production shape/profile evidence |
 
 ## Target Story and Command Taxonomy
 
@@ -312,9 +312,14 @@ Project.
 The Inventory stream includes every current Inventory Item, acquisition line,
 current placement/custody state, immutable inventory-entry basis, occurrence or
 lineage chain needed to explain how it arrived, related Purchase/Return
-summaries allowed by financial access, planning intent and open operation
-results. A previously unseen current Inventory Item must not show a definitive
-history while offline unless this evidence is locally complete.
+summaries allowed by financial access and open operation results. A previously
+unseen current Inventory Item must not show a definitive history while offline
+unless this evidence is locally complete.
+
+O-038 decides whether a target Inventory-planning projection joins this stream.
+Until then, source intended Project/category/resolution values remain migration
+evidence only and cannot authorize or create placement, acquisition, Link,
+occurrence, Invoicing, money or budget effects.
 
 Cross-scope historical detail may use a separate authorized history stream to
 bound download size, but the core Project/Inventory streams retain enough

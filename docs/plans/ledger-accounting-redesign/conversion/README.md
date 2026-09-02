@@ -1,7 +1,7 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 361 of 525 target-relevant
-surfaces are target-mapped or later and the remaining 164 are explicitly tied
+Status: M0 inventory classification complete; 362 of 529 target-relevant
+surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
