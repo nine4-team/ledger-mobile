@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 97
+State version: 98
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-RENAME-VERIFIED
+- Checkpoint: PROJECT-RENAME-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1351,6 +1351,30 @@ modifying the running Firebase application before hard cutover.
   clean tracked artifacts. All five Client rename obligations and exactly its
   two target-only surfaces are now `verified`; every excluded lifecycle,
   history, provider, migration and production surface remains unadvanced.
+- Audited the remaining Phase 1 Project/Client/reference dependency graph and
+  selected `project-rename-operation-contracts` as the next smallest complete
+  user outcome. Stable Project/Client identity, Project setup/archive and
+  directory reads are already verified; the canonical relationship and reviewed
+  capability contract settle name-as-display semantics without making name an
+  identity, relationship or authorization key.
+- Deliberately did not combine Project rename with description/category/media
+  edits or Client reassignment. Those are distinct operations; O-024/O-025
+  remain open for physical delete and Client correction/merge/reassignment.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for exact Account/actor/contract/Operation/Project/new-name/time binding, one
+  same-subject expected Project revision, derived subject/fingerprint, canonical
+  restart, atomic rebound refusal and one narrow rename port.
+- The ready gate passes at 759 recorded / 744 discovered surfaces, 333 mapped /
+  164 residual / 43 blockers. Conversion, capability, query, residual, M0,
+  target-environment and generated-contract controls pass; M1/M2 retain their
+  expected 2/164 blockers. All existing 116 target tests in 26 suites, macOS and
+  generic iOS Simulator staging builds, and diff formatting pass while the two
+  scaffolds remain comment-only.
+- No executable Project rename, Project row/downstream projection, Client/
+  description/category/media/history/lifecycle change, physical persistence,
+  server authorization/revision apply, schema/RLS/Sync/Auth/provider,
+  current/target app/MCP, source migration, hosted resource or production
+  operation exists at ready. O-024/O-025 remain open and unchanged.
 
 ## Next Action
 
@@ -1390,11 +1414,12 @@ Continue without waiting on the two M1 evidence blockers:
    for exact Account/Project/category configuration state, absent/null/zero/
    positive allocation, incomplete relationship evidence and configuration
    revision. Treat the verified `client-rename-operation-contracts` dossier and
-   `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority. Audit
-   the next smallest complete decision-independent Phase 1 dependency against
-   canonical specs and the residual register, then prepare its ready dossier
-   before implementing it. Do not add Client lifecycle/merge/reassignment,
-   frozen-history rewrite, physical persistence, schema/RLS/Sync/Auth/provider
+   `EVID-CLIENT-RENAME-001` as the sole RenameClient semantic authority.
+   Implement only the ready `project-rename-operation-contracts` dossier:
+   stable Account/Project identity, validated replacement display text, one
+   expected Project revision, exact shared operation binding/restart/refusal and
+   one narrow operation port. Do not add Client/description/category/media/
+   history/lifecycle change, physical persistence, schema/RLS/Sync/Auth/provider
    behavior, current app/MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named

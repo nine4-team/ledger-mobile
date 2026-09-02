@@ -46,6 +46,11 @@ staging builds. It preserves stable Client identity, replacement display text,
 expected revision and the shared operation lifecycle without deciding Client
 archive/merge, Project reassignment, provider, migration or production
 behavior.
+The provider-free Project rename command slice is ready, with exactly two
+comment-only target surfaces. It preserves stable Project identity, replacement
+display text, expected revision and Client-relationship separation without
+deciding Project deletion, Client reassignment, provider, migration or
+production behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
