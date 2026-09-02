@@ -165,17 +165,19 @@ run `33663785835`. Auth provider and offline lease choices, final UI copy/policy
 physical synchronization/cleanup, O-023 media retention, schema/RLS/Sync,
 app/MCP, migration, hosted resources and production remain excluded;
 `EVID-SESSION-ENDING-POLICY-001`.
-The provider-free Account discovery and explicit selection slice is ready for
-implementation after exact ready-commit CI. Exactly two comment-only target
-surfaces define environment/Principal-scoped, visibility-safe Account rows,
-ready/partial/stale/authoritative-empty discovery, deterministic remembered-
-first presentation with no automatic selection, exact-snapshot-bound local
-selection intent, canonical restart/refusal and one narrow query port. All 168
-existing target tests in 39 suites, graph/contracts, both staging builds and
-clean artifacts pass locally. A-007/A-016/O-023, current authorization,
-physical workspace activation/switching, membership/Account writers,
-schema/RLS/Sync, app/MCP, migration, hosted resources and production remain
-excluded; `EVID-ACCOUNT-DISCOVERY-SELECTION-001`.
+The provider-free Account discovery and explicit selection slice is implemented
+locally after exact ready commit `ae16ed4e` passed immutable Actions run
+`33666363647`. Exactly two target surfaces define environment/Principal-scoped,
+visibility-safe Account rows; ready/partial/stale/authoritative-empty/failure
+distinction; deterministic remembered-first presentation with no automatic
+selection; exact-snapshot-bound non-authorizing selection intent; canonical
+restart/refusal; stable diagnostics; and one narrow query port. Four focused/
+all 172 target tests in 40 suites, graph/contracts, both staging builds,
+repeatable target-project generation and clean artifacts pass locally. Exact
+implementation-commit CI remains before verification. A-007/A-016/O-023,
+current authorization, physical workspace activation/switching, membership/
+Account writers, schema/RLS/Sync, app/MCP, migration, hosted resources and
+production remain excluded; `EVID-ACCOUNT-DISCOVERY-SELECTION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 137
+State version: 138
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ACCOUNT-DISCOVERY-SELECTION-READY-LOCAL
+- Checkpoint: ACCOUNT-DISCOVERY-SELECTION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2055,7 +2055,27 @@ modifying the running Firebase application before hard cutover.
   suites, both staging builds, unchanged repeatable target graph, target
   isolation/generated contracts, conversion/capability/query/residual controls,
   M0 and clean formatting. M1/M2 retain the expected 2/164 blockers with zero
-  structural errors. Exact ready-commit CI remains before implementation.
+  structural errors.
+- Exact Account-discovery ready commit
+  `ae16ed4e62ee2abe7ab60f71a26a92824e70fa01` passed immutable Actions run
+  `33666363647`: conversion traceability passed in 7 seconds and the isolated
+  target environment passed in 3 minutes 34 seconds with all 168 then-existing
+  target tests, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts.
+- Implemented only the frozen provider-free Account-discovery/selection
+  boundary: bounded visibility-safe Account summaries; exact environment/
+  Principal/readiness/version/time/fingerprint snapshots; distinct waiting,
+  snapshot and failed-with-cache states; deterministic remembered ordering with
+  no automatic selection; exact-snapshot-bound non-authorizing selection
+  intent; stable rejection diagnostics; and one narrow `AccountQuerying` port.
+  Auth, membership proof, authorization, offline lease, persistence, physical
+  activation/switching, schema/RLS/Sync, app/MCP, migration and production remain
+  absent.
+- Four focused and all 172 target tests in 40 suites pass locally, along with
+  target isolation/generated contracts, both staging builds, repeatable target
+  project generation, conversion/capability/query/residual controls, M0 and
+  clean diff formatting. M1/M2 retain exactly 2/164 blockers with zero
+  structural errors. Exact implementation-commit CI remains before verification.
 
 ## Next Action
 
@@ -2132,12 +2152,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SESSION-ENDING-POLICY-001` as the sole provider-free safety authority
    for exact pending-work summaries and clean/sync-first/destructive session
    dispositions. Its exact implementation commit and both CI jobs are
-   verified. Treat the ready `account-discovery-and-selection-contracts`
+   verified. Treat the implemented `account-discovery-and-selection-contracts`
    dossier and `EVID-ACCOUNT-DISCOVERY-SELECTION-001` as the sole authority for
-   the next bounded implementation. Commit/push the exact comment-only ready
-   gate, require both immutable CI jobs, then implement only the frozen
-   provider-free discovery/selection-intent boundary and repeat the local and
-   exact-commit verification gates. Keep
+   the bounded provider-free discovery/selection-intent boundary. Its exact
+   ready commit and both CI jobs pass; commit/push the implementation checkpoint
+   and require both immutable implementation-commit jobs before marking it
+   verified or choosing the next slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

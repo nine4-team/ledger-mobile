@@ -1,14 +1,14 @@
 # EVID-ACCOUNT-DISCOVERY-SELECTION-001 — Account Discovery and Explicit Selection Contracts
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free Account discovery and selection intent
+- Class: implementation / provider-free Account discovery and selection intent
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-C1B994920894`, `TEST-11AC450D596A`
 - Slice dossier:
   `conversion/implementation-slices/account-discovery-and-selection-contracts.json`
-- Verification state: ready locally; exact ready-commit CI is required before
-  executable behavior may be added
+- Verification state: implemented locally; exact implementation-commit CI is
+  required before verification
 - Ready scaffold hashes:
   - `AccountDiscoveryAndSelection.swift`:
     `f84b92866a982f2acad887883e27e8e509b0c9923feddbd4d144988fa053d96e`
@@ -136,8 +136,63 @@ The complete local ready gate passes:
 The synchronized ledger records 785 surfaces / 770 discovered, 359 mapped-or-
 later target-relevant surfaces, 164 residual surfaces and 43 validated blockers.
 Forty slices claim 101 of 523 target-relevant surfaces; 84 are implemented or
-later. Only immutable exact-ready-commit CI may authorize the bounded provider-
-free implementation named here.
+later. The bounded provider-free implementation remained prohibited until the
+exact ready checkpoint passed immutable CI.
+
+The exact ready commit
+`ae16ed4e62ee2abe7ab60f71a26a92824e70fa01` passed immutable GitHub Actions
+run `33666363647`: conversion traceability passed in 7 seconds and the isolated
+target environment passed in 3 minutes 34 seconds with all 168 then-existing
+target tests, graph/generated-contract checks, both staging builds and clean
+tracked artifacts. That immutable pass authorized only the frozen provider-free
+implementation below.
+
+## Implemented Contract
+
+The bounded implementation now defines:
+
+- `AccountDisplayName` and `AccountSummary`, exposing only a stable Account ID
+  and a validated, bounded, visibility-safe display name;
+- `AuthorizedAccountListSnapshot`, which binds one deterministic unique Account
+  list to an exact target environment, Principal, completeness, readiness,
+  local-data version, finite observation time and canonical SHA-256 fingerprint;
+- explicit waiting, snapshot and failed-with-cache discovery states without
+  collapsing an incomplete or failed read into authoritative emptiness;
+- deterministic normalized-name/stable-ID ordering, with a remembered visible
+  Account optionally presented first but never selected automatically;
+- `WorkspaceSelectionIntent`, bound to the exact snapshot, environment,
+  Principal, Account, version and request time the caller selected;
+- `AccountSelectionPolicy`, which rejects unlisted, rebound, changed or tampered
+  selection evidence through stable non-enumerating diagnostics; and
+- one narrow provider-free `AccountQuerying` stream port that cannot authorize
+  or activate an Account.
+
+The exact implementation source hashes are:
+
+- `AccountDiscoveryAndSelection.swift`:
+  `4fc4c2e008995fd1e317508323d55e72c42a6126b79200be825267f8d51d042f`
+- `AccountDiscoveryAndSelectionTests.swift`:
+  `ef93c06a416b24ae4a3116cddcfa880ac1273cf18d3c0072ea400410e8229166`
+
+## Local Implementation Verification
+
+All four focused discovery/selection tests and all 172 target tests in 40
+suites pass locally. They cover zero/one/many/equal-name Account discovery,
+remembered ordering without implicit choice, readiness/empty/failure
+distinction, byte-identical restart, malformed/duplicate/scope/version/time/
+fingerprint/rebinding refusal, every stable diagnostic code and the exact
+provider-free query-port request/stream behavior.
+
+The complete local implementation gate also passes both staging builds, target
+isolation/generated contracts, conversion sync/check/report, capability/query/
+residual controls, M0, clean diff formatting and repeatable XcodeGen output.
+The target project and staging scheme remain exactly
+`0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53`
+and `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`;
+the source application project is unchanged. M1/M2 retain exactly their
+expected 2/164 coverage blockers with zero structural errors. The exact
+implementation commit and immutable CI run remain pending, so this slice is
+not yet verified.
 
 ## Permanent Limits
 
