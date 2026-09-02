@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T19:43:51.461Z",
+  "generatedFromManifestSync": "2026-09-02T20:03:56.912Z",
   "totals": {
     "slices": 42,
     "claimedTargetSurfaces": 105,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 88
+    "implementationAdvancedTargetSurfaces": 90
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 40,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -171,7 +171,7 @@
       "sliceId": "item-space-clearing-operation-contracts",
       "title": "Clear an exact same-scope Item placement set atomically without changing accounting or deleting media",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Item Clearing Operation Contracts",
       "surfaceIds": [
         "SWIFT-4C7158974133",

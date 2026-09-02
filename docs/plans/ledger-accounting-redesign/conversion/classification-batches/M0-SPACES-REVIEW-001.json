@@ -1285,10 +1285,10 @@
     {
       "id": "SWIFT-4C7158974133",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "a5580c3efb9fa0e8569bc2813b4545e13b65a585bd1f6c842b6f2856e690a42c",
-      "currentBehavior": "Contains only the reviewed ready-gate scaffold for a provider-free ClearItemSpaceAssignments operation; no executable clear behavior exists.",
+      "acknowledgeSourceHash": "de8eb6c7a67fb5cc77e2c9fa2c279514908a35c76dd977d3288d42dbdc6d06ec",
+      "currentBehavior": "Implements the reviewed provider-free ClearItemSpaceAssignments operation contract with canonical same-scope mixed-Space Item membership, exact current-placement revisions and deterministic operation evidence.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -1296,7 +1296,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-ITEM-SPACE-CLEARING-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one exact same-scope nonempty bulk ClearItemSpaceAssignments intent with stable Item/current-Space identities, exact Item revisions, canonical typed preconditions, shared operation binding/receipt validation, derived marker-closure semantics and a narrow port. It cannot assign a destination, move Item scope, archive a Space, accept or delete media, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023 remain open.",
+      "notes": "Target-only Phase 1 implementation. One exact same-scope nonempty bulk ClearItemSpaceAssignments intent has stable Item/current-Space identities, exact Item revisions, canonical typed preconditions, shared operation binding/receipt validation, derived marker-closure semantics and a narrow port. Exact ready commit 2a201de4 and immutable Actions run 33675190031 passed; four focused/all 180 target tests in 42 suites and complete local gates pass, while exact implementation-commit CI remains. It cannot assign a destination, move Item scope, archive a Space, accept or delete media, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-037/O-023 remain open.",
       "target": {
         "owner": "Space Item Clearing Operation Contracts",
         "surfaces": [
@@ -1334,10 +1334,10 @@
     {
       "id": "TEST-0AB198EB6935",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "04724d17f1fd927c8734e5fe7e7372c702fb612f59464f2cf44e9ad47e295a41",
-      "currentBehavior": "Contains only the reviewed ready-gate scaffold for deterministic provider-free ClearItemSpaceAssignments tests; no executable clear test exists.",
+      "acknowledgeSourceHash": "c1ac404bcc1a220699bc15d1f53661f4514b0c27faa33bd48a15449d79b73f91",
+      "currentBehavior": "Implements four deterministic provider-free ClearItemSpaceAssignments contract tests covering exact mixed-Space scope/preconditions, restart canonicalization, tamper refusal and shared operation replay.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -1345,7 +1345,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-ITEM-SPACE-CLEARING-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove Project/Inventory same-scope clearing, stable Item/current-Space identities, exact revisions and typed preconditions, mixed-Space/input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. They cannot claim physical placement/marker mutation, destination/scope/archive/accounting behavior, attachment deletion, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Implemented target test surface. Four deterministic tests prove Project/Inventory same-scope clearing, stable Item/current-Space identities, exact revisions and typed preconditions, mixed-Space/input-order canonicalization, byte-identical restart, atomic refusal, receipt and replay semantics. Exact ready commit 2a201de4 and immutable Actions run 33675190031 passed; four focused/all 180 target tests in 42 suites and complete local gates pass, while exact implementation-commit CI remains. They cannot claim physical placement/marker mutation, destination/scope/archive/accounting behavior, attachment deletion, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Space Item Clearing Operation Contracts",
         "surfaces": [
