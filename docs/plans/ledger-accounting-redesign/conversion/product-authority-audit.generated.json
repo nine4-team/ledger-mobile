@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T12:56:41.615Z",
+  "generatedFromManifestSync": "2026-09-02T13:16:17.098Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 769,
-    "targetRelevantSurfaces": 507,
+    "surfaces": 771,
+    "targetRelevantSurfaces": 509,
     "batches": 18,
-    "productScopeSurfaces": 615,
+    "productScopeSurfaces": 617,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 503,
-      "targetRelevantSurfaceCount": 351
+      "surfaceCount": 505,
+      "targetRelevantSurfaceCount": 353
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -70,8 +70,17 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 408,
-      "targetRelevantSurfaceCount": 292
+      "surfaceCount": 410,
+      "targetRelevantSurfaceCount": 294
+    },
+    {
+      "path": "docs/specs/spaces.md",
+      "batchIds": [
+        "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-SPACES-REVIEW-001"
+      ],
+      "surfaceCount": 115,
+      "targetRelevantSurfaceCount": 107
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -316,7 +325,7 @@
       "batchId": "M0-BACKEND-FUNCTIONS-001",
       "title": "Firebase Cloud Functions and privileged side effects",
       "scope": "product",
-      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the five canonical target specs.",
+      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the canonical target specs.",
       "surfaceCount": 23,
       "targetRelevantSurfaceCount": 15,
       "authorities": [
@@ -1251,8 +1260,8 @@
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
-      "surfaceCount": 80,
-      "targetRelevantSurfaceCount": 78,
+      "surfaceCount": 82,
+      "targetRelevantSurfaceCount": 80,
       "authorities": [
         {
           "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
@@ -1264,6 +1273,10 @@
         },
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/spaces.md",
           "role": "canonical_target"
         },
         {
@@ -1341,6 +1354,7 @@
         "SWIFT-58AED31D6D0B",
         "SWIFT-5B59D74F6B13",
         "SWIFT-7500FDB4FDB6",
+        "SWIFT-77F812A8F463",
         "SWIFT-797909434B82",
         "SWIFT-7DC1AEC51D21",
         "SWIFT-8351FACDBE06",
@@ -1378,6 +1392,7 @@
         "TEST-99B322EB971A",
         "TEST-A73A49564E8C",
         "TEST-AC9956AE9D5C",
+        "TEST-CB30140F137B",
         "TEST-D1C8EFBDFDDE",
         "TEST-DB2559406D3D",
         "TEST-DB57E9433EB6",
@@ -1555,7 +1570,7 @@
         },
         {
           "path": "docs/specs/spaces.md",
-          "role": "current_product"
+          "role": "canonical_target"
         },
         {
           "path": "docs/specs/items.md",

@@ -1,32 +1,44 @@
 # EVID-PRODUCT-AUTHORITY-001 — Product Authority to Surface Cross-Reference
 
-- Timestamp: 2026-09-01
+- Timestamp: 2026-09-02
 - Class: product-behavior / conversion-coverage control
-- Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
-  on `dev`; shared worktree was already dirty
+- Original evidence commit: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`;
+  its historical branch label was `dev`
+- Current source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
+  on `firebase`; target work remains isolated on
+  `codex/supabase-powersync-implementation`
 - Production reads or mutations: none
 - Target implementation/deployment/migration changes: none
 - Operator: Codex
 
 ## Result
 
-All 686 conversion surfaces resolve through their one reviewed classification
+All 771 conversion surfaces resolve through their one reviewed classification
 batch to an explicit authority set in `product-authority-crosswalk.json`:
 
-- 573 surfaces are in product-governed batches;
-- 113 are platform, query/profiling, cutover, residual, or conversion-control
+- 617 surfaces are in product-governed batches;
+- 154 are platform, query/profiling, cutover, residual, or conversion-control
   surfaces governed by technical authorities;
-- all 427 target-relevant surfaces resolve to one of those reviewed scopes; and
-- all five canonical target specs are explicitly present and distinguished from
+- all 509 target-relevant surfaces resolve to one of those reviewed scopes; and
+- all six canonical target specs are explicitly present and distinguished from
   current-product and historical-evidence documents.
 
-The five target specs are:
+The six target specs are:
 
 1. `docs/specs/invoice-centered-project-accounting.md`;
 2. `docs/specs/inventory-item-invoicing-lifecycle.md`;
 3. `docs/specs/proto-item-capture.md`;
-4. `docs/specs/client-identity-and-project-transfers.md`; and
-5. `docs/plans/non-item-receipt-lines/design.md`.
+4. `docs/specs/client-identity-and-project-transfers.md`;
+5. `docs/specs/spaces.md`; and
+6. `docs/plans/non-item-receipt-lines/design.md`.
+
+The sixth entry corrects authority metadata rather than choosing new behavior:
+`spaces.md` already declared itself a target-state spec and already stated the
+corrected typed Space/template/checklist rules. The 2026-09-02 Space-template
+dependency audit found that it was still labeled `current_product`. It is now
+canonical for both the Spaces/review and Project/Client/reference batches, so a
+later slice cannot preserve the source hard-delete, checked-state-copy or no-op
+template defects as target behavior.
 
 The conversion check now fails when a classification batch has no authority
 entry, a referenced authority file disappears, a product batch lacks a
@@ -66,6 +78,7 @@ npm run conversion:report
 npm run conversion:gate:m0
 ```
 
-Result: 686 recorded surfaces, 674 currently discovered, zero errors and zero
-warnings; M0 passes. No Firebase application behavior, Supabase/PowerSync
-schema, deployment, production data, or cutover state was changed.
+Result: 771 recorded surfaces, 756 currently discovered, zero errors and three
+explained retained-path warnings; M0 passes. No Firebase application behavior,
+Supabase/PowerSync schema, deployment, production data, or cutover state was
+changed.

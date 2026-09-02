@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 341 of 505 target-relevant
+Status: M0 inventory classification complete; 345 of 509 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -89,6 +89,14 @@ pass all 140 target tests, graph/generated-contract checks, both staging builds
 and clean artifacts. O-026 mutation authority, default seeding, physical
 persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
 production remain excluded.
+The provider-free Space-template reference read slice is ready, not implemented.
+Exactly two comment-only target surfaces have frozen stable Account/template/
+checklist/item identity, text, lifecycle/revision/order, structure-without-
+checked-state, readiness/restart/refusal and narrow-query-port obligations.
+Executable implementation is gated on the exact ready commit passing CI.
+O-026 mutation authority, template apply/save, Space creation, physical
+persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
+production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
@@ -168,8 +176,9 @@ summary or select a different slice merely because the prior reasoning is gone.
   reviewed canonical-target, current-product, historical-evidence,
   decision-log, architecture, or conversion-control authorities.
 - `product-authority-audit.generated.json` and `.md` prove that every stable
-  surface resolves through its batch to an authority set and that all five new
-  target specs remain represented. Generated artifacts must not be edited.
+  surface resolves through its batch to an authority set and that all six
+  registered target specs remain represented. Generated artifacts must not be
+  edited.
 - `implementation-slices/*.json` contains one machine-readable dossier per
   active target slice. `_template.json` is ignored by validation and must be
   copied/renamed before use.

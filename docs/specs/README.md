@@ -17,6 +17,7 @@ migration mechanics.
 | [client-identity-and-project-transfers.md](client-identity-and-project-transfers.md) | Canonical target Client identity, global three-type Transaction taxonomy, and paired same-Client Transfers |
 | [data-model.md](data-model.md) | All entities, relationships, canonical lookups, and validation rules |
 | [proto-item-capture.md](proto-item-capture.md) | Canonical target unified Item wizard, accounting Link, and hard-cutover legacy capture import |
+| [spaces.md](spaces.md) | Canonical target organizational placement, scoped assignment, template, checklist, and archive behavior |
 | [non-item receipt-line design](../plans/non-item-receipt-lines/design.md) | Canonical target physical-Item versus nonphysical receipt completeness model |
 | [write-tiers.md](write-tiers.md) | Current Firebase write patterns; superseded for the redesigned target by the architecture package |
 | [offline-first.md](offline-first.md) | Offline product requirements plus current Firebase implementation; target mechanics live in the architecture package |
@@ -26,7 +27,6 @@ migration mechanics.
 | [return-and-sale-tracking.md](return-and-sale-tracking.md) | Return flow, disposition lifecycle, and incomplete return detection |
 | [transaction-audit.md](transaction-audit.md) | Completeness calculation, variance analysis, and missing price tracking |
 | [vendor-credits.md](vendor-credits.md) | Vendor cancellation credits and other vendor-issued purchase offsets; distinct from physical returns |
-| [spaces.md](spaces.md) | Organization, scoping, templates, and checklists |
 | [reassign-vs-sell.md](reassign-vs-sell.md) | Correct/Move (no financial impact) vs Sell (scope change with budget impact) vs Return (vendor or inventory). UI menu labels and visibility rules. |
 | [reports.md](reports.md) | Invoice, client summary, and property management report generation |
 | [invoice-import.md](invoice-import.md) | PDF/image extraction, vendor parsing, and draft transaction creation |

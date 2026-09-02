@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T12:56:41.615Z",
+  "generatedFromManifestSync": "2026-09-02T13:16:17.098Z",
   "totals": {
-    "slices": 32,
-    "claimedTargetSurfaces": 85,
+    "slices": 33,
+    "claimedTargetSurfaces": 87,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 70
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 31,
@@ -391,6 +391,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/shared-list-query-presentation.json"
+    },
+    {
+      "sliceId": "space-template-reference-read-contracts",
+      "title": "Read ordered Space-template structure offline without carrying checked state or granting write authority",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Template Reference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-77F812A8F463",
+        "TEST-CB30140F137B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-template-reference-read-contracts.json"
     },
     {
       "sliceId": "target-environment-isolation",

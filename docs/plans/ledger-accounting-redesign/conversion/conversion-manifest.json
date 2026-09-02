@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T12:56:41.615Z",
+    "lastSynchronizedAt": "2026-09-02T13:16:17.098Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2166,7 +2166,7 @@
         "acceptance": [
           "Discovery and validation complete with zero structural errors or warnings",
           "Every surface resolves through exactly one classification batch to reviewed product or technical authorities",
-          "All five canonical target specs appear in the reviewed crosswalk and stale generated authority artifacts fail checking",
+          "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking",
           "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations",
           "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence",
           "A mismatched explicit acknowledgment fails",
@@ -22625,6 +22625,70 @@
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
+      "id": "SWIFT-77F812A8F463",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SpaceTemplateReferenceData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SpaceTemplateReferenceData.swift"
+        }
+      ],
+      "observedSourceHash": "9682f5d9bbec156fd6c8f92fa0280217622ee19d89ed3198844ad7c69a11dac2",
+      "acknowledgedSourceHash": "9682f5d9bbec156fd6c8f92fa0280217622ee19d89ed3198844ad7c69a11dac2",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the comment-only ready-gate scaffold for the provider-free Account-scoped Space-template reference read contract; no executable target behavior exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Template Reference Read Contracts",
+        "surfaces": [
+          "SpaceTemplateID",
+          "SpaceTemplateChecklistID",
+          "SpaceTemplateChecklistItemID",
+          "SpaceTemplateChecklistDefinition",
+          "SpaceTemplateChecklistItemDefinition",
+          "SpaceTemplateSnapshot",
+          "SpaceTemplateReferenceSnapshot",
+          "SpaceTemplateQuerying",
+          "SpaceTemplateReferenceFailure"
+        ],
+        "securityRequirements": [
+          "The read model accepts only already-authorized rows for one exact Account and exposes no membership, role, capability, hidden-row count, credential or service identity",
+          "O-026 remains open for every template creation, update, archive/reactivation and reorder operation; reading or selecting a template cannot grant mutation or Space-creation authority"
+        ],
+        "syncRequirements": [
+          "Stable template, checklist and checklist-item identities plus deterministic structure order, lifecycle and revision survive canonical structured restart without carrying checked state",
+          "Ready, partial, stale and authoritative-empty local snapshots remain distinct; this contract does not claim a physical database or synchronized download"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only read values and decode no Firebase Space-template document, embedded source checklist, export row or source-to-target correlation.",
+        "reconciliation": [
+          "A later importer must preserve template text/order and stable source correlation while resetting every migrated template checklist item to target unchecked structure and classifying malformed or duplicate source identity/order"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceTemplateReferenceDataTests"
+        ],
+        "acceptance": [
+          "Synthetic contracts prove only exact Account scope, stable ordered structure without checked state, local readiness/restart and atomic refusal without mutation, Space creation, a provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-SPACE-TEMPLATE-REFERENCE-001"
+      ],
+      "notes": "Ready-gate scaffold only. The target contract is limited to stable ordered template/checklist/item structure, explicit lifecycle/revision/readiness and one narrow read port. Applying, saving, creating, updating, archiving, reactivating or reordering templates; Space creation; O-026 authority; physical persistence; schema/RLS/Sync/provider; app/MCP; migration; hosted resources and production remain excluded.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-78DBAE560212",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/CreateItemsFromImagesModal.swift",
@@ -36099,6 +36163,65 @@
       ],
       "notes": "Six deterministic target package tests with no network or provider test host.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-CB30140F137B",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SpaceTemplateReferenceDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SpaceTemplateReferenceDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "de2d208b92011112a5e7f777914616a056a3a425b3f185ad9b077857684a8e77",
+      "acknowledgedSourceHash": "de2d208b92011112a5e7f777914616a056a3a425b3f185ad9b077857684a8e77",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the comment-only ready-gate scaffold for deterministic Space-template reference read tests; no executable target test exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Template Reference Read Contracts",
+        "surfaces": [
+          "SpaceTemplateReferenceDataTests",
+          "ordered active/archive template structure fixtures",
+          "ready/partial/stale/authoritative-empty restart fixtures",
+          "scope/identity/order/count/time/encoding refusal fixtures",
+          "Account-exact template-query port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, template, checklist and item identities and cannot exercise a credential, membership row, capability grant or hidden data",
+          "Negative tests expose only stable bounded codes and no template text, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured restart/readiness evidence from physical local persistence, authenticated authorization and synchronized target projection"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space-template document, source Space, profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent snapshots round-trip byte-identically while changed Account, duplicate identity/order, count, time and malformed evidence fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceTemplateReferenceDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Space-template read boundary without claiming writer authorization, Space creation, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-SPACE-TEMPLATE-REFERENCE-001"
+      ],
+      "notes": "Ready-gate scaffold only. Tests will prove target structure/readiness/refusal boundaries using synthetic values and cannot prove template mutation, O-026 authorization, Space creation, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-D1C8EFBDFDDE",

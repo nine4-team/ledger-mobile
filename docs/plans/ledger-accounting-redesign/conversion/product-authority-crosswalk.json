@@ -6,6 +6,7 @@
     "docs/specs/inventory-item-invoicing-lifecycle.md",
     "docs/specs/proto-item-capture.md",
     "docs/specs/client-identity-and-project-transfers.md",
+    "docs/specs/spaces.md",
     "docs/plans/non-item-receipt-lines/design.md"
   ],
   "batches": {
@@ -40,7 +41,7 @@
     },
     "M0-BACKEND-FUNCTIONS-001": {
       "scope": "product",
-      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the five canonical target specs.",
+      "rationale": "Existing privileged side effects span every redesigned accounting writer and are source evidence only; target behavior comes from the canonical target specs.",
       "authorities": [
         { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
         { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
@@ -193,6 +194,7 @@
         { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
         { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
         { "path": "docs/specs/projects.md", "role": "current_product" },
         { "path": "docs/specs/budget-management.md", "role": "current_product" },
         { "path": "docs/specs/data-model.md", "role": "current_product" },
@@ -244,7 +246,7 @@
       "authorities": [
         { "path": "docs/specs/inventory-item-invoicing-lifecycle.md", "role": "canonical_target" },
         { "path": "docs/specs/proto-item-capture.md", "role": "canonical_target" },
-        { "path": "docs/specs/spaces.md", "role": "current_product" },
+        { "path": "docs/specs/spaces.md", "role": "canonical_target" },
         { "path": "docs/specs/items.md", "role": "current_product" },
         { "path": "docs/specs/data-model.md", "role": "current_product" },
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }

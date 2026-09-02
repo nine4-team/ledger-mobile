@@ -18,7 +18,7 @@ approval of a target port, schema, or behavior decision.
   offline signals captured; and
 - newly added or unassigned files fail the generated-catalog check.
 - all 686 conversion surfaces resolve through their reviewed classification
-  batches to `product-authority-crosswalk.json`; the five canonical redesign
+  batches to `product-authority-crosswalk.json`; the six canonical redesign
   specs are explicitly distinguished from current and historical evidence.
 
 UI callers, models, tests, Functions, data shapes, and migration/operational

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 115
+State version: 116
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: VENDOR-SUGGESTION-READ-VERIFIED
+- Checkpoint: SPACE-TEMPLATE-READ-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -261,7 +261,8 @@ modifying the running Firebase application before hard cutover.
 - Added a reviewed product-authority crosswalk and generated JSON/Markdown
   audit. All 686 surfaces now resolve through 18 classification batches to an
   explicit authority set: 573 product-governed and 113 technical/control.
-  All five canonical target specs are explicitly distinguished from current
+  All five target specs registered at that checkpoint were explicitly
+  distinguished from current
   product and historical evidence; see `EVID-PRODUCT-AUTHORITY-001`.
 - Made authority coverage part of `conversion:check`: missing batch mappings,
   missing authority files, product batches without a canonical target spec,
@@ -1676,15 +1677,38 @@ modifying the running Firebase application before hard cutover.
 - `VENDORSUGGESTION-TEST-001` through `-004` pass locally. All 140 target tests
   in 32 suites, target graph/generated contracts, both staging builds,
   conversion/capability/query/residual controls, M0 and clean artifacts pass.
-  Exact-implementation-commit hosted `VENDORSUGGESTION-TEST-005` remains
-  planned, so exactly the two claimed surfaces are `implemented`, not
-  `verified`.
+  Exact-implementation-commit hosted `VENDORSUGGESTION-TEST-005` also passes, so
+  exactly the two claimed surfaces are `verified`.
 - Exact implementation commit `519b4338c7cbe8cc63a01820116bef5283a8625a`
   passed immutable GitHub Actions run `33632364285`: conversion traceability
   passed in 10 seconds and the isolated target environment passed in 2 minutes
   38 seconds with all 140 tests in 32 suites, graph/generated-contract checks,
   both staging builds and clean tracked artifacts. All five dossier obligations
   now pass and `SWIFT-111A94B464D5` plus `TEST-A73A49564E8C` are verified.
+- Exact vendor verification-document commit
+  `08cc0472598a5f8171059d91f19f08024a3704f4` passed immutable Actions run
+  `33632848448`: conversion traceability passed in 7 seconds and the isolated
+  target environment passed in 2 minutes 58 seconds.
+- Audited the next decision-independent Project/reference dependency and
+  selected Space-template reads. Corrected `spaces.md` from `current_product` to
+  registered canonical target authority for both affected batches because its
+  existing target-state notice—not the Firebase checked-state-copy/no-op
+  behavior—owns the redesigned contract.
+- Added exactly two comment-only target scaffolds and the complete ready dossier
+  for `SWIFT-77F812A8F463` and `TEST-CB30140F137B`. The frozen boundary covers
+  stable Account/template/checklist/item identity, text, lifecycle/revision/
+  explicit order, checklist structure with no checked state, local readiness/
+  restart/refusal and one narrow Account query port.
+- The synchronized ledger records 771 surfaces / 756 discovered, 345 mapped-or-
+  later target-relevant surfaces, 164 residual surfaces and 43 validated
+  blockers. Thirty-three slices claim 87 target surfaces and 70 are implemented
+  or later. M0 passes; M1/M2 retain exactly their expected 2/164 blockers.
+- The complete local ready gate passes with all 140 existing target tests in 32
+  suites, target graph/generated contracts, both staging builds, repeatable
+  XcodeGen/source-project hashes, conversion/capability/query/residual controls,
+  M0 and clean diff formatting.
+- Executable Space-template implementation remains prohibited until the exact
+  ready commit passes immutable pull-request CI.
 
 ## Next Action
 
@@ -1740,8 +1764,11 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
    semantics. Treat the verified `vendor-suggestion-reference-read-contracts`
    dossier and `EVID-VENDOR-SUGGESTION-REFERENCE-001` as the sole vendor-
-   suggestion read semantics. Audit the next smallest complete decision-
-   independent dependency before creating another ready slice. Keep
+   suggestion read semantics. Finish the `space-template-reference-read-contracts`
+   ready gate and `EVID-SPACE-TEMPLATE-REFERENCE-001`; only after the exact
+   comment-only ready commit passes CI, implement that frozen provider-free
+   read boundary, run its full gate, and advance only its two claimed surfaces.
+   Then audit the next smallest complete decision-independent dependency. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
@@ -2152,7 +2179,7 @@ Product-authority cross-reference checkpoint verified on 2026-09-01:
 
 - all 686 surfaces resolve through 18 batches to reviewed authority sets: 573
   product-governed and 113 technical/control;
-- all five canonical target specs are represented and explicitly separated from
+- all five target specs then registered were represented and explicitly separated from
   current-product, historical-evidence, architecture and conversion-control
   roles;
 - the generated JSON records every stable surface ID and the generated Markdown
