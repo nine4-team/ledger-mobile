@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "exact-money-and-domain-identity",
+  "title": "Make target entity identity and money representation exact before product accounting slices",
+  "kind": "technical_control",
+  "status": "ready",
+  "owner": "Exact Money and Domain Identity",
+  "surfaceIds": [
+    "SWIFT-3AC58A64B789",
+    "TEST-15ECC49577C0"
+  ],
+  "requirements": [
+    {
+      "id": "PRIMITIVE-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "The backend-neutral target introduces executable typed domain values without importing Firebase or changing the released Firebase app or backend.",
+      "decisionIds": [],
+      "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
+    },
+    {
+      "id": "PRIMITIVE-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Entities",
+      "invariant": "Every target Account, Client, Project, Item, Invoice, Transaction, Expense, Fee, Space, Attachment and Operation identity is a stable client-boundary text value generated independently of connectivity and cannot encode a Firestore path, Postgres sequence, Account name or UI order.",
+      "decisionIds": [],
+      "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
+    },
+    {
+      "id": "PRIMITIVE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Value objects",
+      "invariant": "Money is represented as signed integer minor units plus one explicit validated currency identity; construction, comparison and checked arithmetic never use floating point, infer a currency, silently convert currencies or overflow.",
+      "decisionIds": [],
+      "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
+    },
+    {
+      "id": "PRIMITIVE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "Dependency Rule",
+      "invariant": "Domain primitives depend only on standard Swift and LedgerTargetCore types, carry no backend SDK, transport, database, dynamic payload, clock, random generator or global authentication state, and expose stable bounded failures.",
+      "decisionIds": [],
+      "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
+    },
+    {
+      "id": "PRIMITIVE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "Table Conventions",
+      "invariant": "The Swift boundary is compatible with later stable text IDs and bigint integer-minor-unit plus explicit-currency persistence, but this representation slice creates no table, migration, currency policy or persistence authority.",
+      "decisionIds": [],
+      "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
+    },
+    {
+      "id": "PRIMITIVE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "Pure domain tests",
+      "invariant": "Exact-money and identity tests are deterministic, provider-free and cover valid boundaries, type separation, restart encoding, currency mismatch, arithmetic overflow and malformed decoded values rather than compile-only evidence.",
+      "decisionIds": [],
+      "verificationIds": ["PRIMITIVE-TEST-001", "PRIMITIVE-TEST-002", "PRIMITIVE-TEST-003", "PRIMITIVE-TEST-004"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "CurrencyCode accepts exactly three uppercase ASCII letters and revalidates during decoding; it does not claim an ISO registry, locale, exchange-rate, default-currency or Account policy.",
+        "Money stores signed Int64 minor units and one CurrencyCode, offers zero and sign inspection, and permits equality/order/add/subtract/negate only through explicit checked operations that reject currency mismatch and integer overflow.",
+        "ClientID, ProjectID, ItemID, InvoiceID, TransactionID, ExpenseID, FeeID, SpaceID and AttachmentID are distinct LedgerIdentifier specializations with the same bounded opaque validation already used by AccountID, PrincipalID, EntityID and OperationID.",
+        "MoneyContractFailure distinguishes currency mismatch, arithmetic overflow and malformed currency through stable bounded diagnostics without embedding raw values."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This provider-free representation slice creates no Postgres table, column, check, foreign key, index, view or migration; later slices must map Money to bigint minor units plus explicit currency and IDs to stable text."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No command payload, accounting sign rule, handler, transaction, lock, idempotency decision or server validation is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Opaque type safety is not authorization; no server rows or policies exist in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local table, upload shape, visibility policy or readiness rule is introduced."
+    },
+    "localOffline": {
+      "items": [
+        "Every identifier, CurrencyCode and Money value is immutable and Codable; decoding revalidates the same boundary so restart cannot admit whitespace, paths, oversized IDs, malformed currency or floating-point money.",
+        "Canonical sorted-key test encoding of representative and Int64-boundary values round-trips byte-identically without a clock, UUID, locale, database, network or global state.",
+        "Cross-currency comparison/arithmetic, addition/subtraction/negation overflow and malformed decoded values fail atomically with stable codes and no partial Money result."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "AttachmentID is an opaque entity identity only; no bytes, path, URL, reference, upload, retention or deletion behavior exists."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "This slice defines reusable domain values only; it does not wire a form, formatter, query, command, MCP schema, transport or entry point."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No source amount or identifier is transformed. Future migration slices must explicitly reconcile source units/currency/IDs rather than infer them through these types."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local diagnostic codes are contract values only; no telemetry emission, metric, alert or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside the existing provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "The slice cannot choose an Account currency, exchange/rounding/tax policy, amount sign or bounds, product lifecycle, schema, provider, feature activation, migration, deployment, release or cutover.",
+        "All current product formatting/calculation/model/app/MCP surfaces remain at their existing lifecycle status until owning vertical slices use the primitives and pass semantic parity/security/offline evidence."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PRIMITIVE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
+      "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
+      "expected": "Distinct stable typed IDs and exact Money/CurrencyCode values validate; same-currency equality, ordering and checked arithmetic produce exact Int64 results with no provider, locale or floating-point dependency.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PRIMITIVE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
+      "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
+      "expected": "Representative and Int64-boundary identifiers and Money values encode to deterministic integer/currency evidence and restore through the same validators with identical types and bytes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PRIMITIVE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
+      "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
+      "expected": "Whitespace/path/oversized identifiers, lowercase/non-ASCII/wrong-length currency, floating-point decoded money, cross-currency comparison/arithmetic, and every Int64 overflow edge fail atomically with stable safe codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PRIMITIVE-TEST-004",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PRIMITIVE-REQ-001", "PRIMITIVE-REQ-002", "PRIMITIVE-REQ-003", "PRIMITIVE-REQ-004", "PRIMITIVE-REQ-005", "PRIMITIVE-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming product, database, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 technical foundation only. Signed integer representation permits later charges, credits and adjustments but does not authorize any product sign rule. Currency is a validated transport/domain identity, not an approved ISO list, Account default, exchange, locale, tax or rounding policy. The slice stops before product commands/read models, Postgres/PowerSync, app/MCP wiring, provider/hosted resources, migration, production access or cutover."
+}

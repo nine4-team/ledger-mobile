@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 58
+State version: 59
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: VALIDATED-TARGET-COMPOSITION-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: EXACT-MONEY-DOMAIN-IDENTITY-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -712,6 +712,18 @@ modifying the running Firebase application before hard cutover.
   composition obligations and exactly its two target-only surfaces are now
   `verified`; current Firebase root, app/MCP/provider integration and target
   application project surfaces remain unadvanced.
+- Audited the remaining Phase 1 foundations after composition and selected
+  `exact-money-and-domain-identity` as the next smallest decision-independent
+  technical slice. Exact signed integer-minor-unit representation, explicit
+  currency identity and stable entity ID types are shared prerequisites for
+  later product/database/migration slices and do not settle product signs,
+  bounds, allocation, tax, rounding, posting or currency policy.
+- Created exactly two comment-only target scaffolds in the existing provider-
+  free core/test roots and a complete ready dossier covering stable IDs, Money/
+  currency, checked arithmetic, restart decoding and malformed/cross-currency/
+  overflow refusal. No behavior, product command/read model, app/MCP link,
+  database, provider, hosted resource, source transform, migration or
+  production operation exists at this checkpoint.
 
 ## Next Action
 
@@ -721,12 +733,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Treat `validated-target-composition` and `EVID-TARGET-COMPOSITION-001` as the
-   verified structural boundary for later concrete wiring. Audit the remaining
-   mapped, unclaimed Phase 1 foundations and select the smallest complete slice
-   whose requirements are decision-independent and whose dossier can pass the
-   ready gate. Do not link composition into an application or begin provider/
-   local-database work merely because structural composition is verified.
+2. Implement only the ready `exact-money-and-domain-identity` dossier inside
+   the provider-free core/test targets: distinct stable typed IDs, exactly
+   three-uppercase-ASCII-letter CurrencyCode, signed Int64-minor-unit Money,
+   checked same-currency equality/order/add/subtract/negate behavior, decode-
+   through-validation and deterministic restart/invalid/cross-currency/overflow
+   tests. Do not choose product signs/bounds, Account/default currency, ISO
+   registry, locale formatting, exchange, allocation, tax, rounding or posting;
+   do not create app/MCP, database/provider, migration or production behavior.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

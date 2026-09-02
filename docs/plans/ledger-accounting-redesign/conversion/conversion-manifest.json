@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T01:59:04.251Z",
+    "lastSynchronizedAt": "2026-09-02T02:04:33.809Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18637,6 +18637,65 @@
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
+      "id": "SWIFT-3AC58A64B789",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/DomainPrimitives.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/DomainPrimitives.swift"
+        }
+      ],
+      "observedSourceHash": "bfd6e2b15db11adc7a003573ca037b3e6357c48dc8a0ecd081ed460d2524e46a",
+      "acknowledgedSourceHash": "bfd6e2b15db11adc7a003573ca037b3e6357c48dc8a0ecd081ed460d2524e46a",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for exact integer-minor-unit Money, validated currency identity and stable backend-neutral domain entity IDs; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Exact Money and Domain Identity",
+        "surfaces": [
+          "Money",
+          "CurrencyCode",
+          "stable typed Client/Project/Item/Invoice/Transaction/Expense/Fee/Space/Attachment identifiers",
+          "MoneyContractFailure"
+        ],
+        "securityRequirements": [
+          "Domain identifiers contain only bounded opaque values and cannot encode a Firestore path, Postgres sequence, Account name, endpoint, credential or UI order",
+          "Money and identifier failures expose only stable field/category codes and never provider payloads or private values"
+        ],
+        "syncRequirements": [
+          "Money crosses local/server boundaries only as exact integer minor units plus validated currency, with no floating-point persistence or implicit currency conversion",
+          "Stable text identifiers and exact money values encode/decode deterministically without opening a database, Sync Stream, file, network or provider SDK"
+        ]
+      },
+      "migration": {
+        "rule": "Define target representation only; do not transform Firebase amounts, infer currency, round source evidence or create target records in this slice.",
+        "reconciliation": [
+          "Later source transforms must prove exact integer-minor-unit and currency agreement for every migrated amount and stable correlation for every entity ID"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "DomainPrimitivesTests"
+        ],
+        "acceptance": [
+          "Typed IDs and exact Money construct, compare, encode and perform checked same-currency arithmetic deterministically while malformed IDs/currency, cross-currency arithmetic and overflow fail atomically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-DOMAIN-PRIMITIVES-001"
+      ],
+      "notes": "Target-only domain primitive scaffold claimed by exact-money-and-domain-identity. It defines representation and safe arithmetic only; product-specific signs, amount bounds, allocation, tax, rounding, posting, currency policy and migration remain in their owning slices.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
       "id": "SWIFT-3B7DE77EA8E4",
       "kind": "swift_view",
       "name": "LedgeriOS/LedgeriOS/Views/Settings/AccountView.swift",
@@ -31444,6 +31503,64 @@
       ],
       "notes": "Retain field-selection tests against approved target and legacy-audit profiles. M2 map reviewed under target-mapping-method.md; named visibility-safe snapshots replace raw/full/arbitrary-field access and hidden recalculation.",
       "classificationBatch": "M0-REPORTING-SEARCH-001"
+    },
+    {
+      "id": "TEST-15ECC49577C0",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/DomainPrimitivesTests.swift"
+        }
+      ],
+      "observedSourceHash": "9ae49cb9064ac3e67c00e939ca401fcb36dc1c535f77847206887fc6f326119e",
+      "acknowledgedSourceHash": "9ae49cb9064ac3e67c00e939ca401fcb36dc1c535f77847206887fc6f326119e",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for stable-ID, exact-money, canonical restart and malformed/cross-currency/overflow refusal tests; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Exact Money and Domain Identity",
+        "surfaces": [
+          "DomainPrimitivesTests",
+          "stable typed-ID fixtures",
+          "exact integer Money arithmetic fixtures",
+          "canonical restart and invalid-boundary fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic opaque IDs, explicit currency codes and integer boundaries",
+          "Negative tests prove path/whitespace/oversized identity, invalid currency and malformed decoded representations fail without value leakage"
+        ],
+        "syncRequirements": [
+          "All fixtures run without local database, PowerSync, network or hosted services and verify deterministic standard-library Codable boundaries only"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values; load no Firebase export, source amount, production-derived identifier or migration disposition.",
+        "reconciliation": [
+          "Equivalent typed values round-trip exactly and every invalid or non-exact representation is rejected before it can become target evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DomainPrimitivesTests"
+        ],
+        "acceptance": [
+          "Self-tests prove stable type separation, exact same-currency arithmetic, deterministic restart encoding and atomic invalid/cross-currency/overflow refusal without external dependencies"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PLATFORM-CONTROL-001",
+        "EVID-M2-PLATFORM-001",
+        "EVID-DOMAIN-PRIMITIVES-001"
+      ],
+      "notes": "Target-only primitive self-test scaffold. It cannot establish any product amount rule, locale formatter, database mapping, provider fidelity, migration correctness or app/MCP integration.",
+      "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
       "id": "TEST-16A01A0FF3D5",
