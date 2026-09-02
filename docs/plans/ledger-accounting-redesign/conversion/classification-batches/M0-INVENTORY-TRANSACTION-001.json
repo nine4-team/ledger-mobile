@@ -3,7 +3,8 @@
   "title": "Inventory provenance, Transactions, receipts, and corrections",
   "reviewedAt": "2026-08-31",
   "evidence": [
-    "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
+    "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+    "EVID-TRANSACTION-TAXONOMY-001"
   ],
   "surfaces": [
     {
@@ -1896,6 +1897,101 @@
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001"
       ],
       "notes": "Use as source-shape evidence; target import correlates both directions and quarantines disagreement."
+    },
+    {
+      "id": "SWIFT-C7C58265EA19",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "2875a2d9bc4e33e2db4e7006cfe89415098de52c23eed84815318401b09ed492",
+      "currentBehavior": "Provides a comment-only target scaffold for the exact Purchase/Return/Transfer taxonomy, scope-owner meaning, same-Client Transfer route and pair identity; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001"
+      ],
+      "notes": "Target-only Phase 1 taxonomy foundation. It cannot define money-record minimum evidence, Transaction lifecycle, amount/line/category basis, Transfer Item/Invoice/Space effects, correction, schema, RLS, Sync, provider adapters, app/MCP wiring or migration.",
+      "target": {
+        "owner": "Transaction Taxonomy and Transfer Identity",
+        "surfaces": [
+          "LedgerTransactionType",
+          "TransactionScope",
+          "TransactionRecordRole",
+          "TransactionEconomicMeaning",
+          "TransactionClassification",
+          "ProjectTransferRoute",
+          "TransferPairIdentity",
+          "TransactionTaxonomyFailure"
+        ],
+        "securityRequirements": [
+          "Project scope carries exact AccountID, ProjectID and authoritative ClientID; Business Inventory carries only its Account owner, and no display name or caller label can construct or authorize a Transfer route",
+          "Same-Account/same-Client value validation is a domain invariant only and cannot claim membership, financial capability, RLS or download authorization"
+        ],
+        "syncRequirements": [
+          "Taxonomy, scope, role, route and pair identity are immutable deterministic Codable values whose restart decoding revalidates every cross-field invariant",
+          "No local database, provider stream, readiness assertion or optimistic operation is created by this value-only slice"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only canonical classification values; do not decode, normalize or map any legacy Firebase Transaction type or infer scope from a source field in this slice.",
+        "reconciliation": [
+          "Later importer/provider slices must prove every canonical target record has one valid classification and every Transfer has exactly one distinct source/destination pair or quarantine it"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransactionTaxonomyTests"
+        ],
+        "acceptance": [
+          "Synthetic values prove exact three-type decoding, scope-owner meaning, project-only non-cash Transfer, exact-ID route eligibility and distinct paired record identity without provider dependencies"
+        ]
+      }
+    },
+    {
+      "id": "TEST-28D11BDABC0A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "39d2847e98e6dc672139c1dce1afa16d8904749393bd82412cf9113fa370b9b5",
+      "currentBehavior": "Provides a comment-only target scaffold for valid taxonomy/scope meanings, exact same-Client Transfer routing and pair identity, deterministic restart and invalid-combination refusal; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001"
+      ],
+      "notes": "Target-only taxonomy self-test scaffold. It cannot establish server atomicity, pair persistence, authorization/download absence, physical offline behavior, legacy import correctness or concrete app/MCP integration.",
+      "target": {
+        "owner": "Transaction Taxonomy and Transfer Identity",
+        "surfaces": [
+          "TransactionTaxonomyTests",
+          "scope-relative Purchase/Return fixtures",
+          "same-Client Transfer route and pair fixtures",
+          "invalid taxonomy/scope/role/route/pair restart fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic Account/Client/Project/Transaction/Operation identities and prove equal display text never grants a Transfer route",
+          "Negative tests assert stable bounded taxonomy codes without names, source fields, paths, queries or provider payloads"
+        ],
+        "syncRequirements": [
+          "All fixtures run without database, PowerSync, network or hosted services and preserve exact classification/route/pair evidence across canonical restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Transaction enum, scope flag, movement record, lineage edge, export or production-derived identity.",
+        "reconciliation": [
+          "Equivalent canonical evidence round-trips identically while inventory Transfer, incompatible role, cross-Account/cross-Client/same-Project route, archived destination and duplicate pair-record identity fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransactionTaxonomyTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the provider-free taxonomy and pair-identity boundary without claiming handler, schema, RLS, Sync, app/MCP, migration or production evidence"
+        ]
+      }
     }
   ]
 }

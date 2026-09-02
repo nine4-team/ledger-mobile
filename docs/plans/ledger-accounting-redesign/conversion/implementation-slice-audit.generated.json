@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T02:49:03.169Z",
+  "generatedFromManifestSync": "2026-09-02T02:55:52.929Z",
   "totals": {
-    "slices": 15,
-    "claimedTargetSurfaces": 51,
+    "slices": 16,
+    "claimedTargetSurfaces": 53,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 36
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 14,
@@ -209,6 +209,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-environment-isolation.json"
+    },
+    {
+      "sliceId": "transaction-taxonomy-and-transfer-identity",
+      "title": "Define canonical Transaction taxonomy, scope meaning, and Transfer pair identity",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Transaction Taxonomy and Transfer Identity",
+      "surfaceIds": [
+        "SWIFT-C7C58265EA19",
+        "TEST-28D11BDABC0A"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-taxonomy-and-transfer-identity.json"
     },
     {
       "sliceId": "typed-edit-draft-and-submission",

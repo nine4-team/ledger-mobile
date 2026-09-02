@@ -7,7 +7,8 @@ foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; broader app/schema/provider and
-migration surfaces remain unadvanced
+migration surfaces remain unadvanced. The next provider-free Transaction
+taxonomy/Transfer-identity slice is ready for implementation
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

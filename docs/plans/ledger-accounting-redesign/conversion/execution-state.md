@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 64
+State version: 65
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-PROJECT-DIRECTORY-VERIFIED-NEXT-SLICE-AUDIT
+- Checkpoint: TRANSACTION-TAXONOMY-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -796,6 +796,29 @@ modifying the running Firebase application before hard cutover.
   directory obligations and exactly its two target-only surfaces are now
   `verified`; current Project/app/MCP, schema/RLS/Sync/provider and migration
   surfaces remain unadvanced.
+- Audited the remaining Phase 1/domain dependency order after Client/Project
+  verification and selected `transaction-taxonomy-and-transfer-identity` as the
+  smallest next decision-independent accounting foundation. D-001/D-002/D-007
+  settle the exact scope-relative Purchase/Return meanings; D-003–D-006 settle
+  project-only non-cash Transfer, exact same-Client routing and structural pair
+  identity without choosing any open amount, Item, Invoice, Space, lifecycle or
+  correction behavior.
+- Created exactly two comment-only target scaffolds in the provider-free core/
+  test roots and a complete ready dossier for the closed three-type taxonomy,
+  explicit Inventory/Project owner scope, compatible record roles, exact-ID
+  active-destination route, Operation-bound distinct Transfer pair, canonical
+  restart and stable invalid-combination refusal.
+- Extended only the reviewed Inventory/Transaction authority set with the
+  architecture files needed by target implementation. Postgres, handlers, Data
+  API, RLS, Sync Streams, media, concrete app/MCP, legacy enum migration,
+  observability and activation are explicit non-applicabilities. D-017 and
+  O-002/O-011–O-015/O-028–O-032 remain fully open for excluded effects.
+- Sync/check/report pass at 737 recorded / 722 discovered, 311 target-mapped or
+  later / 475 target-relevant, 164 residual and 43 blockers, with only the three
+  documented retired-path warnings. M0 passes; M1 and M2 remain honestly
+  blocked by the unchanged two and 164 prerequisites. No behavioral code,
+  source app/MCP surface, provider, database, hosted resource, migration or
+  production operation exists at this ready checkpoint.
 
 ## Next Action
 
@@ -805,12 +828,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Audit the remaining mapped Phase 1 foundations and select the smallest next
-   decision-independent vertical slice. Freeze its exact product/architecture
-   authority, claim only target-only surfaces, define every applicable and
-   explicitly non-applicable contract layer, and pass the dossier `ready` gate
-   before behavior begins. Do not choose an O-/A-gated mutation/schema/provider
-   policy merely to keep implementation moving.
+2. Implement only the ready `transaction-taxonomy-and-transfer-identity`
+   dossier inside the provider-free core/test targets: the exact three-value
+   type, explicit Inventory/Project scope owner, derived economic meaning,
+   compatible standalone/Transfer roles, exact-ID same-Client active-destination
+   route, Operation-bound distinct source/destination pair, decode revalidation,
+   canonical restart and stable refusal. Do not implement Transaction writers,
+   money amount/sign, Item lines, Invoice/Space effects, corrections/lifecycle,
+   schema/RLS/Sync/provider behavior, legacy mapping, app/MCP wiring, production
+   access or either open product/architecture decision.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

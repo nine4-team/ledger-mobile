@@ -3,7 +3,9 @@
 Status: reviewed static characterization; 25 of 66 target-relevant surfaces are
 exactly target-mapped. Forty-one decision-sensitive movement, occurrence,
 receipt, lifecycle and retention surfaces remain honestly withheld on their
-named blockers; implementation remains unauthorized
+named blockers. Full capability implementation remains unauthorized outside a
+machine-ready bounded slice; the confirmed provider-free taxonomy/Transfer-pair
+value foundation is separately controlled by `transaction-taxonomy-and-transfer-identity`
 
 ## Outcome
 

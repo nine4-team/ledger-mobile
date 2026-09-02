@@ -120,7 +120,11 @@
         { "path": "docs/specs/inventory-as-store.md", "role": "current_product" },
         { "path": "docs/specs/lineage-tracking.md", "role": "current_product" },
         { "path": "docs/specs/vendor-credits.md", "role": "historical_evidence" },
-        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" }
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
       ]
     },
     "M0-INVOICING-BUDGET-001": {
