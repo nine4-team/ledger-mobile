@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T11:31:12.775Z",
+  "generatedFromManifestSync": "2026-09-02T11:46:55.200Z",
   "totals": {
-    "slices": 30,
-    "claimedTargetSurfaces": 81,
+    "slices": 31,
+    "claimedTargetSurfaces": 83,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 66
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 29,
@@ -286,6 +286,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-preference-read-contracts.json"
+    },
+    {
+      "sliceId": "project-preference-update-operation-contracts",
+      "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Preference Update Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-8668DE2251DE",
+        "TEST-AC9956AE9D5C"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-preference-update-operation-contracts.json"
     },
     {
       "sliceId": "project-rename-operation-contracts",

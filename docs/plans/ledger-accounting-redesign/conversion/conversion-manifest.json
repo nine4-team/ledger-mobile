@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T11:31:12.775Z",
+    "lastSynchronizedAt": "2026-09-02T11:46:55.200Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -23569,6 +23569,67 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-8668DE2251DE",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectPreferenceUpdateOperation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectPreferenceUpdateOperation.swift"
+        }
+      ],
+      "observedSourceHash": "c4a7b0e2ded21ec3e58d31879f6e0a928c3caeb154ea9e5b6013f81e2e3bf2d5",
+      "acknowledgedSourceHash": "c4a7b0e2ded21ec3e58d31879f6e0a928c3caeb154ea9e5b6013f81e2e3bf2d5",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for the provider-free current-Principal Project preference update operation; it contains no executable mutation or provider behavior.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Preference Update Operation Contracts",
+        "surfaces": [
+          "ProjectPreferenceExpectedState",
+          "ProjectPreferenceUpdateDraft",
+          "UpdateProjectPreferencesPayload",
+          "UpdateProjectPreferencesCommand",
+          "ProjectPreferenceUpdating",
+          "ProjectPreferenceUpdateFailure"
+        ],
+        "securityRequirements": [
+          "The command binds the preference owner to the envelope actor Principal in one Account and Project, but caller-supplied identity remains expected scope; a later trusted session/handler must derive and enforce the authenticated Principal",
+          "The payload contains only ordered stable category identities and cannot mutate category definitions, carry financial values or target another Principal"
+        ],
+        "syncRequirements": [
+          "The complete replacement intent, expected absence or revision, OperationID, contract, scope, time, fingerprint and receipt evidence must survive canonical structured restart",
+          "Offline acceptance cannot silently overwrite concurrent preference edits; the authoritative handler later resolves the explicit absence/revision precondition and emits the shared operation result"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only command values and decode no Firebase user path, preference document, source category/Project row, export record or source-to-target correlation.",
+        "reconciliation": [
+          "Later provider/import slices must preserve ordered pins, distinguish absent from stored-empty preference rows, retain archived/stale references as evidence, and report cross-user or invalid source variants"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectPreferenceUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic contracts prove exact own-Principal pin-replacement intent, absence/revision concurrency, canonical restart, replay and atomic refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-PREFERENCE-UPDATE-001"
+      ],
+      "notes": "Ready-gate scaffold only. The reviewed dossier freezes one own-Principal complete ordered pin replacement with explicit not-stored versus expected-revision concurrency and the shared operation lifecycle. No authentication, category mutation/resolution, budget effect, physical persistence, schema/RLS/Sync/provider, app/MCP, migration, hosted resource or production behavior exists.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-86B143646854",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/ProgressBar.swift",
@@ -35247,6 +35308,65 @@
       ],
       "notes": "M2 withheld: O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "TEST-AC9956AE9D5C",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift"
+        }
+      ],
+      "observedSourceHash": "4be5b489939234919cc3c5ad3e5f1f1d949ef36a6ebbfb8f4f8ba0a05d1f3f2a",
+      "acknowledgedSourceHash": "4be5b489939234919cc3c5ad3e5f1f1d949ef36a6ebbfb8f4f8ba0a05d1f3f2a",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target verification scaffold for the provider-free Project preference update operation; it adds no executable test or provider evidence.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Preference Update Operation Contracts",
+        "surfaces": [
+          "ProjectPreferenceUpdateOperationTests",
+          "not-stored and expected-revision fixtures",
+          "ordered replacement and stored-empty fixtures",
+          "scope/payload/precondition/fingerprint refusal fixtures",
+          "shared operation-journal replay and reference-port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Project and category identities and cannot exercise a credential, user path or another Principal's row",
+          "Negative tests expose only stable bounded codes and no source value, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured restart/replay evidence from physical local persistence, authenticated Principal enforcement and synchronized authoritative apply"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase preference/user/category/Project export, profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent commands round-trip byte-identically while changed Account/Principal/Project/pins/expected state/preconditions/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectPreferenceUpdateOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only the backend-neutral preference update intent boundary without claiming authentication, physical persistence, server, RLS, Sync Stream, app/MCP, migration or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-PREFERENCE-UPDATE-001"
+      ],
+      "notes": "Ready-gate test scaffold only. Planned deterministic tests cover exact scope/payload/preconditions, restart, malformed/tampered refusal, shared replay/mismatch behavior and no false receipt. They cannot prove authenticated authorization, category validity, physical durability, server apply, schema/RLS/Sync/provider, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-AE45E8FB9289",

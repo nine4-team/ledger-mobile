@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 109
+State version: 110
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-READ-VERIFIED
+- Checkpoint: PROJECT-PREFERENCE-UPDATE-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1580,6 +1580,34 @@ modifying the running Firebase application before hard cutover.
   physical persistence, preference writes, defaults/category resolution,
   budget calculation, schema/RLS/Sync/provider behavior, app/MCP, migration,
   hosted resources and production remain unadvanced.
+- Exact Project-preference-read verification-document commit
+  `f19492b800961a4db517eb7a91a1249841b5be5f` passed immutable GitHub Actions
+  run `33625052445`: conversion traceability passed in 14 seconds and the full
+  isolated target environment passed in 1 minute 46 seconds.
+- Audited the next Phase 1 Project/Client/reference dependency and selected
+  `project-preference-update-operation-contracts` as the next smallest complete
+  mutation. Personal preference ownership is independent of O-026 shared-
+  reference administration; the command cannot mutate a category, template or
+  vendor suggestion.
+- Froze seven exact requirements over one current-Principal Account/Project,
+  complete ordered duplicate-free stable category pins, stored-empty support,
+  explicit not-stored versus exact-revision concurrency, the shared operation
+  lifecycle, canonical restart/refusal and one narrow provider-free port.
+- Exactly two comment-only target surfaces are `target_mapped` under the ready
+  dossier: `SWIFT-8668DE2251DE` and `TEST-AC9956AE9D5C`. Authentication,
+  category mutation/resolution, first-use defaults, budget effects, physical
+  persistence, schema/RLS/Sync/provider behavior, app/MCP, source migration,
+  hosted resources and production remain unadvanced.
+- The ledger now records 767 surfaces, including 752 currently discovered, and
+  341 of 505 target-relevant surfaces are mapped or later. The same 164
+  residual surfaces remain under 43 explicit blockers; no product or provider
+  gate was silently cleared.
+- The complete local ready gate passes: all 132 existing target tests in 30
+  suites while both scaffolds remain comment-only, target isolation/generated
+  contracts, macOS and generic iOS Simulator staging builds, repeatable
+  XcodeGen/source-project stability, conversion/capability/query/residual
+  controls, M0 and clean diff formatting. M1/M2 retain exactly their expected
+  2/164 blockers.
 
 ## Next Action
 
@@ -1630,9 +1658,10 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
    authority. Treat the verified `project-preference-read-contracts` dossier
    and `EVID-PROJECT-PREFERENCE-READ-001` as the sole current-Principal Project
-   preference read semantics. Audit the next smallest complete decision-
-   independent Phase 1 dependency before creating a ready dossier. Keep
-   preference writes, first-use defaults,
+   preference read semantics. Implement only the ready
+   `project-preference-update-operation-contracts` dossier, then require exact
+   local and immutable-CI evidence before advancing its two surfaces. Keep
+   first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role
    policy, schema/RLS/Sync/Auth/provider behavior, app/MCP/search, migration,

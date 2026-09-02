@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-preference-update-operation-contracts",
+  "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Preference Update Operation Contracts",
+  "surfaceIds": [
+    "SWIFT-8668DE2251DE",
+    "TEST-AC9956AE9D5C"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "Personal Project pins may select and order which canonical category-progress values are presented, but replacing a preference can never supply or change category definitions, contributions, spend, allocations, paid/unpaid state or canonical budget arithmetic.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "UpdateProjectPreferences is one idempotent own-Principal operation over an immutable AccountID and ProjectID plus a complete ordered duplicate-free pin replacement. It carries no user-selected backend path, category label, lifecycle state, financial value or mutation of shared reference data.",
+      "decisionIds": ["O-026"],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "The command records the exact business intent to replace personal Project pins through typed Ledger values and exposes no arbitrary field map, collection path, SQL string, generic CRUD, category-definition write, first-use default, visibility repair or budget calculation.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The pin replacement is bound to exactly one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared operation fingerprint and receipt lifecycle; this slice defines no competing queue, retry, result or rejection semantics.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Preconditions and Concurrency",
+      "invariant": "The command distinguishes an authoritatively absent preference from a stored preference at one exact expected revision. The corresponding same-subject expected-state or expected-revision precondition prevents a stale offline replacement from silently becoming last-write-wins and preserves stored-empty versus absent truth.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral ProjectPreferenceUpdating port accepts only the typed command and returns the shared OperationReceipt. The envelope actor identifies the intended preference owner, but a later trusted session and handler must derive and enforce the authenticated Principal rather than trusting a caller-supplied user path.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no preference row/table, authorization policy, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectPreferenceExpectedState is exactly notStored or revision(UInt64); it maps to one same-subject expected-state or expected-revision precondition and never treats stored empty pins as absence.",
+        "ProjectPreferenceUpdateDraft binds one Account, actor Principal, contract version, stable Project, complete ordered duplicate-free pin list, expected state and finite capture time. Archived or unresolved stable IDs may remain intent evidence; no category label/lifecycle/amount or other Principal is carried.",
+        "UpdateProjectPreferencesPayload contains only ProjectID and ordered pin IDs. UpdateProjectPreferencesCommand derives the current-Principal preference subject and shared fingerprint, validates every draft/envelope/payload/precondition/subject binding on construction and decode, and validates only matching OperationID receipts.",
+        "ProjectPreferenceUpdating exposes only updateProjectPreferences(_:) and returns the shared OperationReceipt. ProjectPreferenceUpdateFailure provides stable bounded time, scope, pin, expected-state, payload, subject, fingerprint, receipt, local-acceptance and encoding failures."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates or changes no project_preferences table, Account/Principal/Project foreign key, pin relation/array, revision/audit column, uniqueness rule, index, view, trigger or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative UpdateProjectPreferences handler, authenticated Principal derivation, Project/category preflight, absence/revision lock, row update, audit event, cleanup/default policy or idempotency-result storage exists."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/actor/Project binding is not authorization. No own-Principal predicate, membership check, grant, USING/WITH CHECK policy or cross-user database test exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, local preference table, optimistic pin projection, upload connector, conflict restoration, authenticated download predicate or synchronized apply proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "The complete command is canonical Codable evidence over draft, shared envelope, exact reference-data subject and fingerprint; decode reconstructs through the same validators and byte-identical structured restart is required.",
+        "Not-stored and exact-revision intent remain distinct across restart, including stored-empty pin replacement. Changed Account, actor, contract, Project, pin/order, expected state, subject, preconditions, fingerprint or receipt fails atomically.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/mismatch/receipt semantics; this is not physical durable-store, process/device restart, optimistic UI or authoritative server-apply evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Project preferences contain no attachment identity, local bytes, upload, cache, URL, retention, deletion or presentation behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Project list/detail pin control, first-use default, category resolver, MCP schema/tool, transport handler, capability registration or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase user-path preference, nullable/empty field variant, duplicate pin, stale Project/category reference, source Principal correlation or source row is decoded, normalized, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize a Principal, persist/display/apply a preference, resolve category validity or visibility, calculate budgets, mutate shared reference data, define schema/RLS/Sync/provider/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-026 remains open for shared reference-data administration; A-003/A-004/A-007/A-016, physical offline verification, canonical production preference profiling and all hosted-resource authority remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTPREFERENCEUPDATE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
+      "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
+      "expected": "Valid absent and revisioned synthetic drafts create exact own-Principal complete pin-replacement commands with ordered unique stable IDs, matching same-subject preconditions and no category definition, label, lifecycle, budget value, user path or provider field.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
+      "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-007"],
+      "expected": "Not-stored, revisioned, reordered and stored-empty replacement commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/pins/expected-state/time/subject/fingerprint evidence.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
+      "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
+      "expected": "Duplicate pins, invalid time and changed Account/actor/contract/Project/pin order/expected state/payload/subject/preconditions/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceUpdateOperationTests.swift",
+      "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, the same OperationID with changed Project/pins/expected state is refused by the shared lifecycle, and a failing port returns no false receipt.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCEUPDATE-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROJECTPREFERENCEUPDATE-REQ-001", "PROJECTPREFERENCEUPDATE-REQ-002", "PROJECTPREFERENCEUPDATE-REQ-003", "PROJECTPREFERENCEUPDATE-REQ-004", "PROJECTPREFERENCEUPDATE-REQ-005", "PROJECTPREFERENCEUPDATE-REQ-006", "PROJECTPREFERENCEUPDATE-REQ-007"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming preference persistence/apply, authentication, schema/RLS/Sync/provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready decision-independent Phase 1 command boundary only. Personal pinning and the reviewed capability/architecture contracts settle a complete current-Principal replacement plus explicit absent/revision concurrency. O-026 remains fully open because this operation cannot mutate shared category definitions or grant reference-data authority. The slice stops before authentication, category resolution/defaults, physical durability, authoritative server apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+}
