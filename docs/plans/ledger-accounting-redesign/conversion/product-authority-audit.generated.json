@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T02:22:44.532Z",
+  "generatedFromManifestSync": "2026-09-02T02:32:38.800Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 733,
-    "targetRelevantSurfaces": 471,
+    "surfaces": 735,
+    "targetRelevantSurfaces": 473,
     "batches": 18,
-    "productScopeSurfaces": 579,
+    "productScopeSurfaces": 581,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 469,
-      "targetRelevantSurfaceCount": 317
+      "surfaceCount": 471,
+      "targetRelevantSurfaceCount": 319
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 376,
-      "targetRelevantSurfaceCount": 260
+      "surfaceCount": 378,
+      "targetRelevantSurfaceCount": 262
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -1209,8 +1209,8 @@
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
-      "surfaceCount": 54,
-      "targetRelevantSurfaceCount": 52,
+      "surfaceCount": 56,
+      "targetRelevantSurfaceCount": 54,
       "authorities": [
         {
           "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -1235,6 +1235,26 @@
         {
           "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
           "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/01-system-context-and-principles.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
         }
       ],
       "surfaceIds": [
@@ -1262,6 +1282,7 @@
         "SWIFT-2E174120940E",
         "SWIFT-3875BEEAD657",
         "SWIFT-3D3C4156BE8B",
+        "SWIFT-401EBD892749",
         "SWIFT-42B77ABFD098",
         "SWIFT-4637466F7F73",
         "SWIFT-48DE39470AF0",
@@ -1290,6 +1311,7 @@
         "SWIFT-E1A771F6A409",
         "SWIFT-E23DAF7A18FA",
         "SWIFT-E60A204F472E",
+        "TEST-0911D1BF8A05",
         "TEST-3D0D949763A1",
         "TEST-E591BE8A4B58"
       ]

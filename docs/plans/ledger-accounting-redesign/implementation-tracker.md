@@ -23,10 +23,10 @@ Conversion coverage and resume state: [conversion/README.md](conversion/README.m
 |---|---|---|
 | G0 — Product boundary | design | Open decisions that change schemas/writers are resolved |
 | G0.5 — Capability synthesis | done | All 686 source-baseline surfaces have one reviewed disposition, behavior, evidence owner and dossier/control contract; new target implementation surfaces enter the same manifest and deterministic M0 audit |
-| G0.75 — Target mapping | design | 307 of 471 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
+| G0.75 — Target mapping | design | 309 of 473 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
 | G1 — Target schema | not started | Postgres entities, relationships, IDs, locks, invariants, RLS, and Sync Streams approved |
 | G2 — Source migration/cutover | not started | Firebase export coverage, final-write freeze, pending-write disposition, and rejected-write recovery designed without refactoring the old app |
-| G3 — Implementation | in progress | Decision-independent environment foundations are active; 32 target surfaces are verified across operation, catalog, shared-list, scoped-route, typed-edit, telemetry, release-manifest, protected-artifact, migration-run-integrity, operational-health, deterministic-test-support, and validated-composition slices. The count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
+| G3 — Implementation | in progress | Decision-independent foundations are active; 34 target surfaces are verified across operation, catalog, shared-list, scoped-route, typed-edit, telemetry, release-manifest, protected-artifact, migration-run-integrity, operational-health, deterministic-test-support, validated-composition, and exact-domain-primitive slices. The count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
 | G4 — Migration rehearsal | not started | Read-only audit, backups, dry run, reconciliation, and rollback pass |
 | G5 — Authority cutover | not started | Supabase/PowerSync writers enabled; Firebase source frozen; stale writers rejected; monitoring active |
 | G6 — Release completion | not started | Production target, macOS/iOS distribution, MCP, and post-release reconciliation complete |
@@ -156,7 +156,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 
 | Task | Status | Current surfaces |
 |---|---|---|
-| Swift Client domain/read models, query port, and context | not started | Backend-neutral; no Firestore/Supabase SDK types |
+| Swift Client domain/read models, query port, and context | ready | Two target-only core/test scaffolds map Account-scoped Client/Project summaries, exact `clientId` relationship validation, readiness/versioned local list snapshots and `ClientProjectDirectoryQuerying`. O-024/O-025 mutations, schema/RLS/Sync/provider, app/MCP and migration remain excluded; `EVID-CLIENT-PROJECT-DIRECTORY-001` |
 | Target Client table, FK, indexes, RLS, and Sync Streams | not started | Supabase/Postgres and PowerSync only |
 | MCP Client types/resources/commands | not started | Same target contracts and authorization as app |
 | Project creation: select/create Client | not started | `NewProjectView`, `ProjectService` |

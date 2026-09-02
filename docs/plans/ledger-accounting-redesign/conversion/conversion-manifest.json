@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T02:22:44.532Z",
+    "lastSynchronizedAt": "2026-09-02T02:32:38.800Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19037,6 +19037,67 @@
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
+      "id": "SWIFT-401EBD892749",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ClientProjectDirectory.swift"
+        }
+      ],
+      "observedSourceHash": "5b32a991c6297bdc145b5ae285dfcc6bd04bc6f9bf03b691d1ae3c6cf3650f74",
+      "acknowledgedSourceHash": "5b32a991c6297bdc145b5ae285dfcc6bd04bc6f9bf03b691d1ae3c6cf3650f74",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for account-scoped Client/Project identity, immutable directory snapshots and the backend-neutral local directory read port; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client and Project Domain Read Contracts",
+        "surfaces": [
+          "ClientSummary",
+          "ProjectSummary",
+          "ClientListSnapshot",
+          "ProjectListSnapshot",
+          "ClientProjectDirectoryQuerying",
+          "ClientProjectDirectoryFailure"
+        ],
+        "securityRequirements": [
+          "Every Client and Project value carries one immutable AccountID; Project relationship validation requires the embedded current Client summary to use the same AccountID and exact ClientID",
+          "Client/Project names are display values only and never relationship, authorization, destination-eligibility or cross-account lookup keys; failures expose stable bounded codes without names or raw payloads"
+        ],
+        "syncRequirements": [
+          "Client and Project directory updates reuse the shared query fingerprint, readiness/quality, LocalDataVersion and as-of contract so authoritative empty, no matches and incomplete local scope remain distinct",
+          "Snapshots are immutable, duplicate-ID-free and deterministically Codable for offline restart without constructing a database, listener, network client or provider SDK"
+        ]
+      },
+      "migration": {
+        "rule": "Define target read-domain identity only; do not cluster clientName, create Clients, backfill project.clientId, transform exports or infer ownership in this slice.",
+        "reconciliation": [
+          "Later import/provider slices must prove one Account-scoped Client relationship per Project, preserve source correlation and quarantine unresolved names without treating text equality as authorization"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientProjectDirectoryTests"
+        ],
+        "acceptance": [
+          "Synthetic local snapshots prove exact Client/Project identity, same-Account relationship, duplicate/cross-account refusal, authoritative-empty versus partial readiness and deterministic restart without backend dependencies"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-001"
+      ],
+      "notes": "Target-only Phase 1 Client/Project directory contract scaffold. It cannot define Client merge, Project reassignment/deletion, creation/edit commands, schema, RLS, Sync Streams, provider adapters, app/MCP wiring or migration.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-4076F892F380",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/FormField.swift",
@@ -31337,6 +31398,64 @@
       ],
       "notes": "Four provider-free focused tests pass locally and in the complete 55-test package suite from immutable Actions run 33573298495 on exact implementation commit 34d52dba. Synthetic hashes, counts, versions and timestamps open no export, database, file, hosted resource or provider.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-0911D1BF8A05",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ClientProjectDirectoryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ClientProjectDirectoryTests.swift"
+        }
+      ],
+      "observedSourceHash": "7d9dc6ededd2e1477960397ef7690cde76c8d0c1f0351041bbab2d5be63563fb",
+      "acknowledgedSourceHash": "7d9dc6ededd2e1477960397ef7690cde76c8d0c1f0351041bbab2d5be63563fb",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for Client/Project identity, relationship, local-readiness, deterministic restart and invalid/cross-account/duplicate refusal tests; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client and Project Domain Read Contracts",
+        "surfaces": [
+          "ClientProjectDirectoryTests",
+          "same-Account Client/Project fixtures",
+          "local directory readiness/restart fixtures",
+          "invalid relationship and duplicate-identity fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account/Client/Project identities and display names, and prove name equality never repairs an ID or Account mismatch",
+          "Negative tests expose only stable directory failure codes and no private name, provider, query or persistence payload"
+        ],
+        "syncRequirements": [
+          "All fixtures run without a database, PowerSync, network or hosted services and preserve exact local query/readiness evidence across Codable restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values; load no Firebase export, normalized clientName suggestion, production-derived identifier or migration disposition.",
+        "reconciliation": [
+          "Equivalent directory evidence round-trips identically while cross-Account, mismatched relationship, duplicate identity and incomplete-as-authoritative inputs fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientProjectDirectoryTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral directory contract and refusal boundary without claiming server, RLS, Sync Stream, app/MCP or migration evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-001"
+      ],
+      "notes": "Target-only directory contract self-test scaffold. It cannot establish provider authorization/download absence, physical offline behavior, source migration correctness or concrete app/MCP integration.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-0AD8A0619179",

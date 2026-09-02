@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 61
+State version: 62
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: EXACT-MONEY-DOMAIN-IDENTITY-VERIFIED-NEXT-FOUNDATION-AUDIT
+- Checkpoint: CLIENT-PROJECT-DIRECTORY-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -751,6 +751,25 @@ modifying the running Firebase application before hard cutover.
   primitive obligations and exactly its two target-only surfaces are now
   `verified`; all product accounting, current app/MCP, database/provider,
   migration and production surfaces remain unadvanced.
+- Audited the remaining Phase 1 boundary after exact primitives and selected
+  `client-project-directory-read-contracts` as the first decision-independent
+  product-domain foundation. D-006 and the canonical Client spec settle stable
+  Account-scoped Client identity and required same-Account Project relationship;
+  O-024/O-025 can remain fully open because mutation, reassignment, merge and
+  deletion are excluded.
+- Created exactly two comment-only target scaffolds in the existing provider-
+  free core/test roots and a complete ready dossier for Client/Project summaries,
+  exact ID/Account relationship validation, validated duplicate-free local list
+  snapshots and the architecture-named `ClientProjectDirectoryQuerying` port.
+  Postgres, handlers, Data API, RLS, Sync Streams, media, concrete app/MCP,
+  migration, observability and rollout are explicit non-applicabilities.
+- Extended only the reviewed Project/Client authority set with the architecture
+  files needed by target implementation and mapped the two new target surfaces.
+  Sync/check/report pass at 735 recorded / 720 discovered, 309 target-mapped or
+  later / 473 target-relevant, 164 residual and 43 blockers, with only the three
+  documented retired-path warnings. No behavioral code, source app/MCP surface,
+  provider, database, hosted resource, migration or production operation exists
+  at this ready checkpoint.
 
 ## Next Action
 
@@ -760,14 +779,16 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Treat `exact-money-and-domain-identity` and `EVID-DOMAIN-PRIMITIVES-001` as
-   the shared representation dependency for later product/database/migration
-   slices. Audit the remaining Phase 1 target-mapped surfaces and select the
-   smallest next decision-independent vertical foundation whose exact
-   architecture authority, contracts, verification and non-applicabilities can
-   pass a new ready dossier without choosing an O-/A-gated product/provider
-   behavior. Create only its target scaffolds and ready checkpoint before
-   behavioral implementation.
+2. Implement only the ready `client-project-directory-read-contracts` dossier
+   inside the provider-free core/test targets: exact nonblank Client/Project
+   display values, Account-scoped ClientSummary, same-Account ProjectSummary,
+   duplicate-free ClientListSnapshot/ProjectListSnapshot over the verified
+   local list contract, stable directory failures and the exact
+   `ClientProjectDirectoryQuerying` watch port. Add deterministic domain,
+   restart and invalid/cross-Account/duplicate/incomplete-readiness tests. Do
+   not implement Create/Rename/Archive/ChangeClient/Delete, choose O-024/O-025,
+   create schema/RLS/Sync/provider behavior, transform `clientName`, wire app/
+   MCP, access production or modify either application project.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

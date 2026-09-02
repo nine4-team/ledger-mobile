@@ -3,7 +3,8 @@
   "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
   "reviewedAt": "2026-08-31",
   "evidence": [
-    "EVID-CAPABILITY-PROJECT-REFERENCE-001"
+    "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-001"
   ],
   "surfaces": [
     {
@@ -1749,6 +1750,99 @@
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
       "notes": "M2 withheld: O-026 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+    },
+    {
+      "id": "SWIFT-401EBD892749",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "5b32a991c6297bdc145b5ae285dfcc6bd04bc6f9bf03b691d1ae3c6cf3650f74",
+      "currentBehavior": "Provides a comment-only target scaffold for account-scoped Client/Project identity, immutable directory snapshots and the backend-neutral local directory read port; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-001"
+      ],
+      "notes": "Target-only Phase 1 Client/Project directory contract scaffold. It cannot define Client merge, Project reassignment/deletion, creation/edit commands, schema, RLS, Sync Streams, provider adapters, app/MCP wiring or migration.",
+      "target": {
+        "owner": "Client and Project Domain Read Contracts",
+        "surfaces": [
+          "ClientSummary",
+          "ProjectSummary",
+          "ClientListSnapshot",
+          "ProjectListSnapshot",
+          "ClientProjectDirectoryQuerying",
+          "ClientProjectDirectoryFailure"
+        ],
+        "securityRequirements": [
+          "Every Client and Project value carries one immutable AccountID; Project relationship validation requires the embedded current Client summary to use the same AccountID and exact ClientID",
+          "Client/Project names are display values only and never relationship, authorization, destination-eligibility or cross-account lookup keys; failures expose stable bounded codes without names or raw payloads"
+        ],
+        "syncRequirements": [
+          "Client and Project directory updates reuse the shared query fingerprint, readiness/quality, LocalDataVersion and as-of contract so authoritative empty, no matches and incomplete local scope remain distinct",
+          "Snapshots are immutable, duplicate-ID-free and deterministically Codable for offline restart without constructing a database, listener, network client or provider SDK"
+        ]
+      },
+      "migration": {
+        "rule": "Define target read-domain identity only; do not cluster clientName, create Clients, backfill project.clientId, transform exports or infer ownership in this slice.",
+        "reconciliation": [
+          "Later import/provider slices must prove one Account-scoped Client relationship per Project, preserve source correlation and quarantine unresolved names without treating text equality as authorization"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientProjectDirectoryTests"
+        ],
+        "acceptance": [
+          "Synthetic local snapshots prove exact Client/Project identity, same-Account relationship, duplicate/cross-account refusal, authoritative-empty versus partial readiness and deterministic restart without backend dependencies"
+        ]
+      }
+    },
+    {
+      "id": "TEST-0911D1BF8A05",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7d9dc6ededd2e1477960397ef7690cde76c8d0c1f0351041bbab2d5be63563fb",
+      "currentBehavior": "Provides a comment-only target scaffold for Client/Project identity, relationship, local-readiness, deterministic restart and invalid/cross-account/duplicate refusal tests; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-001"
+      ],
+      "notes": "Target-only directory contract self-test scaffold. It cannot establish provider authorization/download absence, physical offline behavior, source migration correctness or concrete app/MCP integration.",
+      "target": {
+        "owner": "Client and Project Domain Read Contracts",
+        "surfaces": [
+          "ClientProjectDirectoryTests",
+          "same-Account Client/Project fixtures",
+          "local directory readiness/restart fixtures",
+          "invalid relationship and duplicate-identity fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account/Client/Project identities and display names, and prove name equality never repairs an ID or Account mismatch",
+          "Negative tests expose only stable directory failure codes and no private name, provider, query or persistence payload"
+        ],
+        "syncRequirements": [
+          "All fixtures run without a database, PowerSync, network or hosted services and preserve exact local query/readiness evidence across Codable restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values; load no Firebase export, normalized clientName suggestion, production-derived identifier or migration disposition.",
+        "reconciliation": [
+          "Equivalent directory evidence round-trips identically while cross-Account, mismatched relationship, duplicate identity and incomplete-as-authoritative inputs fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientProjectDirectoryTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral directory contract and refusal boundary without claiming server, RLS, Sync Stream, app/MCP or migration evidence"
+        ]
+      }
     }
   ]
 }

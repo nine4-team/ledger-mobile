@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T02:22:44.532Z",
+  "generatedFromManifestSync": "2026-09-02T02:32:38.800Z",
   "totals": {
-    "slices": 14,
-    "claimedTargetSurfaces": 49,
+    "slices": 15,
+    "claimedTargetSurfaces": 51,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 34
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 13,
@@ -17,6 +17,21 @@
     "cutover_ready": 0
   },
   "slices": [
+    {
+      "sliceId": "client-project-directory-read-contracts",
+      "title": "Define authoritative Client/Project identity and local directory read contracts",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Client and Project Domain Read Contracts",
+      "surfaceIds": [
+        "SWIFT-401EBD892749",
+        "TEST-0911D1BF8A05"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 4,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-project-directory-read-contracts.json"
+    },
     {
       "sliceId": "deterministic-target-test-support",
       "title": "Provide deterministic provider-free reference adapters for target use-case tests",
