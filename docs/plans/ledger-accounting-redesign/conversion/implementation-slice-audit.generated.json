@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T03:40:36.039Z",
+  "generatedFromManifestSync": "2026-09-02T03:53:51.163Z",
   "totals": {
     "slices": 18,
     "claimedTargetSurfaces": 57,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 40
+    "implementationAdvancedTargetSurfaces": 42
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 16,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -81,7 +81,7 @@
       "sliceId": "non-item-receipt-line-reconstruction-contracts",
       "title": "Represent ordered non-item receipt lines and exact reconstruction evidence",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Receipt Line Reconstruction",
       "surfaceIds": [
         "SWIFT-B687382A0772",

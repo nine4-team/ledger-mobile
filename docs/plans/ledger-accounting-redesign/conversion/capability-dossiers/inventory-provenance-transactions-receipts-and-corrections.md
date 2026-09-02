@@ -6,8 +6,8 @@ receipt, lifecycle and retention surfaces remain honestly withheld on their
 named blockers. Full capability implementation remains unauthorized outside a
 machine-ready bounded slice; the confirmed provider-free taxonomy/Transfer-pair
 value foundation is separately controlled by
-`transaction-taxonomy-and-transfer-identity`, and the ready embedded-line/
-exact-reconstruction boundary is controlled by
+`transaction-taxonomy-and-transfer-identity`, and the bounded embedded-line/
+exact-reconstruction boundary is implemented locally and controlled by
 `non-item-receipt-line-reconstruction-contracts`.
 
 ## Outcome

@@ -280,7 +280,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 
 | Task | Status | Required behavior |
 |---|---|---|
-| Define provider-free NonItemReceiptLine and exact reconstruction evidence | ready | Two target-only core/test scaffolds map stable ordered line identity/shape, exact integer-Money increase/decrease/net/reconstructed/variance evidence, canonical restart and refusal. No completion verdict, billing/tax allocation, Transaction writer, schema/provider, current app/MCP or migration is claimed; `EVID-RECEIPT-RECONSTRUCTION-001` |
+| Define provider-free NonItemReceiptLine and exact reconstruction evidence | implemented | Two target-only core/test surfaces implement stable ordered line identity/shape, exact integer-Money increase/decrease/net/reconstructed/variance evidence, order-binding fingerprint, canonical restart and refusal. Four focused/all 84 target tests and both staging builds pass locally; exact-commit CI remains before verification. No completion verdict, billing/tax allocation, Transaction writer, schema/provider, current app/MCP or migration is claimed; `EVID-RECEIPT-RECONSTRUCTION-001` |
 | Persist and expose NonItemReceiptLine in the target vertical slice | not started | Postgres relationship/checks/indexes, handlers, grants/RLS, Sync, app/MCP and migration land together after applicable gates |
 | Update Purchase/Return entry UI | not started | Other receipt lines section |
 | Replace subtotal/tax completeness equation | not started | Exact-cent final amount reconstruction |

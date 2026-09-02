@@ -3,7 +3,7 @@
   "sliceId": "non-item-receipt-line-reconstruction-contracts",
   "title": "Represent ordered non-item receipt lines and exact reconstruction evidence",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Receipt Line Reconstruction",
   "surfaceIds": [
     "SWIFT-B687382A0772",
@@ -51,7 +51,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
       "section": "Clocks, IDs, and Determinism",
-      "invariant": "Receipt-line identity and reconstruction values are deterministic backend-neutral Codable evidence with stable bounded failures; construction and decoding revalidate classification, Account, identity, line, order, currency, arithmetic and derived totals instead of trusting serialized aggregates.",
+      "invariant": "Receipt-line identity and reconstruction values are deterministic backend-neutral Codable evidence with stable bounded failures; construction and decoding revalidate classification, Account, identity, line, order, currency, arithmetic, derived totals and the canonical evidence fingerprint instead of trusting serialized aggregates.",
       "decisionIds": [],
       "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-002", "RECEIPT-TEST-003", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
     },
@@ -71,6 +71,7 @@
         "NonItemReceiptLineID is a distinct stable entity ID; NonItemReceiptLineDescription rejects blank values while preserving the exact accepted source wording.",
         "NonItemReceiptLineEffect is exactly increase/decrease; NonItemReceiptLine stores one strictly positive Money magnitude and optional quantity evidence that never participates in arithmetic.",
         "TransactionReceiptReconstruction binds one AccountID, TransactionID and validated standalone Purchase/Return classification to ordered duplicate-free lines, recorded final amount, authoritative physical Item total and exact derived increase/decrease/net/reconstructed/variance Money.",
+        "ReceiptReconstructionFingerprint binds the contract version, Account/Transaction/classification identity, exact Money inputs, ordered line evidence and every derived total for deterministic corruption/order detection; it is evidence integrity, not authorization or cryptographic authenticity.",
         "ReceiptLineReconstructionFailure exposes closed stable codes for invalid line, duplicate identity, invalid scope/classification, Account/currency mismatch, overflow, derived-evidence mismatch and malformed encoding."
       ],
       "notApplicable": ""
@@ -97,8 +98,8 @@
     },
     "localOffline": {
       "items": [
-        "Line and reconstruction values are immutable canonical Codable evidence; array order, source wording, quantity, exact Money and derived totals survive byte-identical restart.",
-        "Decoding reconstructs through all classification, Account, line, duplicate, currency, arithmetic and derived-total validators, so tampered aggregate evidence never partially opens.",
+        "Line and reconstruction values are immutable canonical Codable evidence; array order, source wording, quantity, exact Money, derived totals and the evidence fingerprint survive byte-identical restart.",
+        "Decoding reconstructs through all classification, Account, line, duplicate, currency, arithmetic, derived-total and evidence-fingerprint validators, so reordered or tampered aggregate evidence never partially opens.",
         "The exact variance is retained as evidence; the slice exposes no complete/incomplete verdict and therefore cannot choose O-030 one-cent behavior."
       ],
       "notApplicable": ""
@@ -135,35 +136,35 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
       "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-004", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
       "expected": "Synthetic Purchase and Return fixtures preserve ordered increase/decrease lines and optional quantity while exact integer Money yields the specified increase, decrease, net, reconstructed and variance totals without Item fabrication or billing effects.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-RECEIPT-RECONSTRUCTION-001"]
     },
     {
       "id": "RECEIPT-TEST-002",
       "kind": "domain",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
       "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
-      "expected": "Exact Wayfair-like one-cent variance remains visible rather than becoming a completion verdict; mixed currency and every increase/decrease/net/reconstruction/variance overflow edge fail atomically.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Exact Wayfair-like one-cent variance remains visible rather than becoming a completion verdict; mixed currency and every reachable increase/decrease aggregation, reconstruction and variance overflow edge fail atomically.",
+      "status": "passed",
+      "evidence": ["EVID-RECEIPT-RECONSTRUCTION-001"]
     },
     {
       "id": "RECEIPT-TEST-003",
       "kind": "offline_restart",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
       "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
-      "expected": "Representative exact and nonzero-variance reconstruction evidence round-trips byte-identically with source wording, quantity, array order, Account/Transaction/classification identity and every derived total intact without local or remote state.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Representative exact and nonzero-variance reconstruction evidence round-trips byte-identically with source wording, quantity, array order, Account/Transaction/classification identity, every derived total and the order-binding fingerprint intact without local or remote state.",
+      "status": "passed",
+      "evidence": ["EVID-RECEIPT-RECONSTRUCTION-001"]
     },
     {
       "id": "RECEIPT-TEST-004",
       "kind": "offline_rejection",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
       "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-004", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
-      "expected": "Blank descriptions, zero/negative magnitudes, duplicate IDs, Transfer/non-standalone classification, Account/currency mismatch, malformed values and tampered ordered/derived evidence fail atomically with stable bounded codes.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Blank descriptions, zero/negative magnitudes, duplicate IDs, Transfer/non-standalone classification, Account/currency mismatch, malformed values and tampered order/derived/fingerprint evidence fail atomically with stable bounded codes.",
+      "status": "passed",
+      "evidence": ["EVID-RECEIPT-RECONSTRUCTION-001"]
     },
     {
       "id": "RECEIPT-TEST-005",
@@ -175,7 +176,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-RECEIPT-RECONSTRUCTION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 receipt-evidence foundation only. It implements D-016 line identity/shape and exact mathematical reconstruction over already-verified Money and Purchase/Return classification, but no Transaction writer/posting/completeness verdict, Item-history authority, billability/allocation, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior. O-008/O-030/O-031/O-032 remain fully open outside the slice."

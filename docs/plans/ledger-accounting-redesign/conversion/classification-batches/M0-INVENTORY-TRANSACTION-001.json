@@ -2090,10 +2090,10 @@
     {
       "id": "SWIFT-B687382A0772",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "3f9dc3b91dbb8676a7c913b65881643ca011fae1b4c39f006a31f5b33fed4e21",
-      "currentBehavior": "Provides a comment-only target scaffold for stable non-item receipt-line values and exact Purchase/Return reconstruction evidence; no executable behavior exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "2d5ce505a18fbb9cfeeb4b556e36784203469da6ca545192d2b1c77a6204d23e",
+      "currentBehavior": "Implements provider-free stable non-item receipt-line identity, source-preserving wording, positive exact-Money magnitude, increase/decrease effect, optional non-arithmetic quantity, ordered duplicate-free standalone Purchase/Return reconstruction, exact derived totals/variance, deterministic evidence fingerprinting, decode revalidation and bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -2101,7 +2101,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-RECEIPT-RECONSTRUCTION-001"
       ],
-      "notes": "Target-only Phase 1 receipt-evidence foundation. It cannot create or edit a Transaction, declare a one-cent completeness policy, allocate tax, decide billability, create an Item/Expense/Invoice effect, define schema/RLS/Sync/provider behavior, migrate source receipts, wire app/MCP entry points or activate production.",
+      "notes": "Target-only Phase 1 receipt-evidence foundation. Four focused tests and all 84 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. The fingerprint binds canonical evidence/order for deterministic corruption detection, not authorization or authenticity. This boundary cannot create or edit a Transaction, declare a one-cent completeness policy, allocate tax, decide billability, create an Item/Expense/Invoice effect, define schema/RLS/Sync/provider behavior, migrate source receipts, wire app/MCP entry points or activate production.",
       "target": {
         "owner": "Receipt Line Reconstruction",
         "surfaces": [
@@ -2109,6 +2109,7 @@
           "NonItemReceiptLineDescription",
           "NonItemReceiptLineEffect",
           "NonItemReceiptLine",
+          "ReceiptReconstructionFingerprint",
           "TransactionReceiptReconstruction",
           "ReceiptLineReconstructionFailure"
         ],
@@ -2117,7 +2118,7 @@
           "Local mathematical validity is not authorization: future handlers and download boundaries must prove current membership, financial visibility and relationship access"
         ],
         "syncRequirements": [
-          "The embedded ordered values and reconstruction evidence are canonical Codable values that preserve source wording, quantity evidence, exact Money totals and variance across restart",
+          "The embedded ordered values and reconstruction evidence are canonical Codable values that preserve source wording, quantity evidence, exact Money totals, variance and the order-binding evidence fingerprint across restart",
           "No PowerSync Stream, local table, provider subscription, writer or optimistic operation is created by this provider-free value slice"
         ]
       },
@@ -2139,10 +2140,10 @@
     {
       "id": "TEST-4CDC064BC93C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "03e615f0ce8cd06a038430738ee26ddb4b984dbbae0d7c6edeb7b3845d6be2b8",
-      "currentBehavior": "Provides a comment-only target scaffold for deterministic receipt-line validation, exact reconstruction, canonical restart, and invalid/duplicate/cross-currency/tampered evidence refusal; no executable test exists before the slice ready gate passes.",
+      "acknowledgeSourceHash": "5a910b897f18a423643fc7481f95e4337299dede1e1c7c0e310d11bbed39b70a",
+      "currentBehavior": "Executes four deterministic target-only tests for exact Purchase/Return line reconstruction and one-cent variance evidence, every reachable currency/arithmetic failure, byte-identical canonical restart, and atomic refusal of invalid, duplicate, malformed, reordered, derived-total-tampered or fingerprint-tampered evidence.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -2150,14 +2151,14 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-RECEIPT-RECONSTRUCTION-001"
       ],
-      "notes": "Target-only receipt-evidence self-test scaffold. It cannot establish persistence, server authorization, Transaction posting/completeness, physical offline sync, app/MCP parity, legacy receipt migration, production behavior or any O-008/O-030/O-031/O-032 decision.",
+      "notes": "Four focused receipt-evidence tests and all 84 target tests pass locally with graph/contracts, both staging builds and clean artifacts; exact-commit CI is pending. These target-only tests cannot establish persistence, server authorization, Transaction posting/completeness, physical offline sync, app/MCP parity, legacy receipt migration, production behavior or any O-008/O-030/O-031/O-032 decision.",
       "target": {
         "owner": "Receipt Line Reconstruction",
         "surfaces": [
           "ReceiptLineReconstructionTests",
           "Purchase and Return exact-equation fixtures",
           "ordered canonical restart fixtures",
-          "invalid line, duplicate ID, currency, overflow and tamper fixtures"
+          "invalid line, duplicate ID, currency, reachable overflow, derived-total, order and fingerprint tamper fixtures"
         ],
         "securityRequirements": [
           "Fixtures use synthetic Account/Transaction identities and non-sensitive receipt wording only",

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 71
+State version: 72
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: RECEIPT-RECONSTRUCTION-READY-IMPLEMENTATION-NEXT
+- Checkpoint: RECEIPT-RECONSTRUCTION-IMPLEMENTED-EXACT-CI-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -917,6 +917,28 @@ modifying the running Firebase application before hard cutover.
   and generic-iOS-Simulator staging builds and diff formatting all pass with the
   two comment-only receipt scaffolds. The receipt obligations remain planned;
   no executable receipt test or behavioral implementation is claimed at ready.
+- Implemented only the ready provider-free receipt boundary: distinct line ID,
+  source-preserving nonblank wording, positive exact-Money magnitude, increase/
+  decrease effect, optional non-arithmetic quantity, duplicate-free source
+  order, standalone Purchase/Return classification, exact increase/decrease/
+  net/reconstructed/variance evidence, and a canonical SHA-256 fingerprint
+  binding identity, classification, inputs, order and derived totals.
+- Added four deterministic receipt tests. BLVD-like Purchase evidence exactly
+  reconstructs 504,772 minor units; Wayfair-like Return evidence retains an
+  exact negative-one-minor-unit variance without declaring completion. Tests
+  also prove every reachable aggregation/reconstruction/variance overflow,
+  mixed-currency refusal, byte-identical restart, stable diagnostics and atomic
+  malformed/duplicate/reordered/derived-total/fingerprint tamper refusal.
+- All four focused receipt tests and all 84 target package tests pass locally,
+  as do target graph/generated-contract checks, macOS and generic-iOS-Simulator
+  staging builds and diff formatting. `RECEIPT-TEST-001` through `-004` pass;
+  exact-commit hosted `RECEIPT-TEST-005` remains planned, so exactly the two
+  receipt surfaces are `implemented`, not `verified`.
+- The receipt fingerprint is deterministic corruption/order evidence rather
+  than authorization or proof of external authenticity. No completion verdict,
+  Transaction writer/posting/sign policy, Item basis/tax allocation, billing,
+  schema/RLS/Sync/provider, app/MCP, migration, Firebase change, hosted resource
+  or production operation was introduced; O-008/O-030/O-031/O-032 remain open.
 
 ## Next Action
 
@@ -930,17 +952,17 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
    Transaction classification, scope, route and pair identity. Do not recreate
    or extend that meaning independently in app, MCP, SQL or adapters.
-3. Implement only the ready
-   `non-item-receipt-line-reconstruction-contracts` dossier inside the provider-
-   free core/test targets: distinct stable line ID, source-preserving nonblank
-   wording, strictly positive Money magnitude, increase/decrease effect,
-   optional non-arithmetic quantity, ordered duplicate-free standalone
-   Purchase/Return reconstruction, exact increase/decrease/net/reconstructed/
-   variance evidence, decode revalidation, canonical restart and stable
-   refusal. Do not implement a Transaction writer/posting/completeness verdict,
-   Item-history basis, O-008 billing, O-030 rounding behavior, O-031 tax/basis,
-   O-032 posting policy, schema/RLS/Sync/provider behavior, legacy mapping,
-   current app/MCP wiring, production access or any other open decision.
+3. Commit and push only the implemented
+   `non-item-receipt-line-reconstruction-contracts` checkpoint, then require the
+   exact implementation SHA to pass both pull-request jobs before advancing
+   `RECEIPT-TEST-005`, the dossier, or its two surfaces to `verified`. If either
+   job fails, repair the same slice without weakening a gate. After immutable
+   CI evidence is recorded, select the next smallest decision-independent slice
+   through the same ready/implement/verify process. Do not add a Transaction
+   writer/posting/completeness verdict, Item-history basis, O-008 billing,
+   O-030 rounding behavior, O-031 tax/basis, O-032 posting policy, schema/RLS/
+   Sync/provider behavior, legacy mapping, current app/MCP wiring, production
+   access or any other open decision.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
