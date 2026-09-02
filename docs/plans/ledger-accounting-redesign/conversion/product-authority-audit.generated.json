@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T03:33:10.186Z",
+  "generatedFromManifestSync": "2026-09-02T03:40:36.039Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 739,
-    "targetRelevantSurfaces": 477,
+    "surfaces": 741,
+    "targetRelevantSurfaces": 479,
     "batches": 18,
-    "productScopeSurfaces": 585,
+    "productScopeSurfaces": 587,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 475,
-      "targetRelevantSurfaceCount": 323
+      "surfaceCount": 477,
+      "targetRelevantSurfaceCount": 325
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 452,
-      "targetRelevantSurfaceCount": 296
+      "surfaceCount": 454,
+      "targetRelevantSurfaceCount": 298
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 509,
-      "targetRelevantSurfaceCount": 324
+      "surfaceCount": 511,
+      "targetRelevantSurfaceCount": 326
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 382,
-      "targetRelevantSurfaceCount": 266
+      "surfaceCount": 384,
+      "targetRelevantSurfaceCount": 268
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -84,8 +84,8 @@
         "M0-ITEM-CREATION-LINK-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 419,
-      "targetRelevantSurfaceCount": 269
+      "surfaceCount": 421,
+      "targetRelevantSurfaceCount": 271
     }
   ],
   "batches": [
@@ -604,8 +604,8 @@
       "title": "Inventory provenance, Transactions, receipts, and corrections",
       "scope": "product",
       "rationale": "Inventory, money, provenance, correction, and receipt surfaces are governed by the new story-specific accounting and Item lifecycle specs, not legacy movement Transaction mechanics.",
-      "surfaceCount": 85,
-      "targetRelevantSurfaceCount": 70,
+      "surfaceCount": 87,
+      "targetRelevantSurfaceCount": 72,
       "authorities": [
         {
           "path": "docs/specs/invoice-centered-project-accounting.md",
@@ -733,6 +733,7 @@
         "SWIFT-99F937C57A47",
         "SWIFT-A17130583CB1",
         "SWIFT-A7915475818E",
+        "SWIFT-B687382A0772",
         "SWIFT-BDF8928A5FC7",
         "SWIFT-C7C58265EA19",
         "SWIFT-CD04095425B1",
@@ -743,6 +744,7 @@
         "SWIFT-E73BF270D7A4",
         "TEST-1EA750C216D5",
         "TEST-28D11BDABC0A",
+        "TEST-4CDC064BC93C",
         "TEST-7335FA7381B4",
         "TEST-7E9C05E9E5D7",
         "TEST-82FAD193C51B",

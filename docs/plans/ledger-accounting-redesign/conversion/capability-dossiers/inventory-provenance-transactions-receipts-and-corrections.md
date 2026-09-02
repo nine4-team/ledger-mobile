@@ -1,11 +1,14 @@
 # Capability Dossier — Inventory Provenance, Transactions, Receipts, and Corrections
 
-Status: reviewed static characterization; 25 of 66 target-relevant surfaces are
-exactly target-mapped. Forty-one decision-sensitive movement, occurrence,
+Status: reviewed static characterization; 27 of 68 target-relevant surfaces are
+target-mapped or later. Forty-one decision-sensitive movement, occurrence,
 receipt, lifecycle and retention surfaces remain honestly withheld on their
 named blockers. Full capability implementation remains unauthorized outside a
 machine-ready bounded slice; the confirmed provider-free taxonomy/Transfer-pair
-value foundation is separately controlled by `transaction-taxonomy-and-transfer-identity`
+value foundation is separately controlled by
+`transaction-taxonomy-and-transfer-identity`, and the ready embedded-line/
+exact-reconstruction boundary is controlled by
+`non-item-receipt-line-reconstruction-contracts`.
 
 ## Outcome
 

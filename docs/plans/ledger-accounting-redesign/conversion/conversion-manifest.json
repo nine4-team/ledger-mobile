@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T03:33:10.186Z",
+    "lastSynchronizedAt": "2026-09-02T03:40:36.039Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -26655,6 +26655,68 @@
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
+      "id": "SWIFT-B687382A0772",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ReceiptLineReconstruction.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ReceiptLineReconstruction.swift"
+        }
+      ],
+      "observedSourceHash": "3f9dc3b91dbb8676a7c913b65881643ca011fae1b4c39f006a31f5b33fed4e21",
+      "acknowledgedSourceHash": "3f9dc3b91dbb8676a7c913b65881643ca011fae1b4c39f006a31f5b33fed4e21",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for stable non-item receipt-line values and exact Purchase/Return reconstruction evidence; no executable behavior exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Receipt Line Reconstruction",
+        "surfaces": [
+          "NonItemReceiptLineID",
+          "NonItemReceiptLineDescription",
+          "NonItemReceiptLineEffect",
+          "NonItemReceiptLine",
+          "TransactionReceiptReconstruction",
+          "ReceiptLineReconstructionFailure"
+        ],
+        "securityRequirements": [
+          "Reconstruction binds an exact AccountID, TransactionID and validated standalone Purchase/Return classification; display descriptions and amounts never establish Account scope or authorization",
+          "Local mathematical validity is not authorization: future handlers and download boundaries must prove current membership, financial visibility and relationship access"
+        ],
+        "syncRequirements": [
+          "The embedded ordered values and reconstruction evidence are canonical Codable values that preserve source wording, quantity evidence, exact Money totals and variance across restart",
+          "No PowerSync Stream, local table, provider subscription, writer or optimistic operation is created by this provider-free value slice"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only receipt-line and reconstruction values; do not decode Firebase discount/subtotal/tax fields, infer descriptions or tax allocations, or transform any source Transaction in this slice.",
+        "reconciliation": [
+          "Later migration/provider slices must correlate every imported line to one source Transaction and prove exact physical-item plus signed-line reconstruction or a reviewed visible variance without fabricated Items"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ReceiptLineReconstructionTests"
+        ],
+        "acceptance": [
+          "Synthetic Purchase/Return evidence preserves stable ordered lines and reconstructs exact increase, decrease, net, final and variance Money while refusing invalid or ambiguous evidence without choosing open billing, rounding, tax-allocation or posting policy"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001",
+        "EVID-RECEIPT-RECONSTRUCTION-001"
+      ],
+      "notes": "Target-only Phase 1 receipt-evidence foundation. It cannot create or edit a Transaction, declare a one-cent completeness policy, allocate tax, decide billability, create an Item/Expense/Invoice effect, define schema/RLS/Sync/provider behavior, migrate source receipts, wire app/MCP entry points or activate production.",
+      "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
       "id": "SWIFT-B6C3B72884E1",
       "kind": "swift_model",
       "name": "LedgeriOS/LedgeriOS/Models/ProjectPreferences.swift",
@@ -32557,6 +32619,65 @@
       ],
       "notes": "M2 withheld: O-033/O-034 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
+    },
+    {
+      "id": "TEST-4CDC064BC93C",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift"
+        }
+      ],
+      "observedSourceHash": "03e615f0ce8cd06a038430738ee26ddb4b984dbbae0d7c6edeb7b3845d6be2b8",
+      "acknowledgedSourceHash": "03e615f0ce8cd06a038430738ee26ddb4b984dbbae0d7c6edeb7b3845d6be2b8",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for deterministic receipt-line validation, exact reconstruction, canonical restart, and invalid/duplicate/cross-currency/tampered evidence refusal; no executable test exists before the slice ready gate passes.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Receipt Line Reconstruction",
+        "surfaces": [
+          "ReceiptLineReconstructionTests",
+          "Purchase and Return exact-equation fixtures",
+          "ordered canonical restart fixtures",
+          "invalid line, duplicate ID, currency, overflow and tamper fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic Account/Transaction identities and non-sensitive receipt wording only",
+          "Negative tests assert stable bounded failures without paths, queries, credentials, provider payloads or authorization claims"
+        ],
+        "syncRequirements": [
+          "All fixtures run without database, PowerSync, network or hosted services and preserve exact ordered reconstruction evidence across canonical restart"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Transaction, receipt, discount, subtotal, tax, Item, export or production-derived identity.",
+        "reconciliation": [
+          "Equivalent receipt evidence round-trips identically while invalid lines, duplicate identities, incompatible classification/account/currency, arithmetic overflow and tamper fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ReceiptLineReconstructionTests"
+        ],
+        "acceptance": [
+          "Self-tests prove only provider-free embedded receipt-line and exact reconstruction semantics without claiming completion policy, writer, schema, RLS, Sync, app/MCP, migration or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001",
+        "EVID-RECEIPT-RECONSTRUCTION-001"
+      ],
+      "notes": "Target-only receipt-evidence self-test scaffold. It cannot establish persistence, server authorization, Transaction posting/completeness, physical offline sync, app/MCP parity, legacy receipt migration, production behavior or any O-008/O-030/O-031/O-032 decision.",
+      "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
       "id": "TEST-4FA2FD0EE08C",

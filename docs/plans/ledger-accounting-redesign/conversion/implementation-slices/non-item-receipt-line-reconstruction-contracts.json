@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "non-item-receipt-line-reconstruction-contracts",
+  "title": "Represent ordered non-item receipt lines and exact reconstruction evidence",
+  "kind": "technical_control",
+  "status": "ready",
+  "owner": "Receipt Line Reconstruction",
+  "surfaceIds": [
+    "SWIFT-B687382A0772",
+    "TEST-4CDC064BC93C"
+  ],
+  "requirements": [
+    {
+      "id": "RECEIPT-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/plans/non-item-receipt-lines/design.md",
+      "section": "Canonical shape",
+      "invariant": "A NonItemReceiptLine is an ordered embedded value with a stable identity, source-preserving nonblank description, strictly positive Money magnitude, increase/decrease effect and optional quantity evidence; duplicate IDs, an empty description and zero/negative magnitude are invalid, and quantity never changes the authoritative line amount.",
+      "decisionIds": ["D-016"],
+      "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-002", "RECEIPT-TEST-003", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
+    },
+    {
+      "id": "RECEIPT-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/plans/non-item-receipt-lines/design.md",
+      "section": "Accounting and completeness",
+      "invariant": "For one Account-scoped standalone Purchase or Return, exact Money arithmetic derives increase total, decrease total, signed line net, physical-Item-plus-line reconstructed total and exact variance from the recorded final amount without subtotal, tax rate, percentage tolerance or floating-point arithmetic.",
+      "decisionIds": ["D-001", "D-002", "D-007", "D-016"],
+      "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-002", "RECEIPT-TEST-003", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
+    },
+    {
+      "id": "RECEIPT-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/plans/non-item-receipt-lines/design.md",
+      "section": "Lifecycle and inventory behavior",
+      "invariant": "A receipt line belongs to exactly one reconstruction/Transaction scope and never becomes an Item, Item membership, Space assignment, attachment gallery, inventory lineage or physical movement, and it is not copied to another Transaction by this value boundary.",
+      "decisionIds": ["D-016"],
+      "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-003", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
+    },
+    {
+      "id": "RECEIPT-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/plans/non-item-receipt-lines/design.md",
+      "section": "Billing decision that must remain explicit",
+      "invariant": "Receipt-line existence and increase/decrease effect create no client billability, Invoice line, Expense, credit, budget contribution or allocation; O-008 remains open and cannot be inferred from reconstruction evidence.",
+      "decisionIds": ["D-016"],
+      "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
+    },
+    {
+      "id": "RECEIPT-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Clocks, IDs, and Determinism",
+      "invariant": "Receipt-line identity and reconstruction values are deterministic backend-neutral Codable evidence with stable bounded failures; construction and decoding revalidate classification, Account, identity, line, order, currency, arithmetic and derived totals instead of trusting serialized aggregates.",
+      "decisionIds": [],
+      "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-002", "RECEIPT-TEST-003", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
+    },
+    {
+      "id": "RECEIPT-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 value boundary is executable with synthetic deterministic evidence while the released Firebase app remains unchanged and no Transaction writer, completion verdict, schema, provider, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["RECEIPT-TEST-001", "RECEIPT-TEST-002", "RECEIPT-TEST-003", "RECEIPT-TEST-004", "RECEIPT-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "NonItemReceiptLineID is a distinct stable entity ID; NonItemReceiptLineDescription rejects blank values while preserving the exact accepted source wording.",
+        "NonItemReceiptLineEffect is exactly increase/decrease; NonItemReceiptLine stores one strictly positive Money magnitude and optional quantity evidence that never participates in arithmetic.",
+        "TransactionReceiptReconstruction binds one AccountID, TransactionID and validated standalone Purchase/Return classification to ordered duplicate-free lines, recorded final amount, authoritative physical Item total and exact derived increase/decrease/net/reconstructed/variance Money.",
+        "ReceiptLineReconstructionFailure exposes closed stable codes for invalid line, duplicate identity, invalid scope/classification, Account/currency mismatch, overflow, derived-evidence mismatch and malformed encoding."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 provider-free boundary creates no non_item_receipt_lines table/value relationship, Transaction column, check, foreign key, uniqueness rule, index, view or migration; the full receipt vertical slice must define those together with its writer and migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No Purchase/Return create/edit/post/correct command, completeness decision, lock, operation envelope, idempotent result or authoritative reconstruction handler is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Local Account/classification validation is not authorization. No server row, membership/financial predicate, grant or RLS policy exists in this slice."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, parameter, local table, download predicate, upload rule or provider readiness claim is defined."
+    },
+    "localOffline": {
+      "items": [
+        "Line and reconstruction values are immutable canonical Codable evidence; array order, source wording, quantity, exact Money and derived totals survive byte-identical restart.",
+        "Decoding reconstructs through all classification, Account, line, duplicate, currency, arithmetic and derived-total validators, so tampered aggregate evidence never partially opens.",
+        "The exact variance is retained as evidence; the slice exposes no complete/incomplete verdict and therefore cannot choose O-030 one-cent behavior."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Receipt lines contain no AttachmentID, byte, path, URL, cache, upload, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "The shared value semantics are defined, but no current Transaction form/detail/audit surface, MCP DTO/tool/resource, transport handler or writer is wired."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase discount/subtotal/tax/Item evidence is decoded or transformed. Later migration must preserve reviewed source wording/order, correlate every line to one Transaction, avoid inferred tax allocation and retain visible unresolved variance."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failure codes are contract values only; no telemetry emission, metric, alert, completeness dashboard or runbook action is added."
+    },
+    "rolloutRollback": {
+      "items": [
+        "The implementation remains inside provider-free LedgerTargetCore and test targets and is not linked by changing either application project.",
+        "The slice cannot enable receipt-line creation, declare Transaction completeness, remove legacy fields, expose client billing, activate a feature, deploy, release or cut over.",
+        "O-008, O-030, O-031 and O-032 remain outside this boundary; exact variance evidence does not approve billing treatment, rounding tolerance/line, Item tax basis or posting policy."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "RECEIPT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
+      "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-004", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
+      "expected": "Synthetic Purchase and Return fixtures preserve ordered increase/decrease lines and optional quantity while exact integer Money yields the specified increase, decrease, net, reconstructed and variance totals without Item fabrication or billing effects.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "RECEIPT-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
+      "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
+      "expected": "Exact Wayfair-like one-cent variance remains visible rather than becoming a completion verdict; mixed currency and every increase/decrease/net/reconstruction/variance overflow edge fail atomically.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "RECEIPT-TEST-003",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
+      "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
+      "expected": "Representative exact and nonzero-variance reconstruction evidence round-trips byte-identically with source wording, quantity, array order, Account/Transaction/classification identity and every derived total intact without local or remote state.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "RECEIPT-TEST-004",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ReceiptLineReconstructionTests.swift",
+      "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-004", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
+      "expected": "Blank descriptions, zero/negative magnitudes, duplicate IDs, Transfer/non-standalone classification, Account/currency mismatch, malformed values and tampered ordered/derived evidence fail atomically with stable bounded codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "RECEIPT-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["RECEIPT-REQ-001", "RECEIPT-REQ-002", "RECEIPT-REQ-003", "RECEIPT-REQ-004", "RECEIPT-REQ-005", "RECEIPT-REQ-006"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming completion, billing, schema, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 receipt-evidence foundation only. It implements D-016 line identity/shape and exact mathematical reconstruction over already-verified Money and Purchase/Return classification, but no Transaction writer/posting/completeness verdict, Item-history authority, billability/allocation, schema/RLS/Sync/provider, app/MCP, migration, hosted resource, production access or cutover behavior. O-008/O-030/O-031/O-032 remain fully open outside the slice."
+}

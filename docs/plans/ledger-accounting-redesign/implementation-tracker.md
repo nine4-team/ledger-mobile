@@ -23,10 +23,10 @@ Conversion coverage and resume state: [conversion/README.md](conversion/README.m
 |---|---|---|
 | G0 — Product boundary | design | Open decisions that change schemas/writers are resolved |
 | G0.5 — Capability synthesis | done | All 686 source-baseline surfaces have one reviewed disposition, behavior, evidence owner and dossier/control contract; new target implementation surfaces enter the same manifest and deterministic M0 audit |
-| G0.75 — Target mapping | design | 309 of 473 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
+| G0.75 — Target mapping | design | 315 of 479 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
 | G1 — Target schema | not started | Postgres entities, relationships, IDs, locks, invariants, RLS, and Sync Streams approved |
 | G2 — Source migration/cutover | not started | Firebase export coverage, final-write freeze, pending-write disposition, and rejected-write recovery designed without refactoring the old app |
-| G3 — Implementation | in progress | Decision-independent foundations are active; 34 target surfaces are verified across operation, catalog, shared-list, scoped-route, typed-edit, telemetry, release-manifest, protected-artifact, migration-run-integrity, operational-health, deterministic-test-support, validated-composition, and exact-domain-primitive slices. The count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
+| G3 — Implementation | in progress | Decision-independent foundations are active; 40 target surfaces are verified across operation, catalog, shared-list, scoped-route, typed-edit, telemetry, release-manifest, protected-artifact, migration-run-integrity, operational-health, deterministic-test-support, validated-composition, exact-domain-primitive, Client/Project-directory, Transaction-taxonomy and Transfer-destination slices. The count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
 | G4 — Migration rehearsal | not started | Read-only audit, backups, dry run, reconciliation, and rollback pass |
 | G5 — Authority cutover | not started | Supabase/PowerSync writers enabled; Firebase source frozen; stale writers rejected; monitoring active |
 | G6 — Release completion | not started | Production target, macOS/iOS distribution, MCP, and post-release reconciliation complete |
@@ -280,7 +280,8 @@ the minimum operational freeze/rejection control required for the hard cutover.
 
 | Task | Status | Required behavior |
 |---|---|---|
-| Implement NonItemReceiptLine model and validation | not started | Target Swift/MCP/Postgres schema only |
+| Define provider-free NonItemReceiptLine and exact reconstruction evidence | ready | Two target-only core/test scaffolds map stable ordered line identity/shape, exact integer-Money increase/decrease/net/reconstructed/variance evidence, canonical restart and refusal. No completion verdict, billing/tax allocation, Transaction writer, schema/provider, current app/MCP or migration is claimed; `EVID-RECEIPT-RECONSTRUCTION-001` |
+| Persist and expose NonItemReceiptLine in the target vertical slice | not started | Postgres relationship/checks/indexes, handlers, grants/RLS, Sync, app/MCP and migration land together after applicable gates |
 | Update Purchase/Return entry UI | not started | Other receipt lines section |
 | Replace subtotal/tax completeness equation | not started | Exact-cent final amount reconstruction |
 | Migrate discount/tax/shipping/warranty data | not started | Reviewed line mapping |

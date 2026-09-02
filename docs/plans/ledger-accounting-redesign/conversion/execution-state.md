@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 70
+State version: 71
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TRANSFER-DESTINATION-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: RECEIPT-RECONSTRUCTION-READY-IMPLEMENTATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -892,6 +892,31 @@ modifying the running Firebase application before hard cutover.
   destination-selection obligations and exactly its two target-only surfaces
   are now `verified`; current picker/app/MCP, command, authorization, schema/
   RLS/Sync/provider and migration surfaces remain unadvanced.
+- Audited the remaining Phase 1 dependency graph after exact Money,
+  Purchase/Return taxonomy and Transfer destination verification and selected
+  `non-item-receipt-line-reconstruction-contracts` as the smallest next
+  decision-independent accounting value boundary. D-016 settles stable ordered
+  embedded line identity/shape and exact reconstruction math without choosing
+  billing, rounding, Item tax/basis or Transaction posting behavior.
+- Created exactly two comment-only target scaffolds in the provider-free core/
+  test roots and a complete ready dossier for stable ID/source wording,
+  positive Money magnitude, increase/decrease effect, optional non-arithmetic
+  quantity evidence, duplicate-free order, standalone Purchase/Return scope,
+  exact increase/decrease/net/reconstructed/variance totals, canonical restart
+  and stable classification/Account/currency/overflow/tamper refusal.
+- O-008/O-030/O-031/O-032 remain fully open and outside the slice. Postgres,
+  handlers, Data API, RLS, Sync Streams, local persistence, media, current app/
+  MCP, source decoding/migration, observability and activation are explicit
+  nonapplicabilities. No behavioral code, Firebase change, provider, hosted
+  resource, migration or production operation exists at this ready checkpoint.
+- Sync/check/report pass at 741 recorded / 726 discovered surfaces, 315 target-
+  mapped or later / 479 target-relevant, 164 residual and 43 blockers, with only
+  the three documented retired-path warnings. M0 passes; M1 and M2 remain
+  honestly blocked by the unchanged two and 164 prerequisites.
+- The existing 80 target tests, target graph/generated-contract checks, macOS
+  and generic-iOS-Simulator staging builds and diff formatting all pass with the
+  two comment-only receipt scaffolds. The receipt obligations remain planned;
+  no executable receipt test or behavioral implementation is claimed at ready.
 
 ## Next Action
 
@@ -905,12 +930,17 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-TRANSACTION-TAXONOMY-001` as the sole shared semantic source for later
    Transaction classification, scope, route and pair identity. Do not recreate
    or extend that meaning independently in app, MCP, SQL or adapters.
-3. Audit the remaining Phase 1 dependency graph and select the smallest next
-   decision-independent user or operational slice. Claim only stable target-
-   only surfaces whose exact product/architecture authority is closed; create
-   its dossier, executable verification obligations and ready evidence before
-   implementing behavior. Do not infer any open O-/A- decision or advance a
-   current Firebase-era app/MCP surface from a provider-free foundation.
+3. Implement only the ready
+   `non-item-receipt-line-reconstruction-contracts` dossier inside the provider-
+   free core/test targets: distinct stable line ID, source-preserving nonblank
+   wording, strictly positive Money magnitude, increase/decrease effect,
+   optional non-arithmetic quantity, ordered duplicate-free standalone
+   Purchase/Return reconstruction, exact increase/decrease/net/reconstructed/
+   variance evidence, decode revalidation, canonical restart and stable
+   refusal. Do not implement a Transaction writer/posting/completeness verdict,
+   Item-history basis, O-008 billing, O-030 rounding behavior, O-031 tax/basis,
+   O-032 posting policy, schema/RLS/Sync/provider behavior, legacy mapping,
+   current app/MCP wiring, production access or any other open decision.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
