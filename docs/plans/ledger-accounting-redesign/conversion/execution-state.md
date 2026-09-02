@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 57
+State version: 58
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: VALIDATED-TARGET-COMPOSITION-IMPLEMENTED-EXACT-CI-NEXT
+- Checkpoint: VALIDATED-TARGET-COMPOSITION-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -704,6 +704,14 @@ modifying the running Firebase application before hard cutover.
   hosted CI remains planned, so exactly the two target-only composition
   surfaces are `implemented`. Current Firebase root, app/MCP integration,
   provider adapters and target application project surfaces remain unadvanced.
+- Exact implementation commit
+  `be88c5b9e42eef90018f84012f5a3e60f9631009` passed immutable GitHub Actions
+  run `33581326840`: conversion traceability and isolated-target jobs both
+  passed, including graph/generated-contract checks, all 66 target tests,
+  macOS and generic iOS Simulator builds and clean tracked artifacts. All four
+  composition obligations and exactly its two target-only surfaces are now
+  `verified`; current Firebase root, app/MCP/provider integration and target
+  application project surfaces remain unadvanced.
 
 ## Next Action
 
@@ -713,14 +721,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Preserve the implemented `validated-target-composition` boundary exactly,
-   commit and push its implementation checkpoint, and require the immutable
-   exact-commit pull-request run to pass conversion traceability, graph/
-   generated-contract checks, all 66 target tests, both target builds and clean
-   tracked artifacts. Only then advance its dossier and exactly
-   `SWIFT-06BA59E1BBDF` / `TEST-952BC24E0233` to `verified`. Keep the module out
-   of both application projects and do not infer provider, app/MCP, local-
-   database, hosted-resource, migration, production or cutover authority.
+2. Treat `validated-target-composition` and `EVID-TARGET-COMPOSITION-001` as the
+   verified structural boundary for later concrete wiring. Audit the remaining
+   mapped, unclaimed Phase 1 foundations and select the smallest complete slice
+   whose requirements are decision-independent and whose dossier can pass the
+   ready gate. Do not link composition into an application or begin provider/
+   local-database work merely because structural composition is verified.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T01:55:40.065Z",
+    "lastSynchronizedAt": "2026-09-02T01:59:04.251Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16081,14 +16081,14 @@
           "A complete provider-free reference plan assembles the current target ports only after environment, version, lifecycle and capability closure pass, while every incomplete, mixed, test-runtime or authority-bearing plan is refused"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Implemented target-only composition contract claimed by validated-target-composition. Three focused and all 66 target tests pass locally; exact-commit CI remains required before verification. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
+      "notes": "Verified target-only composition contract claimed by validated-target-composition. Three focused and all 66 target tests pass locally and in exact implementation commit be88c5b9e42eef90018f84012f5a3e60f9631009 / immutable Actions run 33581326840. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -33567,14 +33567,14 @@
           "Self-tests prove explicit typed composition, catalog/capability closure, environment isolation, deterministic restart evidence and permanent non-authority without external dependencies"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Implemented target-only composition self-tests use the verified deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally; exact-commit CI remains required before verification. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
+      "notes": "Verified target-only composition self-tests use the deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally and in exact implementation commit be88c5b9e42eef90018f84012f5a3e60f9631009 / immutable Actions run 33581326840. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {

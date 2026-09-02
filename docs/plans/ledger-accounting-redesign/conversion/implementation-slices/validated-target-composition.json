@@ -3,7 +3,7 @@
   "sliceId": "validated-target-composition",
   "title": "Validate one explicit environment-bound target composition before application or provider wiring",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Validated Target Composition",
   "surfaceIds": [
     "SWIFT-06BA59E1BBDF",
@@ -154,8 +154,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["COMPOSE-REQ-001", "COMPOSE-REQ-002", "COMPOSE-REQ-003", "COMPOSE-REQ-004", "COMPOSE-REQ-005"],
       "expected": "The exact implementation commit passes conversion traceability, package graph/provider/source-contamination guards, the complete target suite, both target builds and clean artifacts while the Firebase project links no target composition code and no provider/runtime integration is claimed.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-TARGET-COMPOSITION-001"]
     }
   ],
   "implementationEvidence": ["EVID-TARGET-COMPOSITION-001"],

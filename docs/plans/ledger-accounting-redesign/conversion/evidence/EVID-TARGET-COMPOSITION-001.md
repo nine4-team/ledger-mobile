@@ -2,14 +2,19 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / provider-free composition boundary
+- Exact implementation commit:
+  `be88c5b9e42eef90018f84012f5a3e60f9631009` on
+  `codex/supabase-powersync-implementation`
+- Immutable hosted CI:
+  [GitHub Actions run 33581326840](https://github.com/nine4-team/ledger-mobile/actions/runs/33581326840),
+  both jobs passed
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current Firebase composition root remain
   unchanged
 - Claimed target surfaces: `SWIFT-06BA59E1BBDF`, `TEST-952BC24E0233`
 - Slice dossier:
   `conversion/implementation-slices/validated-target-composition.json`
-- Slice state: implemented; local obligations pass and exact-commit hosted CI
-  remains pending before verification
+- Slice state: verified; all four obligations pass
 
 ## Selection and Scope
 
@@ -98,9 +103,11 @@ version drift, gated/deprecated/duplicate/unowned capabilities, unsafe evidence,
 digest tamper, noncanonical bytes and oversized evidence.
 
 `COMPOSE-TEST-001`, `COMPOSE-TEST-002` and `COMPOSE-TEST-003` pass locally.
-`COMPOSE-TEST-004` remains planned until an immutable hosted run passes on the
-exact implementation commit, so the slice and exactly its two target-only
-surfaces remain `implemented`, not `verified`.
+`COMPOSE-TEST-004` passed in immutable GitHub Actions run `33581326840` on exact
+implementation commit `be88c5b9e42eef90018f84012f5a3e60f9631009`:
+conversion traceability, graph/generated-contract checks, all 66 target tests,
+both target builds and clean tracked artifacts passed. The slice and exactly
+its two target-only surfaces are therefore `verified`.
 
 ## Ready-Gate Verification
 

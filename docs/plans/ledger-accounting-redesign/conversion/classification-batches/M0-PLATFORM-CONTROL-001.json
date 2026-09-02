@@ -3765,14 +3765,14 @@
       "acknowledgeSourceHash": "cd52b14244b38dcb57b5da4334a928f8723e9791848a49d24ab19f276e7eb57d",
       "currentBehavior": "Implements the provider-free explicit target composition boundary: validated environment/version/use-bound dependency plans, exact implementation and capability ownership, typed catalog/operation-query/sync-health assembly, structural-only canonical receipts, and stable fail-closed environment/dependency/catalog/capability/evidence results.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Implemented target-only composition contract claimed by validated-target-composition. Three focused and all 66 target tests pass locally; exact-commit CI remains required before verification. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
+      "notes": "Verified target-only composition contract claimed by validated-target-composition. Three focused and all 66 target tests pass locally and in exact implementation commit be88c5b9e42eef90018f84012f5a3e60f9631009 / immutable Actions run 33581326840. It does not claim or advance current Firebase root SWIFT-88C69E26FBA0, target-environment project/package surfaces, any provider adapter, or concrete app/MCP wiring.",
       "target": {
         "owner": "Validated Target Composition",
         "surfaces": [
@@ -3812,14 +3812,14 @@
       "acknowledgeSourceHash": "788e5b229fb2ad3b7bb5859693df44b12914766f05fb63ea5f45b5bcb1aee394",
       "currentBehavior": "Exercises complete provider-free reference composition, explicit port use, canonical receipt restart/input normalization, and atomic refusal for missing/duplicate/wrong/cross-environment/reference-runtime dependencies, version drift, unavailable/deprecated/duplicate/unowned capabilities, unsafe evidence, tamper, noncanonical bytes and size bounds.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Implemented target-only composition self-tests use the verified deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally; exact-commit CI remains required before verification. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
+      "notes": "Verified target-only composition self-tests use the deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally and in exact implementation commit be88c5b9e42eef90018f84012f5a3e60f9631009 / immutable Actions run 33581326840. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
       "target": {
         "owner": "Validated Target Composition",
         "surfaces": [
