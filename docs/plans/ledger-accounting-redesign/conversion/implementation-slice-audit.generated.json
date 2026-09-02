@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T02:45:23.669Z",
+  "generatedFromManifestSync": "2026-09-02T02:49:03.169Z",
   "totals": {
     "slices": 15,
     "claimedTargetSurfaces": 51,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 13,
+    "implemented": 0,
+    "verified": 14,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -21,7 +21,7 @@
       "sliceId": "client-project-directory-read-contracts",
       "title": "Define authoritative Client/Project identity and local directory read contracts",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Client and Project Domain Read Contracts",
       "surfaceIds": [
         "SWIFT-401EBD892749",

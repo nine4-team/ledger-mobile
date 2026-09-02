@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-401EBD892749`, `TEST-0911D1BF8A05`
 - Slice dossier:
   `conversion/implementation-slices/client-project-directory-read-contracts.json`
-- Slice state: implemented; local semantic and build verification passes, while
-  exact-commit hosted CI remains before `verified`
+- Slice state: verified at exact implementation commit
+  `3c0b58b66e61ab8351d823bf0e0bdcaca7d1c9ff`
 
 ## Selection and Scope
 
@@ -93,10 +93,16 @@ Local commands passed on 2026-09-01:
 - `npm run target:staging:build:macos` and
   `npm run target:staging:build:ios` — both unsigned staging builds passed.
 
-`DIRECTORY-TEST-001` through `003` therefore pass. The exact implementation
-commit and immutable pull-request run do not yet exist, so
-`DIRECTORY-TEST-004` remains planned and both surfaces honestly remain
-`implemented` rather than `verified`.
+`DIRECTORY-TEST-001` through `003` therefore pass. Immutable GitHub Actions run
+[`33584456794`](https://github.com/nine4-team/ledger-mobile/actions/runs/33584456794)
+also passed for exact implementation commit
+`3c0b58b66e61ab8351d823bf0e0bdcaca7d1c9ff`. Its `Conversion state and
+traceability` job passed the synchronized control plane and clean generated
+artifacts. Its `Isolated target environment` job passed graph/source-isolation,
+generated contracts, all 72 target tests, macOS and generic iOS Simulator
+builds, and clean tracked artifacts. `DIRECTORY-TEST-004` and all four slice
+obligations therefore pass; exactly the two claimed target-only surfaces are
+`verified`.
 
 ## Permanent Limits
 

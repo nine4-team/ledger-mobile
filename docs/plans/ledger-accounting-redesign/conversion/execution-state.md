@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 63
+State version: 64
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-PROJECT-DIRECTORY-IMPLEMENTED-EXACT-CI-NEXT
+- Checkpoint: CLIENT-PROJECT-DIRECTORY-VERIFIED-NEXT-SLICE-AUDIT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -788,6 +788,14 @@ modifying the running Firebase application before hard cutover.
   Current Project/app/MCP, schema/RLS/Sync/provider and migration surfaces remain
   unadvanced; no Firebase change, hosted resource or production operation was
   introduced.
+- Exact implementation commit
+  `3c0b58b66e61ab8351d823bf0e0bdcaca7d1c9ff` passed immutable GitHub Actions
+  run `33584456794`: conversion traceability and isolated-target jobs both
+  passed, including graph/generated-contract checks, all 72 target tests,
+  macOS and generic iOS Simulator builds and clean tracked artifacts. All four
+  directory obligations and exactly its two target-only surfaces are now
+  `verified`; current Project/app/MCP, schema/RLS/Sync/provider and migration
+  surfaces remain unadvanced.
 
 ## Next Action
 
@@ -797,14 +805,12 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented `client-project-directory-read-contracts`
-   checkpoint, then require an immutable pull-request run for that exact commit.
-   Advance only `SWIFT-401EBD892749` and `TEST-0911D1BF8A05` plus their dossier
-   to `verified` after both conversion-traceability and isolated-target jobs
-   pass all 72 tests, graph/contracts, both staging builds and clean artifacts.
-   Do not implement Create/Rename/Archive/ChangeClient/Delete, choose O-024/
-   O-025, create schema/RLS/Sync/provider behavior, transform `clientName`, wire
-   app/MCP, access production or modify either application project.
+2. Audit the remaining mapped Phase 1 foundations and select the smallest next
+   decision-independent vertical slice. Freeze its exact product/architecture
+   authority, claim only target-only surfaces, define every applicable and
+   explicitly non-applicable contract layer, and pass the dossier `ready` gate
+   before behavior begins. Do not choose an O-/A-gated mutation/schema/provider
+   policy merely to keep implementation moving.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -1757,14 +1757,14 @@
       "acknowledgeSourceHash": "d6fcb4ae91d358433ef1f492d6df9a8f185b419c0741a7b400e53efe715a4cc5",
       "currentBehavior": "Implements provider-free validated Client and Project display values, Account-scoped immutable summaries, exact Project-to-Client ID and Account relationship checks, duplicate-free local list snapshots, stable bounded failures and the backend-neutral ClientProjectDirectoryQuerying watch port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-001"
       ],
-      "notes": "Target-only Phase 1 Client/Project read-domain implementation. Local deterministic proof passes; exact-commit hosted CI remains before verification. It cannot define Client merge, Project reassignment/deletion, creation/edit commands, schema, RLS, Sync Streams, provider adapters, app/MCP wiring or migration.",
+      "notes": "Target-only Phase 1 Client/Project read-domain implementation. Local deterministic proof and exact-commit hosted CI pass. It cannot define Client merge, Project reassignment/deletion, creation/edit commands, schema, RLS, Sync Streams, provider adapters, app/MCP wiring or migration.",
       "target": {
         "owner": "Client and Project Domain Read Contracts",
         "surfaces": [
@@ -1805,14 +1805,14 @@
       "acknowledgeSourceHash": "28b22dd21d195f41f7efc30a242d1631b827f1c99f26f98207c2489b8b8bd174",
       "currentBehavior": "Provides three executable provider-free tests for exact Client/Project identity and Account relationships, same-name distinct Clients, immutable local readiness and byte-identical restart, plus atomic invalid-name/time/cross-Account/mismatched-ID/duplicate/incomplete-authority refusal and safe diagnostics.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-001"
       ],
-      "notes": "Target-only directory contract self-tests pass locally with all 72 target tests and both staging builds; exact-commit hosted CI remains before verification. They cannot establish provider authorization/download absence, physical offline behavior, source migration correctness or concrete app/MCP integration.",
+      "notes": "Target-only directory contract self-tests and exact-commit hosted CI pass with all 72 target tests, both staging builds and clean artifacts. They cannot establish provider authorization/download absence, physical offline behavior, source migration correctness or concrete app/MCP integration.",
       "target": {
         "owner": "Client and Project Domain Read Contracts",
         "surfaces": [

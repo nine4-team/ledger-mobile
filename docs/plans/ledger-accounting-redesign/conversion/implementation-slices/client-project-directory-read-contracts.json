@@ -3,7 +3,7 @@
   "sliceId": "client-project-directory-read-contracts",
   "title": "Define authoritative Client/Project identity and local directory read contracts",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Client and Project Domain Read Contracts",
   "surfaceIds": [
     "SWIFT-401EBD892749",
@@ -162,8 +162,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["DIRECTORY-REQ-001", "DIRECTORY-REQ-002", "DIRECTORY-REQ-003", "DIRECTORY-REQ-004", "DIRECTORY-REQ-005", "DIRECTORY-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming schema, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-001"]
     }
   ],
   "implementationEvidence": ["EVID-CLIENT-PROJECT-DIRECTORY-001"],
