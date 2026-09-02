@@ -3,7 +3,7 @@
   "sliceId": "space-creation-operation-contracts",
   "title": "Create one Project or Business Inventory Space without unrelated effects",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Creation Operation Contracts",
   "surfaceIds": ["SWIFT-F61D38406022", "TEST-F46861BCC21A"],
   "requirements": [
@@ -160,8 +160,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPACECREATE-REQ-001", "SPACECREATE-REQ-002", "SPACECREATE-REQ-003", "SPACECREATE-REQ-004", "SPACECREATE-REQ-005", "SPACECREATE-REQ-006", "SPACECREATE-REQ-007", "SPACECREATE-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CREATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-CREATION-001"],

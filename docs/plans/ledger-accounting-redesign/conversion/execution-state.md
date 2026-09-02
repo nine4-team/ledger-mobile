@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 126
+State version: 127
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CREATION-IMPLEMENTED-LOCAL
+- Checkpoint: SPACE-CREATION-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1879,6 +1879,13 @@ modifying the running Firebase application before hard cutover.
   formatting. The implementation acknowledges exact source hashes; 78 target
   surfaces are now implementation-advanced. Exact implementation-commit CI
   remains before verification.
+- Exact Space-create implementation commit
+  `03b545dffcaaf8ea37fc9f30f0e3f12b761610a4` passed immutable GitHub Actions
+  run `33647113450`: conversion traceability passed in 7 seconds and the
+  isolated target environment passed in 2 minutes 45 seconds with all 156 tests
+  in 36 suites, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts. All five obligations pass and exactly the two Space-create
+  surfaces are now `verified`; 78 target surfaces are implemented or later.
 
 ## Next Action
 
@@ -1943,11 +1950,8 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-PROJECT-DETAILS-UPDATE-001` as the sole UpdateProjectDetails semantic
    authority. Treat `space-creation-operation-contracts` and
    `EVID-SPACE-CREATION-001` as the sole direct provider-free CreateSpace
-   semantic authority. Synchronize and validate the locally implemented
-   checkpoint, commit and push it, and require both exact-implementation-commit
-   CI jobs to pass before marking either claimed Space surface verified. Then
-   record immutable verification evidence and audit the next smallest complete
-   decision-independent dependency. Keep
+   semantic authority. Audit the next smallest complete decision-independent
+   dependency before creating another ready slice. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

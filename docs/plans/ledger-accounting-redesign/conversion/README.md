@@ -119,12 +119,14 @@ pass four focused/all 152 target tests, graph/generated-contract checks, both
 staging builds and clean artifacts. O-023/O-024/O-025, physical persistence,
 schema/RLS/Sync/Auth/provider behavior, app/MCP, migration and production remain
 excluded.
-The provider-free direct Space creation slice is implemented locally and awaits
-exact-implementation-commit CI. Exactly two target surfaces implement a stable
+The provider-free direct Space creation slice is verified. Exactly two target
+surfaces implement a stable
 Space ID, exact Project-or-Business-Inventory scope, normalized required name
 and optional notes, zero expected-revision preconditions, shared operation
-lifecycle, canonical restart/refusal and a narrow port. Four focused/all 156
-target tests and both staging builds pass locally. Checklist/template/media/
+lifecycle, canonical restart/refusal and a narrow port. Exact implementation
+commit `03b545df` and immutable Actions run `33647113450` pass four focused/all
+156 target tests, graph/generated-contract checks, both staging builds and clean
+artifacts. Checklist/template/media/
 Item/review/lifecycle/accounting mutation, authorization, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded. O-023/O-026/O-037 stay open; `EVID-SPACE-CREATION-001`.

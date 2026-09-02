@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-F61D38406022`, `TEST-F46861BCC21A`
 - Slice dossier:
   `conversion/implementation-slices/space-creation-operation-contracts.json`
-- Verification state: implemented locally; exact implementation-commit CI is
-  still required before either claimed surface can become verified
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `03b545dffcaaf8ea37fc9f30f0e3f12b761610a4`
 - Ready scaffold hashes:
   - `SpaceCreationOperation.swift`:
     `3a9649300ded0cfa08608c5cec10a0bbfd5e314792e651c2c18e87427dbe9d34`
@@ -176,8 +176,24 @@ controls, M0 and clean diff formatting. The ledger remains at 777 recorded / 762
 discovered and 351 mapped-or-later / 164 residual / 43 blockers; 78 target
 surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
 
-`SPACECREATE-TEST-001` through `-004` therefore pass. `-005` remains planned
-until immutable exact-implementation-commit CI passes.
+`SPACECREATE-TEST-001` through `-004` therefore pass.
+
+## Immutable Exact-Commit Verification
+
+GitHub Actions run `33647113450` verified exact implementation commit
+`03b545dffcaaf8ea37fc9f30f0e3f12b761610a4`:
+
+- conversion traceability passed in 7 seconds;
+- the isolated target environment passed in 2 minutes 45 seconds;
+- all 156 target tests in 36 suites passed;
+- target dependency/provider/source-project isolation and generated app/MCP
+  contracts passed;
+- macOS and generic iOS Simulator staging builds passed; and
+- tracked-artifact cleanliness passed.
+
+`SPACECREATE-TEST-005` therefore passes. All five obligations and exactly the
+two claimed target-only surfaces are verified. Hosted evidence adds no server,
+physical persistence, authorization, provider, migration or production claim.
 
 ## Permanent Limits
 

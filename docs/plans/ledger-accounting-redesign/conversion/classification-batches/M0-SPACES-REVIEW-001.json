@@ -902,7 +902,7 @@
       "acknowledgeSourceHash": "1512b0809cd1b32c65c9db28fd72d7fa3a95bb65fe233f69d1469ecae43e374c",
       "currentBehavior": "Defines the implemented provider-free boundary for direct stable-ID Space creation in one Project or Business Inventory scope with canonical name/notes, exact operation binding, restart/refusal validation and a narrow operation port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -952,7 +952,7 @@
       "acknowledgeSourceHash": "72de7d9a3db2c8ae5b507e37b44c8348f786e0ad28471c0faecd98d7c49b450d",
       "currentBehavior": "Defines deterministic provider-free tests for direct Space Project/Inventory scope, canonical name/notes, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
