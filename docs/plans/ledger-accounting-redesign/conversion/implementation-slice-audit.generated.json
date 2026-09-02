@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T16:05:00.485Z",
+  "generatedFromManifestSync": "2026-09-02T16:21:23.734Z",
   "totals": {
     "slices": 37,
     "claimedTargetSurfaces": 95,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 78
+    "implementationAdvancedTargetSurfaces": 80
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 35,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -441,7 +441,7 @@
       "sliceId": "space-details-update-operation-contracts",
       "title": "Replace one Space's complete mutable details without changing scope or child state",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Details Update Operation Contracts",
       "surfaceIds": [
         "SWIFT-EDFA6A1EF8C3",

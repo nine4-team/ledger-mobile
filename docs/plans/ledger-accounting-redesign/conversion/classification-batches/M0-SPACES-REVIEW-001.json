@@ -995,10 +995,10 @@
     {
       "id": "SWIFT-EDFA6A1EF8C3",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "17d858d85970e165a22db02d9e3b7d3956245be5fd21b9c48eeb4be9941ad9c8",
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for revision-aware replacement of one Space's complete normalized name-and-optional-notes pair; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "3bf0031d1ec90f369482d09dab740900a279911e36eab3c5b6980cc5dc78284f",
+      "currentBehavior": "Defines the implemented provider-free boundary for revision-aware replacement of one Space's complete canonical name-and-optional-notes pair with exact operation binding, restart/refusal validation and a narrow operation port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -1043,10 +1043,10 @@
     {
       "id": "TEST-E8832A105D5C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "f5a877a366877ed95661f043c406981921da8f94cb3878e3eac91f718b127b78",
-      "currentBehavior": "Defines only the comment-scaffolded target tests for complete normalized Space detail replacement, exact revision, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "1c453a32feba17ec47de517145369c0e29709dc99a05aa0262205202cf66ef9b",
+      "currentBehavior": "Defines deterministic provider-free tests for complete canonical Space detail replacement, exact same-Space revision, byte-identical restart, atomic refusal, receipt and exact replay semantics.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",

@@ -3,7 +3,7 @@
   "sliceId": "space-details-update-operation-contracts",
   "title": "Replace one Space's complete mutable details without changing scope or child state",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Space Details Update Operation Contracts",
   "surfaceIds": ["SWIFT-EDFA6A1EF8C3", "TEST-E8832A105D5C"],
   "requirements": [
@@ -123,8 +123,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
       "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
       "expected": "Valid synthetic set and clear inputs produce one typed exact-scope UpdateSpaceDetails command with complete canonical name/notes and one same-Space revision, containing no scope/checklist/template/attachment/Item/review/lifecycle/completion/accounting/generic-write input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
     },
     {
       "id": "SPACEDETAILS-TEST-002",
@@ -132,8 +132,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
       "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-008"],
       "expected": "Set and clear commands round-trip byte-identically with exact Account/actor/contract/Operation/Space/name/notes/revision/time/subject/fingerprint evidence and no scope override, backend path, provider, credential or authoritative result claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
     },
     {
       "id": "SPACEDETAILS-TEST-003",
@@ -141,8 +141,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
       "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
       "expected": "Blank/noncanonical name, noncanonical notes, invalid time and changed Account/actor/contract/Space/name/notes/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
     },
     {
       "id": "SPACEDETAILS-TEST-004",
@@ -150,8 +150,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateOperationTests.swift",
       "covers": ["SPACEDETAILS-REQ-001", "SPACEDETAILS-REQ-002", "SPACEDETAILS-REQ-003", "SPACEDETAILS-REQ-004", "SPACEDETAILS-REQ-005", "SPACEDETAILS-REQ-006", "SPACEDETAILS-REQ-007", "SPACEDETAILS-REQ-008"],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Space/name/notes/revision is refused, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-001"]
     },
     {
       "id": "SPACEDETAILS-TEST-005",
@@ -163,7 +163,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-SPACE-DETAILS-UPDATE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Decision-independent Phase 1 Space-details command only. The canonical Space spec and reviewed capability dossier preserve edit outcomes while replacing generic partial dictionaries with one complete revisioned name/notes intent. O-023/O-026/O-037 remain fully open because this command carries no media, templates, assignment or lifecycle concern. The slice stops before physical durable storage, authoritative server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."

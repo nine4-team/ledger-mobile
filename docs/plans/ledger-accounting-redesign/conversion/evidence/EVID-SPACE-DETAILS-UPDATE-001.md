@@ -1,14 +1,14 @@
 # EVID-SPACE-DETAILS-UPDATE-001 — Space Details Update Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation plan / provider-free Space details update
+- Class: implementation / provider-free Space details update
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-EDFA6A1EF8C3`, `TEST-E8832A105D5C`
 - Slice dossier:
   `conversion/implementation-slices/space-details-update-operation-contracts.json`
-- Verification state: ready locally; executable behavior remains absent until
-  the exact comment-only ready commit passes immutable pull-request CI
+- Verification state: implemented locally; exact implementation-commit CI is
+  still required before either claimed surface can become verified
 - Ready scaffold hashes:
   - `SpaceDetailsUpdateOperation.swift`:
     `17d858d85970e165a22db02d9e3b7d3956245be5fd21b9c48eeb4be9941ad9c8`
@@ -122,9 +122,65 @@ The complete local ready gate passes:
 Passing immutable exact-ready-commit CI may authorize only the bounded
 provider-free implementation named here.
 
+Exact comment-only ready commit
+`938a30abdf816be63055f30a2d17c602f92e0611` passed immutable GitHub Actions
+run `33652799157`: conversion traceability passed in 10 seconds and the isolated
+target environment passed in 2 minutes 57 seconds with all 156 then-existing
+tests, graph/generated-contract checks, both staging builds and clean tracked
+artifacts. That gate authorized only the frozen provider-free implementation.
+
+## Implemented Contract
+
+- `ExpectedSpaceRevision` is one typed unsigned revision value and carries no
+  row, timestamp or conflict-result claim.
+- `SpaceDetailsUpdateDraft` binds one exact Account, actor, operation contract,
+  stable Space, reused canonical `SpaceDisplayName` and `SpaceCreationNotes`,
+  expected Space revision and finite capture time. Reusing the verified value
+  types keeps creation and editing normalization identical.
+- `UpdateSpaceDetailsPayload` contains only Space ID and the complete canonical
+  name/notes pair. `UpdateSpaceDetailsCommand` derives exactly one Space subject
+  and same-subject expected-revision precondition through the shared envelope,
+  fingerprint, receipt and replay lifecycle and revalidates duplicated evidence
+  on decode.
+- `SpaceDetailsUpdating` is one narrow provider-free operation port.
+  `SpaceDetailsUpdateFailure` supplies stable bounded codes for invalid time,
+  malformed evidence, binding/precondition/subject/fingerprint/receipt mismatch
+  and local acceptance failure; shared Space value failures retain their
+  already-verified stable codes.
+
+The command contains no Project/Inventory scope, checklist/template/attachment/
+Item/review/completion/lifecycle/accounting mutation, generic field map or
+authoritative update result. Its deterministic adapter uses only the shared
+`OperationJournal`; it is not a physical local or server implementation.
+
+Implementation hashes:
+
+- `SpaceDetailsUpdateOperation.swift`:
+  `3bf0031d1ec90f369482d09dab740900a279911e36eab3c5b6980cc5dc78284f`
+- `SpaceDetailsUpdateOperationTests.swift`:
+  `1c453a32feba17ec47de517145369c0e29709dc99a05aa0262205202cf66ef9b`
+
+## Local Implementation Verification
+
+Four focused deterministic tests pass. They prove one complete normalized set/
+clear details pair, duplicate-name identity and exact same-Space revision;
+canonical byte-identical restart; atomic blank/noncanonical/malformed/rebound/
+tampered evidence refusal with stable diagnostics; shared exact replay/
+Operation-ID mismatch semantics; and no false receipt from a failing port.
+
+The complete local implementation gate also passes: all 160 target tests in 37
+suites, target environment isolation, generated app/MCP contracts, macOS and
+generic iOS Simulator staging builds, conversion/capability/query/residual
+controls, M0 and clean diff formatting. The ledger remains at 779 recorded / 764
+discovered and 353 mapped-or-later / 164 residual / 43 blockers; 80 target
+surfaces are implementation-advanced. M1/M2 retain the expected 2/164 blockers.
+
+`SPACEDETAILS-TEST-001` through `-004` therefore pass. `-005` remains planned
+until immutable exact-implementation-commit CI passes.
+
 ## Permanent Limits
 
-This ready plan cannot:
+This implementation cannot:
 
 - visibly or authoritatively update any Space;
 - create or modify a local/server Space row, revision or audit field;

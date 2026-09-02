@@ -130,15 +130,15 @@ artifacts. Checklist/template/media/
 Item/review/lifecycle/accounting mutation, authorization, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded. O-023/O-026/O-037 stay open; `EVID-SPACE-CREATION-001`.
-The provider-free Space details update slice is ready. Exactly two comment-only
-target surfaces and one machine-readable dossier freeze a complete normalized
-name/optional-notes replacement, stable Space identity, exact same-Space
-expected revision, shared operation lifecycle, and a narrow port. No executable
-details-update behavior exists before exact-ready-commit CI; scope/checklist/
-template/media/Item/review/lifecycle/accounting mutation, authorization,
-physical persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and
-production remain excluded. O-023/O-026/O-037 stay open;
-`EVID-SPACE-DETAILS-UPDATE-001`.
+The provider-free Space details update slice is implemented locally and awaits
+exact-implementation-commit CI. Exactly two target surfaces implement one
+complete normalized name/optional-notes replacement, stable Space identity,
+exact same-Space expected revision, shared operation lifecycle, canonical
+restart/refusal and a narrow port. Four focused/all 160 target tests and both
+staging builds pass locally. Scope/checklist/template/media/Item/review/
+lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/
+Sync/provider behavior, app/MCP, migration and production remain excluded.
+O-023/O-026/O-037 stay open; `EVID-SPACE-DETAILS-UPDATE-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
