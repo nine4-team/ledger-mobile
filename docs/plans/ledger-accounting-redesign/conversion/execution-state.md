@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 50
+State version: 51
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: OPERATIONAL-HEALTH-IMPLEMENTED-EXACT-CI-PENDING-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: OPERATIONAL-HEALTH-VERIFIED-NEXT-FOUNDATION-AUDIT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -620,6 +620,13 @@ modifying the running Firebase application before hard cutover.
   remains planned, so exactly the two target-only surfaces are `implemented`
   and the broader current observability/performance surfaces remain
   `target_mapped`.
+- Exact implementation commit `4fdb363f` passed immutable GitHub Actions run
+  `33576448917`: both conversion traceability and isolated-target jobs passed,
+  including all 59 target tests, graph/generated-contract checks, macOS and
+  generic iOS Simulator builds and clean tracked artifacts. All four
+  operational-health obligations and exactly its two target-only surfaces are
+  now `verified`; the broader current observability/performance/navigation/test
+  surfaces remain `target_mapped`.
 
 ## Next Action
 
@@ -629,15 +636,15 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Commit and push the implemented
-   `operational-health-and-objective-registry` checkpoint, then require an
-   immutable GitHub Actions run on that exact implementation commit. Advance
-   the slice and exactly its two target-only surfaces to `verified` only if both
-   conversion and isolated-target jobs pass all 59 tests, graph/generated-
-   contract guards, both target builds and clean artifacts. Do not add a sink,
-   SDK, hosted alert, production threshold, operator action, app/MCP lifecycle
-   wiring or advance the broader current observability surfaces from this
-   registry evidence.
+2. Audit the remaining Phase 1 backend-neutral composition-root, deterministic
+   in-memory/failure-adapter and target test-support gaps against the reviewed
+   platform/app-shell mappings and architecture. Select one bounded technical
+   slice only if exact authority, claimed target-only surfaces and executable
+   verification can be completed without choosing A-003/A-004/A-007/A-015/
+   A-016, any open product decision, provider resource, credential, spend,
+   production behavior or cutover policy. Create comment-only scaffolds and a
+   `ready` dossier before behavior; otherwise record the named blocker rather
+   than inventing work.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

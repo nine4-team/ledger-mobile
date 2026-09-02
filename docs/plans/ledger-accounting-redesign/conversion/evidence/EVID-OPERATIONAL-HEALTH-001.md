@@ -2,9 +2,10 @@
 
 - Timestamp: 2026-09-01
 - Class: implementation / health, objective, alert, and runbook control
-- Exact implementation commit: pending this bounded checkpoint on
-  `codex/supabase-powersync-implementation`; immutable hosted CI is still
-  required before verification
+- Exact implementation commit:
+  `4fdb363fbc871f409f53f642ae3c6615272e5322`
+- Immutable hosted verification:
+  `https://github.com/nine4-team/ledger-mobile/actions/runs/33576448917`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and current diagnostics remain unchanged
 - Claimed target surfaces: `SWIFT-D9A560340CA9`, `TEST-D534C0EDD709`
@@ -106,12 +107,25 @@ Local results on 2026-09-01:
   active policy, emitted/acknowledged/resolved alert, executable operator action
   or approved numeric performance budget.
 
-`OPHEALTH-TEST-001`, `OPHEALTH-TEST-002`, and `OPHEALTH-TEST-003` pass locally.
-`OPHEALTH-TEST-004` remains planned until an immutable GitHub Actions run passes
-on the exact implementation commit with conversion/contract/graph checks, the
-complete 59-test package, both target builds and clean tracked artifacts. The
-slice and exactly its two target-only surfaces are therefore `implemented`, not
-`verified`.
+## Immutable Hosted Verification
+
+GitHub Actions run `33576448917` passed on exact implementation commit
+`4fdb363fbc871f409f53f642ae3c6615272e5322`:
+
+- `Conversion state and traceability`: pass at 727 recorded / 712 discovered
+  surfaces with zero errors, the three documented retired-path warnings, fresh
+  generated artifacts and M0 pass;
+- target dependency/environment boundary and generated contract checks: pass;
+- complete target package: pass, 59 tests;
+- target staging macOS build: pass;
+- target staging generic iOS Simulator build: pass; and
+- clean tracked-artifact check: pass.
+
+All four `OPHEALTH-TEST-*` obligations therefore pass. The slice and exactly
+its two target-only surfaces are `verified`. This does not advance
+`MAN-OBS-001`, `SWIFT-7B159D426B1D`, `SWIFT-2703ADAB66C5`, or
+`TEST-ECE08B24ADCE`; actual emitters, app/MCP lifecycle wiring, provider
+adapters, approved thresholds and physical evidence remain outside this slice.
 
 No metric was emitted, no threshold was approved, no alert was activated, and
 no runbook action, provider, hosted resource, production access, deployment,

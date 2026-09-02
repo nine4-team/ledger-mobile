@@ -3567,14 +3567,14 @@
       "acknowledgeSourceHash": "660337d993a7a378c6c959b5961d3014ff29c60492b4c3aee8580d0fde08b15d",
       "currentBehavior": "Defines a provider-free operational health snapshot derived from validated SyncHealthSnapshot truth plus a complete closed measurement, exact-zero service-objective, alert-candidate, runbook and spike-pending performance-budget registry. Canonical bounded evidence, explicit missing objective evidence, stable failures and candidateOnly/evidenceOnly authority cannot emit a metric, activate an alert, approve a numeric threshold or execute an operator action.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATIONAL-HEALTH-001"
       ],
-      "notes": "Target-only provider-free values and validators. Current app/MCP diagnostics, emitters, sinks, provider adapters, hosted policies, numeric thresholds and broader mapped observability surfaces remain unadvanced. Exact-commit external CI remains before verification.",
+      "notes": "Target-only provider-free values and validators. Four focused/59 total tests, graph/contract checks, both target builds and clean artifacts passed immutable Actions run 33576448917 on exact implementation commit 4fdb363f. Current app/MCP diagnostics, emitters, sinks, provider adapters, hosted policies, numeric thresholds and broader mapped observability surfaces remain unadvanced.",
       "target": {
         "owner": "Operational Health and Objective Registry",
         "surfaces": [
@@ -3613,14 +3613,14 @@
       "acknowledgeSourceHash": "837eacbab8685417447faf2dace264fa0c73f6a6f1ab164f5dceb17e845ae4ee",
       "currentBehavior": "Exercises exact registry topology, reciprocal references, offline-ready versus online-unsynchronized health, derived ages, complete evidence-gated objective assessment, canonical restart and reordering, invalid counts/times/policies/runbooks/evidence, digest/noncanonical/size tamper and permanent candidate-only non-authority using synthetic provider-free values.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATIONAL-HEALTH-001"
       ],
-      "notes": "Four provider-free focused tests and all 59 target package tests pass locally. Fixtures use synthetic time/count/code/evidence values, contact no file/network/provider/hosted service and cannot activate operational behavior or claim a production threshold. Exact-commit external CI remains before verification.",
+      "notes": "Four provider-free focused tests and all 59 target package tests pass locally and in immutable Actions run 33576448917 on exact implementation commit 4fdb363f. Fixtures use synthetic time/count/code/evidence values, contact no file/network/provider/hosted service and cannot activate operational behavior or claim a production threshold.",
       "target": {
         "owner": "Operational Health and Objective Registry",
         "surfaces": [

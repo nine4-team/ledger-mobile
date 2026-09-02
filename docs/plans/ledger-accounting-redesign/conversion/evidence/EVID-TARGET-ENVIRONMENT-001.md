@@ -150,3 +150,15 @@ edges, all tooling source is covered by the provider-import scan, and neither
 The full 55-test package suite and both existing app builds pass locally. This
 extends isolation evidence only; it does not make migration tooling part of the
 app or authorize a migration.
+
+## Cumulative Operational-Registry Verification
+
+Immutable GitHub Actions run `33576448917` on exact commit
+`4fdb363fbc871f409f53f642ae3c6615272e5322` later passed the expanded complete
+59-test target package, dependency/application graph guard, generated contracts,
+macOS staging build, generic iOS Simulator staging build and clean-artifact
+check. The new operational-health implementation remained inside the provider-
+free core and introduced no provider SDK, migration-tooling app link, hosted
+resource, credential or source-project change. This is cumulative isolation
+evidence only; the signed/visual/physical and hosted-resource portions of
+`TARGET-ENV-TEST-005` remain open.
