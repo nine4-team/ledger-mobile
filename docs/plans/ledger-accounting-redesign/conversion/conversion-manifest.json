@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T10:17:45.872Z",
+    "lastSynchronizedAt": "2026-09-02T10:33:56.027Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -25376,6 +25376,66 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-9CDB2BCAC71B",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectNoteCreationOperation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectNoteCreationOperation.swift"
+        }
+      ],
+      "observedSourceHash": "18a49e7175ac8a112ac1c7301e1797e09945fd1168815079dd6322c54a7c47cd",
+      "acknowledgedSourceHash": "18a49e7175ac8a112ac1c7301e1797e09945fd1168815079dd6322c54a7c47cd",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for one typed AddProjectNote command, exact Project parent identity and shared operation receipt; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Note Creation Operation Contracts",
+        "surfaces": [
+          "ProjectNoteCreationDraft",
+          "AddProjectNotePayload",
+          "AddProjectNoteCommand",
+          "ProjectNoteCreating",
+          "ProjectNoteCreationFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, ProjectID and preallocated ProjectNoteID; Project names, Client text, creator labels, timestamps and caller claims never authorize the parent or establish authoritative audit evidence",
+          "A later trusted handler must derive and verify the actor, assign authoritative creation time/source, and preflight Project existence and visibility without distinguishing missing from denied; this provider-free command performs none of those checks"
+        ],
+        "syncRequirements": [
+          "Stable OperationID, Account/actor/contract, Project parent, note identity, nonblank text, requested source and finite client capture time survive canonical structured restart and exact replay through the shared operation lifecycle",
+          "A deterministic reference adapter proves only provider-free local acceptance/replay semantics, not physical durability, optimistic note projection, parent authorization, authoritative audit assignment, PowerSync upload or synchronized visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only note-create intent and decode or rewrite no Firebase embedded/nested note, legacy author/source/timestamp variant, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must map every source note once or quarantine it and reconcile parent, note identity, text hash, final source, creator, authoritative creation time, revision/tombstone and deterministic order"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectNoteCreationOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/note/text/requested-source intent, excluded caller-authored audit evidence, canonical restart, atomic rebound refusal and shared replay without a database, parent authorization, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-NOTE-CREATION-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may preserve one stable offline-allocatable note identity, exact parent Project, nonblank text, requested source and shared operation identity/replay while explicitly excluding caller-authored authoritative creator/time/source evidence. It cannot persist or project a note, authorize/preflight the parent, define mutation roles, schema/RLS/Sync/provider behavior, wire app/MCP, migrate source notes or activate production.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-9CF3A4F84903",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/Protocols/BudgetServiceProtocols.swift",
@@ -35851,6 +35911,65 @@
       ],
       "notes": "Preserve presentation cases and add authoritative Accounted For projection cases. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "TEST-DB2559406D3D",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectNoteCreationOperationTests.swift"
+        }
+      ],
+      "observedSourceHash": "f441ddcf4c3044dbb4807c61c80ce239c861547ef5790faea8251b761219196a",
+      "acknowledgedSourceHash": "f441ddcf4c3044dbb4807c61c80ce239c861547ef5790faea8251b761219196a",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines only the comment-scaffolded target tests for Project-note create shape, excluded caller audit, canonical restart, atomic refusal and shared operation replay; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Note Creation Operation Contracts",
+        "surfaces": [
+          "ProjectNoteCreationOperationTests",
+          "exact Project/note/text/requested-source fixtures",
+          "excluded creator/time/audit fixtures",
+          "canonical restart and tamper fixtures",
+          "shared OperationJournal replay and failing-port fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Project, Principal, Operation and note identities and contain no Project/Client name, creator display, authoritative timestamp, provider path or credential",
+          "Negative tests expose only stable bounded codes and no role, hidden parent state, membership, source payload, provider error or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic structured command evidence from physical persistence, authoritative parent preflight/audit assignment, optimistic projection, server apply and synchronized note visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Project/note/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent note-create evidence round-trips byte-identically while changed Account/actor/contract/Project/note/text/requested-source/parent/precondition/fingerprint evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectNoteCreationOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral Project-note creation command boundary without claiming a note row/projection, parent authorization, server audit, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-NOTE-CREATION-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/note/text/requested-source command truth, excluded caller-authored authoritative audit, byte-identical restart, malformed/rebound refusal, exact replay and no false receipt without claiming physical local durability, authorization/preflight, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-DB57E9433EB6",

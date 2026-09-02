@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 335 of 499 target-relevant
+Status: M0 inventory classification complete; 337 of 501 target-relevant
 surfaces are target-mapped or later and the remaining 164 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -57,6 +57,13 @@ Exactly two target surfaces preserve stable Account/Project/note identity,
 audit and tombstone evidence, deterministic bounded order and explicit offline-
 history readiness without authorizing mutation, provider, migration or
 production behavior.
+The provider-free Project-note creation slice is ready with exactly two
+comment-only target surfaces. Its reviewed contract preallocates stable note
+identity, binds exact Project/text/requested-source intent to the shared
+operation lifecycle, excludes caller-authored authoritative creator/time/source
+evidence and reserves non-enumerating parent preflight for a later trusted
+handler. No executable command, provider, app/MCP, migration or production
+behavior exists at this checkpoint.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

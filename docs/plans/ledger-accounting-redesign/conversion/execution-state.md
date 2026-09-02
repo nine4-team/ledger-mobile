@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 103
+State version: 104
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-READ-VERIFIED
+- Checkpoint: PROJECT-NOTE-CREATION-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1461,6 +1461,36 @@ modifying the running Firebase application before hard cutover.
   clean tracked artifacts. All five Project-note obligations and exactly its
   two target-only surfaces are now `verified`; every excluded mutation,
   provider, migration and production surface remains unadvanced.
+- Exact verification-document commit `0b811864504a90294beefcf6e34b6e9adc73dfda`
+  passed immutable GitHub Actions run `33618750372`; both conversion
+  traceability and the isolated target environment completed successfully.
+- Audited the next Phase 1 dependency and selected
+  `project-note-creation-operation-contracts` as the smallest complete
+  decision-independent operation. It owns only AddProjectNote intent; edit,
+  remove and their role/revision policy remain separate and unimplemented.
+- Froze seven exact requirements over stable Account/Project/note identity,
+  nonblank text, requested source, the shared operation envelope/fingerprint/
+  receipt/replay lifecycle, one derived parent Project reference and explicit
+  exclusion of caller-authored authoritative creator/time/source evidence.
+- The later trusted handler, not this provider-free command, must derive and
+  verify the actor, assign final creation time/source and preflight Project
+  existence/visibility without distinguishing missing from denied. No server
+  handler, authorization, note row/projection, provider or app/MCP writer was
+  introduced.
+- Exactly two comment-only target surfaces are `target_mapped` under the ready
+  dossier: `SWIFT-9CDB2BCAC71B` and `TEST-DB2559406D3D`. The ledger now records
+  763 surfaces, including 748 currently discovered, and 337 of 501 target-
+  relevant surfaces are mapped or later; the existing 164 residual surfaces
+  remain under 43 explicit blockers.
+- Conversion, capability, query, residual, M0, target-environment and generated-
+  contract checks pass. M1/M2 retain their expected 2/164 blockers. All 124
+  existing target tests in 28 suites, macOS and generic iOS Simulator staging
+  builds, XcodeGen/source-project stability and diff formatting pass while both
+  new scaffolds remain comment-only. Exact ready-checkpoint CI is pending.
+- No physical local persistence, parent authorization, server audit assignment,
+  schema/RLS/Sync/Auth/provider behavior, shipped-app/MCP change, source note
+  migration, hosted resource, production read/mutation, deployment, release or
+  cutover occurred.
 
 ## Next Action
 
@@ -1506,12 +1536,17 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-note-read-contracts` dossier and
    `EVID-PROJECT-NOTE-READ-001` as the sole shared read semantics for stable
    Project-note identity, audit/tombstone evidence, deterministic bounded order
-   and explicit offline-history completeness. Audit the next smallest complete
-   decision-independent Phase 1 dependency against canonical specs and the
-   residual register, then prepare its ready dossier before implementation.
-   Keep Add/Edit/Remove, role policy, physical persistence, schema/RLS/Sync/
-   Auth/provider behavior, app/MCP/search, migration, hosted resources and
-   production access excluded unless that later slice explicitly owns them.
+   and explicit offline-history completeness. After exact ready-checkpoint CI
+   passes, implement only the frozen `project-note-creation-operation-contracts`
+   dossier in its two claimed target surfaces: typed AddProjectNote draft/
+   payload/command, exact parent Project reference, shared fingerprint/receipt/
+   replay validation, narrow create port, stable failures and the four planned
+   deterministic tests. Preserve requested source as non-authoritative intent;
+   do not accept creator display, server creation time, revision, edit/deletion
+   audit or authorization input. Keep physical persistence, authoritative parent
+   preflight/audit assignment, edit/remove/role policy, schema/RLS/Sync/Auth/
+   provider behavior, app/MCP/search, migration, hosted resources and production
+   access excluded.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
