@@ -3,7 +3,7 @@
   "sliceId": "account-discovery-and-selection-contracts",
   "title": "Discover visible Accounts and express explicit workspace choice without creating authorization",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Identity, Membership, and Workspace Context",
   "surfaceIds": ["SWIFT-C1B994920894", "TEST-11AC450D596A"],
   "requirements": [
@@ -160,8 +160,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["ACCOUNTSELECT-REQ-001", "ACCOUNTSELECT-REQ-002", "ACCOUNTSELECT-REQ-003", "ACCOUNTSELECT-REQ-004", "ACCOUNTSELECT-REQ-005", "ACCOUNTSELECT-REQ-006", "ACCOUNTSELECT-REQ-007", "ACCOUNTSELECT-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming Auth, membership, physical switching, schema/RLS/Sync, app/MCP, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ACCOUNT-DISCOVERY-SELECTION-001"]
     }
   ],
   "implementationEvidence": ["EVID-ACCOUNT-DISCOVERY-SELECTION-001"],

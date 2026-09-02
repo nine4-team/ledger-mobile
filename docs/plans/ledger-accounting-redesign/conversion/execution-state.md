@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 138
+State version: 139
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ACCOUNT-DISCOVERY-SELECTION-IMPLEMENTED-LOCAL
+- Checkpoint: ACCOUNT-DISCOVERY-SELECTION-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2075,7 +2075,14 @@ modifying the running Firebase application before hard cutover.
   target isolation/generated contracts, both staging builds, repeatable target
   project generation, conversion/capability/query/residual controls, M0 and
   clean diff formatting. M1/M2 retain exactly 2/164 blockers with zero
-  structural errors. Exact implementation-commit CI remains before verification.
+  structural errors.
+- Exact Account-discovery implementation commit
+  `e2972b9c81055fdf936db81afc4bd7e5cd13d0fb` passed immutable Actions run
+  `33668715587`: conversion traceability passed in 8 seconds and the isolated
+  target environment passed in 3 minutes 8 seconds with all 172 target tests in
+  40 suites, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts. All five obligations pass; exactly the two Account-
+  discovery/selection surfaces are now `verified`.
 
 ## Next Action
 
@@ -2152,12 +2159,14 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-SESSION-ENDING-POLICY-001` as the sole provider-free safety authority
    for exact pending-work summaries and clean/sync-first/destructive session
    dispositions. Its exact implementation commit and both CI jobs are
-   verified. Treat the implemented `account-discovery-and-selection-contracts`
+   verified. Treat the verified `account-discovery-and-selection-contracts`
    dossier and `EVID-ACCOUNT-DISCOVERY-SELECTION-001` as the sole authority for
    the bounded provider-free discovery/selection-intent boundary. Its exact
-   ready commit and both CI jobs pass; commit/push the implementation checkpoint
-   and require both immutable implementation-commit jobs before marking it
-   verified or choosing the next slice. Keep
+   implementation commit and both CI jobs are verified. Audit the next highest-
+   value decision-independent target slice against its canonical product
+   authority and reviewed source dossier, then create only its comment-only
+   scaffolds/dossier/evidence and pass the complete ready gate before adding
+   executable behavior. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

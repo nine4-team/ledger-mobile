@@ -539,14 +539,14 @@
       "acknowledgeSourceHash": "4fc4c2e008995fd1e317508323d55e72c42a6126b79200be825267f8d51d042f",
       "currentBehavior": "Defines the implemented provider-free Account display/summary, environment-and-Principal-scoped authorized list snapshot and fingerprint, readiness/failure update states, deterministic remembered ordering, exact-snapshot-bound explicit workspace-selection intent/policy, stable failures and narrow AccountQuerying port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-IDENTITY-001",
         "EVID-M2-IDENTITY-001",
         "EVID-ACCOUNT-DISCOVERY-SELECTION-001"
       ],
-      "notes": "Target-only Phase 1 implemented surface. Exact ready commit ae16ed4e62ee2abe7ab60f71a26a92824e70fa01 passed immutable Actions run 33666363647. Four focused/all 172 target tests in 40 suites, graph/contracts, both staging builds and repeatable project generation pass locally for the bounded provider-free discovery/selection implementation. It cannot authenticate, prove membership, authorize or activate an Account, choose an offline lease, persist remembered state, switch streams/queues, access a provider, define schema/RLS/Sync, wire app/MCP, migrate source data or activate production. Exact implementation-commit CI remains before verification.",
+      "notes": "Target-only Phase 1 verified surface. Exact ready commit ae16ed4e62ee2abe7ab60f71a26a92824e70fa01 passed immutable Actions run 33666363647. Exact implementation commit e2972b9c81055fdf936db81afc4bd7e5cd13d0fb passed immutable Actions run 33668715587 with four focused/all 172 target tests in 40 suites, graph/contracts, both staging builds and clean artifacts. It cannot authenticate, prove membership, authorize or activate an Account, choose an offline lease, persist remembered state, switch streams/queues, access a provider, define schema/RLS/Sync, wire app/MCP, migrate source data or activate production.",
       "target": {
         "owner": "Identity, Membership, and Workspace Context",
         "surfaces": [
@@ -590,14 +590,14 @@
       "acknowledgeSourceHash": "ef93c06a416b24ae4a3116cddcfa880ac1273cf18d3c0072ea400410e8229166",
       "currentBehavior": "Defines four deterministic provider-free tests for zero/one/many discovery, equal-name identity, remembered ordering/no auto-selection, exact scoped intent, canonical restart, malformed/duplicate/rebound/changed/tampered refusal and narrow query-port behavior.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-IDENTITY-001",
         "EVID-M2-IDENTITY-001",
         "EVID-ACCOUNT-DISCOVERY-SELECTION-001"
       ],
-      "notes": "Target-only Phase 1 implemented test surface. Exact ready commit ae16ed4e62ee2abe7ab60f71a26a92824e70fa01 passed immutable Actions run 33666363647. Four focused/all 172 target tests in 40 suites, graph/contracts and both staging builds pass locally. The focused tests prove only deterministic provider-free discovery and explicit selection intent; they cannot authorize or activate an Account or simulate physical offline behavior. Exact implementation-commit CI remains before verification.",
+      "notes": "Target-only Phase 1 verified test surface. Exact ready commit ae16ed4e62ee2abe7ab60f71a26a92824e70fa01 passed immutable Actions run 33666363647. Exact implementation commit e2972b9c81055fdf936db81afc4bd7e5cd13d0fb passed immutable Actions run 33668715587 with four focused/all 172 target tests in 40 suites, graph/contracts, both staging builds and clean artifacts. The focused tests prove only deterministic provider-free discovery and explicit selection intent; they cannot authorize or activate an Account or simulate physical offline behavior.",
       "target": {
         "owner": "Identity, Membership, and Workspace Context",
         "surfaces": [

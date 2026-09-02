@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T18:40:38.108Z",
+  "generatedFromManifestSync": "2026-09-02T18:45:52.056Z",
   "totals": {
     "slices": 40,
     "claimedTargetSurfaces": 101,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 38,
+    "implemented": 0,
+    "verified": 39,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -21,7 +21,7 @@
       "sliceId": "account-discovery-and-selection-contracts",
       "title": "Discover visible Accounts and express explicit workspace choice without creating authorization",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Identity, Membership, and Workspace Context",
       "surfaceIds": [
         "SWIFT-C1B994920894",

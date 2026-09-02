@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-C1B994920894`, `TEST-11AC450D596A`
 - Slice dossier:
   `conversion/implementation-slices/account-discovery-and-selection-contracts.json`
-- Verification state: implemented locally; exact implementation-commit CI is
-  required before verification
+- Verification state: verified at exact implementation commit
+  `e2972b9c81055fdf936db81afc4bd7e5cd13d0fb`
 - Ready scaffold hashes:
   - `AccountDiscoveryAndSelection.swift`:
     `f84b92866a982f2acad887883e27e8e509b0c9923feddbd4d144988fa053d96e`
@@ -190,9 +190,18 @@ The target project and staging scheme remain exactly
 `0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53`
 and `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`;
 the source application project is unchanged. M1/M2 retain exactly their
-expected 2/164 coverage blockers with zero structural errors. The exact
-implementation commit and immutable CI run remain pending, so this slice is
-not yet verified.
+expected 2/164 coverage blockers with zero structural errors.
+
+## Immutable Implementation Verification
+
+Exact implementation commit
+`e2972b9c81055fdf936db81afc4bd7e5cd13d0fb` passed immutable GitHub Actions
+run `33668715587`. Conversion traceability passed in 8 seconds. The isolated
+target environment passed in 3 minutes 8 seconds, including target dependency/
+environment validation, generated app/MCP contracts, all 172 target tests in 40
+suites, the macOS staging build, the generic iOS Simulator staging build and
+clean tracked artifacts. All five dossier obligations therefore pass and both
+claimed surfaces are `verified`.
 
 ## Permanent Limits
 
