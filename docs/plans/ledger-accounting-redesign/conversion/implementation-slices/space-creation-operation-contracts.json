@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-creation-operation-contracts",
+  "title": "Create one Project or Business Inventory Space without unrelated effects",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Space Creation Operation Contracts",
+  "surfaceIds": ["SWIFT-F61D38406022", "TEST-F46861BCC21A"],
+  "requirements": [
+    {
+      "id": "SPACECREATE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Direct CreateSpace owns one caller-generated stable SpaceID in one exact Account and immutable creation scope: a stable ProjectID or Business Inventory. It cannot use copied names, route strings, a nullable scope pair or backend paths as relationship authority.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Space name is leading/trailing-whitespace-trimmed and nonblank; optional notes are likewise trimmed with nil or whitespace-only meaning absent. Accepted interior text is preserved, no unapproved length cap is invented and duplicate names remain valid because SpaceID owns identity.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Direct creation contains only Space identity, scope, name and optional notes. Attachments, checklist revisions, template apply/save, Item assignment, archive, review notes and completion/reconciliation state remain separate typed operations with no implicit default side effect.",
+      "decisionIds": ["O-023", "O-026", "O-037"],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space in Budget Context",
+      "invariant": "Creating a Space cannot create or change a Transaction, occurrence, Invoice, budget contribution, payer, Item placement, price or other accounting state.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Commands",
+      "invariant": "CreateSpace is one typed business intent and exposes no generic field map, collection/path/SQL string, CRUD action, server timestamp, archive/completion toggle or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The complete direct-creation intent is bound to one OperationID, contract version, AccountID, actor PrincipalID and finite client-created time through the shared fingerprint/receipt lifecycle. New Space creation carries no expected-revision precondition and defines no competing queue, retry or rejection semantics.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Context-specific operations",
+      "invariant": "One narrow backend-neutral Space-creation operation accepts the validated command and returns the shared OperationReceipt or stable failure. Local validation never substitutes for trusted membership, exact Project existence/scope or create authorization.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    },
+    {
+      "id": "SPACECREATE-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 command boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no Space table/handler, RLS, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["SPACECREATE-TEST-001", "SPACECREATE-TEST-002", "SPACECREATE-TEST-003", "SPACECREATE-TEST-004", "SPACECREATE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceCreationScope is exactly project(ProjectID) or businessInventory and encodes canonically without a nullable pair, display name, route, path or caller-authored Account override.",
+        "SpaceDisplayName canonicalizes outer whitespace and rejects blank or noncanonical encoded values. SpaceCreationNotes canonicalizes optional outer whitespace, maps nil/whitespace-only to absent, preserves accepted interior text and rejects noncanonical encoded values; neither invents an unapproved length cap.",
+        "SpaceCreationDraft owns exact Account, actor, operation contract, stable Space, immutable creation scope, canonical name/notes and finite capture time; it contains no checklist/template/attachment/Item/review/lifecycle/completion/accounting input.",
+        "CreateSpacePayload mirrors only stable Space ID, exact scope, display name and notes. CreateSpaceCommand binds it to the shared OperationEnvelope, derives the Space subject/fingerprint, requires zero preconditions and revalidates duplicated evidence on decode.",
+        "SpaceCreating is the narrow backend-neutral operation port returning the shared OperationReceipt. Receipt validation requires exact OperationID and exposes no authoritative created-row/result claim; stable failures cover values, bindings, unexpected preconditions, subject, fingerprint, receipt, local acceptance and malformed evidence."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "This Phase 1 contract creates no spaces table, scope constraint, revision/audit column, foreign key, index, view or migration."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative CreateSpace handler, membership/Project lookup, idempotency storage, audit timestamp or server insert exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Account/actor/scope binding is not authorization. No membership predicate, Project visibility check, grant or WITH CHECK policy exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Space row/list projection, optimistic overlay, upload connector or synchronized visibility/readiness claim is defined."},
+    "localOffline": {
+      "items": [
+        "The command is canonical Codable evidence over draft, shared envelope, exact empty precondition set, Space subject and fingerprint; decode reconstructs through the same scope/name/notes/binding validators and byte-identical structured restart is required.",
+        "Changed Account, actor, contract, Space/scope/name/notes payload, preconditions, command subject, fingerprint or receipt OperationID fails atomically without rebinding scope or adding unrelated Space effects.",
+        "A deterministic reference adapter may accept the command into the shared OperationJournal and prove exact replay/receipt semantics; this is not physical durable-store, process/device restart, optimistic row, authoritative apply or offline-authorization evidence."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "Direct CreateSpace owns no AttachmentID/reference/bytes/retention behavior and cannot add, detach, reorder or delete Space media; O-023 remains open."},
+    "appMcp": {"items": [], "notApplicable": "No New Space UI, current app service, target MCP tool/schema, transport, contract-catalog entry or app/MCP parity is wired."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Space document, random nested ID, route sentinel or source export row is decoded or transformed. Later migration must preserve stable Space identity/scope/content or quarantine anomalies explicitly."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are contract values only; no signal emission, metric, alert, audit sink or runbook action is introduced."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and its tests and does not change or link either application project.",
+        "The slice cannot visibly or authoritatively create a Space, validate membership/Project scope, create/revise checklists, apply/save templates, assign Items, attach media, set completion, archive/delete, write review evidence, alter accounting, choose Auth, define provider/schema/migration behavior, activate a feature, deploy, release or cut over.",
+        "O-023/O-026/O-037, A-003/A-004/A-007/A-015/A-016, physical offline verification, production profiling and O-022 remain outside this command boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPACECREATE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCreationOperationTests.swift",
+      "covers": ["SPACECREATE-REQ-001", "SPACECREATE-REQ-002", "SPACECREATE-REQ-003", "SPACECREATE-REQ-004", "SPACECREATE-REQ-005", "SPACECREATE-REQ-006", "SPACECREATE-REQ-007", "SPACECREATE-REQ-008"],
+      "expected": "Valid synthetic Project and Business Inventory drafts produce typed exact-scope CreateSpace commands with canonical name/notes, zero preconditions and no checklist/template/attachment/Item/review/lifecycle/completion/accounting/generic-write input.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACECREATE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCreationOperationTests.swift",
+      "covers": ["SPACECREATE-REQ-001", "SPACECREATE-REQ-002", "SPACECREATE-REQ-003", "SPACECREATE-REQ-004", "SPACECREATE-REQ-005", "SPACECREATE-REQ-006", "SPACECREATE-REQ-008"],
+      "expected": "Project and Business Inventory commands round-trip byte-identically with exact Account/actor/contract/Operation/Space/scope/name/notes/time/subject/fingerprint evidence and no backend path, provider, credential or authoritative result claim.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACECREATE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCreationOperationTests.swift",
+      "covers": ["SPACECREATE-REQ-001", "SPACECREATE-REQ-002", "SPACECREATE-REQ-003", "SPACECREATE-REQ-004", "SPACECREATE-REQ-005", "SPACECREATE-REQ-006", "SPACECREATE-REQ-007", "SPACECREATE-REQ-008"],
+      "expected": "Blank/noncanonical name, noncanonical notes/scope, invalid time and changed Account/actor/contract/Space/scope/name/notes/precondition/command subject/fingerprint/receipt evidence fail atomically through stable diagnostic codes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACECREATE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceCreationOperationTests.swift",
+      "covers": ["SPACECREATE-REQ-001", "SPACECREATE-REQ-002", "SPACECREATE-REQ-003", "SPACECREATE-REQ-004", "SPACECREATE-REQ-005", "SPACECREATE-REQ-006", "SPACECREATE-REQ-007", "SPACECREATE-REQ-008"],
+      "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Space/scope/name/notes is refused, and a failing port returns no success receipt.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SPACECREATE-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SPACECREATE-REQ-001", "SPACECREATE-REQ-002", "SPACECREATE-REQ-003", "SPACECREATE-REQ-004", "SPACECREATE-REQ-005", "SPACECREATE-REQ-006", "SPACECREATE-REQ-007", "SPACECREATE-REQ-008"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 direct Space-create command only. The canonical Space spec and reviewed capability dossier separate direct creation from checklist revision, template use/administration, attachment lifecycle, Item assignment, review, completion and archive. O-023/O-026/O-037 remain fully open because this command carries none of those concerns. The slice stops before physical durable storage, authoritative Project/membership validation, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+}

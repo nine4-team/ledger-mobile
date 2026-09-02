@@ -895,6 +895,102 @@
         "EVID-CAPABILITY-SPACES-REVIEW-001"
       ],
       "notes": "Retain and share validation across app/MCP commands."
+    },
+    {
+      "id": "SWIFT-F61D38406022",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "3a9649300ded0cfa08608c5cec10a0bbfd5e314792e651c2c18e87427dbe9d34",
+      "currentBehavior": "Defines only the comment-scaffolded target boundary for direct stable-ID Space creation in one Project or Business Inventory scope with normalized name/notes; no executable behavior exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CREATION-001"
+      ],
+      "notes": "Target-only Phase 1 ready surface. The bounded implementation may define one direct CreateSpace intent with stable identity, exact Project-or-Business-Inventory scope, canonical name/notes, shared operation binding/receipt validation and a narrow port. It cannot create checklists, apply/save templates, attach media, assign Items, set review/completion/lifecycle state, mutate accounting, create rows, authorize access, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-023/O-026/O-037 remain open.",
+      "target": {
+        "owner": "Space Creation Operation Contracts",
+        "surfaces": [
+          "SpaceCreationScope",
+          "SpaceDisplayName",
+          "SpaceCreationNotes",
+          "SpaceCreationDraft",
+          "CreateSpacePayload",
+          "CreateSpaceCommand",
+          "SpaceCreating",
+          "SpaceCreationFailure"
+        ],
+        "securityRequirements": [
+          "The command binds one exact AccountID, actor PrincipalID, operation contract, stable SpaceID and canonical ProjectID-or-Business-Inventory scope; it carries no caller-authored path, copied scope name or authorization claim",
+          "Construction and restart reject changed scope, actor, contract, Space/scope/name/notes payload, preconditions, subject or fingerprint; local value validity never substitutes for later trusted membership and Project/create authorization"
+        ],
+        "syncRequirements": [
+          "The direct-create intent reuses the shared operation fingerprint/receipt/replay lifecycle and zero expected-revision preconditions for one caller-generated stable Space identity",
+          "A deterministic reference port proves only provider-free acceptance semantics, not physical durability, authoritative row insertion, optimistic Space visibility or synchronized list readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only direct Space-create intent and decode no Firebase Space document, route sentinel, generic update dictionary, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must preserve stable Space Account/Project-or-Inventory scope, name/notes and source correlation while separately reconciling checklists, attachments, assignments, review, lifecycle and timestamps"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCreationOperationTests"
+        ],
+        "acceptance": [
+          "Synthetic commands prove exact Project/Inventory direct-create scope, normalized name/notes, zero preconditions, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
+        ]
+      }
+    },
+    {
+      "id": "TEST-F46861BCC21A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "99a735a4001179d517c128d444ca16550604d8ca0410c9ca32f53df0f6d92d57",
+      "currentBehavior": "Defines only the comment-scaffolded target tests for direct Space Project/Inventory scope, normalized name/notes, restart, receipt and refusal semantics; no executable test exists at the ready checkpoint.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CREATION-001"
+      ],
+      "notes": "Ready-gate target test surface only. Planned deterministic tests prove direct Project/Inventory Space-create identity, normalized name/notes, zero preconditions, restart/replay/refusal and absence of checklist/template/attachment/Item/review/completion/lifecycle/accounting mutation without claiming physical local durability, authorization, server apply, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "target": {
+        "owner": "Space Creation Operation Contracts",
+        "surfaces": [
+          "SpaceCreationOperationTests",
+          "Project and Business Inventory scope fixtures",
+          "canonical Space name and notes fixtures",
+          "canonical command restart/replay fixtures",
+          "scope/payload/precondition/fingerprint/receipt refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Operation, Space and Project identities and prove no path/template/attachment/Item/review/accounting field can rebind creation identity or authority",
+          "Negative tests expose only stable bounded codes and no name/notes text, source paths, credentials, provider payloads or production identifiers"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish one deterministic local create-operation receipt from physical persistence, authoritative row state and synchronized Space visibility"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase Space/generic update/export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent Project/Inventory creation evidence round-trips byte-identically while changed Account/actor/contract/Space/scope/name/notes/preconditions/subject/fingerprint/receipt evidence fails atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceCreationOperationTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral direct Space-create boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      }
     }
   ]
 }

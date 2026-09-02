@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 124
+State version: 125
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-DETAILS-UPDATE-VERIFIED
+- Checkpoint: SPACE-CREATION-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1835,6 +1835,32 @@ modifying the running Firebase application before hard cutover.
   tracked artifacts. All five obligations pass and exactly the two Project-
   details surfaces are now `verified`; 76 target surfaces are implemented or
   later.
+- Exact Project-details verification-document commit
+  `27b2123474957a448097078c7facbf6ed3d8c418` passed immutable GitHub Actions
+  run `33643300146`: conversion traceability passed in 11 seconds and the
+  isolated target environment passed in 3 minutes 4 seconds.
+- Audited `ConfigureProjectCategories` and did not create a writer: verified
+  requirement `PROJECTCATEGORY-REQ-004` keeps category mutation out while O-026
+  shared-reference administration authority remains open.
+- Selected direct `CreateSpace` as the next smallest complete decision-
+  independent dependency. Clarified the existing canonical `spaces.md` target
+  requirements for stable identity, exact Project-or-Business-Inventory scope,
+  normalized required name and optional notes, separate child concerns, shared
+  operation lifecycle and no accounting effects. O-023/O-026/O-037 are not
+  resolved or bypassed.
+- Added exactly two target-only comment scaffolds and a ready dossier for the
+  provider-free direct Space-create operation. No executable behavior exists
+  before exact-ready-commit CI.
+- The synchronized ledger now records 777 surfaces / 762 discovered, 351
+  mapped-or-later target-relevant surfaces, 164 residual surfaces and 43
+  validated blockers. Thirty-six slices claim 93 target surfaces; 76 are
+  implemented or later. M0 passes; M1/M2 retain exactly their expected 2/164
+  blockers.
+- The complete local Space-create ready gate passes with all 152 existing
+  target tests in 35 suites while both new files remain comment-only, target
+  environment/generated contracts, both staging builds, conversion/capability/
+  query/residual controls, M0 and clean diff formatting. Immutable exact-ready-
+  commit CI is the only prerequisite to bounded implementation.
 
 ## Next Action
 
@@ -1897,8 +1923,13 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-CLIENT-ARCHIVE-001` as the sole ArchiveClient semantic authority.
    Treat the verified `project-details-update-operation-contracts` dossier and
    `EVID-PROJECT-DETAILS-UPDATE-001` as the sole UpdateProjectDetails semantic
-   authority. Audit the next smallest complete decision-independent dependency
-   before creating another ready slice. Keep
+   authority. Treat `space-creation-operation-contracts` and
+   `EVID-SPACE-CREATION-001` as the complete ready plan for the direct provider-
+   free CreateSpace boundary. Commit only that comment-only ready checkpoint,
+   push it, and require both exact-commit CI jobs to pass. Then implement only
+   its frozen scope, run every focused/cumulative/control/build gate, record
+   exact implementation evidence, and require exact-commit CI before marking
+   either Space surface verified. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

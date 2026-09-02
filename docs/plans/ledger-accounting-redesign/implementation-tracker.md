@@ -23,10 +23,10 @@ Conversion coverage and resume state: [conversion/README.md](conversion/README.m
 |---|---|---|
 | G0 — Product boundary | design | Open decisions that change schemas/writers are resolved |
 | G0.5 — Capability synthesis | done | All 686 source-baseline surfaces have one reviewed disposition, behavior, evidence owner and dossier/control contract; new target implementation surfaces enter the same manifest and deterministic M0 audit |
-| G0.75 — Target mapping | design | 335 of 499 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
+| G0.75 — Target mapping | design | 351 of 515 target-relevant surfaces are target-mapped or later; all 164 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
 | G1 — Target schema | not started | Postgres entities, relationships, IDs, locks, invariants, RLS, and Sync Streams approved |
 | G2 — Source migration/cutover | not started | Firebase export coverage, final-write freeze, pending-write disposition, and rejected-write recovery designed without refactoring the old app |
-| G3 — Implementation | in progress | Decision-independent foundations are active; 58 target surfaces are verified across the completed provider-free slices. The count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
+| G3 — Implementation | in progress | Decision-independent foundations are active; 76 target surfaces are verified across the completed provider-free slices, with two additional direct Space-creation surfaces ready but still comment-only. The count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
 | G4 — Migration rehearsal | not started | Read-only audit, backups, dry run, reconciliation, and rollback pass |
 | G5 — Authority cutover | not started | Supabase/PowerSync writers enabled; Firebase source frozen; stale writers rejected; monitoring active |
 | G6 — Release completion | not started | Production target, macOS/iOS distribution, MCP, and post-release reconciliation complete |
@@ -183,6 +183,12 @@ the minimum operational freeze/rejection control required for the hard cutover.
 | Audit and review legacy `clientName` clusters | not started | Read-only normalized-name suggestions |
 | Backfill reviewed `project.clientId` | not started | No name-only automatic authorization |
 | Disable Transfer for unresolved projects | not started | App/MCP plus target handler/RLS/stream authorization guard |
+
+## Workstream 2A — Spaces and Work Queues
+
+| Task | Status | Current surfaces |
+|---|---|---|
+| Define provider-free direct Space creation operation | ready | Exactly two comment-only target core/test surfaces and one ready dossier freeze stable Space identity, exact Project-or-Business-Inventory creation scope, normalized required name and optional notes, zero expected-revision preconditions, shared operation lifecycle and one narrow port. Exact-ready-commit CI must pass before executable behavior is added. Checklist/template/media/Item/review/lifecycle/accounting mutation, authorization, physical persistence, schema/RLS/Sync/provider behavior, app/MCP, migration and production remain excluded; O-023/O-026/O-037 stay open; `EVID-SPACE-CREATION-001` |
 
 ## Workstream 3 — Global Transaction Taxonomy
 

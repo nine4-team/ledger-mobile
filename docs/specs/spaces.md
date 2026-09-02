@@ -11,6 +11,28 @@
 
 Spaces are organizational containers for items. They represent physical locations (rooms, storage units, warehouses) or logical groupings where items are placed. Spaces can belong to a project or to business inventory.
 
+## Target Redesign Requirements
+
+- Every Space has one stable account-scoped identity and exactly one immutable
+  creation scope: one stable Project ID or Business Inventory. A copied Project
+  name, route string, nullable scope pair, or generic backend path cannot define
+  that relationship.
+- Direct `CreateSpace` requires a nonblank name after removing leading/trailing
+  whitespace. Optional notes use the same outer-whitespace normalization, with
+  nil or whitespace-only input meaning no notes. Accepted interior text is
+  preserved, and duplicate Space names remain valid because identity is by ID.
+- Direct creation owns only Space identity, scope, name, and optional notes.
+  Attachments, checklist revisions, template application/saving, Item
+  assignment, archive, review notes, and completion/reconciliation state are
+  separate typed operations with their own authority and conflict evidence.
+- Accepted offline creation intent uses the shared durable operation lifecycle.
+  The authoritative handler later validates current membership and the exact
+  Project parent where applicable; local value validation is not authorization.
+- No Space operation creates or changes a Transaction, occurrence, Invoice,
+  budget contribution, payer, price, or other accounting state.
+- O-037 remains the authority for assigned Items when an existing Space is
+  archived. It does not change direct creation semantics.
+
 ## Scope
 
 - `projectId` set: space belongs to that project

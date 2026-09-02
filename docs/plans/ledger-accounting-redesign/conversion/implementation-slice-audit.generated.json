@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T14:37:37.352Z",
+  "generatedFromManifestSync": "2026-09-02T14:57:40.836Z",
   "totals": {
-    "slices": 35,
-    "claimedTargetSurfaces": 91,
+    "slices": 36,
+    "claimedTargetSurfaces": 93,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 76
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 34,
@@ -421,6 +421,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/shared-list-query-presentation.json"
+    },
+    {
+      "sliceId": "space-creation-operation-contracts",
+      "title": "Create one Project or Business Inventory Space without unrelated effects",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Creation Operation Contracts",
+      "surfaceIds": [
+        "SWIFT-F61D38406022",
+        "TEST-F46861BCC21A"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-operation-contracts.json"
     },
     {
       "sliceId": "space-template-reference-read-contracts",
