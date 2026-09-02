@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 81
+State version: 82
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CREATION-OPERATION-IMPLEMENTED-CI-PENDING
+- Checkpoint: CLIENT-CREATION-OPERATION-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1076,6 +1076,14 @@ modifying the running Firebase application before hard cutover.
   authorization, Client lifecycle/correction, Project setup/reassignment,
   schema/RLS/Sync/Auth/provider, current/target app/MCP, migration, hosted
   resource or production operation was introduced; O-025 remains open.
+- Exact implementation commit
+  `3b837af34bbbde9e7c4b6707f6366dc88d236957` passed immutable GitHub Actions
+  run `33595993615`: conversion traceability passed in 10 seconds and the
+  isolated-target job passed in 1 minute 50 seconds with all 96 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five Client-create obligations and exactly its
+  two target-only surfaces are now `verified`; every excluded server,
+  authorization, provider, migration and production surface remains unadvanced.
 
 ## Next Action
 
@@ -1099,14 +1107,15 @@ Continue without waiting on the two M1 evidence blockers:
    `attachment-capture-and-local-durability-receipt` dossier and
    `EVID-ATTACHMENT-CAPTURE-001` as the sole shared semantic source for stable
    capture identity, exact local-byte evidence and success-shaped receipts.
-   Treat the implemented `client-creation-operation-contracts` dossier as the
-   sole Client-create semantic authority. Commit the exact implementation
-   checkpoint, push it, require immutable pull-request CI for
-   `CLIENTCREATE-TEST-005`, and advance only its two surfaces to verified after
-   the exact commit passes. Do not add a Client row/handler, membership
-   authorization, Client rename/archive/merge, Project reassignment/setup,
-   filesystem persistence, schema/RLS/Sync/Auth/provider behavior, current app/
-   MCP, migration, hosted resources or production access.
+   Treat the verified `client-creation-operation-contracts` dossier and
+   `EVID-CLIENT-CREATION-001` as the sole Client-create semantic authority.
+   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
+   decision-independent user/operational outcome, create exactly its target-only
+   scaffolds and complete its ready dossier before behavioral implementation.
+   Do not add a Client row/handler, membership authorization, Client rename/
+   archive/merge, Project reassignment/setup, filesystem persistence, schema/
+   RLS/Sync/Auth/provider behavior, current app/MCP, migration, hosted resources
+   or production access without the applicable gates.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

@@ -3,7 +3,7 @@
   "sliceId": "client-creation-operation-contracts",
   "title": "Create one Account-scoped Client through the shared operation contract",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Client Creation Operation Contracts",
   "surfaceIds": [
     "SWIFT-3B3E02643603",
@@ -171,8 +171,8 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["CLIENTCREATE-REQ-001", "CLIENTCREATE-REQ-002", "CLIENTCREATE-REQ-003", "CLIENTCREATE-REQ-004", "CLIENTCREATE-REQ-005", "CLIENTCREATE-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-CREATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-CLIENT-CREATION-001"],

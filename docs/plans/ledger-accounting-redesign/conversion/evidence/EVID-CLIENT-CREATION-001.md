@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-3B3E02643603`, `TEST-E42E9E6D7B28`
 - Slice dossier:
   `conversion/implementation-slices/client-creation-operation-contracts.json`
-- Verification state: implemented locally; exact-commit hosted CI remains
-  planned
+- Verification state: verified at exact implementation commit
+  `3b837af34bbbde9e7c4b6707f6366dc88d236957`
 - Implementation hashes:
   - `ClientCreationOperation.swift`:
     `bcda18195d249e5c852ef7125c0151a83eaf294c5f324d4b656bbb48cbb1b78f`
@@ -126,8 +126,26 @@ The implementation checkpoint ran from the dedicated Supabase worktree on
 - M1/M2 — expected blocks at the unchanged 2/164 prerequisites.
 
 `CLIENTCREATE-TEST-001` through `-004` therefore pass with this evidence.
-`CLIENTCREATE-TEST-005` remains planned until immutable exact-commit CI
-succeeds.
+
+## Immutable Exact-Commit Verification
+
+GitHub Actions run
+[`33595993615`](https://github.com/nine4-team/ledger-mobile/actions/runs/33595993615)
+verified exact implementation commit
+`3b837af34bbbde9e7c4b6707f6366dc88d236957` on 2026-09-01:
+
+- `Conversion state and traceability` — pass in 10 seconds;
+- `Isolated target environment` — pass in 1 minute 50 seconds;
+- target dependency/provider/source-project isolation and generated app/MCP
+  contracts — pass;
+- all 96 target tests in 21 suites — pass;
+- macOS and generic iOS Simulator staging builds — pass; and
+- tracked-artifact cleanliness — pass.
+
+`CLIENTCREATE-TEST-005` therefore passes. All five obligations and exactly the
+two claimed target-only surfaces are verified. The hosted evidence adds no
+server, physical persistence, authorization, provider, migration or production
+claim.
 
 ## Permanent Limits
 

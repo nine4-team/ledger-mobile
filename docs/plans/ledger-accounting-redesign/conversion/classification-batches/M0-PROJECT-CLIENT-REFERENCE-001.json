@@ -1850,14 +1850,14 @@
       "acknowledgeSourceHash": "bcda18195d249e5c852ef7125c0151a83eaf294c5f324d4b656bbb48cbb1b78f",
       "currentBehavior": "Implements a provider-free stable Client-creation draft, exact typed payload and shared-envelope command, derived Client subject/fingerprint validation, exact receipt validation, a narrow operation port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-CREATION-001"
       ],
-      "notes": "Target-only Phase 1 command boundary implemented locally. Four focused/all 96 target tests pass; exact-commit hosted CI remains before verification. The implementation creates no Client row, membership authorization, name uniqueness, Client lifecycle/correction, Project setup/reassignment, schema/RLS/Sync/Auth/provider behavior, app/MCP wiring, source migration or production authority.",
+      "notes": "Target-only Phase 1 command boundary verified at exact implementation commit 3b837af3 by immutable Actions run 33595993615. Four focused/all 96 target tests, graph/contracts, both staging builds and clean artifacts pass. The implementation creates no Client row, membership authorization, name uniqueness, Client lifecycle/correction, Project setup/reassignment, schema/RLS/Sync/Auth/provider behavior, app/MCP wiring, source migration or production authority.",
       "target": {
         "owner": "Client Creation Operation Contracts",
         "surfaces": [
@@ -1897,14 +1897,14 @@
       "acknowledgeSourceHash": "11866971537ccb6d043ab034acc8f1a95222fc642ed4d9dc7c6f9dbdcb91df28",
       "currentBehavior": "Executes four deterministic target-only tests for same-name distinct identity, exact command scope and derived evidence, canonical structured restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-CREATION-001"
       ],
-      "notes": "Four focused/all 96 target tests pass locally; exact-commit hosted CI remains before verification. Tests prove typed value/operation/restart/replay/refusal semantics only and do not prove physical local durability, membership authorization, authoritative server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, migration or production behavior.",
+      "notes": "Four focused/all 96 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 3b837af3 in immutable Actions run 33595993615. Tests prove typed value/operation/restart/replay/refusal semantics only and do not prove physical local durability, membership authorization, authoritative server apply, schema/RLS/Sync/provider behavior, concrete app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Client Creation Operation Contracts",
         "surfaces": [
