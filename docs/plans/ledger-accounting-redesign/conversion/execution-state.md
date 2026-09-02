@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 157
+State version: 158
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ITEM-LINK-PRESENTATION-IMPLEMENTED-CI-PENDING
+- Checkpoint: PROJECT-ITEM-LINK-PRESENTATION-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2377,6 +2377,15 @@ modifying the running Firebase application before hard cutover.
   locally. The slice is `implemented`, not verified, until final synchronized
   controls and immutable exact-implementation-checkpoint CI pass. No provider,
   Firebase or production action occurred.
+- Exact implementation commit
+  `d7f4286be2a2fe7f4a8c8e7d59a59547114e47e4` passed immutable Actions run
+  `33691932385`: conversion traceability passed in 10 seconds and the isolated
+  target environment passed in 2 minutes 19 seconds with all 193 target tests
+  in 45 suites, generated contracts, both staging builds and clean tracked
+  artifacts. Promoted exactly the Project Item Link presentation dossier and
+  its two surfaces to `verified`. The broader Link flow remains unimplemented
+  and blocked from this leaf. No provider, Firebase or production action
+  occurred.
 
 ## Next Action
 
@@ -2480,9 +2489,10 @@ Continue without waiting on the two M1 evidence blockers:
    worker to promote its own status or edit canonical integration controls.
    Treat the verified `project-item-accounting-section-contracts` resolution as
    the sole input authority for the ready
-   `project-item-link-presentation-contracts` leaf. Finish its synchronized
-   complete local gate and immutable exact-implementation-commit CI before
-   verification. Keep
+   verified `project-item-link-presentation-contracts` leaf as the sole target
+   presentation authority for exact section/action/question/payer vocabulary,
+   authoritative Unaccounted-only Link availability and no-action dismissal.
+   Keep
    actual Link routes/commands, Purchase choice/eligibility, acquisition
    handling, correction/relink behavior, transient UI state, Accounted-item
    actions, app/MCP and provider/migration behavior outside this slice.

@@ -242,14 +242,16 @@ all 189 target tests in 44 suites, generated contracts, both staging builds and
 clean artifacts. Both enhanced write-capable pilots have now passed;
 `EVID-PROJECT-BUDGET-SEGMENT-001`.
 The Project Item accounting-label and Link payer-choice presentation slice is
-implemented and independently reviewed, pending exact implementation-SHA CI.
+verified at exact implementation commit `d7f4286b` and immutable run
+`33691932385`.
 It is intentionally limited to exact section/action/question/choice vocabulary,
 authoritative Unaccounted-only availability, fail-closed other states,
 side-effect-free dismissal and restart re-projection. Actual Link routes,
 commands, Purchase selection, acquisition handling, persistence, app/MCP and
-provider behavior remain excluded. Four focused/all 193 tests and local target/
-build gates pass; the one P3 test-exhaustiveness finding was corrected and
-independently confirmed; `EVID-PROJECT-ITEM-LINK-PRESENTATION-001`.
+provider behavior remain excluded. Four focused/all 193 tests, generated
+contracts, both staging builds and clean artifacts pass; the one P3 test-
+exhaustiveness finding was corrected and independently confirmed;
+`EVID-PROJECT-ITEM-LINK-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

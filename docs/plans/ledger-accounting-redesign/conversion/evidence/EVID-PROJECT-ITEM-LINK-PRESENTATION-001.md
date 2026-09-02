@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-A2FCAF3E6103`, `TEST-F63806A8047A`
 - Slice dossier:
   `conversion/implementation-slices/project-item-link-presentation-contracts.json`
-- Verification state: implemented and independently reviewed locally; exact
-  implementation-checkpoint CI remains open
+- Verification state: verified after every-line primary review, independent
+  adversarial review, complete local gates and exact implementation-SHA CI
 - Ready scaffold hashes:
   - `ProjectItemLinkPresentation.swift`:
     `f83b017c6902a682f931aee3df6c0441a321103d904da8b62f5dde11e002e971`
@@ -97,14 +97,18 @@ confirmed the finding resolved with no remaining issue.
 Four focused tests and all 193 target tests in 45 suites pass. Target isolation,
 generated app/MCP contracts, repeatable project generation and both staging
 builds also pass locally. Conversion synchronization, capability/query/
-residual controls and M0 must be rerun after status/hash reconciliation, and
-immutable CI on the final implementation checkpoint remains required before
-verification.
+residual controls and M0 were rerun after status/hash reconciliation. The
+exact implementation commit
+`d7f4286be2a2fe7f4a8c8e7d59a59547114e47e4` passed immutable Actions run
+`33691932385`: conversion traceability passed in 10 seconds and the isolated
+target environment passed in 2 minutes 19 seconds with all 193 tests in 45
+suites, generated contracts, both staging builds and clean tracked artifacts.
+The slice is therefore verified.
 
 ## Permanent Limits
 
-Ready status proves only that the bounded target contract is sufficiently
-specified to implement with synthetic provider-free evidence. It proves no
+Verified status proves only the bounded provider-free contract with synthetic
+evidence and the recorded local/CI gates. It proves no
 physical persistence, authorization, synchronization, database policy, Link
 behavior, app/MCP behavior, migration reconciliation, hosted resource,
 production behavior, release or cutover.
