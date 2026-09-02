@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T05:49:25.727Z",
+  "generatedFromManifestSync": "2026-09-02T06:06:21.108Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 747,
-    "targetRelevantSurfaces": 485,
+    "surfaces": 749,
+    "targetRelevantSurfaces": 487,
     "batches": 18,
-    "productScopeSurfaces": 593,
+    "productScopeSurfaces": 595,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 481,
-      "targetRelevantSurfaceCount": 329
+      "surfaceCount": 483,
+      "targetRelevantSurfaceCount": 331
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 386,
-      "targetRelevantSurfaceCount": 270
+      "surfaceCount": 388,
+      "targetRelevantSurfaceCount": 272
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -1251,9 +1251,13 @@
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
-      "surfaceCount": 58,
-      "targetRelevantSurfaceCount": 56,
+      "surfaceCount": 60,
+      "targetRelevantSurfaceCount": 58,
       "authorities": [
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
         {
           "path": "docs/specs/client-identity-and-project-transfers.md",
           "role": "canonical_target"
@@ -1347,6 +1351,7 @@
         "SWIFT-AFBB07058144",
         "SWIFT-B6C3B72884E1",
         "SWIFT-BAFED6656104",
+        "SWIFT-C1C5DFC81448",
         "SWIFT-CF459111B7BB",
         "SWIFT-D73C92887393",
         "SWIFT-DCB56234B246",
@@ -1356,6 +1361,7 @@
         "SWIFT-E60A204F472E",
         "TEST-0911D1BF8A05",
         "TEST-3D0D949763A1",
+        "TEST-99B322EB971A",
         "TEST-E42E9E6D7B28",
         "TEST-E591BE8A4B58"
       ]

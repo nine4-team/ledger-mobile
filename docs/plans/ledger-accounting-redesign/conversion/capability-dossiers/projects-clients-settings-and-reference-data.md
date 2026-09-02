@@ -211,7 +211,9 @@ not share one target authorization policy with the app.
 7. Category definitions use stable IDs and explicit active/system/type/order
    state. System categories and semantically dangerous type changes are handled
    by trusted commands. Project enablement preserves the distinction among no
-   row, enabled/no allocation, and explicit zero.
+   row, enabled/no allocation, and explicit zero; every supplied allocation is
+   exact, non-negative integer-currency `Money`. The target does not inherit the
+   source UI's arbitrary 32-bit maximum.
 8. Updating Project details and the complete selected-category/allocation set is
    one idempotent conflict-aware operation, not a fan-out of silent writes.
 9. Personal Project preferences are readable/writable only by their principal

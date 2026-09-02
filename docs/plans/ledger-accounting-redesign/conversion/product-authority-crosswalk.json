@@ -190,6 +190,7 @@
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
       "authorities": [
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
         { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
         { "path": "docs/specs/invoice-centered-project-accounting.md", "role": "canonical_target" },
         { "path": "docs/specs/projects.md", "role": "current_product" },

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 82
+State version: 83
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CREATION-OPERATION-VERIFIED-NEXT-SLICE-SELECTION
+- Checkpoint: PROJECT-SETUP-OPERATION-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1084,6 +1084,34 @@ modifying the running Firebase application before hard cutover.
   clean tracked artifacts. All five Client-create obligations and exactly its
   two target-only surfaces are now `verified`; every excluded server,
   authorization, provider, migration and production surface remains unadvanced.
+- Audited the next Phase 1 dependency graph and selected
+  `project-setup-operation-contracts` as the next smallest user-meaningful
+  operation. D-006 settles stable Account-scoped Client identity; the reviewed
+  capability contract and target architecture settle one Project setup intent
+  with existing/new Client selection and the complete selected-category state.
+- Created exactly two comment-only target scaffolds and a complete ready dossier
+  for stable Project/Client identity, validated Project name/exact optional
+  description, canonical duplicate-free category selection, absent/null/zero
+  allocation, shared operation fingerprint/receipt/replay and stable refusal.
+  No behavioral Project-setup code or executable test exists at ready.
+- Corrected the target allocation guidance to retain exact non-negative
+  integer-currency Money without inheriting the source UI's arbitrary 32-bit
+  maximum. Empty category selection remains representable; category order is
+  canonical rather than a business identity.
+- Kept hero media entirely outside CreateProject under the separately verified
+  attachment-capture receipt lifecycle. Media failure cannot invalidate a
+  valid Project, and this slice makes no attachment-reference/upload claim.
+- O-023/O-024/O-025/O-026 remain open: the slice neither changes attachment
+  retention, deletes/edits/reassigns a Project, merges a Client nor mutates a
+  shared category definition. Local command validation is not authorization.
+- Postgres, handlers, Data API grants, RLS, Sync Streams, physical local
+  durability, Auth/provider choice, current/target app/MCP, source migration,
+  hosted resources and production remain explicit nonapplicabilities.
+- Ready-gate sync/check and capability/query/residual controls pass at 749
+  recorded / 734 discovered surfaces, 323 mapped / 164 residual / 43 blockers;
+  M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 96 target
+  tests, graph/contracts, both staging builds and diff formatting pass with no
+  executable Project-setup behavior claimed.
 
 ## Next Action
 
@@ -1109,13 +1137,15 @@ Continue without waiting on the two M1 evidence blockers:
    capture identity, exact local-byte evidence and success-shaped receipts.
    Treat the verified `client-creation-operation-contracts` dossier and
    `EVID-CLIENT-CREATION-001` as the sole Client-create semantic authority.
-   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
-   decision-independent user/operational outcome, create exactly its target-only
-   scaffolds and complete its ready dossier before behavioral implementation.
-   Do not add a Client row/handler, membership authorization, Client rename/
-   archive/merge, Project reassignment/setup, filesystem persistence, schema/
-   RLS/Sync/Auth/provider behavior, current app/MCP, migration, hosted resources
-   or production access without the applicable gates.
+   Implement only the ready `project-setup-operation-contracts` dossier:
+   existing/new Client selection, stable Project identity/name/description,
+   canonical complete category state with absent/null/zero allocation, exact
+   shared-envelope subject/fingerprint binding, narrow operation port, receipt
+   validation, canonical restart and the five planned tests. Do not add Project/
+   Client/category rows or handlers, membership/category authorization,
+   category-definition mutation, Project edit/reassignment/archive/delete,
+   hero media, physical persistence, schema/RLS/Sync/Auth/provider behavior,
+   current app/MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
