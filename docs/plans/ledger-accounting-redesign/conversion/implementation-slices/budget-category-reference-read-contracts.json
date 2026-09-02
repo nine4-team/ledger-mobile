@@ -3,7 +3,7 @@
   "sliceId": "budget-category-reference-read-contracts",
   "title": "Read authorized budget-category reference data with stable offline semantics",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Budget Category Reference Read Contracts",
   "surfaceIds": [
     "SWIFT-8351FACDBE06",
@@ -274,8 +274,10 @@
         "CATEGORYREFERENCE-REQ-007"
       ],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-BUDGET-CATEGORY-REFERENCE-001"
+      ]
     }
   ],
   "implementationEvidence": [

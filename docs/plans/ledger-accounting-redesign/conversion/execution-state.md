@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 90
+State version: 91
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: BUDGET-CATEGORY-REFERENCE-READ-IMPLEMENTED-AWAITING-EXACT-CI
+- Checkpoint: BUDGET-CATEGORY-REFERENCE-READ-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1234,6 +1234,15 @@ modifying the running Firebase application before hard cutover.
   authorization, schema/RLS/Sync/Auth/provider, current/target app/MCP, source
   migration, hosted resource or production operation was introduced. O-026
   remains open and unchanged.
+- Exact implementation commit
+  `713dcf579bc8634b6a429da2fa1e2a431b722b57` passed immutable GitHub Actions
+  run `33606006684`: conversion traceability passed in 13 seconds and the
+  isolated-target job passed in 1 minute 59 seconds with all 108 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five category-reference obligations and exactly
+  its two target-only surfaces are now `verified`; every excluded mutation,
+  server/authorization, provider, migration and production surface remains
+  unadvanced.
 
 ## Next Action
 
@@ -1264,16 +1273,16 @@ Continue without waiting on the two M1 evidence blockers:
    existing/new Client selection and complete absent/null/zero category intent.
    Treat the verified `project-archive-operation-contracts` dossier and
    `EVID-PROJECT-ARCHIVE-001` as the sole ArchiveProject semantic authority.
-   Treat the implemented `budget-category-reference-read-contracts` dossier and
+   Treat the verified `budget-category-reference-read-contracts` dossier and
    `EVID-BUDGET-CATEGORY-REFERENCE-001` as the sole shared read semantics for
    category identity/kind/lifecycle/system/exclusion/order/revision,
-   eligibility, visible-count privacy and local readiness. Commit and push the
-   exact implementation checkpoint, wait for immutable hosted conversion and
-   isolated-target CI, and advance only its two surfaces/tests to `verified` if
-   that exact commit passes. Do not add hidden fee visibility/counts, category
-   administration, Project allocation configuration, physical persistence,
-   schema/RLS/Sync/Auth/provider behavior, current app/MCP, migration, hosted
-   resources or production access.
+   eligibility, visible-count privacy and local readiness. Audit the remaining
+   decision-independent Phase 1 mappings and select the smallest next complete
+   user outcome whose product authority and dependencies are settled. Do not
+   add hidden fee visibility/counts, category administration, Project
+   allocation configuration, physical persistence, schema/RLS/Sync/Auth/
+   provider behavior, current app/MCP, migration, hosted resources or production
+   access while their named gates remain open.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

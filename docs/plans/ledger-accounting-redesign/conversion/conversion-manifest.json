@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T07:54:04.255Z",
+    "lastSynchronizedAt": "2026-09-02T08:00:49.963Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -23240,14 +23240,14 @@
           "Synthetic snapshots prove stable authorized category identity/type/order/eligibility, exact readiness restart and atomic invalid/cross-scope/duplicate refusal without a database, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Target-only Phase 1 read boundary implemented locally. Four focused/all 108 target tests, graph/contracts, both staging builds and diff formatting pass; exact-commit hosted CI is pending before verification. The implementation cannot authorize downloads, reveal hidden fee rows/counts, mutate category definitions, configure Project allocations, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open for every mutation.",
+      "notes": "Target-only Phase 1 read boundary verified at exact implementation commit 713dcf57 by immutable Actions run 33606006684. Four focused/all 108 target tests, graph/contracts, both staging builds and clean artifacts pass. The implementation cannot authorize downloads, reveal hidden fee rows/counts, mutate category definitions, configure Project allocations, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open for every mutation.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33353,14 +33353,14 @@
           "Self-tests prove the backend-neutral budget-category reference read boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Four focused/all 108 target tests, graph/contracts, both staging builds and diff formatting pass locally; exact-commit hosted CI remains before verification. Tests prove only provider-free typed read/restart/refusal behavior and do not prove hidden fee visibility, physical local durability, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Four focused/all 108 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 713dcf57 in immutable Actions run 33606006684. Tests prove only provider-free typed read/restart/refusal behavior and do not prove hidden fee visibility, physical local durability, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

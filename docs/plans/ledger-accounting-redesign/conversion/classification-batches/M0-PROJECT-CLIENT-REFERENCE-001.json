@@ -2135,14 +2135,14 @@
       "acknowledgeSourceHash": "110f0b12f529131e929dbad4532e66e7925544c2359321e7faae82622f2ebcb8",
       "currentBehavior": "Implements provider-free budget-category names, exact general/itemized/fee kind, lifecycle/system/exclusion/order/revision definitions, active/non-system/itemized eligibility, validated Account-scoped local snapshots, canonical restart, a narrow reference query port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Target-only Phase 1 read boundary implemented locally. Four focused/all 108 target tests, graph/contracts, both staging builds and diff formatting pass; exact-commit hosted CI is pending before verification. The implementation cannot authorize downloads, reveal hidden fee rows/counts, mutate category definitions, configure Project allocations, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open for every mutation.",
+      "notes": "Target-only Phase 1 read boundary verified at exact implementation commit 713dcf57 by immutable Actions run 33606006684. Four focused/all 108 target tests, graph/contracts, both staging builds and clean artifacts pass. The implementation cannot authorize downloads, reveal hidden fee rows/counts, mutate category definitions, configure Project allocations, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open for every mutation.",
       "target": {
         "owner": "Budget Category Reference Read Contracts",
         "surfaces": [
@@ -2183,14 +2183,14 @@
       "acknowledgeSourceHash": "7a703a6d369b112f2758b7f31dc8cdb0a3178e64e879756c341575f237cdf611",
       "currentBehavior": "Executes four deterministic provider-free tests for exact category identity/kind/order/eligibility, authorized visible-count privacy, ready/partial/stale/empty restart, malformed/scope/duplicate refusal and exact-Account reference-port failure safety.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Four focused/all 108 target tests, graph/contracts, both staging builds and diff formatting pass locally; exact-commit hosted CI remains before verification. Tests prove only provider-free typed read/restart/refusal behavior and do not prove hidden fee visibility, physical local durability, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Four focused/all 108 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 713dcf57 in immutable Actions run 33606006684. Tests prove only provider-free typed read/restart/refusal behavior and do not prove hidden fee visibility, physical local durability, authorization, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Budget Category Reference Read Contracts",
         "surfaces": [

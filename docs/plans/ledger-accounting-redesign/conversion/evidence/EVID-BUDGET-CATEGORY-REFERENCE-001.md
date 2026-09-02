@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-8351FACDBE06`, `TEST-61925915E20E`
 - Slice dossier:
   `conversion/implementation-slices/budget-category-reference-read-contracts.json`
-- Verification state: implemented; four local obligations pass and exact-commit
-  hosted operational CI remains planned
+- Verification state: verified; all five obligations pass at exact
+  implementation commit `713dcf579bc8634b6a429da2fa1e2a431b722b57`
 - Implementation hashes:
   - `BudgetCategoryReferenceData.swift`:
     `110f0b12f529131e929dbad4532e66e7925544c2359321e7faae82622f2ebcb8`
@@ -135,9 +135,25 @@ passes four tests in one suite. It proves:
 target suite in 24 suites, target graph and generated contracts, macOS and
 generic iOS Simulator staging builds, conversion/capability/query/residual
 controls, M0 and diff formatting also pass locally. M1 and M2 retain their
-expected two and 164 blockers with zero structural errors. Immutable exact-
-commit CI still has to pass before `CATEGORYREFERENCE-TEST-005` and the slice
-can advance to `verified`.
+expected two and 164 blockers with zero structural errors.
+
+## Exact-Commit Hosted Verification
+
+Immutable GitHub Actions run
+[`33606006684`](https://github.com/nine4-team/ledger-mobile/actions/runs/33606006684)
+passed against exact implementation commit
+`713dcf579bc8634b6a429da2fa1e2a431b722b57`:
+
+- `Conversion state and traceability` passed in 13 seconds, including conversion,
+  capability, query, residual, M0 and clean-generated-artifact checks; and
+- `Isolated target environment` passed in 1 minute 59 seconds, including graph
+  and generated-contract validation, all 108 target tests, macOS and generic
+  iOS Simulator staging builds and clean tracked artifacts.
+
+`CATEGORYREFERENCE-TEST-005` therefore passes, all five obligations are
+complete, and exactly `SWIFT-8351FACDBE06` and `TEST-61925915E20E` advance to
+`verified`. This evidence does not upgrade any provider, authorization,
+physical-offline, app/MCP, migration or production surface.
 
 ## Permanent Limits
 
