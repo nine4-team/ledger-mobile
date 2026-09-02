@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 105
+State version: 106
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-CREATION-IMPLEMENTED
+- Checkpoint: PROJECT-NOTE-CREATION-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1510,10 +1510,17 @@ modifying the running Firebase application before hard cutover.
   tests in 29 suites, target graph/generated contracts, both staging builds,
   conversion/capability/query/residual controls, M0 and clean artifacts pass.
   M1/M2 retain exactly their expected 2/164 blockers.
-- Exact-implementation-commit hosted `PROJECTNOTECREATE-TEST-005` remains
-  planned, so exactly the two new target surfaces are `implemented`, not
-  `verified`. No excluded parent-authorization/audit/provider behavior was
-  introduced.
+- Exact implementation commit
+  `15566c8dd766762656cb180a65caf0b4600841d5` passed immutable GitHub Actions
+  run `33622056438`: conversion traceability passed in 8 seconds and the
+  isolated target environment passed in 2 minutes 37 seconds with all 128
+  target tests, dependency/environment and generated-contract checks, macOS
+  and generic iOS Simulator staging builds and clean tracked artifacts.
+- All five Project-note-creation obligations and exactly its two claimed target
+  surfaces are now `verified`. Parent authorization, authoritative audit/source
+  assignment, note persistence/projection, edit/remove role policy, schema/RLS/
+  Sync/Auth/provider behavior, app/MCP, migration, hosted resources and
+  production remain unadvanced.
 
 ## Next Action
 
@@ -1559,15 +1566,15 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-note-read-contracts` dossier and
    `EVID-PROJECT-NOTE-READ-001` as the sole shared read semantics for stable
    Project-note identity, audit/tombstone evidence, deterministic bounded order
-   and explicit offline-history completeness. Verify exact implementation commit
-   CI for the frozen `project-note-creation-operation-contracts` dossier. If
-   both jobs pass, record immutable run evidence and advance only its two claimed
-   surfaces plus all five obligations to `verified`. Then audit the next
-   smallest complete decision-independent Phase 1 dependency before creating a
-   new ready dossier. Keep physical persistence, authoritative parent preflight/
-   audit assignment, edit/remove/role policy, schema/RLS/Sync/Auth/provider
-   behavior, app/MCP/search, migration, hosted resources and production access
-   excluded.
+   and explicit offline-history completeness. Treat the verified
+   `project-note-creation-operation-contracts` dossier and
+   `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
+   authority. Audit the next smallest complete decision-independent Phase 1
+   dependency before creating a new ready dossier. Keep physical persistence,
+   authoritative parent preflight/audit assignment, edit/remove/role policy,
+   schema/RLS/Sync/Auth/provider behavior, app/MCP/search, migration, hosted
+   resources and production access excluded unless their named gates are
+   resolved.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

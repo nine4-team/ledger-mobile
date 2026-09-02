@@ -3,7 +3,7 @@
   "sliceId": "project-note-creation-operation-contracts",
   "title": "Add one Project note through a stable shared operation contract",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Note Creation Operation Contracts",
   "surfaceIds": [
     "SWIFT-9CDB2BCAC71B",
@@ -180,12 +180,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTNOTECREATE-REQ-001", "PROJECTNOTECREATE-REQ-002", "PROJECTNOTECREATE-REQ-003", "PROJECTNOTECREATE-REQ-004", "PROJECTNOTECREATE-REQ-005", "PROJECTNOTECREATE-REQ-006", "PROJECTNOTECREATE-REQ-007"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming parent authorization, server audit, schema, Sync, provider, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-NOTE-CREATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-NOTE-CREATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 AddProjectNote command boundary only. It preallocates stable note identity, binds exact parent/text/requested-source intent and reuses the shared operation lifecycle. Requested source and client actor/time remain non-authoritative; a later trusted handler owns authenticated actor derivation, non-enumerating Project preflight and final creator/time/source evidence. Edit/remove role and revision policy, physical persistence, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access and cutover remain excluded."
+  "notes": "Verified decision-independent Phase 1 AddProjectNote command boundary at exact implementation commit 15566c8dd766762656cb180a65caf0b4600841d5 and immutable Actions run 33622056438. It preallocates stable note identity, binds exact parent/text/requested-source intent and reuses the shared operation lifecycle. Requested source and client actor/time remain non-authoritative; a later trusted handler owns authenticated actor derivation, non-enumerating Project preflight and final creator/time/source evidence. Edit/remove role and revision policy, physical persistence, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access and cutover remain excluded."
 }

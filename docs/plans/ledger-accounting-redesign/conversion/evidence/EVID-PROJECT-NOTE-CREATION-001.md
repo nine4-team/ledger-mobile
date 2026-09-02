@@ -1,14 +1,14 @@
 # EVID-PROJECT-NOTE-CREATION-001 — Project Note Creation Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation planning / provider-free Project-note creation command
+- Class: verification / provider-free Project-note creation command
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-9CDB2BCAC71B`, `TEST-DB2559406D3D`
 - Slice dossier:
   `conversion/implementation-slices/project-note-creation-operation-contracts.json`
-- Verification state: implemented; four local obligations pass and exact-
-  implementation-commit CI remains planned
+- Verification state: verified; all five obligations pass at exact implementation
+  commit `15566c8dd766762656cb180a65caf0b4600841d5`
 - Ready scaffold hashes:
   - `ProjectNoteCreationOperation.swift`:
     `18a49e7175ac8a112ac1c7301e1797e09945fd1168815079dd6322c54a7c47cd`
@@ -172,9 +172,23 @@ environment isolation, generated app/MCP contracts, macOS and generic iOS
 Simulator staging builds, conversion/capability/query/residual controls, M0 and
 clean diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
 
-PROJECTNOTECREATE-TEST-001 through -004 therefore pass. Exact-
-implementation-commit hosted PROJECTNOTECREATE-TEST-005 remains planned, so
-exactly the two claimed target surfaces are implemented, not verified.
+PROJECTNOTECREATE-TEST-001 through -004 therefore pass locally.
+
+## Exact Implementation CI
+
+Exact implementation commit
+`15566c8dd766762656cb180a65caf0b4600841d5` passed immutable GitHub Actions run
+[33622056438](https://github.com/nine4-team/ledger-mobile/actions/runs/33622056438).
+Conversion state and traceability passed in 8 seconds. The isolated target
+environment passed in 2 minutes 37 seconds with all 128 target tests, target
+dependency/environment and generated app/MCP contract checks, macOS and generic
+iOS Simulator staging builds, and clean tracked artifacts.
+
+PROJECTNOTECREATE-TEST-001 through -005 and exactly the two claimed target
+surfaces are therefore verified. The runner's repository-level Node.js 20
+deprecation annotation applies to GitHub-provided actions being forced to Node
+24; it is not a Project-note contract failure and did not alter the passing
+jobs.
 
 ## Permanent Limits
 

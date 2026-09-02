@@ -2043,14 +2043,14 @@
       "acknowledgeSourceHash": "bd9f1a1351f22276fef8322627ee99344855761de1a91803adac6032970217d5",
       "currentBehavior": "Implements a provider-free Project-note creation draft, exact Project/note/text/requested-source payload, derived parent Project reference, precondition-free shared-envelope command, fingerprint/receipt validation, narrow create port and stable bounded failures.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-CREATION-001"
       ],
-      "notes": "Implemented target-only Phase 1 command surface pending exact-commit CI. It preserves one stable offline-allocatable note identity, exact parent Project, nonblank text, requested source and shared operation identity/replay while excluding caller-authored authoritative creator/time/source/revision/edit/deletion evidence. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass locally. It cannot persist or project a note, authorize/preflight the parent, define mutation roles, schema/RLS/Sync/provider behavior, wire app/MCP, migrate source notes or activate production.",
+      "notes": "Verified target-only Phase 1 command surface at exact implementation commit 15566c8d and immutable Actions run 33622056438. It preserves one stable offline-allocatable note identity, exact parent Project, nonblank text, requested source and shared operation identity/replay while excluding caller-authored authoritative creator/time/source/revision/edit/deletion evidence. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass. It cannot persist or project a note, authorize/preflight the parent, define mutation roles, schema/RLS/Sync/provider behavior, wire app/MCP, migrate source notes or activate production.",
       "target": {
         "owner": "Project Note Creation Operation Contracts",
         "surfaces": [
@@ -2090,14 +2090,14 @@
       "acknowledgeSourceHash": "38b3d2fc20ef768b572ba95f96431e967bc26ed4a756c5b20dcf3f4f0aae1740",
       "currentBehavior": "Implements four deterministic tests for exact Project/note/text/requested-source command shape, excluded caller audit, canonical restart, malformed/rebound/tampered refusal, shared OperationJournal replay/mismatch semantics and no false receipt from a failing port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-CREATION-001"
       ],
-      "notes": "Implemented target-only deterministic tests pending exact-commit CI. They prove exact Account/Project/note/text/requested-source command truth, excluded caller-authored authoritative audit, byte-identical restart, malformed/rebound/precondition/fingerprint refusal, exact replay and no false receipt. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass locally. No physical local durability, authorization/preflight, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior is claimed.",
+      "notes": "Verified target-only deterministic tests at exact implementation commit 15566c8d and immutable Actions run 33622056438. They prove exact Account/Project/note/text/requested-source command truth, excluded caller-authored authoritative audit, byte-identical restart, malformed/rebound/precondition/fingerprint refusal, exact replay and no false receipt. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass. No physical local durability, authorization/preflight, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior is claimed.",
       "target": {
         "owner": "Project Note Creation Operation Contracts",
         "surfaces": [

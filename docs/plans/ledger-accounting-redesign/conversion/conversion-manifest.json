@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T10:54:00.684Z",
+    "lastSynchronizedAt": "2026-09-02T11:04:40.734Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -25425,14 +25425,14 @@
           "Synthetic commands prove exact Project/note/text/requested-source intent, excluded caller-authored audit evidence, canonical restart, atomic rebound refusal and shared replay without a database, parent authorization, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-CREATION-001"
       ],
-      "notes": "Implemented target-only Phase 1 command surface pending exact-commit CI. It preserves one stable offline-allocatable note identity, exact parent Project, nonblank text, requested source and shared operation identity/replay while excluding caller-authored authoritative creator/time/source/revision/edit/deletion evidence. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass locally. It cannot persist or project a note, authorize/preflight the parent, define mutation roles, schema/RLS/Sync/provider behavior, wire app/MCP, migrate source notes or activate production.",
+      "notes": "Verified target-only Phase 1 command surface at exact implementation commit 15566c8d and immutable Actions run 33622056438. It preserves one stable offline-allocatable note identity, exact parent Project, nonblank text, requested source and shared operation identity/replay while excluding caller-authored authoritative creator/time/source/revision/edit/deletion evidence. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass. It cannot persist or project a note, authorize/preflight the parent, define mutation roles, schema/RLS/Sync/provider behavior, wire app/MCP, migrate source notes or activate production.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35961,14 +35961,14 @@
           "Self-tests prove the backend-neutral Project-note creation command boundary without claiming a note row/projection, parent authorization, server audit, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-NOTE-CREATION-001"
       ],
-      "notes": "Implemented target-only deterministic tests pending exact-commit CI. They prove exact Account/Project/note/text/requested-source command truth, excluded caller-authored authoritative audit, byte-identical restart, malformed/rebound/precondition/fingerprint refusal, exact replay and no false receipt. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass locally. No physical local durability, authorization/preflight, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior is claimed.",
+      "notes": "Verified target-only deterministic tests at exact implementation commit 15566c8d and immutable Actions run 33622056438. They prove exact Account/Project/note/text/requested-source command truth, excluded caller-authored authoritative audit, byte-identical restart, malformed/rebound/precondition/fingerprint refusal, exact replay and no false receipt. Four focused/all 128 tests, graph/contracts, both staging builds and clean artifacts pass. No physical local durability, authorization/preflight, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior is claimed.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
