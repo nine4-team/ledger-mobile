@@ -15,13 +15,21 @@
 
 ## Surfaces
 
+Verified target-only surfaces:
+
 - `SWIFT-A3B756DA1382` — shared operation envelope, lifecycle, journal, error,
   query and readiness contracts
 - `TEST-7D6F49F784FB` — deterministic operation/restart/readiness suite
-- `MCPMOD-DAB760104CEE` — replacement application error and operation-rejection
-  contract
-- `SWIFT-F26052171FEB` — replacement synchronization health/readiness contract
-- `FILE-F29942C1A7F4` — replacement target fault-fixture contract
+
+Broader mapped surfaces that use this contract as evidence but are not verified
+by this provider-free slice:
+
+- `MCPMOD-DAB760104CEE` — target MCP error-envelope projection and app/MCP
+  parity still require an entry-point slice;
+- `SWIFT-F26052171FEB` — application lifecycle wiring and physical/provider
+  readiness evidence still require an integration slice; and
+- `FILE-F29942C1A7F4` — the target MCP/app/local/staging contract harness still
+  requires dedicated test-support implementation and self-tests.
 
 ## Implemented Contract
 
@@ -52,6 +60,13 @@ because the fixture encoded epoch milliseconds but decoded with Swift's default
 reference-date strategy. The implementation added one public canonical codec
 and the restart/fingerprint fixtures now use it in both directions. The final
 suite passes and preserves the exact timestamps and fingerprints.
+
+An audit after the later operational-health slice found that the initial
+checkpoint had incorrectly advanced the three broader source surfaces above to
+`verified` even though the dossier explicitly makes app/MCP integration not
+applicable. Their statuses and slice ownership were corrected back to
+`target_mapped`; the code, two target-only verified surfaces and test evidence
+remain unchanged.
 
 ## Reproduction
 

@@ -1888,14 +1888,14 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Provides structured MCP error payloads and note validation helpers.",
       "disposition": "replace",
-      "status": "verified",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "Preserve machine-readable recovery while enforcing non-enumeration/correlation and durable operation results. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "notes": "The verified target core now owns provider-free error/rejection values, but this broader MCP module remains target_mapped until target MCP transport actually projects the same registered envelope and parity/security tests pass. Source-provider/build mechanics do not become target application authority.",
       "target": {
         "owner": "Application Error Contract",
         "surfaces": [
@@ -2598,14 +2598,14 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Tracks current listener/sync lifecycle state for views.",
       "disposition": "redesign",
-      "status": "verified",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "Replace connection/listener inference with scope-specific PowerSync readiness and operation health. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "notes": "The verified target core owns SyncHealthSnapshot semantics, but this broader app lifecycle surface remains target_mapped until scoped target readiness is wired into the application and physical/provider fault evidence passes. Source listener mechanics do not become target authority.",
       "target": {
         "owner": "Local Data and Sync Operations",
         "surfaces": [
@@ -2653,14 +2653,14 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Provides shared current MCP Firebase test helpers.",
       "disposition": "replace",
-      "status": "verified",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "Create Principal/account/environment-isolated target fixtures and contract helpers. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "notes": "Operation-core tests prove lifecycle fault semantics, but this broader MCP helper replacement remains target_mapped until Principal/Account/environment-isolated target contract harnesses exercise app, MCP, local and staging boundaries. Source-provider/build mechanics do not become target application authority.",
       "target": {
         "owner": "Target Contract Test Infrastructure",
         "surfaces": [

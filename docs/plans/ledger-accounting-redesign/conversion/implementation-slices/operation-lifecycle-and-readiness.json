@@ -6,10 +6,7 @@
   "status": "verified",
   "owner": "Shared Operation and Readiness Contracts",
   "surfaceIds": [
-    "FILE-F29942C1A7F4",
-    "MCPMOD-DAB760104CEE",
     "SWIFT-A3B756DA1382",
-    "SWIFT-F26052171FEB",
     "TEST-7D6F49F784FB"
   ],
   "requirements": [

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T00:49:07.294Z",
+    "lastSynchronizedAt": "2026-09-02T00:53:04.827Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -5297,14 +5297,14 @@
           "The same semantic story can exercise app, MCP, local adapter and staging target without Firebase-shaped models or production access"
         ]
       },
-      "status": "verified",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "Create Principal/account/environment-isolated target fixtures and contract helpers. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "notes": "Operation-core tests prove lifecycle fault semantics, but this broader MCP helper replacement remains target_mapped until Principal/Account/environment-isolated target contract harnesses exercise app, MCP, local and staging boundaries. Source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -9409,14 +9409,14 @@
           "App and MCP report the same safe actionable failure for the same target outcome and one rejection cannot poison the queue"
         ]
       },
-      "status": "verified",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "Preserve machine-readable recovery while enforcing non-enumeration/correlation and durable operation results. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "notes": "The verified target core now owns provider-free error/rejection values, but this broader MCP module remains target_mapped until target MCP transport actually projects the same registered envelope and parity/security tests pass. Source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -30187,14 +30187,14 @@
           "UI can distinguish usable local data, stale/partial readiness, queued work and remote failure without equating connectivity with correctness"
         ]
       },
-      "status": "verified",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "Replace connection/listener inference with scope-specific PowerSync readiness and operation health. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
+      "notes": "The verified target core owns SyncHealthSnapshot semantics, but this broader app lifecycle surface remains target_mapped until scoped target readiness is wired into the application and physical/provider fault evidence passes. Source listener mechanics do not become target authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {

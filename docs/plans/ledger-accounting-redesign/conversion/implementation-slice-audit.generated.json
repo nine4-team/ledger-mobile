@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T00:49:07.294Z",
+  "generatedFromManifestSync": "2026-09-02T00:53:04.827Z",
   "totals": {
     "slices": 11,
-    "claimedTargetSurfaces": 46,
-    "unclaimedTargetSurfaces": 419,
-    "implementationAdvancedTargetSurfaces": 31
+    "claimedTargetSurfaces": 43,
+    "unclaimedTargetSurfaces": 422,
+    "implementationAdvancedTargetSurfaces": 28
   },
   "statusCounts": {
     "draft": 0,
@@ -39,10 +39,7 @@
       "status": "verified",
       "owner": "Shared Operation and Readiness Contracts",
       "surfaceIds": [
-        "FILE-F29942C1A7F4",
-        "MCPMOD-DAB760104CEE",
         "SWIFT-A3B756DA1382",
-        "SWIFT-F26052171FEB",
         "TEST-7D6F49F784FB"
       ],
       "requirementCount": 7,

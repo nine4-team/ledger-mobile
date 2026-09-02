@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 51
+State version: 52
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: OPERATIONAL-HEALTH-VERIFIED-NEXT-FOUNDATION-AUDIT-TARGET-ENVIRONMENT-IN-PROGRESS
+- Checkpoint: EARLY-SLICE-CLAIM-SCOPE-CORRECTED-TEST-SUPPORT-READY-GATE-NEXT-TARGET-ENVIRONMENT-IN-PROGRESS
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -360,14 +360,15 @@ modifying the running Firebase application before hard cutover.
   explicit required-update/contract blocks, retained original result/rejection
   evidence through supersession/resolution, and safe diagnostics are proven in
   `EVID-OPERATION-CORE-001`.
-- Advanced exactly five claimed replacement surfaces to `verified` through the
-  slice dossier, classified the two new target files, extended the reviewed
-  platform authority set to the operation/domain/port architecture files, and
-  regenerated coverage/authority/slice audits. The conversion ledger passes at
-  701 recorded / 686 discovered surfaces with only the three explained retired-
-  path warnings. No Postgres schema, RLS, Data API grant, PowerSync Stream,
-  provider adapter, hosted resource, Firebase implementation, migration,
-  deployment or production operation was introduced.
+- Advanced the two target-only operation code/test surfaces to `verified`,
+  extended the reviewed platform authority set to the operation/domain/port
+  architecture files, and regenerated coverage/authority/slice audits. The
+  initial checkpoint also overclaimed three broader current MCP/app/test-helper
+  replacements; the later Phase 1 audit corrected those surfaces and removed
+  them from the slice because concrete app/MCP/test-harness integration was
+  explicitly not applicable. No Postgres schema, RLS, Data API grant, PowerSync
+  Stream, provider adapter, hosted resource, Firebase implementation,
+  migration, deployment or production operation was introduced.
 - Implemented the decision-independent `versioned-contract-catalog` technical
   slice with one canonical registry and deterministic Swift, TypeScript and
   bounded MCP-resource projections. All projections embed catalog SHA-256
@@ -627,6 +628,14 @@ modifying the running Firebase application before hard cutover.
   operational-health obligations and exactly its two target-only surfaces are
   now `verified`; the broader current observability/performance/navigation/test
   surfaces remain `target_mapped`.
+- Audited the remaining Phase 1 composition-root and deterministic test-support
+  mappings and found one historical scope inconsistency: operation-lifecycle
+  had verified `MCPMOD-DAB760104CEE`, `SWIFT-F26052171FEB`, and
+  `FILE-F29942C1A7F4` even though its dossier explicitly omitted concrete
+  app/MCP integration and a shared target harness. Corrected those three to
+  `target_mapped`, removed them from the operation slice, retained only the two
+  actual target files as verified, and updated evidence/tracker counts. No code
+  or already-passing operation behavior changed.
 
 ## Next Action
 
@@ -636,15 +645,17 @@ Continue without waiting on the two M1 evidence blockers:
    `EVID-OPERATION-CORE-001` as the shared semantic dependency for every later
    operation slice. Do not recreate queued/applied/rejected, idempotency,
    readiness or error behavior independently in app, MCP, SQL or adapters.
-2. Audit the remaining Phase 1 backend-neutral composition-root, deterministic
-   in-memory/failure-adapter and target test-support gaps against the reviewed
-   platform/app-shell mappings and architecture. Select one bounded technical
-   slice only if exact authority, claimed target-only surfaces and executable
-   verification can be completed without choosing A-003/A-004/A-007/A-015/
-   A-016, any open product decision, provider resource, credential, spend,
-   production behavior or cutover policy. Create comment-only scaffolds and a
-   `ready` dossier before behavior; otherwise record the named blocker rather
-   than inventing work.
+2. Create the `deterministic-target-test-support` ready gate from the reviewed
+   `TEST-6A6B0926E2EE` / Target Contract Test Infrastructure mapping and Phase 1
+   architecture. Claim only new target-only test-support code/test surfaces;
+   leave the current Swift and MCP helper surfaces `target_mapped`. Define
+   deterministic environment/Principal/Account/clock/ID/revision fixtures,
+   immutable scripted operation/readiness/failure adapters, canonical restart
+   evidence and provider/production refusal with self-tests. Stop before domain-
+   specific product fixtures, app/MCP entry-point parity, local database,
+   provider SDK, hosted staging, A-003/A-004/A-007/A-015/A-016 or any open
+   product decision. Implement behavior only after the comment-only scaffolds,
+   exact dossier and conversion ready gate pass.
 3. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.
