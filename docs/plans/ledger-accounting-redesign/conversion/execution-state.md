@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-01
-State version: 86
+State version: 87
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ARCHIVE-OPERATION-READY
+- Checkpoint: PROJECT-ARCHIVE-OPERATION-IMPLEMENTED-AWAITING-EXACT-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1163,6 +1163,25 @@ modifying the running Firebase application before hard cutover.
   M0 passes, M1/M2 retain the expected 2/164 blocks, and the existing 100 target
   tests, graph/contracts, both staging builds and diff formatting pass with no
   executable Project-archive behavior claimed.
+- Implemented only the ready provider-free Project archive boundary: typed
+  expected revision, exact Account/actor/contract/Project/time draft, one-field
+  archive payload, exactly one same-Project expected-revision precondition,
+  shared operation envelope/fingerprint/receipt, narrow operation port and
+  closed stable failures.
+- Added four deterministic tests for exact archive-only scope, stable Project
+  identity, canonical byte-identical restart, changed Account/actor/contract/
+  payload/revision-subject/revision-value/precondition-count/command-subject/
+  fingerprint/receipt/malformed refusal and shared OperationJournal replay/
+  changed-Project-or-revision mismatch behavior.
+- Four focused/all 104 target tests, graph/contracts and both staging builds pass
+  locally. `PROJECTARCHIVE-TEST-001` through `-004` pass; exact-commit hosted
+  `PROJECTARCHIVE-TEST-005` remains planned, so exactly the two Project-archive
+  surfaces are `implemented`, not `verified`.
+- No lifecycle row, authoritative archive or history-preservation result,
+  physical local durability, membership/Project authorization, restore/delete/
+  edit/reassignment, Client/category/media/accounting mutation, schema/RLS/
+  Sync/Auth/provider, current/target app/MCP, migration, hosted resource or
+  production operation was introduced; O-024/O-025 remain open.
 
 ## Next Action
 
@@ -1191,15 +1210,14 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-setup-operation-contracts` dossier and
    `EVID-PROJECT-SETUP-001` as the sole CreateProject semantic authority for
    existing/new Client selection and complete absent/null/zero category intent.
-   Implement only the ready `project-archive-operation-contracts` dossier:
-   stable Project archive draft/payload/command, one exact expected-revision
-   precondition, shared-envelope subject/fingerprint binding, narrow operation
-   port, receipt validation, canonical restart and the five planned tests. Do
-   not add Project rows/handlers, authoritative history-preservation claims,
-   membership/Project authorization, restore/delete/edit/reassignment, Client/
-   category/media/accounting mutation, physical persistence, schema/RLS/Sync/
-   Auth/provider behavior, current app/MCP, migration, hosted resources or
-   production access.
+   Treat the implemented `project-archive-operation-contracts` dossier and
+   `EVID-PROJECT-ARCHIVE-001` as the sole ArchiveProject semantic authority.
+   Wait for exact-commit hosted verification before marking its fifth obligation
+   or two surfaces verified. Do not add Project rows/handlers, authoritative
+   history-preservation claims, membership/Project authorization, restore/
+   delete/edit/reassignment, Client/category/media/accounting mutation,
+   physical persistence, schema/RLS/Sync/Auth/provider behavior, current app/
+   MCP, migration, hosted resources or production access.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

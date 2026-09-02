@@ -3,7 +3,7 @@
   "sliceId": "project-archive-operation-contracts",
   "title": "Archive one Project without changing identity or deleting history",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Archive Operation Contracts",
   "surfaceIds": [
     "SWIFT-10A07B52B82D",
@@ -200,8 +200,10 @@
         "PROJECTARCHIVE-REQ-007"
       ],
       "expected": "A valid synthetic draft produces one typed exact-scope ArchiveProject command with one same-subject expected revision and no Client/name/details/category/media/child/delete/restore/generic-write input.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-001"
+      ]
     },
     {
       "id": "PROJECTARCHIVE-TEST-002",
@@ -216,8 +218,10 @@
         "PROJECTARCHIVE-REQ-007"
       ],
       "expected": "Representative commands round-trip byte-identically with exact Account/actor/contract/Operation/Project/revision/time/subject/fingerprint evidence and no backend path, provider, credential, child/history result or delete claim.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-001"
+      ]
     },
     {
       "id": "PROJECTARCHIVE-TEST-003",
@@ -233,8 +237,10 @@
         "PROJECTARCHIVE-REQ-007"
       ],
       "expected": "Invalid time and changed Account/actor/contract/Project/revision subject/value/count/command subject/fingerprint/receipt evidence fail atomically through Project-archive stable diagnostic codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-001"
+      ]
     },
     {
       "id": "PROJECTARCHIVE-TEST-004",
@@ -250,8 +256,10 @@
         "PROJECTARCHIVE-REQ-007"
       ],
       "expected": "A deterministic reference port returns the shared queued receipt, exact replay returns the same receipt, same OperationID with changed Project/revision intent is refused by the shared lifecycle, and a failing port returns no success receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-001"
+      ]
     },
     {
       "id": "PROJECTARCHIVE-TEST-005",

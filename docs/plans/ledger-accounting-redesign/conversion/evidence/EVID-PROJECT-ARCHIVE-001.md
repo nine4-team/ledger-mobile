@@ -7,12 +7,13 @@
 - Claimed target surfaces: `SWIFT-10A07B52B82D`, `TEST-756CB57BD6CA`
 - Slice dossier:
   `conversion/implementation-slices/project-archive-operation-contracts.json`
-- Verification state: ready; behavioral implementation has not started
-- Ready scaffold hashes:
+- Verification state: implemented locally; exact-commit hosted verification is
+  pending
+- Implementation hashes:
   - `ProjectArchiveOperation.swift`:
-    `ccb34eadc48d27d994388d893b1b8b8489111a0ab3907f572548a3d42e7c6b78`
+    `5a3421b470e4cd99639c6f2a91ac7240d2fddb3b1ac0bc9660b4ff97788202f9`
   - `ProjectArchiveOperationTests.swift`:
-    `7dbcee77d28a2f8e9e508c0977b315e87c3b59f3054d3e0a72c121287b326fdf`
+    `e3a984ec49233404a2cf46058f9474f6e15bd1f2fad03406748f1553d4a5b24a`
 
 ## Selection and Scope
 
@@ -93,9 +94,55 @@ The ready checkpoint ran from the dedicated Supabase worktree on 2026-09-01:
 Passing this ready gate authorizes only the bounded provider-free implementation
 named in the dossier.
 
+## Implemented Contract
+
+`ProjectArchiveOperation.swift` now provides:
+
+- `ExpectedProjectRevision`, an exact unsigned Project revision value distinct
+  from Project identity and caller-controlled lifecycle state;
+- `ProjectArchiveDraft`, which binds one Account, actor, operation contract,
+  stable Project, expected revision and finite capture time;
+- `ArchiveProjectPayload`, whose only field is the stable Project ID;
+- `ArchiveProjectCommand`, whose public construction derives exactly one Project
+  subject and one same-subject `expectedRevision` precondition, reuses the shared
+  operation envelope/fingerprint, and whose decoder revalidates every duplicated
+  binding rather than trusting serialized derived evidence;
+- exact `OperationReceipt` validation for the command's Operation ID;
+- the narrow `ProjectArchiving` provider-free port; and
+- a closed stable failure taxonomy for invalid time, scope/actor/contract/
+  payload/revision-precondition/subject/fingerprint/receipt mismatches,
+  malformed evidence and local acceptance failure.
+
+The implementation deliberately has no lifecycle boolean or generic mutation
+map. It cannot express restore, unarchive, physical deletion, Project editing,
+Client reassignment, child mutation or an authoritative archive result. It uses
+`OperationJournal` only through a deterministic test adapter and does not claim
+physical durable storage, authorization, server apply, history preservation in
+storage or synchronized Project visibility.
+
+## Local Implementation Verification
+
+The implementation checkpoint ran from the dedicated Supabase worktree on
+2026-09-01:
+
+- `swift test --package-path LedgeriOS --filter ProjectArchiveOperationTests` —
+  pass, four focused tests;
+- `swift test --package-path LedgeriOS` — pass, all 104 tests in 23 suites;
+- target environment and generated-contract checks — pass;
+- macOS and generic iOS Simulator staging builds — pass;
+- conversion sync/check/report, capability/query/residual controls and M0 —
+  pass at 751 recorded / 736 discovered surfaces and 325 mapped / 164 residual /
+  43 blockers, with only the three documented retired-path warnings;
+- M1/M2 — expected blocks at the unchanged 2/164 prerequisites; and
+- `git diff --check` — pass.
+
+`PROJECTARCHIVE-TEST-001` through `-004` therefore pass with this evidence.
+Exact-commit `PROJECTARCHIVE-TEST-005` remains planned, so exactly the two
+claimed target-only surfaces are `implemented`, not `verified`.
+
 ## Permanent Limits
 
-This ready plan cannot:
+This provider-free implementation cannot:
 
 - visibly or authoritatively archive, restore or delete a Project;
 - create or modify a local/server Project row, lifecycle state or audit field;
