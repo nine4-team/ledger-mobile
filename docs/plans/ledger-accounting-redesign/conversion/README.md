@@ -64,6 +64,12 @@ exact Project/text/requested-source intent to the shared operation lifecycle,
 exclude caller-authored authoritative creator/time/source evidence and reserve
 non-enumerating parent preflight for a later trusted handler. No note row,
 provider, app/MCP, migration or production behavior exists at this checkpoint.
+The provider-free current-Principal Project preference read slice is ready for
+implementation. Exactly two comment-only target surfaces are scoped to ordered
+stable pin identities, revision, exact Account/Principal/Project binding and
+authoritative absence versus incomplete local evidence. Preference writes,
+authentication, schema/RLS/Sync/provider behavior, category resolution, budget
+calculation, app/MCP, migration and production remain excluded.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

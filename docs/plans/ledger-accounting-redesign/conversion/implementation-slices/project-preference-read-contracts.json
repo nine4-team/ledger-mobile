@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-preference-read-contracts",
+  "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Preference Read Contracts",
+  "surfaceIds": [
+    "SWIFT-C6AE96622805",
+    "TEST-96AAFA22224B"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTPREFERENCE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
+      "section": "Budget Progress",
+      "invariant": "Personal pins may select which canonical Project category progress values are presented and in what user-defined order, but preference data never supplies spend, allocation or contribution authority and cannot change the paid-plus-unpaid accounting formula.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "One preference row is bound to stable AccountID, PrincipalID and ProjectID, carries an ordered unique list of stable BudgetCategoryIDs and a monotonic revision, and contains no user-selected backend path, category label or financial value.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Security and Sync Requirements for Later Target Mapping",
+      "invariant": "The local directory contains only already-authorized preference rows for the authenticated Principal in the exact Account. Request AccountID and PrincipalID are expected scope, not authority; later trusted session, RLS and Sync boundaries must derive and enforce the Principal and never expose another Principal's rows or hidden count.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Migration Contract",
+      "invariant": "Preference identity and pin order are preserved independently of category lifecycle. Archived or presently unresolved category IDs remain preference evidence for later visibility-safe resolution; this read contract neither deletes nor silently repairs them and imports no source preference row.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "The current-Principal preference directory is an immutable local read model with exact query fingerprint, LocalDataVersion, visible-row count, readiness/quality, completeness and as-of evidence. A missing Project row means not stored only when directory evidence is complete; otherwise lookup reports not available.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One narrow backend-neutral ProjectPreferenceQuerying port exposes the exact scoped local directory using domain and standard Swift types only; it contains no generic CRUD, listener registration, preference writer, authentication implementation or backend SDK type.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 read boundary is executable only with deterministic provider-free evidence while the shipped app remains unchanged and no preference row/table, RLS policy, Sync Stream, Auth/provider choice, source transform, hosted resource or production authority is introduced.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectPreferenceSnapshot binds one stable AccountID, PrincipalID and ProjectID to an ordered duplicate-free list of BudgetCategoryIDs and one revision. Empty pins are valid stored preference state; no category name, lifecycle, amount, budget result, user path or provider value is carried.",
+        "ProjectPreferenceDirectoryRequest binds exact Account/Principal expected scope to one derived query fingerprint. Serialized requests reconstruct the fingerprint rather than trusting caller-supplied derived evidence.",
+        "ProjectPreferenceDirectorySnapshot validates request fingerprint, finite as-of time, exact row scope, unique Project rows and already-authorized visible count, then canonicalizes rows by ProjectID without changing pin order.",
+        "ProjectPreferenceLookupState distinguishes stored preference, authoritative notStored from a complete directory, and notAvailable from incomplete local evidence. It does not synthesize first-use defaults or resolve category visibility.",
+        "ProjectPreferenceQuerying exposes only watchProjectPreferences(request:) local streams; ProjectPreferenceDataFailure supplies stable bounded scope/identity/pin/fingerprint/readiness/request/encoding codes."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "This Phase 1 contract creates no project_preferences table, Principal/Project foreign key, pin relation/array, revision column, uniqueness rule, index, view or migration."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "No authoritative preference query/write handler, authenticated Principal derivation, Project/category preflight, idempotency result or conflict resolution is implemented."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "No relation, view or function is exposed through the Supabase Data API and no grant is added."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Typed Account/Principal/Project scope and already-authorized local values are not authorization. No own-Principal predicate, membership check, grant or RLS policy exists."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "No PowerSync Stream, bucket parameter, local preference table, authenticated download predicate or synchronized completeness proof is defined."
+    },
+    "localOffline": {
+      "items": [
+        "Request, row and directory values are canonical Codable evidence and reconstruct through the same scope, pin uniqueness, fingerprint, count, completeness and timestamp validators.",
+        "Ready, partial, stale and authoritative-empty local directories retain exact LocalDataVersion/as-of evidence; missing-row lookup is notStored only for complete evidence and is notAvailable otherwise.",
+        "Cross-Account/Principal rows, duplicate Projects or pins, mismatched query fingerprints/counts/requests and malformed encoded values fail atomically without returning a partial preference directory."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Project preferences contain no image URL, AttachmentPath, byte reference, cache, upload, retention or deletion behavior."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No Project list/detail presentation, default-pin derivation, MCP schema/tool, transport handler, capability registration or app/MCP parity wiring is added."
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase user-path preference, nullable field variant, duplicate pin, stale Project/category reference or source Principal correlation is decoded, normalized, quarantined or reconciled."
+    },
+    "observabilityRunbooks": {
+      "items": [],
+      "notApplicable": "Stable local failures are contract values only; no telemetry signal, metric, alert, audit sink or runbook action is introduced."
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
+        "The slice cannot authorize a Principal, persist/display a preference, resolve category visibility, calculate budgets, write pins, define schema/RLS/Sync/provider/migration behavior, activate a feature, deploy, release or cut over.",
+        "A-003/A-004/A-007/A-016, physical offline verification, canonical production preference profiling and all hosted-resource authority remain outside this read boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTPREFERENCE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
+      "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
+      "expected": "Valid synthetic rows preserve exact Account/Principal/Project identity, ordered unique pins, empty stored state and revision while excluding category labels/lifecycle, budget values, user paths, authorization and provider data.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
+      "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-007"],
+      "expected": "Ready, partial, stale and authoritative-empty current-Principal directories round-trip byte-identically with exact query fingerprint, row/pin order, revisions, LocalDataVersion, completeness, quality and as-of evidence; lookup preserves stored/notStored/notAvailable truth.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
+      "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
+      "expected": "Cross-Account/Principal rows, duplicate Project identities or pinned category IDs, fingerprint/count/request mismatch, invalid as-of time and malformed decoded values fail atomically through stable codes.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
+      "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
+      "expected": "A deterministic reference port returns only the exact Account/Principal directory, rejects request/snapshot mismatch without yielding rows, and a failing port yields no false snapshot.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
+    },
+    {
+      "id": "PROJECTPREFERENCE-TEST-005",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["PROJECTPREFERENCE-REQ-001", "PROJECTPREFERENCE-REQ-002", "PROJECTPREFERENCE-REQ-003", "PROJECTPREFERENCE-REQ-004", "PROJECTPREFERENCE-REQ-005", "PROJECTPREFERENCE-REQ-006", "PROJECTPREFERENCE-REQ-007"],
+      "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming authentication, persistence, schema, Sync, provider, migration or production behavior.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-PREFERENCE-READ-001"]
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Decision-independent Phase 1 read contract only. It preserves exact current-Principal preference scope, ordered stable pin identities, revision and authoritative absence versus incomplete-local truth. It does not invent a first-use default, resolve archived/stale category visibility, calculate budgets, authorize a caller, write preferences, define schema/RLS/Sync/Auth/provider behavior, wire app/MCP, migrate source data, provision hosted resources or authorize production/cutover."
+}

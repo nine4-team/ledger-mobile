@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 106
+State version: 107
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-CREATION-VERIFIED
+- Checkpoint: PROJECT-PREFERENCE-READ-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1521,6 +1521,34 @@ modifying the running Firebase application before hard cutover.
   assignment, note persistence/projection, edit/remove role policy, schema/RLS/
   Sync/Auth/provider behavior, app/MCP, migration, hosted resources and
   production remain unadvanced.
+- Exact Project-note-creation verification-document commit
+  `b6e8e6cc179df8f670db689679a89dbf9b5f0cea` passed immutable GitHub Actions
+  run `33622774880`: conversion traceability passed in 8 seconds and the full
+  isolated target environment passed in 1 minute 58 seconds.
+- Audited the next Phase 1 Project/Client/reference dependency and excluded
+  Project-note edit/removal because their role policy remains deliberately
+  unsettled. Selected `project-preference-read-contracts` as the next smallest
+  complete dependency: current-Principal ordered pins, revision and local
+  absence/readiness truth only.
+- Froze seven exact requirements over stable Account/Principal/Project scope,
+  ordered unique category identities, preference revision, derived query
+  fingerprint, already-authorized visible count and stored/not-stored/not-
+  available lookup. Pins remain presentation evidence and cannot supply or
+  change canonical budget amounts or arithmetic.
+- Exactly two comment-only target surfaces are `target_mapped` under the ready
+  dossier: `SWIFT-C6AE96622805` and `TEST-96AAFA22224B`. Preference writes,
+  first-use defaults, category visibility resolution, authentication, physical
+  persistence, schema/RLS/Sync/provider behavior, app/MCP, source migration,
+  hosted resources and production remain unadvanced.
+- The ledger now records 765 surfaces, including 750 currently discovered, and
+  339 of 503 target-relevant surfaces are mapped or later. The same 164
+  residual surfaces remain under 43 explicit blockers; no product or provider
+  gate was silently cleared.
+- The complete local ready gate passes: all 128 existing target tests in 29
+  suites while both scaffolds remain comment-only, target isolation/generated
+  contracts, macOS and generic iOS Simulator staging builds, XcodeGen/source-
+  project stability, conversion/capability/query/residual controls, M0 and clean
+  diff formatting. M1/M2 retain exactly their expected 2/164 blockers.
 
 ## Next Action
 
@@ -1569,12 +1597,15 @@ Continue without waiting on the two M1 evidence blockers:
    and explicit offline-history completeness. Treat the verified
    `project-note-creation-operation-contracts` dossier and
    `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
-   authority. Audit the next smallest complete decision-independent Phase 1
-   dependency before creating a new ready dossier. Keep physical persistence,
-   authoritative parent preflight/audit assignment, edit/remove/role policy,
-   schema/RLS/Sync/Auth/provider behavior, app/MCP/search, migration, hosted
-   resources and production access excluded unless their named gates are
-   resolved.
+   authority. Run the complete ready gate for the frozen
+   `project-preference-read-contracts` dossier. If it passes, push and verify
+   the exact ready commit, then implement only its two claimed provider-free
+   surfaces and five obligations. Keep preference writes, first-use defaults,
+   category visibility resolution, authentication, physical persistence,
+   authoritative parent preflight/audit assignment, note edit/remove/role
+   policy, schema/RLS/Sync/Auth/provider behavior, app/MCP/search, migration,
+   hosted resources and production access excluded unless their named gates
+   are resolved.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

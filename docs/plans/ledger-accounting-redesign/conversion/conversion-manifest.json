@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T11:04:40.734Z",
+    "lastSynchronizedAt": "2026-09-02T11:15:37.095Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -28258,6 +28258,67 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-C6AE96622805",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectPreferenceData.swift"
+        }
+      ],
+      "observedSourceHash": "dcf06d2a71a083a4025bad3d92a658f83c6a2d265ce4f10ccbbd654f4bb49bc3",
+      "acknowledgedSourceHash": "dcf06d2a71a083a4025bad3d92a658f83c6a2d265ce4f10ccbbd654f4bb49bc3",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for current-Principal Project preference read contracts; no executable read, write, provider, migration or application behavior exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Preference Read Contracts",
+        "surfaces": [
+          "ProjectPreferenceSnapshot",
+          "ProjectPreferenceDirectoryRequest",
+          "ProjectPreferenceDirectorySnapshot",
+          "ProjectPreferenceLookupState",
+          "ProjectPreferenceQuerying",
+          "ProjectPreferenceDataFailure"
+        ],
+        "securityRequirements": [
+          "The read request and every row bind one exact AccountID and PrincipalID, but those caller-supplied values are expected scope only; a later trusted session/RLS/Sync boundary must derive and enforce the authenticated Principal",
+          "The local snapshot contains only already-authorized preference rows and their visible count, and exposes no other Principal's rows, hidden counts, category names, budget amounts or authorization claims"
+        ],
+        "syncRequirements": [
+          "Stable Project and ordered pinned category identities, revision, query identity, LocalDataVersion, as-of time, completeness and ready/partial/stale quality survive canonical structured restart",
+          "A missing Project preference is authoritative only when the current-Principal directory is complete; incomplete local evidence yields notAvailable rather than silently becoming an empty preference"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only preference read values and decode no Firebase user path, preference document, export row or source-to-target correlation.",
+        "reconciliation": [
+          "Later provider/import slices must preserve valid ordered pins, retain archived/stale category references as evidence, deduplicate or quarantine duplicates explicitly, bind each row to a reviewed Account/Principal/Project and report cross-user or missing-reference variants"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectPreferenceDataTests"
+        ],
+        "acceptance": [
+          "Synthetic snapshots prove exact current-Principal preference scope, ordered pins, revision, authoritative absence versus local unavailability and atomic refusal without a database, provider or production resource"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-PREFERENCE-READ-001"
+      ],
+      "notes": "Ready target-only Phase 1 scaffold. The reviewed slice may define exact Account/Principal/Project scope, ordered unique pinned category identities, preference revision, authoritative absence versus incomplete local evidence and one narrow read port. It cannot authorize a caller, calculate or mutate budget values, resolve category visibility, write preferences, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source preferences or activate production.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-C7C58265EA19",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/TransactionTaxonomy.swift",
@@ -35026,6 +35087,65 @@
       ],
       "notes": "Verified target-only composition self-tests use the deterministic reference adapters in the test target only. Three focused and all 66 target tests pass locally and in exact implementation commit be88c5b9e42eef90018f84012f5a3e60f9631009 / immutable Actions run 33581326840. They cannot establish application wiring, provider fidelity, hosted-resource isolation, physical offline durability or replacement of the current Firebase composition root.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-96AAFA22224B",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectPreferenceDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "e5e274a833492de9cc8fd4974b0ac40ea1863312fbbceaf40ea59222fe0878d4",
+      "acknowledgedSourceHash": "e5e274a833492de9cc8fd4974b0ac40ea1863312fbbceaf40ea59222fe0878d4",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides a comment-only target scaffold for deterministic Project preference read tests; no executable test or provider/source fixture exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Preference Read Contracts",
+        "surfaces": [
+          "ProjectPreferenceDataTests",
+          "ordered pin and revision fixtures",
+          "authoritative-absence versus unavailable fixtures",
+          "ready/partial/stale restart fixtures",
+          "scope/identity/fingerprint/read-port refusal fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic non-production Account, Principal, Project and category identities and model an already-authorized current-Principal subset without hidden rows or counts",
+          "Negative tests expose only stable bounded codes and no user path, source value, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "All fixtures run provider-free and distinguish deterministic local preference evidence from physical persistence, authenticated Principal enforcement and synchronized Account completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase preference/user/category/Project export, profile or source-to-target mapping.",
+        "reconciliation": [
+          "Equivalent preference evidence round-trips byte-identically while changed Account/Principal/Project/query identity, duplicate rows/pins and contradictory completeness fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectPreferenceDataTests"
+        ],
+        "acceptance": [
+          "Self-tests prove the backend-neutral current-Principal Project preference read boundary without claiming authentication, server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-PREFERENCE-READ-001"
+      ],
+      "notes": "Ready target-only test scaffold. Planned fixtures cover exact Account/Principal/Project scope, ordered unique pinned category IDs, revision, ready/partial/stale/authoritative-empty restart, authoritative not-stored versus not-available lookup, malformed/scope/duplicate/fingerprint refusal and exact read-port behavior. No physical durability, authorization, preference write, budget calculation, schema/RLS/Sync/provider, app/MCP, migration or production behavior is claimed.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-99B322EB971A",

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T11:04:40.734Z",
+  "generatedFromManifestSync": "2026-09-02T11:15:37.095Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 763,
-    "targetRelevantSurfaces": 501,
+    "surfaces": 765,
+    "targetRelevantSurfaces": 503,
     "batches": 18,
-    "productScopeSurfaces": 609,
+    "productScopeSurfaces": 611,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 497,
-      "targetRelevantSurfaceCount": 345
+      "surfaceCount": 499,
+      "targetRelevantSurfaceCount": 347
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -70,8 +70,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 402,
-      "targetRelevantSurfaceCount": 286
+      "surfaceCount": 404,
+      "targetRelevantSurfaceCount": 288
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -1251,8 +1251,8 @@
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
-      "surfaceCount": 74,
-      "targetRelevantSurfaceCount": 72,
+      "surfaceCount": 76,
+      "targetRelevantSurfaceCount": 74,
       "authorities": [
         {
           "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
@@ -1358,6 +1358,7 @@
         "SWIFT-B6C3B72884E1",
         "SWIFT-BAFED6656104",
         "SWIFT-C1C5DFC81448",
+        "SWIFT-C6AE96622805",
         "SWIFT-CF459111B7BB",
         "SWIFT-D73C92887393",
         "SWIFT-DCB56234B246",
@@ -1371,6 +1372,7 @@
         "TEST-3D0D949763A1",
         "TEST-61925915E20E",
         "TEST-756CB57BD6CA",
+        "TEST-96AAFA22224B",
         "TEST-99B322EB971A",
         "TEST-D1C8EFBDFDDE",
         "TEST-DB2559406D3D",

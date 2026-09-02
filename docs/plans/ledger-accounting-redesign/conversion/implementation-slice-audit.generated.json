@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T11:04:40.734Z",
+  "generatedFromManifestSync": "2026-09-02T11:15:37.095Z",
   "totals": {
-    "slices": 29,
-    "claimedTargetSurfaces": 79,
+    "slices": 30,
+    "claimedTargetSurfaces": 81,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 64
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 28,
@@ -271,6 +271,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-note-read-contracts.json"
+    },
+    {
+      "sliceId": "project-preference-read-contracts",
+      "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Preference Read Contracts",
+      "surfaceIds": [
+        "SWIFT-C6AE96622805",
+        "TEST-96AAFA22224B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 5,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-preference-read-contracts.json"
     },
     {
       "sliceId": "project-rename-operation-contracts",
