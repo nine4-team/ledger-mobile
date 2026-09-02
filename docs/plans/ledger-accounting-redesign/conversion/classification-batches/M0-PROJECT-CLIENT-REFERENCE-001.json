@@ -2226,17 +2226,17 @@
     {
       "id": "SWIFT-E084EBB4EBFF",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "625c7b4209814892595793bb57ede2c57c9f5b6bee925feaadfcd952f2cc2cf4",
-      "currentBehavior": "Defines only the comment-scaffolded target boundary for an authorized Project category configuration snapshot; no executable behavior exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "7adb9fc7946223eaa3003a0526d4522d03e1d6e89ca0229a43b3c35c4633d9f8",
+      "currentBehavior": "Defines the provider-free Project category configuration read boundary: exact Account/Project/revision scope, no relationship, enabled without allocation, enabled with explicit zero or positive Money, incomplete relationship evidence, canonical local readiness/restart, atomic validation and one narrow read port.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
       ],
-      "notes": "Target-only Phase 1 ready surface. The bounded implementation may combine the verified visible category definitions with exact Project enablement state, preserve no relationship versus enabled/null versus explicit-zero allocation, retain incomplete local truth and expose one narrow read port. It cannot calculate spend, authorize financial data, mutate categories or Project configuration, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open and no writer is introduced.",
+      "notes": "Target-only Phase 1 implementation. It combines verified visible category definitions with exact Project enablement state, preserves no relationship versus enabled/null versus explicit-zero/positive allocation, retains incomplete local truth and exposes one narrow read port. It cannot calculate spend, authorize financial data, mutate categories or Project configuration, define schema/RLS/Sync/provider behavior, wire app/MCP, migrate source data or activate production. O-026 remains open and no writer is introduced.",
       "target": {
         "owner": "Project Category Configuration Read Contracts",
         "surfaces": [
@@ -2273,17 +2273,17 @@
     {
       "id": "TEST-DB57E9433EB6",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "7717c1c54f2011989105a08e80e98d9d587df06277d35530957a5ffb987b35b8",
-      "currentBehavior": "Defines only the comment-scaffolded target tests for Project category relationship absence, enabled null/zero allocation, incomplete readiness, restart and refusal semantics; no executable test exists at the ready checkpoint.",
+      "acknowledgeSourceHash": "70178188e8f417c833e22b5f9f3127647056911cb2f8e5dbe9f33cbde79af4ce",
+      "currentBehavior": "Defines four deterministic provider-free tests for exact Project category relationship/allocation states, category evidence, ready/partial/stale/authoritative-empty restart, invalid/scope/duplicate/count/completeness refusal and exact Account/Project read-port behavior.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
       ],
-      "notes": "Ready-gate target test surface only. Planned deterministic tests prove exact Account/Project/category scope, no-row/null/zero distinctions, incomplete-local truth, canonical restart and atomic invalid/duplicate/contradictory refusal without claiming physical local durability, authorization, spend calculation, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Implemented target tests prove exact Account/Project/category scope, no-row/null/zero/positive distinctions, incomplete-local truth, canonical restart and atomic malformed/scope/duplicate/count/contradictory refusal without claiming physical local durability, authorization, spend calculation, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "target": {
         "owner": "Project Category Configuration Read Contracts",
         "surfaces": [

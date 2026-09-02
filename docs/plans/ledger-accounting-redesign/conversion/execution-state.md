@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 92
+State version: 93
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-READ-READY
+- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-READ-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1268,6 +1268,29 @@ modifying the running Firebase application before hard cutover.
   expected 2/164 blockers. All existing 108 target tests in 24 suites, macOS and
   generic iOS Simulator staging builds, and diff formatting pass while the two
   scaffolds remain comment-only.
+- Exact ready commit `0a34682693d13a0432d0fde54c9254d98641b0a4`
+  passed immutable Actions run `33608479448`: traceability passed in 7 seconds,
+  and the isolated target job passed in 2 minutes 54 seconds with all 108 then-
+  existing tests, graph/contracts, both staging builds and clean artifacts.
+- Implemented only the frozen provider-free Project category configuration read
+  boundary: exact Account/Project/configuration revision, closed no-relationship/
+  enabled-null/enabled-zero-or-positive/incomplete states, verified category
+  evidence, visible-count privacy, canonical local restart, completeness-aware
+  refusal, stable failures and one narrow read port.
+- Added four deterministic tests covering exact relationship/allocation truth,
+  ready/partial/stale/authoritative-empty restart, malformed/negative/scope/
+  duplicate/count/completeness refusal and exact Account/Project port failure
+  safety. Four focused/all 112 target tests in 25 suites pass locally, as do
+  graph/contracts, target environment, macOS and generic iOS Simulator staging
+  builds and diff formatting.
+- `PROJECTCATEGORY-TEST-001` through `-004` pass locally. Exact-implementation-
+  commit hosted `PROJECTCATEGORY-TEST-005` remains planned, so exactly the two
+  Project category configuration surfaces are `implemented`, not `verified`.
+- No budget/spend calculation, hidden row/count, category or Project
+  configuration writer, physical persistence, server/download authorization,
+  schema/RLS/Sync/Auth/provider, current/target app/MCP, source migration,
+  hosted resource or production operation was introduced. O-026 remains open
+  and unchanged.
 
 ## Next Action
 
@@ -1301,12 +1324,12 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `budget-category-reference-read-contracts` dossier and
    `EVID-BUDGET-CATEGORY-REFERENCE-001` as the sole shared read semantics for
    category identity/kind/lifecycle/system/exclusion/order/revision,
-   eligibility, visible-count privacy and local readiness. Implement only the
-   ready `project-category-configuration-read-contracts` dossier: exact visible
-   Account/Project/category configuration state, no-row/null/zero/positive
-   allocation distinctions, configuration revision, explicit incomplete
-   relationship evidence, shared local readiness/restart, atomic invalid/scope/
-   duplicate/contradictory refusal and one narrow query port. Do not add budget
+   eligibility, visible-count privacy and local readiness. Preserve the locally
+   implemented `project-category-configuration-read-contracts` boundary exactly
+   as scoped, commit it and require immutable exact-commit CI for
+   `PROJECTCATEGORY-TEST-005`. If it passes, record the run, advance only its two
+   target surfaces to `verified`, rerun the ledger controls and select the next
+   smallest complete decision-independent Phase 1 outcome. Do not add budget
    arithmetic, hidden category/allocation visibility or counts, category or
    Project configuration mutation, physical persistence, schema/RLS/Sync/Auth/
    provider behavior, current app/MCP, migration, hosted resources or production

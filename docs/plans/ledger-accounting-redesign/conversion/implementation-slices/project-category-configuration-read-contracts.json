@@ -3,7 +3,7 @@
   "sliceId": "project-category-configuration-read-contracts",
   "title": "Read exact Project category configuration without inventing budget authority",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Category Configuration Read Contracts",
   "surfaceIds": [
     "SWIFT-E084EBB4EBFF",
@@ -196,8 +196,10 @@
         "PROJECTCATEGORY-REQ-007"
       ],
       "expected": "Valid synthetic visible rows preserve exact Account/Project/category identity, no-relationship/enabled-null/enabled-zero/enabled-positive state, category definition evidence and configuration revision without budget arithmetic, authorization or provider dependencies.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
     },
     {
       "id": "PROJECTCATEGORY-TEST-002",
@@ -213,8 +215,10 @@
         "PROJECTCATEGORY-REQ-007"
       ],
       "expected": "Ready, partial, stale and authoritative-empty authorized snapshots round-trip byte-identically with stable category order, exact relationship-known/incomplete truth, query fingerprint, configuration revision, LocalDataVersion and as-of evidence.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
     },
     {
       "id": "PROJECTCATEGORY-TEST-003",
@@ -230,8 +234,10 @@
         "PROJECTCATEGORY-REQ-007"
       ],
       "expected": "Negative/malformed allocation, cross-Account category, duplicate ID/name/order, hidden-count mismatch, no-relationship from incomplete evidence, incomplete marker in complete evidence and malformed decoded values fail atomically through stable configuration codes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
     },
     {
       "id": "PROJECTCATEGORY-TEST-004",
@@ -247,8 +253,10 @@
         "PROJECTCATEGORY-REQ-007"
       ],
       "expected": "A deterministic reference port returns only the exact Account/Project snapshot, refuses mismatched Account or Project requests without yielding rows and a failing port yields no false snapshot.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-001"
+      ]
     },
     {
       "id": "PROJECTCATEGORY-TEST-005",
