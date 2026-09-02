@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 141
+State version: 142
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-IMPLEMENTED-LOCAL
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2125,8 +2125,14 @@ modifying the running Firebase application before hard cutover.
   staging builds, target isolation/generated contracts, conversion/capability/
   query/residual controls, M0, clean formatting and repeatable project/scheme
   hashes. M1/M2 retain exactly 2/164 blockers with zero structural errors. The
-  source application project is unchanged; exact implementation-commit CI
-  remains.
+  source application project is unchanged.
+- Exact implementation commit
+  `c5fdf5c73763b5a629ff0416bebba92696af6581` passed immutable Actions run
+  `33672006836`: conversion traceability passed in 9 seconds and the isolated
+  target environment passed in 2 minutes 31 seconds with all 176 target tests
+  in 41 suites, graph/generated-contract checks, both staging builds and clean
+  tracked artifacts. All five obligations pass; exactly the two Item-to-Space
+  assignment surfaces are now `verified`.
 
 ## Next Action
 
@@ -2206,13 +2212,14 @@ Continue without waiting on the two M1 evidence blockers:
    verified. Treat the verified `account-discovery-and-selection-contracts`
    dossier and `EVID-ACCOUNT-DISCOVERY-SELECTION-001` as the sole authority for
    the bounded provider-free discovery/selection-intent boundary. Its exact
-   implementation commit and both CI jobs are verified. Treat the ready
+   implementation commit and both CI jobs are verified. Treat the verified
    `item-space-assignment-operation-contracts` dossier and
    `EVID-ITEM-SPACE-ASSIGNMENT-001` as the sole authority for the bounded
-   provider-free AssignItemsToSpace boundary. The exact ready commit and both
-   immutable CI jobs passed; finish the complete local implementation gate,
-   commit/push the exact implementation, require both immutable CI jobs, and
-   then promote only the two claimed surfaces to verified. Keep
+   provider-free AssignItemsToSpace boundary. Its exact implementation commit
+   and both CI jobs are verified. Audit the next smallest complete decision-
+   independent product slice against canonical specs, reviewed capability
+   evidence, source callers and open-decision gates before creating its ready
+   dossier. Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
    authoritative parent preflight/audit assignment, note edit/remove/role

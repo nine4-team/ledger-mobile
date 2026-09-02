@@ -179,7 +179,7 @@ A-007/A-016/O-023,
 current authorization, physical workspace activation/switching, membership/
 Account writers, schema/RLS/Sync, app/MCP, migration, hosted resources and
 production remain excluded; `EVID-ACCOUNT-DISCOVERY-SELECTION-001`.
-The provider-free Item-to-Space assignment slice is implemented locally after
+The provider-free Item-to-Space assignment slice is verified after
 exact ready commit `30f4ab88` passed immutable Actions run `33670383410`.
 Exactly two target surfaces define one story-specific `AssignItemsToSpace`
 intent: exact Account/actor/Operation scope, one stable Project-or-Business-
@@ -187,8 +187,9 @@ Inventory destination Space and revision, a canonical nonempty duplicate-free
 Item/revision set, deterministic active/revision/scope preconditions, atomic
 refusal, restart/replay, stable diagnostics and one narrow port. Four focused
 and all 176 target tests in 41 suites, graph/contracts, both staging builds,
-repeatable project generation and local controls pass; exact implementation-
-commit CI remains. O-037 remains open because archive is excluded; Item scope/
+repeatable project generation and clean artifacts pass locally and at exact
+implementation commit `c5fdf5c7` in immutable run `33672006836`. O-037 remains
+open because archive is excluded; Item scope/
 accounting, physical persistence, schema/RLS/Sync, app/MCP, migration, hosted
 resources and production remain absent; `EVID-ITEM-SPACE-ASSIGNMENT-001`.
 

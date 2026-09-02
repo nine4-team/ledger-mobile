@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T19:12:44.132Z",
+  "generatedFromManifestSync": "2026-09-02T19:20:59.331Z",
   "totals": {
     "slices": 41,
     "claimedTargetSurfaces": 103,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 39,
+    "implemented": 0,
+    "verified": 40,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -156,7 +156,7 @@
       "sliceId": "item-space-assignment-operation-contracts",
       "title": "Assign an exact Item set to one same-scope Space atomically without changing accounting",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Space Item Assignment Operation Contracts",
       "surfaceIds": [
         "SWIFT-4B007A00C393",

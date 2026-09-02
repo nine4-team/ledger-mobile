@@ -3,7 +3,7 @@
   "sliceId": "item-space-assignment-operation-contracts",
   "title": "Assign an exact Item set to one same-scope Space atomically without changing accounting",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Space Item Assignment Operation Contracts",
   "surfaceIds": [
     "SWIFT-4B007A00C393",
@@ -189,12 +189,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["ITEMSPACEASSIGN-REQ-001", "ITEMSPACEASSIGN-REQ-002", "ITEMSPACEASSIGN-REQ-003", "ITEMSPACEASSIGN-REQ-004", "ITEMSPACEASSIGN-REQ-005", "ITEMSPACEASSIGN-REQ-006", "ITEMSPACEASSIGN-REQ-007", "ITEMSPACEASSIGN-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming physical placement, accounting, schema/RLS/Sync, app/MCP, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"]
     }
   ],
   "implementationEvidence": ["EVID-ITEM-SPACE-ASSIGNMENT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally as a decision-independent Phase 1 command boundary after exact ready commit 30f4ab88cd526b89b09dc22f1f26cd66884b0b33 passed immutable Actions run 33670383410. The canonical Space spec and reviewed capability/architecture contracts settle stable same-scope placement, complete nonempty bulk intent, exact optimistic revisions, atomicity, idempotency, accounting independence and shared operation semantics. Four focused and all 176 target tests in 41 suites plus complete local implementation gates pass; exact implementation-commit CI remains required. O-037 stays open because Space archive is excluded. O-007/O-015 do not block this organizational placement-only command because it cannot alter occurrence/provenance/accounting state. The slice stops before physical persistence, authoritative apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified decision-independent Phase 1 command boundary. Exact ready commit 30f4ab88cd526b89b09dc22f1f26cd66884b0b33 passed immutable Actions run 33670383410; exact implementation commit c5fdf5c73763b5a629ff0416bebba92696af6581 passed immutable Actions run 33672006836 with conversion traceability in 9 seconds and the isolated target environment in 2 minutes 31 seconds, including four focused/all 176 target tests in 41 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. The canonical Space spec and reviewed capability/architecture contracts settle stable same-scope placement, complete nonempty bulk intent, exact optimistic revisions, atomicity, idempotency, accounting independence and shared operation semantics. O-037 stays open because Space archive is excluded. O-007/O-015 do not block this organizational placement-only command because it cannot alter occurrence/provenance/accounting state. The slice stops before physical persistence, authoritative apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

@@ -1,14 +1,15 @@
 # EVID-ITEM-SPACE-ASSIGNMENT-001 — Item-to-Space Assignment Operation Contracts
 
 - Timestamp: 2026-09-02
-- Class: implementation / provider-free Item-to-Space assignment intent
+- Class: verification / provider-free Item-to-Space assignment intent
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-4B007A00C393`, `TEST-51D893DD949E`
 - Slice dossier:
   `conversion/implementation-slices/item-space-assignment-operation-contracts.json`
-- Verification state: implemented locally; exact implementation-commit CI is
-  required before verification
+- Verification state: verified at exact implementation commit
+  `c5fdf5c73763b5a629ff0416bebba92696af6581` by immutable Actions run
+  `33672006836`
 - Ready scaffold hashes:
   - `ItemSpaceAssignmentOperation.swift`:
     `beb965fd5d36a8d73fedbd390d0ff26a6e2ae8ae9af459ceb592f7537db09f5b`
@@ -169,8 +170,15 @@ the source application project is unchanged. M1/M2 retain exactly their expected
 still records 787 surfaces / 772 discovered, 361 mapped-or-later target-relevant
 surfaces, 164 residual surfaces and 43 validated blockers. Forty-one slices
 claim 103 of 525 target-relevant surfaces; 88 are implemented or later. The
-exact implementation commit and immutable CI run remain pending, so this slice
-is not yet verified.
+exact implementation commit and immutable CI run were the remaining obligation.
+
+The exact implementation commit
+`c5fdf5c73763b5a629ff0416bebba92696af6581` passed immutable GitHub Actions run
+`33672006836`: conversion traceability passed in 9 seconds and the isolated
+target environment passed in 2 minutes 31 seconds. The run repeated all 176
+target tests in 41 suites, target isolation and generated-contract checks, both
+staging builds and clean tracked-artifact verification. All five dossier
+obligations therefore pass, and exactly the two claimed surfaces are verified.
 
 ## Permanent Limits
 
