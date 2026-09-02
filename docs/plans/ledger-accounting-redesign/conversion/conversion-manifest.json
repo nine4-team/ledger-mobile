@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T06:59:52.932Z",
+    "lastSynchronizedAt": "2026-09-02T07:07:05.500Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16848,14 +16848,14 @@
           "Synthetic commands prove stable Project identity, exact expected-revision binding, canonical restart/replay and atomic mismatch/tamper/refusal without a database, provider or production resource"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-ARCHIVE-001"
       ],
-      "notes": "Target-only Phase 1 implementation passes four focused/all 104 local target tests, graph/contracts and both staging builds. Exact-commit hosted CI remains pending, so the surface is implemented rather than verified. It cannot restore, delete, rename, edit or reassign a Project; change Client/category/media/accounting evidence; create rows; authorize access; define schema/RLS/Sync/provider behavior; wire app/MCP; migrate source data; or activate production. O-024/O-025 remain open.",
+      "notes": "Target-only Phase 1 command boundary verified at exact implementation commit 7b30bd25 by immutable Actions run 33601516220. Four focused/all 104 target tests, graph/contracts, both staging builds and clean artifacts pass. It cannot restore, delete, rename, edit or reassign a Project; change Client/category/media/accounting evidence; create rows; authorize access; define schema/RLS/Sync/provider behavior; wire app/MCP; migrate source data; or activate production. O-024/O-025 remain open.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33640,14 +33640,14 @@
           "Self-tests prove the backend-neutral Project archive command boundary without claiming server, RLS, Sync Stream, app/MCP, migration, filesystem or production evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-ARCHIVE-001"
       ],
-      "notes": "Four focused/all 104 local target tests, graph/contracts and both staging builds pass. Exact-commit hosted CI remains pending, so the test surface is implemented rather than verified. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply/history retention, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
+      "notes": "Four focused/all 104 target tests, graph/contracts, both staging builds and clean artifacts pass locally and at exact implementation commit 7b30bd25 in immutable Actions run 33601516220. Tests prove typed command/restart/replay/refusal semantics only and do not prove physical local durability, authorization, server apply/history retention, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

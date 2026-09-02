@@ -30,8 +30,9 @@ behavior. The provider-free Project setup operation slice is verified at exact
 implementation commit `8d8cd30f`, including all 100 target tests and both
 staging builds, without introducing rows, authorization, media, providers or
 production behavior. The provider-free Project archive operation slice is
-implemented locally with all 104 target tests and both staging builds passing;
-exact-commit hosted verification remains pending.
+verified at exact implementation commit `7b30bd25`, including all 104 target
+tests and both staging builds, without introducing lifecycle storage,
+authorization, providers, migration or production behavior.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-02T06:59:52.932Z",
+  "generatedFromManifestSync": "2026-09-02T07:07:05.500Z",
   "totals": {
     "slices": 23,
     "claimedTargetSurfaces": 67,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 21,
+    "implemented": 0,
+    "verified": 22,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -171,7 +171,7 @@
       "sliceId": "project-archive-operation-contracts",
       "title": "Archive one Project without changing identity or deleting history",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Archive Operation Contracts",
       "surfaceIds": [
         "SWIFT-10A07B52B82D",

@@ -3,7 +3,7 @@
   "sliceId": "project-archive-operation-contracts",
   "title": "Archive one Project without changing identity or deleting history",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Archive Operation Contracts",
   "surfaceIds": [
     "SWIFT-10A07B52B82D",
@@ -275,8 +275,10 @@
         "PROJECTARCHIVE-REQ-007"
       ],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming server, authorization, provider, migration or production behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-001"
+      ]
     }
   ],
   "implementationEvidence": [

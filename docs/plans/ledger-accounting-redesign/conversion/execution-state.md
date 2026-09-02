@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
-Last updated: 2026-09-01
-State version: 87
+Last updated: 2026-09-02
+State version: 88
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ARCHIVE-OPERATION-IMPLEMENTED-AWAITING-EXACT-CI
+- Checkpoint: PROJECT-ARCHIVE-OPERATION-VERIFIED-NEXT-SLICE-SELECTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -1182,6 +1182,15 @@ modifying the running Firebase application before hard cutover.
   edit/reassignment, Client/category/media/accounting mutation, schema/RLS/
   Sync/Auth/provider, current/target app/MCP, migration, hosted resource or
   production operation was introduced; O-024/O-025 remain open.
+- Exact implementation commit
+  `7b30bd25a60f2a2a751c219b7745e0ec524f31b8` passed immutable GitHub Actions
+  run `33601516220`: conversion traceability passed in 9 seconds and the
+  isolated-target job passed in 2 minutes 16 seconds with all 104 target tests,
+  graph/generated-contract checks, macOS and generic iOS Simulator builds and
+  clean tracked artifacts. All five Project-archive obligations and exactly its
+  two target-only surfaces are now `verified`; every excluded lifecycle-row,
+  server, authorization, history-preservation, provider, migration and
+  production surface remains unadvanced.
 
 ## Next Action
 
@@ -1210,14 +1219,16 @@ Continue without waiting on the two M1 evidence blockers:
    Treat the verified `project-setup-operation-contracts` dossier and
    `EVID-PROJECT-SETUP-001` as the sole CreateProject semantic authority for
    existing/new Client selection and complete absent/null/zero category intent.
-   Treat the implemented `project-archive-operation-contracts` dossier and
+   Treat the verified `project-archive-operation-contracts` dossier and
    `EVID-PROJECT-ARCHIVE-001` as the sole ArchiveProject semantic authority.
-   Wait for exact-commit hosted verification before marking its fifth obligation
-   or two surfaces verified. Do not add Project rows/handlers, authoritative
-   history-preservation claims, membership/Project authorization, restore/
-   delete/edit/reassignment, Client/category/media/accounting mutation,
-   physical persistence, schema/RLS/Sync/Auth/provider behavior, current app/
-   MCP, migration, hosted resources or production access.
+   Audit the remaining reviewed Phase 1 dependency graph, select the smallest
+   decision-independent user/operational outcome, create exactly its target-only
+   scaffolds and complete its ready dossier before beginning the next behavior.
+   Do not add Project rows/handlers, authoritative history-preservation claims,
+   membership/Project authorization, restore/delete/edit/reassignment, Client/
+   category/media/accounting mutation, physical persistence, schema/RLS/Sync/
+   Auth/provider behavior, current app/MCP, migration, hosted resources or
+   production access without the applicable gates.
 4. Do not enter hosted/provider-specific Phase 2, identity/Auth, encrypted
    local persistence, media retention, or product-command work while its named
    A-/O-/credential/spend gates remain open.

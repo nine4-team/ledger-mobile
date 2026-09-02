@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-10A07B52B82D`, `TEST-756CB57BD6CA`
 - Slice dossier:
   `conversion/implementation-slices/project-archive-operation-contracts.json`
-- Verification state: implemented locally; exact-commit hosted verification is
-  pending
+- Verification state: verified at exact implementation commit
+  `7b30bd25a60f2a2a751c219b7745e0ec524f31b8`
 - Implementation hashes:
   - `ProjectArchiveOperation.swift`:
     `5a3421b470e4cd99639c6f2a91ac7240d2fddb3b1ac0bc9660b4ff97788202f9`
@@ -137,8 +137,26 @@ The implementation checkpoint ran from the dedicated Supabase worktree on
 - `git diff --check` — pass.
 
 `PROJECTARCHIVE-TEST-001` through `-004` therefore pass with this evidence.
-Exact-commit `PROJECTARCHIVE-TEST-005` remains planned, so exactly the two
-claimed target-only surfaces are `implemented`, not `verified`.
+
+## Immutable Exact-Commit Verification
+
+GitHub Actions run
+[`33601516220`](https://github.com/nine4-team/ledger-mobile/actions/runs/33601516220)
+verified exact implementation commit
+`7b30bd25a60f2a2a751c219b7745e0ec524f31b8` on 2026-09-02:
+
+- `Conversion state and traceability` — pass in 9 seconds;
+- `Isolated target environment` — pass in 2 minutes 16 seconds;
+- target dependency/provider/source-project isolation and generated app/MCP
+  contracts — pass;
+- all 104 target tests in 23 suites — pass;
+- macOS and generic iOS Simulator staging builds — pass; and
+- tracked-artifact cleanliness — pass.
+
+`PROJECTARCHIVE-TEST-005` therefore passes. All five obligations and exactly
+the two claimed target-only surfaces are verified. The hosted evidence adds no
+server, physical persistence, authorization, history-preservation, provider,
+migration or production claim.
 
 ## Permanent Limits
 
