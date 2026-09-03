@@ -3,7 +3,7 @@
   "sliceId": "client-archive-use-case-contracts",
   "title": "Dispatch one selected Client archive intent",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Client Archive Use Case",
   "surfaceIds": ["SWIFT-7A484C80FD98", "TEST-E10E6D44CC8A"],
   "requirements": [
@@ -161,12 +161,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally only after exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 passed immutable Actions run 33765054735. Exactly two frozen target leaves now implement the transient exact Account/Client/revision intent, existing archive-command assembly, one post-construction ClientArchiving call, receipt validation, structured cancellation, normalized failure preservation and bounded raw errors. Authority review caught a missing compile-time Equatable/Sendable proof; the corrected test closes it and two independent final reviewers return GO. Six focused and all 267 target tests in 58 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. Exact implementation-commit CI is required before verification; all exclusions remain binding."
+  "notes": "Verified at exact implementation commit a5ba0ae31d7d2547398d4b63be1f0f4bc866148f after immutable Actions run 33767120461 passed traceability in 12 seconds and the isolated target job in 3 minutes 3 seconds. Exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 previously passed run 33765054735. Exactly two frozen target leaves implement the transient exact Account/Client/revision intent, existing archive-command assembly, one post-construction ClientArchiving call, receipt validation, structured cancellation, normalized failure preservation and bounded raw errors. Authority review caught a missing compile-time Equatable/Sendable proof; the corrected test closed it and two independent final reviewers returned GO. Six focused and all 267 target tests in 58 suites passed with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting passed. All exclusions remain binding."
 }

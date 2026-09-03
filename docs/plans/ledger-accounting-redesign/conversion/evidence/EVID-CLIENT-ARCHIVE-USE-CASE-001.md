@@ -1,14 +1,15 @@
 # EVID-CLIENT-ARCHIVE-USE-CASE-001 — Client Archive Use Case
 
 - Timestamp: 2026-09-03
-- Class: implementation / local integration evidence for provider-free selected-Client archive dispatch
+- Class: verification / provider-free selected-Client archive dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Target-branch baseline: exact note-candidate rejection commit `7d759c8a6853b774a2077bd4a070b0188cb1abfd`; immutable Actions run `33763753929` passed both jobs
 - Ready baseline: exact commit `a4bc1daa73f640a42f8b0de50240801619339f95`; immutable Actions run `33765054735` passed before implementation
+- Implementation baseline: exact commit `a5ba0ae31d7d2547398d4b63be1f0f4bc866148f`; immutable Actions run `33767120461` passed
 - Claimed target surfaces: `SWIFT-7A484C80FD98`, `TEST-E10E6D44CC8A`
 - Related source evidence retained without promotion: `SWIFT-7500FDB4FDB6`, `SWIFT-58A14BD25578`, `SWIFT-CF459111B7BB`, `SWIFT-E23DAF7A18FA`, `MCPMOD-8FC7F6247E2F`
 - Slice dossier: `conversion/implementation-slices/client-archive-use-case-contracts.json`
-- Verification state: corrected implementation passes root review, two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
+- Verification state: verified at the exact implementation commit after root review, two independent final reviews, complete local integration gates and immutable CI
 
 ## Selection and Authority
 
@@ -54,7 +55,7 @@ not impersonate restore, delete, merge, rename or reassignment.
 
 ## Required Verification
 
-Eight planned obligations require exact transient intent shape, revision
+All eight obligations pass and require exact transient intent shape, revision
 boundaries, reciprocal independent variation of all intent/caller fields, every
 receipt state, construction-before-call, mismatch refusal, distinct normalized/
 raw/cancellation failures, exact command/diagnostic exclusions, actual READY
@@ -109,8 +110,11 @@ authority-focused implementation review found
 that removing either declared `Equatable` or `Sendable` conformance would not
 fail a test; the added constrained compile-time assertion closes that proof gap
 without changing runtime behavior. Corrected-diff authority and adversarial
-continuity reviews both return GO with no remaining P0-P3. Exact implementation-
-commit CI remains required before verification.
+continuity reviews both returned GO with no remaining P0-P3. Exact implementation
+commit `a5ba0ae31d7d2547398d4b63be1f0f4bc866148f` passed immutable Actions run
+`33767120461` (traceability 12 seconds; isolated target 3 minutes 3 seconds),
+including the complete target suite and both staging builds. The immutable CI
+verified the synchronized conversion records and left tracked artifacts clean.
 
 ## Permanent Exclusions
 

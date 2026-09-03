@@ -3676,23 +3676,23 @@
       "acknowledgeSourceHash": "92661d6dd90db46c6f0da58ec7fee818b9cfcab481e7c32a57233e4a99514415",
       "currentBehavior": "Implements a provider-free transient selected-Client archive intent and application dispatch through the verified Client archive operation.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-ARCHIVE-001", "EVID-CLIENT-ARCHIVE-USE-CASE-001"],
-      "notes": "Implemented locally only after exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 passed immutable Actions run 33765054735. The transient exact Account/Client/revision intent feeds existing archive-command assembly, one post-construction port call, receipt validation, structured cancellation, normalized failure preservation and bounded raw-error mapping. Two independent final reviewers return GO after one test-proof correction; complete local gates pass. No Client read/lifecycle/UI, physical persistence, authorization, provider or production behavior. Exact implementation-commit CI remains pending.",
+      "notes": "Verified at exact implementation commit a5ba0ae31d7d2547398d4b63be1f0f4bc866148f in immutable Actions run 33767120461 after exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 passed run 33765054735. The transient exact Account/Client/revision intent feeds existing archive-command assembly, one post-construction port call, receipt validation, structured cancellation, normalized failure preservation and bounded raw-error mapping. Two independent final reviewers returned GO after one test-proof correction; complete local and immutable CI gates pass. No Client read/lifecycle/UI, physical persistence, authorization, provider or production behavior.",
       "target": {
         "owner": "Client Archive Use Case",
         "surfaces": ["ClientArchiveIntent", "ClientArchiveUseCase", "single ClientArchiving.archive invocation and receipt validation"],
         "securityRequirements": ["Typed intent binds exact AccountID, ClientID and expected revision without treating name, selected row, route or provider path as identity or authorization", "Caller actor and capture time remain separate exact application inputs, and raw provider errors cannot cross the application boundary"],
-        "syncRequirements": ["Future provider-free assembly invokes the existing Client archive port once only after construction and validates its receipt", "No physical persistence/restart, optimistic lifecycle projection, authoritative archive or synchronized visibility is claimed"]
+        "syncRequirements": ["Provider-free assembly invokes the existing Client archive port once only after construction and validates its receipt", "No physical persistence/restart, optimistic lifecycle projection, authoritative archive or synchronized visibility is claimed"]
       },
       "migration": {
         "rule": "Define target-only transient intent and application orchestration; decode no Firebase Project/clientName model, view, MCP payload, export row or migration disposition.",
-        "reconciliation": ["Synthetic Account/Client/revision and operation metadata will reach one verified archive command without source transformation"]
+        "reconciliation": ["Synthetic Account/Client/revision and operation metadata reach one verified archive command without source transformation"]
       },
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ClientArchiveUseCaseTests"],
-        "acceptance": ["Planned tests prove only selected-Client archive-command dispatch through one validated receipt and permanent exclusions"]
+        "acceptance": ["Tests prove only selected-Client archive-command dispatch through one validated receipt and permanent exclusions"]
       }
     },
     {
@@ -3701,10 +3701,10 @@
       "acknowledgeSourceHash": "477782ae8c3d65a19381099ecce4630b910b17a684bf1bb9f5fd002ab6a03d25",
       "currentBehavior": "Implements executable obligations for exact Client archive intent, reciprocal command forwarding, one call, receipt/failure/cancellation handling, diagnostics and exclusions.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-ARCHIVE-001", "EVID-CLIENT-ARCHIVE-USE-CASE-001"],
-      "notes": "Six focused synthetic tests cover exact transient intent shape with compile-time Equatable/Sendable and runtime non-Codable checks, revision zero/UInt64.max, reciprocal caller and derived-command fields, every receipt state, construction-before-call, Infinity/NaN and receipt mismatch, normalized/raw/cancellation failures, all stable diagnostics, exact nested encoded-command keys and complete exclusions. Authority review caught the missing conformance proof, the corrected test closes it, and both independent final reviewers return GO. Root focused/all tests and complete integration gates pass; exact implementation-commit CI remains pending.",
+      "notes": "Verified at exact implementation commit a5ba0ae31d7d2547398d4b63be1f0f4bc866148f in immutable Actions run 33767120461. Six focused synthetic tests cover exact transient intent shape with compile-time Equatable/Sendable and runtime non-Codable checks, revision zero/UInt64.max, reciprocal caller and derived-command fields, every receipt state, construction-before-call, Infinity/NaN and receipt mismatch, normalized/raw/cancellation failures, all stable diagnostics, exact nested encoded-command keys and complete exclusions. Authority review caught the missing conformance proof, the corrected test closed it, and both independent final reviewers returned GO. Root focused/all tests and complete local plus immutable CI gates pass.",
       "target": {
         "owner": "Client Archive Use Case Tests",
         "surfaces": ["exact transient intent and revision-boundary fixtures", "reciprocal command and single-call port fixtures", "receipt-state, construction, normalized/raw failure, cancellation, diagnostics and exclusion fixtures"],
@@ -3713,11 +3713,11 @@
       },
       "migration": {
         "rule": "Use target-only synthetic values and load no Firebase Project/clientName/view/MCP/export data or source-to-target mapping.",
-        "reconciliation": ["Planned tests preserve canonical target dispatch while every related source surface remains unadvanced"]
+        "reconciliation": ["Tests preserve canonical target dispatch while every related source surface remains unadvanced"]
       },
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ClientArchiveUseCaseTests"],
-        "acceptance": ["Planned tests prove only the frozen provider-free Client archive use case and exclusions"]
+        "acceptance": ["Tests prove only the frozen provider-free Client archive use case and exclusions"]
       }
     }
   ]

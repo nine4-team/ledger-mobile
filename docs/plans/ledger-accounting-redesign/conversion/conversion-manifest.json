@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T14:27:27.612Z",
+    "lastSynchronizedAt": "2026-09-03T14:37:07.391Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -23634,14 +23634,14 @@
           "Caller actor and capture time remain separate exact application inputs, and raw provider errors cannot cross the application boundary"
         ],
         "syncRequirements": [
-          "Future provider-free assembly invokes the existing Client archive port once only after construction and validates its receipt",
+          "Provider-free assembly invokes the existing Client archive port once only after construction and validates its receipt",
           "No physical persistence/restart, optimistic lifecycle projection, authoritative archive or synchronized visibility is claimed"
         ]
       },
       "migration": {
         "rule": "Define target-only transient intent and application orchestration; decode no Firebase Project/clientName model, view, MCP payload, export row or migration disposition.",
         "reconciliation": [
-          "Synthetic Account/Client/revision and operation metadata will reach one verified archive command without source transformation"
+          "Synthetic Account/Client/revision and operation metadata reach one verified archive command without source transformation"
         ]
       },
       "verification": {
@@ -23649,10 +23649,10 @@
           "swift test --package-path LedgeriOS --filter ClientArchiveUseCaseTests"
         ],
         "acceptance": [
-          "Planned tests prove only selected-Client archive-command dispatch through one validated receipt and permanent exclusions"
+          "Tests prove only selected-Client archive-command dispatch through one validated receipt and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -23660,7 +23660,7 @@
         "EVID-CLIENT-ARCHIVE-001",
         "EVID-CLIENT-ARCHIVE-USE-CASE-001"
       ],
-      "notes": "Implemented locally only after exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 passed immutable Actions run 33765054735. The transient exact Account/Client/revision intent feeds existing archive-command assembly, one post-construction port call, receipt validation, structured cancellation, normalized failure preservation and bounded raw-error mapping. Two independent final reviewers return GO after one test-proof correction; complete local gates pass. No Client read/lifecycle/UI, physical persistence, authorization, provider or production behavior. Exact implementation-commit CI remains pending.",
+      "notes": "Verified at exact implementation commit a5ba0ae31d7d2547398d4b63be1f0f4bc866148f in immutable Actions run 33767120461 after exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 passed run 33765054735. The transient exact Account/Client/revision intent feeds existing archive-command assembly, one post-construction port call, receipt validation, structured cancellation, normalized failure preservation and bounded raw-error mapping. Two independent final reviewers returned GO after one test-proof correction; complete local and immutable CI gates pass. No Client read/lifecycle/UI, physical persistence, authorization, provider or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -39305,7 +39305,7 @@
       "migration": {
         "rule": "Use target-only synthetic values and load no Firebase Project/clientName/view/MCP/export data or source-to-target mapping.",
         "reconciliation": [
-          "Planned tests preserve canonical target dispatch while every related source surface remains unadvanced"
+          "Tests preserve canonical target dispatch while every related source surface remains unadvanced"
         ]
       },
       "verification": {
@@ -39313,10 +39313,10 @@
           "swift test --package-path LedgeriOS --filter ClientArchiveUseCaseTests"
         ],
         "acceptance": [
-          "Planned tests prove only the frozen provider-free Client archive use case and exclusions"
+          "Tests prove only the frozen provider-free Client archive use case and exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -39324,7 +39324,7 @@
         "EVID-CLIENT-ARCHIVE-001",
         "EVID-CLIENT-ARCHIVE-USE-CASE-001"
       ],
-      "notes": "Six focused synthetic tests cover exact transient intent shape with compile-time Equatable/Sendable and runtime non-Codable checks, revision zero/UInt64.max, reciprocal caller and derived-command fields, every receipt state, construction-before-call, Infinity/NaN and receipt mismatch, normalized/raw/cancellation failures, all stable diagnostics, exact nested encoded-command keys and complete exclusions. Authority review caught the missing conformance proof, the corrected test closes it, and both independent final reviewers return GO. Root focused/all tests and complete integration gates pass; exact implementation-commit CI remains pending.",
+      "notes": "Verified at exact implementation commit a5ba0ae31d7d2547398d4b63be1f0f4bc866148f in immutable Actions run 33767120461. Six focused synthetic tests cover exact transient intent shape with compile-time Equatable/Sendable and runtime non-Codable checks, revision zero/UInt64.max, reciprocal caller and derived-command fields, every receipt state, construction-before-call, Infinity/NaN and receipt mismatch, normalized/raw/cancellation failures, all stable diagnostics, exact nested encoded-command keys and complete exclusions. Authority review caught the missing conformance proof, the corrected test closed it, and both independent final reviewers returned GO. Root focused/all tests and complete local plus immutable CI gates pass.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

@@ -573,11 +573,13 @@ the already verified
 Client archive operation without advancing reads, lifecycle eligibility, UI,
 physical persistence, authorization, provider, migration or production behavior.
 One bounded writer changed only those leaves. Authority review caught and
-corrected a missing compile-time conformance proof; both final reviewers return
+corrected a missing compile-time conformance proof; both final reviewers returned
 GO. Root line review, six focused/all 267 target tests, complete controls,
-repeatable generation and both staging builds pass. Exact implementation-SHA CI
-is pending. No Firebase, provider, hosted, migration or production behavior
-changed.
+repeatable generation and both staging builds passed. Exact implementation commit
+`a5ba0ae31d7d2547398d4b63be1f0f4bc866148f` passed immutable Actions run
+`33767120461` (traceability 12 seconds; isolated target 3 minutes 3 seconds), so
+the two leaves and dossier are verified. No Firebase, provider, hosted, migration
+or production behavior changed.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

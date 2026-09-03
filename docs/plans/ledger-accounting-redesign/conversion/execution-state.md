@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 217
+State version: 218
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-ARCHIVE-USE-CASE-IMPLEMENTATION-LOCAL
+- Checkpoint: CLIENT-ARCHIVE-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3117,8 +3117,13 @@ modifying the running Firebase application before hard cutover.
   found that removing either declared `Equatable` or `Sendable` conformance
   would not fail a test; the added constrained compile-time assertion closes
   that proof gap without changing runtime behavior. Corrected-diff authority
-  and adversarial continuity reviews both return GO with no remaining P0-P3.
-  Exact implementation-SHA CI remains pending.
+  and adversarial continuity reviews both returned GO with no remaining P0-P3.
+  Exact implementation commit
+  `a5ba0ae31d7d2547398d4b63be1f0f4bc866148f` passed immutable Actions run
+  `33767120461` (traceability 12 seconds; isolated target 3 minutes 3 seconds),
+  including all target tests, both staging builds and clean tracked artifacts.
+  The dossier and both target surfaces are verified; every exclusion remains
+  binding.
 
 ## Next Action
 
@@ -3375,15 +3380,14 @@ Continue without waiting on the two M1 evidence blockers:
    Do not recreate the rejected Project-note use-case scaffolds or mark that
    product slice ready until O-039 is approved and canonical target note
    requirements record the chosen app/MCP normalization/minimum behavior.
-   Review and gate the provider-free Client archive use-case implementation.
+   Treat verified `client-archive-use-case-contracts` and
+   `EVID-CLIENT-ARCHIVE-USE-CASE-001` as the frozen selected-Client archive
+   application boundary. Exact READY commit `a4bc1daa` / run `33765054735` and
+   exact implementation commit `a5ba0ae3` / immutable run `33767120461` pass.
    Preserve exactly `ClientArchiveUseCase.swift` (`SWIFT-7A484C80FD98`) and
-   `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) as the only executable
-   changes. The exact READY-SHA gate, root line review and focused/all tests
-   pass. Both independent implementation reviewers return GO after one test-
-   proof correction, and the complete integration gate passes. Commit/push the
-   exact package and require immutable exact implementation-SHA CI before
-   verification. The frozen
-   boundary remains exact AccountID/ClientID/ExpectedClientRevision intent, existing
+   `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) as the verified
+   executable leaves. The frozen boundary remains exact
+   AccountID/ClientID/ExpectedClientRevision intent, existing
    `ClientArchiveDraft`/`ArchiveClientCommand` assembly, one
    `ClientArchiving.archive` call after construction, receipt validation,
    structured cancellation, normalized failure preservation and bounded raw
@@ -3391,6 +3395,10 @@ Continue without waiting on the two M1 evidence blockers:
    readiness or permissions; do not add UI, optimistic projection, persistence,
    authorization, restore/delete/merge/rename/reassignment/cascade, provider,
    schema/RLS/Sync, app/MCP, migration, hosted or production behavior.
+   Run a fresh strict-authority preflight over the residual manifest and product
+   authority, select the next coherent decision-independent vertical slice, and
+   freeze its exact surfaces, requirements, tests and exclusions in a reviewed
+   READY checkpoint before executable implementation.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,
