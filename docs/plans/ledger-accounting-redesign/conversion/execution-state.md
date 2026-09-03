@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 230
+State version: 231
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-RENAME-USE-CASE-IMPLEMENTATION-LOCAL-GREEN
+- Checkpoint: PROJECT-RENAME-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -41,8 +41,8 @@ modifying the running Firebase application before hard cutover.
   use case constructs before one call, validates afterward, preserves all 12
   typed failures plus cancellation and bounds unknown errors. Eight focused
   tests plus review satisfy `PRENAMEUSE-TEST-001` through
-  `PRENAMEUSE-TEST-009`; immutable exact-implementation-SHA CI remains for
-  `PRENAMEUSE-TEST-010`. All named source UI/service/model/validation/MCP surfaces,
+  `PRENAMEUSE-TEST-009`; exact implementation commit `9c8e27cf` / immutable
+  Actions run `33816585123` satisfies `PRENAMEUSE-TEST-010`. All named source UI/service/model/validation/MCP surfaces,
   including ProjectDetailView and ProjectDetailContainer, retain their prior
   statuses and every persistence/authorization/provider/
   schema/RLS/Sync/migration/hosted/production exclusion remains binding. The
@@ -52,8 +52,8 @@ modifying the running Firebase application before hard cutover.
   and both staging builds. Initial READY reviews corrected mirrored-proof risk,
   product/technical authority attribution, ProjectDetailView status coverage
   and rejection-recovery wording. Both independent implementation reviewers
-  return GO with no remaining P0-P3 finding. Immutable exact-implementation-SHA
-  CI remains required before verification promotion.
+  returned GO with no remaining P0-P3 finding. The dossier and both target
+  leaves are verified.
 
 - Rejected the chosen-Project note-creation application-use-case candidate
   before READY, commit or executable implementation. The first independent
@@ -3581,12 +3581,13 @@ Continue without waiting on the two M1 evidence blockers:
    MCP tool at their prior statuses; do not add read/readiness/lifecycle/no-op/
    UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync,
    app/MCP, migration, hosted or production behavior.
-   Treat `project-rename-use-case-contracts` and
-   `EVID-PROJECT-RENAME-USE-CASE-001` as the current locally green implementation
-   candidate. Preserve exact leaves `ProjectRenameUseCase.swift`
+   Treat verified `project-rename-use-case-contracts` and
+   `EVID-PROJECT-RENAME-USE-CASE-001` as the frozen application boundary.
+   Preserve exact leaves `ProjectRenameUseCase.swift`
    (`SWIFT-5A812E7B8C95`) and `ProjectRenameUseCaseTests.swift`
-   (`TEST-E1BAA8DF70B4`) and promote neither until exact implementation-SHA CI
-   passes. Both independent implementation reviewers return GO. The boundary consumes an
+   (`TEST-E1BAA8DF70B4`). Exact implementation commit `9c8e27cf` / immutable
+   run `33816585123` passed, and both independent implementation reviewers
+   returned GO. The boundary consumes an
    already-validated `ProjectDisplayName`; do not introduce raw String
    normalization, UI/no-op/read/readiness/lifecycle policy, broader mutation,
    persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration,

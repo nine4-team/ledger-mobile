@@ -1,7 +1,7 @@
 # EVID-PROJECT-RENAME-USE-CASE-001 — Project Rename Use Case
 
 - Timestamp: 2026-09-03
-- Class: implementation candidate / provider-free typed Project-rename application dispatch
+- Class: verified implementation / provider-free typed Project-rename application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Prior verified conversion baseline: exact commit `83581721f2337a81be07f98a19cd007d80e99e90`; Project-details implementation `55baae9d47a40b14bd05418ca2bbf9cc2c11d480` passed immutable Actions run `33799751617`
 - Ready baseline: exact commit `dc7c9779efb4d176e507e0c683f2dffc4814110b`; immutable Actions run `33808493496` passed both jobs
@@ -9,7 +9,7 @@
 - Preserved verified dependencies: `SWIFT-797909434B82`, `TEST-3CE7B387E9B7` at exact implementation `7f395bbe` / run `33615145061`; `SWIFT-401EBD892749` at exact implementation `3c0b58b6` / run `33584456794`
 - Preserved source surfaces: `SWIFT-CF459111B7BB` and `MCPTOOL-A9FCDED31D3F` remain `characterized` on O-025; `SWIFT-D73C92887393` remains `characterized` on O-024; `SWIFT-E1A771F6A409` and `SWIFT-27CA6EAC7092` remain `characterized` on O-024/O-025; `SWIFT-7500FDB4FDB6`, `SWIFT-038E6D4248AF`, `TEST-E591BE8A4B58` and `SWIFT-A9748507A27A` remain `target_mapped`
 - Slice dossier: `conversion/implementation-slices/project-rename-use-case-contracts.json`
-- Verification state: local implementation gate and two independent implementation reviews pass; exact implementation commit and CI remain pending
+- Verification state: verified at exact implementation commit `9c8e27cfb26252f6d068841a822be578412c82e6` and immutable Actions run `33816585123`
 
 ## Selection and Authority
 
@@ -134,8 +134,10 @@ as errors. Target isolation and generated contracts, repeatable project
 generation at `0657194a` / `388303af`, macOS and generic iOS Simulator staging
 builds, and clean diff formatting pass. The implementation diff changes exactly
 the two authorized leaves. Both independent implementation reviewers return GO
-with no remaining P0-P3 finding. Immutable exact-implementation-SHA CI remains
-the sole verification-promotion prerequisite.
+with no remaining P0-P3 finding. Exact implementation commit
+`9c8e27cfb26252f6d068841a822be578412c82e6` passed immutable Actions run
+`33816585123`: traceability and the isolated target job, including all tests,
+both staging builds and clean generated artifacts, succeeded.
 
 ## Permanent Exclusions
 

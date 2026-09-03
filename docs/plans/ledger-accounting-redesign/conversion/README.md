@@ -647,8 +647,8 @@ dirty/no-op/UI, broader mutation, persistence, authorization, provider/schema/
 RLS/Sync, app/MCP, migration, hosted and production behavior remain outside;
 `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001`.
 
-The typed Project rename application boundary is locally implemented.
-`project-rename-use-case-contracts` is `in_progress` with two executable leaves,
+The typed Project rename application boundary is verified.
+`project-rename-use-case-contracts` is `verified` with two executable leaves,
 `SWIFT-5A812E7B8C95` and `TEST-E1BAA8DF70B4`, above the verified Project rename
 operation and Client/Project display-value contracts. The frozen public intent
 contains only Account, Project, expected revision and an already-validated
@@ -656,11 +656,11 @@ contains only Account, Project, expected revision and an already-validated
 The use case constructs the verified draft/command before one rename-port
 call, validates afterward, preserves all 12 typed failures and cancellation,
 and bounds only unknown errors. Exact READY commit `dc7c9779` / immutable run
-`33808493496` passed. Eight focused/all 294 tests in 62 suites, repeatable
-generation, target controls and both staging builds pass locally; both
-independent implementation reviewers return GO. `PRENAMEUSE-TEST-001` through
-`PRENAMEUSE-TEST-009` pass, while immutable exact-implementation-SHA CI remains
-before verification promotion. EditProjectModal, ProjectService/Protocol, Project model,
+`33808493496` and exact implementation `9c8e27cf` / immutable run
+`33816585123` passed. Eight focused/all 294 tests in 62 suites, repeatable
+generation, target controls and both staging builds pass locally and in CI;
+both independent implementation reviewers returned GO. All ten obligations
+pass. EditProjectModal, ProjectService/Protocol, Project model,
 ProjectFormValidation/tests, ProjectDetailView, ProjectDetailContainer and
 `update_project` retain their prior statuses.
 Initial READY review corrected mirrored reciprocal-proof risk, product/technical

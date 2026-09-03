@@ -3,7 +3,7 @@
   "sliceId": "project-rename-use-case-contracts",
   "title": "Dispatch one typed Project display-name replacement",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Project Rename Use Case",
   "surfaceIds": ["SWIFT-5A812E7B8C95", "TEST-E1BAA8DF70B4"],
   "requirements": [
@@ -197,12 +197,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-006", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-RENAME-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implementation candidate follows exact READY commit dc7c9779efb4d176e507e0c683f2dffc4814110b / immutable run 33808493496 above verified ProjectRenameOperation.swift/tests at exact implementation 7f395bbe / run 33615145061 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Exactly two executable leaves implement the public typed Project-rename intent and application path: construction before one port call, validation after it, all 12 typed failures plus cancellation preserved, and unknown port errors bounded. Eight focused tests plus review evidence satisfy PRENAMEUSE-TEST-001 through PRENAMEUSE-TEST-009; PRENAMEUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI. Both independent final reviewers return GO. All 294 target tests in 62 suites, complete target controls, repeatable generation and both staging builds pass locally. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded."
+  "notes": "Verified at exact implementation commit 9c8e27cfb26252f6d068841a822be578412c82e6 / immutable run 33816585123 after exact READY commit dc7c9779efb4d176e507e0c683f2dffc4814110b / run 33808493496, above verified ProjectRenameOperation.swift/tests at exact implementation 7f395bbe / run 33615145061 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Exactly two executable leaves implement the public typed Project-rename intent and application path: construction before one port call, validation after it, all 12 typed failures plus cancellation preserved, and unknown port errors bounded. Eight focused tests plus review evidence satisfy PRENAMEUSE-TEST-001 through PRENAMEUSE-TEST-009; immutable exact-implementation-SHA CI satisfies PRENAMEUSE-TEST-010. Both independent final reviewers returned GO. All 294 target tests in 62 suites, complete target controls, repeatable generation and both staging builds pass locally and in CI. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded."
 }

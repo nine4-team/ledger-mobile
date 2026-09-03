@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T23:04:58.847Z",
+    "lastSynchronizedAt": "2026-09-03T23:37:05.957Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -21979,7 +21979,7 @@
           "Implementation tests must prove only the frozen provider-free typed Project rename application path and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -21987,7 +21987,7 @@
         "EVID-PROJECT-RENAME-001",
         "EVID-PROJECT-RENAME-USE-CASE-001"
       ],
-      "notes": "Implementation candidate after exact READY commit dc7c9779 / immutable run 33808493496. The public non-Codable intent contains exact Account/Project/revision/ProjectDisplayName; the use case constructs the verified draft/command, calls ProjectRenaming.rename once, validates the receipt, preserves all 12 typed failures/cancellation and bounds unknown port errors. Local tests/reviews pass; exact implementation commit and CI remain pending. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified at exact implementation commit 9c8e27cfb26252f6d068841a822be578412c82e6 in immutable Actions run 33816585123 after exact READY commit dc7c9779efb4d176e507e0c683f2dffc4814110b passed run 33808493496. The public non-Codable intent contains exact Account/Project/revision/ProjectDisplayName; the use case constructs the verified draft/command, calls ProjectRenaming.rename once, validates the receipt, preserves all 12 typed failures/cancellation and bounds unknown port errors. Local and CI tests plus independent reviews pass. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -39760,7 +39760,7 @@
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executes eight provider-free public-consumer tests covering the frozen behavioral obligations for typed intent shape/access, exact display-name bytes, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy PRENAMEUSE-TEST-001 through PRENAMEUSE-TEST-009, while PRENAMEUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI.",
+      "currentBehavior": "Executes eight provider-free public-consumer tests covering the frozen behavioral obligations for typed intent shape/access, exact display-name bytes, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy PRENAMEUSE-TEST-001 through PRENAMEUSE-TEST-009, and immutable exact-implementation-SHA CI satisfies PRENAMEUSE-TEST-010.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Rename Use Case Tests",
@@ -39792,7 +39792,7 @@
           "Implementation tests must prove only the frozen provider-free Project rename use case and exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -39800,7 +39800,7 @@
         "EVID-PROJECT-RENAME-001",
         "EVID-PROJECT-RENAME-USE-CASE-001"
       ],
-      "notes": "Implementation candidate after exact READY commit dc7c9779 / immutable run 33808493496. Eight tests cover ordinary public construction, exact typed-name bytes including accepted whitespace and more than 8 KiB Unicode, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership against literal baseline/delta expectations with recording/canned fakes only, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy PRENAMEUSE-TEST-001 through PRENAMEUSE-TEST-009; PRENAMEUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI. Both independent reviewers return GO; all 294 target tests and complete local gates pass. No source/app/provider status advances.",
+      "notes": "Verified at exact implementation commit 9c8e27cfb26252f6d068841a822be578412c82e6 in immutable Actions run 33816585123 after exact READY commit dc7c9779 / run 33808493496. Eight tests cover ordinary public construction, exact typed-name bytes including accepted whitespace and more than 8 KiB Unicode, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership against literal baseline/delta expectations with recording/canned fakes only, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy PRENAMEUSE-TEST-001 through PRENAMEUSE-TEST-009; immutable exact-implementation-SHA CI satisfies PRENAMEUSE-TEST-010. Both independent reviewers returned GO; all 294 target tests and complete local and CI gates pass. No source/app/provider status advances.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
