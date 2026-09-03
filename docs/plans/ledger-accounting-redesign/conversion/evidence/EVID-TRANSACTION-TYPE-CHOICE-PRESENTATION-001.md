@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-F90B7B48C1F6`, `TEST-F66BBF1FC092`
 - Slice dossier:
   `conversion/implementation-slices/transaction-type-choice-presentation-contracts.json`
-- Verification state: ready and assigned pending assignment-control CI;
-  executable implementation and tests remain absent
+- Verification state: ready and actively delegated from an exact green base;
+  executable implementation and tests remain absent on the integration branch
 - Ready scaffold hashes:
   - `TransactionTypeChoicePresentation.swift`:
     `ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629`
@@ -133,8 +133,9 @@ staging builds and clean tracked artifacts. Isolated branch/worktree
 `codex/supabase-slice-transaction-type-choice` /
 `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_transaction_type_choice`
 exists at that exact base. `SUBAGENT-WORK-007` owns only the two named target
-paths; its assignment-control commit must pass immutable CI before the worker
-may write.
+paths. Assignment-control commit
+`49289922cbfcc345c223d7589064df3519268349` passed immutable CI run
+`33707949029`; the worker may now write only those two paths.
 
 ## Permanent Limits
 

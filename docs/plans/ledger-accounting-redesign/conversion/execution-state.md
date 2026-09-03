@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 178
+State version: 179
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TXTYPE-WORKER-ASSIGNMENT-PENDING-CI
+- Checkpoint: TXTYPE-WORKER-ACTIVE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2647,6 +2647,16 @@ modifying the running Firebase application before hard cutover.
   primary every-line review, independent adversarial review, complete local
   integration gates and exact integration-SHA CI remain mandatory. No provider,
   Firebase or production action occurred.
+- Assignment-control commit `49289922cbfcc345c223d7589064df3519268349`
+  passed immutable Actions run `33707949029`: conversion traceability passed in
+  7 seconds and isolated target verification passed in 2 minutes 51 seconds,
+  including all 218 existing tests, generated contracts, both staging builds
+  and clean tracked artifacts. Released active `SUBAGENT-WORK-007` from exact
+  green base `8cf4bec6`; it may change only the two registered Transaction type-
+  choice paths and cannot promote status. Primary every-line review,
+  independent adversarial review, complete central gates and immutable exact-
+  integration-SHA CI remain mandatory. No provider, Firebase or production
+  action occurred.
 
 ## Next Action
 
@@ -2802,7 +2812,7 @@ Continue without waiting on the two M1 evidence blockers:
    run `33707305340`; preserve this boundary as verified.
    General Space lists
    remain rejected until filtering, ordering, search, count and archive
-   semantics have product authority. Treat assigned-pending-CI
+   semantics have product authority. Treat active isolated
    `transaction-type-choice-presentation-contracts` and
    `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001` as the next disjoint frozen
    boundary. Preserve literal unordered Project purchase/return/transfer and
@@ -2811,9 +2821,9 @@ Continue without waiting on the two M1 evidence blockers:
    Do not recreate classification, invent menu/filter order, classify legacy
    records or acquire amount/status/action, app/MCP, provider/schema/RLS/Sync,
    migration or production behavior. Independent review of the actual ready
-   diff is already complete. `SUBAGENT-WORK-007` is registered from exact green
-   base `8cf4bec6` and may edit only the two registered paths after its
-   assignment-control commit passes immutable CI. Then require primary every-
+   diff is already complete. `SUBAGENT-WORK-007` is active from exact green
+   base `8cf4bec6`; assignment-control commit `49289922` passed immutable run
+   `33707949029`, and the worker may edit only the two registered paths. Require primary every-
    line and independent adversarial review, the complete local integration gate
    and immutable exact-integration-SHA CI before promotion.
    Keep
