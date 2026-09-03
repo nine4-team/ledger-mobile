@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 387 of 561 target-relevant
+Status: M0 inventory classification complete; 393 of 567 target-relevant
 surfaces are target-mapped or later and the remaining 174 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -622,6 +622,26 @@ verified.
 O-023/O-024/O-025/O-026, source UI/defaults/category mutation/media, physical
 persistence, authorization, provider, migration and production remain outside;
 `EVID-PROJECT-SETUP-USE-CASE-001`.
+
+The next bounded READY candidate is the description-only Project details
+form-to-application boundary. Root and two read-only preflights rejected the
+legacy broad Edit Project surface as authority and selected only the canonical
+`UpdateProjectDetails` set/clear behavior above the verified operation. Exactly
+two comment-only leaves (`SWIFT-B95AD78B8CEC`, `TEST-315066B94566`) freeze a
+transient four-field input, existing description normalization, construction
+before one port call, receipt validation, all 13 typed failures, cancellation
+and bounded unknown errors. The dossier is `ready` and all ten tests are
+`planned`. The complete local READY gate passes 279 tests in 60 suites,
+conversion/target controls, repeatable generation and both staging builds.
+Independent reviews caught and corrected a missing public initializer,
+`@testable` access masking, lifecycle-status overstatement and stale gate
+wording; both corrected-diff reviewers return GO. Executable
+implementation remains unauthorized until immutable exact-SHA CI passes.
+EditProjectModal, ProjectService/Protocol, Project model and
+`update_project` MCP tool retain their prior statuses. Read/readiness/lifecycle,
+dirty/no-op/UI, broader mutation, persistence, authorization, provider/schema/
+RLS/Sync, app/MCP, migration, hosted and production behavior remain outside;
+`EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

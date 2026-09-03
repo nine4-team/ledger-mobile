@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T19:04:50.790Z",
+    "lastSynchronizedAt": "2026-09-03T19:32:39.067Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -28554,6 +28554,65 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-B95AD78B8CEC",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateUseCase.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateUseCase.swift"
+        }
+      ],
+      "observedSourceHash": "7bd32006b76076256f58be5d73cafd7d2c2e223d63d1b8c4ed1c8db7f39b4745",
+      "acknowledgedSourceHash": "7bd32006b76076256f58be5d73cafd7d2c2e223d63d1b8c4ed1c8db7f39b4745",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold freezes a provider-free description-only Project details form-to-application boundary above the verified update operation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Details Update Use Case",
+        "surfaces": [
+          "ProjectDetailsUpdateFormInput",
+          "ProjectDetailsUpdateUseCase",
+          "single ProjectDetailsUpdating.updateDetails invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Typed transient input binds exact AccountID, ProjectID and expected revision without treating description, display text, route or provider path as identity or authorization",
+          "Caller Operation, actor, contract and capture time remain exact; raw service errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Provider-free orchestration constructs the existing verified Project description command before exactly one port call and validates the returned receipt",
+          "No local persistence/restart, optimistic Project row, authoritative update or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only transient input and application orchestration; decode no Firebase Project document, generic update dictionary, EditProject callback, MCP request, export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic Account/Project/revision/raw description and operation metadata reach one verified description-only command without source transformation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectDetailsUpdateUseCaseTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen provider-free Project description normalization-to-validated-receipt application path and permanent exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-DETAILS-UPDATE-001",
+        "EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "READY scaffold only. After the exact READY commit passes immutable CI, implementation may add a transient exact Account/Project/revision/raw-description input and one use case that reuses the verified canonical replacement/draft/command, calls ProjectDetailsUpdating.updateDetails once after construction, validates the receipt, preserves typed failures/cancellation and bounds unknown port errors. It cannot add Project reads/readiness/lifecycle/no-op/UI, rename, Client/category/allocation/budget/media/child/history/accounting mutation, persistence, authorization, provider, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-BAFED6656104",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/ProjectBudgetCategoriesService.swift",
@@ -35202,6 +35261,65 @@
         "EVID-PROJECT-ARCHIVE-USE-CASE-001"
       ],
       "notes": "Verified at exact implementation commit 232acf922b6c1ab1016017c3ebc3b926b164466c in immutable Actions run 33758116150. Six focused synthetic tests cover exact transient intent shape, revision zero/UInt64.max, reciprocal caller and derived command fields, every receipt state, construction-before-call, receipt mismatch, normalized/raw failure distinction, structured cancellation, all stable diagnostics, exact nested encoded-command keys and complete exclusions. Tests prove application choreography only, never UI, eligibility, physical history/persistence, authorization, provider/schema/RLS/Sync, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-315066B94566",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift"
+        }
+      ],
+      "observedSourceHash": "590fd99a4f0c745be3cc614fab6c732bc093db807a55d024c4072eab32eb547b",
+      "acknowledgedSourceHash": "590fd99a4f0c745be3cc614fab6c732bc093db807a55d024c4072eab32eb547b",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY scaffold freezes reciprocal Project details use-case proof across input shape, normalization, command ownership, receipt/error boundaries and exclusions.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Details Update Use Case Tests",
+        "surfaces": [
+          "exact transient form-input fixtures",
+          "description normalization and reciprocal encoded-field fixtures",
+          "receipt-state, construction, typed/raw failure, cancellation, diagnostics and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project, Principal and Operation identities and prove typed local input is non-authorizing",
+          "Stable failures reveal no raw identity, description text, credential, service payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Construction failure makes zero calls and exact receipt states return without an optimistic or authoritative Project row"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase Project/generic-update/view/MCP/export data or source-to-target mapping.",
+        "reconciliation": [
+          "Tests preserve canonical target dispatch while EditProjectModal, ProjectService/Protocol, Project model and update_project MCP tool remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectDetailsUpdateUseCaseTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen provider-free Project details update use case and exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-DETAILS-UPDATE-001",
+        "EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "READY scaffold only. Ten planned obligations cover exact non-Codable input shape, clear/set normalization and long UTF-8 text, revision boundaries, every receipt state, reciprocal encoded leaf ownership, normalization equivalence, zero/one-call failures, every typed failure plus cancellation/raw-error mapping, diagnostics, command topology, exact path/status preservation and immutable READY/implementation CI. No source, service or production behavior advances.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

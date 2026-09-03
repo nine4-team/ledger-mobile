@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 224
+State version: 225
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SETUP-USE-CASE-VERIFIED
+- Checkpoint: PROJECT-DETAILS-UPDATE-USE-CASE-READY-LOCAL-GREEN
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3213,6 +3213,32 @@ modifying the running Firebase application before hard cutover.
   The dossier and both target surfaces are verified; every exclusion remains
   binding.
 
+- Exact Project-setup verification-promotion commit
+  `0a8cc53a909951c31fc8be6377e2e5f62b93e87c` passed immutable Actions run
+  `33794464360`, freezing that slice. Root and two read-only preflights then
+  selected only the canonical description set/clear application boundary above
+  verified `ProjectDetailsUpdateOperation.swift`; the older broad Edit Project
+  surface is not target authority for this slice. Candidate paths independently
+  resolve to `ProjectDetailsUpdateUseCase.swift` (`SWIFT-B95AD78B8CEC`) and
+  `ProjectDetailsUpdateUseCaseTests.swift` (`TEST-315066B94566`). Both are
+  comment-only. The `ready` dossier freezes a transient exact Account/
+  Project/revision/raw-description input, canonical replacement/draft/command
+  construction before one port call, receipt validation after it, all 13 typed
+  failures, cancellation and bounded unknown errors. Ten tests remain planned.
+  EditProjectModal, ProjectService/Protocol, Project model and update_project
+  MCP tool retain their prior statuses; all read/readiness/lifecycle/no-op/UI,
+  broader mutation, physical persistence, authorization, provider/schema/RLS/
+  Sync, app/MCP, migration, hosted and production behavior remains excluded.
+  The corrected local READY gate passes 827/812 conversion inventory, 393/174/
+  45 residual control, M0, target isolation/contracts, all 279 target tests in
+  60 suites with warnings as errors, repeatable generation at `0657194a` /
+  `388303af`, both staging builds, JSON and formatting checks. Independent
+  reviews caught and corrected a missing public initializer plus `@testable`
+  masking (P1), comment-only lifecycle overstatement (P2), and stale gate
+  evidence (P3); both corrected-diff reviewers return GO.
+  Immutable exact-READY-SHA CI is the sole remaining authorization gate before
+  executable implementation.
+
 ## Next Action
 
 Continue without waiting on the two M1 evidence blockers:
@@ -3511,6 +3537,19 @@ Continue without waiting on the two M1 evidence blockers:
    defaults/category mutation, physical persistence, authorization, provider/
    schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
    outside.
+   Treat ready `project-details-update-use-case-contracts` and
+   `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001` as the current candidate. Preserve
+   exactly the two comment-only leaves `ProjectDetailsUpdateUseCase.swift`
+   (`SWIFT-B95AD78B8CEC`) and `ProjectDetailsUpdateUseCaseTests.swift`
+   (`TEST-315066B94566`). Preserve the completed deterministic sync/local READY
+   gate and independent corrected-diff reviews, commit the exact READY package
+   and require immutable exact-SHA CI.
+   Only then may a bounded writer replace those two comments with the frozen
+   transient four-field input and one description-only application path. Keep
+   EditProjectModal, ProjectService/Protocol, Project model and update_project
+   MCP tool at their prior statuses; do not add read/readiness/lifecycle/no-op/
+   UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync,
+   app/MCP, migration, hosted or production behavior.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-details-update-use-case-contracts",
+  "title": "Normalize and dispatch one Project description replacement",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Details Update Use Case",
+  "surfaceIds": ["SWIFT-B95AD78B8CEC", "TEST-315066B94566"],
+  "requirements": [
+    {
+      "id": "PDETAILUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Project description remains optional. Updating or clearing it is one distinct UpdateProjectDetails intent: leading and trailing whitespace is not stored, whitespace-only input clears, and accepted interior text remains exact without an invented length cap.",
+      "decisionIds": [],
+      "verificationIds": ["PDETAILUSE-TEST-001", "PDETAILUSE-TEST-002", "PDETAILUSE-TEST-004", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    },
+    {
+      "id": "PDETAILUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "UpdateProjectDetails cannot rename the Project or change its Client, categories, media, lifecycle, children or accounting history. Stable AccountID and ProjectID plus the exact expected Project revision bind the operation; display text, route or provider path never substitutes for identity or concurrency evidence.",
+      "decisionIds": [],
+      "verificationIds": ["PDETAILUSE-TEST-001", "PDETAILUSE-TEST-003", "PDETAILUSE-TEST-004", "PDETAILUSE-TEST-006", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    },
+    {
+      "id": "PDETAILUSE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "The application boundary consumes a transient exact Account/Project/revision/raw-description form input. It reuses ProjectDescriptionReplacement and adds no alternate domain validator, persisted form draft, initial/current value, readiness, lifecycle, dirty/no-op, dismissal, error-UX, route, provider identity or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["PDETAILUSE-TEST-001", "PDETAILUSE-TEST-002", "PDETAILUSE-TEST-003", "PDETAILUSE-TEST-004", "PDETAILUSE-TEST-006", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    },
+    {
+      "id": "PDETAILUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ProjectDetailsUpdateUseCase constructs the canonical replacement, verified ProjectDetailsUpdateDraft and UpdateProjectDetailsCommand before invoking ProjectDetailsUpdating.updateDetails exactly once; it validates and returns the exact receipt and LocalOperationState.",
+      "decisionIds": [],
+      "verificationIds": ["PDETAILUSE-TEST-002", "PDETAILUSE-TEST-003", "PDETAILUSE-TEST-004", "PDETAILUSE-TEST-005", "PDETAILUSE-TEST-006", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    },
+    {
+      "id": "PDETAILUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "The use case preserves CancellationError and every ProjectDetailsUpdateFailure. Only an unknown port error maps to ProjectDetailsUpdateFailure.localAcceptanceFailed; construction remains outside the port catch and receipt validation remains outside it so neither failure is silently reclassified.",
+      "decisionIds": [],
+      "verificationIds": ["PDETAILUSE-TEST-005", "PDETAILUSE-TEST-006", "PDETAILUSE-TEST-007", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    },
+    {
+      "id": "PDETAILUSE-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "This target-only slice advances only its two claimed leaves. EditProjectModal, ProjectService, ProjectServiceProtocol, the Project model and update_project MCP tool retain their prior status because each owns broader read, UI, mutation, transport or migration responsibility that this description-only application path does not replace.",
+      "decisionIds": [],
+      "verificationIds": ["PDETAILUSE-TEST-003", "PDETAILUSE-TEST-006", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    },
+    {
+      "id": "PDETAILUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only leaves may change. Physical local durability, optimistic projection, trusted authorization/audit/apply, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, source migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["PDETAILUSE-TEST-001", "PDETAILUSE-TEST-002", "PDETAILUSE-TEST-003", "PDETAILUSE-TEST-004", "PDETAILUSE-TEST-005", "PDETAILUSE-TEST-006", "PDETAILUSE-TEST-007", "PDETAILUSE-TEST-008", "PDETAILUSE-TEST-009", "PDETAILUSE-TEST-010"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectDetailsUpdateFormInput is transient, non-Codable and exposes an exact public four-argument initializer for only AccountID, ProjectID, ExpectedProjectRevision and raw optional description.",
+        "ProjectDetailsUpdateUseCase reuses ProjectDescriptionReplacement, ProjectDetailsUpdateDraft and UpdateProjectDetailsCommand rather than inventing another validator or operation model.",
+        "Canonical construction finishes before one ProjectDetailsUpdating call; receipt validation follows the port boundary; typed failures and cancellation are preserved while unknown port errors are bounded.",
+        "No application policy is added for initial/current reads, readiness, lifecycle eligibility, dirty/no-op detection, Project rename or Client/category/allocation/budget/media/child/history/accounting mutation."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Project, operation, table, view, function, constraint, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted membership/revision validation, authorization, idempotency store, audit assignment or authoritative Project update is implemented; the injected port remains an application boundary."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation, function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local form input and command validity are not authorization; no Account/Project policy or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No synchronized Project or operation stream, local table, upload connector or optimistic projection exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port but adds no physical form/operation persistence, restart write, optimistic row, retry or rejection recovery."},
+    "storageMedia": {"items": [], "notApplicable": "Project description update owns no attachment identity, bytes, reference, upload, retention or deletion behavior; O-023 remains outside."},
+    "appMcp": {"items": [], "notApplicable": "No initial value, read readiness, dirty/no-op, SwiftUI control, copy, loading, error, dismissal, navigation, app composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project document, generic update dictionary, EditProject callback, MCP request, export row or source-to-target mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; EditProjectModal, ProjectService/Protocol, Project model, current app, MCP and provider implementation remain unchanged.",
+        "The deterministic in-memory port cannot physically persist, authorize, synchronize, deploy, display, migrate, release or cut over a Project description update.",
+        "O-022/O-023/O-024/O-025/O-026 and A-003/A-004/A-007/A-015/A-016 remain open or outside because migration activation, media, lifecycle/correction, reference mutation, providers and production behavior are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PDETAILUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-007"],
+      "expected": "A test consumer imports LedgerTargetCore without @testable and constructs the form input through its exact public four-argument initializer. The input is compile-time Equatable/Sendable, runtime non-Codable and has exactly accountId, projectId, expectedRevision and rawDescription stored fields; caller raw String bytes remain exact before canonical construction, and revision zero and UInt64.max remain valid and exact.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-007"],
+      "expected": "Nil, empty and whitespace-only raw descriptions dispatch the same canonical clear; padded input trims only outer whitespace/newlines; interior Unicode and more than 8 KiB of UTF-8 text pass through the actual command exactly without an invented cap.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
+      "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying one Project-description replacement and one same-Project expected-revision precondition; no broader edit field enters the command.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-007"],
+      "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project, revision, description, Operation, actor, contract and time; each value reaches only its existing owning command fields. Normalization-equivalent raw strings yield identical commands and fingerprints.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-007"],
+      "expected": "Positive infinity and NaN capture times fail during construction with zero calls, while a mismatched receipt fails after exactly one call; neither failure is reclassified as a port failure.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
+      "expected": "Each of all 13 ProjectDetailsUpdateFailure values deliberately thrown by the port remains exact after one call, CancellationError remains structured cancellation, and an unknown port error alone maps to localAcceptanceFailed without leaking raw detail.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-007",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-005", "PDETAILUSE-REQ-007"],
+      "expected": "All 13 diagnostic codes remain an exact stable enumeration and reveal no synthetic identity, description text, raw error, credential, service payload or production identifier.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-008",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
+      "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
+      "expected": "Exact nested command topology exposes only draft/envelope/subject/fingerprint ownership, one descriptionReplacement value and one expected-revision precondition—never rename, Client, category, allocation, budget, media, lifecycle, child, accounting, history, UI or service-detail fields.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-009",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
+      "expected": "The READY commit changes only two comment scaffolds and control/evidence files, passes all gates, and leaves EditProjectModal, ProjectService/Protocol, Project model, update_project MCP tool and every app/provider surface at prior status and content.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "PDETAILUSE-TEST-010",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "READY is being prepared at the exact verified Project-setup promotion baseline 0a8cc53a909951c31fc8be6377e2e5f62b93e87c, whose immutable Actions run 33794464360 passed. Exactly two comment-only target leaves freeze a description-only form-to-application boundary above verified ProjectDetailsUpdateOperation.swift at exact dependency implementation a532ac9d / run 33642777864. The future implementation must construct before one port call, validate after it, preserve all 13 typed failures plus cancellation, and bound unknown port errors. EditProjectModal, ProjectService/Protocol, Project model and update_project MCP tool remain unadvanced; all read/readiness/lifecycle, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. O-022 through O-026 and A-003/A-004/A-007/A-015/A-016 remain unadvanced. READY promotion requires complete local gates, two independent actual-diff GO reviews and immutable exact-SHA CI."
+}
