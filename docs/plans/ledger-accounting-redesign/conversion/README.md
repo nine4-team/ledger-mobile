@@ -290,8 +290,10 @@ negative count, stale completeness and every waiting state. Primary and
 independent re-review plus 6 focused and all 205 tests in 47 suites pass with no
 remaining P0-P3 finding. Integrated as `bd576c52`/`01fc6a0f`; complete local
 integration gates pass with conversion/M0 controls, isolation/contracts, 205
-tests, repeatable generation, both builds and clean artifacts. Immutable exact-
-commit CI remains required before verification;
+tests, repeatable generation, both builds and clean artifacts. Exact integration
+checkpoint `d460b021` passed immutable Actions run `33698741756`: traceability
+in 9 seconds and isolated target verification in 3 minutes 21 seconds. The
+slice and exactly its two surfaces are verified;
 `EVID-PROJECT-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long

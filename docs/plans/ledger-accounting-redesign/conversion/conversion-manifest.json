@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T00:15:16.165Z",
+    "lastSynchronizedAt": "2026-09-03T00:20:24.948Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -20565,7 +20565,7 @@
           "Synthetic single-Project fixtures prove exact identity/relationship/core/revision/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -35104,7 +35104,7 @@
           "Tests prove only the provider-free single-Project core-record contract and explicitly exclude complete-workspace, child, media, accounting, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",

@@ -3268,7 +3268,7 @@
       "acknowledgeSourceHash": "a8dac7b7b351db6722d5ab4f9cd851d86f3d36439298539b83fa3e88d6696605",
       "currentBehavior": "Implements the provider-free single-Project core-record read contract with exact identity, relationship, canonical description, locally observed revision, offline truth, bounded failures and a narrow query port.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -3316,7 +3316,7 @@
       "acknowledgeSourceHash": "fbeb5c6f0fe4ee3efe439b38547378b12989eb6318ac24f26f647709dbe825e8",
       "currentBehavior": "Tests the provider-free single-Project core-record read contract across exact identity, relationship, canonical description, revision, readiness, restart, refusal, diagnostics, port validation, failure, cancellation and encoded exclusions.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",

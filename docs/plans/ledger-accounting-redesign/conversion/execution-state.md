@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 166
+State version: 167
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-CORE-DETAILS-INTEGRATION-GATE
+- Checkpoint: PROJECT-CORE-DETAILS-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2466,8 +2466,15 @@ modifying the running Firebase application before hard cutover.
   and generated contracts, 6 focused and all 205 tests in 47 suites, repeatable
   project generation, both staging builds, clean formatting and no source-
   project change. M1/M2 remain at their exact expected 2/167 blockers.
-  Immutable CI on the exact integration checkpoint remains required before
-  verification. No provider, Firebase or production action occurred.
+  The local checkpoint was then held pending the immutable CI result recorded
+  in the following entry. No provider, Firebase or production action occurred.
+- Exact integration checkpoint
+  `d460b02105cbb8446d69a09b4b246e0600d50fef` passed immutable Actions run
+  `33698741756`: conversion traceability passed in 9 seconds and isolated target
+  verification passed in 3 minutes 21 seconds with all 205 tests, generated
+  contracts, both staging builds and clean tracked artifacts. Promoted exactly
+  `project-core-details-read-contracts` and its two surfaces to `verified`.
+  No provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2588,13 +2595,14 @@ Continue without waiting on the two M1 evidence blockers:
    migration or production behavior.
    Treat ready `project-core-details-read-contracts` and
    `EVID-PROJECT-CORE-DETAILS-001` as the next frozen implementation boundary.
-   Exact comment-only ready commit `4fd81f47` passed complete local gates and
-   immutable Actions run `33697079580`. Registered `SUBAGENT-WORK-004` final
-   candidate `62d59f1d` was integrated as `bd576c52`/`01fc6a0f` only after
-   primary every-line and independent adversarial review, including four
-   corrected test-exhaustiveness gaps. The complete local integration gate
-   passes. Commit the exact control/evidence checkpoint and require immutable
-   CI before verification because
+   Treat verified `project-core-details-read-contracts` and
+   `EVID-PROJECT-CORE-DETAILS-001` as the sole provider-free single-Project core
+   read authority. Preserve the four corrected test-exhaustiveness findings and
+   exact integration run `33698741756`; do not let later slices promote local
+   revision to server-current authority or acquire workspace children, media,
+   accounting, mutation, authorization, provider, schema/RLS/Sync, app/MCP,
+   migration or production behavior. Rescout and freeze the next decision-
+   independent boundary before any writer starts because
    the slice composes shared Project/Client, canonical-description, revision and
    offline-readiness semantics. Do not let it become a Project workspace or
    acquire children, media, accounting, mutation, authorization, provider,

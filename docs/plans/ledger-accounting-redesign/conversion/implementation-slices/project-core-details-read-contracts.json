@@ -3,7 +3,7 @@
   "sliceId": "project-core-details-read-contracts",
   "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Core Details Read Contracts",
   "surfaceIds": ["SWIFT-4C4690368BEC", "TEST-5F24EA7C310A"],
   "requirements": [
@@ -168,12 +168,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, source-contamination and generated-contract checks, the complete target suite, both staging builds and clean artifacts without changing an application project or claiming complete-workspace, provider, migration, hosted or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-CORE-DETAILS-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented provider-free contract pending exact integration-checkpoint CI. Primary and independent adversarial preflight approved this bounded core-record read after constraining revision to exact locally observed conflict-precondition evidence, requiring canonical description revalidation, allowing active Project/archived Client history, and rejecting any full-workspace or current Firebase/app/MCP claim. Exact ready commit 4fd81f477f87de9528c25559d0950dbdd0136717 passed immutable Actions run 33697079580. Worker candidate c7719ce51a83989f399f0ed8c2fd9c1c0142da67 changed only the registered two paths; primary every-line review found four test-exhaustiveness gaps covering distinct multiple rows, negative count, stale completeness and waiting-state exhaustiveness. Test-only correction 62d59f1d45a90cfbfb3fecc86486a9c95173d0d4 resolved all four, and primary plus independent re-review found no remaining P0-P3 issue. Complete local gates pass: six focused and all 205 tests in 47 suites, conversion and M0 controls, target isolation/generated contracts, repeatable generation, both staging builds and clean artifacts. O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; operational verification remains planned until immutable CI passes on the exact integration commit."
+  "notes": "Verified provider-free contract. Primary and independent adversarial preflight approved this bounded core-record read after constraining revision to exact locally observed conflict-precondition evidence, requiring canonical description revalidation, allowing active Project/archived Client history, and rejecting any full-workspace or current Firebase/app/MCP claim. Exact ready commit 4fd81f477f87de9528c25559d0950dbdd0136717 passed immutable Actions run 33697079580. Worker candidate c7719ce51a83989f399f0ed8c2fd9c1c0142da67 changed only the registered two paths; primary every-line review found four test-exhaustiveness gaps covering distinct multiple rows, negative count, stale completeness and waiting-state exhaustiveness. Test-only correction 62d59f1d45a90cfbfb3fecc86486a9c95173d0d4 resolved all four, and primary plus independent re-review found no remaining P0-P3 issue. Complete local gates passed: six focused and all 205 tests in 47 suites, conversion and M0 controls, target isolation/generated contracts, repeatable generation, both staging builds and clean artifacts. Exact integration checkpoint d460b02105cbb8446d69a09b4b246e0600d50fef passed immutable Actions run 33698741756: traceability in 9 seconds and isolated target verification in 3 minutes 21 seconds. O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside."
 }

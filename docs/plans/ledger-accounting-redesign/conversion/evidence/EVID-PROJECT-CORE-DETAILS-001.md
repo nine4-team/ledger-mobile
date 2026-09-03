@@ -7,9 +7,8 @@
 - Claimed target surfaces: `SWIFT-4C4690368BEC`, `TEST-5F24EA7C310A`
 - Slice dossier:
   `conversion/implementation-slices/project-core-details-read-contracts.json`
-- Verification state: implementation integrated after enhanced review; five
-  executable obligations pass locally and the operational obligation remains
-  planned until complete integration gates and immutable exact-commit CI pass
+- Verification state: verified after enhanced review, complete local gates and
+  immutable CI on the exact integration checkpoint
 - Ready scaffold hashes:
   - `ProjectCoreDetailsData.swift`:
     `cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e`
@@ -112,8 +111,15 @@ gates pass: conversion sync/check/report, capability/query/residual/M0 controls,
 target isolation and generated app/MCP contracts, 6 focused and all 205 tests
 in 47 suites, repeatable generation with unchanged project/scheme hashes, both
 staging builds, clean formatting and no source-project change. M1 and M2 retain
-exactly their expected 2 and 167 blockers. Immutable CI on the exact integration
-checkpoint is still required before verification.
+exactly their expected 2 and 167 blockers. That local checkpoint was then held
+pending the immutable CI result recorded below.
+
+Exact integration checkpoint
+`d460b02105cbb8446d69a09b4b246e0600d50fef` passed immutable GitHub Actions
+run `33698741756`: conversion state and traceability passed in 9 seconds, and
+the isolated target environment passed in 3 minutes 21 seconds with all 205
+tests, generated contracts, macOS and iOS Simulator staging builds and clean
+tracked artifacts. The slice and exactly its two surfaces are verified.
 
 ## Permanent Limits
 
