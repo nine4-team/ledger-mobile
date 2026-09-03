@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 171
+State version: 172
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CORE-DETAILS-VERIFIED
+- Checkpoint: PROJECT-EXISTING-CLIENT-SELECTION-READY-PENDING-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2528,6 +2528,36 @@ modifying the running Firebase application before hard cutover.
   generated contracts, both staging builds and clean tracked artifacts.
   Promoted exactly `client-core-details-read-contracts` and its two registered
   surfaces to `verified`. No provider, Firebase or production action occurred.
+- Verification-control commit `8aadd9015c8f552d824775027a8a11703f52fb41`
+  passed immutable Actions run `33703099284`: conversion traceability and the
+  isolated target job, all 211 tests, generated contracts, both staging builds
+  and clean artifacts passed. The clean Client worker worktree was removed;
+  its branch and reviewed candidate commits remain recoverable. No provider,
+  Firebase or production action occurred.
+- Rescouted the next Project setup boundary. Independent adversarial preflight
+  rejected a duplicate Account-only Client query port and an unsupported final
+  UI no-auto-selection rule before freeze. The corrected
+  `project-existing-client-selection-read-contracts` boundary is a pure
+  projection over the verified Client directory: active rows remain in exact
+  upstream order, no selected/default value exists, an explicit projected
+  ClientID produces only the verified `.existing` setup input, and a distinct
+  evidence fingerprint binds ordered active rows, source fingerprint, visible
+  count plus every other readiness field. This prevents removed/reordered rows
+  or a changed-but-still-structurally-valid count from restarting as unchanged
+  evidence without claiming authentication or row immutability. This visible-
+  count omission was found during independent review of the actual ready diff;
+  the correction and regenerated controls received final independent GO with
+  no remaining P0-P3 finding.
+  Exactly two target-only paths contain comments. The complete local ready gate
+  passes at 803 recorded / 788 discovered surfaces, 374 mapped / 167 residual /
+  44 blockers, all 211 tests in 48 suites, conversion/capability/query/residual
+  controls, M0, target isolation/generated contracts, repeatable project
+  generation, both staging builds, clean formatting and an untouched Firebase
+  checkout. Exact ready-commit CI remains mandatory before delegation. A
+  second read-only scout recommends the disjoint Transaction type-choice
+  presentation boundary for later independent preflight; no second slice is
+  frozen or implemented yet. No provider, Firebase or production action
+  occurred.
 
 ## Next Action
 
@@ -2666,11 +2696,19 @@ Continue without waiting on the two M1 evidence blockers:
    let the slice become a Client workspace/CRM model or acquire Projects/counts,
    Transfer eligibility, media, accounting, history, mutation, authorization,
    provider, schema/RLS/Sync, app/MCP, migration or production behavior.
-   Rescout and freeze the next decision-independent boundary before any writer
-   starts; current read-only scouting recommends the Project existing-Client
-   selection boundary and rejects a general Space list until its unresolved
-   filtering, ordering, search, count and archive semantics have product
-   authority.
+   Treat ready `project-existing-client-selection-read-contracts` and
+   `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001` as the next frozen boundary.
+   Preserve its pure projection over the existing directory port, absence of
+   any selected/default value or final UI preselection policy, explicit active
+   ClientID-to-`.existing` conversion, exact upstream order and content-bound
+   evidence fingerprint including visible count. Commit the ready checkpoint and require immutable CI
+   on that exact commit before creating an isolated worker. The worker may edit
+   only the two registered target paths; primary every-line and independent
+   adversarial review remain mandatory before integration. General Space lists
+   remain rejected until filtering, ordering, search, count and archive
+   semantics have product authority. Retain the separately scouted Transaction
+   type-choice presentation candidate for later independent preflight, but do
+   not freeze or delegate it from this dirty checkpoint.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

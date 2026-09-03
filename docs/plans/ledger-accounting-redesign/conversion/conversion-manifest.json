@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T01:17:40.585Z",
+    "lastSynchronizedAt": "2026-09-03T01:39:34.228Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16696,6 +16696,68 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-0C8433A6C6F4",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectExistingClientSelectionData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectExistingClientSelectionData.swift"
+        }
+      ],
+      "observedSourceHash": "184acab06203e860c4f68323a8cd580c23163c0618bfc8a0fddeb9caf9c35f3f",
+      "acknowledgedSourceHash": "184acab06203e860c4f68323a8cd580c23163c0618bfc8a0fddeb9caf9c35f3f",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the ready-gate scaffold for a pure provider-free projection from an existing validated Client directory into active existing-Client choices; executable behavior is intentionally absent.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Existing-Client Selection Projection",
+        "surfaces": [
+          "ProjectExistingClientSelectionSnapshot",
+          "ProjectExistingClientSelectionAvailability",
+          "explicit ProjectClientSelectionInput.existing projection",
+          "content-bound projection evidence",
+          "ProjectExistingClientSelectionFailure"
+        ],
+        "securityRequirements": [
+          "Exact AccountID and source-directory identity are preserved; cross-Account or rebound candidates fail without enumerating inaccessible Clients",
+          "Local active candidates and explicit selection intent are non-authorizing and require later trusted server revalidation"
+        ],
+        "syncRequirements": [
+          "Ready-complete empty remains distinct from incomplete/partial/stale empty and source fingerprint, visible count, local version/as-of evidence are preserved",
+          "The canonical evidence fingerprint binds ordered active candidates, source fingerprint, visible count, completeness, quality, LocalDataVersion and as-of so candidate removal, reordering or count change cannot restart as unchanged evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Project only target-domain ClientSummary evidence and decode no Firebase clientName, provider query, source export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices must prove every offered Client exists, is active and belongs to the Account at authoritative apply; local selection never substitutes for that check"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectExistingClientSelectionDataTests"
+        ],
+        "acceptance": [
+          "Synthetic fixtures prove only filtering, order, explicit existing-ID selection, readiness, restart, refusal and encoded exclusion without a second port or provider"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-001",
+        "EVID-PROJECT-SETUP-001",
+        "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"
+      ],
+      "notes": "Ready-gate mapping only. The slice must reuse ClientListSnapshot and ProjectClientSelectionInput, add no second query port, expose no selected/default Client, and require an explicit active ClientID. It defines no final UI preselection policy, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "SWIFT-0DC9E061596B",
@@ -36367,6 +36429,65 @@
       ],
       "notes": "M2 withheld: O-015/O-023 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "TEST-8B902DC97729",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "8994a2c92f54a54e7881083a1c0f7531e11f8fafe948bd46c8352b9cc7f24273",
+      "acknowledgedSourceHash": "8994a2c92f54a54e7881083a1c0f7531e11f8fafe948bd46c8352b9cc7f24273",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the ready-gate scaffold for provider-free existing-Client selection projection tests; no executable test exists yet.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Existing-Client Selection Projection",
+        "surfaces": [
+          "active/archived and same-name Client fixtures",
+          "ready/incomplete/partial/stale and zero/one/many fixtures",
+          "explicit-selection, restart, tamper, upstream-failure/cancellation and encoded-boundary fixtures"
+        ],
+        "securityRequirements": [
+          "Synthetic non-production identities and bounded unique diagnostics expose no inaccessible Client",
+          "Tests prove local projected choices are non-authorizing and add no permission or membership claim"
+        ],
+        "syncRequirements": [
+          "Provider-free tests distinguish canonical structured restart and local readiness from physical database durability or authenticated synchronization"
+        ]
+      },
+      "migration": {
+        "rule": "Use only target synthetic values and load no Firebase DTO, listener result, free-text Client identity, source export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Canonical projection evidence restarts identically while account, source/query/evidence fingerprint, ordered-active-row, changed-but-valid or structurally invalid visible count, completeness/as-of and malformed evidence changes fail atomically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectExistingClientSelectionDataTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen pure projection contract and explicitly exclude a second port, final UI policy, mutation, authorization, provider, migration and production claims"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-001",
+        "EVID-PROJECT-SETUP-001",
+        "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"
+      ],
+      "notes": "Planned tests must reject duplicate/cross-Account/rebound/corrupt evidence and false authoritative emptiness, prove exact upstream order and explicit existing-ID intent, and encode no default selection or excluded provider/product surface. Physical persistence, authorization, schema/RLS/Sync, app/MCP, migration and production remain unproved.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-8BFDF8C22B0C",

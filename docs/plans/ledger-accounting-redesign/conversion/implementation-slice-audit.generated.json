@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T01:17:40.585Z",
+  "generatedFromManifestSync": "2026-09-03T01:39:34.228Z",
   "totals": {
-    "slices": 48,
-    "claimedTargetSurfaces": 117,
+    "slices": 49,
+    "claimedTargetSurfaces": 119,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 102
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 47,
@@ -346,6 +346,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-details-update-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-existing-client-selection-read-contracts",
+      "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Existing-Client Selection Projection",
+      "surfaceIds": [
+        "SWIFT-0C8433A6C6F4",
+        "TEST-8B902DC97729"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-existing-client-selection-read-contracts.json"
     },
     {
       "sliceId": "project-item-accounting-section-contracts",

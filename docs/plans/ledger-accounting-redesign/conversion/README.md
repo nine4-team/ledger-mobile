@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 366 of 533 target-relevant
+Status: M0 inventory classification complete; 374 of 541 target-relevant
 surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -327,6 +327,20 @@ clean artifacts. Exact integration checkpoint `6cea8459` passed immutable
 Actions run `33702499992`: traceability in 13 seconds and isolated target
 verification in 3 minutes 39 seconds. The slice and exactly its two surfaces
 are verified.
+
+The next candidate boundary is
+`project-existing-client-selection-read-contracts`. Independent adversarial
+preflight rejected both a duplicate Account-only Client query port and an
+unsupported final UI no-auto-selection rule before freeze. The corrected ready
+boundary is a pure projection over the verified `ClientListSnapshot`: it keeps
+only active Clients in exact upstream order, carries no selected/default value,
+requires an explicit projected ClientID to produce the verified
+`ProjectClientSelectionInput.existing` input, preserves incomplete/offline
+truth, and binds ordered active rows, source fingerprint, visible count and all
+other readiness evidence in a canonical evidence fingerprint. Its two target-only paths remain comments;
+the complete local ready gate passes all 211 tests and both staging builds, and
+immutable exact-ready-SHA CI remains required before delegation.
+`EVID-PROJECT-EXISTING-CLIENT-SELECTION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
