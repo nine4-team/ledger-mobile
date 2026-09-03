@@ -3669,6 +3669,56 @@
         "tests": ["swift test --package-path LedgeriOS --filter ProjectArchiveUseCaseTests"],
         "acceptance": ["Focused tests prove only the provider-free Project archive use case and its permanent exclusions"]
       }
+    },
+    {
+      "id": "SWIFT-7A484C80FD98",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1720c5b0e97fd51eb02a85e2f2a0448cb25b175478a44c6526d9f524272b98f0",
+      "currentBehavior": "Comment-only READY scaffold for a provider-free selected-Client archive intent and application-dispatch boundary.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-ARCHIVE-001", "EVID-CLIENT-ARCHIVE-USE-CASE-001"],
+      "notes": "Ready design only. Future transient exact Account/Client/revision intent will compose the existing verified archive command and one port call. No executable behavior before reviewed exact-ready-SHA CI.",
+      "target": {
+        "owner": "Client Archive Use Case",
+        "surfaces": ["ClientArchiveIntent", "ClientArchiveUseCase", "single ClientArchiving.archive invocation and receipt validation"],
+        "securityRequirements": ["Typed intent binds exact AccountID, ClientID and expected revision without treating name, selected row, route or provider path as identity or authorization", "Caller actor and capture time remain separate exact application inputs, and raw provider errors cannot cross the application boundary"],
+        "syncRequirements": ["Future provider-free assembly invokes the existing Client archive port once only after construction and validates its receipt", "No physical persistence/restart, optimistic lifecycle projection, authoritative archive or synchronized visibility is claimed"]
+      },
+      "migration": {
+        "rule": "Define target-only transient intent and application orchestration; decode no Firebase Project/clientName model, view, MCP payload, export row or migration disposition.",
+        "reconciliation": ["Synthetic Account/Client/revision and operation metadata will reach one verified archive command without source transformation"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ClientArchiveUseCaseTests"],
+        "acceptance": ["Planned tests prove only selected-Client archive-command dispatch through one validated receipt and permanent exclusions"]
+      }
+    },
+    {
+      "id": "TEST-E10E6D44CC8A",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0764f3f142c1e946034d7b4724ee4d34b37b0e08e5601cb0e33f007eb690e44a",
+      "currentBehavior": "Comment-only READY verification scaffold for exact Client archive intent, reciprocal command forwarding, one call, receipt/failure/cancellation handling and exclusions.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-ARCHIVE-001", "EVID-CLIENT-ARCHIVE-USE-CASE-001"],
+      "notes": "Ready design only. Eight reciprocal obligations are planned; tests remain comments until independent actual-diff review, complete local gates and exact-ready-SHA CI pass.",
+      "target": {
+        "owner": "Client Archive Use Case Tests",
+        "surfaces": ["exact transient intent and revision-boundary fixtures", "reciprocal command and single-call port fixtures", "receipt-state, construction, normalized/raw failure, cancellation, diagnostics and exclusion fixtures"],
+        "securityRequirements": ["Fixtures use only synthetic Account, Client, Principal and Operation identities and prove typed local intent is non-authorizing", "Stable failures reveal no raw identity, credential, provider payload or production identifier"],
+        "syncRequirements": ["An in-memory port proves application choreography only, not physical local persistence/history preservation or authenticated synchronization", "Construction failure makes zero calls and exact receipt states return without an optimistic or authoritative Client row"]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase Project/clientName/view/MCP/export data or source-to-target mapping.",
+        "reconciliation": ["Planned tests preserve canonical target dispatch while every related source surface remains unadvanced"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ClientArchiveUseCaseTests"],
+        "acceptance": ["Planned tests prove only the frozen provider-free Client archive use case and exclusions"]
+      }
     }
   ]
 }

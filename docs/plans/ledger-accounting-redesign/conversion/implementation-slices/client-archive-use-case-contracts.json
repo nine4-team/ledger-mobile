@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-archive-use-case-contracts",
+  "title": "Dispatch one selected Client archive intent",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Client Archive Use Case",
+  "surfaceIds": ["SWIFT-7A484C80FD98", "TEST-E10E6D44CC8A"],
+  "requirements": [
+    {
+      "id": "CLIENTARCHIVEUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "One archive intent binds exact AccountID and stable ClientID; Client name, selected row, route, Project display copy or provider path cannot define Client identity or authorization.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CLIENTARCHIVEUSE-TEST-001", "CLIENTARCHIVEUSE-TEST-002", "CLIENTARCHIVEUSE-TEST-003", "CLIENTARCHIVEUSE-TEST-004", "CLIENTARCHIVEUSE-TEST-007", "CLIENTARCHIVEUSE-TEST-008"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "Archive is a history-preserving Client lifecycle intent. It cannot hard-delete or rename the Client, merge identities, reassign or cascade to Projects, rewrite Transfers/frozen documents/accounting history, or impersonate a future O-025 correction workflow.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CLIENTARCHIVEUSE-TEST-001", "CLIENTARCHIVEUSE-TEST-003", "CLIENTARCHIVEUSE-TEST-004", "CLIENTARCHIVEUSE-TEST-006", "CLIENTARCHIVEUSE-TEST-007", "CLIENTARCHIVEUSE-TEST-008"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "ClientArchiveIntent is transient, Equatable and Sendable but non-Codable and contains exactly AccountID, ClientID and ExpectedClientRevision. It defines no lookup, eligibility, confirmation, dismissal, optimistic projection, restart or provider policy.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTARCHIVEUSE-TEST-001", "CLIENTARCHIVEUSE-TEST-003", "CLIENTARCHIVEUSE-TEST-007", "CLIENTARCHIVEUSE-TEST-008"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ClientArchiveUseCase receives caller OperationID, PrincipalID, contract version and finite capture time, constructs the verified ClientArchiveDraft/ArchiveClientCommand, invokes ClientArchiving.archive exactly once only after construction, validates the receipt, returns its exact local state, preserves CancellationError and ClientArchiveFailure, and maps every other port error to localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTARCHIVEUSE-TEST-002", "CLIENTARCHIVEUSE-TEST-003", "CLIENTARCHIVEUSE-TEST-004", "CLIENTARCHIVEUSE-TEST-005", "CLIENTARCHIVEUSE-TEST-006", "CLIENTARCHIVEUSE-TEST-007", "CLIENTARCHIVEUSE-TEST-008"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "This target-only use-case slice advances only its two claimed leaves. The verified Client archive operation remains a dependency rather than a newly promoted surface, while related Project model/new/edit/list and MCP Project-tool surfaces retain their prior statuses because Client reads, UI integration, source migration and target transport behavior do not advance here.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTARCHIVEUSE-TEST-002", "CLIENTARCHIVEUSE-TEST-003", "CLIENTARCHIVEUSE-TEST-004", "CLIENTARCHIVEUSE-TEST-005", "CLIENTARCHIVEUSE-TEST-006", "CLIENTARCHIVEUSE-TEST-007", "CLIENTARCHIVEUSE-TEST-008"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only leaves may change. Client reads/UI, actual lifecycle projection, authorization/audit, physical persistence, schema/RLS/Sync/provider, app/MCP wiring, Firebase migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["CLIENTARCHIVEUSE-TEST-001", "CLIENTARCHIVEUSE-TEST-002", "CLIENTARCHIVEUSE-TEST-003", "CLIENTARCHIVEUSE-TEST-004", "CLIENTARCHIVEUSE-TEST-005", "CLIENTARCHIVEUSE-TEST-006", "CLIENTARCHIVEUSE-TEST-007", "CLIENTARCHIVEUSE-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ClientArchiveIntent is transient/non-Codable and carries only exact Account/Client identity and expected revision.",
+        "ClientArchiveUseCase adds exact caller operation metadata, constructs the verified archive command, invokes one ClientArchiving call, validates the receipt and returns its exact state.",
+        "Structured cancellation and normalized ClientArchiveFailure remain distinct; unexpected port errors become localAcceptanceFailed.",
+        "No local Client snapshot, lifecycle, Project count, dependency, history, readiness or permission evidence is consumed."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No clients/projects table, lifecycle/revision/audit column, constraint, index, function, view or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted archive handler, membership/Client lookup, revision lock, dependency/history preservation transaction, audit assignment or server update is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local intent is not authorization; no Account membership, Client visibility or mutation policy/test is added."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Client lifecycle row, selection filter, optimistic overlay, upload connector or synchronized visibility exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port, but transient intent and in-memory tests prove no physical persistence, restart or optimistic Client row."},
+    "storageMedia": {"items": [], "notApplicable": "Client archive dispatch owns no attachment identity, bytes, retention or deletion behavior."},
+    "appMcp": {"items": [], "notApplicable": "No Client picker/list/detail UI, app composition, MCP schema/tool/resource/catalog or transport is changed."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project/clientName payload, source export row, target Client row or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Existing bounded failures are values only; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; all source app/Firebase/MCP surfaces and both app projects remain unchanged.",
+        "The deterministic port cannot visibly or physically archive a Client, authorize scope, preserve history transactionally, deploy, migrate, release or cut over.",
+        "O-025 and A-003/A-004/A-007/A-015/A-016 remain open or outside because merge/reassignment/provider behavior is excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
+      "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "Intent exposes exactly AccountID, ClientID and ExpectedClientRevision, is non-Codable, accepts zero/UInt64.max, and exposes no Client row/name/lifecycle/Project/dependency/readiness/UI/operation/provider field.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
+      "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "Every matching LocalOperationState returns unchanged after exactly one archive call and the captured command has the exact verified Client subject, precondition and receipt binding.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
+      "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "A reciprocal matrix independently varies Account, Client, expected revision, Operation, actor, contract and time; each value reaches only its existing draft/command/derived field exactly, with one call and no new policy.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
+      "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "Non-finite capture time fails before dispatch with invalidCapturedAt and zero calls; mismatched receipt fails after exactly one call; no Client/Project state lookup or eligibility gate occurs.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
+      "covers": ["CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "ClientArchiveFailure, arbitrary port failure and CancellationError remain distinct after exactly one dispatched call; raw provider detail never crosses the application boundary.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
+      "covers": ["CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "Stable diagnostics and encoded command shape expose no raw error, lifecycle Boolean, delete/restore/merge/rename, Project list/cascade, accounting/history mutation, UI state, credential, provider payload or production identity.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-007",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "The READY commit changes only comment scaffolds and control/evidence files, passes all controls/tests/builds, and leaves all related source Project model/new/edit/list/MCP surfaces at prior status and content.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "CLIENTARCHIVEUSE-TEST-008",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready design only. Fresh root and strict independent authority preflight selected Client archive dispatch above the verified archive operation. Exactly two comment-only target leaves are frozen. Canonical target authority supplies stable Client identity and history-preserving archive; no source Firebase Client implementation is treated as authority. No executable target code may start until actual-diff review, the complete local ready gate and immutable exact-ready-commit CI pass."
+}

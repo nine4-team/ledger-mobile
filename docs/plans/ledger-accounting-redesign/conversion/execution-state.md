@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 215
+State version: 216
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-NOTE-CREATION-USE-CASE-PREFLIGHT-REJECTED
+- Checkpoint: CLIENT-ARCHIVE-USE-CASE-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3076,6 +3076,30 @@ modifying the running Firebase application before hard cutover.
   target names are corrected. Current control state is 819 recorded / 804
   discovered, 385 mapped-or-later / 174 residual / 45 blockers with only the
   three established retired-path warnings.
+- The rejection/correction checkpoint is immutable at exact commit
+  `7d759c8a6853b774a2077bd4a070b0188cb1abfd`; Actions run `33763753929`
+  passed conversion traceability, all 261 target tests, generated contracts,
+  both staging builds and clean tracked artifacts.
+- Prepared the provider-free Client archive use-case READY package. Exactly
+  `ClientArchiveUseCase.swift` (`SWIFT-7A484C80FD98`) and
+  `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) are comment-only.
+  Six authority-bound requirements and eight reciprocal obligations freeze
+  exact Account/Client/revision intent, application-owned operation metadata,
+  verified archive-command assembly, one post-construction port call, receipt
+  validation, structured cancellation, normalized failure preservation and
+  bounded raw-error mapping. The first deterministic sync caught and corrected
+  an implementation-evidence-as-authority mistake before code or READY
+  promotion. Current control state is 821 recorded / 806 discovered, 387
+  mapped-or-later / 174 residual / 45 blockers with only the three established
+  retired-path warnings. The complete local READY gate passes all 261 target
+  tests in 57 suites with warnings as errors, conversion/capability/query/
+  residual/M0 and target-isolation/generated-contract controls, JSON validation,
+  repeatable Xcode generation at `0657194a` / `388303af`, both staging builds
+  and clean diff formatting. Authority review caught one stale baseline/run
+  reference; root review clarified that actor/time are separate application
+  inputs rather than intent fields. Regenerated checks pass and both read-only
+  reviewers return GO on the corrections. Immutable exact-ready-SHA CI remains
+  pending.
 
 ## Next Action
 
@@ -3332,19 +3356,20 @@ Continue without waiting on the two M1 evidence blockers:
    Do not recreate the rejected Project-note use-case scaffolds or mark that
    product slice ready until O-039 is approved and canonical target note
    requirements record the chosen app/MCP normalization/minimum behavior.
-   Prepare the provider-free Client archive use-case READY package next. Claim
-   only `ClientArchiveUseCase.swift` (`SWIFT-7A484C80FD98`) and
+   Review and gate the provider-free Client archive use-case READY package.
+   Preserve exactly `ClientArchiveUseCase.swift` (`SWIFT-7A484C80FD98`) and
    `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) as comment-only
-   target leaves. Freeze exact AccountID/ClientID/ExpectedClientRevision intent,
-   existing `ClientArchiveDraft`/`ArchiveClientCommand` assembly, one
+   target leaves. The complete local gate and corrected authority/continuity
+   reviews pass. Commit/push the exact READY package and require immutable
+   exact-ready-SHA CI before writing executable implementation. The frozen
+   boundary is exact AccountID/ClientID/ExpectedClientRevision intent, existing
+   `ClientArchiveDraft`/`ArchiveClientCommand` assembly, one
    `ClientArchiving.archive` call after construction, receipt validation,
    structured cancellation, normalized failure preservation and bounded raw
    errors. Do not inspect Client rows, Project counts, history, lifecycle,
    readiness or permissions; do not add UI, optimistic projection, persistence,
    authorization, restore/delete/merge/rename/reassignment/cascade, provider,
-   schema/RLS/Sync, app/MCP, migration, hosted or production behavior. Require
-   independent actual-diff review, complete local gate and exact-ready-SHA CI
-   before executable implementation.
+   schema/RLS/Sync, app/MCP, migration, hosted or production behavior.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

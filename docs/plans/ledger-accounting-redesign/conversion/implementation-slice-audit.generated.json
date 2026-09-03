@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T13:52:44.054Z",
+  "generatedFromManifestSync": "2026-09-03T14:07:26.680Z",
   "totals": {
-    "slices": 56,
-    "claimedTargetSurfaces": 137,
+    "slices": 57,
+    "claimedTargetSurfaces": 139,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 122
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 55,
@@ -76,6 +76,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-archive-use-case-contracts",
+      "title": "Dispatch one selected Client archive intent",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Client Archive Use Case",
+      "surfaceIds": [
+        "SWIFT-7A484C80FD98",
+        "TEST-E10E6D44CC8A"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-use-case-contracts.json"
     },
     {
       "sliceId": "client-core-details-read-contracts",

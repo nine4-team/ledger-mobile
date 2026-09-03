@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 385 of 559 target-relevant
+Status: M0 inventory classification complete; 387 of 561 target-relevant
 surfaces are target-mapped or later and the remaining 174 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -566,7 +566,15 @@ leave a user-visible normalization/minimum choice without canonical authority.
 Its speculative scaffolds and dossier were removed, O-039 now blocks the eight
 affected source/integration surfaces, and a proposed decision packet records
 the options. A separate strict-authority scout selected Client archive dispatch
-as the next decision-independent candidate. No Firebase, provider, hosted,
+as the next decision-independent candidate. That candidate is now a local READY
+package: exactly two comment-only target leaves, six authority-bound requirements
+and eight reciprocal verification obligations compose the already verified
+Client archive operation without advancing reads, lifecycle eligibility, UI,
+physical persistence, authorization, provider, migration or production behavior.
+The complete local gate passes all 261 target tests, controls, repeatable
+generation and both staging builds. Corrected authority and continuity reviews
+return GO; exact-ready-SHA CI must still pass before executable implementation.
+No Firebase, provider, hosted,
 migration or production behavior changed.
 
 This directory makes whole-application conversion progress durable across long
