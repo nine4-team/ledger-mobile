@@ -3,7 +3,7 @@
   "sliceId": "direct-space-creation-use-case-contracts",
   "title": "Validate and dispatch one direct Space creation intent",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Direct Space Creation Use Case",
   "surfaceIds": ["SWIFT-3615734A053E", "TEST-EBA9C48BC4EE", "SWIFT-517FA18158D9", "TEST-915EC8E0BFC9"],
   "requirements": [
@@ -48,7 +48,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
       "section": "Application",
-      "invariant": "A separately named DirectSpaceCreationUseCase receives raw SpaceCreationFormInput plus caller-supplied OperationID, actor PrincipalID, operation contract version and finite capture time. It derives the typed intent through the canonical validators, constructs the already-verified SpaceCreationDraft/CreateSpaceCommand, invokes the existing SpaceCreating port exactly once only after validation, validates the matching OperationReceipt before returning it, preserves already-normalized SpaceCreationFailure values and maps any unexpected port error to SpaceCreationFailure.localAcceptanceFailed.",
+      "invariant": "A separately named DirectSpaceCreationUseCase receives raw SpaceCreationFormInput plus caller-supplied OperationID, actor PrincipalID, operation contract version and finite capture time. It derives the typed intent through the canonical validators, constructs the already-verified SpaceCreationDraft/CreateSpaceCommand, invokes the existing SpaceCreating port exactly once only after validation, validates the matching OperationReceipt before returning it, preserves Swift structured-concurrency cancellation and already-normalized SpaceCreationFailure values, and maps any unexpected transport error to SpaceCreationFailure.localAcceptanceFailed.",
       "decisionIds": [],
       "verificationIds": ["SPCREATEUSE-TEST-003", "SPCREATEUSE-TEST-004", "SPCREATEUSE-TEST-005", "SPCREATEUSE-TEST-006"]
     },
@@ -86,7 +86,7 @@
         "SpaceCreationFormInput carries exact typed Account/Space/scope plus caller-supplied transient raw display-name and notes values. Immutable field replacement preserves every other value and creates no default/blank-state policy.",
         "validatedIntent converts raw values only through the verified SpaceDisplayName and SpaceCreationNotes types. It emits DirectSpaceCreationIntent with canonical name/notes and exact identity/scope, requires no directory, and performs no operation or authorization work.",
         "DirectSpaceCreationUseCase is application-layer orchestration: from raw SpaceCreationFormInput it reuses validatedIntent, adds exact caller operation metadata, creates the verified SpaceCreationDraft/CreateSpaceCommand, calls one injected SpaceCreating port only after validation and validates the returned receipt before returning it.",
-        "The use case preserves already-normalized SpaceCreationFailure values and maps any unexpected port error to SpaceCreationFailure.localAcceptanceFailed. Infrastructure/provider errors are outside this slice and may not cross the application boundary raw.",
+        "The use case preserves Swift CancellationError as structured-concurrency control flow and already-normalized SpaceCreationFailure values, while mapping any unexpected transport error to SpaceCreationFailure.localAcceptanceFailed. This does not choose form-cancel UX policy. Infrastructure/provider errors are outside this slice and may not cross the application boundary raw.",
         "The former SpaceFormValidation source responsibility converges on the canonical SpaceDisplayName conversion and focused target tests rather than introducing a second target validator."
       ],
       "notApplicable": ""
@@ -117,7 +117,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
       "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-004", "SPCREATEUSE-REQ-007"],
       "expected": "Caller-supplied raw empty/whitespace/padded name and notes values remain transient form values; immutable replacement changes only the selected field. Validated intent alone trims outer whitespace, preserves interior text, maps empty/whitespace notes to nil and refuses blank canonical name through the existing SpaceDisplayName failure without defaults, length caps, operation metadata or persistence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
     },
     {
@@ -126,7 +126,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
       "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-003", "SPCREATEUSE-REQ-006", "SPCREATEUSE-REQ-007", "SPCREATEUSE-REQ-008"],
       "expected": "Project and Business Inventory inputs preserve exact Account/Space/scope identity. Two distinct Space IDs may produce equal canonical names without a directory query. Typed intent exposes no template/checklist/media/Item/lifecycle/review/completion/accounting/authorization or backend field.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
     },
     {
@@ -135,7 +135,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
       "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-003", "SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-006", "SPCREATEUSE-REQ-007", "SPCREATEUSE-REQ-008"],
       "expected": "From raw form through validated intent, application assembly and one deterministic SpaceCreating port call, both scopes produce exactly one verified CreateSpaceCommand with caller-supplied Operation/actor/contract/finite time, stable Space identity, canonical name/notes and zero preconditions, then return the matching receipt with its exact local state unchanged and no accounting side effect.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
     },
     {
@@ -144,7 +144,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
       "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-004", "SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-007"],
       "expected": "An exhaustive caller-field matrix proves exact Account, Space, scope, raw-name, raw-notes, Operation, actor, contract and time forwarding at their owning layer without form fingerprints or duplicate validators. Nonfinite time and a mismatched receipt fail; the operation port is not called after form/domain validation failure.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
     },
     {
@@ -152,8 +152,8 @@
       "kind": "domain",
       "owner": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
       "covers": ["SPCREATEUSE-REQ-001", "SPCREATEUSE-REQ-002", "SPCREATEUSE-REQ-003", "SPCREATEUSE-REQ-004", "SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-006", "SPCREATEUSE-REQ-007", "SPCREATEUSE-REQ-008"],
-      "expected": "Blank-name, invalid-time, receipt-mismatch and injected port failures return no receipt and cause no extra call. Canonical validation/receipt failures and an already-normalized SpaceCreationFailure.localAcceptanceFailed retain existing stable bounded diagnostics; an unexpected raw port error is mapped to localAcceptanceFailed rather than crossing the application boundary. No new error includes raw form text, identity, route, credential, provider payload or production path, reflected/encoded command evidence stays within the already-verified direct-create boundary, and no accounting field or effect is introduced.",
-      "status": "planned",
+      "expected": "Blank-name, invalid-time, receipt-mismatch and injected port failures return no receipt and cause no extra call. Swift CancellationError remains structured-concurrency control flow rather than form-cancel UX or a transport failure. Canonical validation/receipt failures and distinct already-normalized SpaceCreationFailure values retain existing stable bounded diagnostics; an unexpected raw transport error is mapped to localAcceptanceFailed rather than crossing the application boundary. No new error includes raw form text, identity, route, credential, provider payload or production path, reflected/encoded command evidence stays within the already-verified direct-create boundary, and no accounting field or effect is introduced.",
+      "status": "passed",
       "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
     },
     {
@@ -169,5 +169,5 @@
   "implementationEvidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Corrected ready design. Independent preflight rejected presentation-owned operation assembly, unsupported initial-blank/cancellation target behavior, redundant fingerprints/restart claims, unclosed current validation responsibility and O-026 overreach. The replacement accepts caller raw input, emits typed intent, gives operation assembly/invocation to a separate application use case, maps the two current validation surfaces to canonical target validation, and makes no form-persistence or template-application claim. The complete local ready gate and two independent corrected-diff reviews pass with no remaining P0-P3 issue. Immutable exact-ready-SHA CI remains required before direct implementation in the existing Supabase worktree."
+  "notes": "Implemented locally after exact ready commit b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe passed immutable Actions run 33744781549. Independent implementation review found nonreciprocal caller-field checks, indistinguishable normalized-failure evidence, cross-scope duplicate-name evidence and incomplete empty/nil/long raw-input boundaries. Reviewers initially disagreed about CancellationError: one treated passthrough as outside the ready boundary, while the other identified normalization as violating architecture rule 7. Authority adjudication preserves Swift structured-concurrency cancellation without choosing form-cancel UX and still normalizes unexpected transport errors under rule 8. The corrected implementation validates all raw input before one port call, exactly forwards every caller field, validates the receipt, and passes two independent final reviews with no remaining P0-P3. Exact implementation-commit CI remains required before verification. No form persistence, template application, SwiftUI, provider, migration or production behavior is introduced."
 }

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 203
+State version: 204
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: DIRECT-SPACE-CREATION-USE-CASE-READY-LOCAL-REVIEWED
+- Checkpoint: DIRECT-SPACE-CREATION-USE-CASE-INTEGRATED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2908,9 +2908,27 @@ modifying the running Firebase application before hard cutover.
   both staging builds and clean formatting. Two independent corrected-diff
   reviews return GO after splitting D-023 accounting authority from direct-
   create scope, preventing raw port-error leakage and preserving exact receipt
-  local state. Exact-ready-SHA CI remains required. No extra slice worktree has been
+  local state. Exact-ready-SHA CI was still required at that checkpoint. No extra slice worktree has been
   created; implementation will use one writer in this Supabase worktree plus
   read-only independent review. Firebase remains unchanged.
+- Exact ready commit `b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe`
+  passed both jobs in immutable Actions run `33744781549` (conversion
+  traceability 16 seconds; isolated target 3 minutes 7 seconds). The direct
+  implementation changed exactly the two frozen target leaves in the existing
+  Supabase worktree. Independent review found nonreciprocal command-field checks,
+  a normalized-failure fixture indistinguishable from the fallback, cross-scope
+  duplicate-name evidence and missing exact empty/nil/long raw-value boundaries.
+  The reviewers initially disagreed about `CancellationError`; architecture
+  rules 7/8 resolved the distinction in favor of preserving structured-
+  concurrency cancellation without choosing form-cancel UX while still
+  normalizing unexpected transport failures. The correction exactly binds every
+  caller and derived command field and closes every boundary matrix. Two independent
+  final reviews return GO with no P0-P3. The complete local integration gate
+  passes conversion/capability/query/residual/M0 controls, target isolation and
+  generated contracts, six focused and all 249 tests in 55 suites, warnings-as-
+  errors, repeatable project hashes `0657194a` / `388303af`, both staging builds,
+  valid JSON and clean formatting. Exact implementation-commit CI remains
+  required before verification; Firebase remains unchanged.
 
 ## Next Action
 
@@ -3125,18 +3143,20 @@ Continue without waiting on the two M1 evidence blockers:
    promotion-checkpoint CI pass after two candidate corrections. The clean
    temporary worktree is removed and its reviewed branch is retained. Preserve
    this contract when selecting the next coherent decision-independent slice.
-   Treat the corrected ready `direct-space-creation-use-case-contracts` dossier
+   Treat the locally implemented `direct-space-creation-use-case-contracts` dossier
    and `EVID-DIRECT-SPACE-CREATION-USE-CASE-001` as the next candidate boundary.
-   It may change only `DirectSpaceCreationUseCase.swift` and its target tests.
+   It changes only `DirectSpaceCreationUseCase.swift` and its target tests.
    Preserve caller-supplied transient raw input, canonical name/notes conversion,
    application-owned operation metadata/command assembly, exactly one post-
-   validation `SpaceCreating` call and receipt validation. Do not add initial-
-   form defaults, cancellation policy, form fingerprints/codecs, uniqueness
-   queries, templates, SwiftUI, physical persistence, optimistic rows,
-   authorization, provider/schema/RLS/Sync, app/MCP, migration or production
-   behavior. Corrected-diff review is complete with two independent GO results;
-   run immutable exact-ready-SHA CI, then implement directly in this Supabase
-   worktree with independent review.
+   validation `SpaceCreating` call, receipt validation, Swift structured-
+   concurrency cancellation and bounded transport-error mapping. Do not add
+   initial-form defaults, form-cancel UX policy, form fingerprints/codecs,
+   uniqueness queries, templates, SwiftUI, physical persistence, optimistic
+   rows, authorization, provider/schema/RLS/Sync, app/MCP, migration or
+   production behavior. Corrected implementation and two independent final
+   reviews pass the complete local gate. Commit the synchronized implementation
+   checkpoint, require immutable exact-implementation-SHA CI, then promote the
+   four claimed surfaces and dossier only after both jobs pass.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

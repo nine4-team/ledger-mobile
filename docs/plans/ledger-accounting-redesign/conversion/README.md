@@ -458,7 +458,7 @@ surfaces are verified. Promotion commit
 reviewed candidate history remain recoverable.
 `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
 
-The next bounded boundary is
+The active bounded boundary is
 `direct-space-creation-use-case-contracts`. Independent preflight rejected its
 first presentation-owned draft for layer inversion, unsupported initial-field
 and cancellation policy, redundant fingerprints/restart claims, an unclosed
@@ -474,8 +474,18 @@ discovered surfaces, zero errors and three established warnings; 388 mapped /
 167 residual / 44 blockers; M0; all 243 tests in 54 suites; warnings-as-errors;
 target isolation/contracts; repeatable project hashes `0657194a` / `388303af`;
 both staging builds and clean formatting. Two independent corrected-diff
-reviews return GO with no remaining P0-P3 issue. Immutable exact-ready-SHA CI
-remains required before implementation.
+reviews return GO with no remaining P0-P3 issue. Exact ready commit
+`b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe` passed immutable Actions run
+`33744781549`. The corrected implementation changes only the two target leaves.
+The first green candidate exposed test-exhaustiveness gaps, and the two reviewers
+initially disagreed about cancellation/error taxonomy. Architecture rules 7/8
+resolved the distinction: the correction preserves Swift task cancellation
+separately from form-cancel UX and transport failures, asserts exact reciprocal field
+forwarding, and covers same-scope duplicate names plus empty/nil/whitespace/
+padded/long inputs. Two independent final reviews return GO. Six focused and
+all 249 tests in 55 suites, conversion/target controls, repeatable generation
+and both staging builds pass locally. Exact implementation-commit CI remains
+required before verification.
 `EVID-DIRECT-SPACE-CREATION-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

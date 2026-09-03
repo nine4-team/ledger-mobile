@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T10:31:21.749Z",
+    "lastSynchronizedAt": "2026-09-03T10:52:10.018Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18906,7 +18906,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Target responsibility converges on the verified SpaceDisplayName/SpaceCreationNotes values and DirectSpaceCreationUseCase tests; no parallel app-only validator is copied. The current Firebase source file remains unchanged.",
+      "notes": "Target responsibility is implemented by the canonical SpaceDisplayName/SpaceCreationNotes values and DirectSpaceCreationUseCase tests; no parallel app-only validator was copied. The current Firebase source file remains unchanged. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -21156,8 +21156,8 @@
           "path": "LedgeriOS/LedgerTargetCore/DirectSpaceCreationUseCase.swift"
         }
       ],
-      "observedSourceHash": "97f9209ca116ab9eff6507b1f212fc3a5badd902f9d90730076a3f191a4d260b",
-      "acknowledgedSourceHash": "97f9209ca116ab9eff6507b1f212fc3a5badd902f9d90730076a3f191a4d260b",
+      "observedSourceHash": "3c1583999b27d6a325434ba8a5036dbb5f7e465c059da61bf57ab1cf1f9610ea",
+      "acknowledgedSourceHash": "3c1583999b27d6a325434ba8a5036dbb5f7e465c059da61bf57ab1cf1f9610ea",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -21201,7 +21201,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Comment-only corrected ready scaffold. Form input exposes canonical intent for immediate validation; the application use case reuses that conversion before invoking the verified port. No form fingerprint/restart, template, UI composition, physical persistence, provider, migration or production behavior is included.",
+      "notes": "Implemented provider-free form input, canonical intent and application use case. Raw input is revalidated before exactly one port call; caller fields and receipt state are preserved exactly; Swift task cancellation remains concurrency control flow; normalized failures are preserved and unexpected transport errors are bounded. No form fingerprint/restart, template, UI composition, physical persistence, provider, migration or production behavior is included. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -37100,8 +37100,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "0c44c61b7b45313cfc8fb2964e84e9b4b5e84350fcb2bc4c398c5254706f4fb3",
-      "acknowledgedSourceHash": "0c44c61b7b45313cfc8fb2964e84e9b4b5e84350fcb2bc4c398c5254706f4fb3",
+      "observedSourceHash": "1ee444d5e3c026efa1b35a903e9e11243fd26df295b6faf29c9424e64d1c6588",
+      "acknowledgedSourceHash": "1ee444d5e3c026efa1b35a903e9e11243fd26df295b6faf29c9424e64d1c6588",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -37145,7 +37145,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Comment-only corrected ready test scaffold. Planned tests must verify layer ownership and failure/no-call behavior without claiming transient form restart, physical durability, authorization, provider or Sync evidence.",
+      "notes": "Implemented focused target tests prove raw empty/nil/whitespace/padded/long boundaries, same-scope duplicate names, reciprocal exact caller-field forwarding, all receipt states, validation-before-call, structured cancellation, distinct normalized failures, raw transport normalization and exclusions. They claim no transient form restart, physical durability, authorization, provider or Sync evidence. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -39445,7 +39445,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Target replacement tests prove the canonical SpaceDisplayName/SpaceCreationNotes path plus use-case failure propagation; current Firebase tests remain unchanged as source evidence.",
+      "notes": "Target replacement tests implement the canonical SpaceDisplayName/SpaceCreationNotes path plus use-case failure, transport normalization and structured-concurrency cancellation behavior; current Firebase tests remain unchanged as source evidence. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

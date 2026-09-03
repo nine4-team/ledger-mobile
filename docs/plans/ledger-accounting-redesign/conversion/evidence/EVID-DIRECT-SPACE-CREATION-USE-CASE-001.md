@@ -1,12 +1,12 @@
 # EVID-DIRECT-SPACE-CREATION-USE-CASE-001 — Direct Space Creation Use Case
 
 - Timestamp: 2026-09-03
-- Class: corrected ready design / provider-free direct Space creation presentation-to-application path
+- Class: implementation / local integration evidence for provider-free direct Space creation presentation-to-application path
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed conversion surfaces: `SWIFT-3615734A053E`, `TEST-EBA9C48BC4EE`, `SWIFT-517FA18158D9`, `TEST-915EC8E0BFC9`
 - Slice dossier: `conversion/implementation-slices/direct-space-creation-use-case-contracts.json`
-- Verification state: complete local ready gate and two independent corrected-
-  diff reviews passed; immutable exact-ready-SHA CI pending
+- Verification state: corrected implementation passes the complete local gate
+  and two independent final reviews; exact implementation-commit CI pending
 
 ## Selection and Authority
 
@@ -66,10 +66,15 @@ actor, operation contract version and finite capture time. It reuses
 validation, validates the returned receipt and returns it with its exact local
 state unchanged. Form, domain, command-construction and receipt-mismatch
 failures return no receipt. An already-normalized `SpaceCreationFailure` from
-the port is preserved, while any unexpected raw port error is mapped to
+the port is preserved, while any unexpected raw transport error is mapped to
 `SpaceCreationFailure.localAcceptanceFailed`; infrastructure/provider errors
 are outside this slice and may not cross the application boundary raw. A
 deterministic in-memory port is test evidence only.
+
+`CancellationError` remains Swift structured-concurrency control flow under
+the architecture's port rule; it is not normalized as a transport failure.
+This does not choose the separate form-cancel UI behavior that the first draft
+incorrectly copied from current presentation behavior.
 
 The two current Firebase-app validation surfaces are conversion responsibilities
 claimed by this slice, but remain untouched. Their target replacement is the
@@ -106,6 +111,43 @@ reviews subsequently returned GO with no remaining P0-P3 finding after the
 package split D-023 accounting independence into its own requirement, required
 unexpected port-error normalization and exact receipt local-state preservation,
 corrected continuity counts/state, and clarified raw-form/application ownership.
+
+Exact ready commit `b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe`
+passed immutable Actions run `33744781549` (conversion traceability 16 seconds;
+isolated target 3 minutes 7 seconds).
+
+## Implementation Review and Local Gate
+
+Implementation changes exactly the two frozen target leaves. The first green
+candidate passed its focused tests, but independent review found nonreciprocal
+caller-field assertions, normalized-failure evidence identical to the fallback
+result, cross-scope duplicate-name evidence, and missing exact empty/nil/long
+raw-value cases. The reviewers initially disagreed about `CancellationError`:
+one treated passthrough as outside the ready boundary, while the other identified
+normalization as violating architecture rule 7. The final authority adjudication
+preserves Swift structured-concurrency cancellation and keeps rule 8 transport-
+error normalization separate.
+
+The correction keeps form-cancel UX outside the slice while preserving
+structured-concurrency `CancellationError`; asserts every caller-owned and
+derived command field reciprocally; proves a distinct normalized failure is
+preserved; proves equal canonical names for distinct Space IDs within the same
+Project scope; and covers exact empty, nil, whitespace-only, padded, interior-
+whitespace and long accepted name/notes input without inventing a cap. Both
+independent final reviews return GO with no remaining P0-P3 finding.
+
+The complete local integration gate passes conversion, capability, query,
+residual and M0 controls; target isolation and generated contracts; six focused
+and all 249 tests in 55 suites; warnings-as-errors; repeatable XcodeGen project/
+scheme hashes `0657194a` / `388303af`; macOS and generic iOS Simulator staging
+builds; valid JSON and clean formatting. Implemented leaf hashes are:
+
+- `DirectSpaceCreationUseCase.swift` — `3c1583999b27d6a325434ba8a5036dbb5f7e465c059da61bf57ab1cf1f9610ea`; and
+- `DirectSpaceCreationUseCaseTests.swift` — `1ee444d5e3c026efa1b35a903e9e11243fd26df295b6faf29c9424e64d1c6588`.
+
+The exact integration commit and immutable CI remain required before the slice,
+the two target leaves, or the two converted current validation responsibilities
+can be promoted to verified.
 
 ## Permanent Exclusions
 
