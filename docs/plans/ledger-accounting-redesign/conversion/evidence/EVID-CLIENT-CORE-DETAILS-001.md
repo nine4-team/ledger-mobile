@@ -1,13 +1,12 @@
 # EVID-CLIENT-CORE-DETAILS-001 — Client Core-Details Read Contracts
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free single-Client core-record read
+- Class: verification / provider-free single-Client core-record read
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-D7F3D08FA568`, `TEST-F304037D32B6`
 - Slice dossier: `conversion/implementation-slices/client-core-details-read-contracts.json`
-- Verification state: implementation integrated/reviewed and complete local
-  integration gate passed; exact integration-commit CI remains pending
+- Verification state: verified
 - Ready scaffold hashes:
   - `ClientCoreDetailsData.swift`: `efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86`
   - `ClientCoreDetailsDataTests.swift`: `b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f`
@@ -123,12 +122,15 @@ The candidate was integrated as
 - M1/M2 remain honestly blocked at `2`/`167` with zero structural errors. The
   Firebase checkout remains clean on `firebase`.
 
-Immutable CI on the exact integration checkpoint remains the final prerequisite
-for verification.
+Exact integration checkpoint `6cea8459d0e50f174300c1aef44b72f3004cdf11`
+passed immutable Actions run `33702499992`: conversion traceability in 13
+seconds and isolated target verification in 3 minutes 39 seconds, including all
+211 tests, generated contracts, both staging builds and clean tracked artifacts.
+Exactly this slice and its two registered surfaces are verified.
 
 ## Permanent Limits
 
-Ready status proves only that authority, boundary and verification obligations
-are traceable. It proves no executable behavior, physical offline durability,
+Verified status proves the provider-free executable contract and its synthetic
+evidence only. It proves no physical offline durability,
 authorization, synchronization, database policy, migration reconciliation,
 app/MCP behavior, hosted resource, production behavior, release or cutover.

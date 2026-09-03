@@ -249,7 +249,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-005",
       "sliceId": "client-core-details-read-contracts",
-      "status": "integrated_pending_ci",
+      "status": "completed",
       "baseCommit": "e925a7a07a0eccf5e1563c4b4a4abee58238e7db",
       "readyCiRun": 33700564469,
       "branch": "codex/supabase-slice-client-core-details",
@@ -306,9 +306,9 @@
         ],
         "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after correction",
         "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 211 tests in 48 suites, repeatable project generation, macOS and iOS staging builds, clean formatting and untouched Firebase source checkout",
-        "exactIntegrationCommitCi": "pending"
+        "exactIntegrationCommitCi": "passed: 6cea8459d0e50f174300c1aef44b72f3004cdf11 in immutable Actions run 33702499992"
       },
-      "integrationDisposition": "candidate integrated as b96377d76df634210dfee4367deb34dbbfdf658d/de85667ce55fbc30b5ee576b2ba7c087d588ea53 after corrected every-line primary and independent adversarial review; complete local gates pass and immutable exact-integration-checkpoint CI remains pending"
+      "integrationDisposition": "accepted and verified at 6cea8459d0e50f174300c1aef44b72f3004cdf11 after corrected every-line primary review, independent adversarial re-review, complete local gates and immutable Actions run 33702499992; worker branch and candidate commits remain recoverable"
     }
   ],
   "preflightFindings": [

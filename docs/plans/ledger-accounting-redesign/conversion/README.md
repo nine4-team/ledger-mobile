@@ -323,7 +323,10 @@ and independent re-review found no remaining P0-P3 issue. Integrated as
 `b96377d7`/`de85667c`. The complete local integration gate passes with 6 focused
 and all 211 tests in 48 suites, conversion/M0 controls, target isolation and
 generated contracts, repeatable project generation, both staging builds and
-clean artifacts. Exact integration-checkpoint CI remains pending.
+clean artifacts. Exact integration checkpoint `6cea8459` passed immutable
+Actions run `33702499992`: traceability in 13 seconds and isolated target
+verification in 3 minutes 39 seconds. The slice and exactly its two surfaces
+are verified.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

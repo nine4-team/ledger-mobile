@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 170
+State version: 171
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CORE-DETAILS-INTEGRATED-PENDING-CI
+- Checkpoint: CLIENT-CORE-DETAILS-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2518,8 +2518,16 @@ modifying the running Firebase application before hard cutover.
   controls, target isolation/generated contracts, 6 focused and all 211 tests
   in 48 suites, repeatable project generation, both staging builds, clean
   formatting and untouched Firebase source checkout. M1/M2 remain at the exact
-  expected 2/167 blockers. Exact integration-commit CI remains pending. No
-  provider, Firebase or production action occurred.
+  expected 2/167 blockers. The local checkpoint was held pending the immutable
+  CI result recorded in the following entry. No provider, Firebase or
+  production action occurred.
+- Exact integration checkpoint
+  `6cea8459d0e50f1743004cdf11` passed immutable Actions run
+  `33702499992`: conversion traceability passed in 13 seconds and isolated
+  target verification passed in 3 minutes 39 seconds with all 211 tests,
+  generated contracts, both staging builds and clean tracked artifacts.
+  Promoted exactly `client-core-details-read-contracts` and its two registered
+  surfaces to `verified`. No provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2646,21 +2654,23 @@ Continue without waiting on the two M1 evidence blockers:
    exact integration run `33698741756`; do not let later slices promote local
    revision to server-current authority or acquire workspace children, media,
    accounting, mutation, authorization, provider, schema/RLS/Sync, app/MCP,
-   migration or production behavior. Rescout and freeze the next decision-
-   independent boundary before any writer starts. Treat ready
+   migration or production behavior. Treat verified
    `client-core-details-read-contracts` and
-   `EVID-CLIENT-CORE-DETAILS-001` as that next frozen boundary. Exact ready
-   commit `e925a7a0` and run `33700564469` satisfy the ready gate. The
-   `SUBAGENT-WORK-005` candidate is integrated after corrected primary and
-   independent review. Central regeneration and the full local gate pass;
-   commit the integration checkpoint, then require exact-commit CI before any
-   verification promotion. Preserve the verified
+   `EVID-CLIENT-CORE-DETAILS-001` as the sole provider-free single-Client core
+   read authority. Exact integration checkpoint `6cea8459` and immutable run
+   `33702499992` satisfy the verification gate after corrected primary and
+   independent adversarial review. Preserve the verified
    ClientSummary, locally observed Client revision and shared offline-readiness
    semantics. Preserve valid Client display text byte-for-byte, accept
    separately valid later name/time/lifecycle/revision snapshots, and do not
    let the slice become a Client workspace/CRM model or acquire Projects/counts,
    Transfer eligibility, media, accounting, history, mutation, authorization,
    provider, schema/RLS/Sync, app/MCP, migration or production behavior.
+   Rescout and freeze the next decision-independent boundary before any writer
+   starts; current read-only scouting recommends the Project existing-Client
+   selection boundary and rejects a general Space list until its unresolved
+   filtering, ordering, search, count and archive semantics have product
+   authority.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
