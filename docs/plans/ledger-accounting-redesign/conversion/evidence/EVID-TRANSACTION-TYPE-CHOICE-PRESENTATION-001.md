@@ -7,7 +7,8 @@
 - Claimed target surfaces: `SWIFT-F90B7B48C1F6`, `TEST-F66BBF1FC092`
 - Slice dossier:
   `conversion/implementation-slices/transaction-type-choice-presentation-contracts.json`
-- Verification state: ready only; executable implementation and tests are absent
+- Verification state: ready and assigned pending assignment-control CI;
+  executable implementation and tests remain absent
 - Ready scaffold hashes:
   - `TransactionTypeChoicePresentation.swift`:
     `ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629`
@@ -122,6 +123,18 @@ Immutable CI on the exact ready commit is mandatory before any isolated worker
 may begin. Passing the ready gate proves only that the frozen authority,
 coverage and isolation are coherent; it does not prove the planned
 presentation behavior.
+
+Original exact ready commit `5e79d83d672b44f320ebe686222e55f8158a8fdf`
+passed immutable Actions run `33706147469`. After the prior disjoint Project
+slice was verified, exact assignment base
+`8cf4bec690345eacfe77b954d8deddabda0ec128` passed immutable run
+`33707620621` with all 218 then-existing tests, generated contracts, both
+staging builds and clean tracked artifacts. Isolated branch/worktree
+`codex/supabase-slice-transaction-type-choice` /
+`/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_transaction_type_choice`
+exists at that exact base. `SUBAGENT-WORK-007` owns only the two named target
+paths; its assignment-control commit must pass immutable CI before the worker
+may write.
 
 ## Permanent Limits
 

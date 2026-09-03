@@ -389,6 +389,40 @@
         "exactIntegrationCommitCi": "passed: 9ff6540760548377fd5c4f528974045777619aad in immutable Actions run 33707305340; traceability 12 seconds, isolated target 2 minutes 44 seconds"
       },
       "integrationDisposition": "accepted and verified at 9ff6540760548377fd5c4f528974045777619aad after four corrected primary-review test gaps, independent P1 rejection and corrected adversarial re-review, complete local gates and immutable Actions run 33707305340; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-007",
+      "sliceId": "transaction-type-choice-presentation-contracts",
+      "status": "assignment_pending_ci",
+      "baseCommit": "8cf4bec690345eacfe77b954d8deddabda0ec128",
+      "readyCiRun": 33707620621,
+      "originalReadyCommit": "5e79d83d672b44f320ebe686222e55f8158a8fdf",
+      "originalReadyCiRun": 33706147469,
+      "branch": "codex/supabase-slice-transaction-type-choice",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_transaction_type_choice",
+      "workerAgent": "/root/client_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter TransactionTypeChoicePresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested quality-control sampling for at least the first couple subagent attempts. Preflight and actual-ready-diff review already corrected aggregate, owner-vocabulary, order, restart-shape and display-title precision risks, so the worker cannot change the frozen boundary or promote status."
+      }
     }
   ],
   "preflightFindings": [
