@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 202
+State version: 203
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCHECKLIST-EDIT-COMPLETE
+- Checkpoint: DIRECT-SPACE-CREATION-USE-CASE-READY-LOCAL-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2887,6 +2887,30 @@ modifying the running Firebase application before hard cutover.
   and retained branch `codex/supabase-slice-space-checklist-edit` plus all three
   candidate commits. The canonical Supabase worktree is clean; Firebase remains
   untouched.
+- A read-only scout selected direct Space creation ahead of Space-details
+  editing and rejected the complete assignment picker because selected-Item/
+  current-placement authority plus archive/no-op behavior are not settled.
+  Independent preflight then rejected the first direct-create presentation
+  draft for application-layer inversion, unsupported initial-field/cancellation
+  policy, redundant fingerprints/restart claims, an unclosed current validator
+  responsibility, O-026 overreach and an incomplete product outcome. The
+  corrected `direct-space-creation-use-case-contracts` package keeps raw input
+  transient, reuses only `SpaceDisplayName`/`SpaceCreationNotes`, and gives
+  operation metadata, command assembly, one port call and receipt validation to
+  `DirectSpaceCreationUseCase`. The two current Firebase validation surfaces are
+  mapped to this canonical target replacement but remain untouched; only the
+  two target leaf scaffolds may change. Two rejected never-committed scaffold
+  records were removed from the uncommitted manifest rather than falsely
+  retired. The complete local ready gate passes with 815 recorded / 800
+  discovered surfaces, zero errors and three established warnings; 388 mapped /
+  167 residual / 44 blockers; M0; all 243 tests in 54 suites; warnings-as-errors;
+  target isolation/contracts; repeatable project hashes `0657194a` / `388303af`;
+  both staging builds and clean formatting. Two independent corrected-diff
+  reviews return GO after splitting D-023 accounting authority from direct-
+  create scope, preventing raw port-error leakage and preserving exact receipt
+  local state. Exact-ready-SHA CI remains required. No extra slice worktree has been
+  created; implementation will use one writer in this Supabase worktree plus
+  read-only independent review. Firebase remains unchanged.
 
 ## Next Action
 
@@ -2989,8 +3013,8 @@ Continue without waiting on the two M1 evidence blockers:
    depth according to novelty and accounting/security risk without allowing a
    worker to promote its own status or edit canonical integration controls.
    Treat the verified `project-item-accounting-section-contracts` resolution as
-   the sole input authority for the ready
-   verified `project-item-link-presentation-contracts` leaf as the sole target
+   the sole input authority for the verified
+   `project-item-link-presentation-contracts` leaf as the sole target
    presentation authority for exact section/action/question/payer vocabulary,
    authoritative Unaccounted-only Link availability and no-action dismissal.
    Keep
@@ -3005,8 +3029,6 @@ Continue without waiting on the two M1 evidence blockers:
    authoritative partial counts, percentage policy, archive effects,
    Item/media/review/template/accounting, provider/schema/RLS/Sync, app/MCP,
    migration or production behavior.
-   Treat ready `project-core-details-read-contracts` and
-   `EVID-PROJECT-CORE-DETAILS-001` as the next frozen implementation boundary.
    Treat verified `project-core-details-read-contracts` and
    `EVID-PROJECT-CORE-DETAILS-001` as the sole provider-free single-Project core
    read authority. Preserve the four corrected test-exhaustiveness findings and
@@ -3103,6 +3125,18 @@ Continue without waiting on the two M1 evidence blockers:
    promotion-checkpoint CI pass after two candidate corrections. The clean
    temporary worktree is removed and its reviewed branch is retained. Preserve
    this contract when selecting the next coherent decision-independent slice.
+   Treat the corrected ready `direct-space-creation-use-case-contracts` dossier
+   and `EVID-DIRECT-SPACE-CREATION-USE-CASE-001` as the next candidate boundary.
+   It may change only `DirectSpaceCreationUseCase.swift` and its target tests.
+   Preserve caller-supplied transient raw input, canonical name/notes conversion,
+   application-owned operation metadata/command assembly, exactly one post-
+   validation `SpaceCreating` call and receipt validation. Do not add initial-
+   form defaults, cancellation policy, form fingerprints/codecs, uniqueness
+   queries, templates, SwiftUI, physical persistence, optimistic rows,
+   authorization, provider/schema/RLS/Sync, app/MCP, migration or production
+   behavior. Corrected-diff review is complete with two independent GO results;
+   run immutable exact-ready-SHA CI, then implement directly in this Supabase
+   worktree with independent review.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

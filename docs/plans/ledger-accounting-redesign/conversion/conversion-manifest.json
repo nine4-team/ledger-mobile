@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T09:46:53.312Z",
+    "lastSynchronizedAt": "2026-09-03T10:31:21.749Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18870,27 +18870,43 @@
         "firebaseCoupling": "none_detected"
       },
       "currentBehavior": "Performs pure Space name/form validation.",
-      "disposition": "preserve",
+      "disposition": "replace",
       "target": {
-        "owner": "",
-        "surfaces": [],
-        "securityRequirements": [],
-        "syncRequirements": []
+        "owner": "Direct Space Creation Use Case",
+        "surfaces": [
+          "SpaceCreationFormInput.validatedIntent",
+          "SpaceDisplayName canonical validation",
+          "SpaceCreationNotes canonical normalization"
+        ],
+        "securityRequirements": [
+          "Required-field validation produces typed intent only and never grants current membership or Space-create authorization"
+        ],
+        "syncRequirements": [
+          "Validation is provider-free and network-independent but carries no physical form-draft durability or synchronization claim"
+        ]
       },
       "migration": {
-        "rule": "",
-        "reconciliation": []
+        "rule": "Replace the app-only helper in the target with canonical domain conversion; do not import Firebase DTOs or source UI state.",
+        "reconciliation": [
+          "Target tests preserve the required-name and outer-whitespace behavior while removing duplicate validation ownership"
+        ]
       },
       "verification": {
-        "tests": [],
-        "acceptance": []
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "One canonical target validator covers submitted direct Space name/notes without modifying the current source helper"
+        ]
       },
-      "status": "characterized",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
-        "EVID-CAPABILITY-SPACES-REVIEW-001"
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Reuse after aligning one app/MCP command validation contract.",
+      "notes": "Target responsibility converges on the verified SpaceDisplayName/SpaceCreationNotes values and DirectSpaceCreationUseCase tests; no parallel app-only validator is copied. The current Firebase source file remains unchanged.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -21128,6 +21144,65 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-517FA18158D9",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/DirectSpaceCreationUseCase.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/DirectSpaceCreationUseCase.swift"
+        }
+      ],
+      "observedSourceHash": "97f9209ca116ab9eff6507b1f212fc3a5badd902f9d90730076a3f191a4d260b",
+      "acknowledgedSourceHash": "97f9209ca116ab9eff6507b1f212fc3a5badd902f9d90730076a3f191a4d260b",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Freezes the provider-free direct Space creation use-case boundary: caller raw input, canonical typed intent, application-owned operation assembly, one SpaceCreating call and receipt validation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Direct Space Creation Use Case",
+        "surfaces": [
+          "SpaceCreationFormInput",
+          "DirectSpaceCreationIntent",
+          "DirectSpaceCreationUseCase",
+          "single SpaceCreating invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Typed intent binds exact AccountID, preallocated SpaceID and Project-or-Business-Inventory scope without treating a name, route, template or backend path as identity",
+          "The application use case adds exact caller operation metadata; local validation and a returned receipt never grant current membership, Project-parent Space-create authorization or server commitment"
+        ],
+        "syncRequirements": [
+          "Provider-free assembly invokes the existing operation port exactly once and validates its receipt",
+          "No physical form/operation persistence, optimistic row, authoritative insertion or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only form intent/use-case values and decode no Firebase Space DTO, random legacy ID, route context, template, source export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic Project/Inventory inputs preserve exact caller identity and canonical submitted values through the verified command boundary"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free raw-input-to-validated-receipt application path and permanent exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
+      ],
+      "notes": "Comment-only corrected ready scaffold. Form input exposes canonical intent for immediate validation; the application use case reuses that conversion before invoking the verified port. No form fingerprint/restart, template, UI composition, physical persistence, provider, migration or production behavior is included.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "SWIFT-51D84FD65ADE",
@@ -37015,6 +37090,65 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "TEST-915EC8E0BFC9",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/DirectSpaceCreationUseCaseTests.swift"
+        }
+      ],
+      "observedSourceHash": "0c44c61b7b45313cfc8fb2964e84e9b4b5e84350fcb2bc4c398c5254706f4fb3",
+      "acknowledgedSourceHash": "0c44c61b7b45313cfc8fb2964e84e9b4b5e84350fcb2bc4c398c5254706f4fb3",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Freezes executable proof for raw input/canonical intent, exact scope and command forwarding, one operation-port call, receipt-state/failure normalization, source-validator conversion and exclusions.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Direct Space Creation Use Case Tests",
+        "surfaces": [
+          "raw form and canonical intent fixtures",
+          "Project and Business Inventory scope fixtures",
+          "exact command and single-call port fixtures",
+          "validation, exact receipt-state, normalized/unexpected port-failure and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Space, Project, Principal and Operation identities and prove typed local intent cannot authorize creation",
+          "Existing bounded failures reveal no raw form text, identity, route, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves request/receipt choreography only, not physical local persistence or authenticated synchronization",
+          "Exact caller-supplied command fields and no-call-on-validation-failure are verified without an optimistic or authoritative Space row"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase form state, Space/template document, export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Current required-name cases and exact Project/Inventory command evidence converge on the canonical target path"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "Tests prove only the provider-free direct Space creation use case and its permanent exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
+      ],
+      "notes": "Comment-only corrected ready test scaffold. Planned tests must verify layer ownership and failure/no-call behavior without claiming transient form restart, physical durability, authorization, provider or Sync evidence.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "TEST-934F8ECFA62C",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgeriOSTests/Integration/ItemCRUDIntegrationTests.swift",
@@ -39275,27 +39409,43 @@
         "firebaseCoupled": false
       },
       "currentBehavior": "Tests current Space form validation.",
-      "disposition": "preserve",
+      "disposition": "replace",
       "target": {
-        "owner": "",
-        "surfaces": [],
-        "securityRequirements": [],
-        "syncRequirements": []
+        "owner": "Direct Space Creation Use Case Tests",
+        "surfaces": [
+          "required Space name target fixtures",
+          "outer-whitespace and blank-notes fixtures",
+          "validation-before-port-call fixtures"
+        ],
+        "securityRequirements": [
+          "Synthetic fixtures expose only stable validation failures and no credentials, provider payloads or production identity"
+        ],
+        "syncRequirements": [
+          "Tests prove network-independent validation only, not physical draft persistence or authenticated Sync"
+        ]
       },
       "migration": {
-        "rule": "",
-        "reconciliation": []
+        "rule": "Use target-only synthetic values and load no Firebase form state, model or export.",
+        "reconciliation": [
+          "Existing required-name cases map to canonical target conversion with no duplicate validator"
+        ]
       },
       "verification": {
-        "tests": [],
-        "acceptance": []
+        "tests": [
+          "swift test --package-path LedgeriOS --filter DirectSpaceCreationUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused target tests supersede the source helper's conversion responsibility while source tests stay untouched"
+        ]
       },
-      "status": "characterized",
+      "status": "target_mapped",
       "blockers": [],
       "evidence": [
-        "EVID-CAPABILITY-SPACES-REVIEW-001"
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Retain and share validation across app/MCP commands.",
+      "notes": "Target replacement tests prove the canonical SpaceDisplayName/SpaceCreationNotes path plus use-case failure propagation; current Firebase tests remain unchanged as source evidence.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

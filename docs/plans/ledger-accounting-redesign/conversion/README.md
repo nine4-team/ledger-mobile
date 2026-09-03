@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 374 of 541 target-relevant
+Status: M0 inventory classification complete; 388 of 555 target-relevant
 surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -457,6 +457,26 @@ surfaces are verified. Promotion commit
 `33740343879`. The clean temporary worker worktree was removed; its branch and
 reviewed candidate history remain recoverable.
 `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
+
+The next bounded boundary is
+`direct-space-creation-use-case-contracts`. Independent preflight rejected its
+first presentation-owned draft for layer inversion, unsupported initial-field
+and cancellation policy, redundant fingerprints/restart claims, an unclosed
+source-validator responsibility and O-026 overreach. The corrected package
+keeps caller-supplied raw form input transient, converts it only through the
+verified canonical Space name/notes values, and gives operation metadata,
+command assembly, one `SpaceCreating` call and receipt validation to a separate
+application use case. It claims four conversion surfaces but permits code
+changes only in two target-only leaves; the two current Firebase validation
+surfaces remain untouched and are replaced in the target by the canonical
+validator/tests. The complete local ready gate passes with 815 recorded / 800
+discovered surfaces, zero errors and three established warnings; 388 mapped /
+167 residual / 44 blockers; M0; all 243 tests in 54 suites; warnings-as-errors;
+target isolation/contracts; repeatable project hashes `0657194a` / `388303af`;
+both staging builds and clean formatting. Two independent corrected-diff
+reviews return GO with no remaining P0-P3 issue. Immutable exact-ready-SHA CI
+remains required before implementation.
+`EVID-DIRECT-SPACE-CREATION-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
