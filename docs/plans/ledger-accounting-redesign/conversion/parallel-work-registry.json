@@ -183,7 +183,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-004",
       "sliceId": "project-core-details-read-contracts",
-      "status": "assigned",
+      "status": "integrated_pending_verification",
       "baseCommit": "4fd81f477f87de9528c25559d0950dbdd0136717",
       "readyCiRun": 33697079580,
       "branch": "codex/supabase-slice-project-core-details",
@@ -210,7 +210,41 @@
         "completeLocalGate": true,
         "exactIntegrationCommitCi": true,
         "reason": "The user requested early quality-control sampling, and this slice composes shared Project/Client identity, canonical description, revision and offline-readiness semantics."
-      }
+      },
+      "handoff": {
+        "candidateCommit": "62d59f1d45a90cfbfb3fecc86486a9c95173d0d4",
+        "candidateCommits": [
+          "c7719ce51a83989f399f0ed8c2fd9c1c0142da67",
+          "62d59f1d45a90cfbfb3fecc86486a9c95173d0d4"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 205 tests in 47 suites by worker and primary agent",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Locally observed revision is conflict-precondition evidence only and is not current authoritative server revision under incomplete, partial or stale evidence."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_four_corrected_test_findings",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_with_no_remaining_p0_p3_after_correction",
+        "findings": [
+          "Primary review required a direct two-distinct-row cardinality rejection in addition to duplicate-row coverage.",
+          "Primary review required direct negative visible-count rejection.",
+          "Primary review required stale-plus-complete rejection in addition to partial-plus-complete coverage.",
+          "Primary review required an exhaustive literal partition of valid and invalid waiting states."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 205 tests in 47 suites, repeatable project generation, macOS and iOS staging builds, clean formatting and untouched source project",
+        "exactIntegrationCommitCi": "pending"
+      },
+      "integrationDisposition": "integrated as bd576c52/01fc6a0f after corrected every-line primary review and independent adversarial re-review; acceptance remains pending complete local integration gates and immutable CI on the exact integration checkpoint"
     }
   ],
   "preflightFindings": [

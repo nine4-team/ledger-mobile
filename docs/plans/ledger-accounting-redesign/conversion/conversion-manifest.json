@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-02T23:57:04.406Z",
+    "lastSynchronizedAt": "2026-09-03T00:15:16.165Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -20525,12 +20525,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectCoreDetailsData.swift"
         }
       ],
-      "observedSourceHash": "cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e",
-      "acknowledgedSourceHash": "cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e",
+      "observedSourceHash": "a8dac7b7b351db6722d5ab4f9cd851d86f3d36439298539b83fa3e88d6696605",
+      "acknowledgedSourceHash": "a8dac7b7b351db6722d5ab4f9cd851d86f3d36439298539b83fa3e88d6696605",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains the comment-only ready-gate scaffold for a provider-free single-Project core-record read contract.",
+      "currentBehavior": "Implements the provider-free single-Project core-record read contract with exact identity, relationship, canonical description, locally observed revision, offline truth, bounded failures and a narrow query port.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Core Details Read Contracts",
@@ -20565,14 +20565,14 @@
           "Synthetic single-Project fixtures prove exact identity/relationship/core/revision/readiness/restart/refusal and port behavior without a database, provider, hosted resource or production input"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-CORE-DETAILS-001"
       ],
-      "notes": "Ready scaffold only. The frozen slice is limited to exact Account/Project identity, verified ProjectSummary relationship/core fields, canonical optional description, exact locally observed revision, explicit local readiness/absence/failure truth, restart and one narrow query port. It cannot define a complete workspace, Project children, media, accounting, mutation, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented provider-free contract only. The frozen slice is limited to exact Account/Project identity, verified ProjectSummary relationship/core fields, canonical optional description, exact locally observed revision, explicit local readiness/absence/failure truth, restart and one narrow query port. It cannot define a complete workspace, Project children, media, accounting, mutation, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35066,12 +35066,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift"
         }
       ],
-      "observedSourceHash": "f0947a1bca6060d39a05255fa442830f707851d944c08945d6d71f11d3ed7c62",
-      "acknowledgedSourceHash": "f0947a1bca6060d39a05255fa442830f707851d944c08945d6d71f11d3ed7c62",
+      "observedSourceHash": "fbeb5c6f0fe4ee3efe439b38547378b12989eb6318ac24f26f647709dbe825e8",
+      "acknowledgedSourceHash": "fbeb5c6f0fe4ee3efe439b38547378b12989eb6318ac24f26f647709dbe825e8",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains the comment-only ready-gate test scaffold for the provider-free single-Project core-record read contract.",
+      "currentBehavior": "Tests the provider-free single-Project core-record read contract across exact identity, relationship, canonical description, revision, readiness, restart, refusal, diagnostics, port validation, failure, cancellation and encoded exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Core Details Read Contracts",
@@ -35104,14 +35104,14 @@
           "Tests prove only the provider-free single-Project core-record contract and explicitly exclude complete-workspace, child, media, accounting, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-PROJECT-CORE-DETAILS-001"
       ],
-      "notes": "Ready scaffold only. Planned tests cover exact Account/Project/Client identity, canonical description, active/archived core rows, local revision truth, explicit completeness/readiness/absence/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure, cancellation and encoded exclusions. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented synthetic tests cover exact Account/Project/Client identity, canonical description, active/archived core rows, local revision truth, explicit completeness/readiness/absence/failure states, canonical restart, bounded tamper refusal, exact request matching, upstream failure, cancellation and encoded exclusions. They cannot prove physical persistence, authorization, Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

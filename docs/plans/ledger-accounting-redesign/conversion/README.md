@@ -283,9 +283,16 @@ accounting, mutations, authorization, provider/schema/RLS/Sync, app/MCP,
 migration and production behavior. The complete local ready gate passes with
 all 199 existing target tests in 46 suites, repeatable generation, both staging
 builds and clean isolation. Exact ready commit `4fd81f47` passed immutable
-Actions run `33697079580`; only the registered two-path isolated assignment is
-authorized, and every-line primary plus independent adversarial review remain
-mandatory before integration; `EVID-PROJECT-CORE-DETAILS-001`.
+Actions run `33697079580`. Candidate `c7719ce5` changed only the registered two
+paths; primary every-line review found four test-exhaustiveness gaps despite a
+green suite, and test-only correction `62d59f1d` covered distinct multiple rows,
+negative count, stale completeness and every waiting state. Primary and
+independent re-review plus 6 focused and all 205 tests in 47 suites pass with no
+remaining P0-P3 finding. Integrated as `bd576c52`/`01fc6a0f`; complete local
+integration gates pass with conversion/M0 controls, isolation/contracts, 205
+tests, repeatable generation, both builds and clean artifacts. Immutable exact-
+commit CI remains required before verification;
+`EVID-PROJECT-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

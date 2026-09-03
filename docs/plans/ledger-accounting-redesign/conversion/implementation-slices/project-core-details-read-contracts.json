@@ -3,7 +3,7 @@
   "sliceId": "project-core-details-read-contracts",
   "title": "Read one Project's provider-free core record and local revision with explicit offline truth",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Core Details Read Contracts",
   "surfaceIds": ["SWIFT-4C4690368BEC", "TEST-5F24EA7C310A"],
   "requirements": [
@@ -123,7 +123,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "Active and archived rows preserve exact ProjectSummary and locally observed revision, including nil/canonical descriptions, UInt64.max revision and an active Project with archived Client; AccountID and ProjectID independently alter the fingerprint.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
     },
     {
@@ -132,7 +132,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "Ready found/authoritative-absent, incomplete found/empty, partial found/empty and stale found/empty fixtures round-trip byte-identically with exact local version/as-of/readiness/completeness/row/revision evidence; archived found never becomes absent and non-ready revision remains non-authoritative.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
     },
     {
@@ -141,7 +141,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "Account/Project/request/fingerprint mismatch, malformed Project/Client relationship, multiple rows, hidden count, nonfinite as-of, invalid completeness, malformed revision and noncanonical description fail atomically through exact unique bounded provider-neutral diagnostics.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
     },
     {
@@ -150,7 +150,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "Unavailable is non-enumerating and carries no cached evidence; retryable and required-update remain distinct; cached failure evidence matches the exact request and cannot upgrade completeness, revision authority or authorization.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
     },
     {
@@ -159,7 +159,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
       "covers": ["PROJECTCORE-REQ-001", "PROJECTCORE-REQ-002", "PROJECTCORE-REQ-003", "PROJECTCORE-REQ-004", "PROJECTCORE-REQ-005", "PROJECTCORE-REQ-006", "PROJECTCORE-REQ-007", "PROJECTCORE-REQ-008"],
       "expected": "A deterministic reference port validates before yielding and streams only exact Account/Project request updates; a raw consumer proves mismatch rejection, upstream failure yields no false result and cancellation stops delivery.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-CORE-DETAILS-001"]
     },
     {
@@ -175,5 +175,5 @@
   "implementationEvidence": ["EVID-PROJECT-CORE-DETAILS-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready-gate only. Primary and independent adversarial preflight approved this bounded provider-free core-record read after constraining revision to exact locally observed conflict-precondition evidence, requiring canonical description revalidation, allowing active Project/archived Client history, and rejecting any full-workspace or current Firebase/app/MCP claim. O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside. Complete local ready gates pass with all 199 existing target tests in 46 suites, repeatable generation, both staging builds and clean isolation. Exact ready commit 4fd81f477f87de9528c25559d0950dbdd0136717 passed immutable Actions run 33697079580; only registered two-path assignment SUBAGENT-WORK-004 is authorized, with every-line primary and independent adversarial review still required before integration."
+  "notes": "Implemented provider-free contract pending exact integration-checkpoint CI. Primary and independent adversarial preflight approved this bounded core-record read after constraining revision to exact locally observed conflict-precondition evidence, requiring canonical description revalidation, allowing active Project/archived Client history, and rejecting any full-workspace or current Firebase/app/MCP claim. Exact ready commit 4fd81f477f87de9528c25559d0950dbdd0136717 passed immutable Actions run 33697079580. Worker candidate c7719ce51a83989f399f0ed8c2fd9c1c0142da67 changed only the registered two paths; primary every-line review found four test-exhaustiveness gaps covering distinct multiple rows, negative count, stale completeness and waiting-state exhaustiveness. Test-only correction 62d59f1d45a90cfbfb3fecc86486a9c95173d0d4 resolved all four, and primary plus independent re-review found no remaining P0-P3 issue. Complete local gates pass: six focused and all 205 tests in 47 suites, conversion and M0 controls, target isolation/generated contracts, repeatable generation, both staging builds and clean artifacts. O-023/O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; operational verification remains planned until immutable CI passes on the exact integration commit."
 }

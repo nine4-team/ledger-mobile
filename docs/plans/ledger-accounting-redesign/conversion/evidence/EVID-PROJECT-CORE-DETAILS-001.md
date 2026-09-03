@@ -7,10 +7,9 @@
 - Claimed target surfaces: `SWIFT-4C4690368BEC`, `TEST-5F24EA7C310A`
 - Slice dossier:
   `conversion/implementation-slices/project-core-details-read-contracts.json`
-- Verification state: ready contract; complete local ready gate passed and
-  immutable CI passed on exact ready commit
-  `4fd81f477f87de9528c25559d0950dbdd0136717`; implementation is authorized
-  only inside the registered two-path isolated worker assignment
+- Verification state: implementation integrated after enhanced review; five
+  executable obligations pass locally and the operational obligation remains
+  planned until complete integration gates and immutable exact-commit CI pass
 - Ready scaffold hashes:
   - `ProjectCoreDetailsData.swift`:
     `cc13b8b394e52067dc66fd08e0700ab200645811b6c3249bf89ec2dcf504f68e`
@@ -98,6 +97,23 @@ contracts, both staging builds and clean-artifact verification. This authorizes
 only registered assignment `SUBAGENT-WORK-004` to replace the two scaffolds;
 every-line primary review, independent adversarial review, complete integration
 gates and exact integration-commit CI remain mandatory before acceptance.
+
+Worker candidate `c7719ce51a83989f399f0ed8c2fd9c1c0142da67`
+descended from the frozen ready commit and changed exactly the two registered
+paths. Its six focused and all 205 tests in 47 suites passed. Primary every-line
+review found four test-exhaustiveness gaps despite that green result: two
+distinct rows, negative visible count, stale-plus-complete evidence and the
+complete valid/invalid waiting-state partition were not asserted directly.
+Test-only correction `62d59f1d45a90cfbfb3fecc86486a9c95173d0d4`
+added those cases without changing implementation. Primary reruns and an
+independent adversarial re-review pass with no remaining P0-P3 finding. The
+candidate was integrated as `bd576c52` and `01fc6a0f`; complete integration
+gates pass: conversion sync/check/report, capability/query/residual/M0 controls,
+target isolation and generated app/MCP contracts, 6 focused and all 205 tests
+in 47 suites, repeatable generation with unchanged project/scheme hashes, both
+staging builds, clean formatting and no source-project change. M1 and M2 retain
+exactly their expected 2 and 167 blockers. Immutable CI on the exact integration
+checkpoint is still required before verification.
 
 ## Permanent Limits
 
