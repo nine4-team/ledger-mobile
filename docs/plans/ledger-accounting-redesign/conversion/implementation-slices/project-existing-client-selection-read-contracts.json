@@ -3,7 +3,7 @@
   "sliceId": "project-existing-client-selection-read-contracts",
   "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Existing-Client Selection Projection",
   "surfaceIds": ["SWIFT-0C8433A6C6F4", "TEST-8B902DC97729"],
   "requirements": [
@@ -124,7 +124,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "A mixed active/archived synthetic ClientListSnapshot projects only active Clients in exact relative source order; equal display names remain distinct by ID, padded valid display text remains byte-exact, exact source-directory and visible counts are preserved, and query/evidence fingerprints remain bound to exact Account/source/projection evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
     {
@@ -133,7 +133,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "Ready-complete true-empty and archived-only evidence yield noActiveClient only when sourceDirectoryRowCount equals visibleRowCountBeforeFiltering. Empty or archived-only ready-complete evidence with a larger visible count yields directoryIncomplete; ready-incomplete, partial and stale empty evidence also yields directoryIncomplete. Non-exhaustive, partial or stale active evidence remains available and explicitly selectable as non-authorizing local intent. Zero/one/many snapshots encode no selected/default value and make no final UI-preselection claim.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
     {
@@ -142,7 +142,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "Explicit active ClientID selection produces exactly ProjectClientSelectionInput.existing(ClientID) with no display-name or new-Client payload; archived, unknown and another snapshot's ID refuse, and no candidate count creates an implicit selection.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
     {
@@ -151,7 +151,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "Account/source/query/evidence fingerprint rebinding; identical and conflicting duplicate Client IDs; cross-Account rows; inserted/removed/reordered active rows; changed but structurally valid sourceDirectoryRowCount or visibleRowCountBeforeFiltering under the old evidence fingerprint; negative, below-active or source-above-visible counts; invalid completeness or finite as-of evidence; and malformed encoding fail atomically through literal unique bounded provider-neutral diagnostics. Separately valid later display/lifecycle/audit evidence constructs a new valid projection rather than being mislabeled immutable tampering.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
     {
@@ -160,7 +160,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "Representative available, exhaustive ready-complete no-active, non-exhaustive ready-complete no-active, ready-incomplete, partial and stale projections round-trip byte-identically with exact Account, ordered active rows, source/query/evidence fingerprints, source-row/visible counts, completeness, quality, LocalDataVersion and as-of evidence; restart creates no selected/default value or stronger local authority.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
     {
@@ -169,7 +169,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "A test-only consumer uses the existing ClientProjectDirectoryQuerying port and the pure projection to deliver exact snapshots; upstream Account mismatch, failure and cancellation produce no false projection or selection. Exact encoded-key allowlists include sourceDirectoryRowCount and visibleRowCountBeforeFiltering but exclude selected/default, revision, Project/history/Transfer/CRM/category/media/mutation/Auth/provider/schema/RLS/Sync/persistence/app/MCP/migration/hosted/production fields, and no new production protocol, repository, adapter or query interface exists.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
     {
@@ -185,5 +185,5 @@
   "implementationEvidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Delegated implementation remains unverified. Independent implementation review rejected the first worker candidate for a P1 authoritative-empty bug: visibleRowCountBeforeFiltering may exceed represented source rows, so activeClients alone cannot prove no active Client. The corrected frozen contract adds evidence-bound sourceDirectoryRowCount and permits noActiveClient only when ready, complete and source-exhaustive. Earlier preflight also rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule. The boundary remains a pure projection over verified ClientListSnapshot, carries no default selection, and requires explicit active ClientID. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
+  "notes": "Implemented pending exact integration-commit CI. Independent implementation review rejected candidate 41a2033c for a P1 authoritative-empty bug: visibleRowCountBeforeFiltering may exceed represented source rows, so activeClients alone cannot prove no active Client. Corrected candidate d206f542 adds evidence-bound sourceDirectoryRowCount and permits noActiveClient only when ready, complete and source-exhaustive. Primary every-line review added four test corrections across the candidate sequence; final primary and independent re-review report no remaining P0-P3 issue. The complete central integration gate passes with seven focused/all 218 tests, conversion/M0 and target isolation/generated-contract controls, repeatable project generation and both staging builds. Earlier preflight also rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule. The boundary remains a pure projection over verified ClientListSnapshot, carries no default selection, and requires explicit active ClientID. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
 }

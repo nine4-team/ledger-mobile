@@ -313,7 +313,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-006",
       "sliceId": "project-existing-client-selection-read-contracts",
-      "status": "active",
+      "status": "integrated_pending_ci",
       "baseCommit": "e6d805630c2ba1f366a6ecf1715a8cf0e60a90ee",
       "readyCiRun": 33704608811,
       "branch": "codex/supabase-slice-project-existing-client-selection",
@@ -351,6 +351,40 @@
         "independentAdversarialReview": "p1_rejected_false_authoritative_empty",
         "finding": "visibleRowCountBeforeFiltering may exceed represented source rows, so empty active rows plus ready/complete evidence cannot prove no omitted active Client",
         "requiredCorrection": "preserve and fingerprint-bind sourceDirectoryRowCount; noActiveClient requires ready, complete and sourceDirectoryRowCount equal to visibleRowCountBeforeFiltering; directly test exhaustive and non-exhaustive empty/archived/active shapes and both count tamper/structural failures"
+      },
+      "handoff": {
+        "candidateCommit": "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3",
+        "candidateCommits": [
+          "de476aed15f7e1d07c47a33fb466eadc78a29d36",
+          "41a2033c51c650e8d678d4bd1b0d2e246c419273",
+          "c2492452e1f8df806d5b6332fd9b9cc8017054ea",
+          "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectExistingClientSelectionData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift"
+        ],
+        "focusedTests": "passed: 7 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 218 tests in 49 suites by worker and primary agent",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Visible active Clients may form local intent under incomplete evidence, but the future authoritative handler must recheck Account, lifecycle and membership before apply."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_four_test_exhaustiveness_corrections",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_p1_authoritative_empty_correction",
+        "findings": [
+          "Primary review required direct partial/stale selection, distinct insertion, both invalid completeness combinations and non-exhaustive restart coverage.",
+          "Independent review rejected false noActiveClient authority when visible rows exceeded represented source rows.",
+          "Correction binds exact sourceDirectoryRowCount and requires source exhaustiveness for noActiveClient."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 7 tests in 1 suite after correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target environment/generated contracts, 7 focused/all 218 tests, repeatable project generation, macOS and generic iOS Simulator staging builds, clean diff formatting and untouched Firebase checkout",
+        "exactIntegrationCommitCi": "pending"
       }
     }
   ],

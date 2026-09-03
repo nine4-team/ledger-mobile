@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T02:09:50.931Z",
+  "generatedFromManifestSync": "2026-09-03T02:20:36.190Z",
   "totals": {
     "slices": 50,
     "claimedTargetSurfaces": 121,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 102
+    "implementationAdvancedTargetSurfaces": 104
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 2,
+    "ready": 1,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 47,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -351,7 +351,7 @@
       "sliceId": "project-existing-client-selection-read-contracts",
       "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Existing-Client Selection Projection",
       "surfaceIds": [
         "SWIFT-0C8433A6C6F4",

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 175
+State version: 176
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SELECTION-P1-CORRECTION-TXTYPE-READY-CI
+- Checkpoint: PROJECT-SELECTION-INTEGRATED-LOCAL-GATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2604,6 +2604,29 @@ modifying the running Firebase application before hard cutover.
   every-line review, independent adversarial review, the complete integration
   gate and immutable CI on the exact integration commit remain mandatory. No
   provider, Firebase or production action occurred.
+- `SUBAGENT-WORK-006` produced four bounded candidates from the exact ready
+  base; final candidate `d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3`
+  changed only the two registered target paths. Root every-line review required
+  four direct test-coverage corrections across the candidate sequence.
+  Independent adversarial review rejected an earlier candidate for a P1 false-
+  authoritative-empty defect: a visible count greater than represented source
+  rows could hide an active Client. The correction stores and fingerprint-binds
+  `sourceDirectoryRowCount`, validates the count relationship and permits
+  `noActiveClient` only when ready, complete and source-exhaustive. Final root
+  and independent review found no remaining P0-P3 issue; worker, root and
+  reviewer focused runs pass all seven tests, and the worker full run passes all
+  218 tests in 49 suites. The candidates were integrated as commits
+  `63baff1a`, `cf9c666f`, `263e8ac7` and `b4e4edae`. The complete central
+  integration gate passes: conversion sync/check/report,
+  capability/query/residual/M0 controls, target environment/generated contracts,
+  seven focused/all 218 tests in 49 suites, repeatable project generation, both
+  staging builds, clean formatting and an untouched Firebase checkout.
+  Immutable exact-integration-checkpoint CI remains pending.
+  The disjoint `transaction-type-choice-presentation-contracts` ready gate also
+  passed exact ready commit `5e79d83d` in immutable Actions run `33706147469`,
+  and the corrected Project-selection control checkpoint `442ecfce` passed
+  immutable run `33706591706`; that next slice has not been delegated. No
+  provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2742,7 +2765,7 @@ Continue without waiting on the two M1 evidence blockers:
    let the slice become a Client workspace/CRM model or acquire Projects/counts,
    Transfer eligibility, media, accounting, history, mutation, authorization,
    provider, schema/RLS/Sync, app/MCP, migration or production behavior.
-   Treat active isolated `project-existing-client-selection-read-contracts` and
+   Treat integrated-pending-CI `project-existing-client-selection-read-contracts` and
    `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001` as the frozen worker boundary.
    Preserve its pure projection over the existing directory port, absence of
    any selected/default value or final UI preselection policy, explicit active
@@ -2750,11 +2773,13 @@ Continue without waiting on the two M1 evidence blockers:
    evidence fingerprint including source-directory row count and visible count.
    Never claim `noActiveClient` unless ready, complete and source-exhaustive;
    non-exhaustive no-active evidence remains `directoryIncomplete`. Exact ready commit `e6d80563`
-   passed immutable run `33704608811`, and active `SUBAGENT-WORK-006` is
-   registered from that exact base. The worker may edit
-   only the two registered target paths; primary every-line and independent
-   adversarial review, the complete integration gate and exact integration-SHA
-   CI remain mandatory before promotion. General Space lists
+   passed immutable run `33704608811`. Corrected candidate `d206f542` changed
+   only the two registered paths; primary every-line and independent
+   adversarial review found no remaining P0-P3 issue after the reviews caught
+   four direct-test gaps and the P1 false-authoritative-empty defect. All seven
+   focused tests and root/worker full 218-test runs pass. The complete central
+   integration gate also passes. Require exact integration-checkpoint CI before promotion.
+   General Space lists
    remain rejected until filtering, ordering, search, count and archive
    semantics have product authority. Treat ready
    `transaction-type-choice-presentation-contracts` and

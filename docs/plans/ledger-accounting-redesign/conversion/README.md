@@ -342,13 +342,15 @@ review rejected the first worker candidate for a P1 false-authoritative-empty
 case: a visible count larger than represented source rows could hide an active
 Client. The corrected frozen contract adds evidence-bound
 `sourceDirectoryRowCount` and permits `noActiveClient` only when the ready,
-complete source is exhaustive. Its two target-only
-integration-branch paths remain comments. Exact ready commit `e6d80563` passed
+complete source is exhaustive. Corrected candidate `d206f542` changed only the
+two registered paths; final root and independent re-review found no remaining
+P0-P3 issue. The complete central integration gate passes with 7 focused/all
+218 tests, conversion/M0 and target isolation/generated-contract controls,
+repeatable project generation and both staging builds. Exact ready commit `e6d80563` passed
 immutable Actions run `33704608811`, including all 211 existing tests,
 generated contracts and both staging builds. Registered `SUBAGENT-WORK-006`
-now owns only those two paths in its isolated worktree; primary every-line
-review, independent adversarial review, the complete local gate and immutable
-exact-integration-SHA CI remain mandatory before promotion.
+owned only those two paths in its isolated worktree. Immutable exact-integration-
+SHA CI remains mandatory before promotion.
 `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001`.
 
 The next disjoint ready boundary is

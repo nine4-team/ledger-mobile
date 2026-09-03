@@ -1,19 +1,24 @@
 # EVID-PROJECT-EXISTING-CLIENT-SELECTION-001 — Project Existing-Client Selection Projection
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free Project existing-Client selection projection
+- Class: implementation checkpoint / provider-free Project existing-Client selection projection
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-0C8433A6C6F4`, `TEST-8B902DC97729`
 - Slice dossier:
   `conversion/implementation-slices/project-existing-client-selection-read-contracts.json`
-- Verification state: ready and delegated from the exact green ready commit;
-  executable implementation and tests are absent on the integration branch
+- Verification state: implemented after corrected primary and independent
+  review; exact integration-commit CI remains pending
 - Ready scaffold hashes:
   - `ProjectExistingClientSelectionData.swift`:
     `184acab06203e860c4f68323a8cd580c23163c0618bfc8a0fddeb9caf9c35f3f`
   - `ProjectExistingClientSelectionDataTests.swift`:
     `8994a2c92f54a54e7881083a1c0f7531e11f8fafe948bd46c8352b9cc7f24273`
+- Reviewed implementation hashes:
+  - `ProjectExistingClientSelectionData.swift`:
+    `fcc321e02472e209791970dbe4c918455dd6d60c7ec5c0ae0dea4f4f30603ca0`
+  - `ProjectExistingClientSelectionDataTests.swift`:
+    `5c2f4c5325b0a793487615354ae610281a8479c1d33a3e36172f8a7f9f8b4bd9`
 
 ## Selection and Scope
 
@@ -173,8 +178,30 @@ Passing these ready gates proves only that the frozen authority, coverage and
 isolation were coherent before the isolated worker began. It does not prove the
 planned projection behavior.
 
+## Implementation Review
+
+`SUBAGENT-WORK-006` produced candidates `de476aed`, `41a2033c`, `c2492452`
+and final `d206f542` from the exact ready base. Every candidate changed only the
+two registered paths. Root every-line review required direct partial/stale
+selection, distinct insertion, both invalid completeness combinations and
+non-exhaustive no-active restart coverage.
+
+Independent review rejected `41a2033c` for the P1 authoritative-empty defect
+described above. The corrected implementation stores
+`sourceDirectoryRowCount`, validates
+`activeClients.count <= sourceDirectoryRowCount <= visibleRowCountBeforeFiltering`,
+binds both counts into evidence, and requires exact source exhaustiveness before
+returning `noActiveClient`. Final root and independent re-review of `d206f542`
+found no remaining P0-P3 issue. Root, worker and reviewer focused runs pass all
+seven tests; root and worker full package runs pass all 218 tests in 49 suites.
+The central integration gate also passes conversion sync/check/report,
+capability/query/residual/M0 controls, target environment and generated-contract
+checks, repeatable project generation, macOS and generic iOS Simulator staging
+builds, clean formatting and an untouched Firebase checkout. Immutable exact-
+integration-commit CI remains mandatory before verification promotion.
+
 ## Permanent Limits
 
-Ready status proves no executable filtering, selection, offline durability,
-authorization, synchronization, database policy, migration reconciliation,
-app/MCP behavior, hosted resource, production behavior, release or cutover.
+Implemented status proves no physical offline durability, authorization,
+synchronization, database policy, migration reconciliation, app/MCP behavior,
+hosted resource, production behavior, release or cutover.
