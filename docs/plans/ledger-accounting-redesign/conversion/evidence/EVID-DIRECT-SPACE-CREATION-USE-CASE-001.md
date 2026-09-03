@@ -153,6 +153,11 @@ generated contracts, macOS/iOS staging builds and clean-artifact checks in 2
 minutes 58 seconds. The slice, both target leaves and both converted current
 validation responsibilities are verified.
 
+Promotion commit `880727f74355699e10466e68d29e1265d5f95fe1`
+passed immutable Actions run `33747118216` (traceability 7 seconds; isolated
+target 2 minutes 39 seconds), confirming the synchronized verified state and
+clean tracked artifacts.
+
 ## Permanent Exclusions
 
 This evidence does not authorize SwiftUI layout/copy/navigation, physical form

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-details-update-use-case-contracts",
+  "title": "Validate and dispatch one complete Space details replacement",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Space Details Update Use Case",
+  "surfaceIds": ["SWIFT-306643A5CD0D", "TEST-235F73A8DC9E"],
+  "requirements": [
+    {
+      "id": "SPDETAILUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One details replacement binds exact AccountID, stable SpaceID and the edit's exact ExpectedSpaceRevision. Display text, route, provider path, copied scope, readiness, as-of time, query fingerprint or cached-status metadata cannot define identity or substitute for the exact revision concurrency evidence.",
+      "decisionIds": [],
+      "verificationIds": ["SPDETAILUSE-TEST-001", "SPDETAILUSE-TEST-002", "SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005", "SPDETAILUSE-TEST-006"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Submitted display name is nonblank after outer-whitespace removal. Optional notes use the same normalization, nil or whitespace-only means absent, accepted interior text and duplicate names are preserved, and no default, uniqueness query or unapproved length cap exists.",
+      "decisionIds": [],
+      "verificationIds": ["SPDETAILUSE-TEST-001", "SPDETAILUSE-TEST-002", "SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "UpdateSpaceDetails replaces the complete mutable name-and-optional-notes pair for one Space revision. It is not a patch, carries no original/base values and decides no dirty/unchanged/no-op policy; it cannot change scope, lifecycle, checklist, template, Item, review, media or accounting state.",
+      "decisionIds": [],
+      "verificationIds": ["SPDETAILUSE-TEST-002", "SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "A non-Codable SpaceDetailsUpdateFormInput retains caller-supplied transient raw name/notes plus exact Account/Space/base revision. Immutable replacement changes only the selected raw field; validatedIntent reuses canonical values but adds no Operation identity, readiness/lifecycle policy, authorization, persistence, fingerprint or restart claim.",
+      "decisionIds": [],
+      "verificationIds": ["SPDETAILUSE-TEST-001", "SPDETAILUSE-TEST-002", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "SpaceDetailsUpdateUseCase receives raw form input plus caller OperationID, PrincipalID, operation contract version and finite capture time; revalidates; constructs the verified SpaceDetailsUpdateDraft/UpdateSpaceDetailsCommand; invokes SpaceDetailsUpdating exactly once only after validation; validates the receipt; preserves exact local state, Swift CancellationError and normalized SpaceCreationFailure/SpaceDetailsUpdateFailure values; and maps unexpected transport errors to SpaceDetailsUpdateFailure.localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005", "SPDETAILUSE-TEST-006"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "This target-only slice maps only save-intent normalization and dispatch. The full source surface SWIFT-9F4789704808 remains target_mapped because initial population, transient UI state, immediate errors, dirty/no-op policy, success/cancel dismissal, layout/copy and composition remain unconverted.",
+      "decisionIds": [],
+      "verificationIds": ["SPDETAILUSE-TEST-001", "SPDETAILUSE-TEST-005", "SPDETAILUSE-TEST-006"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only leaves may change. SpaceCoreDetailsUpdate is only a future composition dependency: this use case consumes no read/readiness snapshot and decides no waiting/partial/stale/failure-cache/active/archived eligibility. SwiftUI, physical persistence, optimistic projection, authorization, schema/RLS/Sync, provider, MCP, migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["SPDETAILUSE-TEST-001", "SPDETAILUSE-TEST-002", "SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005", "SPDETAILUSE-TEST-006"]
+    },
+    {
+      "id": "SPDETAILUSE-REQ-008",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Space in Budget Context",
+      "invariant": "Space details are organizational text only. Replacing them creates or changes no Transaction, occurrence, Invoice, budget contribution, payer, price or other accounting state.",
+      "decisionIds": ["D-023"],
+      "verificationIds": ["SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceDetailsUpdateFormInput carries exact Account/Space/expected-revision identity plus caller raw name and optional notes, is non-Codable, and supports immutable raw-field replacement without defaults or policy.",
+        "validatedIntent reuses SpaceDisplayName and SpaceCreationNotes only; it requires no Space directory/readiness evidence and does no operation or authorization work.",
+        "SpaceDetailsUpdateUseCase adds caller operation metadata, constructs the verified complete-replacement command, invokes one SpaceDetailsUpdating call after validation and validates the exact receipt.",
+        "Swift CancellationError remains concurrency control flow; normalized SpaceCreationFailure and SpaceDetailsUpdateFailure values remain stable; unexpected transport errors map to SpaceDetailsUpdateFailure.localAcceptanceFailed.",
+        "The current modal's newline-only acceptance hole is corrected by canonical whitespace-and-newline validation, while every remaining UI responsibility stays target_mapped."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Space, operation, table, view, function, index or migration changes."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative handler, membership/revision lock, idempotency store, audit or server update is implemented; the injected port remains an application boundary."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local input and a test receipt do not grant membership or update authorization; no RLS/role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync stream, local Space/operation table, upload connector or optimistic projection exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port, but transient form input and in-memory tests prove no physical persistence, restart or synchronized visibility."},
+    "storageMedia": {"items": [], "notApplicable": "No attachment identity, reference, byte, upload, retention or deletion behavior; O-023 stays outside."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI initial state, field binding, copy, error, dirty/no-op, dismissal, navigation, app composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Space model/callback/service input, route, export row or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded application failures are used; no telemetry, metric, alert or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; EditSpaceDetailsModal, SpaceDetailView, the current Firebase app and both app projects remain unchanged.",
+        "The deterministic in-memory port cannot physically persist, authorize, deploy, display, migrate, release or cut over any Space update.",
+        "O-023/O-026/O-037 and A-003/A-004/A-007/A-015/A-016 remain open or outside; D-023 contributes only the no-accounting invariant."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SPDETAILUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
+      "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-006", "SPDETAILUSE-REQ-007"],
+      "expected": "Exact empty/nil/whitespace/padded/interior-whitespace/long raw name and notes remain transient. Canonical conversion rejects empty, spaces-only and newline-only names; trims only outer whitespace/newlines; maps nil/empty/whitespace notes to absent; preserves interior text; and invents no default or length cap.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "SPDETAILUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
+      "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-007"],
+      "expected": "Immutable raw-field replacement preserves exact Account/Space/base revision; revisions zero and UInt64.max are valid exact evidence; two distinct Space IDs may use the same canonical name without any directory query; input/intent expose no readiness, lifecycle, scope, child, accounting, authorization or backend field.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "SPDETAILUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
+      "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-007", "SPDETAILUSE-REQ-008"],
+      "expected": "Raw input through application assembly invokes exactly one deterministic port call with one complete canonical name/notes payload and exactly one same-Space expected-revision precondition, then returns every matching OperationReceipt local state unchanged. The command carries and invokes no accounting value or operation; this provider-free test makes no claim about physical side effects.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "SPDETAILUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
+      "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-007"],
+      "expected": "A reciprocal matrix asserts exact Account, Space, revision, raw name/notes, Operation, actor, contract and time forwarding plus derived subject/fingerprint/precondition. Blank name and nonfinite time cause zero port calls; valid input causes one. No original/base value, dirty/unchanged/no-op decision, readiness, as-of, query-fingerprint or cached-status metadata exists.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "SPDETAILUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
+      "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-006", "SPDETAILUSE-REQ-007", "SPDETAILUSE-REQ-008"],
+      "expected": "Receipt mismatch and distinct normalized SpaceCreationFailure/SpaceDetailsUpdateFailure values remain stable; unexpected raw transport errors become localAcceptanceFailed; Swift CancellationError remains cancellation. Stable diagnostics reveal no raw form values, identity, credentials or provider payload. Separate reflected/encoded shape checks prove only the authorized canonical identity/text/operation fields exist and no provider/UI/readiness/lifecycle/child/accounting or production field is introduced.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
+    },
+    {
+      "id": "SPDETAILUSE-TEST-006",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-006", "SPDETAILUSE-REQ-007", "SPDETAILUSE-REQ-008"],
+      "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while implementation changes only the two target leaves and the current modal/caller/Firebase files remain untouched and target_mapped.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Corrected ready design only. A fresh scout selected Space-details save submission, and independent preflight rejected claiming the entire EditSpaceDetailsModal or consuming SpaceCoreDetailsUpdate/readiness. Exactly two comment-only target leaves are frozen; the source modal remains target_mapped. Canonical validation intentionally fixes its newline-only-name hole. No target code may start until actual-diff review, complete local ready gate and immutable exact-ready-commit CI pass."
+}

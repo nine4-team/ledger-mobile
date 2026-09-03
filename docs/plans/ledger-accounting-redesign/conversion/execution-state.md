@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 205
+State version: 208
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: DIRECT-SPACE-CREATION-USE-CASE-VERIFIED
+- Checkpoint: SPACE-DETAILS-UPDATE-USE-CASE-READY-LOCAL-GREEN
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2932,6 +2932,43 @@ modifying the running Firebase application before hard cutover.
   `33746648677` (traceability 10 seconds; isolated target 2 minutes 58 seconds).
   The four claimed responsibilities and slice are verified; Firebase remains
   unchanged.
+- Verification-promotion commit
+  `880727f74355699e10466e68d29e1265d5f95fe1` passed immutable Actions run
+  `33747118216` (traceability 7 seconds; isolated target 2 minutes 39 seconds).
+  The canonical Supabase worktree is clean, no extra slice worktree exists, and
+  the current Firebase checkout remains untouched.
+- A fresh scout from that verified baseline ranks a provider-free Space-details
+  update use case first, ahead of chosen-Project note capture and Project archive
+  dispatch. The candidate composes verified Space name/notes validation,
+  single-Space core evidence, complete details-replacement operation and the
+  verified direct-use-case orchestration precedent. It must not revive the
+  removed direct-create form-presentation surfaces or claim initial form state,
+  dirty/cancel UX, form restart, scope/lifecycle/child mutation, provider,
+  migration or production behavior. Independent authority preflight was
+  requested before any scaffold or prospective surface was added.
+- Independent preflight returned conditional GO after two corrections. The
+  entire source `EditSpaceDetailsModal` cannot advance because initial state,
+  transient UI, immediate error display, dirty/no-op policy, dismissal, layout,
+  copy and composition remain unconverted; only save-intent normalization and
+  dispatch are mapped here. The use case also cannot consume Space-core update/
+  readiness evidence or choose active/archive eligibility. The corrected ready
+  dossier claims exactly new target surfaces `SWIFT-306643A5CD0D` and
+  `TEST-235F73A8DC9E`; `SWIFT-9F4789704808` remains target_mapped with explicit
+  partial-responsibility evidence. Two comment-only leaves freeze exact typed
+  Account/Space/revision input, canonical text validation, application-owned
+  complete-replacement command dispatch, receipt/error/cancellation behavior
+  and exclusions. Canonical validation intentionally corrects the current
+  newline-only-name hole. Control state is 817 recorded / 802 discovered with
+  zero errors and three established warnings; 390 mapped-or-later / 167 residual
+  / 44 blockers. Independent actual-ready-diff reviewers first caught five
+  contract overclaims and a missing conversion-control crosswalk authority.
+  The corrected package separates diagnostics privacy from command shape,
+  avoids claiming physical effects, leaves dirty/no-op policy undecided,
+  narrows metadata exclusions and assigns source-status semantics to the
+  registered target-mapping control. Both reviewers return GO with no remaining
+  P0-P3 finding. The complete local ready gate passes, including all 249 target
+  tests in 55 suites, repeatable generation and both staging builds. Immutable
+  exact-ready-SHA CI is the sole remaining prerequisite before implementation.
 
 ## Next Action
 
@@ -3160,9 +3197,18 @@ Continue without waiting on the two M1 evidence blockers:
    production behavior. Corrected implementation, two independent final
    reviews, the complete local gate and exact implementation commit
    `c35f1cef` / immutable run `33746648677` pass. Preserve this boundary and
-   select the next coherent decision-independent slice through a fresh product-
-   authority preflight; do not resurrect the rejected presentation-owned form
-   draft or its removed phantom surface records.
+   retain promotion commit `880727f7` / run `33747118216`. Treat the corrected
+   ready `space-details-update-use-case-contracts` dossier and
+   `EVID-SPACE-DETAILS-UPDATE-USE-CASE-001` as the next candidate boundary.
+   It may change only `SpaceDetailsUpdateUseCase.swift` and its target tests and
+   may replace only save-intent normalization/dispatch from the current modal;
+   keep the full source surface target_mapped. Do not consume Space-core read/
+   readiness updates, choose active/archive eligibility, or add initial state,
+   dirty/no-op/cancel/dismissal/UI/form-restart behavior. Independent corrected
+   actual-diff review and the complete local ready gate pass. Commit/push the
+   exact ready package and require immutable exact-ready-SHA CI before
+   implementation.
+   Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

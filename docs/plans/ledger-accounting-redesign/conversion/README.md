@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 388 of 555 target-relevant
+Status: M0 inventory classification complete; 390 of 557 target-relevant
 surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -487,8 +487,26 @@ all 249 tests in 55 suites, conversion/target controls, repeatable generation
 and both staging builds pass locally. Exact implementation commit
 `c35f1cefc88d964035976d537c2f829b4db62a8a` passed immutable Actions run
 `33746648677`; all four claimed conversion responsibilities and the slice are
-verified.
+verified. Promotion commit `880727f74355699e10466e68d29e1265d5f95fe1`
+passed immutable Actions run `33747118216`.
 `EVID-DIRECT-SPACE-CREATION-USE-CASE-001`.
+
+A fresh post-verification scout ranked a provider-free Space-details update use
+case as the strongest next candidate. Independent preflight confirmed the
+application boundary is decision-complete but rejected two overclaims: it may
+replace only the source modal's save-intent responsibility, not the whole
+SwiftUI surface, and it may not consume Space-core read/readiness evidence or
+choose lifecycle eligibility. The corrected ready package claims exactly two
+comment-only target leaves, leaves `SWIFT-9F4789704808` target-mapped, fixes the
+current newline-only-name validation hole through canonical values, and still
+rejects the removed direct-create form presentation and complete Set/Clear
+picker. Two independent actual-diff reviewers caught and drove correction of
+contract overclaims plus one missing conversion-control crosswalk authority;
+both now return GO with no remaining P0-P3 finding. The complete local ready
+gate passes with all 249 target tests in 55 suites, repeatable generation and
+both staging builds. Immutable exact-ready-SHA CI remains required before
+implementation.
+`EVID-SPACE-DETAILS-UPDATE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

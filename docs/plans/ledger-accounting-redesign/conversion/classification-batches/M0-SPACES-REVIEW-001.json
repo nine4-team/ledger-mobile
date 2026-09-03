@@ -678,35 +678,40 @@
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
-        "EVID-M2-SPACES-REVIEW-001"
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Submit typed revisioned detail intent. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
+      "notes": "The target-only use-case slice maps only this modal's save-intent normalization and dispatch responsibility. The full source surface remains target_mapped because initial form population, transient edits, immediate error presentation, cancel/success dismissal, layout/copy and app composition are not converted. Canonical target validation intentionally rejects newline-only names that the shipped whitespace-only disable rule can pass through.",
       "target": {
         "owner": "Spaces and Placement Operations",
         "surfaces": [
+          "SpaceDetailsUpdateFormInput and validated intent",
+          "SpaceDetailsUpdateUseCase",
           "UpdateSpaceDetailsCommand",
           "ExpectedSpaceRevision",
-          "OperationReceipt"
+          "OperationReceipt",
+          "future Space details editor composition"
         ],
         "securityRequirements": [
-          "Typed Space and assignment commands re-authorize Account/scope, expected revision and every Item; template read capability never grants reference-data mutation"
+          "Typed local input binds exact Account, Space and expected revision but grants no current authorization; the authoritative handler later revalidates membership and revision"
         ],
         "syncRequirements": [
-          "Create/update/checklist/assignment operations are durable offline commands with one operation result and conflict state; no per-row fan-out or generic field update exists"
+          "The use case emits one complete revision-aware operation through a narrow port; physical durability, optimistic projection and synchronized visibility remain separate target responsibilities"
         ]
       },
       "migration": {
-        "rule": "Transform source Space create/detail/checklist/assignment behavior into stable typed commands, preserving scope and content while classifying invalid Item/template references and partial source writes.",
+        "rule": "Map only save-intent normalization/dispatch to the target use case now; retain the full source surface as target_mapped until initial state, transient UI, dismissal and app composition are replaced. Decode no Firebase Space DTO here.",
         "reconciliation": [
-          "Command/migration fixtures reconcile Space/checklist/assignment IDs, revisions, requested/applied sets and source correlations with no silent partial success"
+          "Target-only tests prove canonical submitted values and exact revision command assembly; later UI and migration evidence must close the remaining source responsibilities"
         ]
       },
       "verification": {
         "tests": [
-          "Offline create/update/checklist/assignment, restart/replay, stale revision, cross-scope Item, template-apply unchecked-state and app/MCP parity tests"
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateUseCaseTests",
+          "later Space details editor composition and interaction tests"
         ],
         "acceptance": [
-          "A Space or assignment change applies once or reports an actionable conflict and cannot move an unauthorized Item or partially replace a checklist"
+          "The target application can validate and dispatch one complete revision-aware details replacement, while the source UI surface remains unverified until its observable edit flow is composed"
         ]
       }
     },
@@ -1809,6 +1814,98 @@
         ],
         "acceptance": [
           "Tests prove only the provider-free direct Space creation use case and its permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "SWIFT-306643A5CD0D",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "b79fbbc662c99450c6db7c0acda59acf6bd51ee84b1723a4fd1277293d91a4c8",
+      "currentBehavior": "Freezes the provider-free Space details save-intent/use-case boundary without implementing the current SwiftUI modal.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "Comment-only ready scaffold. The future implementation receives exact typed Account/Space/base revision plus transient raw name/notes and adds caller operation metadata at the application layer. It consumes no Space read/readiness state and chooses no UI, lifecycle, authorization, provider or migration policy.",
+      "target": {
+        "owner": "Space Details Update Use Case",
+        "surfaces": [
+          "SpaceDetailsUpdateFormInput",
+          "SpaceDetailsUpdateIntent",
+          "SpaceDetailsUpdateUseCase",
+          "single SpaceDetailsUpdating invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Typed input binds exact AccountID, SpaceID and expected revision without treating text, route, provider path or local read state as identity or authorization",
+          "Application-owned Operation/actor/contract/time fields remain exact and raw provider errors cannot cross the boundary"
+        ],
+        "syncRequirements": [
+          "Provider-free assembly invokes the existing operation port exactly once after validation and validates its receipt",
+          "No form restart, physical operation persistence, optimistic Space projection, authoritative update or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only transient input and application orchestration; decode no Firebase model, callback, route, local snapshot, export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic exact Account/Space/revision values and canonical submitted text reach one verified complete-replacement command"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free save-intent-to-validated-receipt application path and permanent exclusions"
+        ]
+      }
+    },
+    {
+      "id": "TEST-235F73A8DC9E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "08ff9700f3498cb5e18ace76403ab82ede774cb5d7770cc9d57fe18549d68a6d",
+      "currentBehavior": "Freezes executable obligations for Space details raw input, canonical intent, exact complete-replacement command, one port call, receipt/failure/cancellation handling and exclusions.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
+      ],
+      "notes": "Comment-only ready test scaffold. Planned synthetic tests must be reciprocal and exact, including revision zero/UInt64.max and structured cancellation, without claiming the current modal, read readiness, form restart, persistence, authorization, provider or Sync behavior.",
+      "target": {
+        "owner": "Space Details Update Use Case Tests",
+        "surfaces": [
+          "raw form and canonical intent boundary fixtures",
+          "exact Account/Space/revision and duplicate-name fixtures",
+          "reciprocal command and single-call port fixtures",
+          "receipt-state, validation, normalized/raw failure, cancellation and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Space, Principal and Operation identities and prove typed local intent is non-authorizing",
+          "Stable failures reveal no raw form text, identity, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Validation failure causes no port call and exact receipt states are preserved without an optimistic or authoritative Space row"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase form/model/export data or source-to-target migration mapping.",
+        "reconciliation": [
+          "Tests prove the canonical target submission boundary while explicitly leaving the source modal partially unconverted"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceDetailsUpdateUseCaseTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the provider-free Space details update use case and its permanent exclusions"
         ]
       }
     }
