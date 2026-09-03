@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 201
+State version: 202
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCHECKLIST-EDIT-VERIFIED-PENDING-CLEANUP
+- Checkpoint: SCHECKLIST-EDIT-COMPLETE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2878,6 +2878,15 @@ modifying the running Firebase application before hard cutover.
   target environment 2m11s). The checklist-editing slice and both claimed
   surfaces are verified. Promotion-checkpoint CI must pass before the clean
   temporary worker worktree is removed; its branch will be retained.
+- Promotion commit `fd54f8c5db700af6ab8833e195da04256836ea58`
+  passed both jobs in immutable Actions run `33740343879` (conversion state and
+  traceability 8s; isolated target environment 2m51s). Confirmed the worker
+  worktree clean at corrected tip
+  `272b705e246cf505007f38a3d3d386dd8fbc127a`, removed
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_checklist_edit`,
+  and retained branch `codex/supabase-slice-space-checklist-edit` plus all three
+  candidate commits. The canonical Supabase worktree is clean; Firebase remains
+  untouched.
 
 ## Next Action
 
@@ -3090,9 +3099,10 @@ Continue without waiting on the two M1 evidence blockers:
    semantic-base validation that tolerates harmless refresh metadata. It must
    not add checklist reorder, cross-checklist movement, archived-action policy
    or any excluded provider/app behavior. Primary and independent every-line
-   review, the complete local integration gate and exact integration-SHA CI
-   pass after two candidate corrections. Pass promotion-checkpoint CI, then
-   remove the clean temporary worktree while retaining its reviewed branch.
+   review, the complete local integration gate, exact integration-SHA CI and
+   promotion-checkpoint CI pass after two candidate corrections. The clean
+   temporary worktree is removed and its reviewed branch is retained. Preserve
+   this contract when selecting the next coherent decision-independent slice.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

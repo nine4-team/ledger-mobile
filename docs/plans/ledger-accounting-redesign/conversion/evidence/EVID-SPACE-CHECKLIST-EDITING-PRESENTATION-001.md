@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-A9BCA70B7F9C`, `TEST-94F32F5E9219`
 - Slice dossier: `conversion/implementation-slices/space-checklist-editing-presentation-contracts.json`
-- Verification state: verified at exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284` by immutable Actions run `33739849778`; promotion checkpoint CI pending
+- Verification state: verified at exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284` by immutable Actions run `33739849778`; promotion commit `fd54f8c5db700af6ab8833e195da04256836ea58` passed run `33740343879`; clean temporary worktree removed and branch retained
 
 ## Selection and Product Authority
 
@@ -161,8 +161,17 @@ formatting. Implemented leaf hashes are:
 Exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284`
 passed both jobs in immutable Actions run `33739849778` (conversion state and
 traceability 12 seconds; isolated target environment 2 minutes 11 seconds).
-The slice and both surfaces are verified. Promotion-checkpoint CI and clean
-temporary-worktree removal remain before the delegated-work record is closed.
+The slice and both surfaces are verified. At that checkpoint, promotion CI and
+clean temporary-worktree removal still remained before the delegated-work
+record could be closed.
+
+Promotion commit `fd54f8c5db700af6ab8833e195da04256836ea58`
+passed both jobs in immutable Actions run `33740343879` (conversion state and
+traceability 8 seconds; isolated target environment 2 minutes 51 seconds).
+The temporary worktree was clean at reviewed tip
+`272b705e246cf505007f38a3d3d386dd8fbc127a` before removal. Branch
+`codex/supabase-slice-space-checklist-edit` and its candidate history remain
+recoverable.
 
 ## Permanent Exclusions
 

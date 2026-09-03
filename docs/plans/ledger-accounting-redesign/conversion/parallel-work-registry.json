@@ -685,6 +685,12 @@
         "completeLocalGate": "passed: all 243 tests in 54 suites, warnings-as-errors, conversion/capability/query/residual/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
         "exactIntegrationCommit": "5a5c67b1319e3fcc41290469f7f39db9d515b284",
         "exactIntegrationCommitCi": "passed: Actions run 33739849778; conversion traceability 12s; isolated target 2m11s"
+      },
+      "cleanup": {
+        "promotionCommit": "fd54f8c5db700af6ab8833e195da04256836ea58",
+        "promotionCi": "passed: Actions run 33740343879; conversion traceability 8s; isolated target 2m51s",
+        "worktreeRemoved": true,
+        "branchRetained": true
       }
     }
   ],

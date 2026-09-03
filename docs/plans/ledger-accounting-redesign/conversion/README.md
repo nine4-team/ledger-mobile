@@ -429,8 +429,8 @@ commit `5322adfca32ce5fd90f790f70ed584090ab5eee1` passed immutable Actions run
 reviewed candidate history remain recoverable.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
-The active next boundary is
-`space-checklist-editing-presentation-contracts`: a provider-free projection
+The verified `space-checklist-editing-presentation-contracts` boundary is a
+provider-free projection
 from exact Space-core update evidence into current/stale/noneditable truth, a
 raw restart-safe checklist editor, and semantic-base-validated derivation of
 the verified complete-replacement command. Independent preflight rejected
@@ -452,8 +452,10 @@ Corrected worker tip `272b705e` has no remaining P0-P3. All 243 tests,
 warnings-as-errors, repeatable generation and both staging builds pass locally.
 Exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284`
 passed both jobs in immutable Actions run `33739849778`; the slice and both
-surfaces are verified. Promotion-checkpoint CI and clean temporary-worktree
-removal remain.
+surfaces are verified. Promotion commit
+`fd54f8c5db700af6ab8833e195da04256836ea58` passed immutable Actions run
+`33740343879`. The clean temporary worker worktree was removed; its branch and
+reviewed candidate history remain recoverable.
 `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
