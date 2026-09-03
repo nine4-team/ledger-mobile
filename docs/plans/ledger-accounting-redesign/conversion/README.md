@@ -601,26 +601,25 @@ unadvanced. Exact implementation commit `99574328` passed immutable Actions run
 `33788214259` (traceability 10 seconds; isolated target 3 minutes 4 seconds), so
 the two leaves and dossier are verified.
 
-A root scout and separate strict-authority preflight then selected the Project
-setup selection-to-application boundary above the verified form-presentation
-and setup-operation contracts. Exactly two comment-only target leaves freeze
-existing `ProjectSetupFormSelection` plus current
-`ProjectSetupFormPreparation` derivation, one post-derivation
-`ProjectSetupOperating.create` call, receipt validation, both typed failure
-families, cancellation and bounded unknown errors. Matching represented ready,
-partial and stale evidence remains admissible; this boundary adds no ready-only
-gate and leaks no preparation evidence into the command. The complete local
-READY gate passes all 273 existing target tests in 59 suites with warnings as
-errors, 825 recorded / 813 automatic-inventory entries (810 currently
-discovered plus three retained missing-source warnings), 391 mapped-or-later /
-174 residual / 45 blockers, conversion/target controls, repeatable Xcode hashes
-`0657194a` / `388303af`, both staging builds, JSON and clean formatting.
+A root scout and separate strict-authority preflight selected the Project setup
+selection-to-application boundary above the verified form-presentation and
+setup-operation contracts. Exact READY commit `863f6fce` passed immutable run
+`33791245215`. A bounded writer then changed exactly the two frozen target
+leaves: existing `ProjectSetupFormSelection` plus current
+`ProjectSetupFormPreparation` derives one command before one
+`ProjectSetupOperating.create` call, validates the exact receipt, preserves
+both typed failure families and cancellation, and bounds unknown errors.
+Matching represented ready, partial and stale evidence remains admissible; no
+ready-only gate or preparation evidence enters the command. Root every-line
+review and six focused/all 279 target tests in 60 suites pass with warnings as
+errors. Independent reviewers found three P2 proof gaps—nil-description
+omission, same-identity existing-to-new Client discrimination and allocation-
+order equivalence. Corrected tests close all three and both final reviewers
+return GO. Target controls, repeatable Xcode hashes `0657194a` / `388303af` and
+both staging builds pass locally. The dossier remains in progress and the two
+surfaces remain target-mapped until exact implementation-commit CI passes.
 O-023/O-024/O-025/O-026, source UI/defaults/category mutation/media, physical
-persistence, authorization, provider, migration and production remain outside.
-Two independent actual-diff reviewers found and verified corrections to a
-provider-coupling scanner false positive, optional-allocation JSON shape,
-existing-to-new Client delta wording and inventory-count precision; both now
-return GO. Exact READY-commit CI remains required before implementation;
+persistence, authorization, provider, migration and production remain outside;
 `EVID-PROJECT-SETUP-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

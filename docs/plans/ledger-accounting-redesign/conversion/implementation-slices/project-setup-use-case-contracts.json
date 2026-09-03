@@ -3,7 +3,7 @@
   "sliceId": "project-setup-use-case-contracts",
   "title": "Derive and dispatch one complete Project setup",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Project Setup Use Case",
   "surfaceIds": ["SWIFT-EE8576F5CD39", "TEST-BB8C5679BA31"],
   "requirements": [
@@ -107,7 +107,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-007"],
       "expected": "Existing- and new-Client selections dispatch once from exact matching ready, partial and stale represented evidence. Zero categories and absent/null/zero/large-positive mixed-currency allocations remain exact; selection-owned name/description normalization passes through without defaults, a 32-bit cap or an invented currency rule.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -116,7 +116,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
       "expected": "Account mismatch, every Client/category evidence mutation including quality/completeness/version/as-of/query/count/order/row/eligibility changes, and nonfinite capture time fail during existing typed derivation with zero port calls. No raw malformed-input surface or alternate readiness policy is invented.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -125,7 +125,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-007"],
       "expected": "Every matching LocalOperationState returns in the exact validated receipt after exactly one create call carrying the verified Project subject, zero preconditions and complete setup payload; receipt mismatch fails after one call.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -134,7 +134,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-007"],
       "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project, existing/new Client identity and name, Project name/description, every category/allocation component, Operation, actor, contract and time; each value reaches only its existing owning command fields. Rebuilt selections over valid preparation-only evidence changes produce no command-leaf change.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -143,7 +143,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
       "covers": ["PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
       "expected": "Each ProjectSetupFormFailure, each ProjectSetupFailure, arbitrary raw port failure and CancellationError remain distinct after the correct zero/one-call boundary; derivation stays outside the port catch and raw provider detail never crosses the application boundary.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -152,7 +152,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
       "expected": "All 12 form and 16 operation diagnostics plus exact encoded command topology expose only the authorized draft/envelope/subject/fingerprint setup fields, empty preconditions and exact Client/allocation/Money shapes—never preparation/readiness evidence, raw errors, UI/default/category-definition/media/lifecycle/correction/history/accounting/provider/credential/production fields.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -161,7 +161,7 @@
       "owner": "conversion control and independent actual-diff review",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
       "expected": "The READY commit changes only two comment scaffolds and control/evidence files, passes all controls/tests/builds, and leaves NewProjectView, ProjectFormValidation/tests, ProjectService and every Firebase/app/MCP/provider surface at prior status and content.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     },
     {
@@ -177,5 +177,5 @@
   "implementationEvidence": ["EVID-PROJECT-SETUP-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready design only. Root review and a strict independent authority preflight selected Project setup selection-to-application above the verified form-presentation and setup-operation contracts. Exactly two comment-only target leaves are frozen. Matching represented ready, partial and stale evidence remains admissible; changed preparation evidence fails before dispatch and preparation evidence cannot enter the command. O-023/O-024/O-025/O-026 remain outside because media, lifecycle/correction and reference authorization are excluded. Conversion/target controls, all 273 existing target tests in 59 suites with warnings as errors, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. Two independent reviewers found and verified scanner, optional-allocation-shape, Client-delta and discovery-count corrections and returned GO. No executable target code may start until immutable exact-ready-commit CI passes."
+  "notes": "Implemented locally after exact READY commit 863f6fce14332af0f43aa1a82480e44bc790ca56 passed immutable Actions run 33791245215. Exactly two target leaves now derive the existing verified CreateProjectCommand before one ProjectSetupOperating.create call, validate and return its receipt, preserve both typed failure families and cancellation, and bound raw port failures. Root inspected every line and reran six focused plus all 279 target tests in 60 suites with warnings as errors. Independent implementation review found three P2 proof gaps: nil-description omission, same-identity existing-to-new Client discrimination, and allocation-order equivalence. Corrected tests close each gap; both final reviewers return GO. Conversion/target controls, repeatable project hashes 0657194a / 388303af and both staging builds pass locally. NewProjectView, ProjectFormValidation/tests and ProjectService remain unadvanced; all UI/default/category mutation/media, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production exclusions remain binding. Exact implementation-commit CI remains required before verification."
 }

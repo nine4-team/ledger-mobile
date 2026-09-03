@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 222
+State version: 223
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SETUP-USE-CASE-READY-REVIEWED
+- Checkpoint: PROJECT-SETUP-USE-CASE-IMPLEMENTATION-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3148,8 +3148,24 @@ modifying the running Firebase application before hard cutover.
   binding. Two independent actual-diff reviews found and verified corrections
   to a comment-only provider-coupling scanner false positive, optional-
   allocation JSON shape, existing-to-new Client delta wording and inventory-
-  count precision; both return GO. Exact READY-commit CI is the sole remaining
-  prerequisite before implementation.
+  count precision; both return GO. Exact READY commit
+  `863f6fce14332af0f43aa1a82480e44bc790ca56` passed immutable Actions run
+  `33791245215` (traceability 12 seconds; isolated target 3 minutes 20 seconds),
+  authorizing only the two frozen implementation leaves.
+- A bounded writer changed exactly those two leaves. The implementation derives
+  the existing verified CreateProjectCommand before one
+  `ProjectSetupOperating.create` call, validates the receipt, preserves every
+  local state, both typed failure families and cancellation, and bounds unknown
+  port failures. Root inspected every line and independently reran six focused
+  plus all 279 target tests in 60 suites with warnings as errors. Initial
+  independent review found three P2 proof gaps: nil-description omission,
+  same-identity existing-to-new Client discrimination and allocation-order
+  equivalence. Corrected tests close all three; both final reviewers return GO
+  with no remaining P0-P3. Target isolation/contracts, repeatable Xcode hashes
+  `0657194a` / `388303af` and both staging builds pass locally. Exact
+  implementation-commit CI remains required before verification; NewProjectView,
+  ProjectFormValidation/tests, ProjectService and every provider/production
+  exclusion remain unadvanced.
 - Verification-promotion commit
   `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47` passed immutable Actions run
   `33768000016` (traceability 8 seconds; isolated target 2 minutes 57 seconds),
@@ -3477,25 +3493,22 @@ Continue without waiting on the two M1 evidence blockers:
    preserves typed failures/cancellation and bounds raw errors. EditChecklistModal,
    UI/read admission, physical persistence, authorization, provider/schema/RLS/
    Sync, app/MCP, migration, hosted and production behavior must remain unchanged.
-   Review and gate the comment-only `project-setup-use-case-contracts` READY
-   package and `EVID-PROJECT-SETUP-USE-CASE-001`. The frozen boundary composes
-   verified `ProjectSetupFormSelection` /
-   `ProjectSetupFormPreparation` (`SWIFT-EC2117B393FB`) and
-   `ProjectSetupOperating.create` (`SWIFT-C1C5DFC81448`): derive one command
-   before one port call, validate the receipt, preserve ProjectSetupFormFailure /
-   ProjectSetupFailure / cancellation and bound unknown errors. Matching
-   represented ready/partial/stale evidence remains admissible; changed
-   evidence must fail with zero calls and preparation evidence cannot leak into
-   the command. The exact claimed comment-only leaves are
-   `ProjectSetupUseCase.swift` (`SWIFT-EE8576F5CD39`) and
-   `ProjectSetupUseCaseTests.swift` (`TEST-BB8C5679BA31`). Strict authority
-   preflight, complete local READY gates and two corrected-diff reviews pass.
-   Commit/push only the reviewed READY package and require immutable exact-
-   ready-SHA CI before any executable implementation. Preserve
-   NewProjectView, ProjectFormValidation/current validation and ProjectService
-   at their existing statuses; O-023/O-024/O-025/O-026 and UI/defaults/category
-   mutation, physical persistence, authorization, provider/schema/RLS/Sync,
-   app/MCP, migration, hosted and production behavior remain outside.
+   Treat in-progress `project-setup-use-case-contracts` and
+   `EVID-PROJECT-SETUP-USE-CASE-001` as the current frozen boundary. Exact READY
+   commit `863f6fce` / run `33791245215` passed. The corrected implementation
+   changes exactly `ProjectSetupUseCase.swift` (`SWIFT-EE8576F5CD39`) and
+   `ProjectSetupUseCaseTests.swift` (`TEST-BB8C5679BA31`), composes the verified
+   `ProjectSetupFormSelection` / current `ProjectSetupFormPreparation` with
+   `ProjectSetupOperating.create`, and has two independent final GO reviews.
+   Six focused/all 279 target tests, local target controls, repeatable generation
+   and both staging builds pass. Commit/push this exact implementation checkpoint
+   and require immutable exact-implementation-SHA CI. Only after CI passes may
+   the dossier and two leaves be promoted to verified in a separate continuity
+   commit. Preserve NewProjectView, ProjectFormValidation/current validation and
+   ProjectService at their existing statuses; O-023/O-024/O-025/O-026 and UI/
+   defaults/category mutation, physical persistence, authorization, provider/
+   schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
+   outside.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

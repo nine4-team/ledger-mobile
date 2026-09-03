@@ -3723,13 +3723,13 @@
     {
       "id": "SWIFT-EE8576F5CD39",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8149206ded79f1de4ac0335602259bfcae59821a4425069a02e8989370282d80",
-      "currentBehavior": "Comment-only READY scaffold for provider-free Project setup selection-to-application dispatch through the verified form-presentation and setup-operation contracts.",
+      "acknowledgeSourceHash": "5f3b3185a6b1a5192a2c0ad7bb1bfa51abe47aeca4e45a52ddc78a91ab9c1dc8",
+      "currentBehavior": "Implements provider-free Project setup selection-to-application orchestration through the verified form-presentation and setup-operation contracts.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-SETUP-001", "EVID-PROJECT-SETUP-FORM-PRESENTATION-001", "EVID-PROJECT-SETUP-USE-CASE-001"],
-      "notes": "READY design only. The future use case accepts the existing ProjectSetupFormSelection plus current ProjectSetupFormPreparation, derives one verified CreateProjectCommand before exactly one ProjectSetupOperating.create call, validates and returns its exact receipt, preserves both typed failure families and cancellation, and bounds raw port errors. Matching represented ready, partial and stale evidence remains admissible without a new readiness policy. All 273 existing target tests in 59 suites, complete controls, repeatable generation and both staging builds pass. Two independent reviewers found and verified comment-scanner, optional-allocation-shape, Client-delta and count-precision corrections and returned GO. No UI/default/category mutation/media, physical persistence, authorization, provider, migration or production behavior; O-023/O-024/O-025/O-026 remain outside. Exact-ready-SHA CI remains required.",
+      "notes": "Implemented locally after exact READY commit 863f6fce14332af0f43aa1a82480e44bc790ca56 passed immutable run 33791245215. The use case accepts the existing ProjectSetupFormSelection plus current ProjectSetupFormPreparation, derives one verified CreateProjectCommand before exactly one ProjectSetupOperating.create call, validates and returns its exact receipt, preserves both typed failure families and cancellation, and bounds raw port errors. Matching represented ready, partial and stale evidence remains admissible without a new readiness policy. Root every-line review, six focused/all 279 tests and local gates pass. Two independent implementation reviewers return GO after nil-description, same-identity Client-kind and allocation-order proof corrections. No UI/default/category mutation/media, physical persistence, authorization, provider, migration or production behavior; O-023/O-024/O-025/O-026 remain outside. Status remains target_mapped until exact implementation-SHA CI passes.",
       "target": {
         "owner": "Project Setup Use Case",
         "surfaces": ["ProjectSetupUseCase", "single ProjectSetupOperating.create invocation and receipt validation"],
@@ -3742,19 +3742,19 @@
       },
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ProjectSetupUseCaseTests"],
-        "acceptance": ["Planned tests prove only the frozen provider-free Project setup selection-to-validated-receipt application path and permanent exclusions"]
+        "acceptance": ["Tests prove only the frozen provider-free Project setup selection-to-validated-receipt application path and permanent exclusions"]
       }
     },
     {
       "id": "TEST-BB8C5679BA31",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6c6a19210a53baeb2b8b0303391f5f745d9ef27e0535f608882330fed124b542",
-      "currentBehavior": "Comment-only READY scaffold for reciprocal Project setup use-case verification.",
+      "acknowledgeSourceHash": "e6e630f18a4b02d168c30a9ab899d29c44853389cad8448b489dd725a5ed11fd",
+      "currentBehavior": "Implements reciprocal Project setup use-case verification across represented evidence, command ownership, receipt and error boundaries.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-SETUP-001", "EVID-PROJECT-SETUP-FORM-PRESENTATION-001", "EVID-PROJECT-SETUP-USE-CASE-001"],
-      "notes": "READY verification design only. Planned tests cover exact existing/new Client and category selection dispatch across matching ready/partial/stale evidence, zero and nullable/large/mixed-currency allocations, changed-evidence zero-call refusal, every receipt state, exact reciprocal encoded leaf deltas, preparation-evidence non-leakage, both exhaustive failure families, cancellation/raw-error handling, all diagnostics and exact command-shape exclusions. All 273 existing target tests and complete local gates pass while this leaf remains comment-only. Two independent corrected-diff reviewers return GO. No source UI/provider/production behavior. Exact-ready-SHA CI remains required.",
+      "notes": "Six implementation tests cover exact existing/new Client and category selection dispatch across matching ready/partial/stale evidence, zero and nullable/large/mixed-currency allocations, changed-evidence zero-call refusal, every receipt state, exact reciprocal encoded leaf deltas, preparation-evidence non-leakage, both exhaustive failure families, cancellation/raw-error handling, all diagnostics and exact command-shape exclusions. Review caught and corrected missing nil-description omission, same-identity existing-to-new Client discriminator and allocation-permutation equivalence proof. Both final reviewers return GO; all 279 target tests and complete local gates pass. No source UI/provider/production behavior. Status remains target_mapped until exact implementation-SHA CI passes.",
       "target": {
         "owner": "Project Setup Use Case Tests",
         "surfaces": ["exact selection/current-preparation and command fixtures", "ready/partial/stale and changed-evidence fixtures", "reciprocal encoded field-delta and evidence-non-leakage fixtures", "receipt-state, zero-call validation, exhaustive typed/raw failure, cancellation, diagnostics and exclusion fixtures"],
@@ -3763,11 +3763,11 @@
       },
       "migration": {
         "rule": "Use target-only synthetic values and load no Firebase Project/clientName/category/media/export data or source-to-target mapping.",
-        "reconciliation": ["Planned tests preserve canonical target dispatch while NewProjectView, ProjectFormValidation/tests and ProjectService remain unadvanced"]
+        "reconciliation": ["Tests preserve canonical target dispatch while NewProjectView, ProjectFormValidation/tests and ProjectService remain unadvanced"]
       },
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ProjectSetupUseCaseTests"],
-        "acceptance": ["Planned tests prove only the frozen provider-free Project setup use case and exclusions"]
+        "acceptance": ["Tests prove only the frozen provider-free Project setup use case and exclusions"]
       }
     }
   ]

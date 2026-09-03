@@ -1,14 +1,14 @@
 # EVID-PROJECT-SETUP-USE-CASE-001 — Project Setup Use Case
 
 - Timestamp: 2026-09-03
-- Class: ready design / provider-free Project setup selection-to-application dispatch
+- Class: implementation / local integration evidence for provider-free Project setup selection-to-application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
-- Target-branch baseline: exact Space-checklist verification-promotion commit `ecd0ca9fc2f11c4a4bd02f3687b6ba76209cb649`; immutable Actions run `33789427209` passed both jobs
+- Ready baseline: exact commit `863f6fce14332af0f43aa1a82480e44bc790ca56`; immutable Actions run `33791245215` passed before implementation
 - Claimed target surfaces: `SWIFT-EE8576F5CD39`, `TEST-BB8C5679BA31`
 - Preserved source surfaces: `SWIFT-58A14BD25578`, `SWIFT-038E6D4248AF`, `TEST-E591BE8A4B58` remain `target_mapped`; `SWIFT-E1A771F6A409` remains `characterized`
 - Verified dependencies: `SWIFT-EC2117B393FB`, `TEST-38F09C637761`, `SWIFT-C1C5DFC81448`, `TEST-99B322EB971A`
 - Slice dossier: `conversion/implementation-slices/project-setup-use-case-contracts.json`
-- Verification state: comment-only READY package passes the complete local gate and two independent corrected-diff reviews; immutable exact-ready-commit CI remains required
+- Verification state: corrected implementation passes two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
 
 ## Selection and Authority
 
@@ -32,12 +32,12 @@ unadvanced.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaves are claimed:
+Exactly two implemented target leaves are claimed:
 
 - `LedgeriOS/LedgerTargetCore/ProjectSetupUseCase.swift`;
 - `LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift`.
 
-The future `ProjectSetupUseCase` consumes the existing
+`ProjectSetupUseCase` consumes the existing
 `ProjectSetupFormSelection` and current `ProjectSetupFormPreparation` plus
 caller-supplied Project, Operation, Principal, contract-version and finite
 capture-time values. It must derive the existing `CreateProjectCommand` before
@@ -71,7 +71,7 @@ Eight obligations freeze executable proof for:
 7. complete diagnostic mapping and exact nested encoded-command topology with permanent exclusions; and
 8. exact READY/implementation allowlists, complete controls/builds and immutable CI before promotion.
 
-The planned test suite must use only existing typed values. Malformed
+The test suite uses only existing typed values. Malformed
 preparation/selection decoding remains proven by the verified dependency; this
 use case cannot invent a raw decode API to manufacture impossible inputs.
 
@@ -98,8 +98,41 @@ uses generic exclusion language, binds nil allocation to omitted `allocation`,
 states that Client `kind` changes while `displayName` is added, and distinguishes
 813 automatic-inventory entries from 810 currently discovered sources plus the
 three retained warnings. Both reviewers rechecked the exact 17-path package and
-returned GO with no remaining P0-P3. Exact-ready-commit CI remains required
-before implementation begins.
+returned GO with no remaining P0-P3. Exact READY commit
+`863f6fce14332af0f43aa1a82480e44bc790ca56` then passed immutable Actions run
+`33791245215` (traceability 12 seconds; isolated target 3 minutes 20 seconds),
+authorizing only the two frozen implementation leaves.
+
+## Local Implementation Verification
+
+The two frozen leaves now implement one provider-free application path. Command
+derivation revalidates the exact current preparation before any port call;
+`ProjectSetupOperating.create` is invoked once; the returned receipt is
+validated; `CancellationError`, all `ProjectSetupFormFailure` and all
+`ProjectSetupFailure` values remain distinct; and an unknown port failure maps
+to `localAcceptanceFailed`.
+
+Root inspected every changed line and independently reran six focused plus all
+279 target tests in 60 suites with warnings as errors. Initial independent
+implementation review found three P2 proof gaps: the reciprocal matrix did not
+prove nil-description omission, coupled existing-to-new Client kind with an ID
+change, and sorted one allocation input without comparing an equivalent
+permutation. Corrected tests now prove exact nil omission from both command
+owners and encoding, hold Client ID constant while isolating kind/display-name
+changes, retain separate new-ID/new-name cases, and prove a reordered allocation
+selection yields an identical command and fingerprint. Both independent final
+reviewers return GO with no remaining P0-P3.
+
+Target environment isolation, generated contracts, repeatable project/scheme
+hashes `0657194a` / `388303af`, and both staging builds pass locally. The first
+conversion check correctly detected the two changed frozen hashes; this
+checkpoint acknowledges them before regenerating the manifest and audits.
+Exact implementation-commit CI remains required before verification.
+
+Implementation hashes:
+
+- `ProjectSetupUseCase.swift` — `5f3b3185a6b1a5192a2c0ad7bb1bfa51abe47aeca4e45a52ddc78a91ab9c1dc8`;
+- `ProjectSetupUseCaseTests.swift` — `e6e630f18a4b02d168c30a9ab899d29c44853389cad8448b489dd725a5ed11fd`.
 
 ## Permanent Exclusions
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T18:32:43.840Z",
+  "generatedFromManifestSync": "2026-09-03T18:54:53.074Z",
   "totals": {
     "slices": 59,
     "claimedTargetSurfaces": 143,
@@ -9,8 +9,8 @@
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
-    "in_progress": 1,
+    "ready": 0,
+    "in_progress": 2,
     "implemented": 0,
     "verified": 57,
     "rehearsed": 0,
@@ -565,7 +565,7 @@
       "sliceId": "project-setup-use-case-contracts",
       "title": "Derive and dispatch one complete Project setup",
       "kind": "product",
-      "status": "ready",
+      "status": "in_progress",
       "owner": "Project Setup Use Case",
       "surfaceIds": [
         "SWIFT-EE8576F5CD39",
