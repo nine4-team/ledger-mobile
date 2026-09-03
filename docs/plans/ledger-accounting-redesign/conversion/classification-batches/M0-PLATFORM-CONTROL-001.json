@@ -1903,14 +1903,16 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Provides structured MCP error payloads and note validation helpers.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "The verified target core now owns provider-free error/rejection values, but this broader MCP module remains target_mapped until target MCP transport actually projects the same registered envelope and parity/security tests pass. Source-provider/build mechanics do not become target application authority.",
+      "notes": "M2 withheld: O-039 must resolve this helper's source-only three-character trimmed note-text minimum against the app and target representation before shared validation/error behavior is mapped. The verified target core owns only provider-free operation errors; source-provider/build mechanics do not become target application authority.",
       "target": {
         "owner": "Application Error Contract",
         "surfaces": [

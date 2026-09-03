@@ -49,7 +49,7 @@ Read these in order:
 9. [Architecture Decision Register](architecture-decisions.md) — decisions,
    alternatives, consequences, and decisions still requiring evidence.
 10. [Product-to-Architecture Traceability](product-decision-traceability.md) —
-    every confirmed D-001–D-027 and open O-002–O-037 mapped to its owning
+    every confirmed D-001–D-027 and open O-002–O-039 mapped to its owning
     context, target surfaces, verification, and implementation block.
 11. [Vertical Spike Protocol](../../plans/ledger-accounting-redesign/vertical-spike-protocol.md)
     — executable isolated tests, fixtures, evidence, thresholds, Auth/optimism
@@ -178,6 +178,8 @@ schema or writer is implemented.
 | Client Summary paid/open/recognized meaning | O-035; current active-Item prices are not automatically paid spend |
 | Client-shared receipt evidence and delivery links | O-036; no private path or expiring bearer URL in exports |
 | Space archive and assigned Item placement | O-037; archived references remain resolvable pending final policy |
+| Inventory destination planning | O-038; retention, granularity and lifecycle remain unapproved |
+| Project-note text validation | O-039; app/MCP create/edit normalization, controls, size and minimum must converge before shared submission |
 | Transfer versus live Invoice, Space, correction, and later Return | O-002 and O-011 through O-014 |
 | Business-paid acquisition evidence and legacy proto migration | O-016 through O-020 |
 | One-screen versus two-step Item wizard | O-021; UI-only and does not block domain/schema work |

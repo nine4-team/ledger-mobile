@@ -9,9 +9,9 @@
   },
   "summary": {
     "targetRelevant": 559,
-    "targetMapped": 392,
-    "residualSurfaces": 167,
-    "distinctBlockers": 44
+    "targetMapped": 385,
+    "residualSurfaces": 174,
+    "distinctBlockers": 45
   },
   "blockers": [
     {
@@ -2576,6 +2576,73 @@
           "disposition": "redesign",
           "status": "characterized",
           "currentBehavior": "Builds a large Firebase-listener Space detail that also composes Item media, movement, status, relation, delete, note and checklist actions."
+        }
+      ]
+    },
+    {
+      "id": "O-039",
+      "kind": "product decision",
+      "owner": "Project-note text validation",
+      "requirement": "Approved cross-runtime trim/control/nonempty/byte rule plus app/MCP parity, zero-dispatch rejection, restart and lossless import/quarantine tests",
+      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
+      "count": 8,
+      "surfaces": [
+        {
+          "batchId": "M0-APP-SHELL-PRESENTATION-001",
+          "id": "SWIFT-A3E38557F13F",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Collects a Project note and writes through current Account/Auth/Project contexts."
+        },
+        {
+          "batchId": "M0-PLATFORM-CONTROL-001",
+          "id": "MCPMOD-DAB760104CEE",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Provides structured MCP error payloads and note validation helpers."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPMOD-7774C2CE6D09",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Registers note add, newest-first list and case-insensitive substring search. Add does not first prove Project existence; search loads all Project notes before filtering."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPTOOL-D7FEF2D5FE3B",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Adds an MCP-authored Project note only when trimmed text has at least three characters, uses server process time and returns its ID, without a shared operation ID or explicit parent preflight."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-1DA3D2CE9B31",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Activates nine independent Project-scoped listeners, stores partial results in memory, applies financial filtering locally, derives budget state, and exposes Project archive/delete and note CRUD. It does not expose a complete-history or durable operation state."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-5B59D74F6B13",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Defines Firebase-shaped Project note subscribe/create/update/delete methods with untyped update fields."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-7DC1AEC51D21",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Displays legacy Project.notes plus nested notes sorted newest-first by optional client timestamp and permits add/edit/delete with generic errors."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-A3AB0F29E150",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Subscribes to and directly creates, updates and deletes nested Project note documents through the generic repository."
         }
       ]
     },

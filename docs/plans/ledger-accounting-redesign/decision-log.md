@@ -1,7 +1,7 @@
 # Ledger Accounting Redesign — Decision Log
 
 Status: active
-Last updated: 2026-09-02
+Last updated: 2026-09-03
 Program index: [README.md](README.md)
 
 This file is the central decision register. Canonical specs contain the full
@@ -101,6 +101,7 @@ decisions.
 | O-036 | May a client-shared report expose receipt evidence, and through what durable delivery mechanism? | Current PDF generation can embed resolved Storage download URLs. Those URLs may contain bearer tokens, expire, outlive permission changes, or expose internal evidence unintentionally. | Review the [combined O-035/O-036 decision packet](decision-packets/O-035-O-036-client-summary-and-shared-evidence.md), which recommends default omission plus explicit eligible/redacted evidence in an immutable standalone report package with no paths/tokens/expiring links; product approval is still required. |
 | O-037 | When a Space is archived, what happens to Items currently assigned to it? | Current service hard-deletes, the spec says archive while retaining `spaceId`, list readers hide archived Spaces, and some movement paths clear assignments. Silent clearing loses location evidence; hidden unresolved IDs confuse users. | Review the [O-037 decision packet](decision-packets/O-037-space-archive-and-item-assignment.md), which recommends archive-only after synchronization, retained offline-resolvable Item assignments, no new assignment, and separate explicit move/clear; product approval is still required. |
 | O-038 | Does Inventory destination planning survive the redesign, and if so what are its granularity, destination fields, and lifecycle? | The shipped Purchase-level Project/category intent is not target authority, conflicts with D-013 when category is treated as an Item-charge category, and conflates set/change/clear with an independent resolved/reopened state. | Review the [O-038 decision packet](decision-packets/O-038-inventory-destination-planning.md), which recommends retaining the planning outcome as nonfinancial Item-level Project intent with no category authority, explicit cancel/fulfill semantics, and lossless source-evidence migration; product approval is still required. |
+| O-039 | What exact normalization, controls, size, and minimum rule do app and MCP share for new and edited Project-note text? | Current app entry points trim and accept any nonempty remainder, MCP requires at least three trimmed characters while forwarding original text, the target representation preserves accepted bytes, and Swift/JavaScript/Postgres differ at Unicode/control boundaries. A shared writer cannot silently choose among those user-visible outcomes. | Review the [O-039 decision packet](decision-packets/O-039-project-note-text-validation.md), which recommends an explicit cross-runtime edge-scalar trim set, no Unicode normalization, defined control rejection, nonempty remainder, a 16,384-byte new-create/edit maximum, app/MCP parity, and lossless import/quarantine; product approval is still required. |
 
 ## Clarification: “No Inventory Hop”
 

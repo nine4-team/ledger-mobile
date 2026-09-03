@@ -12,8 +12,8 @@
 
 ## Result
 
-The deterministic 167-surface M2 residual is grouped under 44 exact blockers.
-Seventeen reviewable packets now cover all 36 product blockers in the generated
+The deterministic 174-surface M2 residual is grouped under 45 exact blockers.
+Eighteen reviewable packets now cover all 37 product blockers in the generated
 queue:
 
 | Packet | Decisions | Unique surfaces in packet cluster |
@@ -35,9 +35,10 @@ queue:
 | Project and Client lifecycle | O-024/O-025 | 7 |
 | Vendor adjustment and credit balance | O-028 | 2 |
 | Inventory destination planning | O-038 | 5 |
+| Project-note text validation | O-039 | 8 |
 
 Because surfaces can depend on multiple decisions, these clusters overlap.
-Together they touch all 160 residual surfaces that have any product-decision
+Together they touch all 167 residual surfaces that have any product-decision
 blocker. The other seven surfaces depend only on architecture/spike, physical-
 target verification, or canonical-production-evidence blockers. This means a
 proposal is available for every product blocker; it does **not** mean those
@@ -75,7 +76,7 @@ The generated register validates every blocker against the product/architecture
 authority and lists every exact affected surface. Packet links are recorded in
 the decision log and product-to-architecture traceability rows.
 
-A structural audit of all seventeen packet files also verified each contains the
+A structural audit of all eighteen packet files also verified each contains the
 decision requested, confirmed constraints, mutually exclusive options,
 conceptual target ownership, authorization/Sync treatment, migration/
 reconciliation, acceptance tests, approval consequences, and checklist.

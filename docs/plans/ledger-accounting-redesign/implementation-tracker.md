@@ -23,7 +23,7 @@ Conversion coverage and resume state: [conversion/README.md](conversion/README.m
 |---|---|---|
 | G0 — Product boundary | design | Open decisions that change schemas/writers are resolved |
 | G0.5 — Capability synthesis | done | All 686 source-baseline surfaces have one reviewed disposition, behavior, evidence owner and dossier/control contract; new target implementation surfaces enter the same manifest and deterministic M0 audit |
-| G0.75 — Target mapping | design | 392 of 559 target-relevant surfaces are target-mapped or later; all 167 residual surfaces have explicit decision/spike/production-evidence blockers; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
+| G0.75 — Target mapping | design | 385 of 559 target-relevant surfaces are target-mapped or later; all 174 residual surfaces have explicit decision/spike/production-evidence blockers across 45 validated blocker keys; `EVID-M2-WHOLE-MANIFEST-001` plus bounded slice evidence |
 | G1 — Target schema | not started | Postgres entities, relationships, IDs, locks, invariants, RLS, and Sync Streams approved |
 | G2 — Source migration/cutover | not started | Firebase export coverage, final-write freeze, pending-write disposition, and rejected-write recovery designed without refactoring the old app |
 | G3 — Implementation | in progress | Decision-independent foundations are active; 105 `LedgerTargetCore` production/test leaf surfaces are verified across completed provider-free slices, including the direct-Space-use-case leaves at commit `c35f1cef` / run `33746648677` and Space-details-use-case leaves at commit `f0d7c3fa` / run `33750834849`. This count deliberately excludes broader source app/MCP/test-helper surfaces until their target integrations pass. Completion still requires every target slice to pass the [Vertical Slice Implementation Method](conversion/vertical-slice-implementation-method.md), including Postgres/grants/RLS/PowerSync where applicable; no Firebase application adapter exists |
@@ -58,9 +58,9 @@ the minimum operational freeze/rejection control required for the hard cutover.
 | Adopt capability evolution method | done | [Capability Evolution Method](conversion/capability-evolution-method.md) |
 | Build complete current capability/surface catalog | done | 686 surfaces: 674 repository-discovered plus 12 manual cross-cutting; zero unclassified/missing-source/drift/validation gaps; `EVID-M0-COVERAGE-001` |
 | Create reviewed capability dossiers | done | Identity/session, media, Projects/Clients/reference, unified Item/Link, Inventory/Transactions/provenance, Invoicing/budget, reporting/search, Spaces/review, platform/control, and app-shell/presentation/test-support dossiers complete |
-| Map stable target responsibilities | done | 392 target mappings or later across source and target implementation surfaces; zero incomplete mapped records; 167 unresolved surfaces remain tied to 44 explicit blockers rather than guessed |
-| Generate exact residual decision queue | done | 167 residual surfaces grouped under 44 validated blockers; `npm run conversion:residuals:check` |
-| Draft product decision packets | done | Seventeen proposed packets cover all 36 product blockers and all 160 product-dependent residual surfaces; O-021 is UI-only; none is approved by documentation alone |
+| Map stable target responsibilities | done | 385 target mappings or later across source and target implementation surfaces; zero incomplete mapped records; 174 unresolved surfaces remain tied to 45 explicit blockers rather than guessed |
+| Generate exact residual decision queue | done | 174 residual surfaces grouped under 45 validated blockers; `npm run conversion:residuals:check` |
+| Draft product decision packets | done | Eighteen proposed packets cover all 37 product blockers, including O-039 Project-note text validation; O-021 is UI-only; none is approved by documentation alone |
 | Register canonical target specs | done | [Program index](README.md#canonical-target-state-specs) |
 | Establish enforceable vertical-slice implementation protocol | done | [Required method](conversion/vertical-slice-implementation-method.md), ignored template, generated slice audit and conversion-check status/evidence gates; `EVID-SLICE-METHOD-001` |
 | Confirm global Purchase/Return/Transfer taxonomy | done | D-001/D-002 |
@@ -90,6 +90,7 @@ the minimum operational freeze/rejection control required for the hard cutover.
 | Resolve Client Summary financial meaning | blocked | O-035/O-036; [proposed paid/open/recognized and sanitized-evidence packet](decision-packets/O-035-O-036-client-summary-and-shared-evidence.md) awaits approval |
 | Resolve client-shared receipt evidence policy | blocked | O-036; proposed report packet defaults to omission and explicit standalone sanitized packages; approval required |
 | Resolve Space archive behavior for assigned Items | blocked | O-037; [proposed archive-only/resolvable-assignment packet](decision-packets/O-037-space-archive-and-item-assignment.md) awaits approval |
+| Resolve Project-note text validation | blocked | O-039; [proposed shared app/MCP normalization-and-minimum packet](decision-packets/O-039-project-note-text-validation.md) awaits approval |
 | Resolve Transfer edge cases | blocked | O-002/O-011–O-014; [proposed sent/tag/Space/reversal/credit packet](decision-packets/O-002-O-011-O-014-transfer-edge-policy.md) awaits approval |
 
 ## Workstream 1 — Additive Data Foundations

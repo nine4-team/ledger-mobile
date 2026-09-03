@@ -786,6 +786,25 @@
         "Final corrected-diff review found no remaining P0-P3 after one stale verification-state sentence was removed."
       ],
       "disposition": "Prepared exactly two comment-only target scaffolds plus complete ready dossier/evidence/continuity controls. Full local gate and exact ready commit 5c2a185be15189bc8aa1606f838eee5a362780fc Actions run 33732917130 pass. SUBAGENT-WORK-010 assignment-control commit cc6faddf707694e0c4a7af00a770d8a2672b8151 passed immutable Actions run 33733387021; the bounded worker may start."
+    },
+    {
+      "findingId": "PROJECT-NOTE-CREATION-USE-CASE-PREFLIGHT-REJECTION-001",
+      "recordedAt": "2026-09-03",
+      "candidateSlice": "project-note-creation-use-case-contracts",
+      "status": "rejected_before_ready_or_delegation",
+      "reviewers": [
+        "primary-agent",
+        "/root/archive_promotion_traceability_review",
+        "/root/archive_promotion_continuity_review"
+      ],
+      "findings": [
+        "Canonical target specs and confirmed decisions do not choose Project-note submission normalization or minimum length.",
+        "Current app entry points trim outer whitespace and accept any nonempty remainder, while the MCP validation helper requires at least three trimmed characters and forwards the original text.",
+        "The proposed use case silently chose target ProjectNoteText's lossless accepted-byte behavior as user-visible submission policy even though conversion evidence cannot resolve the source conflict.",
+        "The first actual-diff review also caught omitted partial-source accounting for MCPMOD-DAB760104CEE, the helper that owns the source three-character minimum.",
+        "QuickNoteModal's prior target map named superseded ProjectNoteDraft/CreateProjectNoteCommand/ProjectNotesSnapshot/OperationSnapshot types instead of the verified target contracts."
+      ],
+      "disposition": "Removed speculative scaffolds, dossier, evidence and target-surface records before any commit or executable implementation. Opened O-039 with a proposed shared app/MCP validation packet, attached it to eight affected source/integration surfaces, corrected the MCP source behavior and QuickNote target names, and selected Client archive dispatch for a fresh strict-authority preflight."
     }
   ]
 }

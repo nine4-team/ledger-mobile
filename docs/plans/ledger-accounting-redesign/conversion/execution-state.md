@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 213
+State version: 215
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ARCHIVE-USE-CASE-VERIFIED
+- Checkpoint: PROJECT-NOTE-CREATION-USE-CASE-PREFLIGHT-REJECTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,6 +32,32 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
+- Rejected the chosen-Project note-creation application-use-case candidate
+  before READY, commit or executable implementation. The first independent
+  actual-diff reviewer caught omitted accounting for MCP validation helper
+  `MCPMOD-DAB760104CEE`; the second found the blocking authority defect: current
+  app entry points trim and accept any nonempty remainder, MCP requires at least
+  three trimmed characters while forwarding original text, and target
+  `ProjectNoteText` preserves any accepted nonblank bytes. No canonical target
+  heading or confirmed decision chooses the shared user-visible behavior.
+- Removed both speculative comment scaffolds, their dossier/evidence and target
+  surface records. Added O-039 plus a proposed decision packet, corrected exact
+  MCP source behavior and stale QuickNote target names, and attached O-039 to
+  the eight source/integration surfaces whose shared submission behavior it
+  blocks. The verified lower-level note representation/operation remains a
+  provider-free representational superset; it does not authorize an app/MCP
+  submission policy.
+- A fresh strict-authority scout selected provider-free Client archive dispatch
+  as the next candidate. Canonical Client lifecycle authority and D-006 support
+  stable Account/Client/revision intent and archive-only orchestration without
+  deciding merge, reassignment, dependency correction, UI, authorization,
+  persistence, provider, migration or production behavior.
+- The corrected preflight-rejection checkpoint passes conversion sync/check/
+  report, capability/query/residual controls, M0, target isolation/generated
+  contracts, JSON and diff validation, and all 261 target tests in 57 suites.
+  It records 819 surfaces / 804 discovered, 385 mapped-or-later / 174 residual /
+  45 blockers with only the three established retired-path warnings. No app,
+  Firebase, MCP source, provider or production implementation file changed.
 - Separated the supplied 197-path dirty snapshot into an independently verified
   16-path current Firebase implementation commit, a 64-path product-authority
   package with four supporting non-item audit/evidence paths, and the remaining
@@ -3035,6 +3061,21 @@ modifying the running Firebase application before hard cutover.
   `33758116150` (traceability 9 seconds; isolated target 3 minutes 8 seconds).
   The dossier and both target surfaces are verified; source `ProjectDetailView`
   remains characterized and the archive/restore MCP surface remains mapped only.
+- Verification-promotion commit
+  `97cf6156ce4e93a29ded7465d4b1d083fab5c4ef` passed immutable Actions run
+  `33759414349` (traceability 10 seconds; isolated target 2 minutes 56 seconds),
+  freezing the verified archive-use-case boundary.
+- Rejected the next chosen-Project note-creation use-case candidate before
+  READY. The first actual-diff review caught omitted MCP validation-helper
+  accounting; the second caught that the proposed blank-only/lossless-text rule
+  silently chose among conflicting app, MCP and target behaviors without a
+  canonical target heading or confirmed decision. Removed both comment
+  scaffolds, their dossier/evidence and manifest records; no executable code was
+  written or committed. O-039 now records the product choice and blocks eight
+  relevant source/integration surfaces. Exact MCP behavior and stale QuickNote
+  target names are corrected. Current control state is 819 recorded / 804
+  discovered, 385 mapped-or-later / 174 residual / 45 blockers with only the
+  three established retired-path warnings.
 
 ## Next Action
 
@@ -3082,8 +3123,11 @@ Continue without waiting on the two M1 evidence blockers:
    Project-note identity, audit/tombstone evidence, deterministic bounded order
    and explicit offline-history completeness. Treat the verified
    `project-note-creation-operation-contracts` dossier and
-   `EVID-PROJECT-NOTE-CREATION-001` as the sole AddProjectNote semantic
-   authority. Treat the verified `project-preference-read-contracts` dossier
+   `EVID-PROJECT-NOTE-CREATION-001` as the lower-level typed AddProjectNote
+   identity/envelope/representation authority only. It does not decide shared
+   app/MCP create/edit normalization, controls, maximum size or minimum; O-039
+   owns that unresolved product policy. Treat the verified
+   `project-preference-read-contracts` dossier
    and `EVID-PROJECT-PREFERENCE-READ-001` as the sole current-Principal Project
    preference read semantics. Treat the verified
    `project-preference-update-operation-contracts` dossier and
@@ -3285,14 +3329,22 @@ Continue without waiting on the two M1 evidence blockers:
    both staging builds pass. ProjectDetailView must remain characterized,
    `MCPTOOL-921DA05B3330` must remain target_mapped, and no excluded restore/
    lifecycle/UI/MCP/provider behavior may advance.
-   The next bounded candidate is chosen-Project note creation: add only a
-   provider-free application use case and its tests (`SWIFT-1E672B78D7CF`,
-   `TEST-255BB3A62512`) above the verified Project-note creation operation. It
-   must accept an already-selected ProjectID, preallocated NoteID, raw text and
-   requested source, preserving accepted raw text rather than copying Firebase
-   UI trimming. It must not decide the archived-Project picker/prefill policy or
-   advance the full `QuickNoteModal`; freeze exact requirements in a ready
-   dossier and require review plus exact-ready-SHA CI before executable code.
+   Do not recreate the rejected Project-note use-case scaffolds or mark that
+   product slice ready until O-039 is approved and canonical target note
+   requirements record the chosen app/MCP normalization/minimum behavior.
+   Prepare the provider-free Client archive use-case READY package next. Claim
+   only `ClientArchiveUseCase.swift` (`SWIFT-7A484C80FD98`) and
+   `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) as comment-only
+   target leaves. Freeze exact AccountID/ClientID/ExpectedClientRevision intent,
+   existing `ClientArchiveDraft`/`ArchiveClientCommand` assembly, one
+   `ClientArchiving.archive` call after construction, receipt validation,
+   structured cancellation, normalized failure preservation and bounded raw
+   errors. Do not inspect Client rows, Project counts, history, lifecycle,
+   readiness or permissions; do not add UI, optimistic projection, persistence,
+   authorization, restore/delete/merge/rename/reassignment/cascade, provider,
+   schema/RLS/Sync, app/MCP, migration, hosted or production behavior. Require
+   independent actual-diff review, complete local gate and exact-ready-SHA CI
+   before executable implementation.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,
@@ -3341,7 +3393,7 @@ mapping for ready capabilities.
 
 ## Active Blockers and Gates
 
-- O-002 through O-037 remain product blockers where referenced by the decision
+- O-002 through O-039 remain product blockers where referenced by the decision
   traceability table.
 - A-003 and A-004 remain proposed until the vertical spike passes.
 - A-007 target authentication choice is open.

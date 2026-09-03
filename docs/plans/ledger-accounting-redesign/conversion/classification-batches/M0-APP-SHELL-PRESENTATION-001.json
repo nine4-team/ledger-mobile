@@ -1136,20 +1136,22 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Collects a Project note and writes through current Account/Auth/Project contexts.",
       "disposition": "redesign",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
         "EVID-M2-APP-SHELL-001"
       ],
-      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "notes": "M2 withheld: O-039 must resolve note-text normalization, controls and maximum size before a shared application submission boundary is mapped; picker/prefill/default and archived eligibility, Account switching, save/focus/dismiss/retry UI, optimistic visibility and composition also remain unimplemented. The listed target surfaces are ownership candidates, not approved behavior.",
       "target": {
         "owner": "Client and Project",
         "surfaces": [
-          "ProjectNoteDraft",
-          "CreateProjectNoteCommand",
-          "ProjectNotesSnapshot",
-          "OperationSnapshot"
+          "ProjectNoteCreationDraft",
+          "AddProjectNoteCommand",
+          "ProjectNotePage",
+          "OperationReceipt"
         ],
         "securityRequirements": [
           "Server derives actor identity and validates Account/Project membership",

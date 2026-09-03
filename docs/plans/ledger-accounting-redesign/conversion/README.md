@@ -1,7 +1,7 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 392 of 559 target-relevant
-surfaces are target-mapped or later and the remaining 167 are explicitly tied
+Status: M0 inventory classification complete; 385 of 559 target-relevant
+surfaces are target-mapped or later and the remaining 174 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
@@ -556,6 +556,18 @@ implementation commit `232acf922b6c1ab1016017c3ebc3b926b164466c`
 passed immutable Actions run `33758116150`, so the two target surfaces and slice
 are verified.
 `EVID-PROJECT-ARCHIVE-USE-CASE-001`.
+
+Verification-promotion commit `97cf6156ce4e93a29ded7465d4b1d083fab5c4ef`
+passed immutable Actions run `33759414349`, freezing the archive use case. The
+next chosen-Project note-submission candidate was rejected before READY or
+implementation. Independent review found that app trimming, the MCP helper's
+three-character minimum and the target representation's lossless accepted text
+leave a user-visible normalization/minimum choice without canonical authority.
+Its speculative scaffolds and dossier were removed, O-039 now blocks the eight
+affected source/integration surfaces, and a proposed decision packet records
+the options. A separate strict-authority scout selected Client archive dispatch
+as the next decision-independent candidate. No Firebase, provider, hosted,
+migration or production behavior changed.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

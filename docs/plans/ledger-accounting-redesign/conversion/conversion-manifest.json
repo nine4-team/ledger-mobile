@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T13:04:17.999Z",
+    "lastSynchronizedAt": "2026-09-03T13:52:44.054Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -8187,13 +8187,15 @@
           "MCP note behavior is bounded, deterministic and authorized, with no alternate writer or full-account in-process scan"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Target shares note authorization/idempotency/order and bounded search semantics with the app. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-039 blocks the shared add/edit validation boundary until note-text normalization, controls and maximum size are approved. MCP registration, transport, parent authorization, list/search and result presentation remain source evidence; the listed target surfaces are ownership candidates only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -9415,14 +9417,16 @@
           "App and MCP report the same safe actionable failure for the same target outcome and one rejection cannot poison the queue"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-OPERATION-CORE-001"
       ],
-      "notes": "The verified target core now owns provider-free error/rejection values, but this broader MCP module remains target_mapped until target MCP transport actually projects the same registered envelope and parity/security tests pass. Source-provider/build mechanics do not become target application authority.",
+      "notes": "M2 withheld: O-039 must resolve this helper's source-only three-character trimmed note-text minimum against the app and target representation before shared validation/error behavior is mapped. The verified target core owns only provider-free operation errors; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -13800,7 +13804,7 @@
       "observedSourceHash": "3af3b9a85cde6678d1bbc195c3202e173b1ae44c717187111ad25b844ec3289c",
       "acknowledgedSourceHash": "3af3b9a85cde6678d1bbc195c3202e173b1ae44c717187111ad25b844ec3289c",
       "metadata": {},
-      "currentBehavior": "Adds a non-empty MCP-authored Project note with server process time and returns its ID, without a shared operation ID or explicit parent preflight.",
+      "currentBehavior": "Adds an MCP-authored Project note only when trimmed text has at least three characters, uses server process time and returns its ID, without a shared operation ID or explicit parent preflight.",
       "disposition": "replace",
       "target": {
         "owner": "Project Notes",
@@ -13830,13 +13834,15 @@
           "MCP note behavior is bounded, deterministic and authorized, with no alternate writer or full-account in-process scan"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Retry must resolve to one note and authorized existing Project. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-039 must resolve the source MCP's three-character trimmed-text minimum versus app trimming and target representation semantics, including controls and maximum size. MCP schema/transport, trusted parent preflight, final source/audit and result presentation also remain source evidence; the listed target surfaces are ownership candidates only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -17951,12 +17957,13 @@
       },
       "status": "characterized",
       "blockers": [
-        "O-024"
+        "O-024",
+        "O-039"
       ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
-      "notes": "M2 withheld: O-024 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority.",
+      "notes": "M2 withheld: O-024 changes broad target command availability, ownership, dependency/retention behavior or authorization policy, and O-039 leaves target note-create normalization/minimum policy unresolved; no legacy generic mutation is provisional authority.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -21911,13 +21918,15 @@
           "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Replace transport-shaped CRUD with note queries and story-specific operations. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-039 blocks target create/edit submission until note-text normalization, controls and maximum size are approved. Protocol CRUD, reads, edit/remove, provider implementation and physical durability remain source evidence; the listed target surfaces are ownership candidates only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -23918,13 +23927,15 @@
           "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Preserve authoring UX with deterministic order, offline receipts and explicit conflict/rejection state. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-039 blocks target create/edit authoring until note-text normalization, controls and maximum size are approved. Note reads/order, optimistic/retry UI and composition remain source evidence; the listed target surfaces are ownership candidates only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -26893,13 +26904,15 @@
           "Authorized Project notes work offline without duplicates, unstable ordering, forged audit evidence or full-scan search"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Preserve note outcomes with stable IDs, deterministic ordering, idempotency and authorization. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-039 blocks target create/edit submission until note-text normalization, controls and maximum size are approved. Firebase CRUD, reads, physical durability, provider behavior and edit/remove remain source evidence; the listed target surfaces are ownership candidates only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -26986,10 +26999,10 @@
       "target": {
         "owner": "Client and Project",
         "surfaces": [
-          "ProjectNoteDraft",
-          "CreateProjectNoteCommand",
-          "ProjectNotesSnapshot",
-          "OperationSnapshot"
+          "ProjectNoteCreationDraft",
+          "AddProjectNoteCommand",
+          "ProjectNotePage",
+          "OperationReceipt"
         ],
         "securityRequirements": [
           "Server derives actor identity and validates Account/Project membership",
@@ -27013,13 +27026,15 @@
           "A note captured offline remains visible and durable and cannot be attributed to a caller-forged actor"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-039"
+      ],
       "evidence": [
         "EVID-CAPABILITY-APP-SHELL-001",
         "EVID-M2-APP-SHELL-001"
       ],
-      "notes": "Retain useful UX only after replacing legacy fields, eligibility, URL identity, readiness, or accounting assumptions with owning capability contracts. M2 map reviewed under target-mapping-method.md; blockers gate implementation/capability enablement, not this provider-neutral ownership map.",
+      "notes": "M2 withheld: O-039 must resolve note-text normalization, controls and maximum size before a shared application submission boundary is mapped; picker/prefill/default and archived eligibility, Account switching, save/focus/dismiss/retry UI, optimistic visibility and composition also remain unimplemented. The listed target surfaces are ownership candidates, not approved behavior.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
