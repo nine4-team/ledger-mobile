@@ -290,6 +290,127 @@ struct ProjectSetupFormPresentationTests {
         #expect(try Self.command(restored.selection, preparation: restored.preparation).draft.description == "Restart description")
 
         let preparationBytes = try OperationContractCodec.encode(preparation)
+        let preparationMutations: [PreparationMutation] = [
+            .init("preparation Account", .accountScopeMismatch) {
+                $0["accountId"] = "account-other"
+            },
+            .init("preparation evidence fingerprint", .preparationFingerprintMismatch) {
+                $0["evidenceFingerprint"] = Self.hash("8")
+            },
+            .init("Client snapshot Account", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "accountId", "account-other")
+            },
+            .init("Client source fingerprint", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "sourceDirectoryFingerprint", Self.hash("3"))
+            },
+            .init("Client query fingerprint", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "queryFingerprint", Self.hash("4"))
+            },
+            .init("Client evidence fingerprint", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "evidenceFingerprint", Self.hash("9"))
+            },
+            .init("Client source row count", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "sourceDirectoryRowCount", 3)
+                Self.setClientSnapshotField(&$0, "visibleRowCountBeforeFiltering", 3)
+            },
+            .init("Client visible count", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "visibleRowCountBeforeFiltering", 3)
+            },
+            .init("Client completeness", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "isCompleteForQuery", true)
+                Self.setClientSnapshotField(&$0, "quality", "ready")
+            },
+            .init("Client quality", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "quality", "stale")
+            },
+            .init("Client local version", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "localDataVersion", "client-version-changed")
+            },
+            .init("Client as-of", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "asOf", Self.milliseconds(Self.t3))
+            },
+            .init("Client availability", .invalidEncodedPreparation) {
+                Self.setClientSnapshotField(&$0, "availability", "directoryIncomplete")
+            },
+            .init("Client row ID", .invalidEncodedPreparation) {
+                Self.setClientRowField(&$0, "id", "client-changed")
+            },
+            .init("Client row Account", .invalidEncodedPreparation) {
+                Self.setClientRowField(&$0, "accountId", "account-other")
+            },
+            .init("Client row display name", .invalidEncodedPreparation) {
+                Self.setClientRowField(&$0, "displayName", "Changed Client")
+            },
+            .init("Client row lifecycle", .invalidEncodedPreparation) {
+                Self.setClientRowField(&$0, "lifecycle", "archived")
+            },
+            .init("Client row created-at", .invalidEncodedPreparation) {
+                Self.setClientRowField(&$0, "createdAt", Self.milliseconds(Self.t0) + 1)
+            },
+            .init("Client row updated-at", .invalidEncodedPreparation) {
+                Self.setClientRowField(&$0, "updatedAt", Self.milliseconds(Self.t3))
+            },
+            .init("category query fingerprint", .preparationFingerprintMismatch) {
+                Self.setCategoryLocalField(&$0, "queryFingerprint", Self.hash("5"))
+            },
+            .init("category snapshot Account", .invalidEncodedPreparation) {
+                Self.setCategoryReferenceField(&$0, "accountId", "account-other")
+            },
+            .init("category visible count", .invalidEncodedPreparation) {
+                Self.setCategoryLocalField(&$0, "visibleRowCountBeforeFiltering", 6)
+            },
+            .init("category completeness", .preparationFingerprintMismatch) {
+                Self.setCategoryLocalField(&$0, "isCompleteForQuery", true)
+                Self.setCategoryLocalField(&$0, "quality", "ready")
+            },
+            .init("category quality", .preparationFingerprintMismatch) {
+                Self.setCategoryLocalField(&$0, "quality", "partial")
+            },
+            .init("category local version", .preparationFingerprintMismatch) {
+                Self.setCategoryLocalField(&$0, "localDataVersion", "category-version-changed")
+            },
+            .init("category as-of", .preparationFingerprintMismatch) {
+                Self.setCategoryLocalField(&$0, "asOf", Self.milliseconds(Self.t3))
+            },
+            .init("category ID", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "id", "category-changed")
+            },
+            .init("category Account", .invalidEncodedPreparation) {
+                Self.setCategoryRowField(&$0, "accountId", "account-other")
+            },
+            .init("category name", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "name", "Changed Category")
+            },
+            .init("category kind", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "kind", "itemized")
+            },
+            .init("category lifecycle", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "lifecycle", "archived")
+            },
+            .init("category system flag", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "isSystem", true)
+            },
+            .init("category overall exclusion", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "excludesFromOverallBudget", true)
+            },
+            .init("category presentation order", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "presentationOrder", 11)
+            },
+            .init("category revision", .preparationFingerprintMismatch) {
+                Self.setCategoryRowField(&$0, "revision", 2)
+            }
+        ]
+        for mutation in preparationMutations {
+            let actual = Self.preparationDecodeFailure(
+                try Self.mutate(preparationBytes, mutation.apply)
+            )
+            if actual != mutation.expected {
+                Issue.record(
+                    "\(mutation.name): expected \(mutation.expected), got \(String(describing: actual))"
+                )
+            }
+        }
+
         let changedClientOrder = try Self.mutate(preparationBytes) { root in
             var source = root["clientSelectionSnapshot"] as! [String: Any]
             var clients = source["activeClients"] as! [[String: Any]]
@@ -297,7 +418,7 @@ struct ProjectSetupFormPresentationTests {
             source["activeClients"] = clients
             root["clientSelectionSnapshot"] = source
         }
-        #expect(Self.preparationDecodeFailure(changedClientOrder) != nil)
+        #expect(Self.preparationDecodeFailure(changedClientOrder) == .invalidEncodedPreparation)
         let changedCategory = try Self.mutate(preparationBytes) { root in
             var reference = root["categoryReferenceSnapshot"] as! [String: Any]
             var local = reference["local"] as! [String: Any]
@@ -386,6 +507,111 @@ struct ProjectSetupFormPresentationTests {
             root["clientSelection"] = client
         }
         #expect(Self.selectionDecodeFailure(nestedSelectionKey) == .invalidEncodedSelection)
+        let existingWithDisplayName = try Self.mutate(selectionBytes) { root in
+            var client = root["clientSelection"] as! [String: Any]
+            client["displayName"] = "Not allowed for existing"
+            root["clientSelection"] = client
+        }
+        #expect(Self.selectionDecodeFailure(existingWithDisplayName) == .invalidEncodedSelection)
+
+        let richSelection = try preparation.selection(
+            client: ProjectClientSelectionInput(
+                newClientId: ClientID(validating: "client-new-rich"),
+                displayName: ClientDisplayName(validating: "Rich New Client")
+            ),
+            projectDisplayName: ProjectDisplayName(validating: "Rich Project"),
+            rawDescription: "Rich description",
+            categoryAllocations: [
+                Self.allocation(
+                    "category-a",
+                    amount: Money(
+                        minorUnits: 100,
+                        currency: CurrencyCode(validating: "USD")
+                    )
+                ),
+                Self.allocation(
+                    "category-b",
+                    amount: Money(
+                        minorUnits: 200,
+                        currency: CurrencyCode(validating: "EUR")
+                    )
+                )
+            ]
+        )
+        let richSelectionBytes = try OperationContractCodec.encode(richSelection)
+        let selectionMutations: [SelectionMutation] = [
+            .init("selection Account", .selectionFingerprintMismatch) {
+                $0["accountId"] = "account-other"
+            },
+            .init("Project name", .selectionFingerprintMismatch) {
+                $0["projectDisplayName"] = "Changed Project"
+            },
+            .init("canonical description", .selectionFingerprintMismatch) {
+                var replacement = $0["descriptionReplacement"] as! [String: Any]
+                replacement["value"] = "Changed description"
+                $0["descriptionReplacement"] = replacement
+            },
+            .init("Client ID", .selectionFingerprintMismatch) {
+                Self.setSelectionClientField(&$0, "clientId", "client-new-changed")
+            },
+            .init("new Client display name", .selectionFingerprintMismatch) {
+                Self.setSelectionClientField(&$0, "displayName", "Changed New Client")
+            },
+            .init("Client kind shape", .invalidEncodedSelection) {
+                Self.setSelectionClientField(&$0, "kind", "existing")
+            },
+            .init("missing new Client display name", .invalidEncodedSelection) {
+                Self.removeSelectionClientField(&$0, "displayName")
+            },
+            .init("allocation category", .selectionFingerprintMismatch) {
+                Self.setSelectionAllocationField(
+                    &$0,
+                    index: 0,
+                    field: "categoryId",
+                    value: "category-c"
+                )
+            },
+            .init("allocation amount", .selectionFingerprintMismatch) {
+                Self.setSelectionMoneyField(
+                    &$0,
+                    index: 0,
+                    field: "minorUnits",
+                    value: 101
+                )
+            },
+            .init("allocation currency", .selectionFingerprintMismatch) {
+                Self.setSelectionMoneyField(
+                    &$0,
+                    index: 0,
+                    field: "currency",
+                    value: "CAD"
+                )
+            },
+            .init("allocation order", .selectionFingerprintMismatch) {
+                var allocations = $0["categoryAllocations"] as! [[String: Any]]
+                allocations.swapAt(0, 1)
+                $0["categoryAllocations"] = allocations
+            },
+            .init("preparation fingerprint", .selectionFingerprintMismatch) {
+                $0["preparationEvidenceFingerprint"] = Self.hash("6")
+            },
+            .init("selection fingerprint", .selectionFingerprintMismatch) {
+                $0["selectionFingerprint"] = Self.hash("7")
+            },
+            .init("invalid preparation fingerprint", .invalidPreparationFingerprint) {
+                $0["preparationEvidenceFingerprint"] = "not-a-hash"
+            }
+        ]
+        for mutation in selectionMutations {
+            let actual = Self.selectionDecodeFailure(
+                try Self.mutate(richSelectionBytes, mutation.apply)
+            )
+            if actual != mutation.expected {
+                Issue.record(
+                    "\(mutation.name): expected \(mutation.expected), got \(String(describing: actual))"
+                )
+            }
+        }
 
         #expect(Self.setupFailure {
             try Self.command(
@@ -448,6 +674,38 @@ struct ProjectSetupFormPresentationTests {
     private struct RestartFixture: Codable, Equatable, Sendable {
         let preparation: ProjectSetupFormPreparation
         let selection: ProjectSetupFormSelection
+    }
+
+    private struct PreparationMutation {
+        let name: String
+        let expected: ProjectSetupFormFailure
+        let apply: (inout [String: Any]) -> Void
+
+        init(
+            _ name: String,
+            _ expected: ProjectSetupFormFailure,
+            apply: @escaping (inout [String: Any]) -> Void
+        ) {
+            self.name = name
+            self.expected = expected
+            self.apply = apply
+        }
+    }
+
+    private struct SelectionMutation {
+        let name: String
+        let expected: ProjectSetupFormFailure
+        let apply: (inout [String: Any]) -> Void
+
+        init(
+            _ name: String,
+            _ expected: ProjectSetupFormFailure,
+            apply: @escaping (inout [String: Any]) -> Void
+        ) {
+            self.name = name
+            self.expected = expected
+            self.apply = apply
+        }
     }
 
     private static func client(
@@ -599,6 +857,115 @@ struct ProjectSetupFormPresentationTests {
             ),
             capturedAt: capturedAt
         )
+    }
+
+    private static func hash(_ character: Character) -> String {
+        String(repeating: character, count: 64)
+    }
+
+    private static func milliseconds(_ date: Date) -> Int {
+        Int(date.timeIntervalSince1970 * 1_000)
+    }
+
+    private static func setClientSnapshotField(
+        _ root: inout [String: Any],
+        _ field: String,
+        _ value: Any
+    ) {
+        var snapshot = root["clientSelectionSnapshot"] as! [String: Any]
+        snapshot[field] = value
+        root["clientSelectionSnapshot"] = snapshot
+    }
+
+    private static func setClientRowField(
+        _ root: inout [String: Any],
+        _ field: String,
+        _ value: Any
+    ) {
+        var snapshot = root["clientSelectionSnapshot"] as! [String: Any]
+        var rows = snapshot["activeClients"] as! [[String: Any]]
+        rows[0][field] = value
+        snapshot["activeClients"] = rows
+        root["clientSelectionSnapshot"] = snapshot
+    }
+
+    private static func setCategoryLocalField(
+        _ root: inout [String: Any],
+        _ field: String,
+        _ value: Any
+    ) {
+        var reference = root["categoryReferenceSnapshot"] as! [String: Any]
+        var local = reference["local"] as! [String: Any]
+        local[field] = value
+        reference["local"] = local
+        root["categoryReferenceSnapshot"] = reference
+    }
+
+    private static func setCategoryReferenceField(
+        _ root: inout [String: Any],
+        _ field: String,
+        _ value: Any
+    ) {
+        var reference = root["categoryReferenceSnapshot"] as! [String: Any]
+        reference[field] = value
+        root["categoryReferenceSnapshot"] = reference
+    }
+
+    private static func setCategoryRowField(
+        _ root: inout [String: Any],
+        _ field: String,
+        _ value: Any
+    ) {
+        var reference = root["categoryReferenceSnapshot"] as! [String: Any]
+        var local = reference["local"] as! [String: Any]
+        var rows = local["rows"] as! [[String: Any]]
+        rows[0][field] = value
+        local["rows"] = rows
+        reference["local"] = local
+        root["categoryReferenceSnapshot"] = reference
+    }
+
+    private static func setSelectionClientField(
+        _ root: inout [String: Any],
+        _ field: String,
+        _ value: Any
+    ) {
+        var client = root["clientSelection"] as! [String: Any]
+        client[field] = value
+        root["clientSelection"] = client
+    }
+
+    private static func removeSelectionClientField(
+        _ root: inout [String: Any],
+        _ field: String
+    ) {
+        var client = root["clientSelection"] as! [String: Any]
+        client.removeValue(forKey: field)
+        root["clientSelection"] = client
+    }
+
+    private static func setSelectionAllocationField(
+        _ root: inout [String: Any],
+        index: Int,
+        field: String,
+        value: Any
+    ) {
+        var allocations = root["categoryAllocations"] as! [[String: Any]]
+        allocations[index][field] = value
+        root["categoryAllocations"] = allocations
+    }
+
+    private static func setSelectionMoneyField(
+        _ root: inout [String: Any],
+        index: Int,
+        field: String,
+        value: Any
+    ) {
+        var allocations = root["categoryAllocations"] as! [[String: Any]]
+        var money = allocations[index]["allocation"] as! [String: Any]
+        money[field] = value
+        allocations[index]["allocation"] = money
+        root["categoryAllocations"] = allocations
     }
 
     private static func formFailure<Value>(
