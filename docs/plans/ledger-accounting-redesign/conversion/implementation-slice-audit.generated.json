@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T21:31:10.538Z",
+  "generatedFromManifestSync": "2026-09-03T23:04:58.847Z",
   "totals": {
     "slices": 61,
     "claimedTargetSurfaces": 147,
@@ -9,8 +9,8 @@
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
-    "in_progress": 1,
+    "ready": 0,
+    "in_progress": 2,
     "implemented": 0,
     "verified": 59,
     "rehearsed": 0,
@@ -550,7 +550,7 @@
       "sliceId": "project-rename-use-case-contracts",
       "title": "Dispatch one typed Project display-name replacement",
       "kind": "product",
-      "status": "ready",
+      "status": "in_progress",
       "owner": "Project Rename Use Case",
       "surfaceIds": [
         "SWIFT-5A812E7B8C95",

@@ -647,24 +647,25 @@ dirty/no-op/UI, broader mutation, persistence, authorization, provider/schema/
 RLS/Sync, app/MCP, migration, hosted and production behavior remain outside;
 `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001`.
 
-The next bounded candidate is the typed Project rename application boundary.
-`project-rename-use-case-contracts` is `ready` with two comment-only leaves,
+The typed Project rename application boundary is locally implemented.
+`project-rename-use-case-contracts` is `in_progress` with two executable leaves,
 `SWIFT-5A812E7B8C95` and `TEST-E1BAA8DF70B4`, above the verified Project rename
 operation and Client/Project display-value contracts. The frozen public intent
 contains only Account, Project, expected revision and an already-validated
 `ProjectDisplayName`; it accepts no raw String and adds no normalization rule.
-The future use case constructs the verified draft/command before one rename-port
+The use case constructs the verified draft/command before one rename-port
 call, validates afterward, preserves all 12 typed failures and cancellation,
-and bounds only unknown errors. The local READY gate passes 829/814 conversion
-inventory, 395/174/45 residual control, all 286 existing tests in 61 suites,
-repeatable generation and both staging builds; both independent corrected-diff
-reviewers return GO and immutable exact-READY-SHA CI remains. All ten obligations remain planned until
-exact implementation. EditProjectModal, ProjectService/Protocol, Project model,
+and bounds only unknown errors. Exact READY commit `dc7c9779` / immutable run
+`33808493496` passed. Eight focused/all 294 tests in 62 suites, repeatable
+generation, target controls and both staging builds pass locally; both
+independent implementation reviewers return GO. `PRENAMEUSE-TEST-001` through
+`PRENAMEUSE-TEST-009` pass, while immutable exact-implementation-SHA CI remains
+before verification promotion. EditProjectModal, ProjectService/Protocol, Project model,
 ProjectFormValidation/tests, ProjectDetailView, ProjectDetailContainer and
 `update_project` retain their prior statuses.
 Initial READY review corrected mirrored reciprocal-proof risk, product/technical
 authority attribution, ProjectDetailView status coverage and rejection-recovery
-wording; the final corrected-diff reviews found no remaining P0-P3 issue.
+wording. Implementation review found no remaining P0-P3 issue.
 Read/readiness/lifecycle/no-op/UI, broader mutation, persistence, authorization,
 provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior
 remain excluded; `EVID-PROJECT-RENAME-USE-CASE-001`.
