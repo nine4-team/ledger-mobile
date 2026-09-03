@@ -92,12 +92,22 @@ struct ProjectCoreDetailsDataTests {
             try Self.local([try Self.row(project: "other-project")])
         } == .projectIdentityMismatch)
         #expect(Self.failure { try Self.local([row, row]) } == .multipleRows)
+        #expect(Self.failure {
+            try Self.local([
+                row,
+                try Self.row(project: "other-project", client: "other-client")
+            ])
+        } == .multipleRows)
+        #expect(Self.failure { try Self.local([], visibleCount: -1) } == .visibleCountMismatch)
         #expect(Self.failure { try Self.local([row], visibleCount: 2) } == .visibleCountMismatch)
         #expect(Self.failure {
             try Self.local([row], date: Date(timeIntervalSinceReferenceDate: .infinity))
         } == .invalidSnapshotAsOf)
         #expect(Self.failure {
             try Self.local([row], quality: .partial, complete: true)
+        } == .invalidCompleteness)
+        #expect(Self.failure {
+            try Self.local([row], quality: .stale, complete: true)
         } == .invalidCompleteness)
         #expect(Self.failure {
             try Self.row(description: "  noncanonical  ")
@@ -181,7 +191,6 @@ struct ProjectCoreDetailsDataTests {
     func updateFailureSemanticsAndDiagnostics() throws {
         let request = try Self.request()
         let incomplete = try Self.local([try Self.row(revision: .max)], complete: false)
-        let waiting = try ProjectCoreDetailsUpdate(request: request, state: .waiting(.loading))
         let unavailable = try ProjectCoreDetailsUpdate(
             request: request,
             state: .failed(failure: .unavailable, cached: nil)
@@ -194,13 +203,21 @@ struct ProjectCoreDetailsDataTests {
             request: request,
             state: .failed(failure: .requiredUpdate, cached: incomplete)
         )
-        #expect(waiting.state == .waiting(.loading))
+        for readiness in [ListReadiness.notRequested, .loading, .blocked] {
+            let waiting = try ProjectCoreDetailsUpdate(
+                request: request,
+                state: .waiting(readiness)
+            )
+            #expect(waiting.state == .waiting(readiness))
+        }
         #expect(retryable.state != requiredUpdate.state)
         #expect(!incomplete.isAuthoritativeAbsence)
         #expect(!incomplete.observedRevisionIsFromCompleteReadySnapshot)
-        #expect(Self.failure {
-            try ProjectCoreDetailsUpdate(request: request, state: .waiting(.ready))
-        } == .invalidWaitingState)
+        for readiness in [ListReadiness.ready, .partial, .stale] {
+            #expect(Self.failure {
+                try ProjectCoreDetailsUpdate(request: request, state: .waiting(readiness))
+            } == .invalidWaitingState)
+        }
         #expect(Self.failure {
             try ProjectCoreDetailsUpdate(
                 request: request,
