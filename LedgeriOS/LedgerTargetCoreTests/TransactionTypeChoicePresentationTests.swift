@@ -201,8 +201,19 @@ struct TransactionTypeChoicePresentationTests {
             as: TransactionClassification.self
         ) == .invalidEncodedClassification)
         let syntacticallyMalformedJSON = Data("{".utf8)
-        #expect(Self.classificationDecodeFailure(syntacticallyMalformedJSON)
-            == .invalidEncodedClassification)
+        let rawDecodeError: (any Error)? = {
+            do {
+                _ = try OperationContractCodec.decode(
+                    TransactionClassification.self,
+                    from: syntacticallyMalformedJSON
+                )
+                return nil
+            } catch {
+                return error
+            }
+        }()
+        #expect(rawDecodeError is DecodingError)
+        #expect(!(rawDecodeError is TransactionTaxonomyFailure))
         #expect(Self.consume(syntacticallyMalformedJSON)
             == .rejected(.invalidEncodedClassification))
 
@@ -320,21 +331,6 @@ struct TransactionTypeChoicePresentationTests {
 
     private static func isEncodable(_ value: Any) -> Bool {
         value is any Encodable
-    }
-
-    private static func classificationDecodeFailure(
-        _ data: Data
-    ) -> TransactionTaxonomyFailure? {
-        do {
-            _ = try OperationContractCodec.decode(TransactionClassification.self, from: data)
-            return nil
-        } catch let failure as TransactionTaxonomyFailure {
-            return failure
-        } catch is DecodingError {
-            return .invalidEncodedClassification
-        } catch {
-            return nil
-        }
     }
 
     private static func consume(_ bytes: Data) -> ConsumerResult {
