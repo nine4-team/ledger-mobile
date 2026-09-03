@@ -549,7 +549,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-009",
       "sliceId": "project-setup-form-presentation-contracts",
-      "status": "active",
+      "status": "integrated_local_pending_ci",
       "baseCommit": "a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62",
       "readyCiRun": 33726485780,
       "assignmentControlCommit": "10913c5761561ad9fdd0713627ae82396e9f3ff8",
@@ -578,6 +578,39 @@
         "completeLocalGate": true,
         "exactIntegrationCommitCi": true,
         "reason": "The user explicitly requested early delegated-work quality control. Ready-diff review already rejected invented Project-wide currency behavior, ambiguous description normalization and an evidence-completeness overclaim; the worker cannot change the frozen semantic boundary or any canonical control file."
+      },
+      "handoff": {
+        "candidateCommit": "37145ae3548e577469599ff2381c02258b01f130",
+        "candidateCommits": [
+          "7a881af2ff2ef86d1ef4ca4f08c7e604f0aacbe2",
+          "37145ae3548e577469599ff2381c02258b01f130"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 237 tests in 53 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Represented new-Client-ID collision detection covers only active Client IDs retained in the selection snapshot; unrepresented and archived identity collisions remain authoritative-apply concerns.",
+          "Canonical fingerprints prove internal evidence consistency, not current authorization or cryptographic authenticity; structured restart does not prove physical persistence or provider behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_rejecting_one_p2_test_coverage_gap",
+        "independentReviewer": "/root/project_browsing_preflight",
+        "independentAdversarialReview": "passed_after_exhaustive_field_matrix_correction",
+        "findings": [
+          "P2: first green candidate overclaimed every-field evidence binding while mutating only representative fields in its restart test.",
+          "Corrected candidate independently mutates every named preparation, Client snapshot/row, category snapshot/row and selection field with layer-appropriate expected failures.",
+          "Final primary and independent review found no remaining P0-P3; the larger test file is justified by the explicit reciprocal matrix rather than duplicated production behavior."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite",
+        "completeLocalGate": "passed: all 237 tests in 53 suites, warnings-as-errors, conversion/capability/query/residual/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "pending",
+        "exactIntegrationCommitCi": "pending"
       }
     }
   ],

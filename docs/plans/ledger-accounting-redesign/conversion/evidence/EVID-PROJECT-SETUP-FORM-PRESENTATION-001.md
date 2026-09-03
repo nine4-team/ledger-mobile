@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-EC2117B393FB`, `TEST-38F09C637761`
 - Slice dossier: `conversion/implementation-slices/project-setup-form-presentation-contracts.json`
-- Verification state: independently reviewed ready and assignment-control commits passed immutable CI; bounded implementation active
+- Verification state: corrected implementation passes full local gate and independent review; exact integration-commit CI pending
 
 ## Selection and Product Authority
 
@@ -105,8 +105,7 @@ Independent actual-ready-diff review is complete. Exact ready commit
 Actions run `33726485780`. The temporary worker branch/worktree starts at that
 exact commit. Assignment-control commit
 `10913c5761561ad9fdd0713627ae82396e9f3ff8` passed both jobs in immutable
-Actions run `33726899284`; the worker is active with only the two frozen leaf
-paths writable.
+Actions run `33726899284`; the worker received only the two frozen leaf paths.
 
 The first actual-diff review rejected two ambiguities before commit: an
 unsupported same-currency rule despite no Project-currency authority, and
@@ -118,6 +117,35 @@ tests. Correction re-review caught one remaining P2 phrase that could have
 misrepresented partial evidence as complete; the phrase was corrected to bind
 exact represented evidence and independent readiness/completeness state. Final
 independent re-review returned GO with no remaining P0-P3 issue.
+
+## Implementation Review and Local Gate
+
+The first worker candidate, `7a881af2ff2ef86d1ef4ca4f08c7e604f0aacbe2`,
+changed exactly the two allowlisted files and passed its six focused tests plus
+the full package. Primary every-line review nevertheless rejected it for one P2
+test-coverage gap: the restart test and frozen manifest promised every-field
+evidence binding, but the test mutated only representative fields.
+
+Corrected worker tip `37145ae3548e577469599ff2381c02258b01f130`
+adds a table-driven mutation matrix that independently changes every named
+preparation, Client snapshot/row, category snapshot/row and selection field.
+Expected failures remain layer-specific, and the tests do not recompute hashes
+or share production validation logic. Final primary and independent adversarial
+review returned GO with no remaining P0-P3. The worker worktree is clean and
+base-to-tip changes remain exactly the two allowlisted paths.
+
+Integrated production and correction commits are `7365fbcb` and `bfac9f7a`.
+The complete local gate passes conversion/capability/query/residual/M0 controls,
+target isolation and generated contracts, six focused and all 237 tests in 53
+suites, warnings-as-errors, repeatable XcodeGen with unchanged project/scheme
+hashes, macOS and generic iOS Simulator staging builds, and clean formatting.
+Implemented leaf hashes are:
+
+- `ProjectSetupFormPresentation.swift` — `fff3eb39b4b178fc32e2578280d6f7b4f6d52a3b706266a0aa35829983e3ef67`; and
+- `ProjectSetupFormPresentationTests.swift` — `243152d8833b1399e3b543bc91abf5fab7e86b89f91d702b572be3d6a6c5e496`.
+
+Exact integration-commit immutable CI remains required before the slice or
+either surface can be promoted to verified.
 
 ## Rejected Alternatives
 

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T07:16:18.485Z",
+    "lastSynchronizedAt": "2026-09-03T07:47:35.045Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -32250,12 +32250,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift"
         }
       ],
-      "observedSourceHash": "606bd43ba122c00c596d4e55eb610a8c0bfa20da4f413c85eb8d158fe1b92cfe",
-      "acknowledgedSourceHash": "606bd43ba122c00c596d4e55eb610a8c0bfa20da4f413c85eb8d158fe1b92cfe",
+      "observedSourceHash": "fff3eb39b4b178fc32e2578280d6f7b4f6d52a3b706266a0aa35829983e3ef67",
+      "acknowledgedSourceHash": "fff3eb39b4b178fc32e2578280d6f7b4f6d52a3b706266a0aa35829983e3ef67",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the frozen comment scaffold for provider-free Project setup preparation and evidence-bound derivation of the verified CreateProjectCommand.",
+      "currentBehavior": "Implements provider-free Project setup preparation, exact existing-or-new Client and category selection, canonical restart fingerprints, and current-evidence revalidation before deriving the verified CreateProjectCommand.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Presentation",
@@ -32296,7 +32296,7 @@
         "EVID-BUDGET-CATEGORY-REFERENCE-001",
         "EVID-PROJECT-SETUP-FORM-PRESENTATION-001"
       ],
-      "notes": "Ready comment scaffold only. The frozen slice permits explicit existing/new Client choice, zero selected categories, exact nullable allocations and current-evidence validation; it excludes UI/defaults/category creation/media/ports/providers and authority claims.",
+      "notes": "Implemented candidate after primary review rejected an exhaustive field-binding test gap and the worker added reciprocal mutation coverage. Final primary and independent adversarial review report no remaining P0-P3; exact integration CI is pending before verification.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -34861,12 +34861,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "625e9f61b0181e7c019f0d044f3b2e9da8e02bbe78e1373f1a57cc523afc4e15",
-      "acknowledgedSourceHash": "625e9f61b0181e7c019f0d044f3b2e9da8e02bbe78e1373f1a57cc523afc4e15",
+      "observedSourceHash": "243152d8833b1399e3b543bc91abf5fab7e86b89f91d702b572be3d6a6c5e496",
+      "acknowledgedSourceHash": "243152d8833b1399e3b543bc91abf5fab7e86b89f91d702b572be3d6a6c5e496",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the frozen comment scaffold for Project setup preparation, selection, restart/refusal and exact command-derivation tests.",
+      "currentBehavior": "Provides six focused Project setup presentation tests covering ordered preparation, exact Client/category selection, nullable allocations, mixed currencies, description normalization, exhaustive restart-field mutation, current-evidence refusal, diagnostics and provider/authority exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Presentation Tests",
@@ -34907,7 +34907,7 @@
         "EVID-BUDGET-CATEGORY-REFERENCE-001",
         "EVID-PROJECT-SETUP-FORM-PRESENTATION-001"
       ],
-      "notes": "Ready comment scaffold only. Tests must include sibling-selection substitution, every-field evidence mutation, zero/null/positive allocation and explicit no-authorization/provider assertions before implementation can verify this surface.",
+      "notes": "The first green candidate was rejected because its restart test mutated only representative evidence fields. The corrected matrix independently mutates every named preparation, Client, category and selection field with layer-appropriate expected failures; exact integration CI remains pending.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

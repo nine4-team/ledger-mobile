@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 193
+State version: 194
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PSETUP-FORM-WORKER-ACTIVE
+- Checkpoint: PSETUP-FORM-INTEGRATED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2801,6 +2801,21 @@ modifying the running Firebase application before hard cutover.
   Actions run `33726899284`; `/root/project_setup_form_worker` is active in the
   temporary worktree. Primary every-line review, independent adversarial review,
   the complete integration gate and exact integration CI remain required.
+- Worker candidate `7a881af2ff2ef86d1ef4ca4f08c7e604f0aacbe2`
+  changed exactly the two allowlisted files and passed six focused plus all 237
+  tests, but primary every-line review rejected it for a P2 gap: its restart
+  test promised every-field binding while mutating only a representative subset.
+  Corrected worker tip `37145ae3548e577469599ff2381c02258b01f130`
+  adds a table-driven reciprocal matrix over every preparation, Client,
+  category and selection field with layer-appropriate failures. Final primary
+  and independent adversarial review return GO with no remaining P0-P3.
+  Cherry-picked the implementation as `7365fbcb` and correction as `bfac9f7a`.
+  The complete local integration gate passes: conversion/capability/query/
+  residual/M0 controls; target isolation and generated contracts; six focused
+  and all 237 tests in 53 suites; warnings-as-errors; repeatable XcodeGen hashes
+  `0657194a` / `388303af`; macOS and generic iOS Simulator staging builds; clean
+  formatting and exact two-path worker scope. Exact integration-commit CI
+  remains required before verification.
 
 ## Next Action
 

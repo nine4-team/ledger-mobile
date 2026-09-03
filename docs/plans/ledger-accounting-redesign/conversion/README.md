@@ -416,8 +416,12 @@ re-review returned GO with no remaining P0-P3 issue. Exact ready commit
 `a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
 Actions run `33726485780`. A temporary two-path worker worktree is registered;
 assignment-control commit `10913c5761561ad9fdd0713627ae82396e9f3ff8`
-passed both jobs in immutable Actions run `33726899284`, and the bounded worker
-is active.
+passed both jobs in immutable Actions run `33726899284`. Primary review rejected
+the worker's first green candidate because its restart tests did not yet mutate
+every field promised by the frozen manifest. Corrected worker tip `37145ae3`
+adds the exhaustive field matrix; primary and independent review return GO with
+no remaining P0-P3. All 237 tests, warnings-as-errors, repeatable generation and
+both staging builds pass locally. Exact integration-commit CI remains required.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

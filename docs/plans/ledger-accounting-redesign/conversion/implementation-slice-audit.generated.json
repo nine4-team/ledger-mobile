@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T07:16:18.485Z",
+  "generatedFromManifestSync": "2026-09-03T07:47:35.045Z",
   "totals": {
     "slices": 52,
     "claimedTargetSurfaces": 127,
@@ -9,8 +9,8 @@
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
-    "in_progress": 1,
+    "ready": 0,
+    "in_progress": 2,
     "implemented": 0,
     "verified": 50,
     "rehearsed": 0,
@@ -488,7 +488,7 @@
       "sliceId": "project-setup-form-presentation-contracts",
       "title": "Prepare one evidence-bound Project setup command offline",
       "kind": "product",
-      "status": "ready",
+      "status": "in_progress",
       "owner": "Project Setup Presentation",
       "surfaceIds": [
         "SWIFT-EC2117B393FB",
