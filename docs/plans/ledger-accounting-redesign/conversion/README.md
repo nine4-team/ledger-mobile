@@ -337,7 +337,12 @@ only active Clients in exact upstream order, carries no selected/default value,
 requires an explicit projected ClientID to produce the verified
 `ProjectClientSelectionInput.existing` input, preserves incomplete/offline
 truth, and binds ordered active rows, source fingerprint, visible count and all
-other readiness evidence in a canonical evidence fingerprint. Its two target-only
+other readiness evidence in a canonical evidence fingerprint. Independent
+review rejected the first worker candidate for a P1 false-authoritative-empty
+case: a visible count larger than represented source rows could hide an active
+Client. The corrected frozen contract adds evidence-bound
+`sourceDirectoryRowCount` and permits `noActiveClient` only when the ready,
+complete source is exhaustive. Its two target-only
 integration-branch paths remain comments. Exact ready commit `e6d80563` passed
 immutable Actions run `33704608811`, including all 211 existing tests,
 generated contracts and both staging builds. Registered `SUBAGENT-WORK-006`

@@ -340,6 +340,17 @@
         "completeLocalGate": true,
         "exactIntegrationCommitCi": true,
         "reason": "The user explicitly requested early subagent quality-control sampling. Independent preflight already rejected a duplicate production port, unsupported UI policy and incomplete fingerprint basis, so the worker cannot promote status and both post-handoff reviews remain mandatory."
+      },
+      "currentReview": {
+        "candidateCommits": [
+          "de476aed15f7e1d07c47a33fb466eadc78a29d36",
+          "41a2033c51c650e8d678d4bd1b0d2e246c419273"
+        ],
+        "integrationAgentLineReview": "in_progress_after_three_corrected_test_exhaustiveness_findings",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "p1_rejected_false_authoritative_empty",
+        "finding": "visibleRowCountBeforeFiltering may exceed represented source rows, so empty active rows plus ready/complete evidence cannot prove no omitted active Client",
+        "requiredCorrection": "preserve and fingerprint-bind sourceDirectoryRowCount; noActiveClient requires ready, complete and sourceDirectoryRowCount equal to visibleRowCountBeforeFiltering; directly test exhaustive and non-exhaustive empty/archived/active shapes and both count tamper/structural failures"
       }
     }
   ],

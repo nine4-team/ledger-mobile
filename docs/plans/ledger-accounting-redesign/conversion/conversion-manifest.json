@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T02:03:23.026Z",
+    "lastSynchronizedAt": "2026-09-03T02:09:50.931Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16729,8 +16729,8 @@
           "Local active candidates and explicit selection intent are non-authorizing and require later trusted server revalidation"
         ],
         "syncRequirements": [
-          "Ready-complete empty remains distinct from incomplete/partial/stale empty and source fingerprint, visible count, local version/as-of evidence are preserved",
-          "The canonical evidence fingerprint binds ordered active candidates, source fingerprint, visible count, completeness, quality, LocalDataVersion and as-of so candidate removal, reordering or count change cannot restart as unchanged evidence"
+          "Ready-complete source-exhaustive empty remains distinct from non-exhaustive/incomplete/partial/stale empty and source fingerprint, source-row count, visible count, local version/as-of evidence are preserved",
+          "The canonical evidence fingerprint binds ordered active candidates, source fingerprint, source-directory row count, visible count, completeness, quality, LocalDataVersion and as-of so candidate insertion, removal, reordering or count change cannot restart as unchanged evidence"
         ]
       },
       "migration": {
@@ -36525,7 +36525,7 @@
       "migration": {
         "rule": "Use only target synthetic values and load no Firebase DTO, listener result, free-text Client identity, source export/profile or source-to-target mapping.",
         "reconciliation": [
-          "Canonical projection evidence restarts identically while account, source/query/evidence fingerprint, ordered-active-row, changed-but-valid or structurally invalid visible count, completeness/as-of and malformed evidence changes fail atomically"
+          "Canonical projection evidence restarts identically while account, source/query/evidence fingerprint, ordered-active-row, changed-but-valid or structurally invalid source-row/visible counts, completeness/as-of and malformed evidence changes fail atomically; no-active is authoritative only when represented source rows are exhaustive"
         ]
       },
       "verification": {

@@ -39,7 +39,7 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
       "section": "Target Observable Contract — Backend Neutral",
-      "invariant": "The projection consumes the already-validated ClientListSnapshot in its existing upstream order and preserves its exact source query fingerprint, visible count, completeness, quality/readiness, LocalDataVersion and as-of evidence; no second Client query port, adapter or provider request is introduced.",
+      "invariant": "The projection consumes the already-validated ClientListSnapshot in its existing upstream order and preserves its exact source query fingerprint, source-directory row count, visible count, completeness, quality/readiness, LocalDataVersion and as-of evidence; no second Client query port, adapter or provider request is introduced.",
       "decisionIds": [],
       "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
     },
@@ -57,7 +57,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
       "section": "Read models",
-      "invariant": "The immutable pure projection distinguishes active choices, authoritative ready-complete no-active evidence and incomplete local scope. A canonical evidence fingerprint binds contract version, AccountID, ordered active ClientSummary rows, source query fingerprint, visibleRowCountBeforeFiltering, completeness, quality, LocalDataVersion and as-of so removal/reorder/rebinding cannot restart as unchanged evidence.",
+      "invariant": "The immutable pure projection distinguishes active choices, authoritative ready-complete exhaustive no-active evidence and incomplete local scope. No-active is authoritative only when sourceDirectoryRowCount equals visibleRowCountBeforeFiltering. A canonical evidence fingerprint binds contract version, AccountID, ordered active ClientSummary rows, source query fingerprint, both counts, completeness, quality, LocalDataVersion and as-of so omission/removal/reorder/rebinding cannot restart as unchanged evidence.",
       "decisionIds": [],
       "verificationIds": ["PROJECTCLIENTSELECT-TEST-001", "PROJECTCLIENTSELECT-TEST-002", "PROJECTCLIENTSELECT-TEST-003", "PROJECTCLIENTSELECT-TEST-004", "PROJECTCLIENTSELECT-TEST-005", "PROJECTCLIENTSELECT-TEST-006", "PROJECTCLIENTSELECT-TEST-007"]
     },
@@ -84,8 +84,8 @@
     "domain": {
       "items": [
         "ProjectExistingClientSelectionSnapshot is a pure validated projection from one ClientListSnapshot. It retains only active ClientSummary rows in exact source order and permits duplicate display names while refusing duplicate identity, cross-Account and rebound evidence.",
-        "ProjectExistingClientSelectionAvailability is available when at least one active Client is locally present, noActiveClient only for complete ready empty/archived-only evidence, and directoryIncomplete for empty incomplete/partial/stale evidence.",
-        "The snapshot preserves source-directory fingerprint, visibleRowCountBeforeFiltering, completeness, quality/readiness, LocalDataVersion and as-of and derives distinct query identity plus a content-bound canonical evidence fingerprint over the ordered active rows and every one of those provenance/readiness fields.",
+        "ProjectExistingClientSelectionAvailability is available when at least one active Client is locally present, noActiveClient only for complete ready exhaustive empty/archived-only evidence whose sourceDirectoryRowCount equals visibleRowCountBeforeFiltering, and directoryIncomplete for no-active incomplete/partial/stale or non-exhaustive evidence.",
+        "The snapshot preserves source-directory fingerprint, sourceDirectoryRowCount, visibleRowCountBeforeFiltering, completeness, quality/readiness, LocalDataVersion and as-of and derives distinct query identity plus a content-bound canonical evidence fingerprint over the ordered active rows and every one of those provenance/readiness fields.",
         "The snapshot contains no selected/default Client. An explicit selection(clientId:) accepts only a currently projected active ID and returns exactly ProjectClientSelectionInput.existing(ClientID), never a copied display name or new-Client payload.",
         "ProjectExistingClientSelectionFailure exposes stable bounded Account/source/query/evidence/identity/completeness/time/encoding and explicit-not-selectable codes without adding a protocol, repository, adapter or provider type."
       ],
@@ -98,9 +98,9 @@
     "syncStreams": {"items": [], "notApplicable": "The projection consumes an existing validated directory value but defines no PowerSync Stream, local table, download predicate, upload connector or provider readiness claim."},
     "localOffline": {
       "items": [
-        "Canonical Codable projection evidence round-trips only through the same Account, active-row, source/query/evidence fingerprint, count, completeness, quality and finite as-of validation.",
-        "Ready-complete empty and archived-only evidence may prove no active local choice; ready-incomplete, partial and stale empty evidence remains explicitly incomplete. Visible active rows remain usable as local intent with unchanged stale/partial evidence and no authorization claim.",
-        "Removing, inserting or reordering active rows without a newly derived evidence fingerprint, rebinding Account/source/query identity, duplicating IDs, corrupting count/completeness/time or selecting an archived/unknown/cross-snapshot ID fails atomically. A separately constructed later valid Client snapshot receives new derived evidence and remains valid."
+        "Canonical Codable projection evidence round-trips only through the same Account, active-row, source/query/evidence fingerprint, source-row/visible counts, completeness, quality and finite as-of validation.",
+        "Ready-complete empty and archived-only evidence may prove no active local choice only when the source rows are exhaustive. A larger visible count means omitted rows may still be active and remains directoryIncomplete. Visible active rows remain usable as local intent under non-exhaustive, stale or partial evidence without an authorization claim.",
+        "Removing, inserting or reordering active rows without a newly derived evidence fingerprint, rebinding Account/source/query identity, duplicating IDs, corrupting either count/completeness/time or selecting an archived/unknown/cross-snapshot ID fails atomically. A separately constructed later valid Client snapshot receives new derived evidence and remains valid."
       ],
       "notApplicable": ""
     },
@@ -123,7 +123,7 @@
       "kind": "domain",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
-      "expected": "A mixed active/archived synthetic ClientListSnapshot projects only active Clients in exact relative source order; equal display names remain distinct by ID, padded valid display text remains byte-exact, and query/evidence fingerprints remain bound to exact Account/source/projection evidence.",
+      "expected": "A mixed active/archived synthetic ClientListSnapshot projects only active Clients in exact relative source order; equal display names remain distinct by ID, padded valid display text remains byte-exact, exact source-directory and visible counts are preserved, and query/evidence fingerprints remain bound to exact Account/source/projection evidence.",
       "status": "planned",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
@@ -132,7 +132,7 @@
       "kind": "domain",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
-      "expected": "Ready-complete true-empty and archived-only evidence yield noActiveClient; ready-incomplete, partial and stale empty evidence yield directoryIncomplete; partial/stale active evidence remains visibly available but non-authorizing. Zero/one/many snapshots encode no selected/default value and make no final UI-preselection claim.",
+      "expected": "Ready-complete true-empty and archived-only evidence yield noActiveClient only when sourceDirectoryRowCount equals visibleRowCountBeforeFiltering. Empty or archived-only ready-complete evidence with a larger visible count yields directoryIncomplete; ready-incomplete, partial and stale empty evidence also yields directoryIncomplete. Non-exhaustive, partial or stale active evidence remains available and explicitly selectable as non-authorizing local intent. Zero/one/many snapshots encode no selected/default value and make no final UI-preselection claim.",
       "status": "planned",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
@@ -150,7 +150,7 @@
       "kind": "offline_rejection",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
-      "expected": "Account/source/query/evidence fingerprint rebinding; identical and conflicting duplicate Client IDs; cross-Account rows; removed/reordered active rows; a changed but still structurally valid visibleRowCountBeforeFiltering under the old evidence fingerprint; negative or below-candidate visible counts; invalid completeness or finite as-of evidence; and malformed encoding fail atomically through literal unique bounded provider-neutral diagnostics. Separately valid later display/lifecycle/audit evidence constructs a new valid projection rather than being mislabeled immutable tampering.",
+      "expected": "Account/source/query/evidence fingerprint rebinding; identical and conflicting duplicate Client IDs; cross-Account rows; inserted/removed/reordered active rows; changed but structurally valid sourceDirectoryRowCount or visibleRowCountBeforeFiltering under the old evidence fingerprint; negative, below-active or source-above-visible counts; invalid completeness or finite as-of evidence; and malformed encoding fail atomically through literal unique bounded provider-neutral diagnostics. Separately valid later display/lifecycle/audit evidence constructs a new valid projection rather than being mislabeled immutable tampering.",
       "status": "planned",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
@@ -159,7 +159,7 @@
       "kind": "offline_restart",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
-      "expected": "Representative available, ready-complete no-active, ready-incomplete, partial and stale projections round-trip byte-identically with exact Account, ordered active rows, source/query/evidence fingerprints, count, completeness, quality, LocalDataVersion and as-of evidence; restart creates no selected/default value or stronger local authority.",
+      "expected": "Representative available, exhaustive ready-complete no-active, non-exhaustive ready-complete no-active, ready-incomplete, partial and stale projections round-trip byte-identically with exact Account, ordered active rows, source/query/evidence fingerprints, source-row/visible counts, completeness, quality, LocalDataVersion and as-of evidence; restart creates no selected/default value or stronger local authority.",
       "status": "planned",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
@@ -168,7 +168,7 @@
       "kind": "end_to_end",
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
-      "expected": "A test-only consumer uses the existing ClientProjectDirectoryQuerying port and the pure projection to deliver exact snapshots; upstream Account mismatch, failure and cancellation produce no false projection or selection. Exact encoded-key allowlists for every new Codable value exclude selected/default, revision, Project/count/history/Transfer/CRM/category/media/mutation/Auth/provider/schema/RLS/Sync/persistence/app/MCP/migration/hosted/production fields, and no new production protocol, repository, adapter or query interface exists.",
+      "expected": "A test-only consumer uses the existing ClientProjectDirectoryQuerying port and the pure projection to deliver exact snapshots; upstream Account mismatch, failure and cancellation produce no false projection or selection. Exact encoded-key allowlists include sourceDirectoryRowCount and visibleRowCountBeforeFiltering but exclude selected/default, revision, Project/history/Transfer/CRM/category/media/mutation/Auth/provider/schema/RLS/Sync/persistence/app/MCP/migration/hosted/production fields, and no new production protocol, repository, adapter or query interface exists.",
       "status": "planned",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     },
@@ -185,5 +185,5 @@
   "implementationEvidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready only; no executable behavior yet. An independent adversarial preflight rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule before freeze. The corrected boundary is a pure projection over verified ClientListSnapshot, carries no default selection, requires explicit active ClientID for the verified existing-Client setup input, and binds ordered active rows plus all readiness/provenance evidence in a canonical evidence fingerprint. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
+  "notes": "Delegated implementation remains unverified. Independent implementation review rejected the first worker candidate for a P1 authoritative-empty bug: visibleRowCountBeforeFiltering may exceed represented source rows, so activeClients alone cannot prove no active Client. The corrected frozen contract adds evidence-bound sourceDirectoryRowCount and permits noActiveClient only when ready, complete and source-exhaustive. Earlier preflight also rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule. The boundary remains a pure projection over verified ClientListSnapshot, carries no default selection, and requires explicit active ClientID. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
 }

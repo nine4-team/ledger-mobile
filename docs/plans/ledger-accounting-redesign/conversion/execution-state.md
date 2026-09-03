@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 174
+State version: 175
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SELECTION-WORKER-TXTYPE-READY-LOCAL
+- Checkpoint: PROJECT-SELECTION-P1-CORRECTION-TXTYPE-READY-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2357,6 +2357,19 @@ modifying the running Firebase application before hard cutover.
   state is 795 recorded / 780 discovered, 366 mapped-or-later / 167 residual /
   44 blockers with only the three documented retired-path warnings. No worker,
   provider, Firebase or production action occurred.
+- Worker candidates `de476aed` and corrected `41a2033c` changed only the two
+  registered Project selection paths and passed 7 focused/all 218 tests. Root
+  every-line review added direct partial/stale selection, distinct insertion
+  and both invalid completeness assertions. Independent adversarial review then
+  found a P1 false-authoritative-empty defect: the shared list contract allows
+  visible count to exceed represented rows, so empty active rows plus ready/
+  complete evidence could not prove an omitted row was not active. Candidate
+  `41a2033c` is rejected pending correction. The frozen contract now preserves
+  and fingerprint-binds exact `sourceDirectoryRowCount`; `noActiveClient`
+  requires ready, complete and source-exhaustive evidence, while a no-active
+  non-exhaustive projection remains `directoryIncomplete`. The worker is
+  correcting only its two owned paths. No provider, Firebase or production
+  action occurred.
 - Prepared the disjoint `transaction-type-choice-presentation-contracts`
   boundary after read-only scout and independent adversarial review. Preflight
   rejected a second classification aggregate, Business-owner wording and any
@@ -2734,7 +2747,9 @@ Continue without waiting on the two M1 evidence blockers:
    Preserve its pure projection over the existing directory port, absence of
    any selected/default value or final UI preselection policy, explicit active
    ClientID-to-`.existing` conversion, exact upstream order and content-bound
-   evidence fingerprint including visible count. Exact ready commit `e6d80563`
+   evidence fingerprint including source-directory row count and visible count.
+   Never claim `noActiveClient` unless ready, complete and source-exhaustive;
+   non-exhaustive no-active evidence remains `directoryIncomplete`. Exact ready commit `e6d80563`
    passed immutable run `33704608811`, and active `SUBAGENT-WORK-006` is
    registered from that exact base. The worker may edit
    only the two registered target paths; primary every-line and independent

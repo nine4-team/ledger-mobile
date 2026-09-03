@@ -50,8 +50,9 @@ The reviewer then required a further integrity correction: query identity alone
 cannot protect a projected active-row payload that omits archived rows. A
 distinct canonical evidence fingerprint must bind contract version, AccountID,
 the ordered active `ClientSummary` values, source-directory fingerprint,
-`visibleRowCountBeforeFiltering`, completeness, quality, LocalDataVersion and
-as-of time. Candidate removal, insertion, reordering, count change or rebinding
+`sourceDirectoryRowCount`, `visibleRowCountBeforeFiltering`, completeness,
+quality, LocalDataVersion and as-of time. Candidate removal, insertion,
+reordering, count change or rebinding
 therefore cannot decode as unchanged evidence. This is corruption/rebind
 detection, not authentication or authorization; a separately constructed
 legitimate later snapshot derives new evidence and remains valid.
@@ -70,6 +71,21 @@ rejection. After regeneration, independent re-review reports no remaining
 P0-P3 finding and confirms the diff contains only the two scaffolds, slice
 control/evidence entries and expected generated effects.
 
+Independent review of worker candidate `41a2033c` then found a P1
+authoritative-empty defect in both implementation and the frozen plan. The
+shared list contract permits `visibleRowCountBeforeFiltering` to exceed the
+represented source-row count. After filtering archived rows away, an empty
+active array plus ready/complete evidence therefore could not prove that an
+omitted row was not active. That false `noActiveClient` result could steer a
+user toward creating a duplicate Client and incorrect Project relationship.
+
+The candidate is rejected pending correction. The frozen contract now carries
+and fingerprint-binds exact `sourceDirectoryRowCount`. `noActiveClient` is
+permitted only when ready, complete and source-exhaustive
+(`sourceDirectoryRowCount == visibleRowCountBeforeFiltering`); otherwise an
+empty active projection remains `directoryIncomplete`. Visible active rows may
+still form explicit local selection intent without becoming authorization.
+
 ## Ready-Gate Contract
 
 The dossier freezes eight requirements and seven future test obligations:
@@ -77,12 +93,14 @@ The dossier freezes eight requirements and seven future test obligations:
 - filter only active Clients from one validated `ClientListSnapshot`, retaining
   exact relative source order and byte-exact valid display values;
 - allow duplicate display names while preserving stable ClientID distinction;
-- distinguish available, ready-complete no-active and incomplete local states;
-- preserve source query fingerprint, visible count, completeness, quality,
+- distinguish available, ready-complete source-exhaustive no-active and
+  incomplete/non-exhaustive local states;
+- preserve source query fingerprint, source-row count, visible count,
+  completeness, quality,
   LocalDataVersion and finite as-of evidence;
 - derive distinct query identity and content-bound canonical evidence identity,
-  including the source visible-row count that cannot be reconstructed after
-  archived rows are filtered;
+  including both source-row and visible-row counts that cannot be reconstructed
+  after archived rows are filtered;
 - carry no selected/default Client and require one explicit projected active
   ClientID to create exactly the existing-Client setup input;
 - refuse Account/fingerprint/row/order/count/completeness/time/encoding rebinds,
@@ -90,12 +108,14 @@ The dossier freezes eight requirements and seven future test obligations:
 - consume no new port and claim no current server authorization from local
   evidence.
 
-Future tests must directly cover true-empty and archived-only ready-complete
+Future tests must directly cover exhaustive true-empty and archived-only
+ready-complete evidence; non-exhaustive empty/archived-only ready-complete
 evidence; ready-incomplete, partial and stale empty evidence; zero/one/many
 candidate shapes without a selected/default field; active explicit selection;
 same-name identities; padded display text; identical and conflicting duplicate
-IDs; removed and reordered rows; a changed but still structurally valid visible
-count under the old evidence fingerprint plus negative/below-candidate counts;
+IDs; inserted, removed and reordered rows; changed but still structurally valid
+source-row or visible counts under the old evidence fingerprint plus negative,
+below-active and source-above-visible counts;
 every fingerprint and scope rebind; canonical restart; a test-only consumer over
 the existing directory port; upstream error and cancellation; literal bounded
 unique diagnostics; and exact encoded-key allowlists.
