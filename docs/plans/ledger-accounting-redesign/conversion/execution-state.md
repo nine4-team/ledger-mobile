@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 210
+State version: 211
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-DETAILS-UPDATE-USE-CASE-VERIFIED
+- Checkpoint: PROJECT-ARCHIVE-USE-CASE-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2986,6 +2986,39 @@ modifying the running Firebase application before hard cutover.
   passed immutable Actions run `33750834849` (traceability 11 seconds; isolated
   target 3 minutes 17 seconds). The slice and its two target leaves are verified;
   the current source modal remains target_mapped throughout.
+- Verification-promotion commit
+  `d74efb4424a559b007a032baa29d5a31af227754` passed immutable Actions run
+  `33751486795`; the verified Space-details boundary is frozen at this baseline.
+- Fresh authority preflight returned GO only for a strict archive-only Project
+  application path above the existing verified archive operation. The ready
+  package adds exactly comment-only target surfaces `SWIFT-7C5BD31FBF71` and
+  `TEST-29C0CCC4353F`, with six reciprocal planned obligations. The future
+  non-Codable intent carries exact Account/Project/expected revision; the use
+  case adds operation metadata, constructs the existing command, makes exactly
+  one post-construction port call, validates the receipt, preserves cancellation
+  and normalized failure, and bounds raw errors. Source `ProjectDetailView`
+  remains characterized under O-024. `MCPTOOL-921DA05B3330` remains target_mapped
+  across the existing `ArchiveProjectCommand` and separate future
+  `RestoreProjectCommand`, while this slice advances only archive and implements
+  no MCP wiring. Control state is 819
+  recorded / 804
+  discovered, 392 mapped-or-later / 167 residual / 44 blockers, subject to the
+  local sync/check recorded by this checkpoint. Two independent initial actual-
+  diff reviews caught and drove correction of missing MCP source accounting and
+  an incorrect attribution of exact revision mechanics to the Projects product
+  spec. Corrected-diff review then caught that an archive-only command did not
+  completely map the MCP tool's archive/restore Boolean. The source responsibility
+  now maps to the existing `ArchiveProjectCommand` and separate future
+  `RestoreProjectCommand`; verified archive-operation evidence owns only the
+  implemented archive mechanics. Final review also corrected missing restore
+  migration reconciliation and stale future-command wording, then caught that
+  the first reconciliation edit had landed on the broad MCP module rather than
+  the exact tool. The unrelated change is reverted and the tool now owns exact
+  archive/restore reconciliation. The
+  complete corrected local ready gate passes all 255 tests in 56
+  suites with warnings as errors, target/conversion controls, repeatable hashes
+  `0657194a` / `388303af`, both staging builds and clean formatting. Final corrected-
+  diff re-review and immutable exact-ready-SHA CI remain prerequisites to code.
 
 ## Next Action
 
@@ -3225,8 +3258,16 @@ Continue without waiting on the two M1 evidence blockers:
    `b6a98ca0` / run `33749431949`, the corrected implementation, two independent
    final reviews, the complete local integration gate and exact implementation
    commit `f0d7c3fa` / immutable run `33750834849` pass. Preserve the verified
-   boundary, keep the full source modal target_mapped, and select the next
-   coherent decision-independent slice through fresh authority preflight.
+   boundary and keep the full source modal target_mapped. Treat ready
+   `project-archive-use-case-contracts` and
+   `EVID-PROJECT-ARCHIVE-USE-CASE-001` as the next frozen boundary. First obtain
+   independent actual-diff review of the complete ready package, run the full
+   ready gate, commit/push the exact reviewed package and require immutable
+   exact-ready-SHA CI. Only after that passes may implementation replace exactly
+   `ProjectArchiveUseCase.swift` and `ProjectArchiveUseCaseTests.swift`.
+   ProjectDetailView must remain characterized, `MCPTOOL-921DA05B3330` must
+   remain target_mapped, and no excluded lifecycle/UI/MCP/provider behavior may
+   advance.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

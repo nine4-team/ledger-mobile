@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-archive-use-case-contracts",
+  "title": "Dispatch one archive-only Project intent",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Archive Use Case",
+  "surfaceIds": ["SWIFT-7C5BD31FBF71", "TEST-29C0CCC4353F"],
+  "requirements": [
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One archive intent binds exact AccountID and stable ProjectID. Display text, Client identity, route, provider path, copied lifecycle state, readiness/as-of/query evidence or cached metadata cannot define Project identity.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-001", "PROJECTARCHIVEUSE-TEST-002", "PROJECTARCHIVEUSE-TEST-003", "PROJECTARCHIVEUSE-TEST-004", "PROJECTARCHIVEUSE-TEST-005", "PROJECTARCHIVEUSE-TEST-006"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Archive is distinct from rename, Client reassignment and physical deletion. This archive-only application boundary carries no lifecycle Boolean and cannot restore, unarchive, delete, rename, edit, reassign, or mutate children/accounting; it makes no physical history-preservation claim.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-001", "PROJECTARCHIVEUSE-TEST-002", "PROJECTARCHIVEUSE-TEST-003", "PROJECTARCHIVEUSE-TEST-005", "PROJECTARCHIVEUSE-TEST-006"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "ProjectArchiveIntent is transient, Equatable and Sendable but non-Codable, and contains exactly AccountID, ProjectID and ExpectedProjectRevision. It defines no validation helper, fingerprint, codec, operation metadata, restart durability, confirmation, cancellation, dismissal or other UI policy.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-001", "PROJECTARCHIVEUSE-TEST-002", "PROJECTARCHIVEUSE-TEST-005"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ProjectArchiveUseCase receives the intent plus caller OperationID, PrincipalID, operation contract version and finite capture time; constructs the existing ProjectArchiveDraft and ArchiveProjectCommand; invokes ProjectArchiving exactly once only after construction; validates the receipt; returns its exact local state; preserves CancellationError and normalized ProjectArchiveFailure; and maps every other port error to ProjectArchiveFailure.localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-002", "PROJECTARCHIVEUSE-TEST-003", "PROJECTARCHIVEUSE-TEST-004", "PROJECTARCHIVEUSE-TEST-005", "PROJECTARCHIVEUSE-TEST-006"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "This target-only slice implements archive-intent dispatch only. Source surface SWIFT-D73C92887393 remains characterized and blocked by O-024 because ProjectDetailView also owns tabs, export, quick-note, edit, restore/unarchive, delete, lifecycle display, confirmation/dismissal and composition responsibilities that do not advance here. MCPTOOL-921DA05B3330 remains target_mapped across separate ArchiveProjectCommand and RestoreProjectCommand responsibilities, but this slice advances only archive-true dispatch; restore implementation, MCP wiring, authorization and result presentation remain unimplemented.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-001", "PROJECTARCHIVEUSE-TEST-005", "PROJECTARCHIVEUSE-TEST-006"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only leaves may change. ProjectCoreDetailsUpdate is only a future composition dependency: this slice consumes no Project read/readiness update and decides no waiting/partial/stale/failure-cache, active/already-archived eligibility or no-op behavior. SwiftUI, physical persistence/history proof, optimistic projection, authorization, schema/RLS/Sync, provider, app/MCP, migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-001", "PROJECTARCHIVEUSE-TEST-002", "PROJECTARCHIVEUSE-TEST-003", "PROJECTARCHIVEUSE-TEST-004", "PROJECTARCHIVEUSE-TEST-005", "PROJECTARCHIVEUSE-TEST-006"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-REQ-007",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-001.md",
+      "section": "Implemented Contract",
+      "invariant": "The verified Project archive operation remains sole owner of ExpectedProjectRevision, the exact same-Project revision precondition, ProjectArchiveDraft, ArchiveProjectCommand, subject, fingerprint, receipt validation and ProjectArchiveFailure semantics. This use case composes those contracts without redefining or extending them.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVEUSE-TEST-002", "PROJECTARCHIVEUSE-TEST-003", "PROJECTARCHIVEUSE-TEST-004", "PROJECTARCHIVEUSE-TEST-005", "PROJECTARCHIVEUSE-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectArchiveIntent is a non-Codable transient value containing exact Account/Project/expected-revision identity and no lifecycle flag, UI policy, read evidence or operation metadata.",
+        "ProjectArchiveUseCase adds caller operation metadata, constructs the existing verified draft/command, invokes one ProjectArchiving call after construction, validates the receipt and returns its exact local state.",
+        "Structured-concurrency cancellation and normalized ProjectArchiveFailure values remain distinct; every unexpected port error becomes localAcceptanceFailed.",
+        "The existing Project archive operation remains the sole owner of command, subject, precondition, fingerprint, receipt-validation and stable-failure semantics."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Project, operation, lifecycle, audit, table, view, function, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative archive handler, membership/revision lock, eligibility check, idempotency store, history-preservation transaction or server update is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local input and a test receipt do not grant membership or archive authorization; no RLS or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync stream, local Project/operation table, upload connector, lifecycle projection or synchronized visibility exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port, but transient intent and in-memory tests prove no physical persistence, restart, history preservation or synchronization."},
+    "storageMedia": {"items": [], "notApplicable": "No attachment identity, reference, byte, upload, retention or deletion behavior."},
+    "appMcp": {"items": [], "notApplicable": "No ProjectDetailView, archive confirmation, cancellation/dismissal UI, route, app composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project/isArchived value, child, source export row or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded application failures are used; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; ProjectDetailView, the Firebase application and both app projects remain unchanged.",
+        "The deterministic in-memory port cannot visibly or authoritatively archive, restore, unarchive or delete a Project, preserve history in storage, deploy, migrate, release or cut over behavior.",
+        "O-024/O-025 and A-003/A-004/A-007/A-015/A-016 remain open or outside; D-026/D-027 contribute only target-isolation requirements."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTARCHIVEUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
+      "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-005", "PROJECTARCHIVEUSE-REQ-006"],
+      "expected": "ProjectArchiveIntent exposes exactly AccountID, ProjectID and ExpectedProjectRevision; accepts revision zero and UInt64.max; is non-Codable; and exposes no Client, lifecycle Boolean, read/readiness/as-of/query/cache, child, accounting, operation, provider or UI field.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-TEST-002",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
+      "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
+      "expected": "A reciprocal matrix independently varies exact Account, Project, expected revision, Operation, actor, contract and time; each value reaches the existing draft/command and derived subject/precondition/fingerprint exactly, with one port call and no added policy or field.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
+      "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
+      "expected": "Every valid construction invokes ProjectArchiving exactly once; non-finite capturedAt fails before dispatch with zero calls. The recorded command has one ArchiveProject payload and same-Project expected-revision precondition and no restore/delete/child/accounting operation; no physical effect is claimed.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
+      "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
+      "expected": "Each matching OperationReceipt local state is returned exactly. Receipt mismatch is rejected; CancellationError is preserved; a normalized ProjectArchiveFailure distinct from the fallback is preserved; and a raw unexpected port error becomes ProjectArchiveFailure.localAcceptanceFailed, with exact zero/one call counts.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
+      "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-005", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
+      "expected": "Stable diagnostics reveal no raw error, Account/Project/Operation/Principal value, credential, provider path or payload. Separate reflected/recorded/encoded shape checks prove only authorized existing command fields and no UI/readiness/lifecycle toggle/Client/child/accounting/restore/unarchive/delete/provider field, without claiming intent or use-case encoding.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    },
+    {
+      "id": "PROJECTARCHIVEUSE-TEST-006",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-005", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
+      "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while implementation changes only the two target leaves and ProjectDetailView/Firebase files remain untouched and unadvanced.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready design only. Fresh authority preflight selected a strict archive-only application slice and rejected claiming ProjectDetailView, restore/unarchive/delete parity, read/readiness or lifecycle eligibility. Exactly two comment-only target leaves are frozen. No executable target code may start until actual-diff review, the complete local ready gate and immutable exact-ready-commit CI pass."
+}

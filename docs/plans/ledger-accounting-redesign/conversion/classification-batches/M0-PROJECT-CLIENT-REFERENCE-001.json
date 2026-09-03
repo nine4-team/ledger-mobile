@@ -1441,13 +1441,15 @@
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
-        "EVID-M2-PROJECT-REFERENCE-001"
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-ARCHIVE-USE-CASE-001"
       ],
-      "notes": "Preserve archive/unarchive with shared authorization and durable operation result. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "The source Boolean is split into exact ArchiveProjectCommand and RestoreProjectCommand target responsibilities. The archive-only use-case slice advances only archive-true application dispatch; RestoreProjectCommand, MCP wiring, authorization and result presentation remain mapped but unimplemented. Shared authorization and durable operation result remain later target responsibilities; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
       "target": {
         "owner": "Client and Project",
         "surfaces": [
           "ArchiveProjectCommand",
+          "RestoreProjectCommand",
           "ExpectedProjectRevision",
           "OperationReceipt"
         ],
@@ -1461,15 +1463,15 @@
       "migration": {
         "rule": "Map source Project IDs and reviewed Client correlations to target queries/commands; discard Admin-SDK scans, free-text Client authority and denormalized Transaction-only budgets.",
         "reconciliation": [
-          "App and MCP Project lists/details/archive results match by stable IDs, archive scope, Client relation, visibility and canonical budget version on shared fixtures"
+          "App and MCP Project lists/details/archive/restore results match by stable IDs, lifecycle scope, Client relation, visibility and canonical budget version on shared fixtures"
         ]
       },
       "verification": {
         "tests": [
-          "MCP/app query-command parity, cursor/bounds, cross-account/financial denial, idempotent archive and migration fixture tests"
+          "MCP/app query-command parity, cursor/bounds, cross-account/financial denial, idempotent archive/restore and migration fixture tests"
         ],
         "acceptance": [
-          "MCP can inspect and archive authorized Projects without raw scans, copied Client identity or an alternate budget calculation"
+          "MCP can inspect, archive and restore authorized Projects without a caller-controlled lifecycle toggle crossing the application boundary, raw scans, copied Client identity or an alternate budget calculation"
         ]
       }
     },
@@ -3605,6 +3607,56 @@
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ProjectSetupFormPresentationTests"],
         "acceptance": ["Tests prove only the frozen provider-free preparation and command-derivation boundary"]
+      }
+    },
+    {
+      "id": "SWIFT-7C5BD31FBF71",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "8a595f188c27b62c15adc589f5b7fac7c35a85bbd8b1afbfb0f233842768db51",
+      "currentBehavior": "Freezes the provider-free Project archive intent and application-dispatch boundary without implementing ProjectDetailView or executable behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-ARCHIVE-001", "EVID-PROJECT-ARCHIVE-USE-CASE-001"],
+      "notes": "Ready comment-only scaffold. Implementation is limited to transient exact Account/Project/revision intent, existing archive command assembly, one post-construction port call, receipt validation, cancellation/preserved normalized failure/raw normalization. No UI, read/readiness/lifecycle policy, restore/unarchive/delete, physical history proof, provider or production behavior.",
+      "target": {
+        "owner": "Project Archive Use Case",
+        "surfaces": ["ProjectArchiveIntent", "ProjectArchiveUseCase", "single ProjectArchiving invocation and receipt validation"],
+        "securityRequirements": ["Typed intent binds exact AccountID, ProjectID and expected revision without treating display, route, local read state or provider path as identity or authorization", "Application-owned operation metadata remains exact and raw provider errors cannot cross the boundary"],
+        "syncRequirements": ["Provider-free assembly invokes the existing archive port exactly once after construction and validates its receipt", "No intent restart, physical persistence/history proof, optimistic Project projection, authoritative archive or synchronized visibility is claimed"]
+      },
+      "migration": {
+        "rule": "Define target-only transient intent and application orchestration; decode no Firebase Project/isArchived model, callback, route, export row or migration disposition.",
+        "reconciliation": ["Synthetic exact Account/Project/revision and operation metadata reach one verified archive command without source transformation"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectArchiveUseCaseTests"],
+        "acceptance": ["Planned focused tests prove only the frozen provider-free archive-intent-to-validated-receipt path and permanent exclusions"]
+      }
+    },
+    {
+      "id": "TEST-29C0CCC4353F",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "e94867b1ef7fa1cc786c0e8fc132f70d67ed09e35328bf6e2afae6508e4f61af",
+      "currentBehavior": "Freezes planned obligations for exact Project archive intent, reciprocal command forwarding, one port call, receipt/failure/cancellation handling, diagnostics and exclusions.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-ARCHIVE-001", "EVID-PROJECT-ARCHIVE-USE-CASE-001"],
+      "notes": "Ready comment-only test scaffold. Six reciprocal obligations are planned; no executable test or verification claim exists yet. Tests may prove application choreography only, never UI, eligibility, physical history/persistence, authorization, provider/schema/RLS/Sync, migration or production behavior.",
+      "target": {
+        "owner": "Project Archive Use Case Tests",
+        "surfaces": ["exact intent-shape fixtures", "reciprocal command and single-call port fixtures", "receipt-state, construction, normalized/raw failure, cancellation, diagnostics and exclusion fixtures"],
+        "securityRequirements": ["Fixtures use only synthetic Account, Project, Principal and Operation identities and prove typed local intent is non-authorizing", "Stable failures reveal no raw identity, credential, provider payload or production identifier"],
+        "syncRequirements": ["An in-memory port proves application choreography only, not physical local persistence/history preservation or authenticated synchronization", "Construction failure causes no port call and exact receipt states are preserved without an optimistic or authoritative Project row"]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase view/model/export data or source-to-target migration mapping.",
+        "reconciliation": ["Tests will prove the canonical target dispatch boundary while leaving the source ProjectDetailView unadvanced"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectArchiveUseCaseTests"],
+        "acceptance": ["Planned focused tests prove only the provider-free Project archive use case and its permanent exclusions"]
       }
     }
   ]

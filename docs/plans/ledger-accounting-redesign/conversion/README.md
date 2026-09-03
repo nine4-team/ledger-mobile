@@ -1,6 +1,6 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 390 of 557 target-relevant
+Status: M0 inventory classification complete; 392 of 559 target-relevant
 surfaces are target-mapped or later and the remaining 167 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -515,6 +515,36 @@ generation and both staging builds pass. Exact implementation commit
 target leaves are verified. The source modal remains `target_mapped` because
 its remaining UI/composition responsibilities are unconverted.
 `EVID-SPACE-DETAILS-UPDATE-USE-CASE-001`.
+
+Verification-promotion commit `d74efb4424a559b007a032baa29d5a31af227754`
+passed immutable Actions run `33751486795`, leaving the verified Space-details
+slice frozen. Fresh authority preflight then selected a strict archive-only
+Project application slice above the existing verified archive operation. The
+ready package claims exactly two new comment-only target leaves: a non-Codable
+intent with exact Account/Project/expected revision and a use case that adds
+caller operation metadata, assembles the existing command, makes one post-
+construction port call, validates the receipt, preserves cancellation and
+normalized failures, and bounds raw errors. Source `ProjectDetailView` remains
+characterized under O-024, while `MCPTOOL-921DA05B3330` remains target-mapped;
+the app UI/readiness/lifecycle and the MCP tool's archive-false restore, wiring,
+authorization and result responsibilities do not advance. No physical history,
+provider, migration or production behavior is claimed.
+Two independent initial actual-diff reviews caught the omitted MCP accounting
+and an incorrect product-spec attribution for exact revision mechanics;
+corrected-diff review then caught that an archive-only command did not completely
+map the source MCP Boolean. The next review caught missing restore migration
+reconciliation and stale future-command wording. All five are corrected: the verified archive-
+operation evidence owns implemented archive mechanics, while the source MCP
+Boolean maps to the existing `ArchiveProjectCommand` and separate future
+`RestoreProjectCommand` responsibilities. This slice still advances only archive.
+Final review then caught and corrected that the first reconciliation edit had
+landed on the broad MCP module rather than this exact tool. All six findings are
+preserved in the evidence.
+The complete corrected local ready gate
+passes 255 tests in 56 suites with warnings as errors, all conversion/
+target controls, repeatable project generation and both staging builds.
+Final corrected-diff re-review and immutable exact-ready-SHA CI remain required.
+`EVID-PROJECT-ARCHIVE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

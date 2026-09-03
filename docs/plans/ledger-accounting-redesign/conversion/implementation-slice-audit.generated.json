@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T11:45:13.310Z",
+  "generatedFromManifestSync": "2026-09-03T12:32:28.546Z",
   "totals": {
-    "slices": 55,
-    "claimedTargetSurfaces": 135,
+    "slices": 56,
+    "claimedTargetSurfaces": 137,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 120
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 54,
@@ -303,6 +303,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-archive-use-case-contracts",
+      "title": "Dispatch one archive-only Project intent",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Archive Use Case",
+      "surfaceIds": [
+        "SWIFT-7C5BD31FBF71",
+        "TEST-29C0CCC4353F"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-use-case-contracts.json"
     },
     {
       "sliceId": "project-browsing-presentation-contracts",
