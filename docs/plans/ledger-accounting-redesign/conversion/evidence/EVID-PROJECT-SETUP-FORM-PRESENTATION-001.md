@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-EC2117B393FB`, `TEST-38F09C637761`
 - Slice dossier: `conversion/implementation-slices/project-setup-form-presentation-contracts.json`
-- Verification state: independently reviewed ready commit passed immutable CI; assignment-control CI pending before implementation
+- Verification state: independently reviewed ready and assignment-control commits passed immutable CI; bounded implementation active
 
 ## Selection and Product Authority
 
@@ -103,7 +103,10 @@ and `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`.
 Independent actual-ready-diff review is complete. Exact ready commit
 `a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
 Actions run `33726485780`. The temporary worker branch/worktree starts at that
-exact commit; assignment-control CI remains required before a worker may begin.
+exact commit. Assignment-control commit
+`10913c5761561ad9fdd0713627ae82396e9f3ff8` passed both jobs in immutable
+Actions run `33726899284`; the worker is active with only the two frozen leaf
+paths writable.
 
 The first actual-diff review rejected two ambiguities before commit: an
 unsupported same-currency rule despite no Project-currency authority, and

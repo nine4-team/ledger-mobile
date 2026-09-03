@@ -549,9 +549,11 @@
     {
       "assignmentId": "SUBAGENT-WORK-009",
       "sliceId": "project-setup-form-presentation-contracts",
-      "status": "assigned_pending_control_ci",
+      "status": "active",
       "baseCommit": "a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62",
       "readyCiRun": 33726485780,
+      "assignmentControlCommit": "10913c5761561ad9fdd0713627ae82396e9f3ff8",
+      "assignmentControlCiRun": 33726899284,
       "branch": "codex/supabase-slice-project-setup-form",
       "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_setup_form",
       "workerAgent": "/root/project_setup_form_worker",

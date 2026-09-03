@@ -415,7 +415,9 @@ and adds allocation-order/new-ID-collision hardening. Independent correction
 re-review returned GO with no remaining P0-P3 issue. Exact ready commit
 `a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
 Actions run `33726485780`. A temporary two-path worker worktree is registered;
-assignment-control CI remains required before delegation.
+assignment-control commit `10913c5761561ad9fdd0713627ae82396e9f3ff8`
+passed both jobs in immutable Actions run `33726899284`, and the bounded worker
+is active.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
