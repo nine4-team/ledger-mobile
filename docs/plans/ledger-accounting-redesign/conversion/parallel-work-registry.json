@@ -545,6 +545,38 @@
         "worktreeRemoved": true,
         "branchRetained": true
       }
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-009",
+      "sliceId": "project-setup-form-presentation-contracts",
+      "status": "assigned_pending_control_ci",
+      "baseCommit": "a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62",
+      "readyCiRun": 33726485780,
+      "branch": "codex/supabase-slice-project-setup-form",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_setup_form",
+      "workerAgent": "/root/project_setup_form_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectSetupFormPresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested early delegated-work quality control. Ready-diff review already rejected invented Project-wide currency behavior, ambiguous description normalization and an evidence-completeness overclaim; the worker cannot change the frozen semantic boundary or any canonical control file."
+      }
     }
   ],
   "preflightFindings": [
@@ -619,7 +651,7 @@
         "The correction also makes allocation input order non-semantic and refuses a preallocated new Client ID that already identifies a represented existing Client, without claiming authority over unrepresented collisions.",
         "Correction re-review found one P2 phrase that could have treated partial represented evidence as complete; after it was narrowed to exact represented evidence plus independent readiness/completeness state, final independent review returned GO with no remaining P0-P3 issue."
       ],
-      "disposition": "Prepared exactly two comment-only target scaffolds plus a complete ready dossier/evidence plan. Primary and independent actual-diff review and the complete local ready gate pass. No worker may start until exact ready-commit CI passes."
+      "disposition": "Prepared exactly two comment-only target scaffolds plus a complete ready dossier/evidence plan. Primary and independent actual-diff review, the complete local ready gate and exact ready-commit Actions run 33726485780 pass. SUBAGENT-WORK-009 may not start until its assignment-control commit passes immutable CI."
     }
   ]
 }

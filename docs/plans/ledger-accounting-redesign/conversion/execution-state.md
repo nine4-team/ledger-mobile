@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 191
+State version: 192
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PSETUP-FORM-READY-LOCAL
+- Checkpoint: PSETUP-FORM-ASSIGNED-PENDING-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2790,7 +2790,13 @@ modifying the running Firebase application before hard cutover.
   represented new-Client-ID collision hardening. Correction re-review then
   found and corrected one P2 wording overclaim that could have treated a partial
   snapshot as complete. The final independent re-review returned GO with no
-  remaining P0-P3 issue. Exact-ready-SHA CI remains required before delegation.
+  remaining P0-P3 issue. Exact ready commit
+  `a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
+  Actions run `33726485780`. Created branch
+  `codex/supabase-slice-project-setup-form` and temporary worktree
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_setup_form` at
+  that exact commit. `SUBAGENT-WORK-009` grants only the two frozen Swift leaf
+  paths; assignment-control CI remains required before the worker starts.
 
 ## Next Action
 

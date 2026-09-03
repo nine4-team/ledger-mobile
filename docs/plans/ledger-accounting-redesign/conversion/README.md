@@ -412,8 +412,10 @@ and both staging builds. Independent actual-diff review rejected an unsupported
 same-currency rule and ambiguous creation-description handling; the corrected
 boundary invents no Project currency, reuses verified description normalization
 and adds allocation-order/new-ID-collision hardening. Independent correction
-re-review returned GO with no remaining P0-P3 issue; exact ready-SHA CI remains
-required before delegation.
+re-review returned GO with no remaining P0-P3 issue. Exact ready commit
+`a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
+Actions run `33726485780`. A temporary two-path worker worktree is registered;
+assignment-control CI remains required before delegation.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
