@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T08:30:54.952Z",
+    "lastSynchronizedAt": "2026-09-03T09:36:07.186Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27217,12 +27217,12 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift"
         }
       ],
-      "observedSourceHash": "7c0d14b243a0804df37e159218f1c28108780abb97eea850f96e3dda576b782f",
-      "acknowledgedSourceHash": "7c0d14b243a0804df37e159218f1c28108780abb97eea850f96e3dda576b782f",
+      "observedSourceHash": "81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a",
+      "acknowledgedSourceHash": "81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the frozen comment-only leaf for provider-free Space checklist update-state projection, raw restart-safe nested edits and semantic-base-revalidated derivation of the verified checklist-revision command.",
+      "currentBehavior": "Implements provider-free Space checklist update-state projection, raw restart-safe stable-identity editing, canonical evidence fingerprints and semantic-base-revalidated derivation of the verified complete-replacement checklist command.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Checklist Editing Presentation",
@@ -27263,7 +27263,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
       ],
-      "notes": "Ready-design scaffold only. The frozen slice composes verified Space core-details evidence and ReviseSpaceChecklists operation contracts; it does not implement SwiftUI, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented candidate after primary and independent review rejected incomplete verification coverage and then exposed a noncanonical explicit-null cache restart defect. Corrected tip 272b705e246cf505007f38a3d3d386dd8fbc127a has no remaining P0-P3; exact integration CI is pending before verification.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -37080,12 +37080,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "b89ca069c734cf651f0ad6e86a92436aa5726d68305ca159e354b362720a06d6",
-      "acknowledgedSourceHash": "b89ca069c734cf651f0ad6e86a92436aa5726d68305ca159e354b362720a06d6",
+      "observedSourceHash": "86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b",
+      "acknowledgedSourceHash": "86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b",
       "metadata": {
-        "firebaseCoupled": false
+        "firebaseCoupled": true
       },
-      "currentBehavior": "Defines the frozen comment-only executable obligations for Space checklist update-state projection, raw intermediate editing, canonical restart/refusal and semantic-base command derivation.",
+      "currentBehavior": "Provides six focused Space checklist editing presentation tests covering the complete admission matrix, stable raw edits, order-token behavior, exact command forwarding, semantic refresh/conflict, recursive strict restart, fingerprints, diagnostics and scope exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Checklist Editing Presentation Tests",
@@ -37125,7 +37125,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
       ],
-      "notes": "Ready-design scaffold only. Tests must independently mutate every frozen presentation/evidence and raw-draft field, distinguish harmless refresh metadata from semantic-base conflict, and may not claim physical persistence, authorization, provider behavior or authoritative application.",
+      "notes": "The first green candidate was rejected for generic failure assertions and incomplete cached/current field, fingerprint, command and token coverage. The expanded reciprocal matrix found and now guards the explicit-null failed-cache restart defect; exact integration CI remains pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 199
+State version: 200
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCHECKLIST-EDIT-WORKER-ACTIVE
+- Checkpoint: SCHECKLIST-EDIT-INTEGRATED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2855,6 +2855,23 @@ modifying the running Firebase application before hard cutover.
   `/root/space_checklist_edit_worker` is active in the temporary worktree.
   Primary every-line review, independent adversarial review, the complete
   integration gate and exact integration-SHA CI remain required.
+- Worker candidate `37714106e3fcc4271bcdc5ee93bb7a66c41eca23`
+  changed exactly the two allowlisted files and passed six focused plus all 243
+  tests, but primary and independent review rejected incomplete correct-layer,
+  cached/current field, fingerprint, command-forwarding and token evidence.
+  Expanded candidate `d50cc9e383f42ffe8519fd27980dfa96ea59ada4`
+  closed those gaps and exposed a real nil-cache restart defect; review then
+  caught that explicit `cached: null` was still noncanonical. Corrected tip
+  `272b705e246cf505007f38a3d3d386dd8fbc127a` accepts only absent nil cache or a
+  present nonnull strict snapshot and adds reciprocal retryable/unavailable/
+  required-update plus Business Inventory coverage. Final primary and
+  independent adversarial review return GO with no remaining P0-P3. The
+  candidate was cherry-picked as `6859b59c`. The complete local integration
+  gate passes conversion/capability/query/residual/M0 controls, target isolation
+  and generated contracts, six focused and all 243 tests in 54 suites,
+  warnings-as-errors, repeatable XcodeGen hashes `0657194a` / `388303af`, macOS
+  and generic iOS Simulator staging builds, clean formatting and exact two-path
+  worker scope. Exact integration-commit CI remains required before verification.
 
 ## Next Action
 
@@ -3056,21 +3073,20 @@ Continue without waiting on the two M1 evidence blockers:
    exact nullable allocations, ProjectDescriptionReplacement normalization and
    current-evidence validation before the verified CreateProjectCommand exists.
    Do not duplicate or extend it in UI, providers or later operation slices.
-   Treat ready `space-checklist-editing-presentation-contracts` and
+   Treat in-progress `space-checklist-editing-presentation-contracts` and
    `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001` as the next frozen boundary.
    The corrected ready package, exact ready-SHA CI and assignment-control CI
-   pass. The registered worker may
-   project only ready-complete current or retryable-ready-complete cached Space
+   pass. The reviewed implementation projects only ready-complete current or
+   retryable-ready-complete cached Space
    evidence, retain raw blank intermediate text, preserve exact stable nested
    IDs/order tokens, edit checklist fields plus items only within their owning
    checklist, and derive the verified complete-replacement command after
    semantic-base validation that tolerates harmless refresh metadata. It must
    not add checklist reorder, cross-checklist movement, archived-action policy
-   or any excluded provider/app behavior. On handoff, inspect base-to-tip scope,
-   review every changed line, obtain independent adversarial review, rerun the
-   complete local gate, integrate only a corrected exact commit, require exact-
-   integration-SHA CI, promote statuses/evidence, and remove the clean temporary
-   worktree only after promotion CI.
+   or any excluded provider/app behavior. Primary and independent every-line
+   review and the complete local integration gate pass after two candidate
+   corrections. Require exact-integration-SHA CI, promote statuses/evidence,
+   and remove the clean temporary worktree only after promotion CI.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

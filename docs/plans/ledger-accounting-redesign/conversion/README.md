@@ -445,8 +445,12 @@ P0-P3. Exact ready commit `5c2a185be15189bc8aa1606f838eee5a362780fc`
 passed immutable Actions run `33732917130`. A temporary two-path worker
 worktree is registered. Assignment-control commit
 `cc6faddf707694e0c4a7af00a770d8a2672b8151` passed immutable Actions run
-`33733387021`; the bounded two-path worker is active. Primary every-line and
-independent adversarial review remain required before integration.
+`33733387021`. Primary and independent review rejected the first green worker
+candidate for incomplete proof, then the expanded matrix exposed and corrected
+a strict-restart defect involving absent versus explicit-null cached evidence.
+Corrected worker tip `272b705e` has no remaining P0-P3. All 243 tests,
+warnings-as-errors, repeatable generation and both staging builds pass locally;
+exact integration-commit CI remains required before verification.
 `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

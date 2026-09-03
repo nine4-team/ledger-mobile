@@ -1,11 +1,11 @@
 # EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001 — Space Checklist Editing Presentation
 
 - Timestamp: 2026-09-03
-- Class: ready design / provider-free Space checklist editing and command derivation
+- Class: implementation / local integration evidence for provider-free Space checklist editing and command derivation
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-A9BCA70B7F9C`, `TEST-94F32F5E9219`
 - Slice dossier: `conversion/implementation-slices/space-checklist-editing-presentation-contracts.json`
-- Verification state: independently reviewed ready and assignment-control commits passed immutable CI; bounded implementation active
+- Verification state: corrected implementation passes the complete local gate and independent review; exact integration-commit CI pending
 
 ## Selection and Product Authority
 
@@ -30,7 +30,7 @@ stale-revision conflict.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaf files are claimed:
+The frozen implementation owns exactly two target leaf files:
 
 - `LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift`; and
 - `LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift`.
@@ -122,8 +122,44 @@ minutes 12 seconds). The temporary worker branch/worktree starts at that exact
 commit. Assignment-control commit
 `cc6faddf707694e0c4a7af00a770d8a2672b8151` passed both jobs in immutable
 Actions run `33733387021` (traceability 10 seconds; isolated target 3 minutes).
-The bounded worker may implement only the two frozen leaves; primary every-line,
-independent adversarial and complete integration verification remain required.
+At that ready checkpoint, the bounded worker was limited to the two frozen
+leaves and primary every-line, independent adversarial and complete integration
+verification still remained required.
+
+## Implementation Review and Local Gate
+
+The first worker candidate, `37714106e3fcc4271bcdc5ee93bb7a66c41eca23`,
+changed exactly the two allowlisted files and passed six focused tests plus the
+full target package. Primary every-line review nevertheless rejected it because
+generic “some error occurred” assertions did not prove failure ownership and
+the promised current/cached field, fingerprint, command-forwarding and token
+matrices were incomplete.
+
+The expanded candidate `d50cc9e383f42ffe8519fd27980dfa96ea59ada4`
+closed those evidence gaps and exposed a real implementation defect: canonical
+failed updates with no cache omit the optional `cached` key, but the strict
+decoder required it. Review then found that an explicit `cached: null` would
+still decode as canonical nil and fail byte-identical restart. Corrected worker
+tip `272b705e246cf505007f38a3d3d386dd8fbc127a` accepts only an absent key for
+nil or a present nonnull strict snapshot. Retryable, unavailable and required-
+update nil-cache forms, Business Inventory scope and the reciprocal explicit-
+null rejection are all covered. Final primary and independent adversarial
+review report no remaining P0-P3.
+
+The worker worktree is clean and base-to-tip changes remain exactly the two
+allowlisted paths. The reviewed candidate was cherry-picked as implementation
+commit `6859b59c`. The complete local integration gate passes conversion,
+capability, query, residual and M0 controls; target isolation and generated
+contracts; six focused and all 243 tests in 54 suites; warnings-as-errors;
+repeatable XcodeGen with unchanged project/scheme hashes `0657194a` /
+`388303af`; macOS and generic iOS Simulator staging builds; valid JSON and clean
+formatting. Implemented leaf hashes are:
+
+- `SpaceChecklistEditingPresentation.swift` — `81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a`; and
+- `SpaceChecklistEditingPresentationTests.swift` — `86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b`.
+
+Exact integration-commit immutable CI remains required before the slice or
+either surface can be promoted to verified.
 
 ## Permanent Exclusions
 

@@ -622,7 +622,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-010",
       "sliceId": "space-checklist-editing-presentation-contracts",
-      "status": "active",
+      "status": "integrated_local_pending_ci",
       "baseCommit": "5c2a185be15189bc8aa1606f838eee5a362780fc",
       "readyCiRun": 33732917130,
       "assignmentControlCommit": "cc6faddf707694e0c4a7af00a770d8a2672b8151",
@@ -651,6 +651,40 @@
         "completeLocalGate": true,
         "exactIntegrationCommitCi": true,
         "reason": "The user explicitly requested quality-control review for delegated work. Three ready-diff passes already rejected unsafe cached evidence, harmless-refresh overbinding, unsupported checklist reorder/cross-list movement, invalid canonical-only intermediate text, incomplete transition tests and continuity inconsistencies; the worker cannot change the frozen semantic boundary or canonical control files."
+      },
+      "handoff": {
+        "candidateCommit": "272b705e246cf505007f38a3d3d386dd8fbc127a",
+        "candidateCommits": [
+          "37714106e3fcc4271bcdc5ee93bb7a66c41eca23",
+          "d50cc9e383f42ffe8519fd27980dfa96ea59ada4",
+          "272b705e246cf505007f38a3d3d386dd8fbc127a"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 243 tests in 54 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "The complete replacement rejects changed semantic hierarchy but does not merge concurrent edits; users require an explicit higher-layer conflict experience.",
+          "Canonical fingerprints prove internal evidence consistency, not current authorization or cryptographic authenticity; structured restart does not prove physical persistence or provider behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_rejecting_incomplete_test_evidence_and_one_restart_defect",
+        "independentReviewer": "/root/space_checklist_edit_review_prep",
+        "independentAdversarialReview": "passed_after_explicit_null_and_exhaustive_matrix_corrections",
+        "findings": [
+          "P2: first green candidate asserted only generic decode failure and omitted parts of the admission, cached/current field, fingerprint, command-forwarding and order-token matrices.",
+          "Expanded tests exposed that canonical nil-cache failed updates could not restart because the strict decoder required an omitted optional key.",
+          "Primary and independent review then found and corrected acceptance of noncanonical explicit cached null; final review found no remaining P0-P3."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite",
+        "completeLocalGate": "passed: all 243 tests in 54 suites, warnings-as-errors, conversion/capability/query/residual/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "pending",
+        "exactIntegrationCommitCi": "pending"
       }
     }
   ],
