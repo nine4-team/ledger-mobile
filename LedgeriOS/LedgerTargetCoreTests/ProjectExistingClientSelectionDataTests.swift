@@ -26,6 +26,7 @@ struct ProjectExistingClientSelectionDataTests {
         #expect(snapshot.activeClients.map(\.displayName.rawValue) == [paddedName, paddedName])
         #expect(snapshot.availability == .available)
         #expect(snapshot.sourceDirectoryFingerprint == directory.local.queryFingerprint)
+        #expect(snapshot.sourceDirectoryRowCount == 4)
         #expect(snapshot.visibleRowCountBeforeFiltering == 7)
         #expect(snapshot.isCompleteForQuery)
         #expect(snapshot.quality == .ready)
@@ -51,12 +52,23 @@ struct ProjectExistingClientSelectionDataTests {
         let activeB = try Self.client("active-b")
         let archived = try Self.client("archived", lifecycle: .archived)
 
-        let trueEmpty = try Self.snapshot([])
-        let archivedOnly = try Self.snapshot([archived])
+        let trueEmpty = try Self.snapshot([], visibleCount: 0)
+        let archivedOnly = try Self.snapshot([archived], visibleCount: 1)
         #expect(trueEmpty.activeClients.isEmpty)
         #expect(archivedOnly.activeClients.isEmpty)
+        #expect(trueEmpty.sourceDirectoryRowCount == 0)
+        #expect(archivedOnly.sourceDirectoryRowCount == 1)
         #expect(trueEmpty.availability == .noActiveClient)
         #expect(archivedOnly.availability == .noActiveClient)
+
+        let undiscoveredEmpty = try Self.snapshot([], visibleCount: 1)
+        let undiscoveredArchived = try Self.snapshot([archived], visibleCount: 2)
+        #expect(undiscoveredEmpty.sourceDirectoryRowCount == 0)
+        #expect(undiscoveredEmpty.visibleRowCountBeforeFiltering == 1)
+        #expect(undiscoveredArchived.sourceDirectoryRowCount == 1)
+        #expect(undiscoveredArchived.visibleRowCountBeforeFiltering == 2)
+        #expect(undiscoveredEmpty.availability == .directoryIncomplete)
+        #expect(undiscoveredArchived.availability == .directoryIncomplete)
 
         let readyIncomplete = try Self.snapshot([], complete: false)
         let partialEmpty = try Self.snapshot([], quality: .partial, complete: false)
@@ -77,11 +89,17 @@ struct ProjectExistingClientSelectionDataTests {
         let staleActive = try Self.snapshot(
             [activeA], quality: .stale, complete: false
         )
-        for available in [one, many, readyIncompleteActive, partialActive, staleActive] {
+        let undiscoveredActive = try Self.snapshot([activeA], visibleCount: 2)
+        for available in [
+            one, many, readyIncompleteActive, partialActive, staleActive, undiscoveredActive
+        ] {
             #expect(available.availability == .available)
         }
         #expect(try partialActive.selection(clientId: activeA.id) == .existing(activeA.id))
         #expect(try staleActive.selection(clientId: activeA.id) == .existing(activeA.id))
+        #expect(undiscoveredActive.sourceDirectoryRowCount == 1)
+        #expect(undiscoveredActive.visibleRowCountBeforeFiltering == 2)
+        #expect(try undiscoveredActive.selection(clientId: activeA.id) == .existing(activeA.id))
         #expect(one.activeClients.map(\.id) == [activeA.id])
         #expect(many.activeClients.map(\.id) == [activeA.id, activeB.id])
 
@@ -131,7 +149,7 @@ struct ProjectExistingClientSelectionDataTests {
         let activeA = try Self.client("active-a", name: "Same Name")
         let activeB = try Self.client("active-b", name: "Same Name")
         let snapshot = try Self.snapshot(
-            [activeA, activeB], visibleCount: 2, version: "original", asOf: Self.t1
+            [activeA, activeB], visibleCount: 3, version: "original", asOf: Self.t1
         )
         let bytes = try OperationContractCodec.encode(snapshot)
 
@@ -189,13 +207,14 @@ struct ProjectExistingClientSelectionDataTests {
             var clients = root["activeClients"] as! [[String: Any]]
             clients.append(activeCObject)
             root["activeClients"] = clients
+            root["sourceDirectoryRowCount"] = 3
             root["visibleRowCountBeforeFiltering"] = 3
         }
         #expect(Self.decodeFailure(inserted) == .evidenceFingerprintMismatch)
         let reordered = try Self.mutateClients(bytes) { $0.swapAt(0, 1) }
         #expect(Self.decodeFailure(reordered) == .evidenceFingerprintMismatch)
         let validCountChange = try Self.mutate(bytes) {
-            $0["visibleRowCountBeforeFiltering"] = 3
+            $0["visibleRowCountBeforeFiltering"] = 4
         }
         #expect(Self.decodeFailure(validCountChange) == .evidenceFingerprintMismatch)
         let negativeCount = try Self.mutate(bytes) {
@@ -206,6 +225,22 @@ struct ProjectExistingClientSelectionDataTests {
             $0["visibleRowCountBeforeFiltering"] = 1
         }
         #expect(Self.decodeFailure(belowCandidateCount) == .visibleCountMismatch)
+        let validSourceRowCountChange = try Self.mutate(bytes) {
+            $0["sourceDirectoryRowCount"] = 3
+        }
+        #expect(Self.decodeFailure(validSourceRowCountChange) == .evidenceFingerprintMismatch)
+        let negativeSourceRowCount = try Self.mutate(bytes) {
+            $0["sourceDirectoryRowCount"] = -1
+        }
+        #expect(Self.decodeFailure(negativeSourceRowCount) == .visibleCountMismatch)
+        let belowActiveSourceRowCount = try Self.mutate(bytes) {
+            $0["sourceDirectoryRowCount"] = 1
+        }
+        #expect(Self.decodeFailure(belowActiveSourceRowCount) == .visibleCountMismatch)
+        let aboveVisibleSourceRowCount = try Self.mutate(bytes) {
+            $0["sourceDirectoryRowCount"] = 4
+        }
+        #expect(Self.decodeFailure(aboveVisibleSourceRowCount) == .visibleCountMismatch)
 
         let completenessRebind = try Self.mutate(bytes) {
             $0["isCompleteForQuery"] = false
@@ -305,6 +340,7 @@ struct ProjectExistingClientSelectionDataTests {
         #expect(restored.snapshots.map(\.readiness) == [
             .ready, .ready, .ready, .partial, .stale
         ])
+        #expect(restored.snapshots.map(\.sourceDirectoryRowCount) == [2, 0, 0, 1, 1])
     }
 
     @Test("A test-only directory consumer propagates scope failure, upstream failure, and cancellation")
@@ -353,8 +389,9 @@ struct ProjectExistingClientSelectionDataTests {
         let object = try Self.object(snapshot)
         #expect(Set(object.keys) == [
             "accountId", "activeClients", "availability", "sourceDirectoryFingerprint",
-            "visibleRowCountBeforeFiltering", "isCompleteForQuery", "quality",
-            "localDataVersion", "asOf", "queryFingerprint", "evidenceFingerprint"
+            "sourceDirectoryRowCount", "visibleRowCountBeforeFiltering",
+            "isCompleteForQuery", "quality", "localDataVersion", "asOf",
+            "queryFingerprint", "evidenceFingerprint"
         ])
         let clients = try #require(object["activeClients"] as? [[String: Any]])
         #expect(clients.count == 1)

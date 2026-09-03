@@ -126,6 +126,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
     public let activeClients: [ClientSummary]
     public let availability: ProjectExistingClientSelectionAvailability
     public let sourceDirectoryFingerprint: ListQueryFingerprint
+    public let sourceDirectoryRowCount: Int
     public let visibleRowCountBeforeFiltering: Int
     public let isCompleteForQuery: Bool
     public let quality: ListSnapshotQuality
@@ -138,7 +139,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
 
     public init(directory: ClientListSnapshot) throws {
         let activeClients = directory.local.rows.filter { $0.lifecycle == .active }
-        guard directory.local.visibleRowCountBeforeFiltering >= activeClients.count else {
+        guard directory.local.visibleRowCountBeforeFiltering >= directory.local.rows.count else {
             throw ProjectExistingClientSelectionFailure.visibleCountMismatch
         }
         guard directory.local.quality == .ready || !directory.local.isCompleteForQuery else {
@@ -155,6 +156,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
             accountId: directory.accountId,
             activeClients: activeClients,
             sourceDirectoryFingerprint: directory.local.queryFingerprint,
+            sourceDirectoryRowCount: directory.local.rows.count,
             visibleRowCountBeforeFiltering: directory.local.visibleRowCountBeforeFiltering,
             isCompleteForQuery: directory.local.isCompleteForQuery,
             quality: directory.local.quality,
@@ -165,6 +167,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
             accountId: directory.accountId,
             activeClients: activeClients,
             sourceDirectoryFingerprint: directory.local.queryFingerprint,
+            sourceDirectoryRowCount: directory.local.rows.count,
             visibleRowCountBeforeFiltering: directory.local.visibleRowCountBeforeFiltering,
             isCompleteForQuery: directory.local.isCompleteForQuery,
             quality: directory.local.quality,
@@ -179,6 +182,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
         accountId: AccountID,
         activeClients: [ClientSummary],
         sourceDirectoryFingerprint: ListQueryFingerprint,
+        sourceDirectoryRowCount: Int,
         visibleRowCountBeforeFiltering: Int,
         isCompleteForQuery: Bool,
         quality: ListSnapshotQuality,
@@ -196,8 +200,10 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
         guard Set(activeClients.map(\.id)).count == activeClients.count else {
             throw ProjectExistingClientSelectionFailure.duplicateClientIdentity
         }
-        guard visibleRowCountBeforeFiltering >= 0,
-              visibleRowCountBeforeFiltering >= activeClients.count else {
+        guard sourceDirectoryRowCount >= 0,
+              sourceDirectoryRowCount >= activeClients.count,
+              visibleRowCountBeforeFiltering >= 0,
+              sourceDirectoryRowCount <= visibleRowCountBeforeFiltering else {
             throw ProjectExistingClientSelectionFailure.visibleCountMismatch
         }
         guard quality == .ready || !isCompleteForQuery else {
@@ -218,6 +224,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
             accountId: accountId,
             activeClients: activeClients,
             sourceDirectoryFingerprint: sourceDirectoryFingerprint,
+            sourceDirectoryRowCount: sourceDirectoryRowCount,
             visibleRowCountBeforeFiltering: visibleRowCountBeforeFiltering,
             isCompleteForQuery: isCompleteForQuery,
             quality: quality,
@@ -232,10 +239,13 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
         self.activeClients = activeClients
         availability = Self.makeAvailability(
             activeClients: activeClients,
+            sourceDirectoryRowCount: sourceDirectoryRowCount,
+            visibleRowCountBeforeFiltering: visibleRowCountBeforeFiltering,
             isCompleteForQuery: isCompleteForQuery,
             quality: quality
         )
         self.sourceDirectoryFingerprint = sourceDirectoryFingerprint
+        self.sourceDirectoryRowCount = sourceDirectoryRowCount
         self.visibleRowCountBeforeFiltering = visibleRowCountBeforeFiltering
         self.isCompleteForQuery = isCompleteForQuery
         self.quality = quality
@@ -276,6 +286,10 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
                     ListQueryFingerprint.self,
                     forKey: .sourceDirectoryFingerprint
                 ),
+                sourceDirectoryRowCount: container.decode(
+                    Int.self,
+                    forKey: .sourceDirectoryRowCount
+                ),
                 visibleRowCountBeforeFiltering: container.decode(
                     Int.self,
                     forKey: .visibleRowCountBeforeFiltering
@@ -308,13 +322,17 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
 
     private static func makeAvailability(
         activeClients: [ClientSummary],
+        sourceDirectoryRowCount: Int,
+        visibleRowCountBeforeFiltering: Int,
         isCompleteForQuery: Bool,
         quality: ListSnapshotQuality
     ) -> ProjectExistingClientSelectionAvailability {
         if !activeClients.isEmpty {
             return .available
         }
-        if quality == .ready && isCompleteForQuery {
+        if quality == .ready,
+           isCompleteForQuery,
+           sourceDirectoryRowCount == visibleRowCountBeforeFiltering {
             return .noActiveClient
         }
         return .directoryIncomplete
@@ -344,6 +362,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
         accountId: AccountID,
         activeClients: [ClientSummary],
         sourceDirectoryFingerprint: ListQueryFingerprint,
+        sourceDirectoryRowCount: Int,
         visibleRowCountBeforeFiltering: Int,
         isCompleteForQuery: Bool,
         quality: ListSnapshotQuality,
@@ -356,6 +375,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
                 accountId: accountId,
                 activeClients: activeClients,
                 sourceDirectoryFingerprint: sourceDirectoryFingerprint,
+                sourceDirectoryRowCount: sourceDirectoryRowCount,
                 visibleRowCountBeforeFiltering: visibleRowCountBeforeFiltering,
                 isCompleteForQuery: isCompleteForQuery,
                 quality: quality,
@@ -389,6 +409,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
         let accountId: AccountID
         let activeClients: [ClientSummary]
         let sourceDirectoryFingerprint: ListQueryFingerprint
+        let sourceDirectoryRowCount: Int
         let visibleRowCountBeforeFiltering: Int
         let isCompleteForQuery: Bool
         let quality: ListSnapshotQuality
@@ -447,6 +468,7 @@ public struct ProjectExistingClientSelectionSnapshot: Codable, Equatable, Sendab
         case activeClients
         case availability
         case sourceDirectoryFingerprint
+        case sourceDirectoryRowCount
         case visibleRowCountBeforeFiltering
         case isCompleteForQuery
         case quality
