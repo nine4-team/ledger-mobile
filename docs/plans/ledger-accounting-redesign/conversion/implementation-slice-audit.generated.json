@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T14:07:26.680Z",
+  "generatedFromManifestSync": "2026-09-03T14:27:27.612Z",
   "totals": {
     "slices": 57,
     "claimedTargetSurfaces": 139,
@@ -9,8 +9,8 @@
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
-    "in_progress": 1,
+    "ready": 0,
+    "in_progress": 2,
     "implemented": 0,
     "verified": 55,
     "rehearsed": 0,
@@ -81,7 +81,7 @@
       "sliceId": "client-archive-use-case-contracts",
       "title": "Dispatch one selected Client archive intent",
       "kind": "product",
-      "status": "ready",
+      "status": "in_progress",
       "owner": "Client Archive Use Case",
       "surfaceIds": [
         "SWIFT-7A484C80FD98",

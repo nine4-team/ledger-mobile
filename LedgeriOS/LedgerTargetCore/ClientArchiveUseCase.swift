@@ -1,21 +1,65 @@
-// READY contract scaffold only — no executable behavior.
-//
-// This leaf will own one provider-free application path from transient,
-// non-Codable ClientArchiveIntent to the already verified ClientArchiveOperation
-// boundary. Intent carries exactly AccountID, ClientID, and
-// ExpectedClientRevision. OperationID, PrincipalID, OperationContractVersion,
-// and finite capture time are supplied separately to the application use case.
-//
-// Implementation is frozen to:
-// - construct the existing ClientArchiveDraft and ArchiveClientCommand;
-// - call ClientArchiving.archive exactly once after construction succeeds;
-// - validate the receipt and preserve its exact localState;
-// - preserve CancellationError and normalized ClientArchiveFailure;
-// - map any other port error to .localAcceptanceFailed.
-//
-// This boundary does not inspect Client rows, lifecycle, readiness, Projects,
-// accounting history, dependencies, or permissions. It does not implement UI,
-// hiding/optimistic projection, physical persistence/restart, authorization,
-// authoritative audit, restore/delete/merge/rename/reassignment/cascade,
-// provider/schema/RLS/Sync behavior, app/MCP wiring, migration, hosted
-// resources, deployment, release, cutover, or production authority.
+import Foundation
+
+/// Transient archive intent supplied after presentation selects one Client.
+///
+/// The value is deliberately not `Codable`. The existing command has a
+/// canonical encoding, but physical local durability and restart behavior
+/// remain outside this use case.
+public struct ClientArchiveIntent: Equatable, Sendable {
+    public let accountId: AccountID
+    public let clientId: ClientID
+    public let expectedRevision: ExpectedClientRevision
+
+    public init(
+        accountId: AccountID,
+        clientId: ClientID,
+        expectedRevision: ExpectedClientRevision
+    ) {
+        self.accountId = accountId
+        self.clientId = clientId
+        self.expectedRevision = expectedRevision
+    }
+}
+
+/// Application-layer orchestration for one archive-only Client operation.
+public struct ClientArchiveUseCase<Archiver: ClientArchiving>: Sendable {
+    private let archiver: Archiver
+
+    public init(archiver: Archiver) {
+        self.archiver = archiver
+    }
+
+    public func execute(
+        intent: ClientArchiveIntent,
+        operationId: OperationID,
+        actorPrincipalId: PrincipalID,
+        operationContractVersion: OperationContractVersion,
+        capturedAt: Date
+    ) async throws -> OperationReceipt {
+        let draft = try ClientArchiveDraft(
+            accountId: intent.accountId,
+            actorPrincipalId: actorPrincipalId,
+            operationContractVersion: operationContractVersion,
+            clientId: intent.clientId,
+            expectedRevision: intent.expectedRevision,
+            capturedAt: capturedAt
+        )
+        let command = try ArchiveClientCommand(
+            operationId: operationId,
+            draft: draft
+        )
+
+        let receipt: OperationReceipt
+        do {
+            receipt = try await archiver.archive(command)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as ClientArchiveFailure {
+            throw failure
+        } catch {
+            throw ClientArchiveFailure.localAcceptanceFailed
+        }
+
+        return try command.validate(receipt)
+    }
+}

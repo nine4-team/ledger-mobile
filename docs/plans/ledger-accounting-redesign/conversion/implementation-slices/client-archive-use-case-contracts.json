@@ -3,7 +3,7 @@
   "sliceId": "client-archive-use-case-contracts",
   "title": "Dispatch one selected Client archive intent",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Client Archive Use Case",
   "surfaceIds": ["SWIFT-7A484C80FD98", "TEST-E10E6D44CC8A"],
   "requirements": [
@@ -98,7 +98,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
       "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "Intent exposes exactly AccountID, ClientID and ExpectedClientRevision, is non-Codable, accepts zero/UInt64.max, and exposes no Client row/name/lifecycle/Project/dependency/readiness/UI/operation/provider field.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -107,7 +107,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
       "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "Every matching LocalOperationState returns unchanged after exactly one archive call and the captured command has the exact verified Client subject, precondition and receipt binding.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -116,7 +116,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
       "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "A reciprocal matrix independently varies Account, Client, expected revision, Operation, actor, contract and time; each value reaches only its existing draft/command/derived field exactly, with one call and no new policy.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -125,7 +125,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
       "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "Non-finite capture time fails before dispatch with invalidCapturedAt and zero calls; mismatched receipt fails after exactly one call; no Client/Project state lookup or eligibility gate occurs.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -134,7 +134,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
       "covers": ["CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "ClientArchiveFailure, arbitrary port failure and CancellationError remain distinct after exactly one dispatched call; raw provider detail never crosses the application boundary.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -143,7 +143,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientArchiveUseCaseTests.swift",
       "covers": ["CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "Stable diagnostics and encoded command shape expose no raw error, lifecycle Boolean, delete/restore/merge/rename, Project list/cascade, accounting/history mutation, UI state, credential, provider payload or production identity.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -152,7 +152,7 @@
       "owner": "conversion control and independent actual-diff review",
       "covers": ["CLIENTARCHIVEUSE-REQ-001", "CLIENTARCHIVEUSE-REQ-002", "CLIENTARCHIVEUSE-REQ-003", "CLIENTARCHIVEUSE-REQ-004", "CLIENTARCHIVEUSE-REQ-005", "CLIENTARCHIVEUSE-REQ-006"],
       "expected": "The READY commit changes only comment scaffolds and control/evidence files, passes all controls/tests/builds, and leaves all related source Project model/new/edit/list/MCP surfaces at prior status and content.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -168,5 +168,5 @@
   "implementationEvidence": ["EVID-CLIENT-ARCHIVE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready design only. Fresh root and strict independent authority preflight selected Client archive dispatch above the verified archive operation. Exactly two comment-only target leaves are frozen. Canonical target authority supplies stable Client identity and history-preserving archive; no source Firebase Client implementation is treated as authority. No executable target code may start until actual-diff review, the complete local ready gate and immutable exact-ready-commit CI pass."
+  "notes": "Implemented locally only after exact ready commit a4bc1daa73f640a42f8b0de50240801619339f95 passed immutable Actions run 33765054735. Exactly two frozen target leaves now implement the transient exact Account/Client/revision intent, existing archive-command assembly, one post-construction ClientArchiving call, receipt validation, structured cancellation, normalized failure preservation and bounded raw errors. Authority review caught a missing compile-time Equatable/Sendable proof; the corrected test closes it and two independent final reviewers return GO. Six focused and all 267 target tests in 58 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. Exact implementation-commit CI is required before verification; all exclusions remain binding."
 }

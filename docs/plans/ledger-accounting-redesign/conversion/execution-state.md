@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 216
+State version: 217
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-ARCHIVE-USE-CASE-READY-LOCAL
+- Checkpoint: CLIENT-ARCHIVE-USE-CASE-IMPLEMENTATION-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3098,8 +3098,27 @@ modifying the running Firebase application before hard cutover.
   and clean diff formatting. Authority review caught one stale baseline/run
   reference; root review clarified that actor/time are separate application
   inputs rather than intent fields. Regenerated checks pass and both read-only
-  reviewers return GO on the corrections. Immutable exact-ready-SHA CI remains
-  pending.
+  reviewers return GO on the corrections. That reviewed package became the
+  exact READY commit recorded next.
+- Exact READY commit `a4bc1daa73f640a42f8b0de50240801619339f95`
+  passed immutable Actions run `33765054735` (traceability 7 seconds; isolated
+  target 2 minutes 33 seconds), authorizing only the two frozen leaves.
+- A bounded writer then changed exactly those two leaves and no other path. The
+  implementation defines the exact non-Codable Account/Client/revision intent,
+  constructs the existing verified draft/command, invokes `ClientArchiving`
+  once only after construction, validates the receipt, preserves every local
+  state, structured cancellation and normalized failure, and bounds raw port
+  errors. Root inspected every line and independently reran six focused plus all
+  267 target tests in 58 suites with warnings as errors; both pass. The complete
+  local implementation gate also passes conversion/capability/query/residual/
+  M0 and target-isolation/generated-contract controls, repeatable Xcode hashes
+  `0657194a` / `388303af`, both staging builds, JSON validation, exact-path
+  scope and clean formatting. The first authority-focused review
+  found that removing either declared `Equatable` or `Sendable` conformance
+  would not fail a test; the added constrained compile-time assertion closes
+  that proof gap without changing runtime behavior. Corrected-diff authority
+  and adversarial continuity reviews both return GO with no remaining P0-P3.
+  Exact implementation-SHA CI remains pending.
 
 ## Next Action
 
@@ -3356,13 +3375,15 @@ Continue without waiting on the two M1 evidence blockers:
    Do not recreate the rejected Project-note use-case scaffolds or mark that
    product slice ready until O-039 is approved and canonical target note
    requirements record the chosen app/MCP normalization/minimum behavior.
-   Review and gate the provider-free Client archive use-case READY package.
+   Review and gate the provider-free Client archive use-case implementation.
    Preserve exactly `ClientArchiveUseCase.swift` (`SWIFT-7A484C80FD98`) and
-   `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) as comment-only
-   target leaves. The complete local gate and corrected authority/continuity
-   reviews pass. Commit/push the exact READY package and require immutable
-   exact-ready-SHA CI before writing executable implementation. The frozen
-   boundary is exact AccountID/ClientID/ExpectedClientRevision intent, existing
+   `ClientArchiveUseCaseTests.swift` (`TEST-E10E6D44CC8A`) as the only executable
+   changes. The exact READY-SHA gate, root line review and focused/all tests
+   pass. Both independent implementation reviewers return GO after one test-
+   proof correction, and the complete integration gate passes. Commit/push the
+   exact package and require immutable exact implementation-SHA CI before
+   verification. The frozen
+   boundary remains exact AccountID/ClientID/ExpectedClientRevision intent, existing
    `ClientArchiveDraft`/`ArchiveClientCommand` assembly, one
    `ClientArchiving.archive` call after construction, receipt validation,
    structured cancellation, normalized failure preservation and bounded raw

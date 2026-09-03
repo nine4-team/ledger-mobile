@@ -566,16 +566,18 @@ leave a user-visible normalization/minimum choice without canonical authority.
 Its speculative scaffolds and dossier were removed, O-039 now blocks the eight
 affected source/integration surfaces, and a proposed decision packet records
 the options. A separate strict-authority scout selected Client archive dispatch
-as the next decision-independent candidate. That candidate is now a local READY
-package: exactly two comment-only target leaves, six authority-bound requirements
-and eight reciprocal verification obligations compose the already verified
+as the next decision-independent candidate. Exact READY commit `a4bc1daa` passed
+immutable run `33765054735`. Exactly two target leaves now implement six
+authority-bound requirements and eight reciprocal verification obligations over
+the already verified
 Client archive operation without advancing reads, lifecycle eligibility, UI,
 physical persistence, authorization, provider, migration or production behavior.
-The complete local gate passes all 261 target tests, controls, repeatable
-generation and both staging builds. Corrected authority and continuity reviews
-return GO; exact-ready-SHA CI must still pass before executable implementation.
-No Firebase, provider, hosted,
-migration or production behavior changed.
+One bounded writer changed only those leaves. Authority review caught and
+corrected a missing compile-time conformance proof; both final reviewers return
+GO. Root line review, six focused/all 267 target tests, complete controls,
+repeatable generation and both staging builds pass. Exact implementation-SHA CI
+is pending. No Firebase, provider, hosted, migration or production behavior
+changed.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
