@@ -3,7 +3,7 @@
   "sliceId": "project-existing-client-selection-read-contracts",
   "title": "Project active existing Clients from local directory evidence into explicit Project setup selection",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Existing-Client Selection Projection",
   "surfaceIds": ["SWIFT-0C8433A6C6F4", "TEST-8B902DC97729"],
   "requirements": [
@@ -178,12 +178,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PROJECTCLIENTSELECT-REQ-001", "PROJECTCLIENTSELECT-REQ-002", "PROJECTCLIENTSELECT-REQ-003", "PROJECTCLIENTSELECT-REQ-004", "PROJECTCLIENTSELECT-REQ-005", "PROJECTCLIENTSELECT-REQ-006", "PROJECTCLIENTSELECT-REQ-007", "PROJECTCLIENTSELECT-REQ-008"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, the complete target suite, both target builds and clean artifacts without changing an application project or claiming final UI, mutation, authorization, persistence, provider, migration or production behavior.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented pending exact integration-commit CI. Independent implementation review rejected candidate 41a2033c for a P1 authoritative-empty bug: visibleRowCountBeforeFiltering may exceed represented source rows, so activeClients alone cannot prove no active Client. Corrected candidate d206f542 adds evidence-bound sourceDirectoryRowCount and permits noActiveClient only when ready, complete and source-exhaustive. Primary every-line review added four test corrections across the candidate sequence; final primary and independent re-review report no remaining P0-P3 issue. The complete central integration gate passes with seven focused/all 218 tests, conversion/M0 and target isolation/generated-contract controls, repeatable project generation and both staging builds. Earlier preflight also rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule. The boundary remains a pure projection over verified ClientListSnapshot, carries no default selection, and requires explicit active ClientID. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
+  "notes": "Verified at exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad by immutable Actions run 33707305340. Independent implementation review rejected candidate 41a2033c for a P1 authoritative-empty bug: visibleRowCountBeforeFiltering may exceed represented source rows, so activeClients alone cannot prove no active Client. Corrected candidate d206f542 adds evidence-bound sourceDirectoryRowCount and permits noActiveClient only when ready, complete and source-exhaustive. Primary every-line review added four test corrections across the candidate sequence; final primary and independent re-review report no remaining P0-P3 issue. The complete local and CI gates pass with seven focused/all 218 tests, conversion/M0 and target isolation/generated-contract controls, repeatable project generation and both staging builds. Earlier preflight also rejected a duplicate Account-level Client port and unsupported final UI no-auto-selection rule. The boundary remains a pure projection over verified ClientListSnapshot, carries no default selection, and requires explicit active ClientID. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; no mutation, authorization, physical persistence, provider/schema/RLS/Sync, app/MCP, migration, hosted or production behavior is introduced."
 }

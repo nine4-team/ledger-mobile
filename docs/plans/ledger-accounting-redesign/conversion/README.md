@@ -349,8 +349,10 @@ P0-P3 issue. The complete central integration gate passes with 7 focused/all
 repeatable project generation and both staging builds. Exact ready commit `e6d80563` passed
 immutable Actions run `33704608811`, including all 211 existing tests,
 generated contracts and both staging builds. Registered `SUBAGENT-WORK-006`
-owned only those two paths in its isolated worktree. Immutable exact-integration-
-SHA CI remains mandatory before promotion.
+owned only those two paths in its isolated worktree. Exact integration checkpoint
+`9ff65407` passed immutable Actions run `33707305340`, including all 218 tests,
+generated contracts, both staging builds and clean tracked artifacts; the slice
+is verified.
 `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001`.
 
 The next disjoint ready boundary is

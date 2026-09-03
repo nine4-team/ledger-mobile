@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 176
+State version: 177
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SELECTION-INTEGRATED-LOCAL-GATE
+- Checkpoint: PROJECT-SELECTION-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2627,6 +2627,13 @@ modifying the running Firebase application before hard cutover.
   and the corrected Project-selection control checkpoint `442ecfce` passed
   immutable run `33706591706`; that next slice has not been delegated. No
   provider, Firebase or production action occurred.
+- Exact integration checkpoint `9ff6540760548377fd5c4f528974045777619aad`
+  passed immutable Actions run `33707305340`: conversion traceability passed in
+  12 seconds and isolated target verification passed in 2 minutes 44 seconds,
+  including all 218 tests, generated contracts, both staging builds and clean
+  tracked artifacts. Promoted exactly
+  `project-existing-client-selection-read-contracts` and its two registered
+  surfaces to `verified`. No provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2765,7 +2772,7 @@ Continue without waiting on the two M1 evidence blockers:
    let the slice become a Client workspace/CRM model or acquire Projects/counts,
    Transfer eligibility, media, accounting, history, mutation, authorization,
    provider, schema/RLS/Sync, app/MCP, migration or production behavior.
-   Treat integrated-pending-CI `project-existing-client-selection-read-contracts` and
+   Treat verified `project-existing-client-selection-read-contracts` and
    `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001` as the frozen worker boundary.
    Preserve its pure projection over the existing directory port, absence of
    any selected/default value or final UI preselection policy, explicit active
@@ -2778,7 +2785,8 @@ Continue without waiting on the two M1 evidence blockers:
    adversarial review found no remaining P0-P3 issue after the reviews caught
    four direct-test gaps and the P1 false-authoritative-empty defect. All seven
    focused tests and root/worker full 218-test runs pass. The complete central
-   integration gate also passes. Require exact integration-checkpoint CI before promotion.
+   integration gate also passes. Exact checkpoint `9ff65407` passed immutable
+   run `33707305340`; preserve this boundary as verified.
    General Space lists
    remain rejected until filtering, ordering, search, count and archive
    semantics have product authority. Treat ready

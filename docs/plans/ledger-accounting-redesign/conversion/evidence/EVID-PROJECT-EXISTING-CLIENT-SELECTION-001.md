@@ -1,14 +1,15 @@
 # EVID-PROJECT-EXISTING-CLIENT-SELECTION-001 — Project Existing-Client Selection Projection
 
 - Timestamp: 2026-09-02
-- Class: implementation checkpoint / provider-free Project existing-Client selection projection
+- Class: verification / provider-free Project existing-Client selection projection
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-0C8433A6C6F4`, `TEST-8B902DC97729`
 - Slice dossier:
   `conversion/implementation-slices/project-existing-client-selection-read-contracts.json`
-- Verification state: implemented after corrected primary and independent
-  review; exact integration-commit CI remains pending
+- Verification state: verified after corrected primary and independent review;
+  exact integration checkpoint `9ff6540760548377fd5c4f528974045777619aad`
+  passed immutable Actions run `33707305340`
 - Ready scaffold hashes:
   - `ProjectExistingClientSelectionData.swift`:
     `184acab06203e860c4f68323a8cd580c23163c0618bfc8a0fddeb9caf9c35f3f`
@@ -198,10 +199,13 @@ The central integration gate also passes conversion sync/check/report,
 capability/query/residual/M0 controls, target environment and generated-contract
 checks, repeatable project generation, macOS and generic iOS Simulator staging
 builds, clean formatting and an untouched Firebase checkout. Immutable exact-
-integration-commit CI remains mandatory before verification promotion.
+integration-commit CI passed in immutable run `33707305340`: traceability passed
+in 12 seconds and isolated target verification passed in 2 minutes 44 seconds,
+including all 218 tests, generated contracts, both staging builds and clean
+tracked artifacts.
 
 ## Permanent Limits
 
-Implemented status proves no physical offline durability, authorization,
+Verified status proves no physical offline durability, authorization,
 synchronization, database policy, migration reconciliation, app/MCP behavior,
 hosted resource, production behavior, release or cutover.

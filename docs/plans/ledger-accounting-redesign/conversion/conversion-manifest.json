@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T02:20:36.190Z",
+    "lastSynchronizedAt": "2026-09-03T02:25:46.177Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16747,7 +16747,7 @@
           "Synthetic fixtures prove only filtering, order, explicit existing-ID selection, readiness, restart, refusal and encoded exclusion without a second port or provider"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -16756,7 +16756,7 @@
         "EVID-PROJECT-SETUP-001",
         "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"
       ],
-      "notes": "Implemented pending exact integration-commit CI after primary every-line and independent adversarial review. The first reviewed candidate was rejected for a P1 false-authoritative-empty defect; the corrected implementation binds sourceDirectoryRowCount and permits noActiveClient only for ready, complete, source-exhaustive evidence. It reuses ClientListSnapshot and ProjectClientSelectionInput, adds no second query port or selected/default Client, and defines no final UI, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified at exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad by immutable Actions run 33707305340 after primary every-line and independent adversarial review. The first reviewed candidate was rejected for a P1 false-authoritative-empty defect; the corrected implementation binds sourceDirectoryRowCount and permits noActiveClient only for ready, complete, source-exhaustive evidence. It reuses ClientListSnapshot and ProjectClientSelectionInput, adds no second query port or selected/default Client, and defines no final UI, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -36536,7 +36536,7 @@
           "Tests prove only the frozen pure projection contract and explicitly exclude a second port, final UI policy, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -36545,7 +36545,7 @@
         "EVID-PROJECT-SETUP-001",
         "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001"
       ],
-      "notes": "Seven focused and all 218 target tests pass locally after primary review added three direct edge assertions and independent review rejected a P1 false-authoritative-empty bug. Corrected tests cover exact source-row exhaustiveness, non-exhaustive empty/archived/active behavior, count/fingerprint tamper and restart. Physical persistence, authorization, schema/RLS/Sync, app/MCP, migration and production remain unproved pending exact integration-commit CI.",
+      "notes": "Seven focused and all 218 target tests pass locally and in immutable Actions run 33707305340 on exact integration checkpoint 9ff6540760548377fd5c4f528974045777619aad after primary review added four direct edge assertions and independent review rejected a P1 false-authoritative-empty bug. Corrected tests cover exact source-row exhaustiveness, non-exhaustive empty/archived/active behavior, count/fingerprint tamper and restart. Physical persistence, authorization, schema/RLS/Sync, app/MCP, migration and production remain unproved.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

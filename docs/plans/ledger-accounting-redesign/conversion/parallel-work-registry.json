@@ -313,7 +313,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-006",
       "sliceId": "project-existing-client-selection-read-contracts",
-      "status": "integrated_pending_ci",
+      "status": "completed",
       "baseCommit": "e6d805630c2ba1f366a6ecf1715a8cf0e60a90ee",
       "readyCiRun": 33704608811,
       "branch": "codex/supabase-slice-project-existing-client-selection",
@@ -344,13 +344,15 @@
       "currentReview": {
         "candidateCommits": [
           "de476aed15f7e1d07c47a33fb466eadc78a29d36",
-          "41a2033c51c650e8d678d4bd1b0d2e246c419273"
+          "41a2033c51c650e8d678d4bd1b0d2e246c419273",
+          "c2492452e1f8df806d5b6332fd9b9cc8017054ea",
+          "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3"
         ],
-        "integrationAgentLineReview": "in_progress_after_three_corrected_test_exhaustiveness_findings",
+        "integrationAgentLineReview": "passed_after_four_corrected_test_exhaustiveness_findings",
         "independentReviewer": "/root/project_budget_segment_review",
-        "independentAdversarialReview": "p1_rejected_false_authoritative_empty",
+        "independentAdversarialReview": "passed_after_p1_rejected_false_authoritative_empty",
         "finding": "visibleRowCountBeforeFiltering may exceed represented source rows, so empty active rows plus ready/complete evidence cannot prove no omitted active Client",
-        "requiredCorrection": "preserve and fingerprint-bind sourceDirectoryRowCount; noActiveClient requires ready, complete and sourceDirectoryRowCount equal to visibleRowCountBeforeFiltering; directly test exhaustive and non-exhaustive empty/archived/active shapes and both count tamper/structural failures"
+        "requiredCorrection": "completed in d206f542: preserve and fingerprint-bind sourceDirectoryRowCount; noActiveClient requires ready, complete and sourceDirectoryRowCount equal to visibleRowCountBeforeFiltering; directly test exhaustive and non-exhaustive empty/archived/active shapes and both count tamper/structural failures"
       },
       "handoff": {
         "candidateCommit": "d206f5424c3f3bdb2b66f96d8b4acb35b425a9a3",
@@ -384,8 +386,9 @@
         ],
         "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 7 tests in 1 suite after correction",
         "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target environment/generated contracts, 7 focused/all 218 tests, repeatable project generation, macOS and generic iOS Simulator staging builds, clean diff formatting and untouched Firebase checkout",
-        "exactIntegrationCommitCi": "pending"
-      }
+        "exactIntegrationCommitCi": "passed: 9ff6540760548377fd5c4f528974045777619aad in immutable Actions run 33707305340; traceability 12 seconds, isolated target 2 minutes 44 seconds"
+      },
+      "integrationDisposition": "accepted and verified at 9ff6540760548377fd5c4f528974045777619aad after four corrected primary-review test gaps, independent P1 rejection and corrected adversarial re-review, complete local gates and immutable Actions run 33707305340; worker branch and candidate commits remain recoverable"
     }
   ],
   "preflightFindings": [
