@@ -295,6 +295,22 @@ checkpoint `d460b021` passed immutable Actions run `33698741756`: traceability
 in 9 seconds and isolated target verification in 3 minutes 21 seconds. The
 slice and exactly its two surfaces are verified;
 `EVID-PROJECT-CORE-DETAILS-001`.
+The provider-free single-Client core-details read slice is prepared as a ready
+gate with exactly two comment-only target surfaces. Scout and independent
+adversarial preflight approved exact Account/Client identity, the verified
+ClientSummary core fields, exact locally observed Client revision and explicit
+offline readiness/absence/failure truth. Nonblank padded names remain byte-
+exact, equal audit timestamps remain valid, audit provenance is not claimed,
+and local revision never becomes server-current authority. The slice excludes
+Projects/counts, Transfer eligibility, CRM/contact/financial/history/media,
+mutation/archive effects/restore/delete/merge/reassignment, authorization,
+physical persistence, provider/schema/RLS/Sync/Auth, app/MCP, migration and
+production. Complete local and immutable exact-ready-SHA CI gates remain
+required before delegation. The complete local ready gate now passes with all
+205 target tests in 47 suites, conversion/capability/query/residual controls,
+M0, target isolation/generated contracts, repeatable project generation, both
+staging builds and clean diff formatting; immutable exact-ready-SHA CI remains
+pending; `EVID-CLIENT-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T00:20:24.948Z",
+    "lastSynchronizedAt": "2026-09-03T00:39:29.674Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -30342,6 +30342,67 @@
       "classificationBatch": "M0-INVOICING-BUDGET-001"
     },
     {
+      "id": "SWIFT-D7F3D08FA568",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift"
+        }
+      ],
+      "observedSourceHash": "efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86",
+      "acknowledgedSourceHash": "efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains the comment-only ready-gate scaffold for a provider-free single-Client core-record read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Core Details Read Contracts",
+        "surfaces": [
+          "ClientCoreDetailsRequest",
+          "ClientCoreDetailsSnapshot",
+          "ClientCoreDetailsLocalSnapshot",
+          "ClientCoreDetailsUpdate",
+          "ClientCoreDetailsQuerying",
+          "ClientCoreDetailsFailure"
+        ],
+        "securityRequirements": [
+          "Request and row bind exact AccountID/ClientID; rebound, hidden-count and incomplete-as-authoritative evidence fails without revealing another Client",
+          "Cached name/lifecycle/audit/revision evidence is local and non-authorizing"
+        ],
+        "syncRequirements": [
+          "Canonical local state distinguishes authoritative absence from incomplete/partial/stale/failure truth across restart",
+          "locallyObservedRevision remains distinct from LocalDataVersion and updatedAt and is not server-current authority"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only Client core-detail values and decode no Firebase Client document, clientName copy, provider path, export row or migration disposition.",
+        "reconciliation": [
+          "Later provider/import slices preserve stable Account/Client identity, exact current core values and source correlation or quarantine invalid evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Synthetic fixtures prove exact core/revision/readiness/restart/refusal/port behavior without a provider, hosted resource or production input"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-CORE-DETAILS-001"
+      ],
+      "notes": "Ready scaffold only. Exact Account/Client identity, verified ClientSummary, locally observed revision, explicit offline truth and one narrow port; no workspace/CRM, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-D7FC2DBAE316",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/TitledCard.swift",
@@ -38642,6 +38703,64 @@
       ],
       "notes": "Verify target signposts, correlation, overhead, redaction and budgets. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-F304037D32B6",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
+        }
+      ],
+      "observedSourceHash": "b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f",
+      "acknowledgedSourceHash": "b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains the comment-only ready-gate test scaffold for the provider-free single-Client core-record read contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Core Details Read Contracts",
+        "surfaces": [
+          "ClientCoreDetailsDataTests",
+          "active/archived Client fixtures",
+          "ready/incomplete/partial/stale found/empty fixtures",
+          "restart/refusal/port-validation/cancellation fixtures"
+        ],
+        "securityRequirements": [
+          "Synthetic identities and non-enumerating failure fixtures expose no inaccessible Client or production value",
+          "Tests treat local audit/revision evidence as non-authorizing and include no credentials or provider payloads"
+        ],
+        "syncRequirements": [
+          "Provider-free tests distinguish structured restart from physical database durability or authenticated synchronization"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase DTO, listener result, clientName copy, source export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Canonical input restarts identically while malformed encoding, request/row rebinding, invalid ClientSummary evidence, impossible revision encoding, cardinality/count and completeness violations fail atomically; separately valid later Client values remain legitimate snapshot evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientCoreDetailsDataTests"
+        ],
+        "acceptance": [
+          "Tests prove only the provider-free single-Client core-record contract and explicitly exclude workspace/CRM, mutation, authorization, provider, migration and production claims"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-CLIENT-CORE-DETAILS-001"
+      ],
+      "notes": "Ready scaffold only. Planned tests cover exact identity/core/audit/revision, all local truth, canonical restart, bounded refusal/diagnostics, port-side validation, failure/cancellation and encoded exclusions; physical persistence, authorization, provider, migration and production remain unproved.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-F46861BCC21A",

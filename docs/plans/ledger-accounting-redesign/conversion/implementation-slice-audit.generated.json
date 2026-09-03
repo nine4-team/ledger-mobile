@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T00:20:24.948Z",
+  "generatedFromManifestSync": "2026-09-03T00:39:29.674Z",
   "totals": {
-    "slices": 47,
-    "claimedTargetSurfaces": 115,
+    "slices": 48,
+    "claimedTargetSurfaces": 117,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 100
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 46,
@@ -76,6 +76,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-core-details-read-contracts",
+      "title": "Read one Client's provider-free core record and local revision with explicit offline truth",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Client Core Details Read Contracts",
+      "surfaceIds": [
+        "SWIFT-D7F3D08FA568",
+        "TEST-F304037D32B6"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-core-details-read-contracts.json"
     },
     {
       "sliceId": "client-creation-operation-contracts",

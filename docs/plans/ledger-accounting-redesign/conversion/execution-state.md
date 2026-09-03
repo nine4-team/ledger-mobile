@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 167
+State version: 168
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-CORE-DETAILS-VERIFIED
+- Checkpoint: CLIENT-CORE-DETAILS-READY-GATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2475,6 +2475,23 @@ modifying the running Firebase application before hard cutover.
   contracts, both staging builds and clean tracked artifacts. Promoted exactly
   `project-core-details-read-contracts` and its two surfaces to `verified`.
   No provider, Firebase or production action occurred.
+- Rescouted the next boundary after Project core details. A read-only scout and
+  independent adversarial reviewer approved only
+  `client-core-details-read-contracts`: exact Account/Client identity, verified
+  ClientSummary fields, exact locally observed revision and explicit local
+  readiness/absence/failure truth. The review requires byte-exact preservation
+  of valid padded names, accepts equal finite audit timestamps without claiming
+  provenance, keeps revision distinct from LocalDataVersion/updatedAt, and
+  rejects any Client workspace/CRM, Project/count, Transfer, financial/history,
+  mutation, authorization, persistence, provider/schema/RLS/Sync/Auth, app/MCP,
+  migration or production claim. General Space lists and create-from-template
+  were rejected because their product semantics remain unresolved. Two target-
+  only paths contain comments. The complete local ready gate passes all 205
+  target tests in 47 suites, conversion/capability/query/residual controls, M0,
+  target isolation/generated contracts, repeatable project generation, both
+  staging builds and clean diff formatting. Immutable CI on the exact ready
+  commit remains the final prerequisite before delegation. No provider,
+  Firebase or production action occurred.
 
 ## Next Action
 
@@ -2602,11 +2619,18 @@ Continue without waiting on the two M1 evidence blockers:
    revision to server-current authority or acquire workspace children, media,
    accounting, mutation, authorization, provider, schema/RLS/Sync, app/MCP,
    migration or production behavior. Rescout and freeze the next decision-
-   independent boundary before any writer starts because
-   the slice composes shared Project/Client, canonical-description, revision and
-   offline-readiness semantics. Do not let it become a Project workspace or
-   acquire children, media, accounting, mutation, authorization, provider,
-   schema/RLS/Sync, app/MCP, migration or production behavior.
+   independent boundary before any writer starts. Treat ready
+   `client-core-details-read-contracts` and
+   `EVID-CLIENT-CORE-DETAILS-001` as that next frozen boundary: first pass the
+   complete local ready gate and immutable CI on the exact comment-only commit,
+   then assign only its two paths to one isolated worker with primary every-line
+   and independent adversarial review because the slice composes the verified
+   ClientSummary, locally observed Client revision and shared offline-readiness
+   semantics. Preserve valid Client display text byte-for-byte, accept
+   separately valid later name/time/lifecycle/revision snapshots, and do not
+   let the slice become a Client workspace/CRM model or acquire Projects/counts,
+   Transfer eligibility, media, accounting, history, mutation, authorization,
+   provider, schema/RLS/Sync, app/MCP, migration or production behavior.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

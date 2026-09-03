@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-core-details-read-contracts",
+  "title": "Read one Client's provider-free core record and local revision with explicit offline truth",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Client Core Details Read Contracts",
+  "surfaceIds": ["SWIFT-D7F3D08FA568", "TEST-F304037D32B6"],
+  "requirements": [
+    {
+      "id": "CLIENTCORE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "One Client core read binds an exact AccountID and stable ClientID. Names, paths and provider locators cannot define, repair, rebind or authorize identity.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "The product specification requires exact opaque ClientID, owning AccountID, current ClientDisplayName, active-or-archived lifecycle and createdAt/updatedAt audit fields. This slice reuses, rather than redefines, the verified ClientSummary dependency's finite and createdAt-no-later-than-updatedAt validation, including valid equal timestamps. A nonblank padded name is preserved exactly; this slice invents no trimming or audit provenance.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "An archived Client remains a found historical/current identity record. This read defines no selection visibility, cascade, restore, hard delete, merge, reassignment or frozen-history rewrite behavior.",
+      "decisionIds": ["O-025"],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Preconditions and Concurrency",
+      "invariant": "The row carries the exact locally observed ExpectedClientRevision required by verified rename/archive commands. It is conflict-precondition evidence, distinct from LocalDataVersion and updatedAt, and is never current authoritative server revision under incomplete, partial or stale evidence.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Read models",
+      "invariant": "At-most-one exact-request local evidence preserves LocalDataVersion, finite as-of, readiness and completeness. Only complete ready zero-row evidence is authoritative absence; incomplete, partial and stale found/empty states remain explicit.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "One backend-neutral query port streams only exact request updates. Waiting, unavailable, retryable and required-update remain explicit; unavailable is non-enumerating, cache cannot rebind, and failure/cancellation cannot yield false detail or absence.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-007",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "This is not a Client workspace or CRM model. It contains no Projects/counts, Transfer eligibility, contacts, communication, billing, history, financial, media or mutation evidence; O-025 merge/reassignment remains open.",
+      "decisionIds": ["O-025"],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    },
+    {
+      "id": "CLIENTCORE-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "This Phase 1 boundary is executable only with deterministic provider-free synthetic evidence while Firebase remains unchanged. It defines no persistence, authorization, schema/RLS/Sync/Auth/provider, app/MCP, migration, hosted resource, release or production behavior.",
+      "decisionIds": [],
+      "verificationIds": ["CLIENTCORE-TEST-001", "CLIENTCORE-TEST-002", "CLIENTCORE-TEST-003", "CLIENTCORE-TEST-004", "CLIENTCORE-TEST-005", "CLIENTCORE-TEST-006"]
+    }
+  ],
+  "contracts": {
+    "domain": {"items": ["ClientCoreDetailsRequest binds exact AccountID and ClientID to a deterministic versioned fingerprint and revalidates after decode.", "ClientCoreDetailsSnapshot reuses ClientSummary and carries exact locallyObservedRevision: ExpectedClientRevision without claiming server-current authority.", "ClientCoreDetailsLocalSnapshot enforces zero-or-one exact row, exact visible count, explicit readiness/completeness/version/as-of and ready-complete-zero-only authoritative absence.", "ClientCoreDetailsUpdate, bounded failure and ClientCoreDetailsQuerying form the sole narrow provider-free port."], "notApplicable": ""},
+    "postgresSchema": {"items": [], "notApplicable": "No Client table, lifecycle/revision column, constraint, index, view, function, trigger or migration is created."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative get-Client handler, capability derivation, mutation, audit event or reconciliation exists."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed Client evidence is not authorization; no membership or cross-account database policy/test exists."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Client table, subscription or upload connector exists."},
+    "localOffline": {"items": ["Canonical Codable request/row/snapshot/update evidence preserves exact ClientSummary, local revision and local truth across structured restart.", "At-most-one cardinality and exact binding prevent hidden rows or incomplete empty cache from becoming authority.", "A deterministic reference port proves exact streaming/failure/cancellation, not physical persistence, authorization or authenticated synchronization."], "notApplicable": ""},
+    "storageMedia": {"items": [], "notApplicable": "No attachment, image, locator, upload, cache, retention or deletion behavior exists."},
+    "appMcp": {"items": [], "notApplicable": "No Client view/list/navigation/action or MCP contract/handler is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Client DTO, clientName copy, document path, export row or migration disposition is decoded."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable local failures are values only; no telemetry, alert or runbook is introduced."},
+    "rolloutRollback": {"items": ["Implementation remains inside provider-free LedgerTargetCore and tests without changing either application project.", "The slice cannot authorize, persist, synchronize, mutate or present a complete Client workspace; deploy, migrate, release or cut over.", "O-025 and A-003/A-004/A-007/A-015/A-016 remain outside; physical and hosted verification stay gated."], "notApplicable": ""}
+  },
+  "verification": [
+    {"id": "CLIENTCORE-TEST-001", "kind": "domain", "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift", "covers": ["CLIENTCORE-REQ-001", "CLIENTCORE-REQ-002", "CLIENTCORE-REQ-003", "CLIENTCORE-REQ-004", "CLIENTCORE-REQ-005", "CLIENTCORE-REQ-006", "CLIENTCORE-REQ-007", "CLIENTCORE-REQ-008"], "expected": "Active/archived Clients preserve exact IDs, padded/interior-spaced name, lifecycle, finite ordered/equal audit times and revision 0/max; AccountID and ClientID independently alter fingerprint.", "status": "planned", "evidence": ["EVID-CLIENT-CORE-DETAILS-001"]},
+    {"id": "CLIENTCORE-TEST-002", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift", "covers": ["CLIENTCORE-REQ-001", "CLIENTCORE-REQ-002", "CLIENTCORE-REQ-003", "CLIENTCORE-REQ-004", "CLIENTCORE-REQ-005", "CLIENTCORE-REQ-006", "CLIENTCORE-REQ-007", "CLIENTCORE-REQ-008"], "expected": "Ready found/absent, incomplete found/empty, partial found/empty and stale found/empty restart byte-identically; archived remains found and non-ready revision remains non-authoritative.", "status": "planned", "evidence": ["EVID-CLIENT-CORE-DETAILS-001"]},
+    {"id": "CLIENTCORE-TEST-003", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift", "covers": ["CLIENTCORE-REQ-001", "CLIENTCORE-REQ-002", "CLIENTCORE-REQ-003", "CLIENTCORE-REQ-004", "CLIENTCORE-REQ-005", "CLIENTCORE-REQ-006", "CLIENTCORE-REQ-007", "CLIENTCORE-REQ-008"], "expected": "Malformed or missing encoding, request/fingerprint/row rebinding (including same display name with the wrong ClientID), invalid ClientSummary name/nonfinite or reversed audit/lifecycle evidence, missing or negative revision, both identical and distinct two-row evidence, negative and mismatched visible counts, and both partial+complete and stale+complete evidence fail atomically. Every failure is asserted against its literal unique bounded provider-neutral diagnostic code and diagnostics contain no Client name or ID. Separately valid later name, timestamp, lifecycle or revision snapshots are accepted.", "status": "planned", "evidence": ["EVID-CLIENT-CORE-DETAILS-001"]},
+    {"id": "CLIENTCORE-TEST-004", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift", "covers": ["CLIENTCORE-REQ-001", "CLIENTCORE-REQ-002", "CLIENTCORE-REQ-003", "CLIENTCORE-REQ-004", "CLIENTCORE-REQ-005", "CLIENTCORE-REQ-006", "CLIENTCORE-REQ-007", "CLIENTCORE-REQ-008"], "expected": "Waiting accepts exactly notRequested/loading/blocked and rejects exactly ready/partial/stale; unavailable is non-enumerating and carries no cache; retryable and requiredUpdate remain distinct and exact-request cached evidence cannot upgrade completeness, revision authority or authorization.", "status": "planned", "evidence": ["EVID-CLIENT-CORE-DETAILS-001"]},
+    {"id": "CLIENTCORE-TEST-005", "kind": "end_to_end", "owner": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift", "covers": ["CLIENTCORE-REQ-001", "CLIENTCORE-REQ-002", "CLIENTCORE-REQ-003", "CLIENTCORE-REQ-004", "CLIENTCORE-REQ-005", "CLIENTCORE-REQ-006", "CLIENTCORE-REQ-007", "CLIENTCORE-REQ-008"], "expected": "Reference port validates before yield; a deliberately raw consumer with no validation proves mismatched updates are refused; upstream failure and cancellation produce no false detail/absence; exact encoded-key allowlists for every new Codable value prove the frozen exclusions.", "status": "planned", "evidence": ["EVID-CLIENT-CORE-DETAILS-001"]},
+    {"id": "CLIENTCORE-TEST-006", "kind": "operational", "owner": "pull-request CI Isolated target environment job", "covers": ["CLIENTCORE-REQ-001", "CLIENTCORE-REQ-002", "CLIENTCORE-REQ-003", "CLIENTCORE-REQ-004", "CLIENTCORE-REQ-005", "CLIENTCORE-REQ-006", "CLIENTCORE-REQ-007", "CLIENTCORE-REQ-008"], "expected": "Exact implementation commit passes traceability/isolation/contracts/all tests/both builds/clean artifacts without changing an app project or claiming excluded behavior.", "status": "planned", "evidence": ["EVID-CLIENT-CORE-DETAILS-001"]}
+  ],
+  "implementationEvidence": ["EVID-CLIENT-CORE-DETAILS-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready-gate only. Scout and independent adversarial preflight approved exact Account/Client core identity, verified ClientSummary, locally observed revision and explicit offline truth. Padded nonblank names and equal timestamps remain valid; no trimming or audit provenance is invented. Complete local gates pass with all 205 target tests in 47 suites, conversion/capability/query/residual controls, M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean diff formatting. O-025 and A-003/A-004/A-007/A-015/A-016 remain outside. Implementation is withheld until immutable CI passes on the exact ready commit."
+}
