@@ -472,7 +472,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-008",
       "sliceId": "project-browsing-presentation-contracts",
-      "status": "integrated_pending_ci",
+      "status": "verified",
       "baseCommit": "459a58123ac7241984ddee6d559e33f4bca931d4",
       "readyCiRun": 33720134399,
       "assignmentControlCommit": "2cd61b28f829fe63d655b1f6f812ffd76b3e5d48",
@@ -536,7 +536,8 @@
         ],
         "focusedRetest": "passed: worker, primary agent and independent reviewer passed 7 tests across 2 suites",
         "completeLocalGate": "passed: all 231 tests in 52 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
-        "exactIntegrationCommitCi": "pending"
+        "exactIntegrationCommit": "717a0eb89099676bd4c09d6b0665dd83ab9739d8",
+        "exactIntegrationCommitCi": "passed: Actions run 33723154735; both Conversion state and traceability and Isolated target environment jobs succeeded"
       }
     }
   ],

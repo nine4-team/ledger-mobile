@@ -392,8 +392,9 @@ drift; corrected candidate `73f94525` fingerprints the exact selection row,
 adds direct regression coverage and matches
 `ProjectDirectoryPresentationSnapshot`. Primary and independent review report
 no remaining P0-P3; seven focused and all 231 tests, deterministic target
-generation and both staging builds pass locally. Exact integration-SHA CI is
-still required before verification.
+generation and both staging builds pass. Exact integration checkpoint
+`717a0eb89099676bd4c09d6b0665dd83ab9739d8` passed both jobs in immutable
+Actions run `33723154735`; the slice and its four surfaces are verified.
 `EVID-PROJECT-BROWSING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

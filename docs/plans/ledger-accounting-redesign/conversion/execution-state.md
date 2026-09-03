@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 187
+State version: 188
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PBROWSE-INTEGRATED-LOCAL
+- Checkpoint: PBROWSE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2748,8 +2748,10 @@ modifying the running Firebase application before hard cutover.
   independent adversarial review report no remaining P0-P3. Seven focused and
   all 231 tests in 52 suites pass; conversion/capability/query/residual/M0,
   target isolation/generated contracts, repeatable project generation, both
-  staging builds and clean formatting pass. Four surfaces are `implemented`;
-  exact integration-commit CI remains pending.
+  staging builds and clean formatting pass. Exact integration checkpoint
+  `717a0eb89099676bd4c09d6b0665dd83ab9739d8` then passed both jobs in immutable
+  Actions run `33723154735`; `PBROWSE-TEST-007`, the slice, its four surfaces
+  and `SUBAGENT-WORK-008` are now `verified`.
 
 ## Next Action
 
@@ -2921,8 +2923,8 @@ Continue without waiting on the two M1 evidence blockers:
    Actions run `33717396519` with all 224 tests, conversion/target controls,
    repeatable project generation and both staging builds; preserve the verified
    boundary.
-   Treat ready `project-browsing-presentation-contracts` and
-   `EVID-PROJECT-BROWSING-PRESENTATION-001` as the next candidate boundary.
+   Treat verified `project-browsing-presentation-contracts` and
+   `EVID-PROJECT-BROWSING-PRESENTATION-001` as the frozen presentation boundary.
    Preserve exact upstream order, Project-only active/archived segmentation,
    active-Project/archived-Client visibility, ready-complete-source-exhaustive
    absence, every-field evidence binding and selection-to-exact-detail-request
@@ -2936,9 +2938,13 @@ Continue without waiting on the two M1 evidence blockers:
    exact ready-SHA CI, full local ready gate and independent actual-diff
    correction review are recorded as passing. Corrected candidate `73f94525`
    changed only the four registered leaf paths and passed primary every-line,
-   independent adversarial and complete local integration gates. Commit and
-   push the synchronized implementation checkpoint, require both CI jobs on its
-   exact SHA, and only then promote the slice/surfaces/assignment to verified.
+   independent adversarial and complete local integration gates. Exact
+   checkpoint `717a0eb8` passed both CI jobs in immutable Actions run
+   `33723154735`; preserve the verified boundary. Remove the clean isolated
+   worker worktree after the synchronized verification-promotion checkpoint
+   passes CI, retain its reviewed branch, record cleanup, and select the next
+   coherent decision-independent slice through feature-specific product-
+   authority preflight.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

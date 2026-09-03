@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T06:25:20.451Z",
+    "lastSynchronizedAt": "2026-09-03T06:33:08.399Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -22260,7 +22260,7 @@
           "Frozen Project lifecycle, order, empty truth, restart/tamper and selection-to-detail-request requirements pass"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -22269,7 +22269,7 @@
         "EVID-PROJECT-CORE-DETAILS-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Implemented by reviewed candidate 73f94525. An initial green candidate was rejected because persisted selection could be rebound to a valid sibling row and its output type diverged from the manifest; the correction adds exact selection-row fingerprinting/direct regression coverage and the frozen ProjectDirectoryPresentationSnapshot name. Sorting/search/full-card/route behavior remains excluded.",
+      "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735 after reviewed candidate 73f94525. An initial green candidate was rejected because persisted selection could be rebound to a valid sibling row and its output type diverged from the manifest; the correction adds exact selection-row fingerprinting/direct regression coverage and the frozen ProjectDirectoryPresentationSnapshot name. Sorting/search/full-card/route behavior remains excluded.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33333,7 +33333,7 @@
           "All verified detail update states project exact header/readiness/absence/failure truth and reject mismatched evidence"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -33342,7 +33342,7 @@
         "EVID-PROJECT-CORE-DETAILS-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Implemented by reviewed candidate 73f94525 with all focused and full tests passing. Fixed tabs/workspace-shell naming and route behavior remain excluded; exact local header truth only.",
+      "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735 after reviewed candidate 73f94525 passed all focused and full tests. Fixed tabs/workspace-shell naming and route behavior remain excluded; exact local header truth only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33585,7 +33585,7 @@
           "Tests prove only the frozen detail-header and selection-to-request composition boundary"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -33593,7 +33593,7 @@
         "EVID-PROJECT-CORE-DETAILS-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Three focused tests pass in reviewed candidate 73f94525 and cover the frozen detail update truth, request/cache mismatch, end-to-end selection and encoded exclusions.",
+      "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735. Three focused tests in reviewed candidate 73f94525 cover the frozen detail update truth, request/cache mismatch, end-to-end selection and encoded exclusions.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -36823,7 +36823,7 @@
           "Tests prove only the frozen core-row, empty-truth, restart and exact selection boundary"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -36831,7 +36831,7 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Four focused tests pass in reviewed candidate 73f94525. Direct regression coverage proves an encoded selection cannot be rebound from one represented Project to a valid sibling row in the same snapshot.",
+      "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735. Four focused tests in reviewed candidate 73f94525 include direct regression coverage proving an encoded selection cannot be rebound from one represented Project to a valid sibling row in the same snapshot.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-6075C2D24BAD`, `SWIFT-FC9E3C33FECA`, `TEST-02013D984E64`, `TEST-8CB70D14D5BC`
 - Slice dossier: `conversion/implementation-slices/project-browsing-presentation-contracts.json`
-- Verification state: implemented locally; exact integration-commit CI pending
+- Verification state: verified at exact integration checkpoint `717a0eb89099676bd4c09d6b0665dd83ab9739d8` and immutable Actions run `33723154735`
 
 ## Selection and Scope
 
@@ -131,9 +131,17 @@ capability/query/residual controls, M0, target isolation/generated contracts,
 two identical XcodeGen outputs, both staging builds and clean formatting. The
 Firebase checkout remains clean at `fe018501`.
 
+Exact integration checkpoint
+`717a0eb89099676bd4c09d6b0665dd83ab9739d8` passed immutable Actions run
+`33723154735`: both Conversion state and traceability and Isolated target
+environment completed successfully on the reviewed, synchronized
+implementation SHA. `PBROWSE-TEST-007` therefore passes and the four claimed
+surfaces are verified.
+
 ## Permanent Limits
 
 Implementation proves only deterministic provider-free presentation and
-structured restart/refusal. It does not prove physical offline durability,
+structured restart/refusal over already-validated local evidence. It does not
+prove physical offline durability,
 authorization, database policy, synchronization, migration reconciliation,
 app/MCP behavior, hosted resources, production behavior, release or cutover.

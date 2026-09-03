@@ -3,7 +3,7 @@
   "sliceId": "project-browsing-presentation-contracts",
   "title": "Present Project directory selection and detail-header truth",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Project Browsing Presentation",
   "surfaceIds": ["SWIFT-6075C2D24BAD", "SWIFT-FC9E3C33FECA", "TEST-02013D984E64", "TEST-8CB70D14D5BC"],
   "requirements": [
@@ -167,12 +167,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-004", "PBROWSE-REQ-005", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
       "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts while the worker candidate changes only the four allowlisted leaf paths.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented after primary every-line and independent adversarial review, pending exact integration-commit CI. Exact ready commit 459a58123ac7241984ddee6d559e33f4bca931d4 passed immutable Actions run 33720134399 and SUBAGENT-WORK-008 changed only the four frozen leaf paths. Initial candidate 964dbabc passed 231 tests but was rejected for a P1 sibling-row selection rebind and P2 ProjectDirectoryPresentationSnapshot naming mismatch. Corrected candidate 73f94525 adds a canonical selection-specific fingerprint over Account, segment, exact row and directory evidence plus direct sibling-rebind refusal, aligns the frozen type name and passed final primary/independent review with no remaining P0-P3. Seven focused and all 231 tests pass locally; exact integrated-SHA operational CI remains planned. This outcome preserves upstream order and covers only directory core rows, evidence-bound selection, exact detail-request derivation and detail-header truth."
+  "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735 after primary every-line and independent adversarial review. Exact ready commit 459a58123ac7241984ddee6d559e33f4bca931d4 passed immutable Actions run 33720134399 and SUBAGENT-WORK-008 changed only the four frozen leaf paths. Initial candidate 964dbabc passed 231 tests but was rejected for a P1 sibling-row selection rebind and P2 ProjectDirectoryPresentationSnapshot naming mismatch. Corrected candidate 73f94525 adds a canonical selection-specific fingerprint over Account, segment, exact row and directory evidence plus direct sibling-rebind refusal, aligns the frozen type name and passed final primary/independent review with no remaining P0-P3. Seven focused and all 231 tests pass; conversion traceability, target isolation/generated contracts, repeatable project generation and both staging builds also pass on the exact integration SHA. This outcome preserves upstream order and covers only directory core rows, evidence-bound selection, exact detail-request derivation and detail-header truth."
 }
