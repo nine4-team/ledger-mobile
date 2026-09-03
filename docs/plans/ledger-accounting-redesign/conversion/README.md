@@ -346,6 +346,21 @@ review, independent adversarial review, the complete local gate and immutable
 exact-integration-SHA CI remain mandatory before promotion.
 `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001`.
 
+The next disjoint ready boundary is
+`transaction-type-choice-presentation-contracts`. Independent adversarial
+preflight prevented a duplicate Transaction classification aggregate,
+noncanonical Business-owner vocabulary and accidental UI/filter ordering. The
+corrected provider-free leaf exposes only literal unordered type membership by
+scope owner plus exact Purchase/Return/Transfer, Client/1584 and existing
+economic-meaning presentation derived from the verified
+`TransactionClassification`. Its two target-only paths remain comments. The
+complete local ready gate passes all 211 existing tests, repeatable target
+generation and both staging builds. Independent actual-diff review found and
+corrected one P3 test-spec precision issue, then returned GO with no remaining
+P0-P3 finding. Immutable exact-ready-SHA CI remains mandatory before
+delegation.
+`EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001`.
+
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
 is never the authority for what has been covered or verified.

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T01:47:46.122Z",
+    "lastSynchronizedAt": "2026-09-03T02:03:23.026Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -33107,6 +33107,65 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-F90B7B48C1F6",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift"
+        }
+      ],
+      "observedSourceHash": "ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629",
+      "acknowledgedSourceHash": "ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the ready-gate scaffold for provider-free canonical Transaction type-choice presentation; executable behavior is intentionally absent.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transaction Type Choice Presentation",
+        "surfaces": [
+          "TransactionTypeChoiceDescriptor",
+          "TransactionTypeChoiceCatalog",
+          "TransactionTypeChoicePresentationProjector"
+        ],
+        "securityRequirements": [
+          "Presentation consumes already validated taxonomy values and cannot widen Account, Project, Client, role or financial authority",
+          "No identity, amount, source or provider payload is exposed by the descriptor"
+        ],
+        "syncRequirements": [
+          "Canonical restart persists only the verified TransactionClassification and re-derives presentation identically",
+          "No query port, local table, readiness value, upload connector or provider synchronization is created"
+        ]
+      },
+      "migration": {
+        "rule": "Present target taxonomy values only; do not decode or relabel legacy Sale, payment, fee, expense, reimbursement or movement values.",
+        "reconciliation": [
+          "Later migration must classify legacy source records independently; this leaf cannot make ambiguous source evidence appear canonical"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransactionTypeChoicePresentationTests"
+        ],
+        "acceptance": [
+          "Synthetic verified classifications prove exact unordered membership, titles, owner vocabulary, economic meanings, role-neutral Transfer projection, restart and malformed-taxonomy refusal"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001",
+        "EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"
+      ],
+      "notes": "Ready-gate mapping only. The slice reuses the verified taxonomy and classification, expresses literal unordered scope membership, and derives exact Purchase/Return/Transfer, Client/1584 and economic-meaning presentation. It adds no classification aggregate, order, action, amount, provider or migration behavior.",
+      "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
       "id": "SWIFT-F971A5B270E6",
       "kind": "swift_model",
       "name": "LedgeriOS/LedgeriOS/Models/Shared/AttachmentUpload.swift",
@@ -39000,6 +39059,66 @@
       ],
       "notes": "Verified synthetic tests. An independent reviewer found one P3 self-referential choice-membership assertion; CaseIterable plus a literal unordered two-case assertion corrected it and the reviewer confirmed resolution. Four focused/all 193 target tests in 45 suites passed locally and at exact implementation commit d7f4286be2a2fe7f4a8c8e7d59a59547114e47e4 in immutable Actions run 33691932385 without asserting payer display order or any actual Link behavior.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "TEST-F66BBF1FC092",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "448ec87f3d2d231fe69631e981d8403840790a1eb618cabfd328a713699f49e6",
+      "acknowledgedSourceHash": "448ec87f3d2d231fe69631e981d8403840790a1eb618cabfd328a713699f49e6",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the ready-gate scaffold for provider-free Transaction type-choice presentation tests; no executable test exists yet.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transaction Type Choice Presentation",
+        "surfaces": [
+          "literal scope-membership fixtures",
+          "five owner/type presentation fixtures",
+          "Transfer role-equivalence fixtures",
+          "classification restart and malformed-taxonomy fixtures",
+          "exact encoded-key and forbidden-vocabulary assertions"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic identifiers and expose no production or inaccessible financial value",
+          "Tests cannot promote locally valid classification to authorization or command eligibility"
+        ],
+        "syncRequirements": [
+          "Provider-free tests distinguish canonical Codable classification restart from physical persistence or authenticated synchronization"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic taxonomy values and load no Firebase Transaction, export, profile or legacy classification.",
+        "reconciliation": [
+          "Exact encoder keys and taxonomy failures prevent derived presentation from becoming a legacy import mapping or alternate classification authority"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransactionTypeChoicePresentationTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen presentation leaf and explicitly exclude ordering, amounts, lifecycle, commands, app/MCP, provider, migration and production behavior"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
+        "EVID-M2-INVENTORY-TRANSACTION-001",
+        "EVID-TRANSACTION-TAXONOMY-001",
+        "EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"
+      ],
+      "notes": "Planned tests use literal sets and exact strings, exhaust all six valid classification shapes across five owner/type pairs, prove Transfer source/destination equivalence, re-project every shape after canonical classification restart, and exercise exact existing taxonomy failures and encoded exclusions. They make no UI order, command, provider, migration or production claim.",
+      "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
       "id": "TEST-F86623DF8B57",

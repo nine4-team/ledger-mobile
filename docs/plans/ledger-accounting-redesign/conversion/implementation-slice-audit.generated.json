@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T01:47:46.122Z",
+  "generatedFromManifestSync": "2026-09-03T02:03:23.026Z",
   "totals": {
-    "slices": 49,
-    "claimedTargetSurfaces": 119,
+    "slices": 50,
+    "claimedTargetSurfaces": 121,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 102
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 2,
     "in_progress": 1,
     "implemented": 0,
     "verified": 47,
@@ -689,6 +689,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-taxonomy-and-transfer-identity.json"
+    },
+    {
+      "sliceId": "transaction-type-choice-presentation-contracts",
+      "title": "Present canonical Transaction type choices and scope-relative meaning",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Transaction Type Choice Presentation",
+      "surfaceIds": [
+        "SWIFT-F90B7B48C1F6",
+        "TEST-F66BBF1FC092"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-type-choice-presentation-contracts.json"
     },
     {
       "sliceId": "transfer-destination-selection-contracts",

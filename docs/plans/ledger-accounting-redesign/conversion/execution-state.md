@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 173
+State version: 174
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-EXISTING-CLIENT-SELECTION-DELEGATED
+- Checkpoint: PROJECT-SELECTION-WORKER-TXTYPE-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2357,6 +2357,28 @@ modifying the running Firebase application before hard cutover.
   state is 795 recorded / 780 discovered, 366 mapped-or-later / 167 residual /
   44 blockers with only the three documented retired-path warnings. No worker,
   provider, Firebase or production action occurred.
+- Prepared the disjoint `transaction-type-choice-presentation-contracts`
+  boundary after read-only scout and independent adversarial review. Preflight
+  rejected a second classification aggregate, Business-owner wording and any
+  array/declaration/filter/UI-order claim. The corrected leaf reuses the
+  verified `TransactionClassification`, returns literal unordered membership,
+  derives exact Purchase/Return/Transfer and Client/1584 titles plus the
+  existing economic meaning, and makes Transfer source/destination roles
+  presentation-equivalent. Exactly two target paths contain comments. The
+  complete local ready gate passes at 805 recorded / 790 discovered surfaces,
+  376 mapped / 167 residual / 44 blockers, all 211 tests in 48 suites,
+  conversion/capability/query/residual controls, M0, target isolation/generated
+  contracts, repeatable generation, both staging builds, clean formatting and
+  an untouched Firebase checkout. Independent actual-diff review found one P3:
+  the first draft could freeze declaration order, restarted five semantic pairs
+  instead of all six valid role-bearing classifications, and described all
+  public vocabulary rather than only display titles. The corrected obligations
+  require literal Set membership plus count three and prohibit array/order
+  equality, restart all six shapes with equal restored Transfer descriptors,
+  and constrain exact display-title strings. Final independent re-review found
+  no remaining P0-P3 issue. Immutable CI on the exact ready commit remains
+  mandatory before delegation. No provider, Firebase or production action
+  occurred.
 - The complete Project Item Link presentation ready gate passes conversion,
   capability, query, regenerated residual and M0 controls, target isolation,
   generated app/MCP contracts, all 189 existing target tests in 44 suites,
@@ -2719,9 +2741,17 @@ Continue without waiting on the two M1 evidence blockers:
    adversarial review, the complete integration gate and exact integration-SHA
    CI remain mandatory before promotion. General Space lists
    remain rejected until filtering, ordering, search, count and archive
-   semantics have product authority. Retain the separately scouted Transaction
-   type-choice presentation candidate for later independent preflight, but do
-   not freeze or delegate it from this dirty checkpoint.
+   semantics have product authority. Treat ready
+   `transaction-type-choice-presentation-contracts` and
+   `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001` as the next disjoint frozen
+   boundary. Preserve literal unordered Project purchase/return/transfer and
+   Inventory purchase/return membership, exact Client/1584 owner vocabulary,
+   existing economic meanings and source/destination Transfer equivalence.
+   Do not recreate classification, invent menu/filter order, classify legacy
+   records or acquire amount/status/action, app/MCP, provider/schema/RLS/Sync,
+   migration or production behavior. Require independent review of the actual
+   ready diff, then the complete local and immutable exact-ready-SHA CI gates
+   before any second worker is registered.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
