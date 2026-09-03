@@ -116,85 +116,75 @@ struct ProjectDirectoryPresentationTests {
 
         let presentationBytes = try OperationContractCodec.encode(presentation)
         let account = try Self.mutate(presentationBytes) { $0["accountId"] = "other-account" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, account) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, account) == .evidenceFingerprintMismatch)
         let segment = try Self.mutate(presentationBytes) { $0["segment"] = "archived" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, segment) == .segmentLifecycleMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, segment) == .segmentLifecycleMismatch)
         let source = try Self.mutate(presentationBytes) {
             $0["sourceDirectoryFingerprint"] = String(repeating: "3", count: 64)
         }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, source) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, source) == .evidenceFingerprintMismatch)
         let sourceCount = try Self.mutate(presentationBytes) { $0["sourceDirectoryRowCount"] = 3 }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, sourceCount) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, sourceCount) == .evidenceFingerprintMismatch)
         let visibleCount = try Self.mutate(presentationBytes) { $0["visibleRowCountBeforeFiltering"] = 4 }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, visibleCount) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, visibleCount) == .evidenceFingerprintMismatch)
         let completeness = try Self.mutate(presentationBytes) { $0["isCompleteForQuery"] = true }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, completeness) == .invalidCompleteness)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, completeness) == .invalidCompleteness)
         let quality = try Self.mutate(presentationBytes) { $0["quality"] = "partial" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, quality) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, quality) == .evidenceFingerprintMismatch)
         let version = try Self.mutate(presentationBytes) { $0["localDataVersion"] = "changed" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, version) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, version) == .evidenceFingerprintMismatch)
         let time = try Self.mutate(presentationBytes) {
             $0["asOf"] = ($0["asOf"] as! NSNumber).doubleValue + 1_000
         }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, time) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, time) == .evidenceFingerprintMismatch)
         let order = try Self.mutateRows(presentationBytes) { $0.swapAt(0, 1) }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, order) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, order) == .evidenceFingerprintMismatch)
         let projectId = try Self.mutateRow(presentationBytes, at: 0) { $0["projectId"] = "changed" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, projectId) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, projectId) == .evidenceFingerprintMismatch)
         let projectName = try Self.mutateRow(presentationBytes, at: 0) { $0["projectDisplayName"] = "Changed" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, projectName) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, projectName) == .evidenceFingerprintMismatch)
         let clientId = try Self.mutateRow(presentationBytes, at: 0) { $0["clientId"] = "changed-client" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, clientId) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, clientId) == .evidenceFingerprintMismatch)
         let clientName = try Self.mutateRow(presentationBytes, at: 0) { $0["clientDisplayName"] = "Changed" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, clientName) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, clientName) == .evidenceFingerprintMismatch)
         let clientLifecycle = try Self.mutateRow(presentationBytes, at: 0) { $0["clientLifecycle"] = "archived" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, clientLifecycle) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, clientLifecycle) == .evidenceFingerprintMismatch)
         let projectLifecycle = try Self.mutateRow(presentationBytes, at: 0) { $0["projectLifecycle"] = "archived" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, projectLifecycle) == .segmentLifecycleMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, projectLifecycle) == .segmentLifecycleMismatch)
         let fingerprint = try Self.mutate(presentationBytes) {
             $0["evidenceFingerprint"] = String(repeating: "a", count: 64)
         }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, fingerprint) == .evidenceFingerprintMismatch)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, fingerprint) == .evidenceFingerprintMismatch)
         let malformedFingerprint = try Self.mutate(presentationBytes) { $0["evidenceFingerprint"] = "bad" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, malformedFingerprint) == .invalidEvidenceFingerprint)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, malformedFingerprint) == .invalidEvidenceFingerprint)
         let missing = try Self.mutate(presentationBytes) { $0.removeValue(forKey: "rows") }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, missing) == .invalidEncodedPresentation)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, missing) == .invalidEncodedPresentation)
         let unknown = try Self.mutate(presentationBytes) { $0["route"] = "project" }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, unknown) == .invalidEncodedPresentation)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, unknown) == .invalidEncodedPresentation)
         let unknownRow = try Self.mutateRow(presentationBytes, at: 0) { $0["budget"] = 1 }
-        #expect(Self.decodeFailure(ProjectDirectoryPresentation.self, unknownRow) == .invalidEncodedRow)
+        #expect(Self.decodeFailure(ProjectDirectoryPresentationSnapshot.self, unknownRow) == .invalidEncodedRow)
 
         let selectionBytes = try OperationContractCodec.encode(selection)
         let selectionAccount = try Self.mutate(selectionBytes) { $0["accountId"] = "other-account" }
-        let reboundAccount = try OperationContractCodec.decode(
-            ProjectBrowsingSelection.self,
-            from: selectionAccount
-        )
-        #expect(Self.failure {
-            try reboundAccount.detailRequest(validating: presentation)
-        } == .selectionSnapshotMismatch)
+        #expect(Self.decodeFailure(ProjectBrowsingSelection.self, selectionAccount) == .selectionFingerprintMismatch)
         let selectionRow = try Self.mutate(selectionBytes) { root in
             var row = root["row"] as! [String: Any]
             row["clientDisplayName"] = "Different"
             root["row"] = row
         }
-        let reboundRow = try OperationContractCodec.decode(
-            ProjectBrowsingSelection.self,
-            from: selectionRow
-        )
-        #expect(Self.failure {
-            try reboundRow.detailRequest(validating: presentation)
-        } == .selectionSnapshotMismatch)
+        #expect(Self.decodeFailure(ProjectBrowsingSelection.self, selectionRow) == .selectionFingerprintMismatch)
         let selectionEvidence = try Self.mutate(selectionBytes) {
             $0["directoryEvidenceFingerprint"] = String(repeating: "b", count: 64)
         }
-        let reboundEvidence = try OperationContractCodec.decode(
-            ProjectBrowsingSelection.self,
-            from: selectionEvidence
-        )
-        #expect(Self.failure {
-            try reboundEvidence.detailRequest(validating: presentation)
-        } == .selectionSnapshotMismatch)
+        #expect(Self.decodeFailure(ProjectBrowsingSelection.self, selectionEvidence) == .selectionFingerprintMismatch)
+        let selectionFingerprint = try Self.mutate(selectionBytes) {
+            $0["selectionFingerprint"] = String(repeating: "c", count: 64)
+        }
+        #expect(Self.decodeFailure(ProjectBrowsingSelection.self, selectionFingerprint) == .selectionFingerprintMismatch)
+        let invalidSelectionFingerprint = try Self.mutate(selectionBytes) {
+            $0["selectionFingerprint"] = "bad"
+        }
+        #expect(Self.decodeFailure(ProjectBrowsingSelection.self, invalidSelectionFingerprint) == .invalidSelectionFingerprint)
         let selectionSegment = try Self.mutate(selectionBytes) { $0["segment"] = "archived" }
         #expect(Self.decodeFailure(ProjectBrowsingSelection.self, selectionSegment) == .segmentLifecycleMismatch)
         let selectionMissing = try Self.mutate(selectionBytes) { $0.removeValue(forKey: "row") }
@@ -225,6 +215,21 @@ struct ProjectDirectoryPresentationTests {
         #expect(selection.row.clientId == second.clientId)
         #expect(request.accountId == current.accountId)
         #expect(request.projectId == second.id)
+
+        let siblingSelection = try current.selection(projectId: first.id)
+        let siblingBytes = try OperationContractCodec.encode(siblingSelection)
+        let siblingRoot = try #require(
+            JSONSerialization.jsonObject(with: siblingBytes) as? [String: Any]
+        )
+        let reboundToExactSibling = try Self.mutate(
+            OperationContractCodec.encode(selection)
+        ) { root in
+            root["row"] = siblingRoot["row"]
+        }
+        #expect(
+            Self.decodeFailure(ProjectBrowsingSelection.self, reboundToExactSibling)
+                == .selectionFingerprintMismatch
+        )
         #expect(Self.failure {
             try current.selection(projectId: archived.id)
         } == .projectNotSelectable)
@@ -259,7 +264,7 @@ struct ProjectDirectoryPresentationTests {
             with: OperationContractCodec.encode(selection)
         ) as? [String: Any])
         #expect(Set(root.keys) == [
-            "accountId", "segment", "row", "directoryEvidenceFingerprint"
+            "accountId", "segment", "row", "directoryEvidenceFingerprint", "selectionFingerprint"
         ])
         let text = String(decoding: try OperationContractCodec.encode(selection), as: UTF8.self)
             .lowercased()
@@ -276,7 +281,7 @@ struct ProjectDirectoryPresentationTests {
     private static let t2 = Date(timeIntervalSince1970: 1_802_300_002)
 
     private struct RestartFixture: Codable, Equatable, Sendable {
-        let presentation: ProjectDirectoryPresentation
+        let presentation: ProjectDirectoryPresentationSnapshot
         let selection: ProjectBrowsingSelection
     }
 
@@ -345,7 +350,7 @@ struct ProjectDirectoryPresentationTests {
         version: String = "project-directory-v1",
         asOf: Date = t1,
         sourceHash: String = String(repeating: "1", count: 64)
-    ) throws -> ProjectDirectoryPresentation {
+    ) throws -> ProjectDirectoryPresentationSnapshot {
         try ProjectDirectoryPresentationProjector.project(
             snapshot(
                 rows,

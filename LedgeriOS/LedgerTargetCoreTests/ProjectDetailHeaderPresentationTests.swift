@@ -304,7 +304,7 @@ struct ProjectDetailHeaderPresentationTests {
     private static func directory(
         _ rows: [ProjectSummary],
         version: String = "directory"
-    ) throws -> ProjectDirectoryPresentation {
+    ) throws -> ProjectDirectoryPresentationSnapshot {
         let local = try ListLocalSnapshot(
             queryFingerprint: ListQueryFingerprint(validating: String(repeating: "1", count: 64)),
             rows: rows,

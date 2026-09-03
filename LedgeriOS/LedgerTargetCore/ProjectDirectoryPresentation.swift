@@ -8,7 +8,9 @@ public enum ProjectDirectoryPresentationFailure: Error, Equatable, Sendable {
     case invalidCompleteness
     case invalidAsOf
     case invalidEvidenceFingerprint
+    case invalidSelectionFingerprint
     case evidenceFingerprintMismatch
+    case selectionFingerprintMismatch
     case projectNotSelectable
     case selectionSnapshotMismatch
     case invalidEncodedRow
@@ -23,7 +25,9 @@ public enum ProjectDirectoryPresentationFailure: Error, Equatable, Sendable {
         case .invalidCompleteness: "project_directory_presentation_completeness_invalid"
         case .invalidAsOf: "project_directory_presentation_as_of_invalid"
         case .invalidEvidenceFingerprint: "project_directory_presentation_evidence_fingerprint_invalid"
+        case .invalidSelectionFingerprint: "project_directory_presentation_selection_fingerprint_invalid"
         case .evidenceFingerprintMismatch: "project_directory_presentation_evidence_fingerprint_mismatch"
+        case .selectionFingerprintMismatch: "project_directory_presentation_selection_fingerprint_mismatch"
         case .projectNotSelectable: "project_directory_presentation_project_not_selectable"
         case .selectionSnapshotMismatch: "project_directory_presentation_selection_snapshot_mismatch"
         case .invalidEncodedRow: "project_directory_presentation_row_encoding_invalid"
@@ -134,7 +138,36 @@ public struct ProjectDirectoryEvidenceFingerprint: Codable, Equatable, Hashable,
     }
 }
 
-public struct ProjectDirectoryPresentation: Codable, Equatable, Sendable {
+public struct ProjectBrowsingSelectionFingerprint: Codable, Equatable, Hashable, Sendable {
+    public let sha256: String
+
+    public init(validating sha256: String) throws {
+        let hexadecimal = CharacterSet(charactersIn: "0123456789abcdef")
+        guard sha256.utf8.count == 64,
+              sha256.unicodeScalars.allSatisfy(hexadecimal.contains) else {
+            throw ProjectDirectoryPresentationFailure.invalidSelectionFingerprint
+        }
+        self.sha256 = sha256
+    }
+
+    public init(from decoder: Decoder) throws {
+        do {
+            let container = try decoder.singleValueContainer()
+            try self.init(validating: container.decode(String.self))
+        } catch let failure as ProjectDirectoryPresentationFailure {
+            throw failure
+        } catch {
+            throw ProjectDirectoryPresentationFailure.invalidSelectionFingerprint
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(sha256)
+    }
+}
+
+public struct ProjectDirectoryPresentationSnapshot: Codable, Equatable, Sendable {
     public let accountId: AccountID
     public let segment: ProjectDirectorySegment
     public let rows: [ProjectDirectoryCoreRow]
@@ -253,7 +286,7 @@ public struct ProjectDirectoryPresentation: Codable, Equatable, Sendable {
         guard let row = rows.first(where: { $0.projectId == projectId }) else {
             throw ProjectDirectoryPresentationFailure.projectNotSelectable
         }
-        return ProjectBrowsingSelection(
+        return try ProjectBrowsingSelection(
             accountId: accountId,
             segment: segment,
             row: row,
@@ -375,8 +408,8 @@ public enum ProjectDirectoryPresentationProjector {
     public static func project(
         _ snapshot: ProjectListSnapshot,
         segment: ProjectDirectorySegment
-    ) throws -> ProjectDirectoryPresentation {
-        try ProjectDirectoryPresentation(snapshot: snapshot, segment: segment)
+    ) throws -> ProjectDirectoryPresentationSnapshot {
+        try ProjectDirectoryPresentationSnapshot(snapshot: snapshot, segment: segment)
     }
 }
 
@@ -385,21 +418,29 @@ public struct ProjectBrowsingSelection: Codable, Equatable, Sendable {
     public let segment: ProjectDirectorySegment
     public let row: ProjectDirectoryCoreRow
     public let directoryEvidenceFingerprint: ProjectDirectoryEvidenceFingerprint
+    public let selectionFingerprint: ProjectBrowsingSelectionFingerprint
 
     fileprivate init(
         accountId: AccountID,
         segment: ProjectDirectorySegment,
         row: ProjectDirectoryCoreRow,
         directoryEvidenceFingerprint: ProjectDirectoryEvidenceFingerprint
-    ) {
+    ) throws {
+        let selectionFingerprint = try Self.makeSelectionFingerprint(
+            accountId: accountId,
+            segment: segment,
+            row: row,
+            directoryEvidenceFingerprint: directoryEvidenceFingerprint
+        )
         self.accountId = accountId
         self.segment = segment
         self.row = row
         self.directoryEvidenceFingerprint = directoryEvidenceFingerprint
+        self.selectionFingerprint = selectionFingerprint
     }
 
     public func detailRequest(
-        validating currentSnapshot: ProjectDirectoryPresentation
+        validating currentSnapshot: ProjectDirectoryPresentationSnapshot
     ) throws -> ProjectCoreDetailsRequest {
         guard accountId == currentSnapshot.accountId,
               segment == currentSnapshot.segment,
@@ -428,12 +469,19 @@ public struct ProjectBrowsingSelection: Codable, Equatable, Sendable {
                 ProjectDirectoryEvidenceFingerprint.self,
                 forKey: .directoryEvidenceFingerprint
             )
-            self.init(
+            let encodedSelectionFingerprint = try container.decode(
+                ProjectBrowsingSelectionFingerprint.self,
+                forKey: .selectionFingerprint
+            )
+            try self.init(
                 accountId: accountId,
                 segment: segment,
                 row: row,
                 directoryEvidenceFingerprint: directoryEvidenceFingerprint
             )
+            guard selectionFingerprint == encodedSelectionFingerprint else {
+                throw ProjectDirectoryPresentationFailure.selectionFingerprintMismatch
+            }
         } catch let failure as ProjectDirectoryPresentationFailure {
             throw failure
         } catch {
@@ -441,11 +489,46 @@ public struct ProjectBrowsingSelection: Codable, Equatable, Sendable {
         }
     }
 
+    private static func makeSelectionFingerprint(
+        accountId: AccountID,
+        segment: ProjectDirectorySegment,
+        row: ProjectDirectoryCoreRow,
+        directoryEvidenceFingerprint: ProjectDirectoryEvidenceFingerprint
+    ) throws -> ProjectBrowsingSelectionFingerprint {
+        do {
+            let basis = SelectionFingerprintBasis(
+                contractVersion: "project-browsing-selection-v1",
+                accountId: accountId,
+                segment: segment,
+                row: row,
+                directoryEvidenceFingerprint: directoryEvidenceFingerprint
+            )
+            let bytes = try OperationContractCodec.encode(basis)
+            let digest = SHA256.hash(data: bytes)
+                .map { String(format: "%02x", $0) }
+                .joined()
+            return try ProjectBrowsingSelectionFingerprint(validating: digest)
+        } catch let failure as ProjectDirectoryPresentationFailure {
+            throw failure
+        } catch {
+            throw ProjectDirectoryPresentationFailure.invalidEncodedSelection
+        }
+    }
+
+    private struct SelectionFingerprintBasis: Codable {
+        let contractVersion: String
+        let accountId: AccountID
+        let segment: ProjectDirectorySegment
+        let row: ProjectDirectoryCoreRow
+        let directoryEvidenceFingerprint: ProjectDirectoryEvidenceFingerprint
+    }
+
     private enum CodingKeys: String, CodingKey, CaseIterable {
         case accountId
         case segment
         case row
         case directoryEvidenceFingerprint
+        case selectionFingerprint
     }
 }
 
