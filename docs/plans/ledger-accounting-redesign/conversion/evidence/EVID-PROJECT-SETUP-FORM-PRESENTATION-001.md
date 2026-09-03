@@ -150,6 +150,13 @@ Actions run `33729967356`: conversion state and traceability completed in 10
 seconds and the isolated target environment completed in 3 minutes 9 seconds.
 The slice and both claimed surfaces are verified.
 
+Promotion commit `5322adfca32ce5fd90f790f70ed584090ab5eee1`
+passed both jobs in immutable Actions run `33730394704` (traceability 9 seconds;
+isolated target 2 minutes 21 seconds). The worker worktree was clean at reviewed
+tip `37145ae3548e577469599ff2381c02258b01f130` and was removed. Branch
+`codex/supabase-slice-project-setup-form` and both worker candidate commits are
+retained for audit and recovery.
+
 ## Rejected Alternatives
 
 - Pinned-budget presentation was rejected even though its source surfaces were

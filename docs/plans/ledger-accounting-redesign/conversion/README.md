@@ -423,7 +423,10 @@ adds the exhaustive field matrix; primary and independent review return GO with
 no remaining P0-P3. All 237 tests, warnings-as-errors, repeatable generation and
 both staging builds pass locally. Exact integration checkpoint
 `147d22de801b15794d8ebb4786eaea86e4346940` passed both jobs in immutable
-Actions run `33729967356`; the slice and both surfaces are verified.
+Actions run `33729967356`; the slice and both surfaces are verified. Promotion
+commit `5322adfca32ce5fd90f790f70ed584090ab5eee1` passed immutable Actions run
+`33730394704`. The clean temporary worker worktree was removed; its branch and
+reviewed candidate history remain recoverable.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

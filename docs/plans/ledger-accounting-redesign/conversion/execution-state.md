@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 195
+State version: 196
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PSETUP-FORM-VERIFIED-PENDING-CLEANUP
+- Checkpoint: PSETUP-FORM-CLEANED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2818,6 +2818,13 @@ modifying the running Firebase application before hard cutover.
   `147d22de801b15794d8ebb4786eaea86e4346940` passed both jobs in immutable
   Actions run `33729967356`; the slice, both surfaces and `SUBAGENT-WORK-009`
   are now verified. Promotion CI and clean temporary-worktree removal remain.
+- Promotion commit `5322adfca32ce5fd90f790f70ed584090ab5eee1`
+  passed both jobs in immutable Actions run `33730394704` (traceability 9s;
+  isolated target 2m21s). Confirmed the worker worktree clean at corrected tip
+  `37145ae3548e577469599ff2381c02258b01f130`, removed
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_setup_form`, and
+  retained branch `codex/supabase-slice-project-setup-form` plus both candidate
+  commits. The canonical Supabase worktree is clean; Firebase remains untouched.
 
 ## Next Action
 
@@ -3011,21 +3018,18 @@ Continue without waiting on the two M1 evidence blockers:
    passes CI, retain its reviewed branch, record cleanup, and select the next
    coherent decision-independent slice through feature-specific product-
    authority preflight.
-   Treat ready `project-setup-form-presentation-contracts` and
-   `EVID-PROJECT-SETUP-FORM-PRESENTATION-001` as the next candidate boundary.
-   Preserve exact Account scope, verified active-Client upstream order,
-   configurable category presentation order, independent local readiness and
-   explicit existing-versus-preallocated-new Client identity. Permit zero
-   selected categories and preserve null/zero/positive allocation intent.
-   Revalidate the current preparation snapshot before deriving only the
-   verified `ProjectSetupDraft` and `CreateProjectCommand`; changed or sibling-
-   substituted Client/category evidence must fail before a command exists. Do
-   not add UI layout/copy/steps, defaults, category creation, media, a Project-
-   specific submission reducer, port invocation, authorization, persistence,
-   provider/schema/RLS/Sync, app/MCP, migration or production behavior. Pass the
-   complete local ready gate and independent actual-diff review, commit/push the
-   exact synchronized ready checkpoint, require both CI jobs, and only then
-   create an isolated worker branch/worktree with the two frozen leaf paths.
+   Treat verified `project-setup-form-presentation-contracts` and
+   `EVID-PROJECT-SETUP-FORM-PRESENTATION-001` as the sole provider-free form
+   preparation boundary. Preserve exact Account scope, verified active-Client
+   upstream order, category presentation order, independent readiness,
+   explicit existing/preallocated-new Client identity, zero-category validity,
+   exact nullable allocations, ProjectDescriptionReplacement normalization and
+   current-evidence validation before the verified CreateProjectCommand exists.
+   Do not duplicate or extend it in UI, providers or later operation slices.
+   Select the next coherent decision-independent slice through feature-specific
+   product-authority preflight; create a temporary worker worktree only when a
+   separate concurrent writer is actually assigned, and remove it after the
+   reviewed promotion checkpoint passes immutable CI.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,
