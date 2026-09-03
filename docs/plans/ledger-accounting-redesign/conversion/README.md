@@ -309,8 +309,12 @@ production. Complete local and immutable exact-ready-SHA CI gates remain
 required before delegation. The complete local ready gate now passes with all
 205 target tests in 47 suites, conversion/capability/query/residual controls,
 M0, target isolation/generated contracts, repeatable project generation, both
-staging builds and clean diff formatting; immutable exact-ready-SHA CI remains
-pending; `EVID-CLIENT-CORE-DETAILS-001`.
+staging builds and clean diff formatting. Exact ready commit `e925a7a0` passed
+immutable Actions run `33700564469`: traceability in 7 seconds and isolated
+target verification in 2 minutes 22 seconds. Registered isolated assignment
+`SUBAGENT-WORK-005` owns only the two Client core-details paths and requires
+primary every-line plus independent adversarial review before integration;
+`EVID-CLIENT-CORE-DETAILS-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

@@ -245,6 +245,40 @@
         "exactIntegrationCommitCi": "passed: d460b02105cbb8446d69a09b4b246e0600d50fef in immutable Actions run 33698741756"
       },
       "integrationDisposition": "accepted and verified at d460b02105cbb8446d69a09b4b246e0600d50fef after corrected every-line primary review, independent adversarial re-review, complete local gates and immutable Actions run 33698741756; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-005",
+      "sliceId": "client-core-details-read-contracts",
+      "status": "active",
+      "baseCommit": "e925a7a07a0eccf5e1563c4b4a4abee58238e7db",
+      "readyCiRun": 33700564469,
+      "branch": "codex/supabase-slice-client-core-details",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_client_core_details",
+      "workerAgent": "/root/client_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ClientCoreDetailsDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested early subagent quality-control sampling. Pre-freeze review already corrected Client-port authority, stale Project wording, legitimate later-value handling and exact negative-test obligations, so both reviews remain mandatory."
+      },
+      "handoff": null,
+      "integrationDisposition": "pending untrusted worker candidate, every-line primary review, independent adversarial review, complete local gates and immutable exact-integration-commit CI"
     }
   ],
   "preflightFindings": [

@@ -6,8 +6,8 @@
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-D7F3D08FA568`, `TEST-F304037D32B6`
 - Slice dossier: `conversion/implementation-slices/client-core-details-read-contracts.json`
-- Verification state: complete local ready gate passed; implementation remains
-  withheld until immutable CI passes on the exact ready commit
+- Verification state: ready/delegated; complete local and immutable exact-ready-
+  commit gates passed, while implementation verification remains pending
 - Ready scaffold hashes:
   - `ClientCoreDetailsData.swift`: `efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86`
   - `ClientCoreDetailsDataTests.swift`: `b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f`
@@ -73,6 +73,20 @@ O-025 and A-003/A-004/A-007/A-015/A-016 remain untouched.
 - macOS and generic iOS Simulator staging builds and diff formatting pass.
 - The Firebase checkout remains clean on `firebase`; no provider or production
   action occurred.
+
+## Immutable Ready Commit and Assignment
+
+Exact ready commit `e925a7a07a0eccf5e1563c4b4a4abee58238e7db`
+passed Actions run `33700564469`: conversion traceability in 7 seconds and the
+isolated target job in 2 minutes 22 seconds, including all tests, both staging
+builds and clean tracked artifacts.
+
+`SUBAGENT-WORK-005` is pinned to that commit on
+`codex/supabase-slice-client-core-details` in the isolated
+`/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_client_core_details`
+worktree. The worker owns only the two registered Swift paths. The candidate is
+untrusted until primary every-line review, independent adversarial review,
+complete local gates and exact integration-commit CI all pass.
 
 ## Permanent Limits
 

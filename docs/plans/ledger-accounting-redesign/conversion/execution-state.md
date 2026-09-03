@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 168
+State version: 169
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CORE-DETAILS-READY-GATE
+- Checkpoint: CLIENT-CORE-DETAILS-DELEGATED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2489,8 +2489,18 @@ modifying the running Firebase application before hard cutover.
   only paths contain comments. The complete local ready gate passes all 205
   target tests in 47 suites, conversion/capability/query/residual controls, M0,
   target isolation/generated contracts, repeatable project generation, both
-  staging builds and clean diff formatting. Immutable CI on the exact ready
-  commit remains the final prerequisite before delegation. No provider,
+  staging builds and clean diff formatting. At that ready-gate checkpoint,
+  immutable CI on the exact ready commit remained the final prerequisite before
+  delegation. No provider, Firebase or production action occurred.
+- Exact ready commit `e925a7a07a0eccf5e1563c4b4a4abee58238e7db`
+  passed immutable Actions run `33700564469`: traceability in 7 seconds and
+  isolated target verification in 2 minutes 22 seconds. Created isolated branch
+  `codex/supabase-slice-client-core-details` and worktree
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_client_core_details`, then
+  registered active `SUBAGENT-WORK-005` with ownership of exactly the two Client
+  core-details paths. Primary every-line and independent adversarial review,
+  complete local integration gates and exact integration-commit CI remain
+  mandatory; the candidate is not yet accepted or verified. No provider,
   Firebase or production action occurred.
 
 ## Next Action
@@ -2621,10 +2631,11 @@ Continue without waiting on the two M1 evidence blockers:
    migration or production behavior. Rescout and freeze the next decision-
    independent boundary before any writer starts. Treat ready
    `client-core-details-read-contracts` and
-   `EVID-CLIENT-CORE-DETAILS-001` as that next frozen boundary: first pass the
-   complete local ready gate and immutable CI on the exact comment-only commit,
-   then assign only its two paths to one isolated worker with primary every-line
-   and independent adversarial review because the slice composes the verified
+   `EVID-CLIENT-CORE-DETAILS-001` as that next frozen boundary. Exact ready
+   commit `e925a7a0` and run `33700564469` satisfy the ready gate; supervise
+   active `SUBAGENT-WORK-005` without changing its base or scope, then perform
+   primary every-line and independent adversarial review because the slice
+   composes the verified
    ClientSummary, locally observed Client revision and shared offline-readiness
    semantics. Preserve valid Client display text byte-for-byte, accept
    separately valid later name/time/lifecycle/revision snapshots, and do not
