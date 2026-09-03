@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T00:45:58.735Z",
+  "generatedFromManifestSync": "2026-09-03T01:08:56.822Z",
   "totals": {
     "slices": 48,
     "claimedTargetSurfaces": 117,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 100
+    "implementationAdvancedTargetSurfaces": 102
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 46,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -81,7 +81,7 @@
       "sliceId": "client-core-details-read-contracts",
       "title": "Read one Client's provider-free core record and local revision with explicit offline truth",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Client Core Details Read Contracts",
       "surfaceIds": [
         "SWIFT-D7F3D08FA568",

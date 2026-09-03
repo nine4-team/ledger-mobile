@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 169
+State version: 170
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-CORE-DETAILS-DELEGATED
+- Checkpoint: CLIENT-CORE-DETAILS-INTEGRATED-PENDING-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2502,6 +2502,24 @@ modifying the running Firebase application before hard cutover.
   complete local integration gates and exact integration-commit CI remain
   mandatory; the candidate is not yet accepted or verified. No provider,
   Firebase or production action occurred.
+- Worker candidate `549ecfa6896533fa34b9d8f81efb8e57559e6312`
+  exactly descended from the ready commit and changed only the two registered
+  Client paths. Primary every-line review found no implementation defect and
+  independently reran 6 focused/all 211 target tests. Independent adversarial
+  review found one P3 false-positive assertion: a catch-all helper could treat
+  an unrelated error as success for valid waiting states. Test-only correction
+  `cd433de292a917eaef3ee9db81ef89b52bc88c1e` now directly constructs and
+  asserts `notRequested`/`loading`/`blocked` and requires exact
+  `invalidWaitingState` for `ready`/`partial`/`stale`. Primary and independent
+  re-review report no remaining P0-P3 issue. Integrated as
+  `b96377d76df634210dfee4367deb34dbbfdf658d`/
+  `de85667ce55fbc30b5ee576b2ba7c087d588ea53`. Central regeneration and the
+  complete local integration gate pass: conversion/capability/query/residual/M0
+  controls, target isolation/generated contracts, 6 focused and all 211 tests
+  in 48 suites, repeatable project generation, both staging builds, clean
+  formatting and untouched Firebase source checkout. M1/M2 remain at the exact
+  expected 2/167 blockers. Exact integration-commit CI remains pending. No
+  provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2632,10 +2650,11 @@ Continue without waiting on the two M1 evidence blockers:
    independent boundary before any writer starts. Treat ready
    `client-core-details-read-contracts` and
    `EVID-CLIENT-CORE-DETAILS-001` as that next frozen boundary. Exact ready
-   commit `e925a7a0` and run `33700564469` satisfy the ready gate; supervise
-   active `SUBAGENT-WORK-005` without changing its base or scope, then perform
-   primary every-line and independent adversarial review because the slice
-   composes the verified
+   commit `e925a7a0` and run `33700564469` satisfy the ready gate. The
+   `SUBAGENT-WORK-005` candidate is integrated after corrected primary and
+   independent review. Central regeneration and the full local gate pass;
+   commit the integration checkpoint, then require exact-commit CI before any
+   verification promotion. Preserve the verified
    ClientSummary, locally observed Client revision and shared offline-readiness
    semantics. Preserve valid Client display text byte-for-byte, accept
    separately valid later name/time/lifecycle/revision snapshots, and do not

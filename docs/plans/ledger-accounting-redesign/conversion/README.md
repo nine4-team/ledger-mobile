@@ -315,6 +315,15 @@ target verification in 2 minutes 22 seconds. Registered isolated assignment
 `SUBAGENT-WORK-005` owns only the two Client core-details paths and requires
 primary every-line plus independent adversarial review before integration;
 `EVID-CLIENT-CORE-DETAILS-001`.
+Candidate `549ecfa6` changed only those paths. Primary every-line review found
+no implementation defect, while independent review caught a P3 false-positive
+waiting-state test despite the green suite. Correction `cd433de2` now requires
+direct success for valid states and exact failures for invalid states; primary
+and independent re-review found no remaining P0-P3 issue. Integrated as
+`b96377d7`/`de85667c`. The complete local integration gate passes with 6 focused
+and all 211 tests in 48 suites, conversion/M0 controls, target isolation and
+generated contracts, repeatable project generation, both staging builds and
+clean artifacts. Exact integration-checkpoint CI remains pending.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

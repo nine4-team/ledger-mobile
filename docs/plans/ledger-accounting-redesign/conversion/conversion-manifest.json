@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T00:45:58.735Z",
+    "lastSynchronizedAt": "2026-09-03T01:08:56.822Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -30352,12 +30352,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift"
         }
       ],
-      "observedSourceHash": "efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86",
-      "acknowledgedSourceHash": "efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86",
+      "observedSourceHash": "32a0d3f76ec6a62194311c9e08fd06902aea163b05ea8fdc2f0597e13f49c1b0",
+      "acknowledgedSourceHash": "32a0d3f76ec6a62194311c9e08fd06902aea163b05ea8fdc2f0597e13f49c1b0",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains the comment-only ready-gate scaffold for a provider-free single-Client core-record read contract.",
+      "currentBehavior": "Implements the provider-free single-Client core-record request, validated local snapshot, explicit update/failure states and narrow exact-request query port.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Core Details Read Contracts",
@@ -30392,14 +30392,14 @@
           "Synthetic fixtures prove exact core/revision/readiness/restart/refusal/port behavior without a provider, hosted resource or production input"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-CORE-DETAILS-001"
       ],
-      "notes": "Ready scaffold only. Exact Account/Client identity, verified ClientSummary, locally observed revision, explicit offline truth and one narrow port; no workspace/CRM, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented and locally reviewed. Exact Account/Client identity, verified ClientSummary, locally observed revision, explicit offline truth and one narrow port; no workspace/CRM, mutation, authorization, persistence, provider/schema/RLS/Sync, app/MCP, migration or production behavior. Exact integration-commit CI remains pending.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -38715,12 +38715,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
         }
       ],
-      "observedSourceHash": "b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f",
-      "acknowledgedSourceHash": "b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f",
+      "observedSourceHash": "755426139af7a27acf176d83a3a752cd565cd0cdc452c2f36fac1f9374da35cd",
+      "acknowledgedSourceHash": "755426139af7a27acf176d83a3a752cd565cd0cdc452c2f36fac1f9374da35cd",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains the comment-only ready-gate test scaffold for the provider-free single-Client core-record read contract.",
+      "currentBehavior": "Executes six provider-free tests for exact Client identity/core/revision, every local truth state, exhaustive negative evidence, explicit failure semantics, port validation/cancellation and exact encoded exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Core Details Read Contracts",
@@ -38752,14 +38752,14 @@
           "Tests prove only the provider-free single-Client core-record contract and explicitly exclude workspace/CRM, mutation, authorization, provider, migration and production claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001",
         "EVID-CLIENT-CORE-DETAILS-001"
       ],
-      "notes": "Ready scaffold only. Planned tests cover exact identity/core/audit/revision, all local truth, canonical restart, bounded refusal/diagnostics, port-side validation, failure/cancellation and encoded exclusions; physical persistence, authorization, provider, migration and production remain unproved.",
+      "notes": "Six tests pass after primary every-line and independent adversarial review corrected one false-positive waiting-state assertion. They cover exact identity/core/audit/revision, all local truth, canonical restart, bounded refusal/diagnostics, port-side validation, failure/cancellation and encoded exclusions; physical persistence, authorization, provider, migration and production remain unproved. Exact integration-commit CI remains pending.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

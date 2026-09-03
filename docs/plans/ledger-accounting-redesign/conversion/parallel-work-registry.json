@@ -249,7 +249,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-005",
       "sliceId": "client-core-details-read-contracts",
-      "status": "active",
+      "status": "integrated_pending_ci",
       "baseCommit": "e925a7a07a0eccf5e1563c4b4a4abee58238e7db",
       "readyCiRun": 33700564469,
       "branch": "codex/supabase-slice-client-core-details",
@@ -277,8 +277,38 @@
         "exactIntegrationCommitCi": true,
         "reason": "The user explicitly requested early subagent quality-control sampling. Pre-freeze review already corrected Client-port authority, stale Project wording, legitimate later-value handling and exact negative-test obligations, so both reviews remain mandatory."
       },
-      "handoff": null,
-      "integrationDisposition": "pending untrusted worker candidate, every-line primary review, independent adversarial review, complete local gates and immutable exact-integration-commit CI"
+      "handoff": {
+        "candidateCommit": "cd433de292a917eaef3ee9db81ef89b52bc88c1e",
+        "candidateCommits": [
+          "549ecfa6896533fa34b9d8f81efb8e57559e6312",
+          "cd433de292a917eaef3ee9db81ef89b52bc88c1e"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ClientCoreDetailsData.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ClientCoreDetailsDataTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 211 tests in 48 suites by worker and primary agent",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Provider-free structured restart does not prove physical persistence, current authorization, authenticated PowerSync visibility, app/MCP integration, migration or production behavior.",
+          "Locally observed revision is conflict-precondition evidence only and is not current authoritative server revision under incomplete, partial or stale evidence."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_with_no_implementation_finding",
+        "independentReviewer": "/root/project_budget_segment_review",
+        "independentAdversarialReview": "passed_after_one_corrected_p3",
+        "findings": [
+          "Independent review rejected the first candidate because a catch-all-to-nil test helper could falsely count unrelated errors as successful valid waiting states.",
+          "Correction cd433de292a917eaef3ee9db81ef89b52bc88c1e directly constructs and asserts notRequested/loading/blocked while requiring exact invalidWaitingState for ready/partial/stale."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite after correction",
+        "completeLocalGate": "passed: conversion sync/check/report, capability/query/residual/M0 controls, target isolation/generated app-MCP contracts, 6 focused and all 211 tests in 48 suites, repeatable project generation, macOS and iOS staging builds, clean formatting and untouched Firebase source checkout",
+        "exactIntegrationCommitCi": "pending"
+      },
+      "integrationDisposition": "candidate integrated as b96377d76df634210dfee4367deb34dbbfdf658d/de85667ce55fbc30b5ee576b2ba7c087d588ea53 after corrected every-line primary and independent adversarial review; complete local gates pass and immutable exact-integration-checkpoint CI remains pending"
     }
   ],
   "preflightFindings": [

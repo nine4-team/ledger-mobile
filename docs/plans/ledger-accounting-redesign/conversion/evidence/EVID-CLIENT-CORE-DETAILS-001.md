@@ -6,8 +6,8 @@
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `SWIFT-D7F3D08FA568`, `TEST-F304037D32B6`
 - Slice dossier: `conversion/implementation-slices/client-core-details-read-contracts.json`
-- Verification state: ready/delegated; complete local and immutable exact-ready-
-  commit gates passed, while implementation verification remains pending
+- Verification state: implementation integrated/reviewed and complete local
+  integration gate passed; exact integration-commit CI remains pending
 - Ready scaffold hashes:
   - `ClientCoreDetailsData.swift`: `efc9dd853b0905edaa24815e430c160042dda7e5acd77457e42c7af50d420c86`
   - `ClientCoreDetailsDataTests.swift`: `b62320f3c9a27c94c8a9a64927ac4d3f8cb8cb27c74967e46055449eb1647b5f`
@@ -87,6 +87,44 @@ builds and clean tracked artifacts.
 worktree. The worker owns only the two registered Swift paths. The candidate is
 untrusted until primary every-line review, independent adversarial review,
 complete local gates and exact integration-commit CI all pass.
+
+## Candidate and Enhanced Review
+
+Worker candidate `549ecfa6896533fa34b9d8f81efb8e57559e6312`
+was an exact child of the ready commit and changed only the two registered paths.
+Primary every-line review found no implementation defect. Independent
+adversarial review nevertheless rejected one P3 false-positive test: a helper
+treated unrelated errors as success for nominally valid waiting states.
+
+Correction `cd433de292a917eaef3ee9db81ef89b52bc88c1e`
+replaced that helper path with direct throwing construction and exact state
+assertions for `notRequested`/`loading`/`blocked`, while retaining exact
+`invalidWaitingState` assertions for `ready`/`partial`/`stale`. Primary and
+independent re-review report no remaining P0-P3 issue. Worker, primary and
+reviewer focused runs pass all six tests; worker and primary full runs pass all
+211 tests in 48 suites.
+
+The candidate was integrated as
+`b96377d76df634210dfee4367deb34dbbfdf658d` and correction
+`de85667ce55fbc30b5ee576b2ba7c087d588ea53`.
+
+## Complete Local Integration Gate
+
+- Conversion sync/check/report, capability, query, residual and M0 controls
+  pass at `801` recorded/`786` discovered, zero errors, the three established
+  retired warnings, `372` mapped/`167` residual/`44` blockers.
+- Target environment and generated-contract checks pass; all 6 focused and 211
+  target tests in 48 suites pass.
+- Xcode project and staging-scheme hashes remain byte-identical at
+  `0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53`
+  and `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`.
+- macOS and generic iOS Simulator staging builds, diff formatting and tracked
+  artifact checks pass.
+- M1/M2 remain honestly blocked at `2`/`167` with zero structural errors. The
+  Firebase checkout remains clean on `firebase`.
+
+Immutable CI on the exact integration checkpoint remains the final prerequisite
+for verification.
 
 ## Permanent Limits
 
