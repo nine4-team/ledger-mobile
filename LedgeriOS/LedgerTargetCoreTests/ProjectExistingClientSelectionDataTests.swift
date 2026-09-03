@@ -327,20 +327,34 @@ struct ProjectExistingClientSelectionDataTests {
         let stale = try Self.snapshot(
             [activeA], quality: .stale, complete: false, version: "stale", asOf: Self.t3
         )
+        let nonExhaustiveEmpty = try Self.snapshot(
+            [], visibleCount: 1, version: "non-exhaustive-empty", asOf: Self.t4
+        )
+        let nonExhaustiveArchived = try Self.snapshot(
+            [Self.client("archived", lifecycle: .archived)],
+            visibleCount: 2,
+            version: "non-exhaustive-archived",
+            asOf: Self.t5
+        )
         let fixture = RestartFixture(
-            snapshots: [baseline, readyNoActive, readyIncomplete, partial, stale]
+            snapshots: [
+                baseline, readyNoActive, readyIncomplete, partial, stale,
+                nonExhaustiveEmpty, nonExhaustiveArchived
+            ]
         )
         let bytes = try OperationContractCodec.encode(fixture)
         let restored = try OperationContractCodec.decode(RestartFixture.self, from: bytes)
         #expect(restored == fixture)
         #expect(try OperationContractCodec.encode(restored) == bytes)
         #expect(restored.snapshots.map(\.availability) == [
-            .available, .noActiveClient, .directoryIncomplete, .available, .available
+            .available, .noActiveClient, .directoryIncomplete, .available, .available,
+            .directoryIncomplete, .directoryIncomplete
         ])
         #expect(restored.snapshots.map(\.readiness) == [
-            .ready, .ready, .ready, .partial, .stale
+            .ready, .ready, .ready, .partial, .stale, .ready, .ready
         ])
-        #expect(restored.snapshots.map(\.sourceDirectoryRowCount) == [2, 0, 0, 1, 1])
+        #expect(restored.snapshots.map(\.sourceDirectoryRowCount) == [2, 0, 0, 1, 1, 0, 1])
+        #expect(restored.snapshots.map(\.visibleRowCountBeforeFiltering) == [2, 0, 0, 1, 1, 1, 2])
     }
 
     @Test("A test-only directory consumer propagates scope failure, upstream failure, and cancellation")
