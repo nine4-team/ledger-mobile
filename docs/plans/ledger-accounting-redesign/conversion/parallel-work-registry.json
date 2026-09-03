@@ -622,9 +622,11 @@
     {
       "assignmentId": "SUBAGENT-WORK-010",
       "sliceId": "space-checklist-editing-presentation-contracts",
-      "status": "assigned_pending_control_ci",
+      "status": "active",
       "baseCommit": "5c2a185be15189bc8aa1606f838eee5a362780fc",
       "readyCiRun": 33732917130,
+      "assignmentControlCommit": "cc6faddf707694e0c4a7af00a770d8a2672b8151",
+      "assignmentControlCiRun": 33733387021,
       "branch": "codex/supabase-slice-space-checklist-edit",
       "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_checklist_edit",
       "workerAgent": "/root/space_checklist_edit_worker",
@@ -743,7 +745,7 @@
         "Typed scope is limited to checklist add/remove/rename/clear and item add/remove/edit/check/reorder within its owning checklist. Raw intermediate text, exact stable IDs, represented-scope collisions, order-token preservation and unchanged exact submission are frozen.",
         "Final corrected-diff review found no remaining P0-P3 after one stale verification-state sentence was removed."
       ],
-      "disposition": "Prepared exactly two comment-only target scaffolds plus complete ready dossier/evidence/continuity controls. Full local gate and exact ready commit 5c2a185be15189bc8aa1606f838eee5a362780fc Actions run 33732917130 pass. SUBAGENT-WORK-010 may not start until its assignment-control commit passes immutable CI."
+      "disposition": "Prepared exactly two comment-only target scaffolds plus complete ready dossier/evidence/continuity controls. Full local gate and exact ready commit 5c2a185be15189bc8aa1606f838eee5a362780fc Actions run 33732917130 pass. SUBAGENT-WORK-010 assignment-control commit cc6faddf707694e0c4a7af00a770d8a2672b8151 passed immutable Actions run 33733387021; the bounded worker may start."
     }
   ]
 }

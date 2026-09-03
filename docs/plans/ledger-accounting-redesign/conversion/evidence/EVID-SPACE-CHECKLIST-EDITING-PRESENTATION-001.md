@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-A9BCA70B7F9C`, `TEST-94F32F5E9219`
 - Slice dossier: `conversion/implementation-slices/space-checklist-editing-presentation-contracts.json`
-- Verification state: independently reviewed ready commit passed immutable CI; assignment-control CI pending before implementation
+- Verification state: independently reviewed ready and assignment-control commits passed immutable CI; bounded implementation active
 
 ## Selection and Product Authority
 
@@ -119,7 +119,11 @@ Final independent corrected-diff re-review found no remaining P0-P3. Exact
 ready commit `5c2a185be15189bc8aa1606f838eee5a362780fc` passed both jobs in
 immutable Actions run `33732917130` (traceability 8 seconds; isolated target 3
 minutes 12 seconds). The temporary worker branch/worktree starts at that exact
-commit; assignment-control CI remains before a worker may implement the leaves.
+commit. Assignment-control commit
+`cc6faddf707694e0c4a7af00a770d8a2672b8151` passed both jobs in immutable
+Actions run `33733387021` (traceability 10 seconds; isolated target 3 minutes).
+The bounded worker may implement only the two frozen leaves; primary every-line,
+independent adversarial and complete integration verification remain required.
 
 ## Permanent Exclusions
 

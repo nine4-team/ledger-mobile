@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 198
+State version: 199
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCHECKLIST-EDIT-ASSIGNED-PENDING-CI
+- Checkpoint: SCHECKLIST-EDIT-WORKER-ACTIVE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2849,7 +2849,12 @@ modifying the running Firebase application before hard cutover.
   branch `codex/supabase-slice-space-checklist-edit` and temporary worktree
   `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_checklist_edit` at
   that exact commit. `SUBAGENT-WORK-010` grants only the two frozen Swift leaf
-  paths; assignment-control CI remains required before the worker starts.
+  paths. Assignment-control commit
+  `cc6faddf707694e0c4a7af00a770d8a2672b8151` passed both jobs in immutable
+  Actions run `33733387021` (traceability 10s; isolated target 3m0s).
+  `/root/space_checklist_edit_worker` is active in the temporary worktree.
+  Primary every-line review, independent adversarial review, the complete
+  integration gate and exact integration-SHA CI remain required.
 
 ## Next Action
 
@@ -3053,18 +3058,19 @@ Continue without waiting on the two M1 evidence blockers:
    Do not duplicate or extend it in UI, providers or later operation slices.
    Treat ready `space-checklist-editing-presentation-contracts` and
    `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001` as the next frozen boundary.
-   The corrected ready package and exact ready-SHA CI pass. Commit and push the
-   `SUBAGENT-WORK-010` assignment-control checkpoint, then require immutable CI
-   on that exact control SHA before starting the registered worker. The worker may
+   The corrected ready package, exact ready-SHA CI and assignment-control CI
+   pass. The registered worker may
    project only ready-complete current or retryable-ready-complete cached Space
    evidence, retain raw blank intermediate text, preserve exact stable nested
    IDs/order tokens, edit checklist fields plus items only within their owning
    checklist, and derive the verified complete-replacement command after
    semantic-base validation that tolerates harmless refresh metadata. It must
    not add checklist reorder, cross-checklist movement, archived-action policy
-   or any excluded provider/app behavior. Create a temporary worker worktree
-   only when the separate writer is actually assigned; register exact paths and
-   immutable base before dispatch, then remove it after reviewed promotion CI.
+   or any excluded provider/app behavior. On handoff, inspect base-to-tip scope,
+   review every changed line, obtain independent adversarial review, rerun the
+   complete local gate, integrate only a corrected exact commit, require exact-
+   integration-SHA CI, promote statuses/evidence, and remove the clean temporary
+   worktree only after promotion CI.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

@@ -443,8 +443,11 @@ item editing, and lets harmless refresh metadata advance without hiding a real
 revision/hierarchy conflict. Final corrected-diff review found no remaining
 P0-P3. Exact ready commit `5c2a185be15189bc8aa1606f838eee5a362780fc`
 passed immutable Actions run `33732917130`. A temporary two-path worker
-worktree is registered; assignment-control CI remains required before the
-worker starts. `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
+worktree is registered. Assignment-control commit
+`cc6faddf707694e0c4a7af00a770d8a2672b8151` passed immutable Actions run
+`33733387021`; the bounded two-path worker is active. Primary every-line and
+independent adversarial review remain required before integration.
+`EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
