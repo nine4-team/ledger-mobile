@@ -437,7 +437,7 @@
           "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
         ],
         "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewers",
-      "fullTests": "passed: 224 tests in 50 suites by worker and primary integration gate",
+        "fullTests": "passed: 224 tests in 50 suites by worker and primary integration gate",
         "requirementsAccountedFor": true,
         "forbiddenFilesConfirmedUntouched": true,
         "risks": [
@@ -458,9 +458,15 @@
           "The dossier and evidence now distinguish raw parser behavior from bounded test-consumer rejection."
         ],
         "focusedRetest": "passed: worker, primary agent and final independent reviewer passed 6 tests in 1 suite",
-    "completeLocalGate": "passed: 6 focused/all 224 tests in 50 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
-    "exactIntegrationCommit": "fcff5b854b16d289dfcf159b31fcd45a973c7402",
-    "exactIntegrationCommitCi": "passed: Actions run 33717396519; conversion traceability 14s; isolated target 3m8s"
+        "completeLocalGate": "passed: 6 focused/all 224 tests in 50 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommit": "fcff5b854b16d289dfcf159b31fcd45a973c7402",
+        "exactIntegrationCommitCi": "passed: Actions run 33717396519; conversion traceability 14s; isolated target 3m8s"
+      },
+      "cleanup": {
+        "promotionCommit": "5960bd9d9d3a25050b027e727a0021bb8477b878",
+        "promotionCi": "passed: Actions run 33717813102; conversion traceability 10s; isolated target 3m30s",
+        "worktreeRemoved": true,
+        "branchRetained": true
       }
     }
   ],

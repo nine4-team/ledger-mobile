@@ -373,6 +373,25 @@ all 224 tests, generated contracts, repeatable project generation, both staging
 builds and clean artifacts. The slice is verified.
 `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001`.
 
+The next coherent ready boundary is
+`project-browsing-presentation-contracts`: Project directory core rows,
+content-bound selection, exact `ProjectCoreDetailsRequest` derivation and local
+detail-header truth across four leaf paths. Independent preflight rejected
+noncanonical target sorting, fixed tabs, full-card naming and direct route
+construction, then required Project-only lifecycle filtering, active-Project/
+archived-Client visibility, ready-complete-source-exhaustive absence and a
+fingerprint over all source/projected evidence. Actual-diff review then caught
+and corrected an unrelated D-023 citation, missing exact Client-lifecycle
+authority and stale-selection request-derivation ambiguity. The corrected
+boundary preserves exact upstream order, validates the current presentation
+snapshot before deriving a detail request, and adds no query port, full Project
+card, workspace, route, mutation or provider behavior. Four comment scaffolds
+contain no executable implementation pending exact ready-gate CI; correction
+re-review returned GO with no remaining P0-P3 issue. Its complete local gate
+passes with all 224 existing tests, deterministic target generation and both
+staging builds.
+`EVID-PROJECT-BROWSING-PRESENTATION-001`.
+
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
 is never the authority for what has been covered or verified.

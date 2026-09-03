@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T05:10:41.493Z",
+  "generatedFromManifestSync": "2026-09-03T05:44:10.543Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 805,
-    "targetRelevantSurfaces": 543,
+    "surfaces": 809,
+    "targetRelevantSurfaces": 547,
     "batches": 18,
-    "productScopeSurfaces": 651,
+    "productScopeSurfaces": 655,
     "technicalControlSurfaces": 154
   },
   "canonicalTargetCoverage": [
@@ -22,8 +22,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 521,
-      "targetRelevantSurfaceCount": 369
+      "surfaceCount": 525,
+      "targetRelevantSurfaceCount": 373
     },
     {
       "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -70,16 +70,16 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 426,
-      "targetRelevantSurfaceCount": 310
+      "surfaceCount": 430,
+      "targetRelevantSurfaceCount": 314
     },
     {
       "path": "docs/specs/projects.md",
       "batchIds": [
         "M0-PROJECT-CLIENT-REFERENCE-001"
       ],
-      "surfaceCount": 92,
-      "targetRelevantSurfaceCount": 90
+      "surfaceCount": 96,
+      "targetRelevantSurfaceCount": 94
     },
     {
       "path": "docs/specs/spaces.md",
@@ -87,8 +87,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 139,
-      "targetRelevantSurfaceCount": 131
+      "surfaceCount": 143,
+      "targetRelevantSurfaceCount": 135
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -1346,8 +1346,8 @@
       "title": "Projects, Clients, settings, and reference-data boundary dossier surfaces",
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",
-      "surfaceCount": 92,
-      "targetRelevantSurfaceCount": 90,
+      "surfaceCount": 96,
+      "targetRelevantSurfaceCount": 94,
       "authorities": [
         {
           "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
@@ -1442,6 +1442,7 @@
         "SWIFT-58A14BD25578",
         "SWIFT-58AED31D6D0B",
         "SWIFT-5B59D74F6B13",
+        "SWIFT-6075C2D24BAD",
         "SWIFT-7500FDB4FDB6",
         "SWIFT-77F812A8F463",
         "SWIFT-797909434B82",
@@ -1474,6 +1475,8 @@
         "SWIFT-E1A771F6A409",
         "SWIFT-E23DAF7A18FA",
         "SWIFT-E60A204F472E",
+        "SWIFT-FC9E3C33FECA",
+        "TEST-02013D984E64",
         "TEST-0911D1BF8A05",
         "TEST-22878D176671",
         "TEST-3CE7B387E9B7",
@@ -1482,6 +1485,7 @@
         "TEST-61925915E20E",
         "TEST-756CB57BD6CA",
         "TEST-8B902DC97729",
+        "TEST-8CB70D14D5BC",
         "TEST-96AAFA22224B",
         "TEST-99B322EB971A",
         "TEST-A73A49564E8C",

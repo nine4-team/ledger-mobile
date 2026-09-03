@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T05:10:41.493Z",
+  "generatedFromManifestSync": "2026-09-03T05:44:10.543Z",
   "totals": {
-    "slices": 50,
-    "claimedTargetSurfaces": 121,
+    "slices": 51,
+    "claimedTargetSurfaces": 125,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 106
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 49,
@@ -286,6 +286,23 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-browsing-presentation-contracts",
+      "title": "Present Project directory selection and detail-header truth",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Browsing Presentation",
+      "surfaceIds": [
+        "SWIFT-6075C2D24BAD",
+        "SWIFT-FC9E3C33FECA",
+        "TEST-02013D984E64",
+        "TEST-8CB70D14D5BC"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-browsing-presentation-contracts.json"
     },
     {
       "sliceId": "project-budget-segment-read-contracts",

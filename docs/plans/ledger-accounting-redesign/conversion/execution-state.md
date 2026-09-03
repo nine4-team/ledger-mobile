@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 182
+State version: 185
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TXTYPE-VERIFIED
+- Checkpoint: PBROWSE-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2693,6 +2693,44 @@ modifying the running Firebase application before hard cutover.
   contracts, repeatable project generation, both staging builds and clean
   tracked artifacts. Promoted the dossier, two surfaces, evidence and worker
   assignment to verified. No provider, Firebase or production action occurred.
+- Verification-promotion commit
+  `5960bd9d9d3a25050b027e727a0021bb8477b878` passed immutable Actions run
+  `33717813102`: conversion traceability passed in 10 seconds and the isolated
+  target job passed in 3 minutes 30 seconds. Removed the clean
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_transaction_type_choice`
+  worker worktree after validating exact head `c22fac22`; retained branch
+  `codex/supabase-slice-transaction-type-choice` and all reviewed candidate
+  commits. No provider, Firebase or production action occurred.
+- Applied the larger-slice delegation policy to the next scout. Its first
+  recommendation, `CreateSpaceFromTemplate`, was withdrawn because it missed
+  the explicit `e925a7a0` product-authority rejection; no relevant authority
+  has since resolved O-026 or the Space-name, nested-ID, atomicity, provenance,
+  scope/staleness and customization questions. Independent preflight of the
+  replacement Project-browsing outcome rejected noncanonical sorting, fixed
+  tabs, full-card naming, direct `ScopedRoute` construction, Client-lifecycle
+  filtering and nonexhaustive empty claims. The corrected four-leaf-path
+  `project-browsing-presentation-contracts` boundary preserves upstream order
+  and covers only directory core rows, content-bound selection, exact
+  `ProjectCoreDetailsRequest` derivation and request-validated detail-header
+  truth. Four comment scaffolds are classified ready; no executable behavior,
+  provider, Firebase or production action occurred.
+- Passed the complete Project-browsing local ready gate: 809 recorded / 794
+  discovered surfaces with zero errors and the three established retired-path
+  warnings; 380 mapped / 167 residual / 44 blockers; M0; all 224 existing tests
+  in 50 suites; generated contracts; two identical XcodeGen outputs; both
+  staging builds; and clean diff formatting. The four comment-only scaffold
+  hashes and stable generated project/scheme hashes are recorded in
+  `EVID-PROJECT-BROWSING-PRESENTATION-001`. Actual-ready-diff review and exact-
+  commit immutable CI remain required before delegation.
+- Independent actual-ready-diff review found a P1 unrelated D-023 citation, a
+  P1 missing exact Client-lifecycle authority and a P2 request-derivation shape
+  that could be interpreted as replaying stale selection evidence. The dossier
+  now uses D-006 only for Client/Project identity, cites `Client lifecycle`
+  directly for archived-Client history and makes
+  `detailRequest(validating: currentSnapshot)` the only request-producing call.
+  Independent correction re-review inspected every changed/untracked path and
+  returned GO with no remaining P0-P3 issue or overclaim. The diff is safe for
+  the exact ready commit; immutable CI remains required before delegation.
 
 ## Next Action
 
@@ -2864,6 +2902,20 @@ Continue without waiting on the two M1 evidence blockers:
    Actions run `33717396519` with all 224 tests, conversion/target controls,
    repeatable project generation and both staging builds; preserve the verified
    boundary.
+   Treat ready `project-browsing-presentation-contracts` and
+   `EVID-PROJECT-BROWSING-PRESENTATION-001` as the next candidate boundary.
+   Preserve exact upstream order, Project-only active/archived segmentation,
+   active-Project/archived-Client visibility, ready-complete-source-exhaustive
+   absence, every-field evidence binding and selection-to-exact-detail-request
+   composition. Request derivation must validate the current presentation
+   snapshot and reject changed evidence first. Detail headers must preserve
+   waiting, found ready/partial/stale,
+   authoritative absence, unavailable and cached/no-cache retryable/required-
+   update truth. Do not add a query port, sort/search, full Project card, tabs/
+   children, navigation/route, mutation, authorization, persistence, app/MCP,
+   provider/schema/RLS/Sync, migration or production behavior. Complete the
+   exact ready-SHA CI before delegation; the full local ready gate and
+   independent actual-diff correction review are already recorded as passing.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

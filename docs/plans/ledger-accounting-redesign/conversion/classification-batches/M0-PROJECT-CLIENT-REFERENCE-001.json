@@ -3456,6 +3456,106 @@
         "tests": ["swift test --package-path LedgeriOS --filter ProjectExistingClientSelectionDataTests"],
         "acceptance": ["Tests prove only the frozen pure projection contract and explicitly exclude a second port, final UI policy, mutation, authorization, provider, migration and production claims"]
       }
+    },
+    {
+      "id": "SWIFT-6075C2D24BAD",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "29603f79b563532d6f038b38f80eb4b8b62e1fdff385c556533721ff288a6c02",
+      "currentBehavior": "Contains only the ready comment scaffold for provider-free Project directory core-row presentation and evidence-bound selection.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-PROJECT-DIRECTORY-001", "EVID-PROJECT-CORE-DETAILS-001", "EVID-PROJECT-BROWSING-PRESENTATION-001"],
+      "notes": "Ready comment scaffold only. Preserve exact upstream order, strict Project-lifecycle segmentation, archived-Client visibility and content-bound non-authorizing selection. Sorting/search/full-card/route behavior is excluded.",
+      "target": {
+        "owner": "Project Browsing Presentation",
+        "surfaces": ["ProjectDirectorySegment", "ProjectDirectoryCoreRow", "ProjectDirectoryPresentationSnapshot", "ProjectBrowsingSelection", "ProjectDirectoryPresentationProjector"],
+        "securityRequirements": ["Already-authorized local rows never grant current authorization; Client display text is never relationship identity"],
+        "syncRequirements": ["Projection preserves exact local quality/completeness/exhaustiveness and binds selection to canonical source evidence across restart"]
+      },
+      "migration": {
+        "rule": "No source transformation occurs in this provider-free presentation slice.",
+        "reconciliation": ["Canonical synthetic Project/Client rows and source truth bind to one evidence fingerprint without reading Firebase"]
+      },
+      "verification": {
+        "tests": ["ProjectDirectoryPresentationTests"],
+        "acceptance": ["Frozen Project lifecycle, order, empty truth, restart/tamper and selection-to-detail-request requirements pass"]
+      }
+    },
+    {
+      "id": "SWIFT-FC9E3C33FECA",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "29603f79b563532d6f038b38f80eb4b8b62e1fdff385c556533721ff288a6c02",
+      "currentBehavior": "Contains only the ready comment scaffold for provider-free Project detail-header local-truth presentation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-PROJECT-DIRECTORY-001", "EVID-PROJECT-CORE-DETAILS-001", "EVID-PROJECT-BROWSING-PRESENTATION-001"],
+      "notes": "Ready comment scaffold only. Fixed tabs/workspace-shell naming and route behavior are excluded; exact local header truth only.",
+      "target": {
+        "owner": "Project Browsing Presentation",
+        "surfaces": ["ProjectDetailHeaderPresentation", "ProjectDetailHeaderPresentationProjector"],
+        "securityRequirements": ["Unavailable is non-enumerating and local Project/Client text grants no authorization"],
+        "syncRequirements": ["Waiting, found, authoritative absence, partial/stale and cached/no-cache failure truth derives only from request-validated ProjectCoreDetailsUpdate"]
+      },
+      "migration": {
+        "rule": "No source transformation occurs in this provider-free presentation slice.",
+        "reconciliation": ["Synthetic detail updates preserve exact Project/Client text and local truth without source DTOs"]
+      },
+      "verification": {
+        "tests": ["ProjectDetailHeaderPresentationTests"],
+        "acceptance": ["All verified detail update states project exact header/readiness/absence/failure truth and reject mismatched evidence"]
+      }
+    },
+    {
+      "id": "TEST-02013D984E64",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d27c45ab432f1c7d7bddf1dc8cfe17000879217b16267777f51a7d9064d10caa",
+      "currentBehavior": "Contains only the ready test scaffold for Project detail-header local-truth presentation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-CORE-DETAILS-001", "EVID-PROJECT-BROWSING-PRESENTATION-001"],
+      "notes": "Ready test scaffold only; future tests exhaust exact detail update truth, request/cache mismatch, end-to-end selection and encoded exclusions.",
+      "target": {
+        "owner": "Project Browsing Presentation Tests",
+        "surfaces": ["waiting/found/absence/failure header fixtures", "request/cache mismatch and end-to-end selection fixtures", "encoded-boundary fixtures"],
+        "securityRequirements": ["Unavailable fixtures are non-enumerating and raw stable IDs never become visible labels"],
+        "syncRequirements": ["Fixtures preserve exact ready/partial/stale/cached/no-cache local truth without claiming physical sync"]
+      },
+      "migration": {
+        "rule": "Use synthetic target values only and load no Firebase DTO or export.",
+        "reconciliation": ["Detail-header fixtures reconstruct exact local evidence and reject request/evidence rebind"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectDetailHeaderPresentationTests"],
+        "acceptance": ["Tests prove only the frozen detail-header and selection-to-request composition boundary"]
+      }
+    },
+    {
+      "id": "TEST-8CB70D14D5BC",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d27c45ab432f1c7d7bddf1dc8cfe17000879217b16267777f51a7d9064d10caa",
+      "currentBehavior": "Contains only the ready test scaffold for Project directory core-row projection and evidence-bound selection.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-PROJECT-DIRECTORY-001", "EVID-PROJECT-BROWSING-PRESENTATION-001"],
+      "notes": "Ready test scaffold only; future tests prove Project-only lifecycle segmentation, upstream-order preservation, archived-Client visibility, empty truth, restart/tamper and detail-request derivation.",
+      "target": {
+        "owner": "Project Browsing Presentation Tests",
+        "surfaces": ["Project-lifecycle and upstream-order fixtures", "source-exhaustiveness and restart/tamper fixtures", "same-name and selection fixtures"],
+        "securityRequirements": ["Fixtures use synthetic IDs and prove names are display-only while local selection is non-authorizing"],
+        "syncRequirements": ["Fixtures distinguish ready/partial/stale, complete/incomplete and exhaustive/nonexhaustive local evidence"]
+      },
+      "migration": {
+        "rule": "Use synthetic target values only and load no Firebase DTO or export.",
+        "reconciliation": ["Canonical evidence fingerprint binds every named source/projected field and rejects independent mutation"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectDirectoryPresentationTests"],
+        "acceptance": ["Tests prove only the frozen core-row, empty-truth, restart and exact selection boundary"]
+      }
     }
   ]
 }
