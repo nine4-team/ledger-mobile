@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 218
+State version: 219
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-ARCHIVE-USE-CASE-VERIFIED
+- Checkpoint: SPACE-CHECKLIST-REVISION-USE-CASE-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3124,6 +3124,26 @@ modifying the running Firebase application before hard cutover.
   including all target tests, both staging builds and clean tracked artifacts.
   The dossier and both target surfaces are verified; every exclusion remains
   binding.
+- Verification-promotion commit
+  `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47` passed immutable Actions run
+  `33768000016` (traceability 8 seconds; isolated target 2 minutes 57 seconds),
+  freezing the Client archive use case.
+- A bounded strict-authority scout ranked provider-free Space checklist revision
+  submission first. Root independently confirmed `spaces.md` target authority,
+  the verified Space core-details/editing-presentation/revision-operation chain,
+  and that O-023/O-026/O-032/O-037 media/template/completion/archive questions
+  do not govern this excluded scope. Two deterministic surface IDs resolve to comment-
+  only `SpaceChecklistRevisionUseCase.swift` (`SWIFT-1FDB27E18B95`) and
+  `SpaceChecklistRevisionUseCaseTests.swift` (`TEST-674E6F23E5BE`). The READY
+  dossier freezes exact draft/current semantic revalidation, one verified command,
+  one post-derivation port call, receipt validation, typed failure/cancellation
+  preservation and permanent provider/production exclusions. Current control
+  state is 823 recorded / 808 discovered, 389 mapped-or-later / 174 residual /
+  45 blockers with only the three established retired-path warnings. The
+  complete local READY gate passes all 267 existing target tests in 58 suites
+  with warnings as errors, conversion/target controls, repeatable Xcode hashes
+  `0657194a` / `388303af`, both staging builds, JSON and clean formatting.
+  Independent actual-diff review and exact-ready-SHA CI remain pending.
 
 ## Next Action
 
@@ -3395,10 +3415,18 @@ Continue without waiting on the two M1 evidence blockers:
    readiness or permissions; do not add UI, optimistic projection, persistence,
    authorization, restore/delete/merge/rename/reassignment/cascade, provider,
    schema/RLS/Sync, app/MCP, migration, hosted or production behavior.
-   Run a fresh strict-authority preflight over the residual manifest and product
-   authority, select the next coherent decision-independent vertical slice, and
-   freeze its exact surfaces, requirements, tests and exclusions in a reviewed
-   READY checkpoint before executable implementation.
+   Review and gate `space-checklist-revision-use-case-contracts` and
+   `EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001`. Preserve exactly the two new
+   comment-only leaves `SpaceChecklistRevisionUseCase.swift`
+   (`SWIFT-1FDB27E18B95`) and `SpaceChecklistRevisionUseCaseTests.swift`
+   (`TEST-674E6F23E5BE`). The complete local READY gates pass; obtain two
+   independent actual-diff reviews, then commit/push and require immutable exact-ready-SHA CI
+   before replacing scaffolds with executable code. The frozen application path
+   reuses existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate,
+   derives one verified command before one port call, validates the receipt,
+   preserves typed failures/cancellation and bounds raw errors. EditChecklistModal,
+   UI/read admission, physical persistence, authorization, provider/schema/RLS/
+   Sync, app/MCP, migration, hosted and production behavior must remain unchanged.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

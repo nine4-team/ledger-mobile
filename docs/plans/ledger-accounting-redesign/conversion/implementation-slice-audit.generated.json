@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T14:37:07.391Z",
+  "generatedFromManifestSync": "2026-09-03T17:35:50.123Z",
   "totals": {
-    "slices": 57,
-    "claimedTargetSurfaces": 139,
+    "slices": 58,
+    "claimedTargetSurfaces": 141,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 124
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 56,
@@ -680,6 +680,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-revision-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-checklist-revision-use-case-contracts",
+      "title": "Derive and dispatch one complete Space checklist replacement",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Checklist Revision Use Case",
+      "surfaceIds": [
+        "SWIFT-1FDB27E18B95",
+        "TEST-674E6F23E5BE"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-revision-use-case-contracts.json"
     },
     {
       "sliceId": "space-core-details-read-contracts",

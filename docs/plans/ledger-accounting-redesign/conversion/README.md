@@ -581,6 +581,22 @@ repeatable generation and both staging builds passed. Exact implementation commi
 the two leaves and dossier are verified. No Firebase, provider, hosted, migration
 or production behavior changed.
 
+Verification-promotion commit `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47`
+passed immutable Actions run `33768000016`, freezing the Client archive use case.
+A bounded strict-authority scout then ranked Space checklist revision submission
+first; root independently confirmed the canonical Spaces authority, verified
+editing-presentation and revision-operation dependencies, and absence of an open
+decision blocker. Exactly two new target leaves are comment-only READY scaffolds
+for deriving one complete replacement from existing restart-safe draft/current
+evidence, one port call, receipt validation and bounded failures. EditChecklistModal,
+physical persistence, authorization, provider, migration and production behavior
+remain unadvanced. Exact-diff review, complete local READY gates and immutable
+exact-ready-SHA CI were required. The complete local gate now passes all 267
+existing target tests in 58 suites with warnings as errors, conversion/target
+controls, repeatable generation at `0657194a` / `388303af`, both staging builds,
+JSON and clean formatting. Two independent actual-diff reviews and immutable
+exact-ready-SHA CI remain pending.
+
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
 is never the authority for what has been covered or verified.
