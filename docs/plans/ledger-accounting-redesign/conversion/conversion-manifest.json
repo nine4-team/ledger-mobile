@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T06:36:28.394Z",
+    "lastSynchronizedAt": "2026-09-03T07:06:43.060Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -32240,6 +32240,66 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-EC2117B393FB",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "606bd43ba122c00c596d4e55eb610a8c0bfa20da4f413c85eb8d158fe1b92cfe",
+      "acknowledgedSourceHash": "606bd43ba122c00c596d4e55eb610a8c0bfa20da4f413c85eb8d158fe1b92cfe",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the frozen comment scaffold for provider-free Project setup preparation and evidence-bound derivation of the verified CreateProjectCommand.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Presentation",
+        "surfaces": [
+          "ProjectSetupFormPreparation",
+          "ProjectSetupFormSelection",
+          "ProjectSetupFormPresentation",
+          "evidence-validated CreateProjectCommand derivation"
+        ],
+        "securityRequirements": [
+          "Consume only already-scoped Client/category evidence; local selection never grants current Account, Client or category authorization"
+        ],
+        "syncRequirements": [
+          "Bind exact Client/category source evidence and selected identities across restart; changed evidence fails before command construction"
+        ]
+      },
+      "migration": {
+        "rule": "No source form, Firebase DTO, free-text Client relationship or source export is read or transformed in this provider-free presentation slice.",
+        "reconciliation": [
+          "Synthetic target evidence reconstructs byte-identically and every selection or source mutation is either explicitly represented or rejected"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectSetupFormPresentationTests"
+        ],
+        "acceptance": [
+          "Frozen preparation, selection, nullable-allocation, current-evidence and command-derivation obligations pass without provider or authority claims"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-SETUP-001",
+        "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
+        "EVID-BUDGET-CATEGORY-REFERENCE-001",
+        "EVID-PROJECT-SETUP-FORM-PRESENTATION-001"
+      ],
+      "notes": "Ready comment scaffold only. The frozen slice permits explicit existing/new Client choice, zero selected categories, exact nullable allocations and current-evidence validation; it excludes UI/defaults/category creation/media/ports/providers and authority claims.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-EDFA6A1EF8C3",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/SpaceDetailsUpdateOperation.swift",
@@ -34789,6 +34849,66 @@
       ],
       "notes": "Retain sorting fixtures and add archived-reference/readiness cases. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-38F09C637761",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "625e9f61b0181e7c019f0d044f3b2e9da8e02bbe78e1373f1a57cc523afc4e15",
+      "acknowledgedSourceHash": "625e9f61b0181e7c019f0d044f3b2e9da8e02bbe78e1373f1a57cc523afc4e15",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the frozen comment scaffold for Project setup preparation, selection, restart/refusal and exact command-derivation tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Presentation Tests",
+        "surfaces": [
+          "preparation/order/readiness fixtures",
+          "existing/new Client and category-selection fixtures",
+          "nullable allocation and exact command fixtures",
+          "canonical restart/tamper fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic scoped identities and assert no local evidence becomes authorization or hidden-count inference"
+        ],
+        "syncRequirements": [
+          "Fixtures preserve and mutate every named Client/category evidence field and refuse stale/rebound command derivation"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target values only and load no Firebase form, DTO or export.",
+        "reconciliation": [
+          "Fixture catalog proves exact reconstruction and refusal without claiming source migration parity"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectSetupFormPresentationTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen provider-free preparation and command-derivation boundary"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-SETUP-001",
+        "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
+        "EVID-BUDGET-CATEGORY-REFERENCE-001",
+        "EVID-PROJECT-SETUP-FORM-PRESENTATION-001"
+      ],
+      "notes": "Ready comment scaffold only. Tests must include sibling-selection substitution, every-field evidence mutation, zero/null/positive allocation and explicit no-authorization/provider assertions before implementation can verify this surface.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-3CE7B387E9B7",

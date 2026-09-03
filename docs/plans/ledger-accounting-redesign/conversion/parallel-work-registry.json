@@ -582,6 +582,44 @@
         "The concurrent architecture clarification is technical documentation only and cannot bootstrap product authority because it did not exist at the independently reviewed base."
       ],
       "disposition": "Prepared a two-path comment-only ready scaffold and dossier with the narrowed product boundary, negative/restart/port obligations and all provider, migration and production behavior excluded. No writer may start until the exact ready commit passes immutable CI."
+    },
+    {
+      "findingId": "SUBAGENT-WORK-009-CANDIDATE-REJECTION-001",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "pinned-project-budget-presentation-contracts",
+      "status": "rejected_before_ready_or_delegation",
+      "reviewers": [
+        "primary-agent",
+        "/root/next_coherent_slice_scout"
+      ],
+      "findings": [
+        "O-005 still controls negative-credit/refund rendering, direction, labels, clamping and percentage presentation.",
+        "Canonical authority does not settle archived/deleted/stale/hidden pin resolution or whether missing budget/config evidence means zero, absent, hidden or incomplete.",
+        "The source overall pseudo-pin conflicts with target pin authority, and card fallback is undefined for nullable/zero allocation and signed recognized values.",
+        "A safe raw evidence join would be plumbing rather than a coherent user outcome and would not justify replacing the mapped source presentation/test surfaces."
+      ],
+      "disposition": "No scaffold or implementation was created. Preserve the verified raw Project budget segment and preference contracts; revisit only after category-visibility composition and O-005/card presentation authority are frozen."
+    },
+    {
+      "findingId": "SUBAGENT-WORK-009-PREFLIGHT-001",
+      "recordedAt": "2026-09-02",
+      "candidateSlice": "project-setup-form-presentation-contracts",
+      "status": "ready_after_independent_correction_review",
+      "reviewers": [
+        "primary-agent",
+        "/root/project_browsing_preflight",
+        "/root/next_coherent_slice_scout"
+      ],
+      "findings": [
+        "Verified Project setup, existing-Client selection and budget-category reference contracts provide the complete semantic inputs for an evidence-bound preparation flow.",
+        "The target permits zero categories and exact null/zero/positive allocations; current source preselect-all, at-least-one, missing-as-zero and on-the-fly category mutation are excluded.",
+        "Existing Client selection must remain bound to exact current active-Client evidence, while new Client input uses preallocated stable identity and validated display name without display-text ownership.",
+        "The only command-producing function must revalidate all current Client/category evidence before deriving the existing ProjectSetupDraft and CreateProjectCommand, with no local authorization claim.",
+        "Independent actual-diff review rejected an unsupported mixed-currency rule because no Project-currency authority exists and required explicit reuse of ProjectDescriptionReplacement for creation-time trim/empty-to-nil behavior.",
+        "The correction also makes allocation input order non-semantic and refuses a preallocated new Client ID that already identifies a represented existing Client, without claiming authority over unrepresented collisions.",
+        "Correction re-review found one P2 phrase that could have treated partial represented evidence as complete; after it was narrowed to exact represented evidence plus independent readiness/completeness state, final independent review returned GO with no remaining P0-P3 issue."
+      ],
+      "disposition": "Prepared exactly two comment-only target scaffolds plus a complete ready dossier/evidence plan. Primary and independent actual-diff review and the complete local ready gate pass. No worker may start until exact ready-commit CI passes."
     }
   ]
 }

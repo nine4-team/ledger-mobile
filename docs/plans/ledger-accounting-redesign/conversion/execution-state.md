@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
-Last updated: 2026-09-02
-State version: 189
+Last updated: 2026-09-03
+State version: 191
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PBROWSE-CLEANED
+- Checkpoint: PSETUP-FORM-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2761,6 +2761,36 @@ modifying the running Firebase application before hard cutover.
   retained branch `codex/supabase-slice-project-browsing` with both rejected and
   corrected candidate history recoverable. No Firebase, provider, hosted or
   production action occurred.
+- Cleanup checkpoint `7b40a9660593b8a1ab3220b432da26e6d5f2dbbe`
+  passed immutable Actions run `33724031789`: conversion traceability and the
+  isolated target job both succeeded, including all 231 tests and both staging
+  builds. The canonical Supabase worktree is clean and the Firebase checkout
+  remains untouched at `fe018501`.
+- Two read-only scouts independently audited the next candidate set. Rejected
+  pinned-budget presentation because O-005 and category-visibility/missing-pin/
+  card-fallback semantics remain open; rejected Project browsing shell as a
+  duplicate/premature runtime boundary; rejected Transaction list/card under
+  O-029/O-032; and rejected the general Space list under missing list authority
+  plus O-037. A generic deterministic export renderer remains a viable later
+  infrastructure candidate but cannot yet produce an approved named
+  Transaction export profile. Selected the more complete
+  `project-setup-form-presentation-contracts` boundary instead: two target-only
+  comment scaffolds compose verified active-Client selection, category reference
+  and Project setup command semantics, permit zero categories, preserve exact
+  nullable allocations and require current-evidence validation before command
+  derivation. No executable behavior or provider/Firebase/production action has
+  occurred. The complete local ready gate passes with 811 recorded / 796
+  discovered surfaces, zero errors and three established warnings; 382 mapped /
+  167 residual / 44 blockers; M0; all 231 tests in 52 suites; target isolation
+  and contracts; repeatable project generation; both staging builds and clean
+  formatting. Independent actual-diff review rejected a P1 unsupported mixed-
+  currency rule and P2 ambiguous creation-description behavior. The correction
+  removes Project-wide currency invention, reuses the verified
+  `ProjectDescriptionReplacement` normalizer and adds allocation-order plus
+  represented new-Client-ID collision hardening. Correction re-review then
+  found and corrected one P2 wording overclaim that could have treated a partial
+  snapshot as complete. The final independent re-review returned GO with no
+  remaining P0-P3 issue. Exact-ready-SHA CI remains required before delegation.
 
 ## Next Action
 
@@ -2954,6 +2984,21 @@ Continue without waiting on the two M1 evidence blockers:
    passes CI, retain its reviewed branch, record cleanup, and select the next
    coherent decision-independent slice through feature-specific product-
    authority preflight.
+   Treat ready `project-setup-form-presentation-contracts` and
+   `EVID-PROJECT-SETUP-FORM-PRESENTATION-001` as the next candidate boundary.
+   Preserve exact Account scope, verified active-Client upstream order,
+   configurable category presentation order, independent local readiness and
+   explicit existing-versus-preallocated-new Client identity. Permit zero
+   selected categories and preserve null/zero/positive allocation intent.
+   Revalidate the current preparation snapshot before deriving only the
+   verified `ProjectSetupDraft` and `CreateProjectCommand`; changed or sibling-
+   substituted Client/category evidence must fail before a command exists. Do
+   not add UI layout/copy/steps, defaults, category creation, media, a Project-
+   specific submission reducer, port invocation, authorization, persistence,
+   provider/schema/RLS/Sync, app/MCP, migration or production behavior. Pass the
+   complete local ready gate and independent actual-diff review, commit/push the
+   exact synchronized ready checkpoint, require both CI jobs, and only then
+   create an isolated worker branch/worktree with the two frozen leaf paths.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T06:36:28.394Z",
+  "generatedFromManifestSync": "2026-09-03T07:06:43.060Z",
   "totals": {
-    "slices": 51,
-    "claimedTargetSurfaces": 125,
+    "slices": 52,
+    "claimedTargetSurfaces": 127,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 110
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 50,
@@ -483,6 +483,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-rename-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-form-presentation-contracts",
+      "title": "Prepare one evidence-bound Project setup command offline",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Setup Presentation",
+      "surfaceIds": [
+        "SWIFT-EC2117B393FB",
+        "TEST-38F09C637761"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-form-presentation-contracts.json"
     },
     {
       "sliceId": "project-setup-operation-contracts",

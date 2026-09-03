@@ -397,6 +397,25 @@ generation and both staging builds pass. Exact integration checkpoint
 Actions run `33723154735`; the slice and its four surfaces are verified.
 `EVID-PROJECT-BROWSING-PRESENTATION-001`.
 
+The next frozen boundary is `project-setup-form-presentation-contracts`:
+provider-free preparation of one Project setup from the verified active-Client
+selection, budget-category reference and Project setup operation contracts.
+It preserves exact Client/category order and local readiness, supports explicit
+existing or preallocated-new Client identity, permits zero selected categories,
+preserves null/zero/positive allocation intent and revalidates current evidence
+before deriving the verified `CreateProjectCommand`. It deliberately excludes
+SwiftUI layout/copy/steps, defaults, on-the-fly category creation, hero media,
+port invocation, authorization, persistence, providers, app/MCP, migration and
+production behavior. Two comment-only leaf scaffolds are ready locally;
+the complete local gate passes with all 231 tests, repeatable target generation
+and both staging builds. Independent actual-diff review rejected an unsupported
+same-currency rule and ambiguous creation-description handling; the corrected
+boundary invents no Project currency, reuses verified description normalization
+and adds allocation-order/new-ID-collision hardening. Independent correction
+re-review returned GO with no remaining P0-P3 issue; exact ready-SHA CI remains
+required before delegation.
+`EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
+
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
 is never the authority for what has been covered or verified.
