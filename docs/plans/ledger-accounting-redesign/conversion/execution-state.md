@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 194
+State version: 195
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PSETUP-FORM-INTEGRATED-LOCAL
+- Checkpoint: PSETUP-FORM-VERIFIED-PENDING-CLEANUP
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2815,7 +2815,9 @@ modifying the running Firebase application before hard cutover.
   and all 237 tests in 53 suites; warnings-as-errors; repeatable XcodeGen hashes
   `0657194a` / `388303af`; macOS and generic iOS Simulator staging builds; clean
   formatting and exact two-path worker scope. Exact integration-commit CI
-  remains required before verification.
+  `147d22de801b15794d8ebb4786eaea86e4346940` passed both jobs in immutable
+  Actions run `33729967356`; the slice, both surfaces and `SUBAGENT-WORK-009`
+  are now verified. Promotion CI and clean temporary-worktree removal remain.
 
 ## Next Action
 

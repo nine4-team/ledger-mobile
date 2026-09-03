@@ -421,7 +421,9 @@ the worker's first green candidate because its restart tests did not yet mutate
 every field promised by the frozen manifest. Corrected worker tip `37145ae3`
 adds the exhaustive field matrix; primary and independent review return GO with
 no remaining P0-P3. All 237 tests, warnings-as-errors, repeatable generation and
-both staging builds pass locally. Exact integration-commit CI remains required.
+both staging builds pass locally. Exact integration checkpoint
+`147d22de801b15794d8ebb4786eaea86e4346940` passed both jobs in immutable
+Actions run `33729967356`; the slice and both surfaces are verified.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

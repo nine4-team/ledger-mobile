@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-EC2117B393FB`, `TEST-38F09C637761`
 - Slice dossier: `conversion/implementation-slices/project-setup-form-presentation-contracts.json`
-- Verification state: corrected implementation passes full local gate and independent review; exact integration-commit CI pending
+- Verification state: verified after corrected implementation, full local gate, independent review and exact integration-commit CI
 
 ## Selection and Product Authority
 
@@ -144,8 +144,11 @@ Implemented leaf hashes are:
 - `ProjectSetupFormPresentation.swift` — `fff3eb39b4b178fc32e2578280d6f7b4f6d52a3b706266a0aa35829983e3ef67`; and
 - `ProjectSetupFormPresentationTests.swift` — `243152d8833b1399e3b543bc91abf5fab7e86b89f91d702b572be3d6a6c5e496`.
 
-Exact integration-commit immutable CI remains required before the slice or
-either surface can be promoted to verified.
+Exact integration checkpoint
+`147d22de801b15794d8ebb4786eaea86e4346940` passed both jobs in immutable
+Actions run `33729967356`: conversion state and traceability completed in 10
+seconds and the isolated target environment completed in 3 minutes 9 seconds.
+The slice and both claimed surfaces are verified.
 
 ## Rejected Alternatives
 

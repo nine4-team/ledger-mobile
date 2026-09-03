@@ -549,7 +549,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-009",
       "sliceId": "project-setup-form-presentation-contracts",
-      "status": "integrated_local_pending_ci",
+      "status": "verified",
       "baseCommit": "a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62",
       "readyCiRun": 33726485780,
       "assignmentControlCommit": "10913c5761561ad9fdd0713627ae82396e9f3ff8",
@@ -609,8 +609,8 @@
         ],
         "focusedRetest": "passed: worker, primary agent and independent reviewer each passed 6 tests in 1 suite",
         "completeLocalGate": "passed: all 237 tests in 53 suites, warnings-as-errors, conversion/capability/query/residual/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
-        "exactIntegrationCommit": "pending",
-        "exactIntegrationCommitCi": "pending"
+        "exactIntegrationCommit": "147d22de801b15794d8ebb4786eaea86e4346940",
+        "exactIntegrationCommitCi": "passed: Actions run 33729967356; conversion traceability 10s; isolated target 3m9s"
       }
     }
   ],

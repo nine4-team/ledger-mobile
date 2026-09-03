@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T07:47:35.045Z",
+    "lastSynchronizedAt": "2026-09-03T07:52:41.998Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -32286,7 +32286,7 @@
           "Frozen preparation, selection, nullable-allocation, current-evidence and command-derivation obligations pass without provider or authority claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -32296,7 +32296,7 @@
         "EVID-BUDGET-CATEGORY-REFERENCE-001",
         "EVID-PROJECT-SETUP-FORM-PRESENTATION-001"
       ],
-      "notes": "Implemented candidate after primary review rejected an exhaustive field-binding test gap and the worker added reciprocal mutation coverage. Final primary and independent adversarial review report no remaining P0-P3; exact integration CI is pending before verification.",
+      "notes": "Verified after primary review rejected an exhaustive field-binding test gap, the worker added reciprocal mutation coverage, final primary/independent review returned GO and exact integration checkpoint 147d22de passed immutable Actions run 33729967356.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -34897,7 +34897,7 @@
           "Tests prove only the frozen provider-free preparation and command-derivation boundary"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -34907,7 +34907,7 @@
         "EVID-BUDGET-CATEGORY-REFERENCE-001",
         "EVID-PROJECT-SETUP-FORM-PRESENTATION-001"
       ],
-      "notes": "The first green candidate was rejected because its restart test mutated only representative evidence fields. The corrected matrix independently mutates every named preparation, Client, category and selection field with layer-appropriate expected failures; exact integration CI remains pending.",
+      "notes": "Verified after the first green candidate was rejected for representative-only mutation coverage. The corrected matrix independently mutates every named preparation, Client, category and selection field with layer-appropriate failures; exact integration checkpoint 147d22de passed immutable Actions run 33729967356.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
