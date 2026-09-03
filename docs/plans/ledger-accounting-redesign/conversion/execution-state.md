@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 188
+State version: 189
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PBROWSE-VERIFIED
+- Checkpoint: PBROWSE-CLEANED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2752,6 +2752,15 @@ modifying the running Firebase application before hard cutover.
   `717a0eb89099676bd4c09d6b0665dd83ab9739d8` then passed both jobs in immutable
   Actions run `33723154735`; `PBROWSE-TEST-007`, the slice, its four surfaces
   and `SUBAGENT-WORK-008` are now `verified`.
+- Promotion checkpoint `51e0544eed0388f274e7bf8963fa49fe84271826`
+  passed immutable Actions run `33723771668`: conversion traceability completed
+  in 47 seconds and the isolated target job completed in 2 minutes 1 second.
+  After confirming the worker worktree was clean at reviewed candidate
+  `73f94525`, removed
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_browsing` and
+  retained branch `codex/supabase-slice-project-browsing` with both rejected and
+  corrected candidate history recoverable. No Firebase, provider, hosted or
+  production action occurred.
 
 ## Next Action
 
