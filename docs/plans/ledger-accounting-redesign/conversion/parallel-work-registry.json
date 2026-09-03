@@ -393,7 +393,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-007",
       "sliceId": "transaction-type-choice-presentation-contracts",
-      "status": "active",
+      "status": "integrated_pending_ci",
       "baseCommit": "8cf4bec690345eacfe77b954d8deddabda0ec128",
       "readyCiRun": 33707620621,
       "originalReadyCommit": "5e79d83d672b44f320ebe686222e55f8158a8fdf",
@@ -424,6 +424,42 @@
         "completeLocalGate": true,
         "exactIntegrationCommitCi": true,
         "reason": "The user explicitly requested quality-control sampling for at least the first couple subagent attempts. Preflight and actual-ready-diff review already corrected aggregate, owner-vocabulary, order, restart-shape and display-title precision risks, so the worker cannot change the frozen boundary or promote status."
+      },
+      "handoff": {
+        "candidateCommit": "c22fac22565f1d48d9240698dbac0ab4a8016607",
+        "candidateCommits": [
+          "0170ac0aff23313fd42c9d45b58784681af69499",
+          "f38258a59b01b7c304c4051028844f9cef4cb615",
+          "c22fac22565f1d48d9240698dbac0ab4a8016607"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
+        ],
+        "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewers",
+        "fullTests": "passed: 224 tests in 50 suites by worker; primary complete integration gate pending",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Presentation is derived from locally validated classification only and grants no current authorization, command eligibility, order, persistence or provider behavior.",
+          "Raw syntactically malformed JSON is DecodingError at the generic codec; invalidEncodedClassification normalization exists only in the test-only consumer boundary."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_malformed_json_truth_correction",
+        "independentReviewers": [
+          "/root/project_budget_segment_review",
+          "/root/transaction_choice_final_review"
+        ],
+        "independentAdversarialReview": "passed_after_one_p3_test_gap_and_one_p3_evidence_overclaim_correction",
+        "findings": [
+          "The first candidate omitted syntactically malformed JSON despite a frozen TEST-005 obligation.",
+          "The first correction could imply the generic codec emitted a taxonomy failure; final c22fac22 directly proves raw DecodingError and separate test-consumer normalization.",
+          "The dossier and evidence now distinguish raw parser behavior from bounded test-consumer rejection."
+        ],
+        "focusedRetest": "passed: worker, primary agent and final independent reviewer passed 6 tests in 1 suite",
+    "completeLocalGate": "passed: 6 focused/all 224 tests in 50 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommitCi": "pending"
       }
     }
   ],

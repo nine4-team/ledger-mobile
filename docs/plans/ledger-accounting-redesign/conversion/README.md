@@ -362,12 +362,14 @@ noncanonical Business-owner vocabulary and accidental UI/filter ordering. The
 corrected provider-free leaf exposes only literal unordered type membership by
 scope owner plus exact Purchase/Return/Transfer, Client/1584 and existing
 economic-meaning presentation derived from the verified
-`TransactionClassification`. Its two target-only paths remain comments. The
-complete local ready gate passes all 211 existing tests, repeatable target
-generation and both staging builds. Independent actual-diff review found and
-corrected one P3 test-spec precision issue, then returned GO with no remaining
-P0-P3 finding. Immutable exact-ready-SHA CI remains mandatory before
-delegation.
+`TransactionClassification`. Final candidate `c22fac22` changed only the two
+registered target paths. Primary and independent implementation review found no
+code P0-P3 issue after rejecting one P3 missing malformed-JSON case; final
+review also corrected an evidence overclaim by distinguishing raw
+`DecodingError` from test-consumer normalization. Six focused/all 224 tests,
+conversion/M0 and target isolation/generated-contract controls, repeatable
+project generation and both staging builds pass in the central integration
+worktree. Immutable exact-integration-SHA CI remains mandatory before promotion.
 `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

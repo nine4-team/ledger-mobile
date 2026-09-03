@@ -41,6 +41,33 @@ product choice, add an O blocker/decision packet and select another slice.
 Read-only exploration, test design and adversarial review may run earlier when
 their scope is bounded and they do not mutate a checkout or external system.
 
+## Delegation Economics and Worktree Threshold
+
+A worktree is an isolation mechanism for a delegated writer, not the unit by
+which implementation should be divided. Every concurrent write-capable worker
+uses one even when its frozen ownership happens to contain only two files: that
+is what keeps its exact base, index, untracked files and candidate lineage from
+colliding with the integration branch or another worker. The number of files
+alone does not measure the size or risk of the change.
+
+Do not create a write-capable assignment merely because two leaf files can be
+isolated. The default delegation unit is one coherent, independently testable
+outcome expected to change roughly 600–1,200 lines across two to six leaf
+implementation/test paths. This is a planning range, not a status shortcut:
+scope cohesion and authority boundaries take precedence over line count.
+
+The integration agent normally implements work expected to take less than
+about 20 minutes or 300 changed lines itself. It may still isolate a smaller
+change when concurrent writes are already active or the boundary is unusually
+risky. Conversely, a larger candidate must be split when it crosses product
+authority, shared foundations or independently promotable outcomes. Never pad
+a slice with unrelated work to meet a size target.
+
+The preferred topology is one write-capable worker for the frozen outcome, one
+read-only scout or adversarial reviewer, and the integration agent retaining
+all control-plane and promotion work. This preserves useful parallelism while
+avoiding worktree, control-commit and CI overhead for micro-slices.
+
 ## Ownership
 
 The integration agent exclusively owns:
@@ -93,9 +120,12 @@ The integration agent reviews and integrates one candidate at a time:
 Worker-branch tests or CI are preliminary evidence only. They never prove a
 cherry-picked, rebased, conflict-resolved or regenerated integration commit.
 
-## First-Two-Pilot Quality Gate
+## Delegation Calibration Quality Gate
 
-The first two write-capable assignments receive enhanced review:
+Every candidate receives integration-agent line review. Independent adversarial
+review is additionally mandatory until five consecutive delegated candidates
+complete without an accepted P0-P2 defect, an out-of-allowlist edit or a
+material product-authority correction:
 
 - every changed line is reviewed by the integration agent;
 - a separate read-only reviewer independently checks every dossier requirement,
@@ -103,9 +133,11 @@ The first two write-capable assignments receive enhanced review:
 - the integration agent reruns both focused tests and the complete gate rather
   than accepting worker output;
 - the registry records findings by severity and their exact disposition; and
-- any critical finding, repeated major finding, out-of-scope edit or evidence
-  overclaim suspends further write-capable delegation until this workflow is
-  corrected and revalidated.
+- any P0-P2 finding, out-of-scope edit or material authority correction resets
+  the five-candidate calibration count; and
+- any critical finding, repeated major finding or evidence overclaim suspends
+  further write-capable delegation until this workflow is corrected and
+  revalidated.
 
 Candidate selection itself is part of the pilot: a proposed slice rejected
 before worker launch is recorded as a preflight finding, not counted as a
@@ -114,13 +146,18 @@ demonstrates this guard: independent review found no canonical target decision,
 a D-013 category conflict, and unresolved granularity/lifecycle, so the
 scaffolds were discarded and O-038 was opened before any implementation.
 
-After two clean pilots, line review, full local verification and exact-commit CI
-remain mandatory. The extra independent review may be risk-based, but security,
-RLS, Sync, accounting, migration and cutover slices always require it.
+After five consecutive qualifying candidates, line review, full local
+verification and exact-commit CI remain mandatory. The extra independent
+review may become risk-based, but accounting, authentication/security, RLS,
+Sync/offline durability, provider, migration/reconciliation, release and
+cutover slices always require it. A candidate that required P3-only correction
+may still qualify for the counter, but its finding remains recorded and the
+integration agent may extend enhanced review when the pattern indicates weak
+tests or evidence.
 
 ### Pilot outcome — 2026-09-02
 
-Both enhanced write-capable pilots completed without an accepted P0-P2 defect.
+The first two enhanced write-capable pilots completed without an accepted P0-P2 defect.
 The controls nevertheless changed the outcome materially:
 
 - pilot 1's independent review found and corrected one P3 documentation
@@ -132,9 +169,11 @@ The controls nevertheless changed the outcome materially:
   draft on maintainability grounds and required a reduced 768-line candidate
   before commit; independent adversarial review then found no P0-P3 defect.
 
-This is enough evidence to continue bounded delegation, not evidence that
-worker output may be trusted without inspection. Every worker candidate still
-requires exact ancestry/path verification, integration-agent line review,
+This was enough evidence to continue bounded delegation, not evidence that
+worker output may be trusted without inspection. A later Project existing-
+Client selection candidate exposed a P1 false-authoritative-empty defect during
+independent review, so the calibration counter was reset. Every worker
+candidate still requires exact ancestry/path verification, integration-agent line review,
 focused and complete local gates, central regeneration and exact integrated-SHA
 CI. Independent adversarial review remains mandatory for novel shared
 semantics, accounting, security, authorization/RLS, Sync/offline durability,

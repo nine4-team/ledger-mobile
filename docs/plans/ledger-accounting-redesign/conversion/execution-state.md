@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 179
+State version: 181
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TXTYPE-WORKER-ACTIVE
+- Checkpoint: TXTYPE-INTEGRATED-LOCAL-GATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2657,6 +2657,35 @@ modifying the running Firebase application before hard cutover.
   independent adversarial review, complete central gates and immutable exact-
   integration-SHA CI remain mandatory. No provider, Firebase or production
   action occurred.
+- `SUBAGENT-WORK-007` produced candidates `0170ac0a`, `f38258a5` and final
+  `c22fac22565f1d48d9240698dbac0ab4a8016607` from exact base `8cf4bec6`;
+  every candidate changed only the two registered paths. Primary every-line
+  review found no implementation defect. Independent review rejected the first
+  candidate for one P3 missing syntactically malformed JSON case. Review of the
+  correction then found a second P3 evidence problem: the frozen wording could
+  falsely imply the generic codec normalized a raw parser error into
+  `TransactionTaxonomyFailure`. Final `c22fac22` directly proves raw
+  `DecodingError`, explicitly not a taxonomy failure, and separately proves the
+  test-only consumer normalizes it to rejected `invalidEncodedClassification`
+  without a descriptor. Replacement independent final review found no code
+  P0-P3 issue and approved the matching dossier correction. Integrated the
+  candidate sequence as `5faf4b29`, `075fd70b` and `da63fb85`. Worker/root
+  focused runs pass all six tests. The complete central gate passes all 224
+  tests in 50 suites, conversion/M0 and target isolation/generated-contract
+  controls, two identical generated-project hashes (`0657194a` project and
+  `388303af` scheme), both staging builds and clean artifacts. Immutable exact-
+  integration-SHA CI remains pending. No provider, Firebase or production
+  action occurred.
+- Recalibrated delegated-work economics after reviewing the completed worker
+  topology. A worktree remains mandatory for any concurrent write-capable
+  worker because it isolates the base, index, untracked files and candidate
+  lineage, but two files are not themselves a sufficient reason to delegate.
+  The default delegated outcome is now a coherent roughly 600–1,200-line,
+  two-to-six-leaf-path slice; the integration agent normally keeps sub-300-line
+  or sub-20-minute work. Independent review remains mandatory until five
+  consecutive qualifying candidates; the Project selection P1 finding reset
+  that counter and the corrected Transaction candidate is the first subsequent
+  P0-P2-clean candidate. Risk domains always retain independent review.
 
 ## Next Action
 
@@ -2812,7 +2841,7 @@ Continue without waiting on the two M1 evidence blockers:
    run `33707305340`; preserve this boundary as verified.
    General Space lists
    remain rejected until filtering, ordering, search, count and archive
-   semantics have product authority. Treat active isolated
+   semantics have product authority. Treat integrated-pending-CI
    `transaction-type-choice-presentation-contracts` and
    `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001` as the next disjoint frozen
    boundary. Preserve literal unordered Project purchase/return/transfer and
@@ -2820,12 +2849,14 @@ Continue without waiting on the two M1 evidence blockers:
    existing economic meanings and source/destination Transfer equivalence.
    Do not recreate classification, invent menu/filter order, classify legacy
    records or acquire amount/status/action, app/MCP, provider/schema/RLS/Sync,
-   migration or production behavior. Independent review of the actual ready
-   diff is already complete. `SUBAGENT-WORK-007` is active from exact green
-   base `8cf4bec6`; assignment-control commit `49289922` passed immutable run
-   `33707949029`, and the worker may edit only the two registered paths. Require primary every-
-   line and independent adversarial review, the complete local integration gate
-   and immutable exact-integration-SHA CI before promotion.
+   migration or production behavior. Final candidate `c22fac22` changed only
+   the two registered paths; primary and independent review found no code P0-P3
+   issue after one P3 malformed-JSON test gap and one P3 evidence overclaim were
+   corrected. Preserve the exact raw `DecodingError` versus test-consumer
+   normalization distinction. The complete central local integration gate
+   passes all 224 tests, conversion/M0 and target controls, repeatable project
+   generation and both staging builds. Complete immutable exact-integration-SHA
+   CI before promotion.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

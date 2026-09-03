@@ -1,19 +1,24 @@
 # EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001 — Transaction Type Choice Presentation
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free Transaction type-choice presentation
+- Class: implementation checkpoint / provider-free Transaction type-choice presentation
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-F90B7B48C1F6`, `TEST-F66BBF1FC092`
 - Slice dossier:
   `conversion/implementation-slices/transaction-type-choice-presentation-contracts.json`
-- Verification state: ready and actively delegated from an exact green base;
-  executable implementation and tests remain absent on the integration branch
+- Verification state: implemented after corrected primary and independent
+  review and complete central gates; exact integration-commit CI remains pending
 - Ready scaffold hashes:
   - `TransactionTypeChoicePresentation.swift`:
     `ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629`
   - `TransactionTypeChoicePresentationTests.swift`:
     `448ec87f3d2d231fe69631e981d8403840790a1eb618cabfd328a713699f49e6`
+- Reviewed implementation hashes:
+  - `TransactionTypeChoicePresentation.swift`:
+    `45f0312f910a20007363f7443b76dbb7f0201a4840ffd224051bc2b9002a3f20`
+  - `TransactionTypeChoicePresentationTests.swift`:
+    `81022ad90925ebce0cd34c5e0c639eb59f69deb15a5db4a830402379e34ee77e`
 
 ## Selection and Scope
 
@@ -79,7 +84,9 @@ The dossier freezes six requirements and seven future test obligations:
 - canonical restart of all six shapes through the verified classification only,
   with exact emitted classification/scope key allowlists and equal restored
   Transfer descriptors; and
-- exact existing taxonomy failure coverage for malformed or invalid evidence.
+- exact existing taxonomy failure coverage for well-formed invalid evidence,
+  plus explicit raw `DecodingError` behavior for malformed JSON and test-
+  consumer normalization to `invalidEncodedClassification` with no descriptor.
 
 The recommended domain surface is deliberately small:
 
@@ -139,6 +146,25 @@ paths. Assignment-control commit
 
 ## Permanent Limits
 
-Ready status proves no executable presentation, offline physical durability,
+Implemented status proves no offline physical durability,
 authorization, database policy, synchronization, migration reconciliation,
 app/MCP behavior, hosted resource, production behavior, release or cutover.
+
+## Implementation Review
+
+`SUBAGENT-WORK-007` produced candidates `0170ac0a`, `f38258a5` and final
+`c22fac22` from exact base `8cf4bec6`; every candidate changed only the two
+registered paths. Primary every-line review found no implementation defect.
+Independent review rejected the first candidate for one P3 test-obligation gap:
+well-formed invalid aggregate shapes did not exercise syntactically malformed
+JSON. The next correction was too ambiguous because a helper normalized the raw
+parser failure as though the codec emitted a taxonomy failure. Final correction
+`c22fac22` directly proves raw `DecodingError`, explicitly not
+`TransactionTaxonomyFailure`, and separately proves the test-only consumer
+normalizes it to rejected `invalidEncodedClassification` without a descriptor.
+Replacement independent final review found no code P0-P3 issue and required the
+matching dossier correction above. Worker/root focused runs pass all six tests;
+the complete central gate passes all 224 tests in 50 suites, conversion/M0 and
+target isolation/generated-contract controls, two identical generated-project
+hashes, both staging builds and clean artifacts. Immutable exact-integration-
+commit CI remains mandatory before promotion.

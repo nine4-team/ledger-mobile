@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T02:35:11.504Z",
+    "lastSynchronizedAt": "2026-09-03T05:03:25.317Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -33117,12 +33117,12 @@
           "path": "LedgeriOS/LedgerTargetCore/TransactionTypeChoicePresentation.swift"
         }
       ],
-      "observedSourceHash": "ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629",
-      "acknowledgedSourceHash": "ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629",
+      "observedSourceHash": "45f0312f910a20007363f7443b76dbb7f0201a4840ffd224051bc2b9002a3f20",
+      "acknowledgedSourceHash": "45f0312f910a20007363f7443b76dbb7f0201a4840ffd224051bc2b9002a3f20",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the ready-gate scaffold for provider-free canonical Transaction type-choice presentation; executable behavior is intentionally absent.",
+      "currentBehavior": "Implements provider-free literal Transaction type membership and stateless exact title/owner/economic-meaning presentation over the verified TransactionClassification, with role-neutral Transfer presentation.",
       "disposition": "redesign",
       "target": {
         "owner": "Transaction Type Choice Presentation",
@@ -33154,7 +33154,7 @@
           "Synthetic verified classifications prove exact unordered membership, titles, owner vocabulary, economic meanings, role-neutral Transfer projection, restart and malformed-taxonomy refusal"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -33162,7 +33162,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"
       ],
-      "notes": "Ready-gate mapping only. The slice reuses the verified taxonomy and classification, expresses literal unordered scope membership, and derives exact Purchase/Return/Transfer, Client/1584 and economic-meaning presentation. It adds no classification aggregate, order, action, amount, provider or migration behavior.",
+      "notes": "Implemented after complete central gates, pending exact integration-commit CI. Final candidate c22fac22 reuses the verified taxonomy and classification, expresses literal unordered scope membership, and derives exact Purchase/Return/Transfer, Client/1584 and economic-meaning presentation. It adds no classification aggregate, order, action, amount, provider or migration behavior.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -39071,12 +39071,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
         }
       ],
-      "observedSourceHash": "448ec87f3d2d231fe69631e981d8403840790a1eb618cabfd328a713699f49e6",
-      "acknowledgedSourceHash": "448ec87f3d2d231fe69631e981d8403840790a1eb618cabfd328a713699f49e6",
+      "observedSourceHash": "81022ad90925ebce0cd34c5e0c639eb59f69deb15a5db4a830402379e34ee77e",
+      "acknowledgedSourceHash": "81022ad90925ebce0cd34c5e0c639eb59f69deb15a5db4a830402379e34ee77e",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the ready-gate scaffold for provider-free Transaction type-choice presentation tests; no executable test exists yet.",
+      "currentBehavior": "Executes six deterministic provider-free tests for literal unordered membership, all five owner/type pairs and six role-bearing classifications, exact titles/meaning, role-neutral Transfer, canonical restart, well-formed taxonomy refusal and explicit malformed-parser normalization at the test-consumer boundary.",
       "disposition": "redesign",
       "target": {
         "owner": "Transaction Type Choice Presentation",
@@ -39109,7 +39109,7 @@
           "Tests prove only the frozen presentation leaf and explicitly exclude ordering, amounts, lifecycle, commands, app/MCP, provider, migration and production behavior"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -39117,7 +39117,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"
       ],
-      "notes": "Planned tests use literal sets and exact strings, exhaust all six valid classification shapes across five owner/type pairs, prove Transfer source/destination equivalence, re-project every shape after canonical classification restart, and exercise exact existing taxonomy failures and encoded exclusions. They make no UI order, command, provider, migration or production claim.",
+      "notes": "Six focused and all 224 tests plus the complete central gate pass after independent review caught one P3 missing syntactically malformed JSON case and final re-review required exact raw DecodingError versus test-consumer normalization wording. Tests use literal sets and exact strings, exhaust all six valid classification shapes across five owner/type pairs, prove Transfer source/destination equivalence, re-project every shape after canonical classification restart, and exercise exact existing taxonomy failures and encoded exclusions. Exact integration CI remains pending; no UI order, command, provider, migration or production claim is made.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
