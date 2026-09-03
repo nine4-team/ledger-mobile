@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 219
+State version: 220
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CHECKLIST-REVISION-USE-CASE-READY-LOCAL
+- Checkpoint: SPACE-CHECKLIST-REVISION-USE-CASE-IMPLEMENTATION-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3137,13 +3137,32 @@ modifying the running Firebase application before hard cutover.
   `SpaceChecklistRevisionUseCaseTests.swift` (`TEST-674E6F23E5BE`). The READY
   dossier freezes exact draft/current semantic revalidation, one verified command,
   one post-derivation port call, receipt validation, typed failure/cancellation
-  preservation and permanent provider/production exclusions. Current control
-  state is 823 recorded / 808 discovered, 389 mapped-or-later / 174 residual /
+  preservation and permanent provider/production exclusions. The READY
+  checkpoint control state was 823 recorded / 808 discovered, 389 mapped-or-later / 174 residual /
   45 blockers with only the three established retired-path warnings. The
-  complete local READY gate passes all 267 existing target tests in 58 suites
+  complete local READY gate passed all 267 existing target tests in 58 suites
   with warnings as errors, conversion/target controls, repeatable Xcode hashes
-  `0657194a` / `388303af`, both staging builds, JSON and clean formatting.
-  Independent actual-diff review and exact-ready-SHA CI remain pending.
+  `0657194a` / `388303af`, both staging builds, JSON and clean formatting. One
+  reviewer found missing explicit proof for both admissible readiness paths;
+  the corrected plan closed it and both independent reviewers returned GO.
+  Exact READY commit `6534da3361b3b52b3713ac558799a1a70ab00f26`
+  passed immutable Actions run `33785649411` (traceability 15 seconds; isolated
+  target 3 minutes 48 seconds), authorizing only the two frozen leaves.
+- A bounded writer then changed exactly those two leaves and no other path. The
+  implementation reuses `SpaceChecklistEditingDraft.command`, derives before
+  one `SpaceChecklistRevising` call, validates the receipt, preserves every
+  local state plus both typed failure families and cancellation, and bounds raw
+  errors. Root inspected every line and independently reran six focused plus
+  all 273 target tests in 59 suites with warnings as errors. Repeatable Xcode
+  hashes `0657194a` / `388303af` and both staging builds pass. Initial reviewers
+  found only test-proof gaps: scope/lifecycle transparency, both revision
+  boundaries on both readiness paths, long UTF-8 values and exact reciprocal
+  field isolation. Corrected tests cover active/archived Project and Business
+  Inventory evidence, more than 8 KB Unicode values, zero/maximum revision on
+  both readiness paths and complete encoded leaf-delta sets. Both final reviews
+  return GO with no remaining P0-P3. Complete local conversion/target controls,
+  JSON, exact-path and formatting checks pass; exact implementation-SHA CI
+  remains pending.
 
 ## Next Action
 
@@ -3415,13 +3434,15 @@ Continue without waiting on the two M1 evidence blockers:
    readiness or permissions; do not add UI, optimistic projection, persistence,
    authorization, restore/delete/merge/rename/reassignment/cascade, provider,
    schema/RLS/Sync, app/MCP, migration, hosted or production behavior.
-   Review and gate `space-checklist-revision-use-case-contracts` and
+   Review and gate the `space-checklist-revision-use-case-contracts`
+   implementation and
    `EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001`. Preserve exactly the two new
-   comment-only leaves `SpaceChecklistRevisionUseCase.swift`
+   executable leaves `SpaceChecklistRevisionUseCase.swift`
    (`SWIFT-1FDB27E18B95`) and `SpaceChecklistRevisionUseCaseTests.swift`
-   (`TEST-674E6F23E5BE`). The complete local READY gates pass; obtain two
-   independent actual-diff reviews, then commit/push and require immutable exact-ready-SHA CI
-   before replacing scaffolds with executable code. The frozen application path
+   (`TEST-674E6F23E5BE`). Exact READY CI, root line review, focused/all tests,
+   complete local gates and both independent corrected-diff reviews pass.
+   Commit/push exactly the implementation package and require immutable exact-
+   implementation-SHA CI before verification. The frozen application path
    reuses existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate,
    derives one verified command before one port call, validates the receipt,
    preserves typed failures/cancellation and bounds raw errors. EditChecklistModal,

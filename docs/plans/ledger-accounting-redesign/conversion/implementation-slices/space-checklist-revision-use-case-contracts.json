@@ -3,7 +3,7 @@
   "sliceId": "space-checklist-revision-use-case-contracts",
   "title": "Derive and dispatch one complete Space checklist replacement",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Space Checklist Revision Use Case",
   "surfaceIds": ["SWIFT-1FDB27E18B95", "TEST-674E6F23E5BE"],
   "requirements": [
@@ -107,7 +107,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
       "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-007"],
       "expected": "The same existing draft successfully derives and dispatches one canonical complete replacement from both ready-complete current evidence and retryable ready-complete cached evidence. Both paths remain admissible after a nonsemantic refresh of version, as-of, name, notes and audit timestamps when the exact Account/Space/scope/lifecycle/revision/hierarchy semantic base is unchanged. Each path makes exactly one call preserving stable nested IDs, explicit order, checked state, normalized outer whitespace and accepted interior text. Duplicate text, an empty collection, a zero-item checklist and revision zero/UInt64.max remain valid without defaults or length caps.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -116,7 +116,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
       "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
       "expected": "Waiting/incomplete/noneditable current evidence, changed Account/Space/scope/lifecycle/revision/hierarchy semantic base, malformed draft content and nonfinite capture time fail during derivation with zero port calls. The use case adds no alternative readiness or archive policy.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -125,7 +125,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
       "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-007"],
       "expected": "Every matching LocalOperationState returns unchanged after exactly one port call carrying one complete hierarchy payload, exactly one same-Space expected-revision precondition and no accounting operation; receipt mismatch fails after one call.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -134,7 +134,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
       "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-007"],
       "expected": "A reciprocal matrix independently varies Account, Space, current revision, checklist/item identity, order, name/text, checked state, Operation, actor, contract and time; every value reaches only its owning existing command/derived evidence field exactly, with one call and no new policy.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -143,7 +143,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
       "covers": ["SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
       "expected": "SpaceChecklistEditingFailure, SpaceChecklistRevisionFailure, unknown port failure and CancellationError remain distinct after the correct zero/one call boundary; raw provider details never cross the application boundary.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -152,7 +152,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift",
       "covers": ["SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
       "expected": "Stable diagnostics and exact encoded command shape expose only the authorized checklist replacement/operation fields and no raw error, Space detail/scope/lifecycle mutation, template/media/Item/review/completion/accounting operation, UI state, credential, provider payload or production identity.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -161,7 +161,7 @@
       "owner": "conversion control and independent actual-diff review",
       "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
       "expected": "The READY commit changes only two comment scaffolds and control/evidence files, passes all controls/tests/builds, and leaves EditChecklistModal plus all Firebase/app/MCP/provider surfaces at prior status and content.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     },
     {
@@ -177,5 +177,5 @@
   "implementationEvidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready design only. Fresh root review and a bounded strict-authority scout selected Space checklist revision submission above the verified editing-presentation and revision-operation contracts. Exactly two comment-only target leaves are frozen. Canonical Spaces authority supplies complete ordered replacement, stable nested identities, normalization, checked state, empty/zero-item validity and atomic revision conflict. O-023/O-026/O-032/O-037 remain outside because media, templates, completion/accounting and archive effects are excluded. Conversion/target controls, all 267 existing target tests in 58 suites with warnings as errors, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. No executable target code may start until two independent actual-diff reviews and immutable exact-ready-commit CI pass."
+  "notes": "Implemented locally only after exact READY commit 6534da3361b3b52b3713ac558799a1a70ab00f26 passed immutable Actions run 33785649411. Exactly two frozen target leaves implement existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate revalidation, one derived command before one SpaceChecklistRevising call, receipt validation, exact local-state preservation, typed failure/cancellation preservation and bounded raw errors. Six focused and all 273 target tests in 59 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. Independent reviews caught test-proof gaps for both readiness paths, long UTF-8 values, scope/lifecycle transparency, revision boundaries and exact reciprocal deltas; corrected tests close them and both final reviews return GO. Exact implementation-commit CI is required before verification. O-023/O-026/O-032/O-037 and every provider/production exclusion remain binding."
 }

@@ -1,20 +1,42 @@
-// READY contract scaffold only — no executable behavior.
-//
-// This leaf will own one provider-free application path from the existing,
-// restart-safe SpaceChecklistEditingDraft plus current SpaceCoreDetailsUpdate
-// to the already verified SpaceChecklistRevisionOperation boundary.
-//
-// Implementation is frozen to:
-// - ask the draft to derive and revalidate one ReviseSpaceChecklistsCommand;
-// - call SpaceChecklistRevising.reviseChecklists exactly once only after
-//   command derivation succeeds;
-// - validate the receipt and preserve its exact localState;
-// - preserve CancellationError, SpaceChecklistEditingFailure, and
-//   SpaceChecklistRevisionFailure;
-// - map any other port error to SpaceChecklistRevisionFailure.localAcceptanceFailed.
-//
-// This boundary does not add draft mutations, choose read/edit eligibility,
-// implement SwiftUI, or claim physical persistence, optimistic projection,
-// authorization, authoritative apply, provider/schema/RLS/Sync behavior,
-// app/MCP wiring, migration, hosted resources, deployment, release, cutover,
-// or production authority.
+import Foundation
+
+/// Application-layer orchestration for one complete Space-checklist replacement.
+public struct SpaceChecklistRevisionUseCase<Reviser: SpaceChecklistRevising>: Sendable {
+    private let reviser: Reviser
+
+    public init(reviser: Reviser) {
+        self.reviser = reviser
+    }
+
+    public func execute(
+        draft: SpaceChecklistEditingDraft,
+        currentUpdate: SpaceCoreDetailsUpdate,
+        operationId: OperationID,
+        actorPrincipalId: PrincipalID,
+        operationContractVersion: OperationContractVersion,
+        capturedAt: Date
+    ) async throws -> OperationReceipt {
+        let command = try draft.command(
+            validating: currentUpdate,
+            operationId: operationId,
+            actorPrincipalId: actorPrincipalId,
+            operationContractVersion: operationContractVersion,
+            capturedAt: capturedAt
+        )
+
+        let receipt: OperationReceipt
+        do {
+            receipt = try await reviser.reviseChecklists(command)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as SpaceChecklistEditingFailure {
+            throw failure
+        } catch let failure as SpaceChecklistRevisionFailure {
+            throw failure
+        } catch {
+            throw SpaceChecklistRevisionFailure.localAcceptanceFailed
+        }
+
+        return try command.validate(receipt)
+    }
+}

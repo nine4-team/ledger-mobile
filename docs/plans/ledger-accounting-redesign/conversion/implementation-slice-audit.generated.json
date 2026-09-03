@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T17:35:50.123Z",
+  "generatedFromManifestSync": "2026-09-03T18:01:50.213Z",
   "totals": {
     "slices": 58,
     "claimedTargetSurfaces": 141,
@@ -9,8 +9,8 @@
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
-    "in_progress": 1,
+    "ready": 0,
+    "in_progress": 2,
     "implemented": 0,
     "verified": 56,
     "rehearsed": 0,
@@ -685,7 +685,7 @@
       "sliceId": "space-checklist-revision-use-case-contracts",
       "title": "Derive and dispatch one complete Space checklist replacement",
       "kind": "product",
-      "status": "ready",
+      "status": "in_progress",
       "owner": "Space Checklist Revision Use Case",
       "surfaceIds": [
         "SWIFT-1FDB27E18B95",

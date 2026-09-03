@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T17:35:50.123Z",
+    "lastSynchronizedAt": "2026-09-03T18:01:50.213Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18070,12 +18070,12 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceChecklistRevisionUseCase.swift"
         }
       ],
-      "observedSourceHash": "ba108c13d8d6ef5503bcfb3c23cd351731de4ac794e3620ce372fc6053e7db20",
-      "acknowledgedSourceHash": "ba108c13d8d6ef5503bcfb3c23cd351731de4ac794e3620ce372fc6053e7db20",
+      "observedSourceHash": "4694ad8c4322d5cc4ad21edb38f5b7e8a3f3c3eb367c545ba393556c18ca3ace",
+      "acknowledgedSourceHash": "4694ad8c4322d5cc4ad21edb38f5b7e8a3f3c3eb367c545ba393556c18ca3ace",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for provider-free Space checklist edit submission through the verified editing and revision-operation contracts.",
+      "currentBehavior": "Implements provider-free Space checklist edit submission through the verified editing and revision-operation contracts.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Checklist Revision Use Case",
@@ -18088,14 +18088,14 @@
           "Caller Operation, actor, contract and capture time remain exact; raw provider errors cannot cross the application boundary"
         ],
         "syncRequirements": [
-          "Future provider-free orchestration derives the verified complete-replacement command before exactly one port call and validates the returned receipt",
+          "Provider-free orchestration derives the verified complete-replacement command before exactly one port call and validates the returned receipt",
           "No new local persistence, optimistic projection, authoritative update or synchronized visibility is claimed"
         ]
       },
       "migration": {
         "rule": "Define target-only application orchestration; decode no Firebase embedded checklist array, callback, route, export row or migration disposition.",
         "reconciliation": [
-          "Synthetic restart-safe draft/current evidence will derive one verified checklist replacement without source transformation"
+          "Synthetic restart-safe draft/current evidence derives one verified checklist replacement without source transformation"
         ]
       },
       "verification": {
@@ -18103,7 +18103,7 @@
           "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionUseCaseTests"
         ],
         "acceptance": [
-          "Planned tests prove only the frozen provider-free checklist edit-to-validated-receipt application path and permanent exclusions"
+          "Focused tests prove only the frozen provider-free checklist edit-to-validated-receipt application path and permanent exclusions"
         ]
       },
       "status": "target_mapped",
@@ -18115,7 +18115,7 @@
         "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001",
         "EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"
       ],
-      "notes": "READY design only. The future use case accepts the existing restart-safe SpaceChecklistEditingDraft plus current SpaceCoreDetailsUpdate, derives one verified ReviseSpaceChecklistsCommand, calls SpaceChecklistRevising once after derivation, validates its receipt, preserves typed failures/cancellation and bounds raw transport errors. All 267 existing target tests, complete controls, repeatable generation and both staging builds pass; actual-diff review and exact-ready-SHA CI remain pending. No SwiftUI, physical persistence, authorization, provider, migration or production behavior.",
+      "notes": "Implemented locally only after exact READY commit 6534da3361b3b52b3713ac558799a1a70ab00f26 passed immutable Actions run 33785649411. The use case accepts the existing restart-safe SpaceChecklistEditingDraft plus current SpaceCoreDetailsUpdate, derives one verified ReviseSpaceChecklistsCommand before exactly one SpaceChecklistRevising call, validates its receipt, preserves editing/revision failures and cancellation, and bounds raw transport errors. Root line review, six focused and all 273 target tests in 59 suites, complete controls, repeatable generation and both staging builds pass. Two independent reviewers found and verified corrections to test-only proof gaps; both now return GO. Exact implementation-commit CI remains pending. No SwiftUI, physical persistence, authorization, provider, migration or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -36226,12 +36226,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistRevisionUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "0b4ccd869d45d6a911f908a464fe2fe7350c285329402c5b2200ea8f449122d1",
-      "acknowledgedSourceHash": "0b4ccd869d45d6a911f908a464fe2fe7350c285329402c5b2200ea8f449122d1",
+      "observedSourceHash": "e4d975662cc555269f54c5e670e084e40a73cc50fe36441540c317a0319574f3",
+      "acknowledgedSourceHash": "e4d975662cc555269f54c5e670e084e40a73cc50fe36441540c317a0319574f3",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for reciprocal Space checklist revision use-case verification.",
+      "currentBehavior": "Implements executable reciprocal Space checklist revision use-case verification.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Checklist Revision Use Case Tests",
@@ -36253,7 +36253,7 @@
       "migration": {
         "rule": "Use target-only synthetic values and load no Firebase Space/checklist/modal/export data or source-to-target mapping.",
         "reconciliation": [
-          "Planned tests preserve canonical target dispatch while EditChecklistModal remains target_mapped"
+          "Executable tests preserve canonical target dispatch while EditChecklistModal remains target_mapped"
         ]
       },
       "verification": {
@@ -36261,7 +36261,7 @@
           "swift test --package-path LedgeriOS --filter SpaceChecklistRevisionUseCaseTests"
         ],
         "acceptance": [
-          "Planned tests prove only the frozen provider-free Space checklist revision use case and exclusions"
+          "Focused tests prove only the frozen provider-free Space checklist revision use case and exclusions"
         ]
       },
       "status": "target_mapped",
@@ -36273,7 +36273,7 @@
         "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001",
         "EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"
       ],
-      "notes": "READY verification design only. Planned focused tests cover exact draft/current-evidence command derivation, ordered hierarchy/normalization/checked state, empty and zero-item cases, reciprocal fields, every receipt state, zero-call validation failures, mismatch, normalized/raw/cancellation behavior, diagnostics and encoded-shape exclusions. All 267 existing target tests and complete local gates pass while this leaf remains comment-only; actual-diff review and exact-ready-SHA CI remain pending.",
+      "notes": "Six executable focused tests cover current and retryable-ready cached evidence, nonsemantic refreshes, active/archived Project and Business Inventory transparency, long UTF-8 text without an invented cap, ordered hierarchy/normalization/checked state, empty and zero-item cases, zero/UInt64.max revision on both readiness paths, exact encoded reciprocal field deltas, every receipt state, zero-call validation failures, mismatch, typed/raw/cancellation behavior, all 41 stable diagnostics and nested encoded-shape exclusions. Root focused/all tests and complete local gates pass; two independent final reviews return GO after correcting test-proof gaps. Exact implementation-commit CI remains pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
