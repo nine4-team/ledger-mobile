@@ -3,7 +3,7 @@
   "sliceId": "space-details-update-use-case-contracts",
   "title": "Validate and dispatch one complete Space details replacement",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Space Details Update Use Case",
   "surfaceIds": ["SWIFT-306643A5CD0D", "TEST-235F73A8DC9E"],
   "requirements": [
@@ -162,12 +162,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-006", "SPDETAILUSE-REQ-007", "SPDETAILUSE-REQ-008"],
       "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while implementation changes only the two target leaves and the current modal/caller/Firebase files remain untouched and target_mapped.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally after exact ready commit b6a98ca0fd33bb170bd9e7f70e7dc8f76a17b19b passed immutable Actions run 33749431949. The provider-free use case revalidates transient raw text, assembles the verified complete-replacement command with exact caller metadata, invokes SpaceDetailsUpdating once, validates its receipt, preserves Swift cancellation and both normalized failure families, and bounds unexpected transport errors. Independent implementation review found an imprecise no-base-value claim plus incomplete long-raw and diagnostic-leakage assertions; all were corrected, and two final reviewers return GO with no P0-P3. Six focused and all 255 target tests in 56 suites, warnings-as-errors, conversion/target controls, repeatable generation and both staging builds pass locally. The current modal remains target_mapped. Exact implementation-commit CI remains required before verification."
+  "notes": "Verified at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 in immutable Actions run 33750834849 after exact ready commit b6a98ca0fd33bb170bd9e7f70e7dc8f76a17b19b passed run 33749431949. The provider-free use case revalidates transient raw text, assembles the verified complete-replacement command with exact caller metadata, invokes SpaceDetailsUpdating once, validates its receipt, preserves Swift cancellation and both normalized failure families, and bounds unexpected transport errors. Independent implementation review found an imprecise no-base-detail claim plus incomplete long-raw and diagnostic-leakage assertions; all were corrected, and two final reviewers return GO with no P0-P3. Six focused and all 255 target tests in 56 suites, warnings-as-errors, conversion/target controls, repeatable generation and both staging builds pass. The current modal remains target_mapped because its UI/composition responsibilities are unconverted."
 }

@@ -6,7 +6,7 @@
 - Claimed target surfaces: `SWIFT-306643A5CD0D`, `TEST-235F73A8DC9E`
 - Partially mapped source evidence: `SWIFT-9F4789704808` remains `target_mapped`
 - Slice dossier: `conversion/implementation-slices/space-details-update-use-case-contracts.json`
-- Verification state: corrected implementation passes two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
+- Verification state: verified at exact implementation commit `f0d7c3fa950485857f23cd7faf9165e8ac23b562` in immutable Actions run `33750834849`
 
 ## Selection and Authority
 
@@ -133,10 +133,13 @@ staging builds; valid JSON and clean formatting. Implemented leaf hashes are:
 - `SpaceDetailsUpdateUseCase.swift` — `dd0ce5e0e0c644ba3f95681d892b74441fbffd7ba87621f328786f20b2ada99d`; and
 - `SpaceDetailsUpdateUseCaseTests.swift` — `72ee0af6873a76bd8af685e43a72198efd6905bbe188604b0253975c2e3a0698`.
 
-The exact integration commit and immutable CI remain required before the slice
-or either target leaf can be promoted to verified. The source modal must remain
-`target_mapped` after that promotion because the unconverted responsibilities
-listed above still exist.
+Exact implementation commit `f0d7c3fa950485857f23cd7faf9165e8ac23b562`
+passed immutable Actions run `33750834849`: conversion state and traceability
+passed in 11 seconds, and the isolated target environment passed all tests,
+generated contracts, macOS/iOS staging builds and clean-artifact checks in 3
+minutes 17 seconds. The slice and both target leaves are verified. The source
+modal remains `target_mapped` because the unconverted responsibilities listed
+above still exist.
 
 ## Permanent Exclusions
 

@@ -510,9 +510,10 @@ Independent review found and drove correction of an imprecise no-base-detail
 claim, missing exact long-raw assertions and incomplete diagnostic-leakage
 coverage; both final reviewers return GO. Six focused and all 255 target tests
 in 56 suites, warnings-as-errors, conversion/target controls, repeatable
-generation and both staging builds pass locally. Exact implementation-commit
-CI remains required before verification; the source modal remains
-`target_mapped` after target-leaf promotion.
+generation and both staging builds pass. Exact implementation commit
+`f0d7c3fa` passed immutable Actions run `33750834849`; the slice and its two
+target leaves are verified. The source modal remains `target_mapped` because
+its remaining UI/composition responsibilities are unconverted.
 `EVID-SPACE-DETAILS-UPDATE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

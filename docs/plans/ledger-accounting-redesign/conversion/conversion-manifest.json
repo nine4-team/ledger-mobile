@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T11:38:18.646Z",
+    "lastSynchronizedAt": "2026-09-03T11:45:13.310Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18771,14 +18771,14 @@
           "Focused tests prove only the frozen provider-free save-intent-to-validated-receipt application path and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Implemented provider-free transient input, canonical intent and application orchestration. Raw text is revalidated before exactly one complete-replacement port call; exact Account/Space/revision and caller operation metadata reach the verified command; receipts are validated; Swift cancellation and normalized failures remain distinct while unexpected transport errors are bounded. No Space read/readiness state or UI, lifecycle, no-op, authorization, provider or migration policy is introduced. Exact implementation-commit CI is pending.",
+      "notes": "Verified at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 in immutable Actions run 33750834849. Provider-free transient input, canonical intent and application orchestration revalidate raw text before exactly one complete-replacement port call; exact Account/Space/revision and caller operation metadata reach the verified command; receipts are validated; Swift cancellation and normalized failures remain distinct while unexpected transport errors are bounded. No Space read/readiness state or UI, lifecycle, no-op, authorization, provider or migration policy is introduced.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -26521,7 +26521,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "The implemented target-only use-case slice maps only this modal's save-intent normalization and dispatch responsibility. The full source surface remains target_mapped because initial form population, transient edits, immediate error presentation, dirty/no-op policy, cancel/success dismissal, layout/copy and app composition are not converted. Canonical target validation intentionally rejects newline-only names that the shipped whitespace-only disable rule can pass through. Exact implementation-commit CI is pending.",
+      "notes": "The verified target-only use-case slice maps only this modal's save-intent normalization and dispatch responsibility at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 / immutable Actions run 33750834849. The full source surface remains target_mapped because initial form population, transient edits, immediate error presentation, dirty/no-op policy, cancel/success dismissal, layout/copy and app composition are not converted. Canonical target validation intentionally rejects newline-only names that the shipped whitespace-only disable rule can pass through.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -34784,14 +34784,14 @@
           "Focused tests prove only the provider-free Space details update use case and its permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Implemented six focused synthetic tests covering exact raw/canonical boundaries, immutable replacement, same-name distinct Spaces, revision zero/UInt64.max, reciprocal caller and derived command fields, every receipt state, validation-before-call, mismatch, both normalized failure families, raw transport normalization, structured cancellation, diagnostics and encoded-shape exclusions. They do not claim the current modal, read readiness, form restart, persistence, authorization, provider or Sync behavior. Exact implementation-commit CI is pending.",
+      "notes": "Verified at exact implementation commit f0d7c3fa950485857f23cd7faf9165e8ac23b562 in immutable Actions run 33750834849. Six focused synthetic tests cover exact raw/canonical boundaries, immutable replacement, same-name distinct Spaces, revision zero/UInt64.max, reciprocal caller and derived command fields, every receipt state, validation-before-call, mismatch, both normalized failure families, raw transport normalization, structured cancellation, diagnostics and encoded-shape exclusions. They do not claim the current modal, read readiness, form restart, persistence, authorization, provider or Sync behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

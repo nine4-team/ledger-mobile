@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 209
+State version: 210
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-DETAILS-UPDATE-USE-CASE-INTEGRATED-LOCAL
+- Checkpoint: SPACE-DETAILS-UPDATE-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2982,7 +2982,9 @@ modifying the running Firebase application before hard cutover.
   focused and all 255 target tests in 56 suites, warnings-as-errors,
   conversion/target controls, stable project hashes `0657194a` / `388303af`,
   both staging builds, valid JSON and clean formatting pass locally. Exact
-  implementation-commit CI remains required before target-leaf/slice promotion;
+  implementation commit `f0d7c3fa950485857f23cd7faf9165e8ac23b562`
+  passed immutable Actions run `33750834849` (traceability 11 seconds; isolated
+  target 3 minutes 17 seconds). The slice and its two target leaves are verified;
   the current source modal remains target_mapped throughout.
 
 ## Next Action
@@ -3212,19 +3214,19 @@ Continue without waiting on the two M1 evidence blockers:
    production behavior. Corrected implementation, two independent final
    reviews, the complete local gate and exact implementation commit
    `c35f1cef` / immutable run `33746648677` pass. Preserve this boundary and
-   retain promotion commit `880727f7` / run `33747118216`. Treat the corrected,
-   locally integrated `space-details-update-use-case-contracts` dossier and
-   `EVID-SPACE-DETAILS-UPDATE-USE-CASE-001` as the next candidate boundary.
-   It may change only `SpaceDetailsUpdateUseCase.swift` and its target tests and
+   retain promotion commit `880727f7` / run `33747118216`. Treat verified
+   `space-details-update-use-case-contracts` and
+   `EVID-SPACE-DETAILS-UPDATE-USE-CASE-001` as the frozen provider-free Space-
+   details submission boundary. It changes only `SpaceDetailsUpdateUseCase.swift` and its target tests and
    may replace only save-intent normalization/dispatch from the current modal;
    keep the full source surface target_mapped. Do not consume Space-core read/
    readiness updates, choose active/archive eligibility, or add initial state,
    dirty/no-op/cancel/dismissal/UI/form-restart behavior. Exact ready commit
    `b6a98ca0` / run `33749431949`, the corrected implementation, two independent
-   final reviews and the complete local integration gate pass. Commit and push
-   this synchronized implementation checkpoint, require immutable exact-
-   implementation-SHA CI, then promote only the two target leaves and slice to
-   verified. Keep the full source modal target_mapped.
+   final reviews, the complete local integration gate and exact implementation
+   commit `f0d7c3fa` / immutable run `33750834849` pass. Preserve the verified
+   boundary, keep the full source modal target_mapped, and select the next
+   coherent decision-independent slice through fresh authority preflight.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,
