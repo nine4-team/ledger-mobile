@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T18:14:02.896Z",
+    "lastSynchronizedAt": "2026-09-03T18:32:43.840Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -32796,6 +32796,65 @@
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
+      "id": "SWIFT-EE8576F5CD39",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ProjectSetupUseCase.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ProjectSetupUseCase.swift"
+        }
+      ],
+      "observedSourceHash": "8149206ded79f1de4ac0335602259bfcae59821a4425069a02e8989370282d80",
+      "acknowledgedSourceHash": "8149206ded79f1de4ac0335602259bfcae59821a4425069a02e8989370282d80",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for provider-free Project setup selection-to-application dispatch through the verified form-presentation and setup-operation contracts.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Use Case",
+        "surfaces": [
+          "ProjectSetupUseCase",
+          "single ProjectSetupOperating.create invocation and receipt validation"
+        ],
+        "securityRequirements": [
+          "Existing selection/current-preparation validation binds exact Account, stable Project/Client/category identity and represented evidence without treating display text, route or provider path as authorization",
+          "Caller Project/Operation/actor/contract/time remain exact and raw provider errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Future provider-free orchestration derives the verified complete Project setup command before exactly one port call and validates the returned receipt",
+          "No new readiness gate, local persistence, optimistic projection, authoritative update or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only application orchestration; decode no Firebase Project/clientName/category/media callback, source export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic typed selection/current preparation will derive one verified Project setup command without source transformation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectSetupUseCaseTests"
+        ],
+        "acceptance": [
+          "Planned tests prove only the frozen provider-free Project setup selection-to-validated-receipt application path and permanent exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-SETUP-001",
+        "EVID-PROJECT-SETUP-FORM-PRESENTATION-001",
+        "EVID-PROJECT-SETUP-USE-CASE-001"
+      ],
+      "notes": "READY design only. The future use case accepts the existing ProjectSetupFormSelection plus current ProjectSetupFormPreparation, derives one verified CreateProjectCommand before exactly one ProjectSetupOperating.create call, validates and returns its exact receipt, preserves both typed failure families and cancellation, and bounds raw port errors. Matching represented ready, partial and stale evidence remains admissible without a new readiness policy. All 273 existing target tests in 59 suites, complete controls, repeatable generation and both staging builds pass. Two independent reviewers found and verified comment-scanner, optional-allocation-shape, Client-delta and count-precision corrections and returned GO. No UI/default/category mutation/media, physical persistence, authorization, provider, migration or production behavior; O-023/O-024/O-025/O-026 remain outside. Exact-ready-SHA CI remains required.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
       "id": "SWIFT-EF13EACEC482",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/Card.swift",
@@ -38592,6 +38651,67 @@
       ],
       "notes": "M2 withheld: O-033/O-034 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority.",
       "classificationBatch": "M0-REPORTING-SEARCH-001"
+    },
+    {
+      "id": "TEST-BB8C5679BA31",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift"
+        }
+      ],
+      "observedSourceHash": "6c6a19210a53baeb2b8b0303391f5f745d9ef27e0535f608882330fed124b542",
+      "acknowledgedSourceHash": "6c6a19210a53baeb2b8b0303391f5f745d9ef27e0535f608882330fed124b542",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY scaffold for reciprocal Project setup use-case verification.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Use Case Tests",
+        "surfaces": [
+          "exact selection/current-preparation and command fixtures",
+          "ready/partial/stale and changed-evidence fixtures",
+          "reciprocal encoded field-delta and evidence-non-leakage fixtures",
+          "receipt-state, zero-call validation, exhaustive typed/raw failure, cancellation, diagnostics and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project, Client, category, Principal and Operation identities and prove local represented evidence is non-authorizing",
+          "Stable failures reveal no raw identity, credential, provider payload or production identifier"
+        ],
+        "syncRequirements": [
+          "An in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Derivation failure makes zero calls and exact receipt states return without an optimistic or authoritative Client/Project row"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase Project/clientName/category/media/export data or source-to-target mapping.",
+        "reconciliation": [
+          "Planned tests preserve canonical target dispatch while NewProjectView, ProjectFormValidation/tests and ProjectService remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectSetupUseCaseTests"
+        ],
+        "acceptance": [
+          "Planned tests prove only the frozen provider-free Project setup use case and exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-PROJECT-REFERENCE-001",
+        "EVID-M2-PROJECT-REFERENCE-001",
+        "EVID-PROJECT-SETUP-001",
+        "EVID-PROJECT-SETUP-FORM-PRESENTATION-001",
+        "EVID-PROJECT-SETUP-USE-CASE-001"
+      ],
+      "notes": "READY verification design only. Planned tests cover exact existing/new Client and category selection dispatch across matching ready/partial/stale evidence, zero and nullable/large/mixed-currency allocations, changed-evidence zero-call refusal, every receipt state, exact reciprocal encoded leaf deltas, preparation-evidence non-leakage, both exhaustive failure families, cancellation/raw-error handling, all diagnostics and exact command-shape exclusions. All 273 existing target tests and complete local gates pass while this leaf remains comment-only. Two independent corrected-diff reviewers return GO. No source UI/provider/production behavior. Exact-ready-SHA CI remains required.",
+      "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
       "id": "TEST-BB924134BF8E",

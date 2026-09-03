@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 221
+State version: 222
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CHECKLIST-REVISION-USE-CASE-VERIFIED
+- Checkpoint: PROJECT-SETUP-USE-CASE-READY-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3124,6 +3124,32 @@ modifying the running Firebase application before hard cutover.
   including all target tests, both staging builds and clean tracked artifacts.
   The dossier and both target surfaces are verified; every exclusion remains
   binding.
+- Exact Space-checklist verification-promotion commit
+  `ecd0ca9fc2f11c4a4bd02f3687b6ba76209cb649` passed immutable Actions run
+  `33789427209` (traceability 9 seconds; isolated target 2 minutes 49 seconds).
+  Root and a separate strict-authority preflight then selected the Project
+  setup selection-to-application boundary above verified
+  ProjectSetupFormSelection/current ProjectSetupFormPreparation and
+  ProjectSetupOperating.create contracts. Candidate paths independently hash
+  to `SWIFT-EE8576F5CD39` and `TEST-BB8C5679BA31`; both are comment-only READY
+  scaffolds with exact hashes recorded in `EVID-PROJECT-SETUP-USE-CASE-001`.
+  The frozen boundary derives one verified command before exactly one port
+  call, validates and returns its exact receipt, preserves both typed failure
+  families plus cancellation, and bounds unknown port errors. Matching
+  represented ready, partial and stale evidence remains admissible without a
+  new readiness gate; changed evidence fails before dispatch and preparation
+  evidence cannot enter the command. The complete local READY gate passes 825
+  recorded / 813 automatic-inventory entries (810 currently discovered plus
+  three retained missing-source warnings) with no other warning or error,
+  391 mapped-or-later / 174 residual / 45 blockers, all 273 existing target
+  tests in 59 suites with warnings as errors, repeatable Xcode hashes
+  `0657194a` / `388303af`, both staging builds, JSON and clean formatting.
+  O-023/O-024/O-025/O-026 and all UI/provider/production exclusions remain
+  binding. Two independent actual-diff reviews found and verified corrections
+  to a comment-only provider-coupling scanner false positive, optional-
+  allocation JSON shape, existing-to-new Client delta wording and inventory-
+  count precision; both return GO. Exact READY-commit CI is the sole remaining
+  prerequisite before implementation.
 - Verification-promotion commit
   `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47` passed immutable Actions run
   `33768000016` (traceability 8 seconds; isolated target 2 minutes 57 seconds),
@@ -3451,16 +3477,21 @@ Continue without waiting on the two M1 evidence blockers:
    preserves typed failures/cancellation and bounds raw errors. EditChecklistModal,
    UI/read admission, physical persistence, authorization, provider/schema/RLS/
    Sync, app/MCP, migration, hosted and production behavior must remain unchanged.
-   Next, run strict-authority preflight and prepare a comment-only READY package
-   for the Project setup selection-to-application use case. The recommended
-   boundary composes verified `ProjectSetupFormSelection` /
+   Review and gate the comment-only `project-setup-use-case-contracts` READY
+   package and `EVID-PROJECT-SETUP-USE-CASE-001`. The frozen boundary composes
+   verified `ProjectSetupFormSelection` /
    `ProjectSetupFormPreparation` (`SWIFT-EC2117B393FB`) and
    `ProjectSetupOperating.create` (`SWIFT-C1C5DFC81448`): derive one command
    before one port call, validate the receipt, preserve ProjectSetupFormFailure /
-   ProjectSetupFailure / cancellation and bound unknown errors. Candidate new
-   leaves are `ProjectSetupUseCase.swift` (`SWIFT-EE8576F5CD39`) and
-   `ProjectSetupUseCaseTests.swift` (`TEST-BB8C5679BA31`). Independently verify
-   the IDs, authority and full test matrix before recording them. Preserve
+   ProjectSetupFailure / cancellation and bound unknown errors. Matching
+   represented ready/partial/stale evidence remains admissible; changed
+   evidence must fail with zero calls and preparation evidence cannot leak into
+   the command. The exact claimed comment-only leaves are
+   `ProjectSetupUseCase.swift` (`SWIFT-EE8576F5CD39`) and
+   `ProjectSetupUseCaseTests.swift` (`TEST-BB8C5679BA31`). Strict authority
+   preflight, complete local READY gates and two corrected-diff reviews pass.
+   Commit/push only the reviewed READY package and require immutable exact-
+   ready-SHA CI before any executable implementation. Preserve
    NewProjectView, ProjectFormValidation/current validation and ProjectService
    at their existing statuses; O-023/O-024/O-025/O-026 and UI/defaults/category
    mutation, physical persistence, authorization, provider/schema/RLS/Sync,

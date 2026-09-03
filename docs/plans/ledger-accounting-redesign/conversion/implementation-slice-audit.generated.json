@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T18:14:02.896Z",
+  "generatedFromManifestSync": "2026-09-03T18:32:43.840Z",
   "totals": {
-    "slices": 58,
-    "claimedTargetSurfaces": 141,
+    "slices": 59,
+    "claimedTargetSurfaces": 143,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 126
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 57,
@@ -560,6 +560,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-use-case-contracts",
+      "title": "Derive and dispatch one complete Project setup",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Setup Use Case",
+      "surfaceIds": [
+        "SWIFT-EE8576F5CD39",
+        "TEST-BB8C5679BA31"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-use-case-contracts.json"
     },
     {
       "sliceId": "protected-artifact-export-lifecycle",

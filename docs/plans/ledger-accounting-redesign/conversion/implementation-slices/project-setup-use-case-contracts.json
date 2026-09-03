@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-setup-use-case-contracts",
+  "title": "Derive and dispatch one complete Project setup",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Setup Use Case",
+  "surfaceIds": ["SWIFT-EE8576F5CD39", "TEST-BB8C5679BA31"],
+  "requirements": [
+    {
+      "id": "PSETUPUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One Project setup binds stable Account, Project and authoritative account-scoped Client identity plus the complete selected-category set and exact nullable allocations as one observable operation. Project name is required, description is already canonicalized by the verified selection, and attachment upload remains a separate durable-media lifecycle.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PSETUPUSE-TEST-001", "PSETUPUSE-TEST-002", "PSETUPUSE-TEST-003", "PSETUPUSE-TEST-004", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    },
+    {
+      "id": "PSETUPUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Existing or new Client selection uses stable same-Account Client identity. Client display text, route, source free text and provider path cannot own or authorize the Project relationship; setup cannot rename, archive, merge, reassign or correct Client or Project identity.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PSETUPUSE-TEST-001", "PSETUPUSE-TEST-002", "PSETUPUSE-TEST-004", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    },
+    {
+      "id": "PSETUPUSE-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Edge Cases",
+      "invariant": "Zero enabled categories is valid. Selected categories preserve exact absent versus selected-null, selected-zero and selected-positive allocation intent; allocation is nonnegative integer-currency Money with no inherited 32-bit cap or invented Project-wide currency rule.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPUSE-TEST-001", "PSETUPUSE-TEST-003", "PSETUPUSE-TEST-004", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    },
+    {
+      "id": "PSETUPUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "The application boundary consumes the existing ProjectSetupFormSelection and current ProjectSetupFormPreparation. It adds no alternate raw form/draft/failure/readiness type, no default selection or ready-only gate, and no UI state, route, provider identity or authorization claim. Matching represented ready, partial or stale evidence remains admissible exactly as the verified selection contract defines; any changed preparation fingerprint is refused before dispatch.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPUSE-TEST-001", "PSETUPUSE-TEST-002", "PSETUPUSE-TEST-004", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    },
+    {
+      "id": "PSETUPUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ProjectSetupUseCase receives existing typed selection/current preparation plus caller ProjectID, OperationID, PrincipalID, contract version and finite capture time; derives the verified CreateProjectCommand before invoking ProjectSetupOperating.create exactly once; validates the receipt; returns the exact receipt and LocalOperationState; preserves CancellationError, ProjectSetupFormFailure and ProjectSetupFailure; and maps every other port error to ProjectSetupFailure.localAcceptanceFailed.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPUSE-TEST-002", "PSETUPUSE-TEST-003", "PSETUPUSE-TEST-004", "PSETUPUSE-TEST-005", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    },
+    {
+      "id": "PSETUPUSE-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "This target-only slice advances only its two claimed leaves. NewProjectView, ProjectFormValidation and its current tests remain target_mapped, while ProjectService remains characterized; source UI validation, Firebase writes and related surfaces do not advance.",
+      "decisionIds": [],
+      "verificationIds": ["PSETUPUSE-TEST-002", "PSETUPUSE-TEST-005", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    },
+    {
+      "id": "PSETUPUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only leaves may change. Physical local persistence, optimistic Project projection, authoritative authorization/audit/apply, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, Firebase migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["PSETUPUSE-TEST-001", "PSETUPUSE-TEST-002", "PSETUPUSE-TEST-003", "PSETUPUSE-TEST-004", "PSETUPUSE-TEST-005", "PSETUPUSE-TEST-006", "PSETUPUSE-TEST-007", "PSETUPUSE-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectSetupUseCase reuses ProjectSetupFormSelection, ProjectSetupFormPreparation and CreateProjectCommand rather than inventing a second form or operation model.",
+        "Selection command derivation revalidates exact current represented evidence and finishes before any ProjectSetupOperating call.",
+        "The use case invokes ProjectSetupOperating.create once, validates and returns the exact receipt, preserves both typed failure families and Swift cancellation, and bounds unknown port failures.",
+        "No readiness, default-selection, category-definition, Client/Project lifecycle/correction, media, UI, persistence, authorization or provider policy is added."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Client, Project, category, allocation, operation, attachment, table, view, function, constraint, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted Project setup handler, membership/reference lookup, collision check, idempotency store, audit assignment or server transaction is implemented; the injected port remains an application boundary."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed local preparation/selection is not authorization; no Account, Client, Project, category or operation policy/test is added."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync Stream, local Project/Client/category/operation row, upload connector or synchronized visibility exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port and preserves the existing offline-capable represented-evidence semantics, but adds no physical persistence, restart write, optimistic Project row or rejection recovery."},
+    "storageMedia": {"items": [], "notApplicable": "Project setup dispatch owns no hero attachment identity, bytes, reference, upload, retention or deletion behavior; O-023 remains outside."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI steps/loading/defaults/errors/dismissal/navigation, app composition, MCP schema/tool/resource/catalog or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project/clientName/category/media callback, source export row or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; NewProjectView, ProjectFormValidation/tests, ProjectService, current Firebase app, MCP and app projects remain unchanged.",
+        "The deterministic in-memory port cannot physically or authoritatively create a Client/Project/category allocation, upload media, authorize, synchronize, deploy, migrate, release or cut over.",
+        "O-023/O-024/O-025/O-026 and A-003/A-004/A-007/A-015/A-016 remain open or outside because media retention, lifecycle/correction, reference authorization, providers and production behavior are excluded."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PSETUPUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-007"],
+      "expected": "Existing- and new-Client selections dispatch once from exact matching ready, partial and stale represented evidence. Zero categories and absent/null/zero/large-positive mixed-currency allocations remain exact; selection-owned name/description normalization passes through without defaults, a 32-bit cap or an invented currency rule.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
+      "expected": "Account mismatch, every Client/category evidence mutation including quality/completeness/version/as-of/query/count/order/row/eligibility changes, and nonfinite capture time fail during existing typed derivation with zero port calls. No raw malformed-input surface or alternate readiness policy is invented.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-007"],
+      "expected": "Every matching LocalOperationState returns in the exact validated receipt after exactly one create call carrying the verified Project subject, zero preconditions and complete setup payload; receipt mismatch fails after one call.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-007"],
+      "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project, existing/new Client identity and name, Project name/description, every category/allocation component, Operation, actor, contract and time; each value reaches only its existing owning command fields. Rebuilt selections over valid preparation-only evidence changes produce no command-leaf change.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "covers": ["PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
+      "expected": "Each ProjectSetupFormFailure, each ProjectSetupFailure, arbitrary raw port failure and CancellationError remain distinct after the correct zero/one-call boundary; derivation stays outside the port catch and raw provider detail never crosses the application boundary.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectSetupUseCaseTests.swift",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
+      "expected": "All 12 form and 16 operation diagnostics plus exact encoded command topology expose only the authorized draft/envelope/subject/fingerprint setup fields, empty preconditions and exact Client/allocation/Money shapes—never preparation/readiness evidence, raw errors, UI/default/category-definition/media/lifecycle/correction/history/accounting/provider/credential/production fields.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-007",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
+      "expected": "The READY commit changes only two comment scaffolds and control/evidence files, passes all controls/tests/builds, and leaves NewProjectView, ProjectFormValidation/tests, ProjectService and every Firebase/app/MCP/provider surface at prior status and content.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    },
+    {
+      "id": "PSETUPUSE-TEST-008",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-SETUP-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready design only. Root review and a strict independent authority preflight selected Project setup selection-to-application above the verified form-presentation and setup-operation contracts. Exactly two comment-only target leaves are frozen. Matching represented ready, partial and stale evidence remains admissible; changed preparation evidence fails before dispatch and preparation evidence cannot enter the command. O-023/O-024/O-025/O-026 remain outside because media, lifecycle/correction and reference authorization are excluded. Conversion/target controls, all 273 existing target tests in 59 suites with warnings as errors, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. Two independent reviewers found and verified scanner, optional-allocation-shape, Client-delta and discovery-count corrections and returned GO. No executable target code may start until immutable exact-ready-commit CI passes."
+}
