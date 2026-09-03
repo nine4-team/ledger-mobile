@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T20:06:00.784Z",
+  "generatedFromManifestSync": "2026-09-03T21:31:10.538Z",
   "totals": {
-    "slices": 60,
-    "claimedTargetSurfaces": 145,
+    "slices": 61,
+    "claimedTargetSurfaces": 147,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 130
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 59,
@@ -545,6 +545,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-rename-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-rename-use-case-contracts",
+      "title": "Dispatch one typed Project display-name replacement",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Rename Use Case",
+      "surfaceIds": [
+        "SWIFT-5A812E7B8C95",
+        "TEST-E1BAA8DF70B4"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-rename-use-case-contracts.json"
     },
     {
       "sliceId": "project-setup-form-presentation-contracts",

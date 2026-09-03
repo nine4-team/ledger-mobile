@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 227
+State version: 229
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-DETAILS-UPDATE-USE-CASE-VERIFIED
+- Checkpoint: PROJECT-RENAME-USE-CASE-READY-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -31,6 +31,26 @@ modifying the running Firebase application before hard cutover.
   decisions, migration, and production authority remain gated.
 
 ## Completed at This Checkpoint
+
+- Prepared a bounded comment-only READY candidate for typed Project rename
+  application dispatch at clean exact baseline `83581721`. Two new leaves,
+  `SWIFT-5A812E7B8C95` and `TEST-E1BAA8DF70B4`, freeze a public non-Codable
+  Account/Project/revision/`ProjectDisplayName` intent and a generic one-call
+  use case above verified `ProjectRenameOperation.swift`. The application
+  boundary accepts no raw String and adds no name-normalization policy. Ten
+  verification obligations remain planned; no executable rename logic exists
+  in either new leaf. All named source UI/service/model/validation/MCP surfaces,
+  including ProjectDetailView and ProjectDetailContainer, retain their prior
+  statuses and every persistence/authorization/provider/
+  schema/RLS/Sync/migration/hosted/production exclusion remains binding. The
+  local READY gate passes 829/814 conversion inventory, 395/174/45 residual
+  control, M0, isolation/contracts, all 286 target tests in 61 suites with
+  warnings as errors, repeatable Xcode generation at `0657194a` / `388303af`,
+  and both staging builds. Initial READY reviews corrected mirrored-proof risk,
+  product/technical authority attribution, ProjectDetailView status coverage
+  and rejection-recovery wording. Both independent corrected-diff reviewers
+  return GO with no remaining P0-P3 finding. Immutable exact-READY-SHA CI
+  remains required before implementation.
 
 - Rejected the chosen-Project note-creation application-use-case candidate
   before READY, commit or executable implementation. The first independent
@@ -3558,6 +3578,18 @@ Continue without waiting on the two M1 evidence blockers:
    MCP tool at their prior statuses; do not add read/readiness/lifecycle/no-op/
    UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync,
    app/MCP, migration, hosted or production behavior.
+   Treat `project-rename-use-case-contracts` and
+   `EVID-PROJECT-RENAME-USE-CASE-001` as the next comment-only READY candidate.
+   Preserve exact leaves `ProjectRenameUseCase.swift` (`SWIFT-5A812E7B8C95`)
+   and `ProjectRenameUseCaseTests.swift` (`TEST-E1BAA8DF70B4`) without executable
+   code until the complete local gate and an exact READY commit pass immutable
+   CI. Both independent actual-diff reviewers return GO. The future boundary consumes an
+   already-validated `ProjectDisplayName`; do not introduce raw String
+   normalization, UI/no-op/read/readiness/lifecycle policy, broader mutation,
+   persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration,
+   hosted or production behavior. Preserve the verified rename operation/tests
+   and directory dependency plus all named source statuses, including
+   ProjectDetailView and ProjectDetailContainer.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

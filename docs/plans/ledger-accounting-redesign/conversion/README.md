@@ -647,6 +647,28 @@ dirty/no-op/UI, broader mutation, persistence, authorization, provider/schema/
 RLS/Sync, app/MCP, migration, hosted and production behavior remain outside;
 `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001`.
 
+The next bounded candidate is the typed Project rename application boundary.
+`project-rename-use-case-contracts` is `ready` with two comment-only leaves,
+`SWIFT-5A812E7B8C95` and `TEST-E1BAA8DF70B4`, above the verified Project rename
+operation and Client/Project display-value contracts. The frozen public intent
+contains only Account, Project, expected revision and an already-validated
+`ProjectDisplayName`; it accepts no raw String and adds no normalization rule.
+The future use case constructs the verified draft/command before one rename-port
+call, validates afterward, preserves all 12 typed failures and cancellation,
+and bounds only unknown errors. The local READY gate passes 829/814 conversion
+inventory, 395/174/45 residual control, all 286 existing tests in 61 suites,
+repeatable generation and both staging builds; both independent corrected-diff
+reviewers return GO and immutable exact-READY-SHA CI remains. All ten obligations remain planned until
+exact implementation. EditProjectModal, ProjectService/Protocol, Project model,
+ProjectFormValidation/tests, ProjectDetailView, ProjectDetailContainer and
+`update_project` retain their prior statuses.
+Initial READY review corrected mirrored reciprocal-proof risk, product/technical
+authority attribution, ProjectDetailView status coverage and rejection-recovery
+wording; the final corrected-diff reviews found no remaining P0-P3 issue.
+Read/readiness/lifecycle/no-op/UI, broader mutation, persistence, authorization,
+provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior
+remain excluded; `EVID-PROJECT-RENAME-USE-CASE-001`.
+
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
 is never the authority for what has been covered or verified.

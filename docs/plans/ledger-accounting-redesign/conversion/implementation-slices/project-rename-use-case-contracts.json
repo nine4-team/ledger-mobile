@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-rename-use-case-contracts",
+  "title": "Dispatch one typed Project display-name replacement",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Rename Use Case",
+  "surfaceIds": ["SWIFT-5A812E7B8C95", "TEST-E1BAA8DF70B4"],
+  "requirements": [
+    {
+      "id": "PRENAMEUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Renaming a Project is one distinct RenameProject outcome over stable AccountID and ProjectID. It is not Project details update, Client rename, Project archive or future Client reassignment, and it changes no other Project responsibility.",
+      "decisionIds": [],
+      "verificationIds": ["PRENAMEUSE-TEST-001", "PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-003", "PRENAMEUSE-TEST-004", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "RenameProject changes only the current Project display name. It cannot change Client relationship, description, category/allocation/budget, media, lifecycle, child, accounting or history state, and display text never substitutes for stable Client identity or Transfer authority.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PRENAMEUSE-TEST-001", "PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-003", "PRENAMEUSE-TEST-004", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "ProjectRenameIntent is a transient, non-Codable, exact Account/Project/revision/ProjectDisplayName presentation value. It owns no raw field, alternate validator, persisted form draft, initial/current read, readiness, lifecycle, dirty/no-op, dismissal, error-UX, route, provider identity or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["PRENAMEUSE-TEST-001", "PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-003", "PRENAMEUSE-TEST-004", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ProjectRenameUseCase constructs the verified ProjectRenameDraft and RenameProjectCommand before invoking ProjectRenaming.rename exactly once, then validates and returns the exact receipt and LocalOperationState.",
+      "decisionIds": [],
+      "verificationIds": ["PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-003", "PRENAMEUSE-TEST-004", "PRENAMEUSE-TEST-005", "PRENAMEUSE-TEST-006", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "The use case preserves CancellationError and every ProjectRenameFailure. Only an unknown port error maps to localAcceptanceFailed; construction remains outside the port catch and receipt validation remains outside it.",
+      "decisionIds": [],
+      "verificationIds": ["PRENAMEUSE-TEST-005", "PRENAMEUSE-TEST-006", "PRENAMEUSE-TEST-007", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-006",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "Only the two new target leaves advance. ProjectRenameOperation/tests and ClientProjectDirectory stay verified; EditProjectModal, ProjectDetailView, ProjectDetailContainer, ProjectService/Protocol, Project model, ProjectFormValidation/tests and update_project retain their prior status and content because each owns broader responsibility.",
+      "decisionIds": [],
+      "verificationIds": ["PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-006", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only executable leaves may change after READY. Physical persistence, optimistic projection, trusted authorization/audit/apply, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, source migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["PRENAMEUSE-TEST-001", "PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-003", "PRENAMEUSE-TEST-004", "PRENAMEUSE-TEST-005", "PRENAMEUSE-TEST-006", "PRENAMEUSE-TEST-007", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "PRENAMEUSE-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-RENAME-001.md",
+      "section": "Implemented Contract",
+      "invariant": "Verified dependency evidence EVID-PROJECT-RENAME-001 remains sole owner of accepted ProjectDisplayName bytes, ExpectedProjectRevision, the exact same-Project revision precondition, ProjectRenameDraft, RenameProjectCommand, subject, fingerprint, receipt validation and ProjectRenameFailure semantics. This use case consumes the already-validated name and composes those contracts without raw String normalization or semantic reimplementation.",
+      "decisionIds": [],
+      "verificationIds": ["PRENAMEUSE-TEST-001", "PRENAMEUSE-TEST-002", "PRENAMEUSE-TEST-003", "PRENAMEUSE-TEST-004", "PRENAMEUSE-TEST-005", "PRENAMEUSE-TEST-006", "PRENAMEUSE-TEST-007", "PRENAMEUSE-TEST-008", "PRENAMEUSE-TEST-009", "PRENAMEUSE-TEST-010"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ProjectRenameIntent is transient, non-Codable and exposes an exact public four-argument initializer for AccountID, ProjectID, ExpectedProjectRevision and ProjectDisplayName.",
+        "The use case reuses ProjectRenameDraft and RenameProjectCommand and accepts no raw String or alternate normalization rule.",
+        "Construction finishes before one ProjectRenaming.rename call; receipt validation follows the port boundary; all 12 typed failures and cancellation remain exact while unknown errors are bounded.",
+        "No initial/current read, readiness, lifecycle, dirty/no-op, UI or broader Project mutation policy is added."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Project, operation, table, view, function, constraint, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted membership/revision validation, authorization, idempotency store, audit assignment or authoritative Project rename is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation, function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed intent and command validity are not authorization; no Account/Project policy or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No synchronized Project or operation stream, local table, upload connector or optimistic projection exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port but adds no physical intent/operation persistence, restart write, optimistic row, retry policy or rejection-recovery behavior."},
+    "storageMedia": {"items": [], "notApplicable": "Project rename owns no attachment identity, bytes, reference, upload, retention or deletion behavior."},
+    "appMcp": {"items": [], "notApplicable": "No raw field normalization, initial value, read readiness, dirty/no-op, SwiftUI control, error/dismissal/navigation, app composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project document, generic update dictionary, EditProject callback, MCP request, export row or source-to-target mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; every source app, service, model, validation, MCP and provider surface remains unchanged.",
+        "The deterministic in-memory test port cannot physically persist, authorize, synchronize, deploy, display, migrate, release or cut over a Project rename.",
+        "O-022/O-023/O-024/O-025/O-026 and A-003/A-004/A-007/A-015/A-016 remain open or outside."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PRENAMEUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "A non-@testable consumer constructs the exact public four-field ProjectRenameIntent. It is compile-time Equatable/Sendable, runtime non-Codable, stores no raw String, and preserves zero and UInt64.max revisions exactly.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-006", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "An already-validated ProjectDisplayName, including accepted outer/interior whitespace and more than 8 KiB Unicode, reaches draft and payload byte-exactly after one call; the use case accepts no raw String and performs no second normalization.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying one Project rename and one same-Project expected-revision precondition; revisions zero and UInt64.max dispatch exactly.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project, revision, typed display name, Operation, actor, contract and time against literal flattened baseline expectations and exact literal changed-leaf sets for all eight axes. Recording/canned fakes and expectation helpers must not reconstruct expected commands with ProjectRenameDraft, RenameProjectCommand or production validation logic.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "Positive infinity and NaN capture times fail during construction with zero calls, while a mismatched receipt fails after exactly one call; neither is reclassified as a port failure.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-006", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "All 12 ProjectRenameFailure values deliberately thrown by the port remain exact after one call, CancellationError remains structured cancellation, and only an unknown port error maps to localAcceptanceFailed.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-007",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "All 12 diagnostic codes remain an exact stable enumeration and reveal no synthetic identity, Project name, raw error, credential, service payload or production identifier.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-008",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameUseCaseTests.swift",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-006", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "Exact nested command topology exposes only draft/envelope/subject/fingerprint ownership, typed replacement display name and one expected-revision precondition—never raw-name, Client, description, category, allocation, budget, media, lifecycle, child, accounting, history, UI or service detail.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-009",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-006", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "The READY commit changes only two comment scaffolds and control/evidence files, and preserves exact statuses/content for the verified dependencies plus EditProjectModal, ProjectDetailView, ProjectDetailContainer, ProjectService/Protocol, Project model, ProjectFormValidation/tests, update_project and every app/provider surface.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "PRENAMEUSE-TEST-010",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["PRENAMEUSE-REQ-001", "PRENAMEUSE-REQ-002", "PRENAMEUSE-REQ-003", "PRENAMEUSE-REQ-004", "PRENAMEUSE-REQ-005", "PRENAMEUSE-REQ-006", "PRENAMEUSE-REQ-007", "PRENAMEUSE-REQ-008"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "planned",
+      "evidence": ["EVID-PROJECT-RENAME-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-PROJECT-RENAME-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "READY is prepared at clean exact conversion baseline 83581721f2337a81be07f98a19cd007d80e99e90, after Project-details implementation 55baae9d / immutable run 33799751617. Exactly two comment-only target leaves freeze a typed Project-rename application boundary above verified ProjectRenameOperation.swift/tests at exact implementation 7f395bbe / run 33615145061 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Future implementation must construct before one port call, validate after it, preserve all 12 typed failures plus cancellation, and bound unknown errors. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. Complete local READY gates pass; independent actual-diff review and immutable exact-SHA CI still gate implementation."
+}

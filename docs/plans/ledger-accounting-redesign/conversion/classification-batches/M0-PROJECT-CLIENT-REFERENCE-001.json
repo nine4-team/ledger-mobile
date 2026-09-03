@@ -3819,6 +3819,56 @@
         "tests": ["swift test --package-path LedgeriOS --filter ProjectDetailsUpdateUseCaseTests"],
         "acceptance": ["Tests prove only the frozen provider-free Project details update use case and exclusions"]
       }
+    },
+    {
+      "id": "SWIFT-5A812E7B8C95",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d7c8eaaaa182501df1c689581a0723d73aaa437d37355b41cde5885be81cb33d",
+      "currentBehavior": "Freezes a comment-only READY contract for a provider-free typed Project-rename intent-to-application boundary above the verified rename operation; it contains no executable implementation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-RENAME-001", "EVID-PROJECT-RENAME-USE-CASE-001"],
+      "notes": "READY scaffold at clean exact baseline 83581721. The frozen future API is a public non-Codable Account/Project/revision/ProjectDisplayName intent and one generic ProjectRenaming dispatch with construction before one call, receipt validation after it, all 12 typed failures/cancellation preserved and unknown errors bounded. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "target": {
+        "owner": "Project Rename Use Case",
+        "surfaces": ["ProjectRenameIntent", "ProjectRenameUseCase", "single ProjectRenaming.rename invocation and receipt validation"],
+        "securityRequirements": ["Typed transient intent binds exact AccountID, ProjectID and expected revision without treating ProjectDisplayName, route or provider path as identity or authorization", "Caller Operation, actor, contract and time remain exact; raw service errors cannot cross the application boundary"],
+        "syncRequirements": ["Future provider-free orchestration constructs the existing verified rename command before exactly one port call and validates the receipt", "No local persistence/restart, optimistic Project row, authoritative rename or synchronized visibility is claimed"]
+      },
+      "migration": {
+        "rule": "Define a target-only comment contract; decode no Firebase Project document, generic update dictionary, EditProject callback, MCP request, export row or migration disposition.",
+        "reconciliation": ["Future synthetic typed Account/Project/revision/name and operation metadata must reach one verified rename command without source transformation"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectRenameUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free typed Project rename application path and permanent exclusions"]
+      }
+    },
+    {
+      "id": "TEST-E1BAA8DF70B4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "b8ba3c9d935dec5324328d3ddf3c6e352011c9e88dfc2284a7c80dff4214c69e",
+      "currentBehavior": "Freezes ten planned verification obligations for the typed Project rename use case; the leaf remains comment-only and executes no tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-RENAME-001", "EVID-PROJECT-RENAME-USE-CASE-001"],
+      "notes": "READY scaffold at clean exact baseline 83581721. Planned tests cover ordinary public construction, exact typed-name bytes including more than 8 KiB Unicode, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership against literal baseline/delta expectations with recording/canned fakes only, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics, topology, exclusions, exact allowlists and immutable CI. No source/app/provider status advances.",
+      "target": {
+        "owner": "Project Rename Use Case Tests",
+        "surfaces": ["exact transient intent fixtures", "typed display-name and reciprocal encoded-field fixtures", "receipt-state, construction, typed/raw failure, cancellation, diagnostics and exclusion fixtures"],
+        "securityRequirements": ["Future fixtures use only synthetic Account, Project, Principal and Operation identities and prove typed local intent is non-authorizing", "Stable failures reveal no raw identity, Project name, credential, service payload or production identifier"],
+        "syncRequirements": ["A future in-memory port proves application choreography only, not physical local persistence or authenticated synchronization", "Construction failure must make zero calls and exact receipt states return without optimistic or authoritative Project state"]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no Firebase Project/generic-update/view/MCP/export data or source-to-target mapping.",
+        "reconciliation": ["Tests must preserve canonical target dispatch while all named source validation/UI/service/model/MCP surfaces remain unadvanced"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectRenameUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Project rename use case and exclusions"]
+      }
     }
   ]
 }
