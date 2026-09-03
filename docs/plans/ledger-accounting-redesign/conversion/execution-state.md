@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 196
+State version: 197
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PSETUP-FORM-CLEANED
+- Checkpoint: SCHECKLIST-EDIT-READY-REVIEW
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2825,6 +2825,25 @@ modifying the running Firebase application before hard cutover.
   `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_setup_form`, and
   retained branch `codex/supabase-slice-project-setup-form` plus both candidate
   commits. The canonical Supabase worktree is clean; Firebase remains untouched.
+- Selected `space-checklist-editing-presentation-contracts` as the next bounded
+  provider-free product slice. It claims only comment-only target leaves
+  `LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift`
+  (`SWIFT-A9BCA70B7F9C`) and
+  `LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift`
+  (`TEST-94F32F5E9219`); source UI/test surfaces remain `target_mapped` and
+  Firebase is unchanged. Independent authority preflight rejected the first
+  draft for unsafe partial/stale replace-all admission, harmless-refresh
+  overbinding, unsupported checklist reorder/cross-list movement and inability
+  to retain blank intermediate form text. Corrected actual-diff review then
+  required an exact ready-complete retryable-cache predicate, current/stale
+  eligibility-transition tests, accurate source wording and this continuity
+  checkpoint. Those corrections are applied. The complete local ready gate
+  passes with 813 recorded / 798 discovered surfaces, zero errors and three
+  established warnings; 384 mapped / 167 residual / 44 blockers; M0; all 237
+  tests in 53 suites; warnings-as-errors; target isolation/contracts; repeatable
+  project hashes `0657194a` / `388303af`; both staging builds; valid JSON and
+  clean formatting. Final independent corrected-diff re-review, ready commit,
+  push and exact ready-SHA CI remain before any worker assignment.
 
 ## Next Action
 
@@ -3026,10 +3045,20 @@ Continue without waiting on the two M1 evidence blockers:
    exact nullable allocations, ProjectDescriptionReplacement normalization and
    current-evidence validation before the verified CreateProjectCommand exists.
    Do not duplicate or extend it in UI, providers or later operation slices.
-   Select the next coherent decision-independent slice through feature-specific
-   product-authority preflight; create a temporary worker worktree only when a
-   separate concurrent writer is actually assigned, and remove it after the
-   reviewed promotion checkpoint passes immutable CI.
+   Treat ready `space-checklist-editing-presentation-contracts` and
+   `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001` as the next frozen boundary.
+   Finish independent review of the corrected actual ready diff. If GO, rerun
+   sync/check, commit and push the ready package, and require immutable CI on
+   that exact SHA before assigning implementation. The implementation may
+   project only ready-complete current or retryable-ready-complete cached Space
+   evidence, retain raw blank intermediate text, preserve exact stable nested
+   IDs/order tokens, edit checklist fields plus items only within their owning
+   checklist, and derive the verified complete-replacement command after
+   semantic-base validation that tolerates harmless refresh metadata. It must
+   not add checklist reorder, cross-checklist movement, archived-action policy
+   or any excluded provider/app behavior. Create a temporary worker worktree
+   only when the separate writer is actually assigned; register exact paths and
+   immutable base before dispatch, then remove it after reviewed promotion CI.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

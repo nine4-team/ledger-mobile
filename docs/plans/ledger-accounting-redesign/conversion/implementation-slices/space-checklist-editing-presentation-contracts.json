@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "space-checklist-editing-presentation-contracts",
+  "title": "Edit one evidence-bound Space checklist hierarchy offline",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Space Checklist Editing Presentation",
+  "surfaceIds": ["SWIFT-A9BCA70B7F9C", "TEST-94F32F5E9219"],
+  "requirements": [
+    {
+      "id": "SCEDIT-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Checklist editing projects one validated SpaceCoreDetailsUpdate. A ready complete represented row is editable-current. A retryable failure is editable-stale only when its cached snapshot has one row, quality ready and isCompleteForQuery true; the enclosing failure, not degraded cached evidence, makes it stale. Partial/stale, ready-incomplete, empty or missing retryable cache, waiting, required-update, unavailable and absent evidence cannot become replace-all input. Project and Business Inventory scope are both valid.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-001", "SCEDIT-TEST-004", "SCEDIT-TEST-005", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Checklists",
+      "invariant": "The raw restart-safe editor preserves stable checklist identity unique within the represented collection and stable checklist-item identity unique within its owning checklist. It supports add/remove/rename of checklists and add/remove/edit/set-checked/reorder of items inside one checklist without treating labels or indexes as identity. Checklist reorder and cross-checklist item movement are excluded. Callers preallocate new IDs; no generation or deleted/unrepresented-history collision policy is invented.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-001", "SCEDIT-TEST-002", "SCEDIT-TEST-003", "SCEDIT-TEST-004", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Raw names and item text, including blank/whitespace intermediate values, survive editing and restart. Only submission reuses the verified outer-whitespace normalization, preserves accepted interior text, requires nonblank canonical values and invents no length cap or default copy. Duplicate names/text are valid. Zero checklists, a zero-item checklist and the same item ID in different checklists are valid; only represented in-scope identity collisions are refused.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-001", "SCEDIT-TEST-002", "SCEDIT-TEST-003", "SCEDIT-TEST-004", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+      "section": "Target Contracts",
+      "invariant": "Preparation preserves exact source presentation-order tokens. Removing or editing a node preserves remaining tokens; append uses zero for an empty sibling list or max-plus-one and reports representational overflow; within-checklist item reorder accepts a complete exact ID permutation and reassigns that checklist's existing ascending token multiset. Missing, repeated, foreign or unknown IDs fail atomically. Checklist order is not editable and no concurrent hierarchy is merged.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-002", "SCEDIT-TEST-003", "SCEDIT-TEST-004", "SCEDIT-TEST-005", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/spaces.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "Submission is one complete ReviseSpaceChecklists replacement with the represented Space revision. Any changed revision or source hierarchy is a conflict before command derivation; the presentation performs no last-write-wins merge, per-item fan-out or generic Space update.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-004", "SCEDIT-TEST-005", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Operation Envelope",
+      "invariant": "The only command-producing call reprojects a permitted current SpaceCoreDetailsUpdate, validates the draft fingerprint and compares the exact semantic base—Account, Space, immutable scope, lifecycle, revision and starting hierarchy—before constructing the already-verified SpaceChecklistRevisionDraft and ReviseSpaceChecklistsCommand with caller-supplied OperationID, actor, contract version and finite capture time. Harmless local version/as-of refresh does not invalidate an otherwise identical base. A valid local draft is neither authorization nor an authoritative result.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-004", "SCEDIT-TEST-005", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "Presentation, preparation and raw edited draft are deterministic canonical Codable values. A presentation-integrity fingerprint binds exact update state, Account/Space request, full represented Space row, local count/completeness/quality/version/as-of evidence and failures. A separate semantic-base fingerprint binds Account, Space, scope, lifecycle, revision and starting hierarchy for command eligibility. The draft fingerprint binds that base plus every raw checklist/item identity/text/check/order field so restart, substitution and tamper fail closed without overbinding refresh metadata.",
+      "decisionIds": [],
+      "verificationIds": ["SCEDIT-TEST-001", "SCEDIT-TEST-002", "SCEDIT-TEST-003", "SCEDIT-TEST-004", "SCEDIT-TEST-005", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    },
+    {
+      "id": "SCEDIT-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only Swift leaf paths implement and test this provider-free presentation boundary while Firebase and both app projects remain unchanged. Archived-Space action availability, template/media/Item/review/archive/accounting behavior, SwiftUI, physical persistence, authorization, schema/RLS/Sync, provider, app/MCP, migration and production behavior do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["SCEDIT-TEST-001", "SCEDIT-TEST-002", "SCEDIT-TEST-003", "SCEDIT-TEST-004", "SCEDIT-TEST-005", "SCEDIT-TEST-006", "SCEDIT-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "SpaceChecklistEditingPresentation projects SpaceCoreDetailsUpdate into editable-current, editable-stale, incomplete/waiting, authoritative absence, unavailable or required-update truth. Current editing requires a ready complete represented row. Stale editing exists only for a retryable failure whose cached snapshot has exactly one row, quality ready and isCompleteForQuery true; retryable partial, stale, ready-incomplete, empty or missing cache and every other incomplete/failed state cannot initialize replace-all state.",
+        "SpaceChecklistEditingPreparation retains the admitted update for canonical restart/integrity, separately fingerprints only the command-relevant semantic base and creates a raw immutable SpaceChecklistEditingDraft. Lifecycle is evidence, not local action eligibility.",
+        "Raw checklist/item editor rows preserve stable IDs, explicit order tokens, checked state and unvalidated text including blank intermediate input. Typed immutable changes support checklist append/remove/rename/clear and item append/remove/edit/set-checked/complete reorder within the owning checklist. Checklist reorder and cross-checklist movement do not exist. New IDs are caller-preallocated and only represented collection/owning-checklist collisions are rejected.",
+        "Submission converts raw text through existing SpaceChecklistName/SpaceChecklistItemText validators. Existing order tokens survive non-order edits/removal; append uses zero or max-plus-one with explicit overflow refusal; item reorder reassigns the existing ascending token multiset. The resulting SpaceChecklistCollection remains complete/canonical and an unchanged draft produces the exact starting collection.",
+        "The only command-producing function reprojects current update evidence, validates draft and semantic-base fingerprints, and compares Account/Space/scope/lifecycle/revision/starting hierarchy before deriving the existing SpaceChecklistRevisionDraft and ReviseSpaceChecklistsCommand. LocalDataVersion/asOf or equivalent presentation refresh alone may advance without invalidating the edit; semantic change fails before a command exists."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Space, checklist, checklist-item, operation, table, view, function, index or migration changes."},
+    "serverHandlers": {"items": [], "notApplicable": "No authoritative checklist handler, membership/revision lock, idempotency store, merge, audit or server update is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation/function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Represented local Space evidence and a valid draft do not authorize revision. No RLS or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No PowerSync stream, local physical Space/checklist table, download predicate, upload connector or optimistic projection exists."},
+    "localOffline": {
+      "items": [
+        "Canonical presentation, preparation and raw-draft encoding preserve exact update/request/row/readiness/completeness/version/time/failure evidence, blank intermediate text, every ordered node and presentation/semantic/draft fingerprints across structured restart.",
+        "Only ready-complete current evidence or retryable evidence carrying an exactly ready-complete one-row cache may initialize editing. Retryable partial/stale/ready-incomplete/empty/missing cache and other incomplete/waiting/absence/unavailable/required-update states cannot. Command validation accepts harmless local version/as-of refresh and current-to-stale or stale-to-current transition with the same semantic base while refusing semantic-base change. This proves structured values, not physical local-database durability."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No AttachmentID, byte, URL, capture, upload, retention, detach or deletion behavior exists; O-023 remains outside."},
+    "appMcp": {"items": [], "notApplicable": "No SwiftUI view/copy/control, action visibility, actual operation invocation, MCP schema/tool/resource or transport wiring is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Space/checklist array, randomized missing identity, listener result, source export or migration mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Stable bounded failures are contract values only; no telemetry, metric, alert or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation stays inside provider-free LedgerTargetCore and tests and cannot link or modify either application project.",
+        "The slice cannot decide archived-Space action availability, invoke the operation port, persist or authorize a revision, merge concurrent edits, apply/save templates, alter media/Items/review/archive/accounting, deploy, release or cut over.",
+        "O-023/O-026/O-032/O-037 and A-003/A-004/A-007/A-015/A-016 remain fully open or outside this boundary."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SCEDIT-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "covers": ["SCEDIT-REQ-001", "SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "SpaceCoreDetailsUpdate projects ready-complete Project/Inventory rows to editable-current. A retryable failure projects editable-stale only with cached quality ready, isCompleteForQuery true and exactly one row. Waiting, partial/stale, ready-incomplete, retryable with partial/stale/ready-incomplete/empty/missing cache, authoritative absence, unavailable and required-update remain distinct noneditable states. Archived lifecycle is bound but no edit-availability decision or authorization field exists.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    },
+    {
+      "id": "SCEDIT-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "covers": ["SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-004", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "Raw blank/whitespace intermediate text survives creation, editing and restart. Typed checklist append/remove/rename/clear plus within-checklist item append/remove/edit/set-checked preserve unaffected identity/order/state and accept caller-preallocated IDs. Submission normalizes valid text and rejects blank canonical output. Duplicate labels, empty hierarchy, zero-item checklist and same item ID in different checklists are valid; unknown targets and represented in-scope collisions fail atomically without historical/global claims.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    },
+    {
+      "id": "SCEDIT-TEST-003",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "covers": ["SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-004", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "No checklist-reorder or cross-checklist-move contract exists. Within one checklist, item reorder requires a complete exact stable-ID permutation, preserves every non-order field and reassigns only that checklist's existing ascending order-token multiset. Rename/check/remove preserve tokens; append uses zero or max-plus-one and refuses UInt32 overflow. Missing, repeated, foreign or unknown IDs fail without partial mutation.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    },
+    {
+      "id": "SCEDIT-TEST-004",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "covers": ["SCEDIT-REQ-001", "SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-004", "SCEDIT-REQ-005", "SCEDIT-REQ-006", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "An unchanged draft derives the exact starting collection and a fully edited draft derives exactly one verified complete-replacement command with final stable hierarchy/order, represented Space revision and caller Operation/actor/contract/time. Cancellation remains UI-only and creates no command. Output has no generic patch, merge, scope/details/lifecycle/template/media/Item/review/accounting, authorization or authoritative-result input.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    },
+    {
+      "id": "SCEDIT-TEST-005",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "covers": ["SCEDIT-REQ-001", "SCEDIT-REQ-004", "SCEDIT-REQ-005", "SCEDIT-REQ-006", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "Command revalidation rejects changed Account/request identity/Space/scope/lifecycle/revision/starting hierarchy or semantic/draft fingerprint before derivation. Concurrent check/edit/reorder changes are conflicts, never local merges. Equivalent bases with later localDataVersion/asOf remain eligible, and ready-current to retryable-ready-complete-cache-stale plus the reverse transition remain eligible. Transition to partial/stale snapshot, unsafe retryable cache, required-update, unavailable or absence refuses derivation. Local editability remains non-authorizing.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    },
+    {
+      "id": "SCEDIT-TEST-006",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "covers": ["SCEDIT-REQ-001", "SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-004", "SCEDIT-REQ-005", "SCEDIT-REQ-006", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "Presentation, preparation and every raw editing stage round-trip byte-identically, including blank intermediate text. An independent reciprocal mutation matrix covers every update/failure, preparation, source request/row/local-evidence, raw checklist/item and draft field. Reordered/inserted/removed nodes, malformed/extra/missing keys, noncanonical admitted source values, nonfinite times and each fingerprint tamper fail at the correct layer without reusing production hashing/validation logic; separate tests prove refresh-metadata mutation is valid current evidence but not silent serialized tamper.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    },
+    {
+      "id": "SCEDIT-TEST-007",
+      "kind": "operational",
+      "owner": "pull-request CI Isolated target environment job",
+      "covers": ["SCEDIT-REQ-001", "SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-004", "SCEDIT-REQ-005", "SCEDIT-REQ-006", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
+      "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while the worker candidate changes only the two allowlisted leaf paths.",
+      "status": "planned",
+      "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Ready-design provider-free presentation slice only. It composes verified Space-core update and checklist-revision operation boundaries. Independent preflight rejected partial/stale snapshot admission, refresh-metadata overbinding, unsupported checklist reorder and canonical-only intermediate text; the corrected contract uses explicit current/retryable-cached editability, a raw restart-safe draft, semantic-base validation, no checklist reorder/cross-checklist movement and exact unchanged-collection submission. No archived-Space eligibility policy is chosen. The slice stops before SwiftUI, operation invocation, physical durability, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted resources, production access or cutover."
+}

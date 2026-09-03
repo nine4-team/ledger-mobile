@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T07:57:06.516Z",
+  "generatedFromManifestSync": "2026-09-03T08:21:23.288Z",
   "totals": {
-    "slices": 52,
-    "claimedTargetSurfaces": 127,
+    "slices": 53,
+    "claimedTargetSurfaces": 129,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 112
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 51,
@@ -603,6 +603,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-assignment-destination-read-contracts.json"
+    },
+    {
+      "sliceId": "space-checklist-editing-presentation-contracts",
+      "title": "Edit one evidence-bound Space checklist hierarchy offline",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Checklist Editing Presentation",
+      "surfaceIds": [
+        "SWIFT-A9BCA70B7F9C",
+        "TEST-94F32F5E9219"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-checklist-editing-presentation-contracts.json"
     },
     {
       "sliceId": "space-checklist-revision-operation-contracts",

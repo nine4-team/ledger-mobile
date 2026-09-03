@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T07:57:06.516Z",
+    "lastSynchronizedAt": "2026-09-03T08:21:23.288Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27207,6 +27207,66 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-A9BCA70B7F9C",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "7c0d14b243a0804df37e159218f1c28108780abb97eea850f96e3dda576b782f",
+      "acknowledgedSourceHash": "7c0d14b243a0804df37e159218f1c28108780abb97eea850f96e3dda576b782f",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Defines the frozen comment-only leaf for provider-free Space checklist update-state projection, raw restart-safe nested edits and semantic-base-revalidated derivation of the verified checklist-revision command.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Checklist Editing Presentation",
+        "surfaces": [
+          "SpaceChecklistEditingPresentationState",
+          "SpaceChecklistEditingPreparation",
+          "raw SpaceChecklistEditingDraft",
+          "typed checklist and within-checklist item editing changes",
+          "evidence-validated ReviseSpaceChecklistsCommand derivation"
+        ],
+        "securityRequirements": [
+          "Projection admits only a ready-complete current row or a retryable cached snapshot with quality ready, isCompleteForQuery true and exactly one row; partial/stale/ready-incomplete/empty/absent/unavailable/required-update evidence cannot silently become replace-all input",
+          "Command derivation revalidates the semantic base of exact Account/Space/scope/lifecycle/revision/hierarchy while harmless local refresh metadata may advance; local editability never grants authorization or decides archived-Space action availability"
+        ],
+        "syncRequirements": [
+          "Canonical presentation and raw draft evidence survive structured restart with stable checklist/item IDs, blank intermediate text, checked state, explicit order and exact source version/time/readiness",
+          "Changed semantic base, partial, rebound or tampered evidence fails before command derivation while harmless local version/as-of refresh remains eligible; no physical durability, optimistic projection or synchronized state is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define target-only presentation values and decode no Firebase Space/checklist DTO, randomized legacy identity, source export row or migration disposition.",
+        "reconciliation": [
+          "Synthetic exact evidence reconstructs canonically while every semantic-base/readiness/raw-draft mutation is represented or rejected without merging concurrent edits"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistEditingPresentationTests"
+        ],
+        "acceptance": [
+          "Focused tests prove only the frozen provider-free preparation/edit/command-derivation boundary and permanent exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
+      ],
+      "notes": "Ready-design scaffold only. The frozen slice composes verified Space core-details evidence and ReviseSpaceChecklists operation contracts; it does not implement SwiftUI, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
       "id": "SWIFT-AA164CD97713",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/ImageCard.swift",
@@ -37008,6 +37068,65 @@
       ],
       "notes": "Target integration tests run against isolated Postgres/PowerSync, not a Firebase Item adapter. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "TEST-94F32F5E9219",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "b89ca069c734cf651f0ad6e86a92436aa5726d68305ca159e354b362720a06d6",
+      "acknowledgedSourceHash": "b89ca069c734cf651f0ad6e86a92436aa5726d68305ca159e354b362720a06d6",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines the frozen comment-only executable obligations for Space checklist update-state projection, raw intermediate editing, canonical restart/refusal and semantic-base command derivation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Checklist Editing Presentation Tests",
+        "surfaces": [
+          "update-state/editability/readiness fixtures",
+          "stable nested identity, blank-intermediate and typed edit fixtures",
+          "canonical order/restart/tamper fixtures",
+          "semantic-base command-derivation fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use synthetic identities/content and prove that local lifecycle/scope/revision evidence is non-authorizing and reveals no hidden rows",
+          "Every mismatch produces bounded diagnostics without provider payload, source path, credential or production identity"
+        ],
+        "syncRequirements": [
+          "Fixtures distinguish structured encode/decode restart from physical local-database durability and authenticated synchronization",
+          "Concurrent hierarchy/revision change is refused atomically rather than locally merged or overwritten; harmless refresh metadata remains eligible"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only values and load no Firebase checklist array, listener result, export/profile or source-to-target mapping.",
+        "reconciliation": [
+          "Fixtures cover exact stable-ID/order/check-state preservation and fail-closed rebound/tamper behavior without claiming source migration parity"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter SpaceChecklistEditingPresentationTests"
+        ],
+        "acceptance": [
+          "Tests prove only the frozen provider-free checklist editing presentation boundary"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
+      ],
+      "notes": "Ready-design scaffold only. Tests must independently mutate every frozen presentation/evidence and raw-draft field, distinguish harmless refresh metadata from semantic-base conflict, and may not claim physical persistence, authorization, provider behavior or authoritative application.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-952BC24E0233",

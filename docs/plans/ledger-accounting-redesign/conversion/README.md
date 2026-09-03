@@ -429,6 +429,21 @@ commit `5322adfca32ce5fd90f790f70ed584090ab5eee1` passed immutable Actions run
 reviewed candidate history remain recoverable.
 `EVID-PROJECT-SETUP-FORM-PRESENTATION-001`.
 
+The active next boundary is
+`space-checklist-editing-presentation-contracts`: a provider-free projection
+from exact Space-core update evidence into current/stale/noneditable truth, a
+raw restart-safe checklist editor, and semantic-base-validated derivation of
+the verified complete-replacement command. Independent preflight rejected
+unsafe partial-cache admission, refresh-metadata overbinding, unsupported
+checklist reorder/cross-list movement and canonical-only intermediate text.
+The corrected ready package admits only ready-complete current or retryable-
+ready-complete cached evidence, preserves blank intermediate form text and
+exact nested IDs/order tokens, supports checklist fields plus within-checklist
+item editing, and lets harmless refresh metadata advance without hiding a real
+revision/hierarchy conflict. The local ready gate passes; final corrected-diff
+review and exact ready-commit CI remain before a temporary worker worktree may
+be created. `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
+
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory
 is never the authority for what has been covered or verified.
