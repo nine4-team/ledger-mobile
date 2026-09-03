@@ -3,7 +3,7 @@
   "sliceId": "project-setup-use-case-contracts",
   "title": "Derive and dispatch one complete Project setup",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Project Setup Use Case",
   "surfaceIds": ["SWIFT-EE8576F5CD39", "TEST-BB8C5679BA31"],
   "requirements": [
@@ -170,12 +170,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["PSETUPUSE-REQ-001", "PSETUPUSE-REQ-002", "PSETUPUSE-REQ-003", "PSETUPUSE-REQ-004", "PSETUPUSE-REQ-005", "PSETUPUSE-REQ-006", "PSETUPUSE-REQ-007"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-SETUP-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-SETUP-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally after exact READY commit 863f6fce14332af0f43aa1a82480e44bc790ca56 passed immutable Actions run 33791245215. Exactly two target leaves now derive the existing verified CreateProjectCommand before one ProjectSetupOperating.create call, validate and return its receipt, preserve both typed failure families and cancellation, and bound raw port failures. Root inspected every line and reran six focused plus all 279 target tests in 60 suites with warnings as errors. Independent implementation review found three P2 proof gaps: nil-description omission, same-identity existing-to-new Client discrimination, and allocation-order equivalence. Corrected tests close each gap; both final reviewers return GO. Conversion/target controls, repeatable project hashes 0657194a / 388303af and both staging builds pass locally. NewProjectView, ProjectFormValidation/tests and ProjectService remain unadvanced; all UI/default/category mutation/media, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production exclusions remain binding. Exact implementation-commit CI remains required before verification."
+  "notes": "Verified at exact implementation commit d624c2e0a5c934cfeb8eadbead3f585f51e8942b in immutable Actions run 33793469069 after exact READY commit 863f6fce14332af0f43aa1a82480e44bc790ca56 passed run 33791245215. Exactly two target leaves derive the existing verified CreateProjectCommand before one ProjectSetupOperating.create call, validate and return its receipt, preserve both typed failure families and cancellation, and bound raw port failures. Root inspected every line and reran six focused plus all 279 target tests in 60 suites with warnings as errors. Independent implementation review found three P2 proof gaps: nil-description omission, same-identity existing-to-new Client discrimination, and allocation-order equivalence. Corrected tests close each gap; both final reviewers returned GO. Conversion/target controls, repeatable project hashes 0657194a / 388303af, both staging builds and clean immutable CI pass. NewProjectView, ProjectFormValidation/tests and ProjectService remain unadvanced; all UI/default/category mutation/media, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production exclusions remain binding."
 }

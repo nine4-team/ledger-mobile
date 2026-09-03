@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T18:54:53.074Z",
+    "lastSynchronizedAt": "2026-09-03T19:04:50.790Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -32824,14 +32824,14 @@
           "Caller Project/Operation/actor/contract/time remain exact and raw provider errors cannot cross the application boundary"
         ],
         "syncRequirements": [
-          "Future provider-free orchestration derives the verified complete Project setup command before exactly one port call and validates the returned receipt",
+          "Provider-free orchestration derives the verified complete Project setup command before exactly one port call and validates the returned receipt",
           "No new readiness gate, local persistence, optimistic projection, authoritative update or synchronized visibility is claimed"
         ]
       },
       "migration": {
         "rule": "Define target-only application orchestration; decode no Firebase Project/clientName/category/media callback, source export row or migration disposition.",
         "reconciliation": [
-          "Synthetic typed selection/current preparation will derive one verified Project setup command without source transformation"
+          "Synthetic typed selection/current preparation derives one verified Project setup command without source transformation"
         ]
       },
       "verification": {
@@ -32842,7 +32842,7 @@
           "Tests prove only the frozen provider-free Project setup selection-to-validated-receipt application path and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -32851,7 +32851,7 @@
         "EVID-PROJECT-SETUP-FORM-PRESENTATION-001",
         "EVID-PROJECT-SETUP-USE-CASE-001"
       ],
-      "notes": "Implemented locally after exact READY commit 863f6fce14332af0f43aa1a82480e44bc790ca56 passed immutable run 33791245215. The use case accepts the existing ProjectSetupFormSelection plus current ProjectSetupFormPreparation, derives one verified CreateProjectCommand before exactly one ProjectSetupOperating.create call, validates and returns its exact receipt, preserves both typed failure families and cancellation, and bounds raw port errors. Matching represented ready, partial and stale evidence remains admissible without a new readiness policy. Root every-line review, six focused/all 279 tests and local gates pass. Two independent implementation reviewers return GO after nil-description, same-identity Client-kind and allocation-order proof corrections. No UI/default/category mutation/media, physical persistence, authorization, provider, migration or production behavior; O-023/O-024/O-025/O-026 remain outside. Status remains target_mapped until exact implementation-SHA CI passes.",
+      "notes": "Verified at exact implementation commit d624c2e0a5c934cfeb8eadbead3f585f51e8942b in immutable Actions run 33793469069 after exact READY commit 863f6fce14332af0f43aa1a82480e44bc790ca56 passed run 33791245215. The use case accepts the existing ProjectSetupFormSelection plus current ProjectSetupFormPreparation, derives one verified CreateProjectCommand before exactly one ProjectSetupOperating.create call, validates and returns its exact receipt, preserves both typed failure families and cancellation, and bounds raw port errors. Matching represented ready, partial and stale evidence remains admissible without a new readiness policy. Root every-line review and six focused/all 279 tests pass. Two independent implementation reviewers returned GO after nil-description, same-identity Client-kind and allocation-order proof corrections. No UI/default/category mutation/media, physical persistence, authorization, provider, migration or production behavior; O-023/O-024/O-025/O-026 remain outside.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -38701,7 +38701,7 @@
           "Tests prove only the frozen provider-free Project setup use case and exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -38710,7 +38710,7 @@
         "EVID-PROJECT-SETUP-FORM-PRESENTATION-001",
         "EVID-PROJECT-SETUP-USE-CASE-001"
       ],
-      "notes": "Six implementation tests cover exact existing/new Client and category selection dispatch across matching ready/partial/stale evidence, zero and nullable/large/mixed-currency allocations, changed-evidence zero-call refusal, every receipt state, exact reciprocal encoded leaf deltas, preparation-evidence non-leakage, both exhaustive failure families, cancellation/raw-error handling, all diagnostics and exact command-shape exclusions. Review caught and corrected missing nil-description omission, same-identity existing-to-new Client discriminator and allocation-permutation equivalence proof. Both final reviewers return GO; all 279 target tests and complete local gates pass. No source UI/provider/production behavior. Status remains target_mapped until exact implementation-SHA CI passes.",
+      "notes": "Verified at exact implementation commit d624c2e0a5c934cfeb8eadbead3f585f51e8942b in immutable Actions run 33793469069. Six implementation tests cover exact existing/new Client and category selection dispatch across matching ready/partial/stale evidence, zero and nullable/large/mixed-currency allocations, changed-evidence zero-call refusal, every receipt state, exact reciprocal encoded leaf deltas, preparation-evidence non-leakage, both exhaustive failure families, cancellation/raw-error handling, all diagnostics and exact command-shape exclusions. Review caught and corrected missing nil-description omission, same-identity existing-to-new Client discriminator and allocation-permutation equivalence proof. Both final reviewers returned GO; all 279 target tests and complete local/CI gates pass. No source UI/provider/production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

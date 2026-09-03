@@ -616,8 +616,9 @@ errors. Independent reviewers found three P2 proof gaps—nil-description
 omission, same-identity existing-to-new Client discrimination and allocation-
 order equivalence. Corrected tests close all three and both final reviewers
 return GO. Target controls, repeatable Xcode hashes `0657194a` / `388303af` and
-both staging builds pass locally. The dossier remains in progress and the two
-surfaces remain target-mapped until exact implementation-commit CI passes.
+both staging builds pass locally. Exact implementation commit `d624c2e0`
+passed immutable run `33793469069`; the dossier and both target leaves are now
+verified.
 O-023/O-024/O-025/O-026, source UI/defaults/category mutation/media, physical
 persistence, authorization, provider, migration and production remain outside;
 `EVID-PROJECT-SETUP-USE-CASE-001`.

@@ -1,14 +1,14 @@
 # EVID-PROJECT-SETUP-USE-CASE-001 — Project Setup Use Case
 
 - Timestamp: 2026-09-03
-- Class: implementation / local integration evidence for provider-free Project setup selection-to-application dispatch
+- Class: verification / provider-free Project setup selection-to-application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Ready baseline: exact commit `863f6fce14332af0f43aa1a82480e44bc790ca56`; immutable Actions run `33791245215` passed before implementation
 - Claimed target surfaces: `SWIFT-EE8576F5CD39`, `TEST-BB8C5679BA31`
 - Preserved source surfaces: `SWIFT-58A14BD25578`, `SWIFT-038E6D4248AF`, `TEST-E591BE8A4B58` remain `target_mapped`; `SWIFT-E1A771F6A409` remains `characterized`
 - Verified dependencies: `SWIFT-EC2117B393FB`, `TEST-38F09C637761`, `SWIFT-C1C5DFC81448`, `TEST-99B322EB971A`
 - Slice dossier: `conversion/implementation-slices/project-setup-use-case-contracts.json`
-- Verification state: corrected implementation passes two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
+- Verification state: verified at exact implementation commit `d624c2e0a5c934cfeb8eadbead3f585f51e8942b`; immutable Actions run `33793469069` passed both jobs
 
 ## Selection and Authority
 
@@ -127,7 +127,10 @@ Target environment isolation, generated contracts, repeatable project/scheme
 hashes `0657194a` / `388303af`, and both staging builds pass locally. The first
 conversion check correctly detected the two changed frozen hashes; this
 checkpoint acknowledges them before regenerating the manifest and audits.
-Exact implementation-commit CI remains required before verification.
+Exact implementation commit `d624c2e0a5c934cfeb8eadbead3f585f51e8942b`
+passed immutable Actions run `33793469069` (traceability 9 seconds; isolated
+target 4 minutes 13 seconds), including all target tests, both staging builds and
+clean tracked artifacts. The dossier and both target surfaces are verified.
 
 Implementation hashes:
 

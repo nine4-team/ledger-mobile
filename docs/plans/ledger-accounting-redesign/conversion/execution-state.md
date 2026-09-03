@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 223
+State version: 224
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-SETUP-USE-CASE-IMPLEMENTATION-LOCAL
+- Checkpoint: PROJECT-SETUP-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3163,9 +3163,12 @@ modifying the running Firebase application before hard cutover.
   equivalence. Corrected tests close all three; both final reviewers return GO
   with no remaining P0-P3. Target isolation/contracts, repeatable Xcode hashes
   `0657194a` / `388303af` and both staging builds pass locally. Exact
-  implementation-commit CI remains required before verification; NewProjectView,
-  ProjectFormValidation/tests, ProjectService and every provider/production
-  exclusion remain unadvanced.
+  implementation commit `d624c2e0a5c934cfeb8eadbead3f585f51e8942b`
+  passed immutable Actions run `33793469069` (traceability 9 seconds; isolated
+  target 4 minutes 13 seconds), including all target tests, both staging builds
+  and clean tracked artifacts. The dossier and both target leaves are verified;
+  NewProjectView, ProjectFormValidation/tests, ProjectService and every provider/
+  production exclusion remain unadvanced.
 - Verification-promotion commit
   `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47` passed immutable Actions run
   `33768000016` (traceability 8 seconds; isolated target 2 minutes 57 seconds),
@@ -3493,7 +3496,7 @@ Continue without waiting on the two M1 evidence blockers:
    preserves typed failures/cancellation and bounds raw errors. EditChecklistModal,
    UI/read admission, physical persistence, authorization, provider/schema/RLS/
    Sync, app/MCP, migration, hosted and production behavior must remain unchanged.
-   Treat in-progress `project-setup-use-case-contracts` and
+   Treat verified `project-setup-use-case-contracts` and
    `EVID-PROJECT-SETUP-USE-CASE-001` as the current frozen boundary. Exact READY
    commit `863f6fce` / run `33791245215` passed. The corrected implementation
    changes exactly `ProjectSetupUseCase.swift` (`SWIFT-EE8576F5CD39`) and
@@ -3501,10 +3504,9 @@ Continue without waiting on the two M1 evidence blockers:
    `ProjectSetupFormSelection` / current `ProjectSetupFormPreparation` with
    `ProjectSetupOperating.create`, and has two independent final GO reviews.
    Six focused/all 279 target tests, local target controls, repeatable generation
-   and both staging builds pass. Commit/push this exact implementation checkpoint
-   and require immutable exact-implementation-SHA CI. Only after CI passes may
-   the dossier and two leaves be promoted to verified in a separate continuity
-   commit. Preserve NewProjectView, ProjectFormValidation/current validation and
+   and both staging builds pass. Exact implementation commit `d624c2e0` and
+   immutable run `33793469069` pass; preserve the dossier and both leaves as
+   verified. Preserve NewProjectView, ProjectFormValidation/current validation and
    ProjectService at their existing statuses; O-023/O-024/O-025/O-026 and UI/
    defaults/category mutation, physical persistence, authorization, provider/
    schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
