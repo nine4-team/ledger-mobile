@@ -386,10 +386,14 @@ authority and stale-selection request-derivation ambiguity. The corrected
 boundary preserves exact upstream order, validates the current presentation
 snapshot before deriving a detail request, and adds no query port, full Project
 card, workspace, route, mutation or provider behavior. Four comment scaffolds
-contain no executable implementation pending exact ready-gate CI; correction
-re-review returned GO with no remaining P0-P3 issue. Its complete local gate
-passes with all 224 existing tests, deterministic target generation and both
-staging builds.
+now contain the provider-free implementation. A green initial candidate was
+rejected for a valid-sibling selection-rebind defect and manifest/API naming
+drift; corrected candidate `73f94525` fingerprints the exact selection row,
+adds direct regression coverage and matches
+`ProjectDirectoryPresentationSnapshot`. Primary and independent review report
+no remaining P0-P3; seven focused and all 231 tests, deterministic target
+generation and both staging builds pass locally. Exact integration-SHA CI is
+still required before verification.
 `EVID-PROJECT-BROWSING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

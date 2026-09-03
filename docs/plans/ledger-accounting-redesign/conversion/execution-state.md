@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 186
+State version: 187
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PBROWSE-ASSIGNED
+- Checkpoint: PBROWSE-INTEGRATED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2738,7 +2738,18 @@ modifying the running Firebase application before hard cutover.
   `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_browsing` at that
   exact commit. Registered `SUBAGENT-WORK-008` with only the four Project-
   browsing implementation/test leaf paths writable; canonical docs, graphs,
-  Firebase, providers and external systems remain forbidden.
+  Firebase, providers and external systems remain forbidden. Assignment-control
+  commit `2cd61b28` also passed both jobs in immutable run `33720523680`.
+- Integrated corrected Project-browsing candidate `73f94525` after rejecting
+  green initial candidate `964dbabc` for a P1 valid-sibling selection rebind and
+  P2 manifest/API name mismatch. The correction fingerprints the exact selected
+  row, directly tests sibling substitution, and exposes the frozen
+  `ProjectDirectoryPresentationSnapshot` name. Both primary every-line and
+  independent adversarial review report no remaining P0-P3. Seven focused and
+  all 231 tests in 52 suites pass; conversion/capability/query/residual/M0,
+  target isolation/generated contracts, repeatable project generation, both
+  staging builds and clean formatting pass. Four surfaces are `implemented`;
+  exact integration-commit CI remains pending.
 
 ## Next Action
 
@@ -2923,9 +2934,11 @@ Continue without waiting on the two M1 evidence blockers:
    children, navigation/route, mutation, authorization, persistence, app/MCP,
    provider/schema/RLS/Sync, migration or production behavior. Complete the
    exact ready-SHA CI, full local ready gate and independent actual-diff
-   correction review are already recorded as passing. Implement exactly the
-   four registered leaf paths in `SUBAGENT-WORK-008`, then require primary every-
-   line and independent adversarial review before integration.
+   correction review are recorded as passing. Corrected candidate `73f94525`
+   changed only the four registered leaf paths and passed primary every-line,
+   independent adversarial and complete local integration gates. Commit and
+   push the synchronized implementation checkpoint, require both CI jobs on its
+   exact SHA, and only then promote the slice/surfaces/assignment to verified.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

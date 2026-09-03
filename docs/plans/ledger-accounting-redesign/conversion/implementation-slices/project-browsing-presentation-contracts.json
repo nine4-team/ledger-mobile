@@ -3,7 +3,7 @@
   "sliceId": "project-browsing-presentation-contracts",
   "title": "Present Project directory selection and detail-header truth",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Browsing Presentation",
   "surfaceIds": ["SWIFT-6075C2D24BAD", "SWIFT-FC9E3C33FECA", "TEST-02013D984E64", "TEST-8CB70D14D5BC"],
   "requirements": [
@@ -113,7 +113,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
       "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
       "expected": "Active/Archived projection filters strictly by Project lifecycle and preserves exact upstream order. An active Project with archived Client stays active with current Client text; an archived Project stays archived; duplicate names remain distinct by stable Project ID. Rows omit hero, budget, action, route and authorization state.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     },
     {
@@ -122,7 +122,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
       "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-003", "PBROWSE-REQ-006"],
       "expected": "An empty segment is authoritative only from ready, complete, source-exhaustive evidence. Ready-nonexhaustive, ready-incomplete, partial-empty and stale-empty remain incomplete; partial/stale represented rows remain usable with exact quality and no false absence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     },
     {
@@ -131,7 +131,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
       "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-004", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
       "expected": "Canonical restart binds Account, segment, ordered rows and exact Project/Client identity/name/lifecycle, source query fingerprint, source and visible counts, completeness, quality, LocalDataVersion and asOf. Independently changed/reordered/removed fields, nonfinite time, malformed or missing canonical keys and fingerprint tamper fail closed.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     },
     {
@@ -140,7 +140,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
       "covers": ["PBROWSE-REQ-001", "PBROWSE-REQ-002", "PBROWSE-REQ-004", "PBROWSE-REQ-006"],
       "expected": "Selection rejects unprojected ID, opposite-segment Project, wrong Account and rebound/changed evidence. Same-name rows select exact stable identity. ProjectBrowsingSelection.detailRequest(validating: currentSnapshot) rejects any current-snapshot/evidence mismatch before returning only the exact verified ProjectCoreDetailsRequest and no route, Principal or authorization evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     },
     {
@@ -149,7 +149,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift",
       "covers": ["PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-005", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
       "expected": "Request-validated waiting states show no titles; found ready/partial/stale evidence shows exact local Project/Client text and readiness; ready-complete empty alone is authoritative absence. Archived Project and active Project with archived Client remain found. Partial/stale/incomplete empty never becomes absence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     },
     {
@@ -158,7 +158,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift",
       "covers": ["PBROWSE-REQ-002", "PBROWSE-REQ-003", "PBROWSE-REQ-004", "PBROWSE-REQ-005", "PBROWSE-REQ-006", "PBROWSE-REQ-007"],
       "expected": "Unavailable is non-enumerating with no cached titles. Retryable and requiredUpdate stay distinct; valid cached rows display only as stale evidence and no-cache failures are blocked. Mismatched request/cache/update and malformed evidence fail closed. One projected-row selection derives the exact detail request only while validating against the same current snapshot, then produces the matching detail header; changed directory evidence is rejected before request derivation.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"]
     },
     {
@@ -174,5 +174,5 @@
   "implementationEvidence": ["EVID-PROJECT-BROWSING-PRESENTATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready only; four comment scaffolds contain no executable behavior. The first scout recommendation, CreateSpaceFromTemplate, was withdrawn because it contradicted a recorded authority rejection and O-026 plus name/identity/atomicity/provenance/customization semantics remain unresolved. Independent Project-browsing preflight removed noncanonical sorting, fixed tabs and route construction and corrected full-card naming, Client-lifecycle filtering, nonexhaustive-empty truth and evidence binding. Actual-ready-diff review then caught a P1 unrelated D-023 citation, a P1 missing exact Client-lifecycle authority and a P2 stale-selection API ambiguity; the corrected contract uses D-006 only for identity, cites Client lifecycle directly and requires current-snapshot validation before request derivation. Correction review returned GO. Exact ready commit 459a58123ac7241984ddee6d559e33f4bca931d4 passed immutable Actions run 33720134399; SUBAGENT-WORK-008 is restricted to the four frozen leaf paths. This outcome preserves upstream order and covers only directory core rows, evidence-bound selection, exact detail-request derivation and detail-header truth."
+  "notes": "Implemented after primary every-line and independent adversarial review, pending exact integration-commit CI. Exact ready commit 459a58123ac7241984ddee6d559e33f4bca931d4 passed immutable Actions run 33720134399 and SUBAGENT-WORK-008 changed only the four frozen leaf paths. Initial candidate 964dbabc passed 231 tests but was rejected for a P1 sibling-row selection rebind and P2 ProjectDirectoryPresentationSnapshot naming mismatch. Corrected candidate 73f94525 adds a canonical selection-specific fingerprint over Account, segment, exact row and directory evidence plus direct sibling-rebind refusal, aligns the frozen type name and passed final primary/independent review with no remaining P0-P3. Seven focused and all 231 tests pass locally; exact integrated-SHA operational CI remains planned. This outcome preserves upstream order and covers only directory core rows, evidence-bound selection, exact detail-request derivation and detail-header truth."
 }

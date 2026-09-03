@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T05:49:46.654Z",
+  "generatedFromManifestSync": "2026-09-03T06:25:20.451Z",
   "totals": {
     "slices": 51,
     "claimedTargetSurfaces": 125,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 106
+    "implementationAdvancedTargetSurfaces": 110
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 49,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -291,7 +291,7 @@
       "sliceId": "project-browsing-presentation-contracts",
       "title": "Present Project directory selection and detail-header truth",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Browsing Presentation",
       "surfaceIds": [
         "SWIFT-6075C2D24BAD",

@@ -472,9 +472,11 @@
     {
       "assignmentId": "SUBAGENT-WORK-008",
       "sliceId": "project-browsing-presentation-contracts",
-      "status": "assigned",
+      "status": "integrated_pending_ci",
       "baseCommit": "459a58123ac7241984ddee6d559e33f4bca931d4",
       "readyCiRun": 33720134399,
+      "assignmentControlCommit": "2cd61b28f829fe63d655b1f6f812ffd76b3e5d48",
+      "assignmentControlCiRun": 33720523680,
       "branch": "codex/supabase-slice-project-browsing",
       "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_browsing",
       "workerAgent": "/root/project_browsing_worker",
@@ -501,6 +503,40 @@
         "completeLocalGate": true,
         "exactIntegrationCommitCi": true,
         "reason": "The user explicitly requested quality-control review for early delegated work. Scope and actual-ready-diff review already rejected unsupported sorting/tabs/routes, an unrelated D-023 citation, missing Client-lifecycle authority and stale-selection request derivation; the worker cannot change that frozen boundary or any canonical control file."
+      },
+      "handoff": {
+        "candidateCommit": "73f94525e3fef8c46a6243ff12c0fd6d02f89e6c",
+        "candidateCommits": [
+          "964dbabcfc5efe3946744c41020a652f03cf0165",
+          "73f94525e3fef8c46a6243ff12c0fd6d02f89e6c"
+        ],
+        "changedPaths": [
+          "LedgeriOS/LedgerTargetCore/ProjectDirectoryPresentation.swift",
+          "LedgeriOS/LedgerTargetCore/ProjectDetailHeaderPresentation.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+          "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift"
+        ],
+        "focusedTests": "passed: 4 directory and 3 detail-header tests by worker, primary agent and independent reviewer",
+        "fullTests": "passed: 231 tests in 52 suites by worker and primary integration gate",
+        "requirementsAccountedFor": true,
+        "forbiddenFilesConfirmedUntouched": true,
+        "risks": [
+          "Canonical fingerprints prove internal evidence consistency, not current authorization or cryptographic authenticity.",
+          "Structured restart does not prove physical persistence, provider sync, schema/RLS, app/MCP wiring, migration or production behavior."
+        ]
+      },
+      "enhancedReview": {
+        "integrationAgentLineReview": "passed_after_selection_identity_and_manifest_name_correction",
+        "independentReviewer": "/root/project_browsing_preflight",
+        "independentAdversarialReview": "passed_after_one_p1_and_one_p2_correction",
+        "findings": [
+          "P1: initial candidate allowed encoded selection B to be rebound to complete valid sibling row A in the same current snapshot because the chosen row lacked a selection-specific fingerprint.",
+          "P2: initial candidate exposed ProjectDirectoryPresentation instead of the frozen ProjectDirectoryPresentationSnapshot manifest surface.",
+          "Corrected candidate binds exact selection identity, directly rejects sibling-row substitution and aligns the manifest name; final review found no remaining P0-P3."
+        ],
+        "focusedRetest": "passed: worker, primary agent and independent reviewer passed 7 tests across 2 suites",
+        "completeLocalGate": "passed: all 231 tests in 52 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
+        "exactIntegrationCommitCi": "pending"
       }
     }
   ],

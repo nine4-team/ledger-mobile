@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T05:49:46.654Z",
+    "lastSynchronizedAt": "2026-09-03T06:25:20.451Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -22223,12 +22223,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectDirectoryPresentation.swift"
         }
       ],
-      "observedSourceHash": "29603f79b563532d6f038b38f80eb4b8b62e1fdff385c556533721ff288a6c02",
-      "acknowledgedSourceHash": "29603f79b563532d6f038b38f80eb4b8b62e1fdff385c556533721ff288a6c02",
+      "observedSourceHash": "bc6545189e12322b35c98180b0f35b0fea275c2b7dc4ab616679569340b7083e",
+      "acknowledgedSourceHash": "bc6545189e12322b35c98180b0f35b0fea275c2b7dc4ab616679569340b7083e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the ready comment scaffold for provider-free Project directory core-row presentation and evidence-bound selection.",
+      "currentBehavior": "Implements provider-free Project directory core-row projection, exact upstream-order and lifecycle segmentation, source-exhaustive empty truth, canonical restart evidence and selection-bound detail-request derivation.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Browsing Presentation",
@@ -22260,7 +22260,7 @@
           "Frozen Project lifecycle, order, empty truth, restart/tamper and selection-to-detail-request requirements pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -22269,7 +22269,7 @@
         "EVID-PROJECT-CORE-DETAILS-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Ready comment scaffold only. Preserve exact upstream order, strict Project-lifecycle segmentation, archived-Client visibility and content-bound non-authorizing selection. Sorting/search/full-card/route behavior is excluded.",
+      "notes": "Implemented by reviewed candidate 73f94525. An initial green candidate was rejected because persisted selection could be rebound to a valid sibling row and its output type diverged from the manifest; the correction adds exact selection-row fingerprinting/direct regression coverage and the frozen ProjectDirectoryPresentationSnapshot name. Sorting/search/full-card/route behavior remains excluded.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33299,12 +33299,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectDetailHeaderPresentation.swift"
         }
       ],
-      "observedSourceHash": "29603f79b563532d6f038b38f80eb4b8b62e1fdff385c556533721ff288a6c02",
-      "acknowledgedSourceHash": "29603f79b563532d6f038b38f80eb4b8b62e1fdff385c556533721ff288a6c02",
+      "observedSourceHash": "23df5419080383f476b1f0a4990316f7ea904e6d858bdd26a0e2d1a4c861e936",
+      "acknowledgedSourceHash": "23df5419080383f476b1f0a4990316f7ea904e6d858bdd26a0e2d1a4c861e936",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the ready comment scaffold for provider-free Project detail-header local-truth presentation.",
+      "currentBehavior": "Implements provider-free Project detail-header projection over request-validated local updates with exact waiting, found, incomplete, absence, unavailable and cached/no-cache failure truth.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Browsing Presentation",
@@ -33333,7 +33333,7 @@
           "All verified detail update states project exact header/readiness/absence/failure truth and reject mismatched evidence"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -33342,7 +33342,7 @@
         "EVID-PROJECT-CORE-DETAILS-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Ready comment scaffold only. Fixed tabs/workspace-shell naming and route behavior are excluded; exact local header truth only.",
+      "notes": "Implemented by reviewed candidate 73f94525 with all focused and full tests passing. Fixed tabs/workspace-shell naming and route behavior remain excluded; exact local header truth only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -33550,12 +33550,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "d27c45ab432f1c7d7bddf1dc8cfe17000879217b16267777f51a7d9064d10caa",
-      "acknowledgedSourceHash": "d27c45ab432f1c7d7bddf1dc8cfe17000879217b16267777f51a7d9064d10caa",
+      "observedSourceHash": "f3ecfae520965a05a9996871450a170162405046deba4c84ca9bb27cba70db8c",
+      "acknowledgedSourceHash": "f3ecfae520965a05a9996871450a170162405046deba4c84ca9bb27cba70db8c",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the ready test scaffold for Project detail-header local-truth presentation.",
+      "currentBehavior": "Runs three provider-free tests covering Project detail-header local truth, cached/no-cache failure behavior and directory-selection-to-detail composition with mismatched/malformed refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Browsing Presentation Tests",
@@ -33585,7 +33585,7 @@
           "Tests prove only the frozen detail-header and selection-to-request composition boundary"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -33593,7 +33593,7 @@
         "EVID-PROJECT-CORE-DETAILS-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Ready test scaffold only; future tests exhaust exact detail update truth, request/cache mismatch, end-to-end selection and encoded exclusions.",
+      "notes": "Three focused tests pass in reviewed candidate 73f94525 and cover the frozen detail update truth, request/cache mismatch, end-to-end selection and encoded exclusions.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -36788,12 +36788,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "d27c45ab432f1c7d7bddf1dc8cfe17000879217b16267777f51a7d9064d10caa",
-      "acknowledgedSourceHash": "d27c45ab432f1c7d7bddf1dc8cfe17000879217b16267777f51a7d9064d10caa",
+      "observedSourceHash": "4b8b327e899e192d0a3313fc47c978d4961c2d2cc4eda93cc15621ebbee7ec6e",
+      "acknowledgedSourceHash": "4b8b327e899e192d0a3313fc47c978d4961c2d2cc4eda93cc15621ebbee7ec6e",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the ready test scaffold for Project directory core-row projection and evidence-bound selection.",
+      "currentBehavior": "Runs four provider-free tests covering exact Project lifecycle/upstream order, source-exhaustive empty truth, canonical restart/tamper refusal and exact evidence-bound selection-to-request derivation.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Browsing Presentation Tests",
@@ -36823,7 +36823,7 @@
           "Tests prove only the frozen core-row, empty-truth, restart and exact selection boundary"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -36831,7 +36831,7 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-001",
         "EVID-PROJECT-BROWSING-PRESENTATION-001"
       ],
-      "notes": "Ready test scaffold only; future tests prove Project-only lifecycle segmentation, upstream-order preservation, archived-Client visibility, empty truth, restart/tamper and detail-request derivation.",
+      "notes": "Four focused tests pass in reviewed candidate 73f94525. Direct regression coverage proves an encoded selection cannot be rebound from one represented Project to a valid sibling row in the same snapshot.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

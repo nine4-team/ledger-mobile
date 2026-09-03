@@ -1,11 +1,11 @@
 # EVID-PROJECT-BROWSING-PRESENTATION-001 — Project Browsing Presentation
 
 - Timestamp: 2026-09-02
-- Class: ready gate / provider-free Project directory-selection and detail-header presentation
+- Class: implementation / provider-free Project directory-selection and detail-header presentation
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-6075C2D24BAD`, `SWIFT-FC9E3C33FECA`, `TEST-02013D984E64`, `TEST-8CB70D14D5BC`
 - Slice dossier: `conversion/implementation-slices/project-browsing-presentation-contracts.json`
-- Verification state: ready only; executable implementation and tests are absent
+- Verification state: implemented locally; exact integration-commit CI pending
 
 ## Selection and Scope
 
@@ -97,8 +97,43 @@ overclaim. Exact ready commit
 passed. `SUBAGENT-WORK-008` is restricted to the four frozen leaf paths in the
 isolated `codex/supabase-slice-project-browsing` worktree.
 
+## Implementation and Review
+
+Worker candidate `964dbabcfc5efe3946744c41020a652f03cf0165`
+changed only the four registered paths and passed all tests, but primary and
+independent review rejected it:
+
+- P1: an encoded selection could replace Project B with the complete valid row
+  for sibling Project A in the same directory and still derive A's request,
+  because only directory evidence—not the chosen row—was fingerprinted; and
+- P2: the public output was named `ProjectDirectoryPresentation`, diverging
+  from the frozen `ProjectDirectoryPresentationSnapshot` manifest surface.
+
+Corrected candidate `73f94525e3fef8c46a6243ff12c0fd6d02f89e6c`
+adds a canonical selection fingerprint over contract version, Account, segment,
+the exact six-field row and directory evidence. Decode recomputes it, a direct
+sibling-row substitution test fails before any request exists, and
+`detailRequest(validating:)` still requires exact current snapshot evidence.
+The public type now matches the manifest. Final primary every-line and
+independent adversarial review found no remaining P0-P3 issue.
+
+The implemented SHA-256 hashes are:
+
+- `ProjectDirectoryPresentation.swift` — `bc6545189e12322b35c98180b0f35b0fea275c2b7dc4ab616679569340b7083e`;
+- `ProjectDetailHeaderPresentation.swift` — `23df5419080383f476b1f0a4990316f7ea904e6d858bdd26a0e2d1a4c861e936`;
+- `ProjectDirectoryPresentationTests.swift` — `4b8b327e899e192d0a3313fc47c978d4961c2d2cc4eda93cc15621ebbee7ec6e`; and
+- `ProjectDetailHeaderPresentationTests.swift` — `f3ecfae520965a05a9996871450a170162405046deba4c84ca9bb27cba70db8c`.
+
+The worker, primary agent and final reviewer passed four directory plus three
+detail-header focused tests. Worker and primary full suites pass all 231 tests
+in 52 suites. The central local gate also passes conversion sync/check/report,
+capability/query/residual controls, M0, target isolation/generated contracts,
+two identical XcodeGen outputs, both staging builds and clean formatting. The
+Firebase checkout remains clean at `fe018501`.
+
 ## Permanent Limits
 
-Ready status proves no executable presentation, physical offline durability,
+Implementation proves only deterministic provider-free presentation and
+structured restart/refusal. It does not prove physical offline durability,
 authorization, database policy, synchronization, migration reconciliation,
-app/MCP behavior, hosted resource, production behavior, release or cutover.
+app/MCP behavior, hosted resources, production behavior, release or cutover.
