@@ -3,7 +3,7 @@
   "sliceId": "project-details-update-use-case-contracts",
   "title": "Normalize and dispatch one Project description replacement",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Project Details Update Use Case",
   "surfaceIds": ["SWIFT-B95AD78B8CEC", "TEST-315066B94566"],
   "requirements": [
@@ -188,12 +188,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implementation candidate follows exact READY commit 22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e / immutable run 33797480692 above verified ProjectDetailsUpdateOperation.swift at a532ac9d / run 33642777864. Exactly two executable leaves implement the public transient input and description-only application path: construction before one port call, validation after it, all 13 typed failures plus cancellation preserved, and unknown port errors bounded. Seven focused tests plus review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009; PDETAILUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI. Independent review caught and corrected missing revision-zero dispatch proof, and both final reviewers return GO. All 286 target tests in 61 suites, complete target controls, repeatable generation and both staging builds pass locally. EditProjectModal, ProjectService/Protocol, Project model and update_project MCP tool remain unadvanced; all read/readiness/lifecycle, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. O-022 through O-026 and A-003/A-004/A-007/A-015/A-016 remain unadvanced."
+  "notes": "Verified at exact implementation commit 55baae9d47a40b14bd05418ca2bbf9cc2c11d480 in immutable Actions run 33799751617 after exact READY commit 22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e / immutable run 33797480692, above verified ProjectDetailsUpdateOperation.swift at a532ac9d / run 33642777864. Exactly two executable leaves implement the public transient input and description-only application path: construction before one port call, validation after it, all 13 typed failures plus cancellation preserved, and unknown port errors bounded. Seven focused tests plus review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009; immutable exact-implementation-SHA CI satisfies PDETAILUSE-TEST-010. Independent review caught and corrected missing revision-zero dispatch proof, and both final reviewers returned GO. All 286 target tests in 61 suites, complete target controls, repeatable generation, both staging builds and clean immutable CI pass. EditProjectModal, ProjectService/Protocol, Project model and update_project MCP tool remain unadvanced; all read/readiness/lifecycle, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. O-022 through O-026 and A-003/A-004/A-007/A-015/A-016 remain unadvanced."
 }

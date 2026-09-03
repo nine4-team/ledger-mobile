@@ -1,7 +1,7 @@
 # EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001 — Project Details Update Use Case
 
 - Timestamp: 2026-09-03
-- Class: implementation candidate / provider-free Project-description form-to-application dispatch
+- Class: verification / provider-free Project-description form-to-application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Prior verified conversion baseline: exact commit `0a8cc53a909951c31fc8be6377e2e5f62b93e87c`; immutable Actions run `33794464360` passed both jobs
 - Ready baseline: exact commit `22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e`; immutable Actions run `33797480692` passed both jobs
@@ -9,7 +9,7 @@
 - Preserved source surfaces: `SWIFT-CF459111B7BB`, `SWIFT-E1A771F6A409`, `SWIFT-27CA6EAC7092`, `SWIFT-7500FDB4FDB6`, `MCPTOOL-A9FCDED31D3F` retain their prior statuses
 - Verified dependency: `SWIFT-1A34CF88E95E`, `TEST-22878D176671` at exact implementation `a532ac9d`; immutable run `33642777864`
 - Slice dossier: `conversion/implementation-slices/project-details-update-use-case-contracts.json`
-- Verification state: local implementation gate and two independent corrected-diff reviews pass; exact implementation commit and CI remain pending
+- Verification state: verified at exact implementation commit `55baae9d47a40b14bd05418ca2bbf9cc2c11d480`; immutable Actions run `33799751617` passed both jobs
 
 ## Selection and Authority
 
@@ -120,12 +120,12 @@ catch.
 
 Seven focused tests use ordinary `import LedgerTargetCore`. Those tests plus
 review evidence satisfy `PDETAILUSE-TEST-001` through `PDETAILUSE-TEST-009`;
-`PDETAILUSE-TEST-010` remains planned pending immutable
-exact-implementation-SHA CI. Initial independent review found one P2
+immutable exact-implementation-SHA CI satisfies `PDETAILUSE-TEST-010`.
+Initial independent review found one P2
 false-green path: revision zero stopped at the form input. The correction
 dispatches revision zero through the real use case and proves the exact draft,
 same-subject precondition and three-leaf encoded delta. Both final
-corrected-diff reviewers return GO with no remaining P0-P3 finding.
+corrected-diff reviewers returned GO with no remaining P0-P3 finding.
 
 The corrected implementation passes seven focused tests and all 286 target
 tests in 61 suites with warnings as errors; target isolation/contracts;
@@ -136,8 +136,11 @@ and clean formatting. Implementation hashes are:
 - `ProjectDetailsUpdateUseCaseTests.swift` — `1961c7c450ffa0503fd6b88fcbaf8d4d8ffba69061950933e71b9c0ea3807fae`.
 
 Conversion synchronization and complete control checks passed after the hash
-update in this checkpoint. Immutable exact-implementation-SHA CI is the only
-remaining gate before verification promotion.
+update in this checkpoint. Exact implementation commit
+`55baae9d47a40b14bd05418ca2bbf9cc2c11d480` passed immutable Actions run
+`33799751617` (traceability 15 seconds; isolated target 2 minutes 38 seconds),
+including all target tests, both staging builds and clean tracked artifacts.
+The dossier and both target surfaces are verified.
 
 ## Permanent Exclusions
 

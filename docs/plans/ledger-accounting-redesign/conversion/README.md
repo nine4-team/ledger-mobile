@@ -623,24 +623,24 @@ O-023/O-024/O-025/O-026, source UI/defaults/category mutation/media, physical
 persistence, authorization, provider, migration and production remain outside;
 `EVID-PROJECT-SETUP-USE-CASE-001`.
 
-The current implementation candidate is the description-only Project details
-form-to-application boundary. Root and two read-only preflights rejected the
+The description-only Project details form-to-application boundary is verified.
+Root and two read-only preflights rejected the
 legacy broad Edit Project surface as authority and selected only the canonical
 `UpdateProjectDetails` set/clear behavior above the verified operation. Exactly
 two leaves (`SWIFT-B95AD78B8CEC`, `TEST-315066B94566`) now implement a
 transient four-field input, existing description normalization, construction
 before one port call, receipt validation, all 13 typed failures, cancellation
 and bounded unknown errors. Exact READY `22c6cc01` / immutable run
-`33797480692` passed. The dossier is `in_progress`; seven focused tests plus
-review evidence satisfy `PDETAILUSE-TEST-001` through `PDETAILUSE-TEST-009`,
-and all 286 target tests in 61 suites, target controls, repeatable generation
-and both staging builds pass locally. `PDETAILUSE-TEST-010` remains planned
-pending immutable exact-implementation-SHA CI.
+`33797480692` and exact implementation `55baae9d` / immutable run
+`33799751617` passed. The dossier and both target leaves are `verified`; seven
+focused tests plus review evidence satisfy `PDETAILUSE-TEST-001` through
+`PDETAILUSE-TEST-009`, and immutable exact-implementation-SHA CI satisfies
+`PDETAILUSE-TEST-010`. All 286 target tests in 61 suites, target controls,
+repeatable generation and both staging builds pass locally and in CI.
 Independent reviews caught and corrected a missing public initializer,
 `@testable` access masking, lifecycle-status overstatement and stale gate
 wording. Implementation review caught and corrected missing zero-revision
-dispatch proof; both corrected-diff reviewers return GO. Verification remains
-unauthorized until immutable exact-implementation-SHA CI passes.
+dispatch proof; both corrected-diff reviewers returned GO.
 EditProjectModal, ProjectService/Protocol, Project model and
 `update_project` MCP tool retain their prior statuses. Read/readiness/lifecycle,
 dirty/no-op/UI, broader mutation, persistence, authorization, provider/schema/

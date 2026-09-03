@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T19:58:46.169Z",
+    "lastSynchronizedAt": "2026-09-03T20:06:00.784Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -28601,7 +28601,7 @@
           "Tests prove only the frozen provider-free Project description normalization-to-validated-receipt application path and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -28609,7 +28609,7 @@
         "EVID-PROJECT-DETAILS-UPDATE-001",
         "EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Implementation candidate after exact READY commit 22c6cc01 / immutable run 33797480692. The public non-Codable input contains exact Account/Project/revision/raw description; the use case reuses the verified canonical replacement/draft/command, calls ProjectDetailsUpdating.updateDetails once after construction, validates the receipt, preserves all typed failures/cancellation and bounds unknown port errors. Local tests/reviews pass; exact implementation commit and CI remain pending. It cannot add Project reads/readiness/lifecycle/no-op/UI, rename, Client/category/allocation/budget/media/child/history/accounting mutation, persistence, authorization, provider, app/MCP, migration or production behavior.",
+      "notes": "Verified at exact implementation commit 55baae9d47a40b14bd05418ca2bbf9cc2c11d480 in immutable Actions run 33799751617 after exact READY commit 22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e passed run 33797480692. The public non-Codable input contains exact Account/Project/revision/raw description; the use case reuses the verified canonical replacement/draft/command, calls ProjectDetailsUpdating.updateDetails once after construction, validates the receipt, preserves all typed failures/cancellation and bounds unknown port errors. Local and CI tests plus independent reviews pass. It cannot add Project reads/readiness/lifecycle/no-op/UI, rename, Client/category/allocation/budget/media/child/history/accounting mutation, persistence, authorization, provider, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35279,7 +35279,7 @@
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executes seven provider-free public-consumer tests covering the frozen behavioral obligations for input shape/access, normalization, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009, while PDETAILUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI.",
+      "currentBehavior": "Executes seven provider-free public-consumer tests covering the frozen behavioral obligations for input shape/access, normalization, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009, and immutable exact-implementation-SHA CI satisfies PDETAILUSE-TEST-010.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Details Update Use Case Tests",
@@ -35311,7 +35311,7 @@
           "Tests prove only the frozen provider-free Project details update use case and exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -35319,7 +35319,7 @@
         "EVID-PROJECT-DETAILS-UPDATE-001",
         "EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Implementation candidate after exact READY commit 22c6cc01 / run 33797480692. Seven tests cover the behavioral obligations, including non-@testable public construction, exact raw bytes, clear/set and more-than-8-KiB Unicode command passage, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership, normalization equivalence, zero/one-call failures, all 13 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009; PDETAILUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI. Independent review caught and corrected missing zero-revision dispatch proof; both final reviewers return GO. No source, service or production behavior advances.",
+      "notes": "Verified at exact implementation commit 55baae9d47a40b14bd05418ca2bbf9cc2c11d480 in immutable Actions run 33799751617 after exact READY commit 22c6cc01 / run 33797480692. Seven tests cover the behavioral obligations, including non-@testable public construction, exact raw bytes, clear/set and more-than-8-KiB Unicode command passage, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership, normalization equivalence, zero/one-call failures, all 13 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009; immutable exact-implementation-SHA CI satisfies PDETAILUSE-TEST-010. Independent review caught and corrected missing zero-revision dispatch proof; both final reviewers returned GO. No source, service or production behavior advances.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {

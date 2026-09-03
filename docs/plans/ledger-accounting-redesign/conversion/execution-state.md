@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 226
+State version: 227
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-DETAILS-UPDATE-USE-CASE-IMPLEMENTATION-LOCAL-GREEN
+- Checkpoint: PROJECT-DETAILS-UPDATE-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3242,9 +3242,13 @@ modifying the running Firebase application before hard cutover.
   public transient input and application path. Seven focused/all 286 target
   tests in 61 suites, target controls, repeatable generation and both builds
   pass locally. Independent implementation review caught and corrected missing
-  revision-zero dispatch proof; both final reviewers return GO. Conversion sync
-  and complete controls follow the implementation-hash update; immutable exact-
-  implementation-SHA CI remains required before verification promotion.
+  revision-zero dispatch proof; both final reviewers returned GO. Conversion
+  synchronization and complete controls passed after the implementation-hash
+  update. Exact implementation commit
+  `55baae9d47a40b14bd05418ca2bbf9cc2c11d480` passed immutable Actions run
+  `33799751617` (traceability 15 seconds; isolated target 2 minutes 38 seconds),
+  including all target tests, both staging builds and clean tracked artifacts.
+  The dossier and both target leaves are verified.
 
 ## Next Action
 
@@ -3544,13 +3548,12 @@ Continue without waiting on the two M1 evidence blockers:
    defaults/category mutation, physical persistence, authorization, provider/
    schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
    outside.
-   Treat in-progress `project-details-update-use-case-contracts` and
-   `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001` as the current candidate. Preserve
+   Treat verified `project-details-update-use-case-contracts` and
+   `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001` as the current frozen boundary. Preserve
    exactly the two implemented leaves `ProjectDetailsUpdateUseCase.swift`
    (`SWIFT-B95AD78B8CEC`) and `ProjectDetailsUpdateUseCaseTests.swift`
-   (`TEST-315066B94566`). Synchronize their exact implementation hashes, run the
-   complete controls, commit the implementation/evidence checkpoint and require
-   immutable exact-SHA CI before verification promotion. Keep
+   (`TEST-315066B94566`). Exact implementation commit `55baae9d` and immutable
+   run `33799751617` pass; preserve the dossier and both leaves as verified. Keep
    EditProjectModal, ProjectService/Protocol, Project model and update_project
    MCP tool at their prior statuses; do not add read/readiness/lifecycle/no-op/
    UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync,

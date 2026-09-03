@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T19:58:46.169Z",
+  "generatedFromManifestSync": "2026-09-03T20:06:00.784Z",
   "totals": {
     "slices": 60,
     "claimedTargetSurfaces": 145,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 128
+    "implementationAdvancedTargetSurfaces": 130
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
-    "in_progress": 2,
+    "in_progress": 1,
     "implemented": 0,
-    "verified": 58,
+    "verified": 59,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -415,7 +415,7 @@
       "sliceId": "project-details-update-use-case-contracts",
       "title": "Normalize and dispatch one Project description replacement",
       "kind": "product",
-      "status": "in_progress",
+      "status": "verified",
       "owner": "Project Details Update Use Case",
       "surfaceIds": [
         "SWIFT-B95AD78B8CEC",
