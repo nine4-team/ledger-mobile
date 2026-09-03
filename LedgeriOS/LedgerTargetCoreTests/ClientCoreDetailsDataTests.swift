@@ -311,18 +311,18 @@ struct ClientCoreDetailsDataTests {
             state: .failed(failure: .requiredUpdate, cached: incomplete)
         )
 
-        let acceptedWaiting = ListReadiness.allCases.filter { readiness in
-            Self.failure {
-                try ClientCoreDetailsUpdate(request: request, state: .waiting(readiness))
-            } == nil
+        for readiness in [ListReadiness.notRequested, .loading, .blocked] {
+            let waiting = try ClientCoreDetailsUpdate(
+                request: request,
+                state: .waiting(readiness)
+            )
+            #expect(waiting.state == .waiting(readiness))
         }
-        let rejectedWaiting = ListReadiness.allCases.filter { readiness in
-            Self.failure {
+        for readiness in [ListReadiness.ready, .partial, .stale] {
+            #expect(Self.failure {
                 try ClientCoreDetailsUpdate(request: request, state: .waiting(readiness))
-            } == .invalidWaitingState
+            } == .invalidWaitingState)
         }
-        #expect(acceptedWaiting == [.notRequested, .loading, .blocked])
-        #expect(rejectedWaiting == [.ready, .partial, .stale])
         #expect(retryable.state != requiredUpdate.state)
         #expect(!incomplete.isAuthoritativeAbsence)
         #expect(!incomplete.observedRevisionIsFromCompleteReadySnapshot)
