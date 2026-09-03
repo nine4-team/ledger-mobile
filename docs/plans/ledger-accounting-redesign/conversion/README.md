@@ -504,8 +504,15 @@ picker. Two independent actual-diff reviewers caught and drove correction of
 contract overclaims plus one missing conversion-control crosswalk authority;
 both now return GO with no remaining P0-P3 finding. The complete local ready
 gate passes with all 249 target tests in 55 suites, repeatable generation and
-both staging builds. Immutable exact-ready-SHA CI remains required before
-implementation.
+both staging builds. Exact ready commit `b6a98ca0` passed immutable Actions run
+`33749431949`. Implementation now changes only the two frozen target leaves.
+Independent review found and drove correction of an imprecise no-base-detail
+claim, missing exact long-raw assertions and incomplete diagnostic-leakage
+coverage; both final reviewers return GO. Six focused and all 255 target tests
+in 56 suites, warnings-as-errors, conversion/target controls, repeatable
+generation and both staging builds pass locally. Exact implementation-commit
+CI remains required before verification; the source modal remains
+`target_mapped` after target-leaf promotion.
 `EVID-SPACE-DETAILS-UPDATE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

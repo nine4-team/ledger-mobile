@@ -1,12 +1,12 @@
 # EVID-SPACE-DETAILS-UPDATE-USE-CASE-001 — Space Details Update Use Case
 
 - Timestamp: 2026-09-03
-- Class: corrected ready design / provider-free Space-details save submission
+- Class: implementation / local integration evidence for provider-free Space-details save submission
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Claimed target surfaces: `SWIFT-306643A5CD0D`, `TEST-235F73A8DC9E`
 - Partially mapped source evidence: `SWIFT-9F4789704808` remains `target_mapped`
 - Slice dossier: `conversion/implementation-slices/space-details-update-use-case-contracts.json`
-- Verification state: independent preflight, two corrected actual-ready-diff reviews and the complete local ready gate pass; immutable exact-ready-SHA CI pending
+- Verification state: corrected implementation passes two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
 
 ## Selection and Authority
 
@@ -41,12 +41,12 @@ corrects this shipped defect rather than preserving it.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaves are claimed:
+Exactly two target leaves are claimed:
 
 - `LedgeriOS/LedgerTargetCore/SpaceDetailsUpdateUseCase.swift`; and
 - `LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift`.
 
-`SpaceDetailsUpdateFormInput` will be non-Codable transient state carrying exact
+`SpaceDetailsUpdateFormInput` is non-Codable transient state carrying exact
 AccountID, SpaceID, ExpectedSpaceRevision and caller raw name/optional notes.
 Immutable replacement changes one raw field only. `validatedIntent` reuses
 `SpaceDisplayName` and `SpaceCreationNotes`; it invents no validator, default,
@@ -86,7 +86,7 @@ Two independent read-only reviewers examined the actual ready diff. They first
 blocked it for five contract overclaims and one control-plane gap: diagnostics
 privacy had been conflated with command encoding, absence of accounting fields
 had been overstated as proof of no physical effects, no-op policy had been
-decided without base values, source-status authority was misassigned, source
+decided without original/base detail values, source-status authority was misassigned, source
 metadata exclusions were too broad, and the correct status authority was not in
 the batch crosswalk. The corrected package separates those claims and registers
 `target-mapping-method.md` only as conversion-control authority. Both reviewers
@@ -99,6 +99,44 @@ macOS and generic iOS Simulator staging builds, JSON validation and clean diff
 formatting. The two new target leaves are comment-only at this checkpoint, so no
 new executable focused test exists until implementation. Exact-ready-SHA CI is
 the sole remaining gate before code may replace the scaffolds.
+
+Exact ready commit `b6a98ca0fd33bb170bd9e7f70e7dc8f76a17b19b`
+passed immutable Actions run `33749431949` (conversion traceability 9 seconds;
+isolated target 3 minutes 7 seconds).
+
+## Implementation Review and Local Gate
+
+Implementation changes exactly the two frozen target leaves. It adds a
+non-Codable transient form input and canonical intent, then revalidates and
+assembles the existing revision-aware complete-replacement command in a
+separate application use case. The use case invokes `SpaceDetailsUpdating`
+exactly once after validation, validates the returned receipt, preserves every
+local state, Swift `CancellationError`, `SpaceCreationFailure` and
+`SpaceDetailsUpdateFailure`, and maps only unexpected transport errors to
+`SpaceDetailsUpdateFailure.localAcceptanceFailed`.
+
+Independent review found three proof/wording gaps while finding the production
+implementation correct: “no base value” contradicted the required base
+revision, long input was asserted only after canonical conversion, and the
+diagnostic privacy test did not reciprocally check raw notes plus every
+synthetic identity. The correction limits the no-base claim to original/base
+detail values, proves exact long raw input before conversion, and checks every
+named synthetic raw/detail and identity value. Both independent final reviewers
+return GO with no remaining P0-P3 finding.
+
+The complete local integration gate passes conversion, capability, query,
+residual and M0 controls; target isolation and generated contracts; six focused
+and all 255 target tests in 56 suites; warnings-as-errors; repeatable XcodeGen
+project/scheme hashes `0657194a` / `388303af`; macOS and generic iOS Simulator
+staging builds; valid JSON and clean formatting. Implemented leaf hashes are:
+
+- `SpaceDetailsUpdateUseCase.swift` — `dd0ce5e0e0c644ba3f95681d892b74441fbffd7ba87621f328786f20b2ada99d`; and
+- `SpaceDetailsUpdateUseCaseTests.swift` — `72ee0af6873a76bd8af685e43a72198efd6905bbe188604b0253975c2e3a0698`.
+
+The exact integration commit and immutable CI remain required before the slice
+or either target leaf can be promoted to verified. The source modal must remain
+`target_mapped` after that promotion because the unconverted responsibilities
+listed above still exist.
 
 ## Permanent Exclusions
 

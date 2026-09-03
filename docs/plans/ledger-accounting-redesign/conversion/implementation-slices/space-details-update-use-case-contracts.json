@@ -3,7 +3,7 @@
   "sliceId": "space-details-update-use-case-contracts",
   "title": "Validate and dispatch one complete Space details replacement",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Space Details Update Use Case",
   "surfaceIds": ["SWIFT-306643A5CD0D", "TEST-235F73A8DC9E"],
   "requirements": [
@@ -30,7 +30,7 @@
       "authorityRole": "canonical_target",
       "authorityPath": "docs/specs/spaces.md",
       "section": "Target Redesign Requirements",
-      "invariant": "UpdateSpaceDetails replaces the complete mutable name-and-optional-notes pair for one Space revision. It is not a patch, carries no original/base values and decides no dirty/unchanged/no-op policy; it cannot change scope, lifecycle, checklist, template, Item, review, media or accounting state.",
+      "invariant": "UpdateSpaceDetails replaces the complete mutable name-and-optional-notes pair for one Space revision. It is not a patch, carries no original/base name-or-notes values and decides no dirty/unchanged/no-op policy; it cannot change scope, lifecycle, checklist, template, Item, review, media or accounting state.",
       "decisionIds": [],
       "verificationIds": ["SPDETAILUSE-TEST-002", "SPDETAILUSE-TEST-003", "SPDETAILUSE-TEST-004", "SPDETAILUSE-TEST-005"]
     },
@@ -117,7 +117,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
       "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-006", "SPDETAILUSE-REQ-007"],
       "expected": "Exact empty/nil/whitespace/padded/interior-whitespace/long raw name and notes remain transient. Canonical conversion rejects empty, spaces-only and newline-only names; trims only outer whitespace/newlines; maps nil/empty/whitespace notes to absent; preserves interior text; and invents no default or length cap.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -126,7 +126,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
       "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-007"],
       "expected": "Immutable raw-field replacement preserves exact Account/Space/base revision; revisions zero and UInt64.max are valid exact evidence; two distinct Space IDs may use the same canonical name without any directory query; input/intent expose no readiness, lifecycle, scope, child, accounting, authorization or backend field.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -135,7 +135,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
       "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-007", "SPDETAILUSE-REQ-008"],
       "expected": "Raw input through application assembly invokes exactly one deterministic port call with one complete canonical name/notes payload and exactly one same-Space expected-revision precondition, then returns every matching OperationReceipt local state unchanged. The command carries and invokes no accounting value or operation; this provider-free test makes no claim about physical side effects.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -143,8 +143,8 @@
       "kind": "domain",
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
       "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-007"],
-      "expected": "A reciprocal matrix asserts exact Account, Space, revision, raw name/notes, Operation, actor, contract and time forwarding plus derived subject/fingerprint/precondition. Blank name and nonfinite time cause zero port calls; valid input causes one. No original/base value, dirty/unchanged/no-op decision, readiness, as-of, query-fingerprint or cached-status metadata exists.",
-      "status": "planned",
+      "expected": "A reciprocal matrix asserts exact Account, Space, revision, raw name/notes, Operation, actor, contract and time forwarding plus derived subject/fingerprint/precondition. Blank name and nonfinite time cause zero port calls; valid input causes one. No original/base name-or-notes value, dirty/unchanged/no-op decision, readiness, as-of, query-fingerprint or cached-status metadata exists.",
+      "status": "passed",
       "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -153,7 +153,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift",
       "covers": ["SPDETAILUSE-REQ-001", "SPDETAILUSE-REQ-002", "SPDETAILUSE-REQ-003", "SPDETAILUSE-REQ-004", "SPDETAILUSE-REQ-005", "SPDETAILUSE-REQ-006", "SPDETAILUSE-REQ-007", "SPDETAILUSE-REQ-008"],
       "expected": "Receipt mismatch and distinct normalized SpaceCreationFailure/SpaceDetailsUpdateFailure values remain stable; unexpected raw transport errors become localAcceptanceFailed; Swift CancellationError remains cancellation. Stable diagnostics reveal no raw form values, identity, credentials or provider payload. Separate reflected/encoded shape checks prove only the authorized canonical identity/text/operation fields exist and no provider/UI/readiness/lifecycle/child/accounting or production field is introduced.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -169,5 +169,5 @@
   "implementationEvidence": ["EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Corrected ready design only. A fresh scout selected Space-details save submission, and independent preflight rejected claiming the entire EditSpaceDetailsModal or consuming SpaceCoreDetailsUpdate/readiness. Exactly two comment-only target leaves are frozen; the source modal remains target_mapped. Canonical validation intentionally fixes its newline-only-name hole. No target code may start until actual-diff review, complete local ready gate and immutable exact-ready-commit CI pass."
+  "notes": "Implemented locally after exact ready commit b6a98ca0fd33bb170bd9e7f70e7dc8f76a17b19b passed immutable Actions run 33749431949. The provider-free use case revalidates transient raw text, assembles the verified complete-replacement command with exact caller metadata, invokes SpaceDetailsUpdating once, validates its receipt, preserves Swift cancellation and both normalized failure families, and bounds unexpected transport errors. Independent implementation review found an imprecise no-base-value claim plus incomplete long-raw and diagnostic-leakage assertions; all were corrected, and two final reviewers return GO with no P0-P3. Six focused and all 255 target tests in 56 suites, warnings-as-errors, conversion/target controls, repeatable generation and both staging builds pass locally. The current modal remains target_mapped. Exact implementation-commit CI remains required before verification."
 }

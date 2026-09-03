@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T11:22:27.906Z",
+  "generatedFromManifestSync": "2026-09-03T11:38:18.646Z",
   "totals": {
     "slices": 55,
     "claimedTargetSurfaces": 135,
@@ -9,8 +9,8 @@
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
-    "in_progress": 1,
+    "ready": 0,
+    "in_progress": 2,
     "implemented": 0,
     "verified": 53,
     "rehearsed": 0,
@@ -700,7 +700,7 @@
       "sliceId": "space-details-update-use-case-contracts",
       "title": "Validate and dispatch one complete Space details replacement",
       "kind": "product",
-      "status": "ready",
+      "status": "in_progress",
       "owner": "Space Details Update Use Case",
       "surfaceIds": [
         "SWIFT-306643A5CD0D",

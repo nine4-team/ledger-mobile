@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T11:22:27.906Z",
+    "lastSynchronizedAt": "2026-09-03T11:38:18.646Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18733,8 +18733,8 @@
           "path": "LedgeriOS/LedgerTargetCore/SpaceDetailsUpdateUseCase.swift"
         }
       ],
-      "observedSourceHash": "b79fbbc662c99450c6db7c0acda59acf6bd51ee84b1723a4fd1277293d91a4c8",
-      "acknowledgedSourceHash": "b79fbbc662c99450c6db7c0acda59acf6bd51ee84b1723a4fd1277293d91a4c8",
+      "observedSourceHash": "dd0ce5e0e0c644ba3f95681d892b74441fbffd7ba87621f328786f20b2ada99d",
+      "acknowledgedSourceHash": "dd0ce5e0e0c644ba3f95681d892b74441fbffd7ba87621f328786f20b2ada99d",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -18778,7 +18778,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Comment-only ready scaffold. The future implementation receives exact typed Account/Space/base revision plus transient raw name/notes and adds caller operation metadata at the application layer. It consumes no Space read/readiness state and chooses no UI, lifecycle, authorization, provider or migration policy.",
+      "notes": "Implemented provider-free transient input, canonical intent and application orchestration. Raw text is revalidated before exactly one complete-replacement port call; exact Account/Space/revision and caller operation metadata reach the verified command; receipts are validated; Swift cancellation and normalized failures remain distinct while unexpected transport errors are bounded. No Space read/readiness state or UI, lifecycle, no-op, authorization, provider or migration policy is introduced. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -26521,7 +26521,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "The target-only use-case slice maps only this modal's save-intent normalization and dispatch responsibility. The full source surface remains target_mapped because initial form population, transient edits, immediate error presentation, cancel/success dismissal, layout/copy and app composition are not converted. Canonical target validation intentionally rejects newline-only names that the shipped whitespace-only disable rule can pass through.",
+      "notes": "The implemented target-only use-case slice maps only this modal's save-intent normalization and dispatch responsibility. The full source surface remains target_mapped because initial form population, transient edits, immediate error presentation, dirty/no-op policy, cancel/success dismissal, layout/copy and app composition are not converted. Canonical target validation intentionally rejects newline-only names that the shipped whitespace-only disable rule can pass through. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -34746,8 +34746,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/SpaceDetailsUpdateUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "08ff9700f3498cb5e18ace76403ab82ede774cb5d7770cc9d57fe18549d68a6d",
-      "acknowledgedSourceHash": "08ff9700f3498cb5e18ace76403ab82ede774cb5d7770cc9d57fe18549d68a6d",
+      "observedSourceHash": "72ee0af6873a76bd8af685e43a72198efd6905bbe188604b0253975c2e3a0698",
+      "acknowledgedSourceHash": "72ee0af6873a76bd8af685e43a72198efd6905bbe188604b0253975c2e3a0698",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -34791,7 +34791,7 @@
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "Comment-only ready test scaffold. Planned synthetic tests must be reciprocal and exact, including revision zero/UInt64.max and structured cancellation, without claiming the current modal, read readiness, form restart, persistence, authorization, provider or Sync behavior.",
+      "notes": "Implemented six focused synthetic tests covering exact raw/canonical boundaries, immutable replacement, same-name distinct Spaces, revision zero/UInt64.max, reciprocal caller and derived command fields, every receipt state, validation-before-call, mismatch, both normalized failure families, raw transport normalization, structured cancellation, diagnostics and encoded-shape exclusions. They do not claim the current modal, read readiness, form restart, persistence, authorization, provider or Sync behavior. Exact implementation-commit CI is pending.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
