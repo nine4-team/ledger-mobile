@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 204
+State version: 205
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: DIRECT-SPACE-CREATION-USE-CASE-INTEGRATED-LOCAL
+- Checkpoint: DIRECT-SPACE-CREATION-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2927,8 +2927,11 @@ modifying the running Firebase application before hard cutover.
   passes conversion/capability/query/residual/M0 controls, target isolation and
   generated contracts, six focused and all 249 tests in 55 suites, warnings-as-
   errors, repeatable project hashes `0657194a` / `388303af`, both staging builds,
-  valid JSON and clean formatting. Exact implementation-commit CI remains
-  required before verification; Firebase remains unchanged.
+  valid JSON and clean formatting. Exact implementation commit
+  `c35f1cefc88d964035976d537c2f829b4db62a8a` passed immutable Actions run
+  `33746648677` (traceability 10 seconds; isolated target 2 minutes 58 seconds).
+  The four claimed responsibilities and slice are verified; Firebase remains
+  unchanged.
 
 ## Next Action
 
@@ -3143,9 +3146,10 @@ Continue without waiting on the two M1 evidence blockers:
    promotion-checkpoint CI pass after two candidate corrections. The clean
    temporary worktree is removed and its reviewed branch is retained. Preserve
    this contract when selecting the next coherent decision-independent slice.
-   Treat the locally implemented `direct-space-creation-use-case-contracts` dossier
-   and `EVID-DIRECT-SPACE-CREATION-USE-CASE-001` as the next candidate boundary.
-   It changes only `DirectSpaceCreationUseCase.swift` and its target tests.
+   Treat verified `direct-space-creation-use-case-contracts` and
+   `EVID-DIRECT-SPACE-CREATION-USE-CASE-001` as the sole provider-free direct-
+   Space form-to-operation use-case boundary. It changes only
+   `DirectSpaceCreationUseCase.swift` and its target tests.
    Preserve caller-supplied transient raw input, canonical name/notes conversion,
    application-owned operation metadata/command assembly, exactly one post-
    validation `SpaceCreating` call, receipt validation, Swift structured-
@@ -3153,10 +3157,12 @@ Continue without waiting on the two M1 evidence blockers:
    initial-form defaults, form-cancel UX policy, form fingerprints/codecs,
    uniqueness queries, templates, SwiftUI, physical persistence, optimistic
    rows, authorization, provider/schema/RLS/Sync, app/MCP, migration or
-   production behavior. Corrected implementation and two independent final
-   reviews pass the complete local gate. Commit the synchronized implementation
-   checkpoint, require immutable exact-implementation-SHA CI, then promote the
-   four claimed surfaces and dossier only after both jobs pass.
+   production behavior. Corrected implementation, two independent final
+   reviews, the complete local gate and exact implementation commit
+   `c35f1cef` / immutable run `33746648677` pass. Preserve this boundary and
+   select the next coherent decision-independent slice through a fresh product-
+   authority preflight; do not resurrect the rejected presentation-owned form
+   draft or its removed phantom surface records.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

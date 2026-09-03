@@ -484,8 +484,10 @@ separately from form-cancel UX and transport failures, asserts exact reciprocal 
 forwarding, and covers same-scope duplicate names plus empty/nil/whitespace/
 padded/long inputs. Two independent final reviews return GO. Six focused and
 all 249 tests in 55 suites, conversion/target controls, repeatable generation
-and both staging builds pass locally. Exact implementation-commit CI remains
-required before verification.
+and both staging builds pass locally. Exact implementation commit
+`c35f1cefc88d964035976d537c2f829b4db62a8a` passed immutable Actions run
+`33746648677`; all four claimed conversion responsibilities and the slice are
+verified.
 `EVID-DIRECT-SPACE-CREATION-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

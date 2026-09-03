@@ -301,14 +301,14 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Performs pure Space name/form validation.",
       "disposition": "replace",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Target responsibility is implemented by the canonical SpaceDisplayName/SpaceCreationNotes values and DirectSpaceCreationUseCase tests; no parallel app-only validator was copied. The current Firebase source file remains unchanged. Exact implementation-commit CI is pending.",
+      "notes": "Target responsibility is verified through the canonical SpaceDisplayName/SpaceCreationNotes values and DirectSpaceCreationUseCase tests; no parallel app-only validator was copied. Exact target implementation commit c35f1cefc88d964035976d537c2f829b4db62a8a passed immutable Actions run 33746648677. The current Firebase source file remains unchanged.",
       "target": {
         "owner": "Direct Space Creation Use Case",
         "surfaces": [
@@ -919,14 +919,14 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Tests current Space form validation.",
       "disposition": "replace",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Target replacement tests implement the canonical SpaceDisplayName/SpaceCreationNotes path plus use-case failure, transport normalization and structured-concurrency cancellation behavior; current Firebase tests remain unchanged as source evidence. Exact implementation-commit CI is pending.",
+      "notes": "Target replacement tests verify the canonical SpaceDisplayName/SpaceCreationNotes path plus use-case failure, transport normalization and structured-concurrency cancellation behavior at exact target implementation commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677; current Firebase tests remain unchanged as source evidence.",
       "target": {
         "owner": "Direct Space Creation Use Case Tests",
         "surfaces": [
@@ -1726,14 +1726,14 @@
       "acknowledgeSourceHash": "3c1583999b27d6a325434ba8a5036dbb5f7e465c059da61bf57ab1cf1f9610ea",
       "currentBehavior": "Freezes the provider-free direct Space creation use-case boundary: caller raw input, canonical typed intent, application-owned operation assembly, one SpaceCreating call and receipt validation.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Implemented provider-free form input, canonical intent and application use case. Raw input is revalidated before exactly one port call; caller fields and receipt state are preserved exactly; Swift task cancellation remains concurrency control flow; normalized failures are preserved and unexpected transport errors are bounded. No form fingerprint/restart, template, UI composition, physical persistence, provider, migration or production behavior is included. Exact implementation-commit CI is pending.",
+      "notes": "Verified provider-free form input, canonical intent and application use case at exact commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677. Raw input is revalidated before exactly one port call; caller fields and receipt state are preserved exactly; Swift task cancellation remains concurrency control flow; normalized failures are preserved and unexpected transport errors are bounded. No form fingerprint/restart, template, UI composition, physical persistence, provider, migration or production behavior is included.",
       "target": {
         "owner": "Direct Space Creation Use Case",
         "surfaces": [
@@ -1772,14 +1772,14 @@
       "acknowledgeSourceHash": "1ee444d5e3c026efa1b35a903e9e11243fd26df295b6faf29c9424e64d1c6588",
       "currentBehavior": "Freezes executable proof for raw input/canonical intent, exact scope and command forwarding, one operation-port call, receipt-state/failure normalization, source-validator conversion and exclusions.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-DIRECT-SPACE-CREATION-USE-CASE-001"
       ],
-      "notes": "Implemented focused target tests prove raw empty/nil/whitespace/padded/long boundaries, same-scope duplicate names, reciprocal exact caller-field forwarding, all receipt states, validation-before-call, structured cancellation, distinct normalized failures, raw transport normalization and exclusions. They claim no transient form restart, physical durability, authorization, provider or Sync evidence. Exact implementation-commit CI is pending.",
+      "notes": "Verified focused target tests at exact commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677. They prove raw empty/nil/whitespace/padded/long boundaries, same-scope duplicate names, reciprocal exact caller-field forwarding, all receipt states, validation-before-call, structured cancellation, distinct normalized failures, raw transport normalization and exclusions. They claim no transient form restart, physical durability, authorization, provider or Sync evidence.",
       "target": {
         "owner": "Direct Space Creation Use Case Tests",
         "surfaces": [

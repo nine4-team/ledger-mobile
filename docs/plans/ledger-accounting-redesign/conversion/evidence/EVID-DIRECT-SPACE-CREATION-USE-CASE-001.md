@@ -5,8 +5,9 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed conversion surfaces: `SWIFT-3615734A053E`, `TEST-EBA9C48BC4EE`, `SWIFT-517FA18158D9`, `TEST-915EC8E0BFC9`
 - Slice dossier: `conversion/implementation-slices/direct-space-creation-use-case-contracts.json`
-- Verification state: corrected implementation passes the complete local gate
-  and two independent final reviews; exact implementation-commit CI pending
+- Verification state: verified at exact implementation commit
+  `c35f1cefc88d964035976d537c2f829b4db62a8a` in immutable Actions run
+  `33746648677`
 
 ## Selection and Authority
 
@@ -145,9 +146,12 @@ builds; valid JSON and clean formatting. Implemented leaf hashes are:
 - `DirectSpaceCreationUseCase.swift` — `3c1583999b27d6a325434ba8a5036dbb5f7e465c059da61bf57ab1cf1f9610ea`; and
 - `DirectSpaceCreationUseCaseTests.swift` — `1ee444d5e3c026efa1b35a903e9e11243fd26df295b6faf29c9424e64d1c6588`.
 
-The exact integration commit and immutable CI remain required before the slice,
-the two target leaves, or the two converted current validation responsibilities
-can be promoted to verified.
+Exact implementation commit `c35f1cefc88d964035976d537c2f829b4db62a8a`
+passed immutable Actions run `33746648677`: conversion state and traceability
+passed in 10 seconds, and the isolated target environment passed all tests,
+generated contracts, macOS/iOS staging builds and clean-artifact checks in 2
+minutes 58 seconds. The slice, both target leaves and both converted current
+validation responsibilities are verified.
 
 ## Permanent Exclusions
 

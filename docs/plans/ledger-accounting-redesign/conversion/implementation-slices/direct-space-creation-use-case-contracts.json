@@ -3,7 +3,7 @@
   "sliceId": "direct-space-creation-use-case-contracts",
   "title": "Validate and dispatch one direct Space creation intent",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Direct Space Creation Use Case",
   "surfaceIds": ["SWIFT-3615734A053E", "TEST-EBA9C48BC4EE", "SWIFT-517FA18158D9", "TEST-915EC8E0BFC9"],
   "requirements": [
@@ -162,12 +162,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SPCREATEUSE-REQ-005", "SPCREATEUSE-REQ-007"],
       "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while implementation changes only the two target leaf paths and the current Firebase validation files remain untouched.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-DIRECT-SPACE-CREATION-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally after exact ready commit b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe passed immutable Actions run 33744781549. Independent implementation review found nonreciprocal caller-field checks, indistinguishable normalized-failure evidence, cross-scope duplicate-name evidence and incomplete empty/nil/long raw-input boundaries. Reviewers initially disagreed about CancellationError: one treated passthrough as outside the ready boundary, while the other identified normalization as violating architecture rule 7. Authority adjudication preserves Swift structured-concurrency cancellation without choosing form-cancel UX and still normalizes unexpected transport errors under rule 8. The corrected implementation validates all raw input before one port call, exactly forwards every caller field, validates the receipt, and passes two independent final reviews with no remaining P0-P3. Exact implementation-commit CI remains required before verification. No form persistence, template application, SwiftUI, provider, migration or production behavior is introduced."
+  "notes": "Verified at exact implementation commit c35f1cefc88d964035976d537c2f829b4db62a8a in immutable Actions run 33746648677 after exact ready commit b8869ac2a0b3cfc48c4c197cc39baa8ceec60cfe passed run 33744781549. Independent implementation review found nonreciprocal caller-field checks, indistinguishable normalized-failure evidence, cross-scope duplicate-name evidence and incomplete empty/nil/long raw-input boundaries. Reviewers initially disagreed about CancellationError: one treated passthrough as outside the ready boundary, while the other identified normalization as violating architecture rule 7. Authority adjudication preserves Swift structured-concurrency cancellation without choosing form-cancel UX and still normalizes unexpected transport errors under rule 8. The corrected implementation validates all raw input before one port call, exactly forwards every caller field, validates the receipt, and passes two independent final reviews with no remaining P0-P3. No form persistence, template application, SwiftUI, provider, migration or production behavior is introduced."
 }

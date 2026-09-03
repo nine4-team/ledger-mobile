@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T10:52:10.018Z",
+  "generatedFromManifestSync": "2026-09-03T10:57:32.825Z",
   "totals": {
     "slices": 54,
     "claimedTargetSurfaces": 133,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 114
+    "implementationAdvancedTargetSurfaces": 118
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
-    "in_progress": 2,
+    "in_progress": 1,
     "implemented": 0,
-    "verified": 52,
+    "verified": 53,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -156,7 +156,7 @@
       "sliceId": "direct-space-creation-use-case-contracts",
       "title": "Validate and dispatch one direct Space creation intent",
       "kind": "product",
-      "status": "in_progress",
+      "status": "verified",
       "owner": "Direct Space Creation Use Case",
       "surfaceIds": [
         "SWIFT-3615734A053E",
