@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 185
+State version: 186
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PBROWSE-READY-LOCAL
+- Checkpoint: PBROWSE-ASSIGNED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2731,6 +2731,14 @@ modifying the running Firebase application before hard cutover.
   Independent correction re-review inspected every changed/untracked path and
   returned GO with no remaining P0-P3 issue or overclaim. The diff is safe for
   the exact ready commit; immutable CI remains required before delegation.
+- Exact ready commit `459a58123ac7241984ddee6d559e33f4bca931d4`
+  passed immutable Actions run `33720134399`: conversion traceability and the
+  isolated target job both succeeded. Created clean branch
+  `codex/supabase-slice-project-browsing` and worktree
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_browsing` at that
+  exact commit. Registered `SUBAGENT-WORK-008` with only the four Project-
+  browsing implementation/test leaf paths writable; canonical docs, graphs,
+  Firebase, providers and external systems remain forbidden.
 
 ## Next Action
 
@@ -2914,8 +2922,10 @@ Continue without waiting on the two M1 evidence blockers:
    update truth. Do not add a query port, sort/search, full Project card, tabs/
    children, navigation/route, mutation, authorization, persistence, app/MCP,
    provider/schema/RLS/Sync, migration or production behavior. Complete the
-   exact ready-SHA CI before delegation; the full local ready gate and
-   independent actual-diff correction review are already recorded as passing.
+   exact ready-SHA CI, full local ready gate and independent actual-diff
+   correction review are already recorded as passing. Implement exactly the
+   four registered leaf paths in `SUBAGENT-WORK-008`, then require primary every-
+   line and independent adversarial review before integration.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

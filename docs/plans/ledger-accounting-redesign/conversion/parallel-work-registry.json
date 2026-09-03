@@ -468,6 +468,40 @@
         "worktreeRemoved": true,
         "branchRetained": true
       }
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-008",
+      "sliceId": "project-browsing-presentation-contracts",
+      "status": "assigned",
+      "baseCommit": "459a58123ac7241984ddee6d559e33f4bca931d4",
+      "readyCiRun": 33720134399,
+      "branch": "codex/supabase-slice-project-browsing",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_browsing",
+      "workerAgent": "/root/project_browsing_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectDirectoryPresentation.swift",
+        "LedgeriOS/LedgerTargetCore/ProjectDetailHeaderPresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectDirectoryPresentationTests.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectDetailHeaderPresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectDirectoryPresentationTests && swift test --package-path LedgeriOS --filter ProjectDetailHeaderPresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested quality-control review for early delegated work. Scope and actual-ready-diff review already rejected unsupported sorting/tabs/routes, an unrelated D-023 citation, missing Client-lifecycle authority and stale-selection request derivation; the worker cannot change that frozen boundary or any canonical control file."
+      }
     }
   ],
   "preflightFindings": [

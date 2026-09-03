@@ -91,8 +91,11 @@ project/scheme hashes remain
 `0657194a678ebbeb7d55e322303e2c5d63198f342e090d2f7072525b20ff9f53`
 and `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`.
 Independent correction re-review returned GO with no remaining P0-P3 issue or
-overclaim. Immutable CI on the exact ready commit remains mandatory before a
-worker begins.
+overclaim. Exact ready commit
+`459a58123ac7241984ddee6d559e33f4bca931d4` passed immutable Actions run
+`33720134399`: conversion traceability and the complete isolated-target job both
+passed. `SUBAGENT-WORK-008` is restricted to the four frozen leaf paths in the
+isolated `codex/supabase-slice-project-browsing` worktree.
 
 ## Permanent Limits
 
