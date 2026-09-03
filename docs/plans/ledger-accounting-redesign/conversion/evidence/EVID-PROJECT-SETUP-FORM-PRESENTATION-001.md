@@ -1,7 +1,7 @@
 # EVID-PROJECT-SETUP-FORM-PRESENTATION-001 — Project Setup Form Presentation
 
 - Timestamp: 2026-09-02
-- Class: ready design / provider-free Project setup preparation and command derivation
+- Class: verification / provider-free Project setup preparation and command derivation
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-EC2117B393FB`, `TEST-38F09C637761`
 - Slice dossier: `conversion/implementation-slices/project-setup-form-presentation-contracts.json`
@@ -35,12 +35,13 @@ boundary.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaf files are claimed:
+Exactly two target leaf files are claimed; both were comment-only at the READY
+checkpoint and are now verified implementations:
 
 - `LedgeriOS/LedgerTargetCore/ProjectSetupFormPresentation.swift`; and
 - `LedgeriOS/LedgerTargetCoreTests/ProjectSetupFormPresentationTests.swift`.
 
-Implementation must produce one deterministic preparation snapshot over exact
+The implementation produces one deterministic preparation snapshot over exact
 Account-matching active-Client selection evidence and category-reference
 evidence. It preserves Client upstream order, category presentation order and
 both sources' exact represented local evidence plus their independent readiness
@@ -62,7 +63,7 @@ sibling Client/category must fail before any command exists.
 
 ## Required Verification
 
-The implementation tests must cover:
+The passing implementation tests cover:
 
 1. Account scope, exact Client/category order, same-name Client identity,
    configurable category filtering and independent readiness/completeness;
@@ -102,7 +103,7 @@ Repeatable generated project/scheme hashes remain
 and `388303af0f4bd6641d70c669ff3754445ab4f59c1a5310cdfe69336827990ed8`.
 Independent actual-ready-diff review is complete. Exact ready commit
 `a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
-Actions run `33726485780`. The temporary worker branch/worktree starts at that
+Actions run `33726485780`. The temporary worker branch/worktree started at that
 exact commit. Assignment-control commit
 `10913c5761561ad9fdd0713627ae82396e9f3ff8` passed both jobs in immutable
 Actions run `33726899284`; the worker received only the two frozen leaf paths.
@@ -131,7 +132,7 @@ adds a table-driven mutation matrix that independently changes every named
 preparation, Client snapshot/row, category snapshot/row and selection field.
 Expected failures remain layer-specific, and the tests do not recompute hashes
 or share production validation logic. Final primary and independent adversarial
-review returned GO with no remaining P0-P3. The worker worktree is clean and
+review returned GO with no remaining P0-P3. The worker worktree was clean and
 base-to-tip changes remain exactly the two allowlisted paths.
 
 Integrated production and correction commits are `7365fbcb` and `bfac9f7a`.

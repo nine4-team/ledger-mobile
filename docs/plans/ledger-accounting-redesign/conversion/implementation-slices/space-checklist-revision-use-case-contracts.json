@@ -3,7 +3,7 @@
   "sliceId": "space-checklist-revision-use-case-contracts",
   "title": "Derive and dispatch one complete Space checklist replacement",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Space Checklist Revision Use Case",
   "surfaceIds": ["SWIFT-1FDB27E18B95", "TEST-674E6F23E5BE"],
   "requirements": [
@@ -170,12 +170,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["SPCHECKUSE-REQ-001", "SPCHECKUSE-REQ-002", "SPCHECKUSE-REQ-003", "SPCHECKUSE-REQ-004", "SPCHECKUSE-REQ-005", "SPCHECKUSE-REQ-006", "SPCHECKUSE-REQ-007"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally only after exact READY commit 6534da3361b3b52b3713ac558799a1a70ab00f26 passed immutable Actions run 33785649411. Exactly two frozen target leaves implement existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate revalidation, one derived command before one SpaceChecklistRevising call, receipt validation, exact local-state preservation, typed failure/cancellation preservation and bounded raw errors. Six focused and all 273 target tests in 59 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean formatting pass. Independent reviews caught test-proof gaps for both readiness paths, long UTF-8 values, scope/lifecycle transparency, revision boundaries and exact reciprocal deltas; corrected tests close them and both final reviews return GO. Exact implementation-commit CI is required before verification. O-023/O-026/O-032/O-037 and every provider/production exclusion remain binding."
+  "notes": "Verified at exact implementation commit 99574328837ff1dfd8924f2eda2e88a635ad5ba7 after immutable Actions run 33788214259 passed traceability in 10 seconds and the isolated target job in 3 minutes 4 seconds. Exact READY commit 6534da3361b3b52b3713ac558799a1a70ab00f26 previously passed run 33785649411. Exactly two frozen target leaves implement existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate revalidation, one derived command before one SpaceChecklistRevising call, receipt validation, exact local-state preservation, typed failure/cancellation preservation and bounded raw errors. Six focused and all 273 target tests in 59 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds, JSON and clean artifacts pass. Independent reviews caught test-proof gaps for both readiness paths, long UTF-8 values, scope/lifecycle transparency, revision boundaries and exact reciprocal deltas; corrected tests closed them and both final reviews returned GO. O-023/O-026/O-032/O-037 and every provider/production exclusion remain binding."
 }

@@ -397,7 +397,8 @@ generation and both staging builds pass. Exact integration checkpoint
 Actions run `33723154735`; the slice and its four surfaces are verified.
 `EVID-PROJECT-BROWSING-PRESENTATION-001`.
 
-The next frozen boundary is `project-setup-form-presentation-contracts`:
+The next frozen boundary at that historical checkpoint was
+`project-setup-form-presentation-contracts`:
 provider-free preparation of one Project setup from the verified active-Client
 selection, budget-category reference and Project setup operation contracts.
 It preserves exact Client/category order and local readiness, supports explicit
@@ -406,15 +407,15 @@ preserves null/zero/positive allocation intent and revalidates current evidence
 before deriving the verified `CreateProjectCommand`. It deliberately excludes
 SwiftUI layout/copy/steps, defaults, on-the-fly category creation, hero media,
 port invocation, authorization, persistence, providers, app/MCP, migration and
-production behavior. Two comment-only leaf scaffolds are ready locally;
-the complete local gate passes with all 231 tests, repeatable target generation
+production behavior. Its READY package used two comment-only leaf scaffolds;
+the complete READY gate passed with all 231 tests, repeatable target generation
 and both staging builds. Independent actual-diff review rejected an unsupported
 same-currency rule and ambiguous creation-description handling; the corrected
 boundary invents no Project currency, reuses verified description normalization
 and adds allocation-order/new-ID-collision hardening. Independent correction
 re-review returned GO with no remaining P0-P3 issue. Exact ready commit
 `a4dd7cbdca3dcf7b31c386e4f451ad320b7c8e62` passed both jobs in immutable
-Actions run `33726485780`. A temporary two-path worker worktree is registered;
+Actions run `33726485780`. A temporary two-path worker worktree was registered;
 assignment-control commit `10913c5761561ad9fdd0713627ae82396e9f3ff8`
 passed both jobs in immutable Actions run `33726899284`. Primary review rejected
 the worker's first green candidate because its restart tests did not yet mutate
@@ -596,7 +597,9 @@ reviewers found only test-proof gaps for readiness, scope/lifecycle transparency
 boundary/long-text coverage and reciprocal field isolation; corrected tests
 close them and both reviewers return GO. EditChecklistModal, physical
 persistence, authorization, provider, migration and production behavior remain
-unadvanced. Immutable exact implementation-SHA CI remains required.
+unadvanced. Exact implementation commit `99574328` passed immutable Actions run
+`33788214259` (traceability 10 seconds; isolated target 3 minutes 4 seconds), so
+the two leaves and dossier are verified.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

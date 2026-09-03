@@ -1,15 +1,16 @@
 # EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001 — Space Checklist Revision Use Case
 
 - Timestamp: 2026-09-03
-- Class: implementation / local integration evidence for provider-free Space checklist edit submission
+- Class: verification / provider-free Space checklist edit submission
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Target-branch baseline: exact Client-archive verification-promotion commit `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47`; immutable Actions run `33768000016` passed both jobs
 - Ready baseline: exact commit `6534da3361b3b52b3713ac558799a1a70ab00f26`; immutable Actions run `33785649411` passed before implementation
+- Implementation baseline: exact commit `99574328837ff1dfd8924f2eda2e88a635ad5ba7`; immutable Actions run `33788214259` passed
 - Claimed target surfaces: `SWIFT-1FDB27E18B95`, `TEST-674E6F23E5BE`
 - Related source evidence retained without promotion: `SWIFT-B5661A312D65` remains `target_mapped`
 - Verified dependencies: `SWIFT-02BF0EA3C433`, `SWIFT-A9BCA70B7F9C`, `SWIFT-EB8803C0864A` and their verified tests
 - Slice dossier: `conversion/implementation-slices/space-checklist-revision-use-case-contracts.json`
-- Verification state: corrected implementation passes root review, two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
+- Verification state: verified at the exact implementation commit after root review, two independent final reviews, complete local integration gates and immutable CI
 
 ## Selection and Authority
 
@@ -62,7 +63,7 @@ legacy completion flag, or mutate accounting.
 
 ## Required Verification
 
-Eight obligations require successful one-call dispatch of the same draft
+All eight obligations pass and require successful one-call dispatch of the same draft
 against both ready-complete current and retryable ready-complete cached evidence,
 including nonsemantic version/as-of/name/notes/audit refreshes over an unchanged
 semantic base; canonical complete replacement including empty and zero-item
@@ -127,8 +128,11 @@ revision boundaries on both readiness paths, long UTF-8 values and exact
 owning-field-only forwarding. The corrected tests close every gap; both
 independent final reviewers return GO with no remaining P0-P3. Complete
 conversion/target controls, JSON validation, exact-path scope and clean
-formatting pass. Exact implementation-commit CI remains required before
-verification.
+formatting pass. Exact implementation commit
+`99574328837ff1dfd8924f2eda2e88a635ad5ba7` passed immutable Actions run
+`33788214259` (traceability 10 seconds; isolated target 3 minutes 4 seconds),
+including the complete target suite, both staging builds and clean tracked
+artifacts. The synchronized dossier and both target surfaces are verified.
 
 ## Permanent Exclusions
 

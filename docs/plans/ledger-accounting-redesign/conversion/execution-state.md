@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 220
+State version: 221
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SPACE-CHECKLIST-REVISION-USE-CASE-IMPLEMENTATION-LOCAL
+- Checkpoint: SPACE-CHECKLIST-REVISION-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3161,8 +3161,12 @@ modifying the running Firebase application before hard cutover.
   Inventory evidence, more than 8 KB Unicode values, zero/maximum revision on
   both readiness paths and complete encoded leaf-delta sets. Both final reviews
   return GO with no remaining P0-P3. Complete local conversion/target controls,
-  JSON, exact-path and formatting checks pass; exact implementation-SHA CI
-  remains pending.
+  JSON, exact-path and formatting checks pass. Exact implementation commit
+  `99574328837ff1dfd8924f2eda2e88a635ad5ba7` passed immutable Actions run
+  `33788214259` (traceability 10 seconds; isolated target 3 minutes 4 seconds),
+  including all target tests, both staging builds and clean tracked artifacts.
+  The dossier and both target surfaces are verified; every exclusion remains
+  binding.
 
 ## Next Action
 
@@ -3434,20 +3438,33 @@ Continue without waiting on the two M1 evidence blockers:
    readiness or permissions; do not add UI, optimistic projection, persistence,
    authorization, restore/delete/merge/rename/reassignment/cascade, provider,
    schema/RLS/Sync, app/MCP, migration, hosted or production behavior.
-   Review and gate the `space-checklist-revision-use-case-contracts`
-   implementation and
-   `EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001`. Preserve exactly the two new
+   Treat verified `space-checklist-revision-use-case-contracts` and
+   `EVID-SPACE-CHECKLIST-REVISION-USE-CASE-001` as the frozen Space checklist
+   application boundary. Exact READY commit `6534da33` / run `33785649411` and
+   exact implementation commit `99574328` / immutable run `33788214259` pass.
+   Preserve exactly the two
    executable leaves `SpaceChecklistRevisionUseCase.swift`
    (`SWIFT-1FDB27E18B95`) and `SpaceChecklistRevisionUseCaseTests.swift`
-   (`TEST-674E6F23E5BE`). Exact READY CI, root line review, focused/all tests,
-   complete local gates and both independent corrected-diff reviews pass.
-   Commit/push exactly the implementation package and require immutable exact-
-   implementation-SHA CI before verification. The frozen application path
+   (`TEST-674E6F23E5BE`) as verified. The frozen application path
    reuses existing SpaceChecklistEditingDraft/current SpaceCoreDetailsUpdate,
    derives one verified command before one port call, validates the receipt,
    preserves typed failures/cancellation and bounds raw errors. EditChecklistModal,
    UI/read admission, physical persistence, authorization, provider/schema/RLS/
    Sync, app/MCP, migration, hosted and production behavior must remain unchanged.
+   Next, run strict-authority preflight and prepare a comment-only READY package
+   for the Project setup selection-to-application use case. The recommended
+   boundary composes verified `ProjectSetupFormSelection` /
+   `ProjectSetupFormPreparation` (`SWIFT-EC2117B393FB`) and
+   `ProjectSetupOperating.create` (`SWIFT-C1C5DFC81448`): derive one command
+   before one port call, validate the receipt, preserve ProjectSetupFormFailure /
+   ProjectSetupFailure / cancellation and bound unknown errors. Candidate new
+   leaves are `ProjectSetupUseCase.swift` (`SWIFT-EE8576F5CD39`) and
+   `ProjectSetupUseCaseTests.swift` (`TEST-BB8C5679BA31`). Independently verify
+   the IDs, authority and full test matrix before recording them. Preserve
+   NewProjectView, ProjectFormValidation/current validation and ProjectService
+   at their existing statuses; O-023/O-024/O-025/O-026 and UI/defaults/category
+   mutation, physical persistence, authorization, provider/schema/RLS/Sync,
+   app/MCP, migration, hosted and production behavior remain outside.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,
