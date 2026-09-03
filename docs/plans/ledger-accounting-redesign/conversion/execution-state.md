@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 197
+State version: 198
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCHECKLIST-EDIT-READY-REVIEW
+- Checkpoint: SCHECKLIST-EDIT-ASSIGNED-PENDING-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2842,8 +2842,14 @@ modifying the running Firebase application before hard cutover.
   established warnings; 384 mapped / 167 residual / 44 blockers; M0; all 237
   tests in 53 suites; warnings-as-errors; target isolation/contracts; repeatable
   project hashes `0657194a` / `388303af`; both staging builds; valid JSON and
-  clean formatting. Final independent corrected-diff re-review, ready commit,
-  push and exact ready-SHA CI remain before any worker assignment.
+  clean formatting. Final independent corrected-diff re-review found no
+  remaining P0-P3. Exact ready commit
+  `5c2a185be15189bc8aa1606f838eee5a362780fc` passed both jobs in immutable
+  Actions run `33732917130` (traceability 8s; isolated target 3m12s). Created
+  branch `codex/supabase-slice-space-checklist-edit` and temporary worktree
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_checklist_edit` at
+  that exact commit. `SUBAGENT-WORK-010` grants only the two frozen Swift leaf
+  paths; assignment-control CI remains required before the worker starts.
 
 ## Next Action
 
@@ -3047,9 +3053,9 @@ Continue without waiting on the two M1 evidence blockers:
    Do not duplicate or extend it in UI, providers or later operation slices.
    Treat ready `space-checklist-editing-presentation-contracts` and
    `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001` as the next frozen boundary.
-   Finish independent review of the corrected actual ready diff. If GO, rerun
-   sync/check, commit and push the ready package, and require immutable CI on
-   that exact SHA before assigning implementation. The implementation may
+   The corrected ready package and exact ready-SHA CI pass. Commit and push the
+   `SUBAGENT-WORK-010` assignment-control checkpoint, then require immutable CI
+   on that exact control SHA before starting the registered worker. The worker may
    project only ready-complete current or retryable-ready-complete cached Space
    evidence, retain raw blank intermediate text, preserve exact stable nested
    IDs/order tokens, edit checklist fields plus items only within their owning

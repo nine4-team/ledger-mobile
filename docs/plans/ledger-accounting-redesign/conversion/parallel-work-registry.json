@@ -618,6 +618,38 @@
         "worktreeRemoved": true,
         "branchRetained": true
       }
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-010",
+      "sliceId": "space-checklist-editing-presentation-contracts",
+      "status": "assigned_pending_control_ci",
+      "baseCommit": "5c2a185be15189bc8aa1606f838eee5a362780fc",
+      "readyCiRun": 33732917130,
+      "branch": "codex/supabase-slice-space-checklist-edit",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_space_checklist_edit",
+      "workerAgent": "/root/space_checklist_edit_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/SpaceChecklistEditingPresentation.swift",
+        "LedgeriOS/LedgerTargetCoreTests/SpaceChecklistEditingPresentationTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter SpaceChecklistEditingPresentationTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested quality-control review for delegated work. Three ready-diff passes already rejected unsafe cached evidence, harmless-refresh overbinding, unsupported checklist reorder/cross-list movement, invalid canonical-only intermediate text, incomplete transition tests and continuity inconsistencies; the worker cannot change the frozen semantic boundary or canonical control files."
+      }
     }
   ],
   "preflightFindings": [
@@ -693,6 +725,25 @@
         "Correction re-review found one P2 phrase that could have treated partial represented evidence as complete; after it was narrowed to exact represented evidence plus independent readiness/completeness state, final independent review returned GO with no remaining P0-P3 issue."
       ],
       "disposition": "Prepared exactly two comment-only target scaffolds plus a complete ready dossier/evidence plan. Primary and independent actual-diff review, the complete local ready gate and exact ready-commit Actions run 33726485780 pass. SUBAGENT-WORK-009 may not start until its assignment-control commit passes immutable CI."
+    },
+    {
+      "findingId": "SUBAGENT-WORK-010-PREFLIGHT-001",
+      "recordedAt": "2026-09-03",
+      "candidateSlice": "space-checklist-editing-presentation-contracts",
+      "status": "ready_after_independent_correction_review",
+      "reviewers": [
+        "primary-agent",
+        "/root/next_coherent_slice_scout"
+      ],
+      "findings": [
+        "Canonical Space authority and verified Space-core/read plus checklist-revision dependencies support a provider-free editor without resolving a new product decision.",
+        "The first draft was rejected because partial/stale rows cannot safely seed replace-all editing, command eligibility must not bind harmless refresh metadata, source behavior does not authorize checklist reorder or cross-list movement, and raw blank intermediate form state must survive restart.",
+        "The corrected update-state contract admits ready-complete current evidence or a retryable cache only when quality is ready, isCompleteForQuery is true and exactly one row exists; unsafe cache, waiting, absence, unavailable and required-update remain noneditable.",
+        "A separate semantic-base fingerprint binds Account/Space/scope/lifecycle/revision/starting hierarchy while presentation integrity still binds full update metadata; current-to-stale and stale-to-current transitions with an unchanged base remain eligible.",
+        "Typed scope is limited to checklist add/remove/rename/clear and item add/remove/edit/check/reorder within its owning checklist. Raw intermediate text, exact stable IDs, represented-scope collisions, order-token preservation and unchanged exact submission are frozen.",
+        "Final corrected-diff review found no remaining P0-P3 after one stale verification-state sentence was removed."
+      ],
+      "disposition": "Prepared exactly two comment-only target scaffolds plus complete ready dossier/evidence/continuity controls. Full local gate and exact ready commit 5c2a185be15189bc8aa1606f838eee5a362780fc Actions run 33732917130 pass. SUBAGENT-WORK-010 may not start until its assignment-control commit passes immutable CI."
     }
   ]
 }

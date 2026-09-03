@@ -440,9 +440,11 @@ The corrected ready package admits only ready-complete current or retryable-
 ready-complete cached evidence, preserves blank intermediate form text and
 exact nested IDs/order tokens, supports checklist fields plus within-checklist
 item editing, and lets harmless refresh metadata advance without hiding a real
-revision/hierarchy conflict. The local ready gate passes; final corrected-diff
-review and exact ready-commit CI remain before a temporary worker worktree may
-be created. `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
+revision/hierarchy conflict. Final corrected-diff review found no remaining
+P0-P3. Exact ready commit `5c2a185be15189bc8aa1606f838eee5a362780fc`
+passed immutable Actions run `33732917130`. A temporary two-path worker
+worktree is registered; assignment-control CI remains required before the
+worker starts. `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long
 agent runs, context compaction, task handoffs, and restarts. Conversation memory

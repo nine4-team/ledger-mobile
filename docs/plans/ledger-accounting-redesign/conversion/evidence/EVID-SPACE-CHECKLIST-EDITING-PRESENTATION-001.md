@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-A9BCA70B7F9C`, `TEST-94F32F5E9219`
 - Slice dossier: `conversion/implementation-slices/space-checklist-editing-presentation-contracts.json`
-- Verification state: ready design; implementation, final review, ready commit/push and exact-ready-SHA CI remain required
+- Verification state: independently reviewed ready commit passed immutable CI; assignment-control CI pending before implementation
 
 ## Selection and Product Authority
 
@@ -115,8 +115,11 @@ suites; warnings-as-errors; target isolation/contracts; repeatable project/
 scheme hashes `0657194a` / `388303af`; both staging builds; valid JSON and clean
 formatting. Comment-only leaf hashes are `7c0d14b243a0804df37e159218f1c28108780abb97eea850f96e3dda576b782f`
 and `b89ca069c734cf651f0ad6e86a92436aa5726d68305ca159e354b362720a06d6`.
-Final independent corrected-diff re-review and exact ready-commit CI remain
-before a worker may implement them.
+Final independent corrected-diff re-review found no remaining P0-P3. Exact
+ready commit `5c2a185be15189bc8aa1606f838eee5a362780fc` passed both jobs in
+immutable Actions run `33732917130` (traceability 8 seconds; isolated target 3
+minutes 12 seconds). The temporary worker branch/worktree starts at that exact
+commit; assignment-control CI remains before a worker may implement the leaves.
 
 ## Permanent Exclusions
 
