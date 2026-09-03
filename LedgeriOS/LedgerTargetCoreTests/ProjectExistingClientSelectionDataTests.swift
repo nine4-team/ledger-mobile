@@ -80,6 +80,8 @@ struct ProjectExistingClientSelectionDataTests {
         for available in [one, many, readyIncompleteActive, partialActive, staleActive] {
             #expect(available.availability == .available)
         }
+        #expect(try partialActive.selection(clientId: activeA.id) == .existing(activeA.id))
+        #expect(try staleActive.selection(clientId: activeA.id) == .existing(activeA.id))
         #expect(one.activeClients.map(\.id) == [activeA.id])
         #expect(many.activeClients.map(\.id) == [activeA.id, activeB.id])
 
@@ -182,6 +184,14 @@ struct ProjectExistingClientSelectionDataTests {
 
         let removed = try Self.mutateClients(bytes) { $0.removeLast() }
         #expect(Self.decodeFailure(removed) == .evidenceFingerprintMismatch)
+        let activeCObject = try Self.object(Self.client("active-c", name: "Third Name"))
+        let inserted = try Self.mutate(bytes) { root in
+            var clients = root["activeClients"] as! [[String: Any]]
+            clients.append(activeCObject)
+            root["activeClients"] = clients
+            root["visibleRowCountBeforeFiltering"] = 3
+        }
+        #expect(Self.decodeFailure(inserted) == .evidenceFingerprintMismatch)
         let reordered = try Self.mutateClients(bytes) { $0.swapAt(0, 1) }
         #expect(Self.decodeFailure(reordered) == .evidenceFingerprintMismatch)
         let validCountChange = try Self.mutate(bytes) {
@@ -206,8 +216,10 @@ struct ProjectExistingClientSelectionDataTests {
             $0["quality"] = "partial"
         }
         #expect(Self.decodeFailure(qualityRebind) == .evidenceFingerprintMismatch)
-        let invalidCompleteness = try Self.mutate(bytes) { $0["quality"] = "stale" }
-        #expect(Self.decodeFailure(invalidCompleteness) == .invalidCompleteness)
+        let invalidPartialCompleteness = try Self.mutate(bytes) { $0["quality"] = "partial" }
+        #expect(Self.decodeFailure(invalidPartialCompleteness) == .invalidCompleteness)
+        let invalidStaleCompleteness = try Self.mutate(bytes) { $0["quality"] = "stale" }
+        #expect(Self.decodeFailure(invalidStaleCompleteness) == .invalidCompleteness)
         let versionRebind = try Self.mutate(bytes) { $0["localDataVersion"] = "changed" }
         #expect(Self.decodeFailure(versionRebind) == .evidenceFingerprintMismatch)
         let timeRebind = try Self.mutate(bytes) { root in
