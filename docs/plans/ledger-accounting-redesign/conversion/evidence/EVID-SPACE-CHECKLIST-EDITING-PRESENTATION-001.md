@@ -5,7 +5,7 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; the source worktree and released Firebase app remain unchanged
 - Claimed target surfaces: `SWIFT-A9BCA70B7F9C`, `TEST-94F32F5E9219`
 - Slice dossier: `conversion/implementation-slices/space-checklist-editing-presentation-contracts.json`
-- Verification state: corrected implementation passes the complete local gate and independent review; exact integration-commit CI pending
+- Verification state: verified at exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284` by immutable Actions run `33739849778`; promotion checkpoint CI pending
 
 ## Selection and Product Authority
 
@@ -158,8 +158,11 @@ formatting. Implemented leaf hashes are:
 - `SpaceChecklistEditingPresentation.swift` — `81200d735ead79c8ab16f0c2f9a7185e97b801a41782ec2368d86d34b1f4f85a`; and
 - `SpaceChecklistEditingPresentationTests.swift` — `86c5aeb3ffeca9177699df5bdf85abb24229dccc2f5a81ae3b2d419139b2951b`.
 
-Exact integration-commit immutable CI remains required before the slice or
-either surface can be promoted to verified.
+Exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284`
+passed both jobs in immutable Actions run `33739849778` (conversion state and
+traceability 12 seconds; isolated target environment 2 minutes 11 seconds).
+The slice and both surfaces are verified. Promotion-checkpoint CI and clean
+temporary-worktree removal remain before the delegated-work record is closed.
 
 ## Permanent Exclusions
 

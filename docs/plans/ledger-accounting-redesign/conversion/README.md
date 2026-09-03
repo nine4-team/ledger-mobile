@@ -449,8 +449,11 @@ worktree is registered. Assignment-control commit
 candidate for incomplete proof, then the expanded matrix exposed and corrected
 a strict-restart defect involving absent versus explicit-null cached evidence.
 Corrected worker tip `272b705e` has no remaining P0-P3. All 243 tests,
-warnings-as-errors, repeatable generation and both staging builds pass locally;
-exact integration-commit CI remains required before verification.
+warnings-as-errors, repeatable generation and both staging builds pass locally.
+Exact integration commit `5a5c67b1319e3fcc41290469f7f39db9d515b284`
+passed both jobs in immutable Actions run `33739849778`; the slice and both
+surfaces are verified. Promotion-checkpoint CI and clean temporary-worktree
+removal remain.
 `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

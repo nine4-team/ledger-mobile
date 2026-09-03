@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T09:36:07.186Z",
+    "lastSynchronizedAt": "2026-09-03T09:41:14.318Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -27256,14 +27256,14 @@
           "Focused tests prove only the frozen provider-free preparation/edit/command-derivation boundary and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
       ],
-      "notes": "Implemented candidate after primary and independent review rejected incomplete verification coverage and then exposed a noncanonical explicit-null cache restart defect. Corrected tip 272b705e246cf505007f38a3d3d386dd8fbc127a has no remaining P0-P3; exact integration CI is pending before verification.",
+      "notes": "Verified at exact integration commit 5a5c67b1319e3fcc41290469f7f39db9d515b284 by immutable Actions run 33739849778 after primary and independent review rejected incomplete verification coverage and exposed a noncanonical explicit-null cache restart defect in earlier candidates.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -37118,14 +37118,14 @@
           "Tests prove only the frozen provider-free checklist editing presentation boundary"
         ]
       },
-      "status": "target_mapped",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"
       ],
-      "notes": "The first green candidate was rejected for generic failure assertions and incomplete cached/current field, fingerprint, command and token coverage. The expanded reciprocal matrix found and now guards the explicit-null failed-cache restart defect; exact integration CI remains pending.",
+      "notes": "Verified at exact integration commit 5a5c67b1319e3fcc41290469f7f39db9d515b284 by immutable Actions run 33739849778. The first green candidate was rejected for incomplete assertions; the expanded reciprocal matrix found and now guards the explicit-null failed-cache restart defect.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

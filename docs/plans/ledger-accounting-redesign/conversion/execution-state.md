@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 200
+State version: 201
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SCHECKLIST-EDIT-INTEGRATED-LOCAL
+- Checkpoint: SCHECKLIST-EDIT-VERIFIED-PENDING-CLEANUP
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2872,6 +2872,12 @@ modifying the running Firebase application before hard cutover.
   warnings-as-errors, repeatable XcodeGen hashes `0657194a` / `388303af`, macOS
   and generic iOS Simulator staging builds, clean formatting and exact two-path
   worker scope. Exact integration-commit CI remains required before verification.
+- Exact integration commit
+  `5a5c67b1319e3fcc41290469f7f39db9d515b284` passed both jobs in immutable
+  Actions run `33739849778` (conversion state and traceability 12s; isolated
+  target environment 2m11s). The checklist-editing slice and both claimed
+  surfaces are verified. Promotion-checkpoint CI must pass before the clean
+  temporary worker worktree is removed; its branch will be retained.
 
 ## Next Action
 
@@ -3073,7 +3079,7 @@ Continue without waiting on the two M1 evidence blockers:
    exact nullable allocations, ProjectDescriptionReplacement normalization and
    current-evidence validation before the verified CreateProjectCommand exists.
    Do not duplicate or extend it in UI, providers or later operation slices.
-   Treat in-progress `space-checklist-editing-presentation-contracts` and
+   Treat verified `space-checklist-editing-presentation-contracts` and
    `EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001` as the next frozen boundary.
    The corrected ready package, exact ready-SHA CI and assignment-control CI
    pass. The reviewed implementation projects only ready-complete current or
@@ -3084,9 +3090,9 @@ Continue without waiting on the two M1 evidence blockers:
    semantic-base validation that tolerates harmless refresh metadata. It must
    not add checklist reorder, cross-checklist movement, archived-action policy
    or any excluded provider/app behavior. Primary and independent every-line
-   review and the complete local integration gate pass after two candidate
-   corrections. Require exact-integration-SHA CI, promote statuses/evidence,
-   and remove the clean temporary worktree only after promotion CI.
+   review, the complete local integration gate and exact integration-SHA CI
+   pass after two candidate corrections. Pass promotion-checkpoint CI, then
+   remove the clean temporary worktree while retaining its reviewed branch.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

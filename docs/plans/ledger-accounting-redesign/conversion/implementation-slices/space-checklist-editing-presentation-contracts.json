@@ -3,7 +3,7 @@
   "sliceId": "space-checklist-editing-presentation-contracts",
   "title": "Edit one evidence-bound Space checklist hierarchy offline",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Space Checklist Editing Presentation",
   "surfaceIds": ["SWIFT-A9BCA70B7F9C", "TEST-94F32F5E9219"],
   "requirements": [
@@ -177,12 +177,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["SCEDIT-REQ-001", "SCEDIT-REQ-002", "SCEDIT-REQ-003", "SCEDIT-REQ-004", "SCEDIT-REQ-005", "SCEDIT-REQ-006", "SCEDIT-REQ-007", "SCEDIT-REQ-008"],
       "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while the worker candidate changes only the two allowlisted leaf paths.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-SPACE-CHECKLIST-EDITING-PRESENTATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally. The slice composes verified Space-core update and checklist-revision operation boundaries. Ready review removed unsafe cached evidence, harmless-refresh overbinding, unsupported checklist reorder/cross-list movement and canonical-only intermediate text. The worker's first green candidate 37714106e3fcc4271bcdc5ee93bb7a66c41eca23 was rejected for generic failure assertions and incomplete cached/current field, fingerprint, command and token coverage. Expanded tests then exposed a real explicit-null failed-cache restart defect; corrected tip 272b705e246cf505007f38a3d3d386dd8fbc127a strictly distinguishes absent nil cache from a required nonnull cached snapshot. Final primary and independent review found no remaining P0-P3. Exact integration CI is pending before verification. No archived-Space eligibility policy is chosen, and the slice stops before SwiftUI, operation invocation, physical durability, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified provider-free implementation. The slice composes verified Space-core update and checklist-revision operation boundaries. Ready review removed unsafe cached evidence, harmless-refresh overbinding, unsupported checklist reorder/cross-list movement and canonical-only intermediate text. The worker's first green candidate 37714106e3fcc4271bcdc5ee93bb7a66c41eca23 was rejected for generic failure assertions and incomplete cached/current field, fingerprint, command and token coverage. Expanded tests then exposed a real explicit-null failed-cache restart defect; corrected tip 272b705e246cf505007f38a3d3d386dd8fbc127a strictly distinguishes absent nil cache from a required nonnull cached snapshot. Final primary and independent review found no remaining P0-P3. Exact integration commit 5a5c67b1319e3fcc41290469f7f39db9d515b284 passed immutable Actions run 33739849778. No archived-Space eligibility policy is chosen, and the slice stops before SwiftUI, operation invocation, physical durability, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted resources, production access or cutover."
 }

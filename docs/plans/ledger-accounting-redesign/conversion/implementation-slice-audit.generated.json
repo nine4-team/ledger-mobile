@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T09:36:07.186Z",
+  "generatedFromManifestSync": "2026-09-03T09:41:14.318Z",
   "totals": {
     "slices": 53,
     "claimedTargetSurfaces": 129,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 112
+    "implementationAdvancedTargetSurfaces": 114
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
-    "in_progress": 2,
+    "in_progress": 1,
     "implemented": 0,
-    "verified": 51,
+    "verified": 52,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -608,7 +608,7 @@
       "sliceId": "space-checklist-editing-presentation-contracts",
       "title": "Edit one evidence-bound Space checklist hierarchy offline",
       "kind": "product",
-      "status": "in_progress",
+      "status": "verified",
       "owner": "Space Checklist Editing Presentation",
       "surfaceIds": [
         "SWIFT-A9BCA70B7F9C",
