@@ -328,18 +328,22 @@ Actions run `33702499992`: traceability in 13 seconds and isolated target
 verification in 3 minutes 39 seconds. The slice and exactly its two surfaces
 are verified.
 
-The next candidate boundary is
+The active isolated implementation boundary is
 `project-existing-client-selection-read-contracts`. Independent adversarial
 preflight rejected both a duplicate Account-only Client query port and an
-unsupported final UI no-auto-selection rule before freeze. The corrected ready
+unsupported final UI no-auto-selection rule before freeze. The corrected
 boundary is a pure projection over the verified `ClientListSnapshot`: it keeps
 only active Clients in exact upstream order, carries no selected/default value,
 requires an explicit projected ClientID to produce the verified
 `ProjectClientSelectionInput.existing` input, preserves incomplete/offline
 truth, and binds ordered active rows, source fingerprint, visible count and all
-other readiness evidence in a canonical evidence fingerprint. Its two target-only paths remain comments;
-the complete local ready gate passes all 211 tests and both staging builds, and
-immutable exact-ready-SHA CI remains required before delegation.
+other readiness evidence in a canonical evidence fingerprint. Its two target-only
+integration-branch paths remain comments. Exact ready commit `e6d80563` passed
+immutable Actions run `33704608811`, including all 211 existing tests,
+generated contracts and both staging builds. Registered `SUBAGENT-WORK-006`
+now owns only those two paths in its isolated worktree; primary every-line
+review, independent adversarial review, the complete local gate and immutable
+exact-integration-SHA CI remain mandatory before promotion.
 `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001`.
 
 This directory makes whole-application conversion progress durable across long

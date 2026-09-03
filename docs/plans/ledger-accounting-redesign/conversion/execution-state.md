@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 172
+State version: 173
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-EXISTING-CLIENT-SELECTION-READY-PENDING-CI
+- Checkpoint: PROJECT-EXISTING-CLIENT-SELECTION-DELEGATED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2558,6 +2558,17 @@ modifying the running Firebase application before hard cutover.
   presentation boundary for later independent preflight; no second slice is
   frozen or implemented yet. No provider, Firebase or production action
   occurred.
+- Exact ready commit `e6d805630c2ba1f366a6ecf1715a8cf0e60a90ee`
+  passed immutable Actions run `33704608811`: conversion traceability and the
+  isolated target job passed, including all 211 existing tests, generated
+  contracts, both staging builds and clean tracked artifacts. Created isolated
+  branch/worktree `codex/supabase-slice-project-existing-client-selection` /
+  `/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_existing_client_selection`
+  at that exact commit and registered active `SUBAGENT-WORK-006`. The worker
+  owns only the two Project existing-Client selection target paths. Primary
+  every-line review, independent adversarial review, the complete integration
+  gate and immutable CI on the exact integration commit remain mandatory. No
+  provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2696,15 +2707,17 @@ Continue without waiting on the two M1 evidence blockers:
    let the slice become a Client workspace/CRM model or acquire Projects/counts,
    Transfer eligibility, media, accounting, history, mutation, authorization,
    provider, schema/RLS/Sync, app/MCP, migration or production behavior.
-   Treat ready `project-existing-client-selection-read-contracts` and
-   `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001` as the next frozen boundary.
+   Treat active isolated `project-existing-client-selection-read-contracts` and
+   `EVID-PROJECT-EXISTING-CLIENT-SELECTION-001` as the frozen worker boundary.
    Preserve its pure projection over the existing directory port, absence of
    any selected/default value or final UI preselection policy, explicit active
    ClientID-to-`.existing` conversion, exact upstream order and content-bound
-   evidence fingerprint including visible count. Commit the ready checkpoint and require immutable CI
-   on that exact commit before creating an isolated worker. The worker may edit
+   evidence fingerprint including visible count. Exact ready commit `e6d80563`
+   passed immutable run `33704608811`, and active `SUBAGENT-WORK-006` is
+   registered from that exact base. The worker may edit
    only the two registered target paths; primary every-line and independent
-   adversarial review remain mandatory before integration. General Space lists
+   adversarial review, the complete integration gate and exact integration-SHA
+   CI remain mandatory before promotion. General Space lists
    remain rejected until filtering, ordering, search, count and archive
    semantics have product authority. Retain the separately scouted Transaction
    type-choice presentation candidate for later independent preflight, but do

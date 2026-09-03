@@ -309,6 +309,38 @@
         "exactIntegrationCommitCi": "passed: 6cea8459d0e50f174300c1aef44b72f3004cdf11 in immutable Actions run 33702499992"
       },
       "integrationDisposition": "accepted and verified at 6cea8459d0e50f174300c1aef44b72f3004cdf11 after corrected every-line primary review, independent adversarial re-review, complete local gates and immutable Actions run 33702499992; worker branch and candidate commits remain recoverable"
+    },
+    {
+      "assignmentId": "SUBAGENT-WORK-006",
+      "sliceId": "project-existing-client-selection-read-contracts",
+      "status": "active",
+      "baseCommit": "e6d805630c2ba1f366a6ecf1715a8cf0e60a90ee",
+      "readyCiRun": 33704608811,
+      "branch": "codex/supabase-slice-project-existing-client-selection",
+      "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_existing_client_selection",
+      "workerAgent": "/root/client_core_details_worker",
+      "ownedPaths": [
+        "LedgeriOS/LedgerTargetCore/ProjectExistingClientSelectionData.swift",
+        "LedgeriOS/LedgerTargetCoreTests/ProjectExistingClientSelectionDataTests.swift"
+      ],
+      "forbiddenPathPrefixes": [
+        "/Users/benjaminmackenzie/Dev/ledger_mobile/",
+        "docs/",
+        "scripts/",
+        ".github/",
+        "LedgeriOS/LedgeriOS.xcodeproj/",
+        "LedgeriOS/LedgerTarget.xcodeproj/",
+        "LedgeriOS/Package.swift",
+        "LedgerTargetMCP/"
+      ],
+      "requiredFocusedCommand": "swift test --package-path LedgeriOS --filter ProjectExistingClientSelectionDataTests",
+      "requiredReview": {
+        "integrationAgentEveryLineReview": true,
+        "independentAdversarialReview": true,
+        "completeLocalGate": true,
+        "exactIntegrationCommitCi": true,
+        "reason": "The user explicitly requested early subagent quality-control sampling. Independent preflight already rejected a duplicate production port, unsupported UI policy and incomplete fingerprint basis, so the worker cannot promote status and both post-handoff reviews remain mandatory."
+      }
     }
   ],
   "preflightFindings": [

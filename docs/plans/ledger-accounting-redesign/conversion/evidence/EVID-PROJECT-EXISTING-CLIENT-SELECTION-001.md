@@ -7,7 +7,8 @@
 - Claimed target surfaces: `SWIFT-0C8433A6C6F4`, `TEST-8B902DC97729`
 - Slice dossier:
   `conversion/implementation-slices/project-existing-client-selection-read-contracts.json`
-- Verification state: ready only; executable implementation and tests are absent
+- Verification state: ready and delegated from the exact green ready commit;
+  executable implementation and tests are absent on the integration branch
 - Ready scaffold hashes:
   - `ProjectExistingClientSelectionData.swift`:
     `184acab06203e860c4f68323a8cd580c23163c0618bfc8a0fddeb9caf9c35f3f`
@@ -136,10 +137,21 @@ The two target paths contain comments only. The complete local ready gate passes
 - `git diff --check` — pass; and
 - the Firebase source checkout remains clean on `firebase`.
 
-Immutable CI on the exact ready commit remains mandatory before delegation.
+Exact ready commit `e6d805630c2ba1f366a6ecf1715a8cf0e60a90ee`
+passed immutable Actions run `33704608811`: conversion traceability passed and
+the isolated target job passed all 211 existing tests, generated contracts and
+both staging builds with clean tracked artifacts. `SUBAGENT-WORK-006` is now
+registered from that exact base in isolated branch/worktree
+`codex/supabase-slice-project-existing-client-selection` /
+`/Users/benjaminmackenzie/Dev/ledger_mobile_supabase_project_existing_client_selection`.
+The worker owns only the two target paths listed above and cannot edit or
+promote canonical conversion controls. Primary every-line review, independent
+adversarial review, the complete integration gate and immutable CI on the exact
+integration commit remain mandatory.
+
 Passing these ready gates proves only that the frozen authority, coverage and
-isolation remain coherent before an isolated worker begins. It does not prove
-the planned projection behavior.
+isolation were coherent before the isolated worker began. It does not prove the
+planned projection behavior.
 
 ## Permanent Limits
 
