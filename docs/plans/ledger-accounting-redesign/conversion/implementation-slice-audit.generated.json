@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T23:37:05.957Z",
+  "generatedFromManifestSync": "2026-09-03T23:52:46.361Z",
   "totals": {
-    "slices": 61,
-    "claimedTargetSurfaces": 147,
+    "slices": 62,
+    "claimedTargetSurfaces": 149,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 132
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 60,
@@ -151,6 +151,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-rename-use-case-contracts",
+      "title": "Dispatch one typed Client display-name replacement",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Client Rename Use Case",
+      "surfaceIds": [
+        "SWIFT-2F4458F40735",
+        "TEST-341B2CD23B6A"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-use-case-contracts.json"
     },
     {
       "sliceId": "deterministic-target-test-support",

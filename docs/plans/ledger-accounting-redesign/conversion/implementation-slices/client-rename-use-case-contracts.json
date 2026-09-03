@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-rename-use-case-contracts",
+  "title": "Dispatch one typed Client display-name replacement",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Client Rename Use Case",
+  "surfaceIds": ["SWIFT-2F4458F40735", "TEST-341B2CD23B6A"],
+  "requirements": [
+    {
+      "id": "CRENAMEUSE-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "Renaming a Client is one distinct RenameClient outcome over stable AccountID and ClientID. The current name is mutable display text, never identity, relationship or Transfer authority, and the rename changes no other Client responsibility.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CRENAMEUSE-TEST-001", "CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "RenameClient changes only the current Client display value. Current Project display later resolves by stable ClientID, while frozen Invoice, report, paid-history and audit snapshots remain unchanged; the use case cannot change Project ownership or authorize Transfer from name equality.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CRENAMEUSE-TEST-001", "CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "RenameClient is distinct from CreateClient, ArchiveClient, ChangeProjectClient and MergeClients. The use case carries no lifecycle, child, accounting, history, merge, alias or reassignment input, so O-024/O-025 remain open and unchanged.",
+      "decisionIds": ["O-024", "O-025"],
+      "verificationIds": ["CRENAMEUSE-TEST-001", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Presentation",
+      "invariant": "ClientRenameIntent is a transient, non-Codable, exact Account/Client/revision/ClientDisplayName presentation value. It owns no raw field, alternate validator, persisted form draft, initial/current read, readiness, lifecycle, dirty/no-op, dismissal, error-UX, route, provider identity or authorization claim.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEUSE-TEST-001", "CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "ClientRenameUseCase constructs the verified ClientRenameDraft and RenameClientCommand before invoking ClientRenaming.rename exactly once, then validates and returns the exact receipt and LocalOperationState.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-005", "CRENAMEUSE-TEST-006", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+      "section": "Application",
+      "invariant": "The use case preserves CancellationError and every ClientRenameFailure. Only an unknown port error maps to localAcceptanceFailed; construction remains outside the port catch and receipt validation remains outside it.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEUSE-TEST-005", "CRENAMEUSE-TEST-006", "CRENAMEUSE-TEST-007", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-007",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md",
+      "section": "Status Rules",
+      "invariant": "Only the two new target leaves advance. ClientRenameOperation/tests, ClientProjectDirectory/tests and ClientCoreDetailsData/tests stay verified; EditProjectModal, ProjectDetailView, ProjectDetailContainer, ProjectService/Protocol, Project model, ProjectFormValidation/tests, the projects MCP module and update_project retain their prior status and content because each owns broader responsibility.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-006", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "Exactly two target-only executable leaves may change after READY. Physical persistence, optimistic projection, trusted authorization/audit/apply, Postgres/Data API/RLS/PowerSync/provider behavior, app/MCP wiring, source migration, hosted resources, production, release and cutover do not advance.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["CRENAMEUSE-TEST-001", "CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-005", "CRENAMEUSE-TEST-006", "CRENAMEUSE-TEST-007", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    },
+    {
+      "id": "CRENAMEUSE-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-RENAME-001.md",
+      "section": "Implemented Contract",
+      "invariant": "Verified dependency evidence EVID-CLIENT-RENAME-001 remains sole owner of accepted ClientDisplayName bytes, ExpectedClientRevision, the exact same-Client revision precondition, ClientRenameDraft, RenameClientCommand, subject, fingerprint, receipt validation and ClientRenameFailure semantics. This use case consumes the already-validated name and composes those contracts without raw String normalization or semantic reimplementation.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEUSE-TEST-001", "CRENAMEUSE-TEST-002", "CRENAMEUSE-TEST-003", "CRENAMEUSE-TEST-004", "CRENAMEUSE-TEST-005", "CRENAMEUSE-TEST-006", "CRENAMEUSE-TEST-007", "CRENAMEUSE-TEST-008", "CRENAMEUSE-TEST-009", "CRENAMEUSE-TEST-010"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "ClientRenameIntent is transient, non-Codable and exposes an exact public four-argument initializer for AccountID, ClientID, ExpectedClientRevision and ClientDisplayName.",
+        "The use case reuses ClientRenameDraft and RenameClientCommand and accepts no raw String or alternate normalization rule.",
+        "Construction finishes before one ClientRenaming.rename call; receipt validation follows the port boundary; all 12 typed failures and cancellation remain exact while unknown errors are bounded.",
+        "No initial/current read, readiness, lifecycle, dirty/no-op, UI, Client correction or Project ownership policy is added."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Client, Project, operation, table, view, function, constraint, index or migration change."},
+    "serverHandlers": {"items": [], "notApplicable": "No trusted membership/revision validation, authorization, idempotency store, audit assignment, current-Project projection update or authoritative Client rename is implemented."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API relation, function or grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Typed intent and command validity are not authorization; no Account/Client/Project policy or role behavior is implemented."},
+    "syncStreams": {"items": [], "notApplicable": "No synchronized Client, Project or operation stream, local table, upload connector or optimistic projection exists."},
+    "localOffline": {"items": [], "notApplicable": "The use case is network-independent behind a port but adds no physical intent/operation persistence, restart write, optimistic row, retry policy or rejection-recovery behavior."},
+    "storageMedia": {"items": [], "notApplicable": "Client rename owns no attachment identity, bytes, reference, upload, retention or deletion behavior."},
+    "appMcp": {"items": [], "notApplicable": "No raw field normalization, initial value, read readiness, dirty/no-op, SwiftUI control, error/dismissal/navigation, app composition, MCP schema/tool/resource or transport is added."},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Project document/clientName cluster, generic update dictionary, EditProject callback, MCP request, export row or source-to-target mapping is decoded or transformed."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Only existing bounded failures are values; no telemetry, metric, alert, audit sink or runbook is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation may change only the two provider-free target leaves; every source app, service, model, validation, MCP and provider surface remains unchanged.",
+        "The deterministic in-memory test port cannot physically persist, authorize, synchronize, deploy, display, migrate, release or cut over a Client rename.",
+        "O-022/O-023/O-024/O-025/O-026 and A-003/A-004/A-007/A-015/A-016 remain open or outside."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CRENAMEUSE-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "A non-@testable consumer constructs the exact public four-field ClientRenameIntent. It is compile-time Equatable/Sendable, runtime non-Codable, stores no raw String, and preserves zero and UInt64.max revisions exactly.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-002",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "An already-validated ClientDisplayName, including accepted outer/interior whitespace and more than 8 KiB Unicode, reaches draft and payload byte-exactly after one call; the use case accepts no raw String and performs no second normalization.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-003",
+      "kind": "end_to_end",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying one Client rename and one same-Client expected-revision precondition; revisions zero and UInt64.max dispatch exactly.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-004",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Client, revision, typed display name, Operation, actor, contract and time against literal flattened baseline expectations and exact literal changed-leaf sets for all eight axes. Recording/canned fakes and expectation helpers must not reconstruct expected commands with ClientRenameDraft, RenameClientCommand or production validation logic.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-005",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "Positive infinity and NaN capture times fail during construction with zero calls, while a mismatched receipt fails after exactly one call; neither is reclassified as a port failure.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-006",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "All 12 ClientRenameFailure values deliberately thrown by the port remain exact after one call, CancellationError remains structured cancellation, and only an unknown port error maps to localAcceptanceFailed.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-007",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "All 12 diagnostic codes remain an exact stable enumeration and reveal no synthetic identity, Client name, raw error, credential, service payload or production identifier.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-008",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "Exact nested command topology exposes only draft/envelope/subject/fingerprint ownership, typed replacement display name and one expected-revision precondition—never raw-name, Project ownership/reassignment, lifecycle, archive/delete/merge/alias, accounting, frozen history, UI or service detail.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-009",
+      "kind": "end_to_end",
+      "owner": "conversion control and independent actual-diff review",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "The READY commit changes only two comment scaffolds and control/evidence files, and preserves exact statuses/content for ClientRenameOperation/tests, ClientProjectDirectory/tests, ClientCoreDetailsData/tests, EditProjectModal, ProjectDetailView, ProjectDetailContainer, ProjectService/Protocol, Project model, ProjectFormValidation/tests, the projects MCP module, update_project and every app/provider surface.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEUSE-TEST-010",
+      "kind": "operational",
+      "owner": "CI and conversion control plane",
+      "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
+      "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
+      "status": "planned",
+      "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
+    }
+  ],
+  "implementationEvidence": ["EVID-CLIENT-RENAME-USE-CASE-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "READY is prepared at clean exact conversion baseline 2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a after Project-rename implementation 9c8e27cf / immutable run 33816585123 and verification promotion 2fa5a536. Exactly two comment-only target leaves freeze a typed Client-rename application boundary above verified ClientRenameOperation.swift/tests at exact implementation 3282f8e3 / run 33612902860 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Future implementation must construct before one port call, validate after it, preserve all 12 typed failures plus cancellation, and bound unknown errors. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, Project projection/reassignment, Client archive/delete/merge, frozen-history rewrite, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. Fast local registration checks pass; complete local READY gates, independent actual-diff review and immutable exact-SHA CI still gate implementation."
+}

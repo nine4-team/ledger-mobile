@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 231
+State version: 232
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-RENAME-USE-CASE-VERIFIED
+- Checkpoint: CLIENT-RENAME-USE-CASE-READY-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3273,6 +3273,28 @@ modifying the running Firebase application before hard cutover.
   including all target tests, both staging builds and clean tracked artifacts.
   The dossier and both target leaves are verified.
 
+- Exact Project-rename-use-case verification-promotion commit
+  `2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a` freezes implementation commit
+  `9c8e27cfb26252f6d068841a822be578412c82e6` / immutable Actions run
+  `33816585123`. A feature-specific authority audit then selected only the typed
+  Client display-name replacement application boundary above verified
+  `ClientRenameOperation.swift`; standalone Client creation, note creation,
+  lifecycle/correction and provider work remain outside. Exact candidate paths
+  resolve to `ClientRenameUseCase.swift` (`SWIFT-2F4458F40735`) and
+  `ClientRenameUseCaseTests.swift` (`TEST-341B2CD23B6A`). Both are comment-only.
+  The `ready` dossier freezes one public non-Codable Account/Client/revision/
+  `ClientDisplayName` intent, construction before exactly one
+  `ClientRenaming.rename` call, receipt validation after it, all 12 typed
+  failures, cancellation and bounded unknown errors. Ten obligations require
+  ordinary import without `@testable`, literal non-mirrored encoded-leaf proof,
+  exact two-leaf implementation scope and immutable READY/implementation CI.
+  Client reads/readiness/lifecycle/no-op/UI, Project reassignment/projection,
+  frozen-history rewrite, broader mutation, physical persistence,
+  authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and
+  production behavior remain excluded. Fast registration controls and the
+  unchanged 294-test baseline suite pass; complete READY review and remaining
+  gates, then exact READY commit immutable CI, must pass before executable code.
+
 ## Next Action
 
 Continue without waiting on the two M1 evidence blockers:
@@ -3594,6 +3616,20 @@ Continue without waiting on the two M1 evidence blockers:
    hosted or production behavior. Preserve the verified rename operation/tests
    and directory dependency plus all named source statuses, including
    ProjectDetailView and ProjectDetailContainer.
+   Treat ready `client-rename-use-case-contracts` and
+   `EVID-CLIENT-RENAME-USE-CASE-001` as the only active implementation
+   candidate after its exact READY commit passes immutable CI. Preserve exactly
+   the two comment-only leaves `ClientRenameUseCase.swift`
+   (`SWIFT-2F4458F40735`) and `ClientRenameUseCaseTests.swift`
+   (`TEST-341B2CD23B6A`) until that gate passes. The future boundary must consume
+   an already-validated `ClientDisplayName`, construct the verified draft and
+   command before exactly one `ClientRenaming.rename` call, validate the receipt
+   afterward, preserve every typed failure plus cancellation and bound only
+   unknown port errors. Do not introduce raw String normalization, Client read/
+   readiness/lifecycle/no-op/UI policy, Client archive/delete/merge, Project
+   reassignment/current projection, frozen-history rewrite, persistence,
+   authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted or
+   production behavior.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,
