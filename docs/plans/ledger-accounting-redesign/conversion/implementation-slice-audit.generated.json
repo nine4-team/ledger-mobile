@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T05:03:25.317Z",
+  "generatedFromManifestSync": "2026-09-03T05:10:41.493Z",
   "totals": {
     "slices": 50,
     "claimedTargetSurfaces": 121,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 48,
+    "implemented": 0,
+    "verified": 49,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -694,7 +694,7 @@
       "sliceId": "transaction-type-choice-presentation-contracts",
       "title": "Present canonical Transaction type choices and scope-relative meaning",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Transaction Type Choice Presentation",
       "surfaceIds": [
         "SWIFT-F90B7B48C1F6",

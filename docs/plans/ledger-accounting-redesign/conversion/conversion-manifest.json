@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T05:03:25.317Z",
+    "lastSynchronizedAt": "2026-09-03T05:10:41.493Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -33154,7 +33154,7 @@
           "Synthetic verified classifications prove exact unordered membership, titles, owner vocabulary, economic meanings, role-neutral Transfer projection, restart and malformed-taxonomy refusal"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -33162,7 +33162,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"
       ],
-      "notes": "Implemented after complete central gates, pending exact integration-commit CI. Final candidate c22fac22 reuses the verified taxonomy and classification, expresses literal unordered scope membership, and derives exact Purchase/Return/Transfer, Client/1584 and economic-meaning presentation. It adds no classification aggregate, order, action, amount, provider or migration behavior.",
+      "notes": "Verified at exact checkpoint fcff5b854b16d289dfcf159b31fcd45a973c7402 by immutable Actions run 33717396519. Final candidate c22fac22 reuses the verified taxonomy and classification, expresses literal unordered scope membership, and derives exact Purchase/Return/Transfer, Client/1584 and economic-meaning presentation. It adds no classification aggregate, order, action, amount, provider or migration behavior.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -39109,7 +39109,7 @@
           "Tests prove only the frozen presentation leaf and explicitly exclude ordering, amounts, lifecycle, commands, app/MCP, provider, migration and production behavior"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
@@ -39117,7 +39117,7 @@
         "EVID-TRANSACTION-TAXONOMY-001",
         "EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"
       ],
-      "notes": "Six focused and all 224 tests plus the complete central gate pass after independent review caught one P3 missing syntactically malformed JSON case and final re-review required exact raw DecodingError versus test-consumer normalization wording. Tests use literal sets and exact strings, exhaust all six valid classification shapes across five owner/type pairs, prove Transfer source/destination equivalence, re-project every shape after canonical classification restart, and exercise exact existing taxonomy failures and encoded exclusions. Exact integration CI remains pending; no UI order, command, provider, migration or production claim is made.",
+      "notes": "Six focused and all 224 tests plus the complete central gate and exact checkpoint fcff5b85 immutable Actions run 33717396519 pass after independent review caught one P3 missing syntactically malformed JSON case and final re-review required exact raw DecodingError versus test-consumer normalization wording. Tests use literal sets and exact strings, exhaust all six valid classification shapes across five owner/type pairs, prove Transfer source/destination equivalence, re-project every shape after canonical classification restart, and exercise exact existing taxonomy failures and encoded exclusions. No UI order, command, provider, migration or production claim is made.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {

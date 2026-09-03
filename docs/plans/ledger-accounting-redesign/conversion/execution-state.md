@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-02
-State version: 181
+State version: 182
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TXTYPE-INTEGRATED-LOCAL-GATE
+- Checkpoint: TXTYPE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -2686,6 +2686,13 @@ modifying the running Firebase application before hard cutover.
   consecutive qualifying candidates; the Project selection P1 finding reset
   that counter and the corrected Transaction candidate is the first subsequent
   P0-P2-clean candidate. Risk domains always retain independent review.
+- Exact Transaction type-choice checkpoint
+  `fcff5b854b16d289dfcf159b31fcd45a973c7402` passed immutable Actions run
+  `33717396519`: conversion traceability passed in 14 seconds and the isolated
+  target job passed in 3 minutes 8 seconds with all 224 tests, generated
+  contracts, repeatable project generation, both staging builds and clean
+  tracked artifacts. Promoted the dossier, two surfaces, evidence and worker
+  assignment to verified. No provider, Firebase or production action occurred.
 
 ## Next Action
 
@@ -2841,9 +2848,9 @@ Continue without waiting on the two M1 evidence blockers:
    run `33707305340`; preserve this boundary as verified.
    General Space lists
    remain rejected until filtering, ordering, search, count and archive
-   semantics have product authority. Treat integrated-pending-CI
+   semantics have product authority. Treat verified
    `transaction-type-choice-presentation-contracts` and
-   `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001` as the next disjoint frozen
+   `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001` as a frozen
    boundary. Preserve literal unordered Project purchase/return/transfer and
    Inventory purchase/return membership, exact Client/1584 owner vocabulary,
    existing economic meanings and source/destination Transfer equivalence.
@@ -2853,10 +2860,10 @@ Continue without waiting on the two M1 evidence blockers:
    the two registered paths; primary and independent review found no code P0-P3
    issue after one P3 malformed-JSON test gap and one P3 evidence overclaim were
    corrected. Preserve the exact raw `DecodingError` versus test-consumer
-   normalization distinction. The complete central local integration gate
-   passes all 224 tests, conversion/M0 and target controls, repeatable project
-   generation and both staging builds. Complete immutable exact-integration-SHA
-   CI before promotion.
+   normalization distinction. Exact checkpoint `fcff5b85` passed immutable
+   Actions run `33717396519` with all 224 tests, conversion/target controls,
+   repeatable project generation and both staging builds; preserve the verified
+   boundary.
    Keep
    first-use defaults,
    category visibility resolution, authentication, physical persistence,

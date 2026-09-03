@@ -7,8 +7,8 @@
 - Claimed target surfaces: `SWIFT-F90B7B48C1F6`, `TEST-F66BBF1FC092`
 - Slice dossier:
   `conversion/implementation-slices/transaction-type-choice-presentation-contracts.json`
-- Verification state: implemented after corrected primary and independent
-  review and complete central gates; exact integration-commit CI remains pending
+- Verification state: verified after corrected primary and independent review,
+  complete central gates and immutable exact-integration-commit CI
 - Ready scaffold hashes:
   - `TransactionTypeChoicePresentation.swift`:
     `ec01c3543c3c407f26d9a1fb6a5c1d716edd089e174d8757b1113ed6d814d629`
@@ -166,5 +166,9 @@ Replacement independent final review found no code P0-P3 issue and required the
 matching dossier correction above. Worker/root focused runs pass all six tests;
 the complete central gate passes all 224 tests in 50 suites, conversion/M0 and
 target isolation/generated-contract controls, two identical generated-project
-hashes, both staging builds and clean artifacts. Immutable exact-integration-
-commit CI remains mandatory before promotion.
+hashes, both staging builds and clean artifacts. Exact integration commit
+`fcff5b854b16d289dfcf159b31fcd45a973c7402` passed immutable
+Actions run `33717396519`: conversion traceability passed in 14 seconds and the
+isolated target job passed in 3 minutes 8 seconds with all 224 tests, generated
+contracts, repeatable project generation, both staging builds and clean tracked
+artifacts. The slice is verified.

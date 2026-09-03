@@ -393,7 +393,7 @@
     {
       "assignmentId": "SUBAGENT-WORK-007",
       "sliceId": "transaction-type-choice-presentation-contracts",
-      "status": "integrated_pending_ci",
+      "status": "verified",
       "baseCommit": "8cf4bec690345eacfe77b954d8deddabda0ec128",
       "readyCiRun": 33707620621,
       "originalReadyCommit": "5e79d83d672b44f320ebe686222e55f8158a8fdf",
@@ -437,7 +437,7 @@
           "LedgeriOS/LedgerTargetCoreTests/TransactionTypeChoicePresentationTests.swift"
         ],
         "focusedTests": "passed: 6 tests in 1 suite by worker, primary agent and independent reviewers",
-        "fullTests": "passed: 224 tests in 50 suites by worker; primary complete integration gate pending",
+      "fullTests": "passed: 224 tests in 50 suites by worker and primary integration gate",
         "requirementsAccountedFor": true,
         "forbiddenFilesConfirmedUntouched": true,
         "risks": [
@@ -459,7 +459,8 @@
         ],
         "focusedRetest": "passed: worker, primary agent and final independent reviewer passed 6 tests in 1 suite",
     "completeLocalGate": "passed: 6 focused/all 224 tests in 50 suites, conversion/M0, target isolation/generated contracts, repeatable project generation, both staging builds and clean artifacts",
-        "exactIntegrationCommitCi": "pending"
+    "exactIntegrationCommit": "fcff5b854b16d289dfcf159b31fcd45a973c7402",
+    "exactIntegrationCommitCi": "passed: Actions run 33717396519; conversion traceability 14s; isolated target 3m8s"
       }
     }
   ],

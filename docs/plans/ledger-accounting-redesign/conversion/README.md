@@ -366,10 +366,11 @@ economic-meaning presentation derived from the verified
 registered target paths. Primary and independent implementation review found no
 code P0-P3 issue after rejecting one P3 missing malformed-JSON case; final
 review also corrected an evidence overclaim by distinguishing raw
-`DecodingError` from test-consumer normalization. Six focused/all 224 tests,
-conversion/M0 and target isolation/generated-contract controls, repeatable
-project generation and both staging builds pass in the central integration
-worktree. Immutable exact-integration-SHA CI remains mandatory before promotion.
+`DecodingError` from test-consumer normalization. Exact checkpoint `fcff5b85`
+passed immutable Actions run `33717396519`: conversion traceability completed
+in 14 seconds and the isolated target job completed in 3 minutes 8 seconds with
+all 224 tests, generated contracts, repeatable project generation, both staging
+builds and clean artifacts. The slice is verified.
 `EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001`.
 
 This directory makes whole-application conversion progress durable across long

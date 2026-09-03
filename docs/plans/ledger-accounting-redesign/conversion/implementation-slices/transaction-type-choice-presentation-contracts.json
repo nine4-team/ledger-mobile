@@ -3,7 +3,7 @@
   "sliceId": "transaction-type-choice-presentation-contracts",
   "title": "Present canonical Transaction type choices and scope-relative meaning",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Transaction Type Choice Presentation",
   "surfaceIds": ["SWIFT-F90B7B48C1F6", "TEST-F66BBF1FC092"],
   "requirements": [
@@ -158,12 +158,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["TXTYPEPRES-REQ-001", "TXTYPEPRES-REQ-002", "TXTYPEPRES-REQ-003", "TXTYPEPRES-REQ-004", "TXTYPEPRES-REQ-005", "TXTYPEPRES-REQ-006"],
       "expected": "The exact implementation commit passes conversion traceability, provider/source-contamination and generated-contract checks, complete target tests, repeatable project generation, both staging builds and clean artifacts while only the two allowlisted target paths differ in the worker candidate.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"]
     }
   ],
   "implementationEvidence": ["EVID-TRANSACTION-TYPE-CHOICE-PRESENTATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented after complete central gates, pending exact integration-commit CI. Candidate sequence 0170ac0a/f38258a5/c22fac22 changed only the two registered paths. Primary every-line and independent review found no implementation defect; independent review rejected the first test candidate for a P3 missing syntactically malformed JSON case, and follow-up review rejected the dossier's false claim that raw parser errors are TransactionTaxonomyFailure. The final tests separately prove raw DecodingError and test-consumer normalization without changing production taxonomy. Six focused and all 224 tests pass with conversion/M0, target isolation/generated-contract controls, repeatable project generation, both staging builds and clean artifacts. Earlier preflight and actual-ready-diff review corrected aggregate, owner vocabulary, order, restart-shape and display-title risks. The slice cannot recreate classification, claim UI/filter ordering, distinguish Transfer roles, classify legacy values, expose amounts/status/actions, or advance app/MCP, provider/schema/RLS/Sync, migration, hosted or production behavior."
+  "notes": "Verified at exact checkpoint fcff5b854b16d289dfcf159b31fcd45a973c7402 by immutable Actions run 33717396519. Candidate sequence 0170ac0a/f38258a5/c22fac22 changed only the two registered paths. Primary every-line and independent review found no implementation defect; independent review rejected the first test candidate for a P3 missing syntactically malformed JSON case, and follow-up review rejected the dossier's false claim that raw parser errors are TransactionTaxonomyFailure. The final tests separately prove raw DecodingError and test-consumer normalization without changing production taxonomy. Six focused and all 224 tests pass with conversion/M0, target isolation/generated-contract controls, repeatable project generation, both staging builds and clean artifacts. Earlier preflight and actual-ready-diff review corrected aggregate, owner vocabulary, order, restart-shape and display-title risks. The slice cannot recreate classification, claim UI/filter ordering, distinguish Transfer roles, classify legacy values, expose amounts/status/actions, or advance app/MCP, provider/schema/RLS/Sync, migration, hosted or production behavior."
 }
