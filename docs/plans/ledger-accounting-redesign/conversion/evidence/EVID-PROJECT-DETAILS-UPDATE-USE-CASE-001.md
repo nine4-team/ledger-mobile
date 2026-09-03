@@ -1,14 +1,15 @@
 # EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001 — Project Details Update Use Case
 
 - Timestamp: 2026-09-03
-- Class: READY / provider-free Project-description form-to-application dispatch
+- Class: implementation candidate / provider-free Project-description form-to-application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Prior verified conversion baseline: exact commit `0a8cc53a909951c31fc8be6377e2e5f62b93e87c`; immutable Actions run `33794464360` passed both jobs
+- Ready baseline: exact commit `22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e`; immutable Actions run `33797480692` passed both jobs
 - Claimed target surfaces: `SWIFT-B95AD78B8CEC`, `TEST-315066B94566`
 - Preserved source surfaces: `SWIFT-CF459111B7BB`, `SWIFT-E1A771F6A409`, `SWIFT-27CA6EAC7092`, `SWIFT-7500FDB4FDB6`, `MCPTOOL-A9FCDED31D3F` retain their prior statuses
 - Verified dependency: `SWIFT-1A34CF88E95E`, `TEST-22878D176671` at exact implementation `a532ac9d`; immutable run `33642777864`
 - Slice dossier: `conversion/implementation-slices/project-details-update-use-case-contracts.json`
-- Verification state: local READY gate and independent corrected-diff review pass; implementation is not authorized until exact READY CI passes
+- Verification state: local implementation gate and two independent corrected-diff reviews pass; exact implementation commit and CI remain pending
 
 ## Selection and Authority
 
@@ -31,12 +32,12 @@ reference mutation. Those decisions remain open and unadvanced.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaves are claimed:
+Exactly two target leaves are claimed:
 
 - `LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateUseCase.swift`;
 - `LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift`.
 
-The future `ProjectDetailsUpdateFormInput` is a transient, non-Codable value
+`ProjectDetailsUpdateFormInput` is a transient, non-Codable value
 with exactly `accountId`, `projectId`, `expectedRevision` and `rawDescription`,
 plus an exact public four-argument initializer so an ordinary non-`@testable`
 module consumer can construct it.
@@ -59,7 +60,7 @@ accounting mutation, persistence, authorization or service implementation.
 
 ## Required Verification
 
-Ten planned obligations freeze executable proof for:
+Ten obligations freeze executable proof for:
 
 1. a non-`@testable` consumer constructing the exact four-field public initializer, Equatable/Sendable and runtime non-Codable input shape, including exact raw String bytes before canonical construction;
 2. nil/empty/whitespace clearing, outer trimming, interior Unicode preservation and more than 8 KiB of UTF-8 text through the actual command without an invented cap;
@@ -74,14 +75,15 @@ Ten planned obligations freeze executable proof for:
 
 ## Comment-Only READY Artifacts
 
-The exact current scaffold hashes are:
+The exact READY scaffold hashes were:
 
 - `ProjectDetailsUpdateUseCase.swift` — `7bd32006b76076256f58be5d73cafd7d2c2e223d63d1b8c4ed1c8db7f39b4745`;
 - `ProjectDetailsUpdateUseCaseTests.swift` — `590fd99a4f0c745be3cc614fab6c732bc093db807a55d024c4072eab32eb547b`.
 
-The prior verified baseline is exact commit
-`0a8cc53a909951c31fc8be6377e2e5f62b93e87c`; immutable Actions run
-`33794464360` passed traceability and isolated-target jobs.
+Exact READY commit `22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e`
+passed immutable Actions run `33797480692`: traceability completed in 8 seconds
+and the isolated target job completed in 3 minutes 36 seconds with all tests,
+both staging builds and clean generated artifacts.
 
 ## Local READY Gate and Review
 
@@ -103,9 +105,39 @@ that defect. The correction freezes an exact public four-argument initializer
 and requires ordinary non-`@testable` consumer compilation. The authority
 review caught a P2 lifecycle overstatement (`in_progress` for comment-only
 READY) and a P3 stale local-gate claim. The package now uses `ready` throughout
-and records the completed gate here. Both corrected-diff reviewers return GO
-with no remaining P0-P3 finding. Immutable exact-READY-SHA CI is the sole remaining
-authorization gate before either leaf may contain executable code.
+and records the completed gate here. Both corrected-diff reviewers returned GO
+with no remaining P0-P3 finding before exact READY CI passed.
+
+## Implementation Candidate and Local Gate
+
+Implementation changes exactly the two frozen target leaves. The production
+leaf exposes the exact public non-Codable four-field input and constructs
+`ProjectDescriptionReplacement`, `ProjectDetailsUpdateDraft` and
+`UpdateProjectDetailsCommand` before one `ProjectDetailsUpdating.updateDetails`
+call. It preserves every typed failure and `CancellationError`, bounds only
+unknown port errors, and validates and returns the exact receipt outside the
+catch.
+
+Seven focused tests use ordinary `import LedgerTargetCore`. Those tests plus
+review evidence satisfy `PDETAILUSE-TEST-001` through `PDETAILUSE-TEST-009`;
+`PDETAILUSE-TEST-010` remains planned pending immutable
+exact-implementation-SHA CI. Initial independent review found one P2
+false-green path: revision zero stopped at the form input. The correction
+dispatches revision zero through the real use case and proves the exact draft,
+same-subject precondition and three-leaf encoded delta. Both final
+corrected-diff reviewers return GO with no remaining P0-P3 finding.
+
+The corrected implementation passes seven focused tests and all 286 target
+tests in 61 suites with warnings as errors; target isolation/contracts;
+repeatable project generation at `0657194a` / `388303af`; both staging builds;
+and clean formatting. Implementation hashes are:
+
+- `ProjectDetailsUpdateUseCase.swift` — `cf27b0177ffcb3933e599e3b8f8d167da6de819c399d254dc1f700d2446d7a50`;
+- `ProjectDetailsUpdateUseCaseTests.swift` — `1961c7c450ffa0503fd6b88fcbaf8d4d8ffba69061950933e71b9c0ea3807fae`.
+
+Conversion synchronization and complete control checks passed after the hash
+update in this checkpoint. Immutable exact-implementation-SHA CI is the only
+remaining gate before verification promotion.
 
 ## Permanent Exclusions
 

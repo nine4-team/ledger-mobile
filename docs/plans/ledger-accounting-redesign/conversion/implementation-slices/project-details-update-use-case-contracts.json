@@ -3,7 +3,7 @@
   "sliceId": "project-details-update-use-case-contracts",
   "title": "Normalize and dispatch one Project description replacement",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Project Details Update Use Case",
   "surfaceIds": ["SWIFT-B95AD78B8CEC", "TEST-315066B94566"],
   "requirements": [
@@ -107,7 +107,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-007"],
       "expected": "A test consumer imports LedgerTargetCore without @testable and constructs the form input through its exact public four-argument initializer. The input is compile-time Equatable/Sendable, runtime non-Codable and has exactly accountId, projectId, expectedRevision and rawDescription stored fields; caller raw String bytes remain exact before canonical construction, and revision zero and UInt64.max remain valid and exact.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -116,7 +116,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-007"],
       "expected": "Nil, empty and whitespace-only raw descriptions dispatch the same canonical clear; padded input trims only outer whitespace/newlines; interior Unicode and more than 8 KiB of UTF-8 text pass through the actual command exactly without an invented cap.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -125,7 +125,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
       "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying one Project-description replacement and one same-Project expected-revision precondition; no broader edit field enters the command.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -134,7 +134,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-007"],
       "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Project, revision, description, Operation, actor, contract and time; each value reaches only its existing owning command fields. Normalization-equivalent raw strings yield identical commands and fingerprints.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -143,7 +143,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-007"],
       "expected": "Positive infinity and NaN capture times fail during construction with zero calls, while a mismatched receipt fails after exactly one call; neither failure is reclassified as a port failure.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -152,7 +152,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
       "expected": "Each of all 13 ProjectDetailsUpdateFailure values deliberately thrown by the port remains exact after one call, CancellationError remains structured cancellation, and an unknown port error alone maps to localAcceptanceFailed without leaking raw detail.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -161,7 +161,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-005", "PDETAILUSE-REQ-007"],
       "expected": "All 13 diagnostic codes remain an exact stable enumeration and reveal no synthetic identity, description text, raw error, credential, service payload or production identifier.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -170,7 +170,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift",
       "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
       "expected": "Exact nested command topology exposes only draft/envelope/subject/fingerprint ownership, one descriptionReplacement value and one expected-revision precondition—never rename, Client, category, allocation, budget, media, lifecycle, child, accounting, history, UI or service-detail fields.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -179,7 +179,7 @@
       "owner": "conversion control and independent actual-diff review",
       "covers": ["PDETAILUSE-REQ-001", "PDETAILUSE-REQ-002", "PDETAILUSE-REQ-003", "PDETAILUSE-REQ-004", "PDETAILUSE-REQ-005", "PDETAILUSE-REQ-006", "PDETAILUSE-REQ-007"],
       "expected": "The READY commit changes only two comment scaffolds and control/evidence files, passes all gates, and leaves EditProjectModal, ProjectService/Protocol, Project model, update_project MCP tool and every app/provider surface at prior status and content.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"]
     },
     {
@@ -195,5 +195,5 @@
   "implementationEvidence": ["EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY is being prepared at the exact verified Project-setup promotion baseline 0a8cc53a909951c31fc8be6377e2e5f62b93e87c, whose immutable Actions run 33794464360 passed. Exactly two comment-only target leaves freeze a description-only form-to-application boundary above verified ProjectDetailsUpdateOperation.swift at exact dependency implementation a532ac9d / run 33642777864. The future implementation must construct before one port call, validate after it, preserve all 13 typed failures plus cancellation, and bound unknown port errors. EditProjectModal, ProjectService/Protocol, Project model and update_project MCP tool remain unadvanced; all read/readiness/lifecycle, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. O-022 through O-026 and A-003/A-004/A-007/A-015/A-016 remain unadvanced. READY promotion requires complete local gates, two independent actual-diff GO reviews and immutable exact-SHA CI."
+  "notes": "Implementation candidate follows exact READY commit 22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e / immutable run 33797480692 above verified ProjectDetailsUpdateOperation.swift at a532ac9d / run 33642777864. Exactly two executable leaves implement the public transient input and description-only application path: construction before one port call, validation after it, all 13 typed failures plus cancellation preserved, and unknown port errors bounded. Seven focused tests plus review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009; PDETAILUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI. Independent review caught and corrected missing revision-zero dispatch proof, and both final reviewers return GO. All 286 target tests in 61 suites, complete target controls, repeatable generation and both staging builds pass locally. EditProjectModal, ProjectService/Protocol, Project model and update_project MCP tool remain unadvanced; all read/readiness/lifecycle, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. O-022 through O-026 and A-003/A-004/A-007/A-015/A-016 remain unadvanced."
 }

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 225
+State version: 226
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-DETAILS-UPDATE-USE-CASE-READY-LOCAL-GREEN
+- Checkpoint: PROJECT-DETAILS-UPDATE-USE-CASE-IMPLEMENTATION-LOCAL-GREEN
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3236,8 +3236,15 @@ modifying the running Firebase application before hard cutover.
   reviews caught and corrected a missing public initializer plus `@testable`
   masking (P1), comment-only lifecycle overstatement (P2), and stale gate
   evidence (P3); both corrected-diff reviewers return GO.
-  Immutable exact-READY-SHA CI is the sole remaining authorization gate before
-  executable implementation.
+  Exact READY commit `22c6cc01d499ce024e1a4c4157bc3c5e5d5a680e`
+  then passed immutable run `33797480692` (traceability 8 seconds; isolated
+  target 3 minutes 36 seconds). Exactly the two frozen leaves now implement the
+  public transient input and application path. Seven focused/all 286 target
+  tests in 61 suites, target controls, repeatable generation and both builds
+  pass locally. Independent implementation review caught and corrected missing
+  revision-zero dispatch proof; both final reviewers return GO. Conversion sync
+  and complete controls follow the implementation-hash update; immutable exact-
+  implementation-SHA CI remains required before verification promotion.
 
 ## Next Action
 
@@ -3537,15 +3544,13 @@ Continue without waiting on the two M1 evidence blockers:
    defaults/category mutation, physical persistence, authorization, provider/
    schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
    outside.
-   Treat ready `project-details-update-use-case-contracts` and
+   Treat in-progress `project-details-update-use-case-contracts` and
    `EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001` as the current candidate. Preserve
-   exactly the two comment-only leaves `ProjectDetailsUpdateUseCase.swift`
+   exactly the two implemented leaves `ProjectDetailsUpdateUseCase.swift`
    (`SWIFT-B95AD78B8CEC`) and `ProjectDetailsUpdateUseCaseTests.swift`
-   (`TEST-315066B94566`). Preserve the completed deterministic sync/local READY
-   gate and independent corrected-diff reviews, commit the exact READY package
-   and require immutable exact-SHA CI.
-   Only then may a bounded writer replace those two comments with the frozen
-   transient four-field input and one description-only application path. Keep
+   (`TEST-315066B94566`). Synchronize their exact implementation hashes, run the
+   complete controls, commit the implementation/evidence checkpoint and require
+   immutable exact-SHA CI before verification promotion. Keep
    EditProjectModal, ProjectService/Protocol, Project model and update_project
    MCP tool at their prior statuses; do not add read/readiness/lifecycle/no-op/
    UI, broader mutation, persistence, authorization, provider/schema/RLS/Sync,

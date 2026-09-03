@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-03T19:32:39.067Z",
+    "lastSynchronizedAt": "2026-09-03T19:58:46.169Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -28564,12 +28564,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ProjectDetailsUpdateUseCase.swift"
         }
       ],
-      "observedSourceHash": "7bd32006b76076256f58be5d73cafd7d2c2e223d63d1b8c4ed1c8db7f39b4745",
-      "acknowledgedSourceHash": "7bd32006b76076256f58be5d73cafd7d2c2e223d63d1b8c4ed1c8db7f39b4745",
+      "observedSourceHash": "cf27b0177ffcb3933e599e3b8f8d167da6de819c399d254dc1f700d2446d7a50",
+      "acknowledgedSourceHash": "cf27b0177ffcb3933e599e3b8f8d167da6de819c399d254dc1f700d2446d7a50",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold freezes a provider-free description-only Project details form-to-application boundary above the verified update operation.",
+      "currentBehavior": "Implements a provider-free description-only Project details form-to-application boundary above the verified update operation, with exact public transient input, canonical command construction, one port call, bounded errors and validated receipt return.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Details Update Use Case",
@@ -28609,7 +28609,7 @@
         "EVID-PROJECT-DETAILS-UPDATE-001",
         "EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "READY scaffold only. After the exact READY commit passes immutable CI, implementation may add a transient exact Account/Project/revision/raw-description input and one use case that reuses the verified canonical replacement/draft/command, calls ProjectDetailsUpdating.updateDetails once after construction, validates the receipt, preserves typed failures/cancellation and bounds unknown port errors. It cannot add Project reads/readiness/lifecycle/no-op/UI, rename, Client/category/allocation/budget/media/child/history/accounting mutation, persistence, authorization, provider, app/MCP, migration or production behavior.",
+      "notes": "Implementation candidate after exact READY commit 22c6cc01 / immutable run 33797480692. The public non-Codable input contains exact Account/Project/revision/raw description; the use case reuses the verified canonical replacement/draft/command, calls ProjectDetailsUpdating.updateDetails once after construction, validates the receipt, preserves all typed failures/cancellation and bounds unknown port errors. Local tests/reviews pass; exact implementation commit and CI remain pending. It cannot add Project reads/readiness/lifecycle/no-op/UI, rename, Client/category/allocation/budget/media/child/history/accounting mutation, persistence, authorization, provider, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35274,12 +35274,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ProjectDetailsUpdateUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "590fd99a4f0c745be3cc614fab6c732bc093db807a55d024c4072eab32eb547b",
-      "acknowledgedSourceHash": "590fd99a4f0c745be3cc614fab6c732bc093db807a55d024c4072eab32eb547b",
+      "observedSourceHash": "1961c7c450ffa0503fd6b88fcbaf8d4d8ffba69061950933e71b9c0ea3807fae",
+      "acknowledgedSourceHash": "1961c7c450ffa0503fd6b88fcbaf8d4d8ffba69061950933e71b9c0ea3807fae",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold freezes reciprocal Project details use-case proof across input shape, normalization, command ownership, receipt/error boundaries and exclusions.",
+      "currentBehavior": "Executes seven provider-free public-consumer tests covering the frozen behavioral obligations for input shape/access, normalization, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009, while PDETAILUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Details Update Use Case Tests",
@@ -35319,7 +35319,7 @@
         "EVID-PROJECT-DETAILS-UPDATE-001",
         "EVID-PROJECT-DETAILS-UPDATE-USE-CASE-001"
       ],
-      "notes": "READY scaffold only. Ten planned obligations cover exact non-Codable input shape, clear/set normalization and long UTF-8 text, revision boundaries, every receipt state, reciprocal encoded leaf ownership, normalization equivalence, zero/one-call failures, every typed failure plus cancellation/raw-error mapping, diagnostics, command topology, exact path/status preservation and immutable READY/implementation CI. No source, service or production behavior advances.",
+      "notes": "Implementation candidate after exact READY commit 22c6cc01 / run 33797480692. Seven tests cover the behavioral obligations, including non-@testable public construction, exact raw bytes, clear/set and more-than-8-KiB Unicode command passage, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership, normalization equivalence, zero/one-call failures, all 13 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy PDETAILUSE-TEST-001 through PDETAILUSE-TEST-009; PDETAILUSE-TEST-010 remains planned pending immutable exact-implementation-SHA CI. Independent review caught and corrected missing zero-revision dispatch proof; both final reviewers return GO. No source, service or production behavior advances.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
