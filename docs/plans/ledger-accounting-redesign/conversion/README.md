@@ -550,9 +550,11 @@ one port call, receipt validation, structured cancellation, normalized failure
 preservation and bounded raw errors. Review rejected weak schema-exclusion tests
 and a physical-durability wording overclaim; both were corrected, and two final
 implementation reviewers return GO. Six focused and all 261 target tests in 57
-suites pass locally with warnings as errors; conversion/target controls,
-repeatable generation, both staging builds and clean formatting also pass. Exact
-implementation-commit CI is still required before verification.
+suites pass with warnings as errors; conversion/target controls, repeatable
+generation, both staging builds and clean formatting also pass. Exact
+implementation commit `232acf922b6c1ab1016017c3ebc3b926b164466c`
+passed immutable Actions run `33758116150`, so the two target surfaces and slice
+are verified.
 `EVID-PROJECT-ARCHIVE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

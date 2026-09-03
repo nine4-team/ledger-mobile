@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 212
+State version: 213
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ARCHIVE-USE-CASE-IMPLEMENTATION-LOCAL
+- Checkpoint: PROJECT-ARCHIVE-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3030,8 +3030,11 @@ modifying the running Firebase application before hard cutover.
   both were corrected, and both final reviewers return GO with no P0-P3. Six
   focused and all 261 target tests in 57 suites pass with warnings as errors;
   target/conversion controls, repeatable hashes `0657194a` / `388303af`, both
-  staging builds and clean formatting also pass. Exact implementation-commit CI
-  remains required before verification.
+  staging builds and clean formatting also pass. Exact implementation commit
+  `232acf922b6c1ab1016017c3ebc3b926b164466c` passed immutable Actions run
+  `33758116150` (traceability 9 seconds; isolated target 3 minutes 8 seconds).
+  The dossier and both target surfaces are verified; source `ProjectDetailView`
+  remains characterized and the archive/restore MCP surface remains mapped only.
 
 ## Next Action
 
@@ -3271,19 +3274,25 @@ Continue without waiting on the two M1 evidence blockers:
    `b6a98ca0` / run `33749431949`, the corrected implementation, two independent
    final reviews, the complete local integration gate and exact implementation
    commit `f0d7c3fa` / immutable run `33750834849` pass. Preserve the verified
-   boundary and keep the full source modal target_mapped. Treat in-progress
+   boundary and keep the full source modal target_mapped. Treat verified
    `project-archive-use-case-contracts` and
-   `EVID-PROJECT-ARCHIVE-USE-CASE-001` as the current frozen boundary. Exact
-   ready commit `bf429472` / run `33755885978` passed. The corrected local
-   implementation changes exactly `ProjectArchiveUseCase.swift` and
+   `EVID-PROJECT-ARCHIVE-USE-CASE-001` as the frozen archive application
+   boundary. Exact ready commit `bf429472` / run `33755885978` and exact
+   implementation commit `232acf92` / run `33758116150` pass. The implementation
+   changes exactly `ProjectArchiveUseCase.swift` and
    `ProjectArchiveUseCaseTests.swift`; two independent final reviews, six focused
    and all 261 target tests, the complete local gate, repeatable generation and
-   both staging builds pass. Commit/push this exact 15-path implementation
-   checkpoint and require immutable exact-implementation-SHA CI. Only after CI
-   passes may the dossier/surfaces/tests be promoted to verified in a separate
-   continuity commit. ProjectDetailView must remain characterized,
+   both staging builds pass. ProjectDetailView must remain characterized,
    `MCPTOOL-921DA05B3330` must remain target_mapped, and no excluded restore/
    lifecycle/UI/MCP/provider behavior may advance.
+   The next bounded candidate is chosen-Project note creation: add only a
+   provider-free application use case and its tests (`SWIFT-1E672B78D7CF`,
+   `TEST-255BB3A62512`) above the verified Project-note creation operation. It
+   must accept an already-selected ProjectID, preallocated NoteID, raw text and
+   requested source, preserving accepted raw text rather than copying Firebase
+   UI trimming. It must not decide the archived-Project picker/prefill policy or
+   advance the full `QuickNoteModal`; freeze exact requirements in a ready
+   dossier and require review plus exact-ready-SHA CI before executable code.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

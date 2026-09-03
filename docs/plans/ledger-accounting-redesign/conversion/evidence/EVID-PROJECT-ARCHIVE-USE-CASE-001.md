@@ -1,13 +1,14 @@
 # EVID-PROJECT-ARCHIVE-USE-CASE-001 — Project Archive Use Case
 
 - Timestamp: 2026-09-03
-- Class: implementation / local integration evidence for provider-free Project archive application dispatch
+- Class: verification / provider-free Project archive application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
 - Ready baseline: exact commit `bf4294727f4b2bde117dc0eaf9e74e9769fe8699`; immutable Actions run `33755885978` passed before implementation
 - Claimed target surfaces: `SWIFT-7C5BD31FBF71`, `TEST-29C0CCC4353F`
 - Partial source evidence: `SWIFT-D73C92887393` remains `characterized` and blocked by O-024; `MCPTOOL-921DA05B3330` remains `target_mapped`
 - Slice dossier: `conversion/implementation-slices/project-archive-use-case-contracts.json`
-- Verification state: corrected implementation passes two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
+- Implementation baseline: exact commit `232acf922b6c1ab1016017c3ebc3b926b164466c`; immutable Actions run `33758116150` passed
+- Verification state: verified at the exact implementation commit after two independent final reviews, complete local integration gates and immutable CI
 
 ## Selection and Authority
 
@@ -53,8 +54,7 @@ It makes no claim that physical rows, children or history have been preserved.
 
 ## Required Verification
 
-The dossier defines six obligations. The first five pass locally; the sixth
-requires exact implementation-commit CI. Together they require exact intent
+The dossier defines six obligations, and all six pass. Together they require exact intent
 shape including revision zero/max; reciprocal forwarding of every intent and caller metadata
 field into the existing command and all derived evidence; exactly one post-
 construction port call; zero calls for non-finite time; exact receipt local
@@ -113,10 +113,12 @@ Both independent final reviewers return GO with no P0-P3.
 
 Six focused and all 261 target tests in 57 suites pass with warnings as errors.
 Conversion/target controls, repeatable project hashes `0657194a` / `388303af`,
-both staging builds and clean formatting also pass. Exact implementation-commit
-CI remains required before verification;
-the first local conversion check correctly detected the changed frozen hashes,
-which this checkpoint now acknowledges before resynchronizing generated state.
+both staging builds and clean formatting also pass. Exact implementation commit
+`232acf922b6c1ab1016017c3ebc3b926b164466c` passed immutable Actions run
+`33758116150` (traceability 9 seconds; isolated target 3 minutes 8 seconds).
+The first local conversion check correctly detected the changed frozen hashes;
+the implementation checkpoint acknowledged them before resynchronizing generated
+state, and the exact implementation CI verified that synchronized result.
 
 Implementation hashes:
 

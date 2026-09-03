@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-03T12:55:12.271Z",
+  "generatedFromManifestSync": "2026-09-03T13:04:17.999Z",
   "totals": {
     "slices": 56,
     "claimedTargetSurfaces": 137,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 120
+    "implementationAdvancedTargetSurfaces": 122
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
-    "in_progress": 2,
+    "in_progress": 1,
     "implemented": 0,
-    "verified": 54,
+    "verified": 55,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -308,7 +308,7 @@
       "sliceId": "project-archive-use-case-contracts",
       "title": "Dispatch one archive-only Project intent",
       "kind": "product",
-      "status": "in_progress",
+      "status": "verified",
       "owner": "Project Archive Use Case",
       "surfaceIds": [
         "SWIFT-7C5BD31FBF71",

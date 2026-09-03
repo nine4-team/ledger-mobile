@@ -3,7 +3,7 @@
   "sliceId": "project-archive-use-case-contracts",
   "title": "Dispatch one archive-only Project intent",
   "kind": "product",
-  "status": "in_progress",
+  "status": "verified",
   "owner": "Project Archive Use Case",
   "surfaceIds": ["SWIFT-7C5BD31FBF71", "TEST-29C0CCC4353F"],
   "requirements": [
@@ -152,12 +152,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-005", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
       "expected": "The exact implementation commit passes traceability, source/provider isolation, generated contracts, focused and complete tests, warnings-as-errors, repeatable project generation, both staging builds and clean artifacts while implementation changes only the two target leaves and ProjectDetailView/Firebase files remain untouched and unadvanced.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally after exact ready commit bf4294727f4b2bde117dc0eaf9e74e9769fe8699 passed immutable Actions run 33755885978. The provider-free use case composes the existing Project archive operation from a transient exact Account/Project/revision intent, invokes ProjectArchiving once after construction, validates its receipt, preserves structured cancellation and normalized failures, and bounds raw transport errors. Independent implementation review found incomplete exact encoded-shape/diagnostic coverage and one durability wording overclaim; both were corrected, and two final reviewers return GO with no P0-P3. Six focused and all 261 target tests in 57 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds and clean formatting also pass. ProjectDetailView, restore implementation, MCP integration, physical durability/history proof, provider and production behavior remain excluded. Exact implementation-commit CI remains required before verification."
+  "notes": "Verified at exact implementation commit 232acf922b6c1ab1016017c3ebc3b926b164466c after immutable Actions run 33758116150 passed traceability in 9 seconds and the isolated target job in 3 minutes 8 seconds. Exact ready commit bf4294727f4b2bde117dc0eaf9e74e9769fe8699 previously passed run 33755885978. The provider-free use case composes the existing Project archive operation from a transient exact Account/Project/revision intent, invokes ProjectArchiving once after construction, validates its receipt, preserves structured cancellation and normalized failures, and bounds raw transport errors. Independent implementation review found incomplete exact encoded-shape/diagnostic coverage and one durability wording overclaim; both were corrected, and two final reviewers returned GO with no P0-P3. Six focused and all 261 target tests in 57 suites passed with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds and clean formatting also passed. ProjectDetailView, restore implementation, MCP integration, physical durability/history proof, provider and production behavior remain excluded."
 }
