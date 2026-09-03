@@ -3612,13 +3612,13 @@
     {
       "id": "SWIFT-7C5BD31FBF71",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8a595f188c27b62c15adc589f5b7fac7c35a85bbd8b1afbfb0f233842768db51",
-      "currentBehavior": "Freezes the provider-free Project archive intent and application-dispatch boundary without implementing ProjectDetailView or executable behavior.",
+      "acknowledgeSourceHash": "9285d1663a78dfba79b33fb12635ce5ccdf5095d5aaff18614d7d0f1675fa8d4",
+      "currentBehavior": "Implements the provider-free Project archive intent and application-dispatch boundary without implementing ProjectDetailView.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-ARCHIVE-001", "EVID-PROJECT-ARCHIVE-USE-CASE-001"],
-      "notes": "Ready comment-only scaffold. Implementation is limited to transient exact Account/Project/revision intent, existing archive command assembly, one post-construction port call, receipt validation, cancellation/preserved normalized failure/raw normalization. No UI, read/readiness/lifecycle policy, restore/unarchive/delete, physical history proof, provider or production behavior.",
+      "notes": "Implemented locally after exact ready commit bf4294727f4b2bde117dc0eaf9e74e9769fe8699 passed immutable Actions run 33755885978. The transient exact Account/Project/revision intent feeds existing archive command assembly, one post-construction port call, receipt validation, structured cancellation, preserved normalized failures and raw-error normalization. No UI, read/readiness/lifecycle policy, restore/unarchive/delete, physical durability/history proof, provider or production behavior. Exact implementation-commit CI remains pending.",
       "target": {
         "owner": "Project Archive Use Case",
         "surfaces": ["ProjectArchiveIntent", "ProjectArchiveUseCase", "single ProjectArchiving invocation and receipt validation"],
@@ -3631,19 +3631,19 @@
       },
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ProjectArchiveUseCaseTests"],
-        "acceptance": ["Planned focused tests prove only the frozen provider-free archive-intent-to-validated-receipt path and permanent exclusions"]
+        "acceptance": ["Focused tests prove only the frozen provider-free archive-intent-to-validated-receipt path and permanent exclusions"]
       }
     },
     {
       "id": "TEST-29C0CCC4353F",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e94867b1ef7fa1cc786c0e8fc132f70d67ed09e35328bf6e2afae6508e4f61af",
-      "currentBehavior": "Freezes planned obligations for exact Project archive intent, reciprocal command forwarding, one port call, receipt/failure/cancellation handling, diagnostics and exclusions.",
+      "acknowledgeSourceHash": "0f6fb8be145258a3fa811223bda589c3d78bfb5c64d6e0aac87ecd83ce5c7507",
+      "currentBehavior": "Implements executable obligations for exact Project archive intent, reciprocal command forwarding, one port call, receipt/failure/cancellation handling, diagnostics and exclusions.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-PROJECT-ARCHIVE-001", "EVID-PROJECT-ARCHIVE-USE-CASE-001"],
-      "notes": "Ready comment-only test scaffold. Six reciprocal obligations are planned; no executable test or verification claim exists yet. Tests may prove application choreography only, never UI, eligibility, physical history/persistence, authorization, provider/schema/RLS/Sync, migration or production behavior.",
+      "notes": "Implemented six focused synthetic tests covering exact transient intent shape, revision zero/UInt64.max, reciprocal caller and derived command fields, every receipt state, construction-before-call, receipt mismatch, normalized/raw failure distinction, structured cancellation, all stable diagnostics, exact nested encoded-command keys and complete exclusions. Tests prove application choreography only, never UI, eligibility, physical history/persistence, authorization, provider/schema/RLS/Sync, migration or production behavior. Exact implementation-commit CI remains pending.",
       "target": {
         "owner": "Project Archive Use Case Tests",
         "surfaces": ["exact intent-shape fixtures", "reciprocal command and single-call port fixtures", "receipt-state, construction, normalized/raw failure, cancellation, diagnostics and exclusion fixtures"],
@@ -3652,11 +3652,11 @@
       },
       "migration": {
         "rule": "Use target-only synthetic values and load no Firebase view/model/export data or source-to-target migration mapping.",
-        "reconciliation": ["Tests will prove the canonical target dispatch boundary while leaving the source ProjectDetailView unadvanced"]
+        "reconciliation": ["Tests prove the canonical target dispatch boundary while leaving the source ProjectDetailView unadvanced"]
       },
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ProjectArchiveUseCaseTests"],
-        "acceptance": ["Planned focused tests prove only the provider-free Project archive use case and its permanent exclusions"]
+        "acceptance": ["Focused tests prove only the provider-free Project archive use case and its permanent exclusions"]
       }
     }
   ]

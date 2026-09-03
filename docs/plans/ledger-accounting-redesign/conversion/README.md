@@ -543,7 +543,16 @@ preserved in the evidence.
 The complete corrected local ready gate
 passes 255 tests in 56 suites with warnings as errors, all conversion/
 target controls, repeatable project generation and both staging builds.
-Final corrected-diff re-review and immutable exact-ready-SHA CI remain required.
+Final corrected-diff re-review returned GO, and exact ready commit `bf429472`
+passed immutable run `33755885978`. Implementation now changes only the two
+frozen target leaves: exact transient intent, existing archive-command assembly,
+one port call, receipt validation, structured cancellation, normalized failure
+preservation and bounded raw errors. Review rejected weak schema-exclusion tests
+and a physical-durability wording overclaim; both were corrected, and two final
+implementation reviewers return GO. Six focused and all 261 target tests in 57
+suites pass locally with warnings as errors; conversion/target controls,
+repeatable generation, both staging builds and clean formatting also pass. Exact
+implementation-commit CI is still required before verification.
 `EVID-PROJECT-ARCHIVE-USE-CASE-001`.
 
 This directory makes whole-application conversion progress durable across long

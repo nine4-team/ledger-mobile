@@ -1,13 +1,13 @@
 # EVID-PROJECT-ARCHIVE-USE-CASE-001 — Project Archive Use Case
 
 - Timestamp: 2026-09-03
-- Class: ready design / provider-free Project archive application dispatch
+- Class: implementation / local integration evidence for provider-free Project archive application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on `firebase`; source worktree and released Firebase app unchanged
-- Target baseline: `d74efb4424a559b007a032baa29d5a31af227754`; promotion run `33751486795` passed before this package
+- Ready baseline: exact commit `bf4294727f4b2bde117dc0eaf9e74e9769fe8699`; immutable Actions run `33755885978` passed before implementation
 - Claimed target surfaces: `SWIFT-7C5BD31FBF71`, `TEST-29C0CCC4353F`
 - Partial source evidence: `SWIFT-D73C92887393` remains `characterized` and blocked by O-024; `MCPTOOL-921DA05B3330` remains `target_mapped`
 - Slice dossier: `conversion/implementation-slices/project-archive-use-case-contracts.json`
-- Verification state: complete local ready gate passed after six actual-diff findings were corrected; final corrected-diff re-review and immutable exact-ready-SHA CI remain required
+- Verification state: corrected implementation passes two independent final reviews and the complete local integration gate; exact implementation-commit CI pending
 
 ## Selection and Authority
 
@@ -32,15 +32,15 @@ responsibility nevertheless stays explicitly `target_mapped`.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaves are claimed:
+Exactly two implemented target leaves are claimed:
 
 - `LedgeriOS/LedgerTargetCore/ProjectArchiveUseCase.swift`; and
 - `LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift`.
 
-The future `ProjectArchiveIntent` is non-Codable and contains exactly AccountID,
+`ProjectArchiveIntent` is non-Codable and contains exactly AccountID,
 ProjectID and ExpectedProjectRevision. The verified archive-operation evidence,
 not the Projects spec alone, owns the exact revision/precondition, command,
-fingerprint, receipt and stable-failure semantics. `ProjectArchiveUseCase` will add caller
+fingerprint, receipt and stable-failure semantics. `ProjectArchiveUseCase` adds caller
 OperationID, PrincipalID, OperationContractVersion and capture time, construct
 the existing ProjectArchiveDraft/ArchiveProjectCommand, call ProjectArchiving
 exactly once only after construction, validate the receipt, preserve its exact
@@ -53,8 +53,9 @@ It makes no claim that physical rows, children or history have been preserved.
 
 ## Required Verification
 
-The six planned obligations in the dossier require exact intent shape including
-revision zero/max; reciprocal forwarding of every intent and caller metadata
+The dossier defines six obligations. The first five pass locally; the sixth
+requires exact implementation-commit CI. Together they require exact intent
+shape including revision zero/max; reciprocal forwarding of every intent and caller metadata
 field into the existing command and all derived evidence; exactly one post-
 construction port call; zero calls for non-finite time; exact receipt local
 states and mismatch refusal; structured cancellation; distinct normalized and
@@ -88,12 +89,39 @@ established retired-path warnings; 392 mapped / 167 residual / 44 blockers; M0;
 all 255 target tests in 56 suites with warnings as errors; target isolation and
 generated contracts; repeatable project hashes `0657194a` / `388303af`; both
 staging builds; JSON validation; and clean diff formatting. Final corrected-diff
-re-review and exact-ready-SHA CI remain mandatory.
+re-review returned GO from both independent reviewers. Exact ready commit
+`bf4294727f4b2bde117dc0eaf9e74e9769fe8699` passed immutable Actions run
+`33755885978` (traceability 7 seconds; isolated target 2 minutes 49 seconds),
+authorizing only the two frozen implementation leaves.
 
-Comment-only scaffold hashes:
+## Local Implementation Verification
 
-- `ProjectArchiveUseCase.swift` — `8a595f188c27b62c15adc589f5b7fac7c35a85bbd8b1afbfb0f233842768db51`; and
-- `ProjectArchiveUseCaseTests.swift` — `e94867b1ef7fa1cc786c0e8fc132f70d67ed09e35328bf6e2afae6508e4f61af`.
+The two frozen leaves now implement the transient exact Account/Project/revision
+intent and one application use case that assembles the existing verified archive
+draft/command, invokes `ProjectArchiving` once after construction, validates the
+receipt, preserves every local state, preserves structured cancellation and
+normalized `ProjectArchiveFailure`, and maps unexpected port errors to
+`localAcceptanceFailed`.
+
+Initial implementation review found no production-flow defect but rejected weak
+schema-exclusion tests and a comment that implied physical durability. The
+corrected tests assert every stable diagnostic, exact nested encoded-command key
+set, every caller/derived field, every receipt state, zero/one call counts and
+the complete forbidden-field boundary. The comment now distinguishes canonical
+command encoding from physical durability/restart, which remain unimplemented.
+Both independent final reviewers return GO with no P0-P3.
+
+Six focused and all 261 target tests in 57 suites pass with warnings as errors.
+Conversion/target controls, repeatable project hashes `0657194a` / `388303af`,
+both staging builds and clean formatting also pass. Exact implementation-commit
+CI remains required before verification;
+the first local conversion check correctly detected the changed frozen hashes,
+which this checkpoint now acknowledges before resynchronizing generated state.
+
+Implementation hashes:
+
+- `ProjectArchiveUseCase.swift` — `9285d1663a78dfba79b33fb12635ce5ccdf5095d5aaff18614d7d0f1675fa8d4`; and
+- `ProjectArchiveUseCaseTests.swift` — `0f6fb8be145258a3fa811223bda589c3d78bfb5c64d6e0aac87ecd83ce5c7507`.
 
 ## Permanent Exclusions
 

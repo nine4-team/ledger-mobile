@@ -1,21 +1,65 @@
-// READY contract scaffold only — no executable behavior.
-//
-// This leaf will own one provider-free application path from a transient,
-// non-Codable `ProjectArchiveIntent` to the already verified
-// `ProjectArchiveOperation` boundary. The intent carries exactly AccountID,
-// ProjectID, and ExpectedProjectRevision. Caller-supplied OperationID,
-// PrincipalID, OperationContractVersion, and finite capture time are added only
-// by the application use case.
-//
-// Implementation is frozen to:
-// - construct the existing ProjectArchiveDraft and ArchiveProjectCommand;
-// - call ProjectArchiving exactly once, and only after construction succeeds;
-// - validate the returned receipt and preserve its exact localState;
-// - preserve CancellationError and normalized ProjectArchiveFailure values;
-// - normalize any other port error to .localAcceptanceFailed.
-//
-// This boundary does not own Project reads/readiness, lifecycle eligibility,
-// already-archived/no-op policy, confirmation/dismissal UI, restore/unarchive,
-// physical deletion or history preservation, child/accounting mutation,
-// persistence, provider/schema/RLS/Sync behavior, app/MCP wiring, migration,
-// deployment, release, or production authority.
+import Foundation
+
+/// Transient archive intent supplied after presentation selects one Project.
+///
+/// The value is deliberately not `Codable`. The existing command has a
+/// canonical encoding, but physical local durability and restart behavior
+/// remain outside this use case.
+public struct ProjectArchiveIntent: Equatable, Sendable {
+    public let accountId: AccountID
+    public let projectId: ProjectID
+    public let expectedRevision: ExpectedProjectRevision
+
+    public init(
+        accountId: AccountID,
+        projectId: ProjectID,
+        expectedRevision: ExpectedProjectRevision
+    ) {
+        self.accountId = accountId
+        self.projectId = projectId
+        self.expectedRevision = expectedRevision
+    }
+}
+
+/// Application-layer orchestration for one archive-only Project operation.
+public struct ProjectArchiveUseCase<Archiver: ProjectArchiving>: Sendable {
+    private let archiver: Archiver
+
+    public init(archiver: Archiver) {
+        self.archiver = archiver
+    }
+
+    public func execute(
+        intent: ProjectArchiveIntent,
+        operationId: OperationID,
+        actorPrincipalId: PrincipalID,
+        operationContractVersion: OperationContractVersion,
+        capturedAt: Date
+    ) async throws -> OperationReceipt {
+        let draft = try ProjectArchiveDraft(
+            accountId: intent.accountId,
+            actorPrincipalId: actorPrincipalId,
+            operationContractVersion: operationContractVersion,
+            projectId: intent.projectId,
+            expectedRevision: intent.expectedRevision,
+            capturedAt: capturedAt
+        )
+        let command = try ArchiveProjectCommand(
+            operationId: operationId,
+            draft: draft
+        )
+
+        let receipt: OperationReceipt
+        do {
+            receipt = try await archiver.archive(command)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as ProjectArchiveFailure {
+            throw failure
+        } catch {
+            throw ProjectArchiveFailure.localAcceptanceFailed
+        }
+
+        return try command.validate(receipt)
+    }
+}

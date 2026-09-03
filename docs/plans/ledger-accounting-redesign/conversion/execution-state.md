@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 211
+State version: 212
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-ARCHIVE-USE-CASE-READY
+- Checkpoint: PROJECT-ARCHIVE-USE-CASE-IMPLEMENTATION-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -3018,7 +3018,20 @@ modifying the running Firebase application before hard cutover.
   complete corrected local ready gate passes all 255 tests in 56
   suites with warnings as errors, target/conversion controls, repeatable hashes
   `0657194a` / `388303af`, both staging builds and clean formatting. Final corrected-
-  diff re-review and immutable exact-ready-SHA CI remain prerequisites to code.
+  diff re-review returned GO from both independent reviewers. Exact ready commit
+  `bf4294727f4b2bde117dc0eaf9e74e9769fe8699` passed immutable run
+  `33755885978` (traceability 7 seconds; isolated target 2 minutes 49 seconds).
+- Implemented exactly the two frozen archive-use-case leaves. The non-Codable
+  intent binds exact Account/Project/revision; the use case assembles the
+  existing verified archive draft/command, invokes `ProjectArchiving` once after
+  construction, validates the receipt, preserves cancellation and normalized
+  failures, and bounds raw errors. Independent review found incomplete exact
+  encoded-shape/diagnostic coverage and a physical-durability wording overclaim;
+  both were corrected, and both final reviewers return GO with no P0-P3. Six
+  focused and all 261 target tests in 57 suites pass with warnings as errors;
+  target/conversion controls, repeatable hashes `0657194a` / `388303af`, both
+  staging builds and clean formatting also pass. Exact implementation-commit CI
+  remains required before verification.
 
 ## Next Action
 
@@ -3258,16 +3271,19 @@ Continue without waiting on the two M1 evidence blockers:
    `b6a98ca0` / run `33749431949`, the corrected implementation, two independent
    final reviews, the complete local integration gate and exact implementation
    commit `f0d7c3fa` / immutable run `33750834849` pass. Preserve the verified
-   boundary and keep the full source modal target_mapped. Treat ready
+   boundary and keep the full source modal target_mapped. Treat in-progress
    `project-archive-use-case-contracts` and
-   `EVID-PROJECT-ARCHIVE-USE-CASE-001` as the next frozen boundary. First obtain
-   independent actual-diff review of the complete ready package, run the full
-   ready gate, commit/push the exact reviewed package and require immutable
-   exact-ready-SHA CI. Only after that passes may implementation replace exactly
-   `ProjectArchiveUseCase.swift` and `ProjectArchiveUseCaseTests.swift`.
-   ProjectDetailView must remain characterized, `MCPTOOL-921DA05B3330` must
-   remain target_mapped, and no excluded lifecycle/UI/MCP/provider behavior may
-   advance.
+   `EVID-PROJECT-ARCHIVE-USE-CASE-001` as the current frozen boundary. Exact
+   ready commit `bf429472` / run `33755885978` passed. The corrected local
+   implementation changes exactly `ProjectArchiveUseCase.swift` and
+   `ProjectArchiveUseCaseTests.swift`; two independent final reviews, six focused
+   and all 261 target tests, the complete local gate, repeatable generation and
+   both staging builds pass. Commit/push this exact 15-path implementation
+   checkpoint and require immutable exact-implementation-SHA CI. Only after CI
+   passes may the dossier/surfaces/tests be promoted to verified in a separate
+   continuity commit. ProjectDetailView must remain characterized,
+   `MCPTOOL-921DA05B3330` must remain target_mapped, and no excluded restore/
+   lifecycle/UI/MCP/provider behavior may advance.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

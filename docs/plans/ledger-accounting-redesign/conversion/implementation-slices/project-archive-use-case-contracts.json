@@ -3,7 +3,7 @@
   "sliceId": "project-archive-use-case-contracts",
   "title": "Dispatch one archive-only Project intent",
   "kind": "product",
-  "status": "ready",
+  "status": "in_progress",
   "owner": "Project Archive Use Case",
   "surfaceIds": ["SWIFT-7C5BD31FBF71", "TEST-29C0CCC4353F"],
   "requirements": [
@@ -107,7 +107,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
       "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-005", "PROJECTARCHIVEUSE-REQ-006"],
       "expected": "ProjectArchiveIntent exposes exactly AccountID, ProjectID and ExpectedProjectRevision; accepts revision zero and UInt64.max; is non-Codable; and exposes no Client, lifecycle Boolean, read/readiness/as-of/query/cache, child, accounting, operation, provider or UI field.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -116,7 +116,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
       "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
       "expected": "A reciprocal matrix independently varies exact Account, Project, expected revision, Operation, actor, contract and time; each value reaches the existing draft/command and derived subject/precondition/fingerprint exactly, with one port call and no added policy or field.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -125,7 +125,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
       "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
       "expected": "Every valid construction invokes ProjectArchiving exactly once; non-finite capturedAt fails before dispatch with zero calls. The recorded command has one ArchiveProject payload and same-Project expected-revision precondition and no restore/delete/child/accounting operation; no physical effect is claimed.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -134,7 +134,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
       "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
       "expected": "Each matching OperationReceipt local state is returned exactly. Receipt mismatch is rejected; CancellationError is preserved; a normalized ProjectArchiveFailure distinct from the fallback is preserved; and a raw unexpected port error becomes ProjectArchiveFailure.localAcceptanceFailed, with exact zero/one call counts.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -143,7 +143,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ProjectArchiveUseCaseTests.swift",
       "covers": ["PROJECTARCHIVEUSE-REQ-001", "PROJECTARCHIVEUSE-REQ-002", "PROJECTARCHIVEUSE-REQ-003", "PROJECTARCHIVEUSE-REQ-004", "PROJECTARCHIVEUSE-REQ-005", "PROJECTARCHIVEUSE-REQ-006", "PROJECTARCHIVEUSE-REQ-007"],
       "expected": "Stable diagnostics reveal no raw error, Account/Project/Operation/Principal value, credential, provider path or payload. Separate reflected/recorded/encoded shape checks prove only authorized existing command fields and no UI/readiness/lifecycle toggle/Client/child/accounting/restore/unarchive/delete/provider field, without claiming intent or use-case encoding.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"]
     },
     {
@@ -159,5 +159,5 @@
   "implementationEvidence": ["EVID-PROJECT-ARCHIVE-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Ready design only. Fresh authority preflight selected a strict archive-only application slice and rejected claiming ProjectDetailView, restore/unarchive/delete parity, read/readiness or lifecycle eligibility. Exactly two comment-only target leaves are frozen. No executable target code may start until actual-diff review, the complete local ready gate and immutable exact-ready-commit CI pass."
+  "notes": "Implemented locally after exact ready commit bf4294727f4b2bde117dc0eaf9e74e9769fe8699 passed immutable Actions run 33755885978. The provider-free use case composes the existing Project archive operation from a transient exact Account/Project/revision intent, invokes ProjectArchiving once after construction, validates its receipt, preserves structured cancellation and normalized failures, and bounds raw transport errors. Independent implementation review found incomplete exact encoded-shape/diagnostic coverage and one durability wording overclaim; both were corrected, and two final reviewers return GO with no P0-P3. Six focused and all 261 target tests in 57 suites pass with warnings as errors; conversion/target controls, repeatable hashes 0657194a / 388303af, both staging builds and clean formatting also pass. ProjectDetailView, restore implementation, MCP integration, physical durability/history proof, provider and production behavior remain excluded. Exact implementation-commit CI remains required before verification."
 }
