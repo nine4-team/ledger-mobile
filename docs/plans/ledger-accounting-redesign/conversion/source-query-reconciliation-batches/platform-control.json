@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-PLATFORM-CONTROL-001",
   "owner": "Platform, Backend, and Conversion Control",
-  "status": "draft",
+  "status": "ready",
   "assignedQueryIds": [
     "QUERY-0DCB1F5BDFA1",
     "QUERY-10D959B980AD",
@@ -502,5 +502,5 @@
       ]
     }
   ],
-  "notes": "Human-reviewed DRAFT reconciliation covers all 18 assigned occurrences. The two BatchWriting document precondition reads remain source-only for compiled current-source compatibility through verified cutover reconciliation and their Firebase query mechanism retires afterward under A-017; no production runtime-use claim is made. The remaining rows bind exact target control/query surfaces, source-only audit/migration behavior, or explicitly authorized behavior retirement."
+  "notes": "READY classification covers all 18 assigned occurrences. The two BatchWriting document precondition reads remain source-only for compiled current-source compatibility through verified cutover reconciliation and their Firebase query mechanism retires afterward under A-017; no production runtime-use claim is made. The remaining rows bind exact target control/query surfaces, source-only audit/migration behavior, or explicitly authorized behavior retirement without authorizing implementation."
 }

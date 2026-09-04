@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-SPACES-REVIEW-001",
   "owner": "Spaces, Checklists, and Review",
-  "status": "draft",
+  "status": "ready",
   "assignedQueryIds": [
     "QUERY-2F3C6023ACB6",
     "QUERY-55977FD9E98E",
@@ -233,5 +233,5 @@
       ]
     }
   ],
-  "notes": "Human-reviewed capability assignment remains DRAFT; all eight assigned rows are populated for pilot review without claiming READY completeness or physical target access."
+  "notes": "Human-reviewed capability classification is READY with all eight assigned rows populated; READY claims classification completeness only, not implementation or physical target access."
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-ITEM-CREATION-LINK-001",
   "owner": "Item Creation and Accounting Link",
-  "status": "draft",
+  "status": "ready",
   "assignedQueryIds": [
     "QUERY-0A9CAB36FAF3",
     "QUERY-130E0FE810B2",
@@ -405,5 +405,5 @@
       ]
     }
   ],
-  "notes": "Human-reviewed DRAFT reconciliation populates all 18 assigned occurrences: D-025 explicitly authorizes retirement of sixteen proto/Quick Draft runtime reads only at verified cutover, the legacy candidate audit remains source-only through verified cutover reconciliation with required mechanism retirement, and the New Item category validation read remains owner-bound to O-016/O-027. Aggregate validation and promotion remain pending."
+  "notes": "READY classification contains all 18 assigned occurrences: D-025 explicitly authorizes retirement of sixteen proto/Quick Draft runtime reads only at verified cutover, the legacy candidate audit remains source-only through verified cutover reconciliation with required mechanism retirement, and the New Item category validation read remains owner-bound to O-016/O-027. Aggregate executable validation and promotion remain pending."
 }

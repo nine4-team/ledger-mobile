@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-INVENTORY-TRANSACTION-001",
   "owner": "Inventory, Transactions, and Provenance",
-  "status": "draft",
+  "status": "ready",
   "assignedQueryIds": [
     "QUERY-02EB353513F6",
     "QUERY-045504DEC224",
@@ -3477,5 +3477,5 @@
       ]
     }
   ],
-  "notes": "Human-reviewed DRAFT reconciliation populates all 123 assigned occurrences. The two Inventory destination-planning filters are held on exact owner-bound O-038 rather than mapped to generic ListTransactionsQuery. The detach/delete Item reads each carry independent same-owner O-023 source-disposition and E-002 reference-safety evidence blocks. Seven bulk_update_transactions behavior retirements bind canonical Inventory lifecycle Story 10 correction authority instead of bypassing their blocked source owner. The remaining rows map exact target queries/nonquery operations, source-only migration/audit reads, mechanism retirement, and source-owner-bound decision holds without claiming physical access or production evidence."
+  "notes": "READY classification contains all 123 assigned occurrences. The two Inventory destination-planning filters are held on exact owner-bound O-038 rather than mapped to generic ListTransactionsQuery. The detach/delete Item reads each carry independent same-owner O-023 source-disposition and E-002 reference-safety evidence blocks. Seven bulk_update_transactions behavior retirements bind canonical Inventory lifecycle Story 10 correction authority instead of bypassing their blocked source owner. The remaining rows map exact target queries/nonquery operations, source-only migration/audit reads, mechanism retirement, and source-owner-bound decision holds without claiming implementation, physical access or production evidence."
 }

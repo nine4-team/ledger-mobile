@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 253
+State version: 254
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SOURCE-QUERY-RECONCILIATION-DRAFT-ROW-POPULATION
+- Checkpoint: SOURCE-QUERY-RECONCILIATION-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,7 +32,8 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Drafted the separate 386-occurrence source-query reconciliation control at
+- Promoted the separate 386-occurrence source-query reconciliation control to
+  classification-only READY from its initial design at
   clean baseline `76b2ff45ba4fffe68097919c32ec7b4fec48047c`. One aggregate
   registry binds the full unchanged source and target-authority artifacts plus
   stable selected manifest projections. Human semantic review assigned every
@@ -65,9 +66,14 @@ modifying the running Firebase application before hard cutover.
   No outcome
   is inferred from subsystem/path/symbol/expression. A-003/A-004 remain global-
   only physical deferrals. The stable control CONFIG owners are `target_mapped`
-  with empty blockers while all 386 rows have explicit outcomes, so the
-  dossier and all batches remain `draft`; no package/workflow/generated
-  reconciliation artifact, executable
+  with empty blockers while all 386 rows have explicit outcomes. Exact
+  complete-DRAFT commit `92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7`
+  passed immutable Actions run `33871918545`; the dossier, registry and all ten
+  non-template batches are now synchronized as `ready` against an exact
+  22-path freeze containing lifecycle/evidence documentation and deterministic
+  conversion metadata regenerated from the dossier status. READY certifies
+  classification completeness only. No
+  package/workflow/generated reconciliation artifact, executable
   control, runtime, provider, hosted, production, release or cutover behavior
   advances. Exact DRAFT commit
   `570f54a50405376ee4b642f1abc11ea04eb0a4bb` passed immutable GitHub Actions
@@ -82,9 +88,7 @@ modifying the running Firebase application before hard cutover.
   review correctly returned NO-GO on the control weaknesses summarized above.
   Corrected-model completion and adversarial re-reviews then independently
   returned GO with no P0-P3 finding after re-deriving the complete row/outcome,
-  evidence, authority, compatibility, retention and conflict controls. An
-  immutable complete-DRAFT checkpoint and exact READY freeze remain before
-  READY;
+  evidence, authority, compatibility, retention and conflict controls;
   `EVID-SOURCE-QUERY-RECONCILIATION-001`.
 
 - Verified the complete target query logical-authority crosswalk
@@ -3546,11 +3550,10 @@ modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Create an immutable complete-DRAFT checkpoint for the independently approved
-386-row/584-outcome model, then freeze exact READY
-hashes/allowlists and run the full conversion/target gates. Only after an
-immutable READY checkpoint passes may the comment-only generator/checker and
-adversarial tests become executable. Preserve the verified logical-authority
+Run the full conversion/target gates and obtain immutable CI for the exact READY
+checkpoint. Then freeze its exact implementation allowlist and scaffold hashes
+before replacing the comment-only generator/checker and adversarial tests with
+executable control. Preserve the verified logical-authority
 registry as the target side of the join; do not translate Firestore syntax or
 indexes, advance globally deferred A-003/A-004 physical planes, access
 production, or silently resolve any blocker.

@@ -3,7 +3,7 @@
   "sliceId": "source-query-reconciliation-control",
   "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
   "kind": "technical_control",
-  "status": "draft",
+  "status": "ready",
   "owner": "Source Query Reconciliation Control",
   "surfaceIds": [
     "CONFIG-A8BD153106B8",
@@ -351,7 +351,34 @@
           "scripts/tests/generate-source-query-reconciliation.test.mjs"
         ]
       },
-      "ready": {"status":"unfrozen","baseCommit":"pending immutable complete-DRAFT checkpoint","paths":[]},
+      "ready": {
+        "status": "frozen",
+        "baseCommit": "92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7",
+        "paths": [
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md"
+        ]
+      },
       "implementation": {"status":"unfrozen","baseCommit":"pending immutable READY checkpoint","paths":[]},
       "promotion": {"status":"unfrozen","baseCommit":"pending immutable implementation checkpoint","paths":[]}
     },
@@ -516,11 +543,6 @@
   ],
   "implementationEvidence": [],
   "rehearsalEvidence": [],
-  "blockers": [
-    "All 386 QUERY IDs are human-reviewed, assigned exactly once and populated with 584 explicit outcomes; aggregate executable validation is not implemented yet",
-    "Independent corrected-model re-review returned GO with no P0-P3 finding after re-deriving all 386 occurrence/owner hashes, all 584 canonical outcomes, the six evidence bindings, four retirement authorities, two compatibility bindings, ordered retention/retirement pairs and the complete conflict matrix",
-    "Six rows remain explicitly evidence-blocked by E-001/E-002 and eight remain authority-blocked by product decisions, with five rows carrying both independent blocker types",
-    "READY hashes and implementation allowlist have not been frozen"
-  ],
-  "notes": "DRAFT contains all 386 human-reviewed rows and 584 outcomes across ten exhaustive batches. The corrected control synchronizes registry/batch/slice lifecycle; closes nested schemas and paths; applies a strict retention-before-retirement milestone order; removes owner-manifest self-authorization in favor of four exact content-hashed authorities; carries complete selected evidence-owner/ref/hash/blocker bindings; freezes current_source_compatibility to exactly two BatchWriting rows; and evaluates every outcome pair through a complete symmetric matrix. O-041 separately owns vendor-spend semantics and remains proposed only. CONFIG-A8BD153106B8 and CONFIG-40F01696B8A6 remain target_mapped with empty blockers while executable validation is absent. READY will mean classification completeness only: unresolved outcome counts remain downstream fail-closed gates. No generated reconciliation artifact, package/workflow hook, executable logic, Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access or production operation is authorized. Later implementation may replace only the two scaffolds, add one deterministic generated JSON artifact plus exact package/workflow commands/gate, and synchronize allowed metadata. Promotion remains a separate immutable-CI and human-review checkpoint."
+  "blockers": [],
+  "notes": "READY contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545. The corrected control synchronizes registry/batch/slice lifecycle; closes nested schemas and paths; applies a strict retention-before-retirement milestone order; removes owner-manifest self-authorization in favor of four exact content-hashed authorities; carries complete selected evidence-owner/ref/hash/blocker bindings; freezes current_source_compatibility to exactly two BatchWriting rows; and evaluates every outcome pair through a complete symmetric conflict matrix. The exact 22-path READY freeze includes only lifecycle/evidence documentation plus deterministic conversion metadata regenerated from the dossier status. O-041 separately owns vendor-spend semantics and remains proposed only. CONFIG-A8BD153106B8 and CONFIG-40F01696B8A6 remain target_mapped with empty blockers while executable validation is absent. READY means classification completeness only: unresolved outcome counts remain downstream fail-closed gates. No generated reconciliation artifact, package/workflow hook, executable logic, Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access or production operation is authorized. Later implementation may replace only the two scaffolds, add one deterministic generated JSON artifact plus exact package/workflow commands/gate, and synchronize allowed metadata after its exact implementation allowlist is frozen. Promotion remains a separate immutable-CI and human-review checkpoint."
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "draft",
+  "status": "ready",
   "sourceInventory": {
     "path": "docs/plans/ledger-accounting-redesign/conversion/query-contract.generated.json",
     "artifactSha256": "2a43de6e59844d081237c8d9731846662e0862190823ea854c2238256b0a6a14",
@@ -86,5 +86,5 @@
     {"queryId":"QUERY-241AE9EE0E3F","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"},
     {"queryId":"QUERY-57FA49B52A1C","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"}
   ],
-  "notes": "DRAFT control with exhaustive human-reviewed ownership and all 386 rows / 584 outcomes populated across the ten batches. E-001/E-002 name required read-only production evidence without claiming it exists or authorizing access; O-041 is a distinct open business vendor-cash semantics decision; current_source_compatibility is restricted to the two exact Firebase-only BatchWriting bindings through verified cutover reconciliation. Behavior retirement uses only four independently reviewed, content-hashed authorities. Corrected-model completion and adversarial reviews returned GO with no P0-P3 finding; immutable complete-DRAFT evidence and the READY hash freeze remain pending. No physical/provider/runtime/production claim is made."
+  "notes": "READY classification control with exhaustive human-reviewed ownership and all 386 rows / 584 outcomes populated across the ten batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545. E-001/E-002 name required read-only production evidence without claiming it exists or authorizing access; O-041 is a distinct open business vendor-cash semantics decision; current_source_compatibility is restricted to the two exact Firebase-only BatchWriting bindings through verified cutover reconciliation. Behavior retirement uses only four independently reviewed, content-hashed authorities. Corrected-model completion and adversarial reviews returned GO with no P0-P3 finding. READY means classification completeness only and grants no implementation, migration, retirement, production or cutover authority. No physical/provider/runtime/production claim is made."
 }

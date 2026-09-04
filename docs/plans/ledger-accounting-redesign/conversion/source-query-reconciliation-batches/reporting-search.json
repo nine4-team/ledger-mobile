@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-REPORTING-SEARCH-001",
   "owner": "Reporting, Search, and Export",
-  "status": "draft",
+  "status": "ready",
   "assignedQueryIds": [
     "QUERY-12AAD362F616",
     "QUERY-1B022B1C66B1",
@@ -454,5 +454,5 @@
       ]
     }
   ],
-  "notes": "Independent semantic review corrected the batch: all thirteen rows now have exact target-query or source-disposition outcomes. The spending-by-vendor predicate is held on distinct O-041 because O-035 does not authorize its accounting semantics and no exact named Vendor Cash Movement target contract exists. The blocker allowlist contains only row-bound product decisions. Status remains DRAFT; no physical target-access or implementation claim is made."
+  "notes": "Independent semantic review corrected the READY classification: all thirteen rows have exact target-query or source-disposition outcomes. The spending-by-vendor predicate is held on distinct O-041 because O-035 does not authorize its accounting semantics and no exact named Vendor Cash Movement target contract exists. The blocker allowlist contains only row-bound product decisions. No physical target-access or implementation claim is made."
 }

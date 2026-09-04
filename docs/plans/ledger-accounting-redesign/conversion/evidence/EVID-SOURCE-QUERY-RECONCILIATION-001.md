@@ -1,9 +1,12 @@
 # EVID-SOURCE-QUERY-RECONCILIATION-001 — Source Query Reconciliation Control
 
 - Timestamp: 2026-09-04
-- Class: draft technical-control design
+- Class: READY source-query classification control
 - Draft baseline: `76b2ff45ba4fffe68097919c32ec7b4fec48047c` on
   `codex/supabase-powersync-implementation`
+- READY base: immutable complete-DRAFT commit
+  `92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7`, which passed GitHub Actions
+  run `33871918545`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `CONFIG-A8BD153106B8`,
@@ -23,11 +26,13 @@
   separate adversarial review found control-model gaps; the corrected lifecycle,
   retention, retirement-authority, evidence-binding, compatibility-scope and
   conflict-schema model passed bounded corrected-model re-review with no P0-P3
-  finding
+  finding. The synchronized registry, ten batches and slice are now READY for
+  the separate executable-control implementation checkpoint; READY authorizes
+  no provider, runtime, migration, retirement, production or cutover action
 
-## Draft Outcome
+## READY Classification Outcome
 
-The repository now contains a draft topology for reconciling every occurrence
+The repository now contains a READY classification topology for every occurrence
 in the frozen current-source query catalog. One aggregate registry binds the
 full source-query artifact, its source digest and the full verified target
 logical-authority artifact. Conversion-manifest references are bound per row
@@ -92,16 +97,16 @@ and behavior retirements now use only four independently extracted,
 content-hashed authority projections. Manifest disposition can no longer
 authorize its own retirement.
 
-The current draft hashes are:
+The current READY hashes are:
 
 - generator scaffold:
   `8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c`;
 - test scaffold:
   `2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60`;
 - aggregate registry:
-  `550e4e023ef314f99787b56d070b5d192b5d6bad3e9955c61106b6a305ccf48b`;
-- draft dossier:
-  `51b3b244e53cdcbd0e3c61effbff80fec1ebc87070aea568da4dbab59103a210`;
+  `4220ab67bccaa0fa081745fca42eecf5e096a0b6fd4a3ff1ac28a4ba36faed59`;
+- READY dossier:
+  `c61548cf5c45d50597d96a06bda5f65adccff873a43bb046ec5cd5b8b2f943a2`;
 - product-authority crosswalk:
   `92dbdf08b4aa4fa875817c974475eb92af95066b0594a022d9d44d29cf29a7d4`;
 - conversion discoverer:
@@ -302,10 +307,11 @@ DRAFT completion changes only the exact 40-path allowlist recorded in the
 dossier relative to `3504b473e16fc40b260652c001fdd6b903b81e40`, including
 the product-authority crosswalk addition that grants this technical-control
 batch the architecture-decisions authority directly. The two
-stable CONFIG owners are `target_mapped` with empty blockers while the slice
-remains DRAFT. Corrected-model independent review is complete. READY still
-requires synchronized registry/batch/slice lifecycle, all 386 rows and
-synchronized immutable hashes. READY is
+  stable CONFIG owners are `target_mapped` with empty blockers while the slice
+is READY. Corrected-model independent review is complete; the registry, ten
+non-template batches and slice have synchronized READY lifecycle, all 386 rows,
+and a frozen 22-path metadata set relative to the immutable complete-DRAFT
+base. READY is
 classification completeness only: it may report unresolved authority/evidence
 outcomes and grants no implementation, migration, source-retirement,
 production, or cutover authority. The generated artifact must expose exact
@@ -317,7 +323,7 @@ the same control metadata. Promotion records immutable CI and human review.
 
 The current source and target generated query artifacts, target registry, all
 Swift query owners, package/workflow, schema, RLS, Sync, provider, hosted and
-production systems remain unchanged by this draft.
+production systems remain unchanged by this READY classification checkpoint.
 
 Canonical production-read evidence remains a precise row-level requirement for
 the six outcomes whose source use or reference safety cannot be established

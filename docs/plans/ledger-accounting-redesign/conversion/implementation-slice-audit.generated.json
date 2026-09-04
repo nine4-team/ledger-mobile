@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T12:14:28.488Z",
+  "generatedFromManifestSync": "2026-09-04T12:26:56.697Z",
   "totals": {
     "slices": 67,
     "claimedTargetSurfaces": 159,
@@ -8,8 +8,8 @@
     "implementationAdvancedTargetSurfaces": 142
   },
   "statusCounts": {
-    "draft": 1,
-    "ready": 0,
+    "draft": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 65,
@@ -730,7 +730,7 @@
       "sliceId": "source-query-reconciliation-control",
       "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
       "kind": "technical_control",
-      "status": "draft",
+      "status": "ready",
       "owner": "Source Query Reconciliation Control",
       "surfaceIds": [
         "CONFIG-40F01696B8A6",
@@ -738,7 +738,7 @@
       ],
       "requirementCount": 10,
       "verificationCount": 10,
-      "blockerCount": 4,
+      "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
     },
     {
