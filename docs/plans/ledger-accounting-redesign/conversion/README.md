@@ -5,7 +5,7 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 439 of 623 target-relevant
+Status: M0 backend-surface classification complete; 441 of 625 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -18,8 +18,14 @@ discovery and explicit-selection provider is now implemented with ten focused
 tests and final independent-review GO; exact READY `5a5f2def` / run
 `33922033391` and exact implementation `011a9d05` / run `33925008015` pass all
 three immutable jobs. It does not reuse the current broad illustrative Sync
-configuration or activate a workspace. The Client/Project directory
-read-contract slice is verified
+configuration or activate a workspace. A new comment-only READY candidate now
+isolates the existing Account workspace database/key namespace by validated
+bundle, environment, persistence-relevant manifest, Principal and Account before
+the pending-work summary provider is implemented; it exposes no hosted or
+destructive behavior and preserves the separate Principal discovery database.
+The corrected-diff independent READY review is GO with no remaining P0-P3;
+immutable READY CI is pending before executable work begins.
+The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit
 `031a240a`. The provider-free exact same-Client Transfer destination-selection

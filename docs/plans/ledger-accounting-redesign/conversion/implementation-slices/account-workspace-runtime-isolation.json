@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "account-workspace-runtime-isolation",
+  "title": "Bind every local Account workspace database to one validated target environment",
+  "kind": "technical_control",
+  "status": "ready",
+  "owner": "Environment and Composition Control",
+  "surfaceIds": ["SWIFT-4E250D0D302E", "TEST-3FCFFC5C8AD8"],
+  "requirements": [
+    {
+      "id": "WORKSPACEISO-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Local Database Lifecycle",
+      "invariant": "An Account workspace database, encryption key and operation queue are derived only from one validated immutable target environment plus canonical Principal and Account identities; persistence-relevant bundle, environment and manifest binding are part of its physical namespace. A later activation/switch coordinator owns authorization-lease enforcement and the one-open-workspace lifecycle.",
+      "decisionIds": [],
+      "verificationIds": ["WORKSPACEISO-TEST-001", "WORKSPACEISO-TEST-002", "WORKSPACEISO-TEST-004"]
+    },
+    {
+      "id": "WORKSPACEISO-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md",
+      "section": "Staging App Isolation",
+      "invariant": "The target staging composition passes its ValidatedLedgerEnvironment into Account workspace bootstrap and never downgrades that evidence to a caller-provided namespace prefix.",
+      "decisionIds": ["D-027"],
+      "verificationIds": ["WORKSPACEISO-TEST-003", "WORKSPACEISO-TEST-006"]
+    },
+    {
+      "id": "WORKSPACEISO-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Environment Topology",
+      "invariant": "Target-local, target-staging and target-production workspaces cannot share database, Keychain or queue state; the Firebase application and its local state remain outside the target runtime.",
+      "decisionIds": ["D-026", "D-027"],
+      "verificationIds": ["WORKSPACEISO-TEST-001", "WORKSPACEISO-TEST-002", "WORKSPACEISO-TEST-006"]
+    },
+    {
+      "id": "WORKSPACEISO-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Platform control and contract publication",
+      "invariant": "The validated environment is retained through Account-workspace bootstrap, and invalid derived namespace or scope evidence fails before filesystem creation, Keychain mutation or database opening.",
+      "decisionIds": [],
+      "verificationIds": ["WORKSPACEISO-TEST-002", "WORKSPACEISO-TEST-003", "WORKSPACEISO-TEST-004", "WORKSPACEISO-TEST-006"]
+    },
+    {
+      "id": "WORKSPACEISO-REQ-005",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/session-ending-pending-work.md",
+      "section": "Session-Ending Safety Contract",
+      "invariant": "Ordinary runtime close preserves the encrypted database and key; destructive deletion remains unavailable outside a later AccountSessionEnding coordinator with exact pending-work disposition.",
+      "decisionIds": [],
+      "verificationIds": ["WORKSPACEISO-TEST-003", "WORKSPACEISO-TEST-005"]
+    },
+    {
+      "id": "WORKSPACEISO-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Account discovery and membership",
+      "invariant": "The hardening remains inside target composition and PowerSync infrastructure; feature commands and queries keep their existing backend-neutral contracts and cross-Principal/Account refusal behavior.",
+      "decisionIds": [],
+      "verificationIds": ["WORKSPACEISO-TEST-003", "WORKSPACEISO-TEST-004"]
+    },
+    {
+      "id": "WORKSPACEISO-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Offline Local-Data Security",
+      "invariant": "Local database paths, support diagnostics and key identities disclose no raw Principal or Account identifier and no encryption material; ordinary close preserves the encrypted database and key.",
+      "decisionIds": [],
+      "verificationIds": ["WORKSPACEISO-TEST-002", "WORKSPACEISO-TEST-004", "WORKSPACEISO-TEST-005"]
+    }
+  ],
+  "contracts": {
+    "domain": {"items": ["Reuse ValidatedLedgerEnvironment, LocalDataNamespace, LedgerEnvironmentPersistenceBinding, PrincipalID and AccountID unchanged.", "No product operation, selection, authorization or lifecycle meaning is added."], "notApplicable": ""},
+    "postgresSchema": {"items": [], "notApplicable": "This local isolation hardening changes no Postgres schema."},
+    "serverHandlers": {"items": [], "notApplicable": "No command handler or server mutation is involved."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API request or grant is involved."},
+    "rlsPolicies": {"items": [], "notApplicable": "Local physical namespace isolation is not RLS and makes no server-authorization claim."},
+    "syncStreams": {"items": [], "notApplicable": "No connector or Sync Stream is opened or changed; this slice only isolates the encrypted local workspace before later connection work."},
+    "localOffline": {"items": ["Derive one physical workspace binding from the validated environment's namespace and persistence binding plus canonical Principal and Account IDs.", "Validate the derived namespace before any filesystem, Keychain or database side effect and use opaque fixed-format filesystem components.", "Identical bindings reopen identical encrypted data; environment, bundle, persistence-relevant manifest, Principal or Account changes cannot collide.", "A changed persistence binding selects a distinct namespace; comparison with separately persisted binding metadata is intentionally outside this slice, and no free caller-authored binding is accepted.", "Keep the Account-workspace namespace separate from the Principal/environment bootstrap database; the later activation/switch coordinator owns authorized opening and one-at-a-time lifecycle enforcement.", "Ordinary close always preserves the database and key; no public delete flag remains on the runtime."], "notApplicable": ""},
+    "storageMedia": {"items": [], "notApplicable": "Attachment-vault namespaces and O-023 retention behavior remain a separate provider boundary."},
+    "appMcp": {"items": ["The isolated staging app retains its validated environment object through runtime construction instead of passing a free namespace string.", "No MCP runtime or session state changes in this slice."], "notApplicable": ""},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase data/cache is read, transformed or reused; existing local-spike fixtures are disposable and production migration remains gated."},
+    "observabilityRunbooks": {"items": ["Failures use stable bounded diagnostics and never disclose raw IDs, paths, secrets or key material."], "notApplicable": ""},
+    "rolloutRollback": {"items": ["The implementation is target-local and reversible on the isolated branch; Firebase remains unchanged and authoritative.", "A-003/A-004 remain proposed and no hosted resource, release, migration or cutover authority advances."], "notApplicable": ""}
+  },
+  "verification": [
+    {"id": "WORKSPACEISO-TEST-001", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerWorkspaceRuntimeIsolationTests.swift", "covers": ["WORKSPACEISO-REQ-001", "WORKSPACEISO-REQ-003"], "expected": "The identical validated environment/Principal/Account binding reopens the same encrypted database and queued evidence, while environment, bundle, persistence-relevant contract/resource, Principal and Account variations each produce a distinct physical database and Keychain identity.", "status": "planned", "evidence": []},
+    {"id": "WORKSPACEISO-TEST-002", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerWorkspaceRuntimeIsolationTests.swift", "covers": ["WORKSPACEISO-REQ-001", "WORKSPACEISO-REQ-003", "WORKSPACEISO-REQ-004", "WORKSPACEISO-REQ-007"], "expected": "Adversarial but canonical Principal/Account values cannot traverse or collide, and an invalid derived namespace refuses before filesystem, Keychain or database access.", "status": "planned", "evidence": []},
+    {"id": "WORKSPACEISO-TEST-003", "kind": "app_mcp_contract", "owner": "LedgerTargetStagingApp.swift build and LedgerWorkspaceRuntimeIsolationTests.swift", "covers": ["WORKSPACEISO-REQ-002", "WORKSPACEISO-REQ-004", "WORKSPACEISO-REQ-005", "WORKSPACEISO-REQ-006"], "expected": "The staging composition passes ValidatedLedgerEnvironment through the model into bootstrap, compiles on macOS/iOS and offers no free namespace input, runtime backend switch or destructive close path.", "status": "planned", "evidence": []},
+    {"id": "WORKSPACEISO-TEST-004", "kind": "domain", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerWorkspaceRuntimeIsolationTests.swift", "covers": ["WORKSPACEISO-REQ-001", "WORKSPACEISO-REQ-004", "WORKSPACEISO-REQ-006", "WORKSPACEISO-REQ-007"], "expected": "Scope mismatch remains rejected before persistence, local namespace derivation is deterministic and domain-separated, and failure diagnostics contain no identifier, path or key material.", "status": "planned", "evidence": []},
+    {"id": "WORKSPACEISO-TEST-005", "kind": "offline_restart", "owner": "LedgerWorkspaceRuntimeIsolationTests.swift and ClientProjectDirectoryPowerSyncQueryTests.swift", "covers": ["WORKSPACEISO-REQ-005", "WORKSPACEISO-REQ-007"], "expected": "Ordinary close cannot delete the database or key and a subsequent open recovers exact encrypted local evidence; the Account runtime exposes no delete flag, while existing disposable test fixtures remove their directories explicitly after close.", "status": "planned", "evidence": []},
+    {"id": "WORKSPACEISO-TEST-006", "kind": "operational", "owner": ".github/workflows/supabase-conversion-control.yml", "covers": ["WORKSPACEISO-REQ-002", "WORKSPACEISO-REQ-003", "WORKSPACEISO-REQ-004"], "expected": "The exact synchronized checkpoint passes conversion controls, target environment/contracts, all Swift/MCP tests, local Supabase provider checks, both staging builds and clean artifacts.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": ["EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Comment-only READY design. Only the new namespace helper and focused-test leaves contain comments; existing LedgerOfflineClientRuntime, LedgerTargetStagingApp and ClientProjectDirectoryPowerSyncQueryTests are unchanged at this checkpoint but are explicitly affected/shared surfaces for the later bounded implementation. The shared directory test retains primary ownership in its existing slice and will change only to call non-destructive close plus explicit fixture-directory cleanup. This prerequisite corrects local isolation only. It adds no Auth, authorization lease, hosted connector/Sync Stream, workspace switch, pending-work summary, physical session ending, runtime deletion, migration, Firebase work or cutover behavior."
+}

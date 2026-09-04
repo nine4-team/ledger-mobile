@@ -128,6 +128,21 @@
         { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
       ]
     },
+    "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001": {
+      "scope": "technical_control",
+      "rationale": "The target Account workspace runtime must preserve validated environment isolation, encrypted restart durability and non-destructive ordinary close before its local evidence can support pending-work or session-ending policy.",
+      "authorities": [
+        { "path": "docs/specs/session-ending-pending-work.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001": {
       "scope": "product",
       "rationale": "The isolated Client and Project directory provider must preserve canonical stable identity and Project-to-Client relationships while proving membership-scoped local visibility, honest independent readiness, offline pending-row usability, reconciliation and target-app navigation without authorizing hosted or production behavior.",

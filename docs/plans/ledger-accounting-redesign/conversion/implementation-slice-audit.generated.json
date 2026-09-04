@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T22:30:15.725Z",
+  "generatedFromManifestSync": "2026-09-04T22:51:37.383Z",
   "totals": {
-    "slices": 73,
-    "claimedTargetSurfaces": 205,
+    "slices": 74,
+    "claimedTargetSurfaces": 207,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 153
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 3,
     "verified": 66,
@@ -48,6 +48,21 @@
       "verificationCount": 7,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-discovery-powersync-provider.json"
+    },
+    {
+      "sliceId": "account-workspace-runtime-isolation",
+      "title": "Bind every local Account workspace database to one validated target environment",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Environment and Composition Control",
+      "surfaceIds": [
+        "SWIFT-4E250D0D302E",
+        "TEST-3FCFFC5C8AD8"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 6,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-runtime-isolation.json"
     },
     {
       "sliceId": "attachment-capture-and-local-durability-receipt",

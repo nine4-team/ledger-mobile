@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T22:30:15.725Z",
+  "generatedFromManifestSync": "2026-09-04T22:51:37.383Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 887,
-    "targetRelevantSurfaces": 627,
-    "batches": 25,
+    "surfaces": 889,
+    "targetRelevantSurfaces": 629,
+    "batches": 26,
     "productScopeSurfaces": 724,
-    "technicalControlSurfaces": 163
+    "technicalControlSurfaces": 165
   },
   "canonicalTargetCoverage": [
     {
@@ -109,11 +109,12 @@
     {
       "path": "docs/specs/session-ending-pending-work.md",
       "batchIds": [
+        "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001"
       ],
-      "surfaceCount": 18,
-      "targetRelevantSurfaceCount": 15
+      "surfaceCount": 20,
+      "targetRelevantSurfaceCount": 17
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -185,6 +186,56 @@
         "SWIFT-8AA6BB698C64",
         "SWIFT-A8B0B06147C3",
         "TEST-D960EA615333"
+      ]
+    },
+    {
+      "batchId": "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+      "title": "Target Account workspace local runtime isolation",
+      "scope": "technical_control",
+      "rationale": "The target Account workspace runtime must preserve validated environment isolation, encrypted restart durability and non-destructive ordinary close before its local evidence can support pending-work or session-ending policy.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/pre-cutover-testing-plan.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-4E250D0D302E",
+        "TEST-3FCFFC5C8AD8"
       ]
     },
     {

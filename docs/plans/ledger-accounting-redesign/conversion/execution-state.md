@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 275
+State version: 277
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-DISCOVERY-POWERSYNC-IMPLEMENTED-CI-VERIFIED
+- Checkpoint: ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-READY-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,8 +36,8 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 265 status-bearing rows: 68
-  done, four verified, three implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 266 status-bearing rows: 68
+  done, four verified, three implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -64,6 +64,32 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Audited the next provider boundary after Account discovery. The proposed
+  pending-work summary is not yet trustworthy because the existing Account
+  workspace runtime omits environment from its database/key identity, accepts a
+  free namespace prefix, uses raw Principal/Account strings as path components
+  and exposes a public destructive-close flag. Prepared an exact comment-only
+  READY candidate that first carries `ValidatedLedgerEnvironment` through the
+  staging composition, derives an opaque bundle/environment/persistence-relevant-
+  manifest/Principal/Account namespace, validates before filesystem/Keychain/database side
+  effects, preserves exact encrypted state across restart and makes ordinary
+  close non-destructive. Only two new leaves contain comments; the existing
+  runtime, staging root and shared directory-provider tests remain byte-unchanged
+  until independent review and exact READY CI pass. Pending-work aggregation
+  and physical session ending are separate later slices. A changed persistence
+  binding selects an isolated namespace rather than being compared with
+  separately stored metadata; callers cannot supply a free binding. The
+  architecture now distinguishes the Principal/environment bootstrap database
+  from the Account-workspace database; a later activation/switch coordinator
+  owns authorization-lease and one-open-at-a-time enforcement. No Firebase,
+  hosted or production state changed;
+  `EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001`.
+  The initial independent review returned NO-GO over an omitted shared test
+  surface, incorrect authority citations, overclaimed stored-binding rejection,
+  imprecise manifest scope and an unenforced workspace-exclusivity claim. All
+  were corrected; final corrected-diff review returned GO with no remaining
+  P0-P3 finding. Immutable READY CI is the next gate.
 
 - Implemented the four-leaf local-only Account discovery provider slice after
   exact corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`
@@ -3822,14 +3848,14 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Prepare the smallest prerequisite to the local session-ending pending-work
-provider: Account-workspace runtime environment and namespace isolation. Freeze
-an exact comment-only READY dossier and focused-test scaffold before executable
-changes. The implementation must replace free namespace input and raw
-Principal/Account filesystem paths with validated compiled-environment evidence
-and an opaque contained namespace, include environment in Keychain scope,
-reject invalid/rebound evidence before filesystem/Keychain/database access,
-reopen the identical encrypted namespace and preserve it on ordinary close.
+Obtain independent review of the exact comment-only Account-workspace runtime
+isolation READY candidate, correct every substantive finding, then commit and
+pass the complete immutable workflow on that exact checkpoint. Only afterward
+replace free namespace input and raw Principal/Account filesystem paths with
+validated compiled-environment evidence and an opaque contained namespace,
+include environment in Keychain scope, reject invalid/rebound evidence before
+filesystem/Keychain/database access, reopen the identical encrypted namespace
+and preserve it on ordinary close.
 Keep Auth, hosted Sync, workspace switching, destructive deletion, A-003/A-004/
 A-007/A-016, migration and cutover open; do not provision hosted resources,
 access production or modify Firebase. After that prerequisite passes, implement

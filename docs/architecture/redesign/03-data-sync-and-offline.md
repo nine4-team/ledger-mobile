@@ -71,8 +71,13 @@ representations. Money remains integer cents.
 
 ## Local Database Lifecycle
 
-- Use a separate encrypted database/key namespace per signed-in Ledger
-  principal and environment.
+- Use a small encrypted bootstrap database/key namespace per signed-in Ledger
+  Principal and environment for Account discovery/selection evidence. After
+  explicit selection and successful later workspace activation/authorization-
+  lease enforcement, open a separate encrypted Account-workspace database/key
+  namespace for the selected Principal, environment and Account. At most one
+  Account-workspace database is open at a time; switching closes the old
+  workspace before opening the new one.
 - Never open a production database with staging credentials or vice versa.
 - A normal logout/account-removal request first applies the pending-work
   disposition policy below. The database and key are removed only after that

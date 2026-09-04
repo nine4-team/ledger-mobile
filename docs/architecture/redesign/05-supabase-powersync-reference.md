@@ -243,11 +243,16 @@ Security properties, not this illustrative YAML, are normative:
 
 The Swift adapter:
 
-- opens one encrypted PowerSync database for the current principal/environment;
+- opens one small encrypted bootstrap PowerSync database for the current
+  Principal/environment and, after explicit Account selection plus successful
+  later workspace activation/authorization-lease enforcement, one separately
+  namespaced encrypted Account-workspace database at a time;
 - defines the generated/hand-reviewed client schema and indexes;
 - connects with an authenticated backend connector;
 - subscribes to bootstrap streams after identity is available;
-- starts/stops inventory and project streams based on application context;
+- starts/stops Inventory and Project streams inside that selected Account
+  workspace based on application context, closing the old Account database
+  before an Account switch;
 - maps watch queries into application read models; and
 - maps upload transactions into direct safe mutations or domain commands.
 

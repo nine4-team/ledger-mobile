@@ -8,7 +8,8 @@
     "EVID-PROJECT-BROWSING-PRESENTATION-001",
     "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
     "EVID-CLIENT-CREATION-PROVIDER-001",
-    "EVID-PROJECT-SETUP-PROVIDER-001"
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
   ],
   "surfaces": [
     {
@@ -42,8 +43,8 @@
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
-      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed.",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"],
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. The Account workspace isolation slice explicitly owns the later mechanical update from the runtime delete flag to non-destructive close plus direct fixture-directory cleanup.",
       "target": {
         "owner": "Client and Project Directory",
         "surfaces": ["Client/Project PowerSync directory provider test suite"],

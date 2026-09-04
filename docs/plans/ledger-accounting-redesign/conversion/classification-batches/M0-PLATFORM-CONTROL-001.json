@@ -305,7 +305,8 @@
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
-        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "target": {
