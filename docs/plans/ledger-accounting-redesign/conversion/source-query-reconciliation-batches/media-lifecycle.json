@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-MEDIA-LIFECYCLE-001",
   "owner": "Media and Attachment Lifecycle",
-  "status": "ready",
+  "status": "implemented",
   "assignedQueryIds": [
     "QUERY-334B5E35D8A6",
     "QUERY-5819775B1FFE",
@@ -107,5 +107,5 @@
       ]
     }
   ],
-  "notes": "All three assigned rows are READY after independent review. The atomic parent append maps to the typed Item and Transaction attachment operations; the destination-existence branch remains explicitly blocked on O-023 because it can discard local/object state; and the emulator seed remains source-only migration evidence. Aggregate executable validation remains pending, with no physical target-access or implementation claim."
+  "notes": "IMPLEMENTED aggregate validation preserves all three independently reviewed rows. The atomic parent append maps to the typed Item and Transaction attachment operations; the destination-existence branch remains explicitly blocked on O-023 because it can discard local/object state; and the emulator seed remains source-only migration evidence. Immutable CI/promotion remains pending, with no physical target-access or target-domain implementation claim."
 }

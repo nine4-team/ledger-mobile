@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-INVOICING-BUDGET-001",
   "owner": "Invoicing, Collection, and Budget",
-  "status": "ready",
+  "status": "implemented",
   "assignedQueryIds": [
     "QUERY-03A40C1ED8F2",
     "QUERY-18394B830E43",
@@ -1123,5 +1123,5 @@
       ]
     }
   ],
-  "notes": "READY classification contains all 35 assigned occurrences. Independent review corrected the active-category filter to the exact O-026-blocked BudgetCategoryReferenceQuerying contract and the Project Transaction spend filter to verified ProjectBudgetSegmentQuerying. The three createProject reads carry independent same-owner O-040 retirement and E-001 runtime-evidence blocks; they do not claim retirement or production use. Exact future/nonquery bindings, owner-bound invoice/accounting holds, and two source-only budget-repair reads with mechanism retirement remain recorded. Aggregate executable validation and promotion remain pending."
+  "notes": "IMPLEMENTED aggregate validation preserves all 35 READY-classified occurrences. Independent review corrected the active-category filter to the exact O-026-blocked BudgetCategoryReferenceQuerying contract and the Project Transaction spend filter to verified ProjectBudgetSegmentQuerying. The three createProject reads retain independent same-owner O-040 retirement and E-001 runtime-evidence blocks; they do not claim retirement or production use. Immutable CI and VERIFIED promotion remain pending."
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-SOURCE-MIGRATION-AUDIT-001",
   "owner": "Source Migration, Audit, Repair, and Profiling",
-  "status": "ready",
+  "status": "implemented",
   "assignedQueryIds": [
     "QUERY-00401E45CFA6",
     "QUERY-01C2FDCB4E10",
@@ -3922,5 +3922,5 @@
       ]
     }
   ],
-  "notes": "READY classification records human-reviewed source-only purpose, retention and source-mechanism retirement for all 129 assigned rows; corrected-model independent review returned GO. Aggregate executable validation remains pending, with no physical target-access or production-execution claim."
+  "notes": "IMPLEMENTED aggregate validation enforces the human-reviewed source-only purpose, retention and source-mechanism retirement for all 129 READY-classified rows; independent implementation review returned GO. Immutable CI/promotion is pending, with no physical target-access or production-execution claim."
 }

@@ -183,8 +183,8 @@
     },
     {
       "id": "CONFIG-7AE45AD102EA",
-      "acknowledgeSourceHash": "40eb2f5e5ab8242633b7e932bc3b75e02108e2bdbe94d3a88e20339a02a1153b",
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory and target query logical-authority generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "acknowledgeSourceHash": "5f4f87354af27ba1ac9ac755de3a7e0ce416e5b36d164a74fecc03585a24e014",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "status": "characterized",
       "blockers": [],
@@ -195,9 +195,10 @@
         "EVID-M2-DECISION-PACKETS-001",
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
-        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "These are operator commands, not product runtime dependencies. The target query logical-authority implementation re-acknowledges the exact package hash while preserving characterized status and existing ownership."
+      "notes": "These are operator commands, not product runtime dependencies. Source-query reconciliation adds three exact dependency-free generator/check/test commands and re-acknowledges the package hash while preserving characterized status and existing ownership."
     }
   ]
 }

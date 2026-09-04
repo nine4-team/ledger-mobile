@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T12:45:23.061Z",
+  "generatedFromManifestSync": "2026-09-04T13:49:53.869Z",
   "totals": {
     "slices": 67,
     "claimedTargetSurfaces": 159,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 142
+    "implementationAdvancedTargetSurfaces": 144
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 65,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -730,7 +730,7 @@
       "sliceId": "source-query-reconciliation-control",
       "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Source Query Reconciliation Control",
       "surfaceIds": [
         "CONFIG-40F01696B8A6",

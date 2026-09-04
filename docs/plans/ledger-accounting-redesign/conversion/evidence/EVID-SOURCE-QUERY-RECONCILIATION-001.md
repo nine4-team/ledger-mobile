@@ -1,7 +1,8 @@
 # EVID-SOURCE-QUERY-RECONCILIATION-001 — Source Query Reconciliation Control
 
 - Timestamp: 2026-09-04
-- Class: READY source-query classification control
+- Class: implemented / source-to-target query classification control; immutable
+  implementation CI and VERIFIED promotion pending
 - Draft baseline: `76b2ff45ba4fffe68097919c32ec7b4fec48047c` on
   `codex/supabase-powersync-implementation`
 - READY base: immutable complete-DRAFT commit
@@ -26,14 +27,18 @@
   separate adversarial review found control-model gaps; the corrected lifecycle,
   retention, retirement-authority, evidence-binding, compatibility-scope and
   conflict-schema model passed bounded corrected-model re-review with no P0-P3
-  finding. The synchronized registry, ten batches and slice are now READY for
-  the separate executable-control implementation checkpoint; READY authorizes
+  finding. The synchronized registry, ten batches and slice reached READY for
+  the separate executable-control implementation checkpoint; READY authorized
   no provider, runtime, migration, retirement, production or cutover action.
   Exact READY commit `4618c7e5b9fc3a24cd917239bf795aec6117ea5c`
   passed immutable Actions run `33872927608`; its 30-path implementation
-  allowlist and both scaffold hashes are frozen before executable edits
+  allowlist and both scaffold hashes were frozen before executable edits. The
+  bounded implementation now passes 23 focused tests, exact generation/check,
+  root review and independent adversarial review with no remaining P0-P2
+  finding. The exact implementation commit and immutable Actions run remain
+  pending, so the slice is not yet VERIFIED.
 
-## READY Classification Outcome
+## Classification Outcome and Implemented Control
 
 The repository now contains a READY classification topology for every occurrence
 in the frozen current-source query catalog. One aggregate registry binds the
@@ -52,13 +57,14 @@ product-authority dependencies explicit, with five rows correctly carrying
 both. Adversarial control review subsequently identified model-level weaknesses
 ordinary row validation did not expose. Those are corrected in DRAFT, and two
 bounded corrected-model reviews independently returned GO with no P0-P3
-finding. The generator and test files remain comment-only; immutable complete-
-DRAFT evidence and the exact READY freeze remain required before READY.
+finding. The former generator and test scaffolds are now replaced by the
+bounded executable control and an independently reviewed 23-test suite. One
+deterministic generated JSON artifact expands all 386 rows and 584 outcomes.
 
 The original DRAFT checkpoint established semantic batch ownership without
-choosing query outcomes. The current pilot adds reviewed outcomes but does not
-prove reconciliation completeness, authorize implementation or create generated
-reconciliation output. I inspected each frozen occurrence's
+choosing query outcomes. The later READY checkpoint added reviewed outcomes but
+did not itself prove executable reconciliation or authorize physical work. I
+inspected each frozen occurrence's
 path, symbol, operation and complete expression and assigned the occurrence to
 the capability that must review its meaning. Mixed files, notably the Firebase
 function entry point, were split occurrence by occurrence rather than assigned
@@ -100,7 +106,7 @@ and behavior retirements now use only four independently extracted,
 content-hashed authority projections. Manifest disposition can no longer
 authorize its own retirement.
 
-The current READY hashes are:
+The frozen READY baseline hashes are:
 
 - generator scaffold:
   `8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c`;
@@ -117,6 +123,20 @@ The current READY hashes are:
   and
 - current-query extractor:
   `2eb8feed057ecdae250f51714dd38c4fee197726c36e30322d43d26853446efd`.
+
+The locally reviewed implementation hashes before the exact commit are:
+
+- executable generator:
+  `c5c7da78e5525a46ffd77ac96e85b5fbb5d8c1ae517586470b9faa978be34010`;
+- 23-test executable suite:
+  `68f50cf91e8c74b1db965edb6609b17841a84606d882b41417f261c9673a4fee`;
+- deterministic reconciliation JSON:
+  `551479f75eb20a1265e494087870c2fcf5f6cb19b348e8c77dfae25fa360f63b`;
+- root package integration:
+  `5f4f87354af27ba1ac9ac755de3a7e0ce416e5b36d164a74fecc03585a24e014`;
+  and
+- conversion workflow:
+  `5585b642c3e6c74c825a84c5ed1b0eb189ece8b6be9a7f2b19b14fd50e8bcc5a`.
 
 ## Corrected Source Artifact Evidence
 
@@ -309,24 +329,27 @@ contained regular non-symlink file.
 DRAFT completion changes only the exact 40-path allowlist recorded in the
 dossier relative to `3504b473e16fc40b260652c001fdd6b903b81e40`, including
 the product-authority crosswalk addition that grants this technical-control
-batch the architecture-decisions authority directly. The two
-  stable CONFIG owners are `target_mapped` with empty blockers while the slice
-is READY. Corrected-model independent review is complete; the registry, ten
+batch the architecture-decisions authority directly. The two stable CONFIG
+owners advanced to `implemented` with empty blockers while the slice entered
+its bounded implementation lifecycle. Corrected-model independent review is
+complete; the registry, ten
 non-template batches and slice have synchronized READY lifecycle, all 386 rows,
 and a frozen 22-path metadata set relative to the immutable complete-DRAFT
 base. READY is
 classification completeness only: it may report unresolved authority/evidence
-outcomes and grants no implementation, migration, source-retirement,
+outcomes and granted no implementation, migration, source-retirement,
 production, or cutover authority. The generated artifact must expose exact
 unresolved counts and downstream promotion/cutover consumers must reject
-applicable nonzero counts. Implementation may then replace only the two
-comment scaffolds, add one generated JSON artifact, add exact package commands
-and an Ubuntu conversion-control gate before target Swift work, and synchronize
-the same control metadata. Promotion records immutable CI and human review.
+applicable nonzero counts. Implementation replaced only the two comment
+scaffolds, added one generated JSON artifact, added exact package commands and
+an unconditional Ubuntu conversion-control gate before dependent target Swift
+work, and synchronized the same control metadata. Promotion remains separate
+and requires the exact implementation commit plus immutable CI.
 
 The current source and target generated query artifacts, target registry, all
-Swift query owners, package/workflow, schema, RLS, Sync, provider, hosted and
-production systems remain unchanged by this READY classification checkpoint.
+Swift query owners, schema, RLS, Sync, provider, hosted and production systems
+remain unchanged. Only the allowlisted root package commands and conversion
+workflow gate changed outside the two control files and generated artifact.
 
 Canonical production-read evidence remains a precise row-level requirement for
 the six outcomes whose source use or reference safety cannot be established
@@ -334,6 +357,51 @@ from repository authority. E-001/E-002 bind the exact required artifact and
 complete selected owner/ref/hash/blocker tuple through a re-derived binding
 hash; they are not evidence that a production read occurred. Neither is a
 blocker on the two CONFIG control surfaces.
+
+## Local Implementation Evidence
+
+The dependency-free generator/checker now re-derives the frozen source and
+target artifact hashes, parsed-byte equality, source file hashes, QUERY IDs,
+occurrence and selected-owner projection hashes, target mappings, typed
+blocker/evidence bindings, content-hashed retirement authority, retention gate
+ordering, compatibility scope, canonical outcome identities and the complete
+symmetric conflict matrix. READY semantics are frozen from the exact base while
+DRAFT authoring still permits only a row subset of exhaustive assignments.
+
+All authoritative inputs and generated output must be contained regular
+non-symlink repository paths. Generation uses an exclusive no-follow temporary,
+flushes before atomic replacement, emits mode 0644 under the normal umask and
+cannot redirect the high-level command away from the one authorized artifact.
+Check mode performs an exact byte comparison without writing. Closed manifest,
+dossier, registry, batch, row and outcome schemas reject hidden physical,
+provider, SQL, RLS or Sync authority, and malformed nested values fail with
+stable prefixed diagnostics.
+
+The implementation binds the exact root package and complete conversion
+workflow artifacts. It rejects npm pre/post lifecycle hooks, conditional or
+failure-tolerant jobs, missing PR triggers, workflow execution-context drift,
+missing clean-diff guards, and any ordering that does not make the Linux
+structural job a prerequisite of Swift tests/builds. Local evidence is:
+
+- `node --check scripts/generate-source-query-reconciliation.mjs` — pass;
+- `npm run source:query-reconciliation:test` — 23/23 pass;
+- `npm run source:query-reconciliation:generate` — 386 rows / 584 outcomes;
+- `npm run source:query-reconciliation:check` — pass and byte-exact;
+- complete CI-portable conversion-control command sequence, run locally on
+  macOS, including target query inventory, logical authority,
+  capability/query/residual checks, read-only profiler audit and M0 gate — pass
+  with the three established stale-discovery warnings only; exact Ubuntu-runner
+  execution remains pending immutable CI;
+- `swift test --package-path LedgeriOS` — all 316 tests in 65 suites pass;
+- isolated `LedgerTargetStaging` macOS and generic iOS Simulator builds — pass;
+- generated artifact mode — 0644; and
+- independent adversarial implementation review — GO, no remaining P0-P2
+  finding after all reported bypasses received regression tests.
+
+The generated artifact continues to report 115 authority-blocked and six
+evidence-blocked outcomes. Those nonzero results are intentional fail-closed
+truth, not permission to promote a dependent domain slice or perform production
+reads, migration, retirement, provider provisioning or cutover.
 
 ## Immutable DRAFT Verification
 

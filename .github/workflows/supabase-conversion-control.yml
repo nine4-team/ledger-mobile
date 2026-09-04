@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -29,6 +31,8 @@ jobs:
           npm run target:query-authority:test
           npm run target:query-authority:check
           npm run conversion:check
+          npm run source:query-reconciliation:test
+          npm run source:query-reconciliation:check
           npm run conversion:capabilities:check
           npm run conversion:queries:check
           npm run conversion:residuals:check
@@ -46,6 +50,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4

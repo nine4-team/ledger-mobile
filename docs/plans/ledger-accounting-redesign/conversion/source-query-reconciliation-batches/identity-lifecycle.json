@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-IDENTITY-LIFECYCLE-001",
   "owner": "Identity and Account Lifecycle",
-  "status": "ready",
+  "status": "implemented",
   "assignedQueryIds": [
     "QUERY-022A3E82CE10",
     "QUERY-03410F14C4E6",
@@ -927,5 +927,5 @@
       ]
     }
   ],
-  "notes": "READY classification contains all 29 assigned identity/lifecycle rows: mapped invite/member replacements, exact AccountQuerying and OAuth authority blocks, explicit retirement of first-account and root MCP user-state behavior, and a same-owner E-001 evidence block for createWithQuota runtime use. The blocker allowlist is limited to the exact row-bound A-007/A-010/A-016 set; evidence requirements are separate from product/architecture authority. READY grants no implementation, physical target-access or production-read authority."
+  "notes": "IMPLEMENTED aggregate validation preserves all 29 READY-classified identity/lifecycle rows: mapped invite/member replacements, exact AccountQuerying and OAuth authority blocks, explicit retirement of first-account and root MCP user-state behavior, and a same-owner E-001 evidence block for createWithQuota runtime use. The blocker allowlist remains limited to the exact row-bound A-007/A-010/A-016 set; evidence requirements remain separate from product/architecture authority. Immutable CI/promotion is pending, and no physical target-access or production-read authority is granted."
 }

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 255
+State version: 256
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SOURCE-QUERY-RECONCILIATION-READY
+- Checkpoint: SOURCE-QUERY-RECONCILIATION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,7 +32,35 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Promoted the separate 386-occurrence source-query reconciliation control to
+- Implemented the separate 386-occurrence source-query reconciliation control
+  from exact READY base `4618c7e5b9fc3a24cd917239bf795aec6117ea5c`
+  and its frozen 30-path boundary. The dependency-free generator/checker emits
+  one deterministic 386-row / 584-outcome JSON artifact and validates exact
+  source/target bytes, source identities/hashes, human-selected owner and target
+  projections, scope-selected blockers/evidence, content-hashed retirement
+  authority, retention ordering, compatibility scope, canonical outcome
+  ordering/cardinality/conflicts, synchronized lifecycle and exact Git diff.
+  Closed schemas prevent hidden physical/provider authority; contained regular
+  non-symlink inputs, exclusive atomic 0644 output, exact high-level destination
+  and byte-exact read-only checking close filesystem drift. Root package and
+  complete workflow artifacts are bound so npm pre/post hooks, missing PR
+  triggers, conditional/failure-tolerant jobs, execution-context overrides,
+  missing diff guards or loss of the Linux-before-Swift dependency fail closed.
+  All 23 focused tests, the complete CI-portable conversion-control command
+  sequence run on macOS, all 316 Swift tests in 65 suites, and both isolated
+  staging builds pass locally. Exact Ubuntu-runner execution remains pending
+  immutable CI. Independent
+  implementation review found real authority-path, physical-field, split-brain,
+  symlink, output-path, CI and malformed-input bypasses; each is corrected with
+  regression coverage, and final review returned GO with no remaining P0-P2
+  finding. `SQUERY-TEST-001` through `-009` pass. The exact implementation
+  commit, immutable CI and `SQUERY-TEST-010` remain pending before VERIFIED
+  promotion. The artifact deliberately preserves 115 authority-blocked and six
+  evidence-blocked outcomes, so no dependent target-domain work may treat this
+  as product-decision, production-read, schema/RLS/Sync/provider, migration,
+  retirement or cutover authority; `EVID-SOURCE-QUERY-RECONCILIATION-001`.
+
+- Earlier, promoted the separate 386-occurrence source-query reconciliation control to
   classification-only READY from its initial design at
   clean baseline `76b2ff45ba4fffe68097919c32ec7b4fec48047c`. One aggregate
   registry binds the full unchanged source and target-authority artifacts plus
@@ -44,8 +72,8 @@ modifying the running Firebase application before hard cutover.
   both independent blocker types, and two retain compiled Firebase BatchWriting
   reads only as current-source compatibility through verified cutover
   reconciliation. O-041 now separately owns Business Vendor Cash Movement
-  semantics because O-035 owns Client Summary only. The two future aggregate
-  generator/test leaves are comment-only. The frozen row
+  semantics because O-035 owns Client Summary only. At that checkpoint, the two
+  future aggregate generator/test leaves were comment-only. The frozen row
   corrected model requires one QUERY ID, canonical full-occurrence hash,
   human-selected exact manifest source owner/ref with a stable projection hash,
   and a nonempty canonical set of exactly seven outcome classes:
@@ -54,7 +82,7 @@ modifying the running Firebase application before hard cutover.
   evidence-blocked. Blocked outcomes bind the exact source owner, TQUERY row or
   target surface that structurally carries every blocker; evidence outcomes now
   bind the complete selected owner/ref/hash/blocker tuple. Registry, batches and
-  slice share one closed lifecycle; nested schemas and batch paths are closed;
+  slice shared one closed lifecycle; nested schemas and batch paths were closed;
   `current_source_compatibility` is frozen to the two BatchWriting reads; 137
   source-retention/mechanism-retirement pairs use an ordered milestone model,
   with 102 retirement gates corrected to follow reconciliation/audit retention;
@@ -69,10 +97,10 @@ modifying the running Firebase application before hard cutover.
   with empty blockers while all 386 rows have explicit outcomes. Exact
   complete-DRAFT commit `92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7`
   passed immutable Actions run `33871918545`; the dossier, registry and all ten
-  non-template batches are now synchronized as `ready` against an exact
+  non-template batches were synchronized as `ready` against an exact
   22-path freeze containing lifecycle/evidence documentation and deterministic
   conversion metadata regenerated from the dossier status. READY certifies
-  classification completeness only. No
+  classification completeness only. At that checkpoint, no
   package/workflow/generated reconciliation artifact, executable
   control, runtime, provider, hosted, production, release or cutover behavior
   advances. Exact DRAFT commit

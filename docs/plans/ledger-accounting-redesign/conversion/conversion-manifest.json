@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T12:45:23.061Z",
+    "lastSynchronizedAt": "2026-09-04T13:49:53.869Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -205,10 +205,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "efdbeb6df6503c5a17c0d37e42f6e6ca668623650d6cec6afd6ea9b6189e3dbe",
-      "acknowledgedSourceHash": "efdbeb6df6503c5a17c0d37e42f6e6ca668623650d6cec6afd6ea9b6189e3dbe",
+      "observedSourceHash": "5585b642c3e6c74c825a84c5ed1b0eb189ece8b6be9a7f2b19b14fd50e8bcc5a",
+      "acknowledgedSourceHash": "5585b642c3e6c74c825a84c5ed1b0eb189ece8b6be9a7f2b19b14fd50e8bcc5a",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability, target query-port inventory, and target query logical-authority test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
+      "currentBehavior": "Runs conversion traceability, target query-port inventory, target query logical-authority, and source-query reconciliation test/check controls on Linux from full Git history, then gates a macOS job on that success before validating the isolated target boundary, contracts, complete target package tests and macOS/iOS Simulator staging builds, with clean-diff enforcement in both jobs.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -244,9 +244,10 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
-        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The target query logical-authority implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; its Linux structural test/check gate runs before the existing dependent target job. Exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777, including all 316 Swift tests and both staging builds. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. Source-query reconciliation re-acknowledges the exact workflow hash while preserving target_mapped status and ownership; its Linux adversarial test/read-only check runs after the existing target-query authority and conversion-ledger checks and before the dependent Swift job, with fetch-depth 0 for exact baseline-diff evidence. Immutable implementation CI remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -595,16 +596,16 @@
           "path": "scripts/tests/generate-source-query-reconciliation.test.mjs"
         }
       ],
-      "observedSourceHash": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60",
-      "acknowledgedSourceHash": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60",
+      "observedSourceHash": "68f50cf91e8c74b1db965edb6609b17841a84606d882b41417f261c9673a4fee",
+      "acknowledgedSourceHash": "68f50cf91e8c74b1db965edb6609b17841a84606d882b41417f261c9673a4fee",
       "metadata": {},
-      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition, complete row set, synchronized lifecycle, ordered retirement gates, exact authority/evidence binding and conflict matrix. It contains no executable tests and proves no aggregate control result.",
+      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, exact lifecycle/Git/package/workflow checks, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
         "surfaces": [
-          "future exact 386-assignment, row and binding tests",
-          "future outcome-authority and lifecycle-allowlist tests"
+          "exact 386-assignment, row and binding tests",
+          "outcome-authority and lifecycle-allowlist tests"
         ],
         "securityRequirements": [
           "Use repository metadata and synthetic fixtures only; never access hosted or production systems"
@@ -614,26 +615,28 @@
         ]
       },
       "migration": {
-        "rule": "Draft test obligations only; do not claim a passing suite before executable implementation.",
+        "rule": "Test repository-controlled reconciliation metadata only; do not contact hosted or production systems.",
         "reconciliation": [
           "Human semantic review remains separate from future structural test success"
         ]
       },
       "verification": {
         "tests": [
-          "comment-only scaffold inspection",
-          "npm run conversion:check"
+          "node --check scripts/tests/generate-source-query-reconciliation.test.mjs",
+          "npm run source:query-reconciliation:test",
+          "npm run source:query-reconciliation:generate",
+          "npm run source:query-reconciliation:check"
         ],
         "acceptance": [
-          "No executable test or generated artifact is present in DRAFT"
+          "All focused structural and adversarial tests pass locally and check mode is byte-exact/read-only"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, aggregate validation or READY status.",
+      "notes": "Implemented locally from the immutable READY base; the 23-test suite and independent adversarial implementation review pass after every finding received regression coverage. Immutable implementation CI remains pending. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -1037,10 +1040,10 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "40eb2f5e5ab8242633b7e932bc3b75e02108e2bdbe94d3a88e20339a02a1153b",
-      "acknowledgedSourceHash": "40eb2f5e5ab8242633b7e932bc3b75e02108e2bdbe94d3a88e20339a02a1153b",
+      "observedSourceHash": "5f4f87354af27ba1ac9ac755de3a7e0ce416e5b36d164a74fecc03585a24e014",
+      "acknowledgedSourceHash": "5f4f87354af27ba1ac9ac755de3a7e0ce416e5b36d164a74fecc03585a24e014",
       "metadata": {},
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory and target query logical-authority generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -1065,9 +1068,10 @@
         "EVID-M2-DECISION-PACKETS-001",
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
-        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "These are operator commands, not product runtime dependencies. The target query logical-authority implementation re-acknowledges the exact package hash while preserving characterized status and existing ownership.",
+      "notes": "These are operator commands, not product runtime dependencies. Source-query reconciliation adds three exact dependency-free generator/check/test commands and re-acknowledges the package hash while preserving characterized status and existing ownership.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
     },
     {
@@ -1356,16 +1360,16 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c",
-      "acknowledgedSourceHash": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c",
+      "observedSourceHash": "c5c7da78e5525a46ffd77ac96e85b5fbb5d8c1ae517586470b9faa978be34010",
+      "acknowledgedSourceHash": "c5c7da78e5525a46ffd77ac96e85b5fbb5d8c1ae517586470b9faa978be34010",
       "metadata": {},
-      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. All 386 reviewed rows are populated in separate data, but this leaf contains no executable logic and makes no machine-validation, implementation, physical-access, provider, hosted, production, or cutover claim.",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, lifecycle and exact Git diff authority, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
         "surfaces": [
-          "future aggregate 386-occurrence reconciliation registry validator",
-          "future deterministic generated reconciliation artifact checker"
+          "aggregate 386-occurrence reconciliation registry validator",
+          "deterministic generated reconciliation artifact checker"
         ],
         "securityRequirements": [
           "Consume repository-controlled source, target-authority, manifest, and registry evidence only",
@@ -1376,26 +1380,28 @@
         ]
       },
       "migration": {
-        "rule": "Draft the complete reviewed classification/control contract without implementing a generator.",
+        "rule": "Validate reviewed classification/control evidence without inferring mappings or defining physical target access.",
         "reconciliation": [
           "All 386 frozen QUERY IDs are human-reviewed into one exact capability batch at DRAFT; a later READY registry must contain one exact row for each assignment"
         ]
       },
       "verification": {
         "tests": [
-          "comment-only scaffold inspection",
-          "npm run conversion:check"
+          "node --check scripts/generate-source-query-reconciliation.mjs",
+          "npm run source:query-reconciliation:generate",
+          "npm run source:query-reconciliation:check",
+          "npm run source:query-reconciliation:test"
         ],
         "acceptance": [
-          "No executable implementation or generated reconciliation artifact exists in DRAFT"
+          "Generated JSON binds all 386 occurrences and 584 reviewed outcomes while unresolved counts remain fail-closed"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, aggregate validation or READY status.",
+      "notes": "Implemented locally from the exact immutable READY base and frozen 30-path allowlist; independent adversarial implementation review returned GO after every finding received regression coverage. Immutable implementation CI remains pending. No runtime, physical/provider, hosted, production, migration, retirement or cutover authority is created.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {

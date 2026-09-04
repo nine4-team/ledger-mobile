@@ -207,14 +207,14 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c",
-      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. All 386 reviewed rows are populated in separate data, but this leaf contains no executable logic and makes no machine-validation, implementation, physical-access, provider, hosted, production, or cutover claim.",
+      "acknowledgeSourceHash": "c5c7da78e5525a46ffd77ac96e85b5fbb5d8c1ae517586470b9faa978be34010",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, lifecycle and exact Git diff authority, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
         "surfaces": [
-          "future aggregate 386-occurrence reconciliation registry validator",
-          "future deterministic generated reconciliation artifact checker"
+          "aggregate 386-occurrence reconciliation registry validator",
+          "deterministic generated reconciliation artifact checker"
         ],
         "securityRequirements": [
           "Consume repository-controlled source, target-authority, manifest, and registry evidence only",
@@ -225,35 +225,37 @@
         ]
       },
       "migration": {
-        "rule": "Draft the complete reviewed classification/control contract without implementing a generator.",
+        "rule": "Validate reviewed classification/control evidence without inferring mappings or defining physical target access.",
         "reconciliation": [
           "All 386 frozen QUERY IDs are human-reviewed into one exact capability batch at DRAFT; a later READY registry must contain one exact row for each assignment"
         ]
       },
       "verification": {
         "tests": [
-          "comment-only scaffold inspection",
-          "npm run conversion:check"
+          "node --check scripts/generate-source-query-reconciliation.mjs",
+          "npm run source:query-reconciliation:generate",
+          "npm run source:query-reconciliation:check",
+          "npm run source:query-reconciliation:test"
         ],
         "acceptance": [
-          "No executable implementation or generated reconciliation artifact exists in DRAFT"
+          "Generated JSON binds all 386 occurrences and 584 reviewed outcomes while unresolved counts remain fail-closed"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, aggregate validation or READY status."
+      "notes": "Implemented locally from the exact immutable READY base and frozen 30-path allowlist; independent adversarial implementation review returned GO after every finding received regression coverage. Immutable implementation CI remains pending. No runtime, physical/provider, hosted, production, migration, retirement or cutover authority is created."
     },
     {
       "id": "CONFIG-40F01696B8A6",
-      "acknowledgeSourceHash": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60",
-      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition, complete row set, synchronized lifecycle, ordered retirement gates, exact authority/evidence binding and conflict matrix. It contains no executable tests and proves no aggregate control result.",
+      "acknowledgeSourceHash": "68f50cf91e8c74b1db965edb6609b17841a84606d882b41417f261c9673a4fee",
+      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, exact lifecycle/Git/package/workflow checks, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
         "surfaces": [
-          "future exact 386-assignment, row and binding tests",
-          "future outcome-authority and lifecycle-allowlist tests"
+          "exact 386-assignment, row and binding tests",
+          "outcome-authority and lifecycle-allowlist tests"
         ],
         "securityRequirements": [
           "Use repository metadata and synthetic fixtures only; never access hosted or production systems"
@@ -263,24 +265,26 @@
         ]
       },
       "migration": {
-        "rule": "Draft test obligations only; do not claim a passing suite before executable implementation.",
+        "rule": "Test repository-controlled reconciliation metadata only; do not contact hosted or production systems.",
         "reconciliation": [
           "Human semantic review remains separate from future structural test success"
         ]
       },
       "verification": {
         "tests": [
-          "comment-only scaffold inspection",
-          "npm run conversion:check"
+          "node --check scripts/tests/generate-source-query-reconciliation.test.mjs",
+          "npm run source:query-reconciliation:test",
+          "npm run source:query-reconciliation:generate",
+          "npm run source:query-reconciliation:check"
         ],
         "acceptance": [
-          "No executable test or generated artifact is present in DRAFT"
+          "All focused structural and adversarial tests pass locally and check mode is byte-exact/read-only"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, aggregate validation or READY status."
+      "notes": "Implemented locally from the immutable READY base; the 23-test suite and independent adversarial implementation review pass after every finding received regression coverage. Immutable implementation CI remains pending. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority."
     }
   ]
 }

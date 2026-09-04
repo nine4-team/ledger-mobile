@@ -3,7 +3,7 @@
   "sliceId": "source-query-reconciliation-control",
   "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Source Query Reconciliation Control",
   "surfaceIds": [
     "CONFIG-A8BD153106B8",
@@ -502,8 +502,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-001", "SQUERY-REQ-003", "SQUERY-REQ-009"],
       "expected": "Exact source artifact validation proves the synchronized DRAFT assignedQueryIds sets are disjoint/exhaustive over all 386 IDs; row sets are subsets only while authoring and exactly equal assignments at READY or later with no duplicate, missing or orphan row.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-002",
@@ -511,8 +511,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-001", "SQUERY-REQ-009"],
       "expected": "Full source artifact hash, sourceDigest, canonical full-occurrence hash, exact QUERY derivation from sourcePath/line/operation, selected source-owner ID/ref and canonical {surfaceId,disposition,sourceRef} projection hash mutations all fail closed without a volatile full-manifest hash.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-003",
@@ -520,8 +520,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
       "expected": "Verified target query outcomes accept only an exact non-decision-blocked TQUERY/TACCESS/mappingHash triple from the bound target authority artifact.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-004",
@@ -529,8 +529,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
       "expected": "Future-query and nonquery outcomes accept only an exact manifest surface/member, allowed disposition/status and canonical {surfaceId,disposition,target} mapping hash; status drift is checked separately and does not alter the hash.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-005",
@@ -538,8 +538,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-002", "SQUERY-REQ-005"],
       "expected": "The seven exact outcome schemas plus authority/evidence-blocked scope discriminators reject unknown nested keys/types, invalid identities/order/enums/coexistence, asymmetric/incomplete conflict matrices, unrelated-surface blocker or evidence laundering, missing/content-drifted retirement authority, invalid ordered lifecycle gates/status/disposition, unexpected directory entries and duplicate or noncanonical outcomes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-006",
@@ -547,8 +547,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-003", "SQUERY-REQ-005", "SQUERY-REQ-009"],
       "expected": "Source-only reuses the row owner/ref/hash with source_only disposition; current-source compatibility is exactly the two frozen BatchWriting rows. Authority-blocked binds exact typed authority in batch/registry and the discriminator-selected source owner, TQUERY row or target surface while excluding O-021/A-003/A-004. Evidence-blocked binds typed requirements to the complete selected owner/ref/hash/blocker tuple. Mechanism retirement is strictly after every retention obligation; behavior retirement uses only the four independently extracted, content-hashed authority projections and never owner-manifest self-authorization.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-007",
@@ -556,8 +556,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
       "covers": ["SQUERY-REQ-006", "SQUERY-REQ-007", "SQUERY-REQ-009"],
       "expected": "Closed schemas reject all per-row physical/index/SQL/RLS/Sync/provider fields, and A-003/A-004 cannot be used as row blockers or outcomes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-008",
@@ -565,8 +565,10 @@
       "owner": "human capability-owner and independent generated-diff review",
       "covers": ["SQUERY-REQ-008"],
       "expected": "Two human reviews account for every generated QUERY row and confirm outcome semantics without auto-classification or physical translation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": [
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+      ]
     },
     {
       "id": "SQUERY-TEST-009",
@@ -574,8 +576,8 @@
       "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs and human review",
       "covers": ["SQUERY-REQ-003", "SQUERY-REQ-005", "SQUERY-REQ-008"],
       "expected": "Human-reviewed batch assignment and classification remain independent of subsystem/path/symbol/expression heuristics; only frozen assignedQueryIds, reviewed rows and exact authority determine ownership/outcomes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"]
     },
     {
       "id": "SQUERY-TEST-010",
@@ -587,8 +589,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545; exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed immutable Actions run 33872927608. The corrected control synchronizes registry/batch/slice lifecycle; closes nested schemas and paths; applies a strict retention-before-retirement milestone order; removes owner-manifest self-authorization in favor of four exact content-hashed authorities; carries complete selected evidence-owner/ref/hash/blocker bindings; freezes current_source_compatibility to exactly two BatchWriting rows; and evaluates every outcome pair through a complete symmetric conflict matrix. The exact 22-path READY freeze includes only lifecycle/evidence documentation plus deterministic conversion metadata regenerated from the dossier status. The exact 30-path implementation allowlist and both READY scaffold hashes are now frozen against the full READY SHA. O-041 separately owns vendor-spend semantics and remains proposed only. CONFIG-A8BD153106B8 and CONFIG-40F01696B8A6 remain target_mapped with empty blockers while executable validation is absent. READY means classification completeness only: unresolved outcome counts remain downstream fail-closed gates. No generated reconciliation artifact, package/workflow hook, executable logic, Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access or production operation is authorized. Implementation may replace only the two scaffolds, add one deterministic generated JSON artifact plus exact package/workflow commands/gate, and synchronize the allowlisted metadata. Promotion remains a separate immutable-CI and human-review checkpoint."
+  "notes": "IMPLEMENTED contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545; exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed immutable Actions run 33872927608. The executable dependency-free generator/checker and 23-test suite now enforce synchronized lifecycle and exact Git/package/workflow authority; closed nested schemas and prefixed malformed-input rejection; strict retention-before-retirement order; four exact content-hashed retirement authorities; complete selected evidence-owner/ref/hash/blocker bindings; exactly two current_source_compatibility BatchWriting rows; parsed-object/raw-byte equality; exhaustive symmetric conflict rules; safe regular non-symlink inputs; contained exclusive atomic 0644 output; byte-exact read-only checking; and an exact unconditional Linux-before-Swift CI gate. Independent adversarial implementation review found and drove corrections for authority-path laundering, hidden physical fields, split-brain input, dangling symlinks, unsafe high-level output paths, package lifecycle hooks, YAML trigger/execution-context bypasses, output mode and unprefixed malformed-null failures, then returned GO with no remaining P0-P2 finding. SQUERY-TEST-001 through -009 pass locally; SQUERY-TEST-010 and VERIFIED promotion remain pending the exact implementation commit and immutable CI. O-041 remains proposed only, and the generated artifact deliberately reports 115 authority-blocked and six evidence-blocked outcomes. No Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access, migration, retirement, production operation or cutover authority is created."
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "ready",
+  "status": "implemented",
   "sourceInventory": {
     "path": "docs/plans/ledger-accounting-redesign/conversion/query-contract.generated.json",
     "artifactSha256": "2a43de6e59844d081237c8d9731846662e0862190823ea854c2238256b0a6a14",
@@ -86,5 +86,5 @@
     {"queryId":"QUERY-241AE9EE0E3F","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"},
     {"queryId":"QUERY-57FA49B52A1C","sourceOwnerSurfaceId":"SWIFT-6E5F6EAFF883","sourceRef":{"path":"LedgeriOS/LedgeriOS/Services/Protocols/BatchWriting.swift"},"expectedSourceOwnerHash":"5bad756f963cac563edfa177c9c88e920fb54a4fda29dd2a8c8e08feef5e660d","retentionGate":"through_verified_cutover_reconciliation"}
   ],
-  "notes": "READY classification control with exhaustive human-reviewed ownership and all 386 rows / 584 outcomes populated across the ten batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545. E-001/E-002 name required read-only production evidence without claiming it exists or authorizing access; O-041 is a distinct open business vendor-cash semantics decision; current_source_compatibility is restricted to the two exact Firebase-only BatchWriting bindings through verified cutover reconciliation. Behavior retirement uses only four independently reviewed, content-hashed authorities. Corrected-model completion and adversarial reviews returned GO with no P0-P3 finding. READY means classification completeness only and grants no implementation, migration, retirement, production or cutover authority. No physical/provider/runtime/production claim is made."
+  "notes": "IMPLEMENTED aggregate control preserves the exhaustive human-reviewed ownership and all 386 rows / 584 outcomes frozen at READY. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545 and exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed run 33872927608. E-001/E-002 remain required read-only production evidence without claiming it exists or authorizing access; O-041 remains a distinct open business vendor-cash semantics decision; current_source_compatibility remains restricted to the two exact Firebase-only BatchWriting bindings through verified cutover reconciliation. Behavior retirement uses only four independently reviewed, content-hashed authorities. Executable implementation and adversarial review pass locally; immutable implementation CI and VERIFIED promotion remain pending. The control grants no migration, retirement, production or cutover authority and makes no physical/provider/runtime/production claim."
 }
