@@ -4,20 +4,30 @@ import PowerSync
 
 public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying, @unchecked Sendable {
     private let database: any PowerSyncDatabaseProtocol
+    private let principalId: PrincipalID
+    private let boundAccountId: AccountID
     private let now: @Sendable () -> Date
 
     public init(
         database: any PowerSyncDatabaseProtocol,
+        principalId: PrincipalID,
+        accountId: AccountID,
         now: @Sendable @escaping () -> Date = Date.init
     ) {
         self.database = database
+        self.principalId = principalId
+        boundAccountId = accountId
         self.now = now
     }
 
     public func watchProjectCoreDetails(
         _ request: ProjectCoreDetailsRequest
     ) -> AsyncThrowingStream<ProjectCoreDetailsUpdate, Error> {
-        AsyncThrowingStream { continuation in
+        guard request.accountId == boundAccountId else {
+            return Self.failedStream(ProjectCoreDetailsFailure.accountScopeMismatch)
+        }
+
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
                     continuation.yield(try ProjectCoreDetailsUpdate(
@@ -26,7 +36,13 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                     ))
                     let rows = try database.watch(
                         sql: """
-                        WITH selected_projects AS (
+                        WITH scope AS (
+                          SELECT EXISTS (
+                            SELECT 1
+                            FROM \(LedgerPowerSyncTable.memberships)
+                            WHERE account_id = ? AND principal_id = ? AND state = 'active'
+                          ) AS is_active
+                        ), selected_projects AS (
                           SELECT authoritative.id, authoritative.account_id,
                                  authoritative.client_id, authoritative.display_name,
                                  authoritative.description, authoritative.lifecycle,
@@ -37,7 +53,9 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                           LEFT JOIN \(LedgerPowerSyncTable.pendingProjects) AS pending
                             ON pending.account_id = authoritative.account_id
                            AND pending.id = authoritative.id
+                           AND pending.created_by_principal_id = ?
                           WHERE authoritative.account_id = ? AND authoritative.id = ?
+                            AND (SELECT is_active FROM scope)
                           UNION ALL
                           SELECT pending.id, pending.account_id, pending.client_id,
                                  pending.display_name, pending.description,
@@ -46,10 +64,14 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                                  NULL AS reconciliation_operation_id
                           FROM \(LedgerPowerSyncTable.pendingProjects) AS pending
                           WHERE pending.account_id = ? AND pending.id = ?
-                            AND NOT EXISTS (
-                              SELECT 1 FROM \(LedgerPowerSyncTable.projects) AS authoritative
-                              WHERE authoritative.account_id = pending.account_id
-                                AND authoritative.id = pending.id
+                            AND pending.created_by_principal_id = ?
+                            AND (
+                              NOT (SELECT is_active FROM scope)
+                              OR NOT EXISTS (
+                                SELECT 1 FROM \(LedgerPowerSyncTable.projects) AS authoritative
+                                WHERE authoritative.account_id = pending.account_id
+                                  AND authoritative.id = pending.id
+                              )
                             )
                         ), selected_clients AS (
                           SELECT authoritative.id, authoritative.account_id,
@@ -62,6 +84,9 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                           LEFT JOIN \(LedgerPowerSyncTable.pendingClients) AS pending
                             ON pending.account_id = authoritative.account_id
                            AND pending.id = authoritative.id
+                           AND pending.created_by_principal_id = ?
+                          WHERE authoritative.account_id = ?
+                            AND (SELECT is_active FROM scope)
                           UNION ALL
                           SELECT pending.id, pending.account_id, pending.display_name,
                                  pending.lifecycle, pending.created_at_ms,
@@ -69,13 +94,19 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                                  pending.operation_id AS pending_operation_id,
                                  NULL AS reconciliation_operation_id
                           FROM \(LedgerPowerSyncTable.pendingClients) AS pending
-                          WHERE NOT EXISTS (
-                            SELECT 1 FROM \(LedgerPowerSyncTable.clients) AS authoritative
-                            WHERE authoritative.account_id = pending.account_id
-                              AND authoritative.id = pending.id
+                          WHERE pending.account_id = ?
+                            AND pending.created_by_principal_id = ?
+                            AND (
+                              NOT (SELECT is_active FROM scope)
+                              OR NOT EXISTS (
+                                SELECT 1 FROM \(LedgerPowerSyncTable.clients) AS authoritative
+                                WHERE authoritative.account_id = pending.account_id
+                                  AND authoritative.id = pending.id
+                              )
                           )
                         )
-                        SELECT project.id, project.account_id, project.client_id,
+                        SELECT scope.is_active,
+                               project.id, project.account_id, project.client_id,
                                project.display_name, project.description,
                                project.lifecycle, project.revision,
                                project.pending_operation_id,
@@ -87,15 +118,24 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                                client.pending_operation_id AS client_pending_operation_id
                               ,client.reconciliation_operation_id AS client_reconciliation_operation_id
                         FROM selected_projects AS project
+                        CROSS JOIN scope
                         JOIN selected_clients AS client
                           ON client.account_id = project.account_id
                          AND client.id = project.client_id
                         """,
                         parameters: [
                             request.accountId.rawValue,
+                            principalId.rawValue,
+                            principalId.rawValue,
+                            request.accountId.rawValue,
                             request.projectId.rawValue,
                             request.accountId.rawValue,
-                            request.projectId.rawValue
+                            request.projectId.rawValue,
+                            principalId.rawValue,
+                            principalId.rawValue,
+                            request.accountId.rawValue,
+                            request.accountId.rawValue,
+                            principalId.rawValue
                         ]
                     ) { cursor in
                         try PowerSyncProjectCoreRow(cursor: cursor)
@@ -106,8 +146,10 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                         let status = database.currentStatus
                         let quality = ClientCoreDetailsPowerSyncQuery.snapshotQuality(
                             hasPendingOperation: localRows.contains { $0.isPending },
-                            hasSynced: status.hasSynced == true,
-                            hasLastSyncedAt: status.lastSyncedAt != nil
+                            hasSynced: localRows.first?.scopeIsActive == true
+                                && status.hasSynced == true,
+                            hasLastSyncedAt: localRows.first?.scopeIsActive == true
+                                && status.lastSyncedAt != nil
                         )
                         let local = try ProjectCoreDetailsLocalSnapshot(
                             request: request,
@@ -122,30 +164,19 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
                         )
                         for row in localRows {
                             if let operationId = row.projectReconciliationOperationId {
-                                try await database.writeTransaction { transaction in
-                                    _ = try transaction.execute(
-                                        sql: """
-                                        DELETE FROM \(LedgerPowerSyncTable.pendingProjects)
-                                        WHERE id = ? AND account_id = ? AND operation_id = ?
-                                        """,
-                                        parameters: [row.id, row.accountId, operationId]
-                                    )
-                                    _ = try transaction.execute(
-                                        sql: """
-                                        DELETE FROM \(LedgerPowerSyncTable.pendingProjectCategoryAllocations)
-                                        WHERE project_id = ? AND account_id = ? AND operation_id = ?
-                                        """,
-                                        parameters: [row.id, row.accountId, operationId]
-                                    )
-                                }
+                                try await PowerSyncOverlayReconciler.reconcileProjectCore(
+                                    database: database,
+                                    projectId: row.id,
+                                    accountId: row.accountId,
+                                    operationId: operationId
+                                )
                             }
                             if let operationId = row.clientReconciliationOperationId {
-                                try await database.execute(
-                                    sql: """
-                                    DELETE FROM \(LedgerPowerSyncTable.pendingClients)
-                                    WHERE id = ? AND account_id = ? AND operation_id = ?
-                                    """,
-                                    parameters: [row.clientId, row.accountId, operationId]
+                                try await PowerSyncOverlayReconciler.reconcileClient(
+                                    database: database,
+                                    clientId: row.clientId,
+                                    accountId: row.accountId,
+                                    operationId: operationId
                                 )
                             }
                         }
@@ -170,9 +201,18 @@ public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying,
             continuation.onTermination = { _ in task.cancel() }
         }
     }
+
+    private static func failedStream<Value: Sendable>(
+        _ error: Error
+    ) -> AsyncThrowingStream<Value, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.finish(throwing: error)
+        }
+    }
 }
 
 private struct PowerSyncProjectCoreRow: Sendable {
+    let scopeIsActive: Bool
     let id: String
     let accountId: String
     let clientId: String
@@ -194,6 +234,7 @@ private struct PowerSyncProjectCoreRow: Sendable {
     }
 
     init(cursor: any SqlCursor) throws {
+        scopeIsActive = try cursor.getInt64(name: "is_active") == 1
         id = try cursor.getString(name: "id")
         accountId = try cursor.getString(name: "account_id")
         clientId = try cursor.getString(name: "client_id")

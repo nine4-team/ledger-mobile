@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 266
+State version: 268
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-PROJECT-DIRECTORY-POWERSYNC-READY
+- Checkpoint: CLIENT-PROJECT-DIRECTORY-POWERSYNC-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -37,7 +37,7 @@ without modifying the running Firebase application before hard cutover.
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
 - The implementation tracker currently contains 264 status-bearing rows: 68
-  done, four verified, one implemented, one ready, zero awaiting verification,
+  done, four verified, two implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -59,6 +59,36 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Implemented the reviewed Client/Project directory and browse provider after
+  exact READY commit `2417d20bd03540288575bb2a33b96130e7edd4c2`
+  passed all three immutable workflow jobs in run `33915624174`. The target-only
+  adapter now combines local PowerSync rows with independent reactive Client and
+  Project completeness streams, exposes only the same Principal's pending rows
+  before membership, gates authoritative rows and reconciliation on active
+  membership, treats missing Project-to-Client joins as incomplete, binds local
+  versions to exact content/readiness and cancels both observations with the
+  consumer. The Account/Principal-bound runtime rejects cross-Account reads and
+  writes plus cross-Principal writes before persistence. The isolated staging
+  app supports fresh offline create, Client selection, active/archived Project
+  browsing and exact selected-row detail navigation with structured task
+  lifetime. Core readback now removes only exact Project/Client core overlays;
+  pending allocations survive until allocation-aware authority exists, while a
+  durable rejection still removes the whole aggregate. Three independent review
+  passes
+  found and drove corrections for shared/non-reactive completeness, fresh-
+  pending invisibility, runtime scope, premature allocation cleanup, stale
+  selection, task lifetime, pre-membership authoritative replacement and a
+  remaining exact-detail authority/reconciliation bypass. The corrected detail
+  readers now bind the same Principal/Account and membership policy as the
+  directories, preserve pending values through exact navigation, and exclude
+  other-Principals' pending rows. Final corrected-diff review returned
+  executable GO with no P0-P2; its sole P3 stale test-count label was corrected
+  before commit. Sixteen focused directory tests, seven Project tests and all
+  358 target tests in 69 suites pass locally. Exact implementation CI and
+  real hosted Auth/Sync proof remain planned, so the slice and its two owned
+  leaves are `implemented`, not `verified` or `rehearsed`. A-003/A-004 remain
+  proposed; no Firebase, hosted or production state changed.
 
 - Prepared the Client/Project directory and browse PowerSync provider as an
   exact comment-only READY checkpoint. Two automatically discovered leaves
@@ -146,9 +176,11 @@ without modifying the running Firebase application before hard cutover.
   RLS and financial visibility, locks Operation/Project/new-Client identities,
   atomically creates the optional Client, Project, allocations and immutable
   terminal result, and refuses OperationID rebinding. Swift and target MCP use
-  the same scoped-user RPC and exact fingerprint. Authoritative Client/Project
-  readback removes the complete linked optimistic aggregate so later eviction
-  cannot resurrect stale local data. Independent early SQL/PowerSync reviews
+  the same scoped-user RPC and exact fingerprint. The later directory-provider
+  correction establishes the precise boundary: authoritative Client/Project
+  core readback removes only linked core overlays so they cannot resurrect,
+  while allocation optimism remains until allocation-aware proof; durable
+  rejection still removes the complete aggregate. Independent early SQL/PowerSync reviews
   found missing grants, a null-discriminator bypass, capability/visibility and
   identity-race gaps, canonical byte/order mismatches, missing command dispatch,
   missing local-link verification and missing overlay reconciliation; all were
@@ -3736,16 +3768,14 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit this synchronized comment-only Client/Project directory PowerSync READY
-checkpoint and require both immutable workflow jobs to pass on that exact
-commit. Then restore the already reviewed executable implementation, inspect
-the READY-relative allowlist, synchronize every changed surface and the dossier
-at honest `implemented` status, correct the existing Project-provider evidence
-so core-row reconciliation no longer overclaims allocation cleanup, rerun the
-complete local provider/Swift/build/control suite, and require immutable CI on
-that exact implementation checkpoint. Do not provision hosted resources,
-access production, modify Firebase, migrate data or advance A-003/A-004 from
-local evidence.
+Finish synchronizing every changed Client/Project directory implementation
+surface, corrected Project-provider reconciliation evidence, dossier, generated
+controls and tracker at honest `implemented` status. Rerun the complete local
+provider/Swift/MCP/build/control suite, commit and push the synchronized
+checkpoint, then require all three immutable workflow jobs to pass on that exact
+implementation commit. Keep hosted Auth/Sync proof and A-003/A-004 open; do not
+provision hosted resources, access production, modify Firebase, migrate data or
+authorize cutover.
 
 Continue without waiting on the two M1 evidence blockers:
 

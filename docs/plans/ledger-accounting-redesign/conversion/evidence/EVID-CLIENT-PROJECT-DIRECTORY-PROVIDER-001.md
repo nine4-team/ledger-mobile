@@ -1,6 +1,6 @@
 # EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001 — Client/Project PowerSync Directory Provider
 
-- Status: READY contract; executable implementation intentionally absent
+- Status: implemented locally; exact implementation CI and hosted Sync proof pending
 - Date: 2026-09-04
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
@@ -9,18 +9,16 @@
 
 ## Outcome
 
-This checkpoint freezes the exact implementation boundary for making Ledger's
-already-verified backend-neutral Client and Project directory contracts work
-against the local PowerSync database and isolated staging app. The two claimed
-Swift leaves remain comment-only at READY.
+This checkpoint implements Ledger's already-verified backend-neutral Client and
+Project directory contracts against the local PowerSync database and isolated
+staging app. The adapter and its 16-test suite are executable target-only code.
 
-The implementation must deliver one coherent local flow: offline Client and
-Project creation appears in the directory, any currently represented active
-Client can be selected, Projects split into active and archived segments, and a
-selected row derives the exact existing detail request. Local rows remain useful
-while completeness is stated honestly.
+The local flow now shows offline-created Clients and Projects immediately,
+selects any currently represented active Client, splits Projects into active and
+archived segments, and derives the exact existing detail request from a selected
+row. Local rows remain useful while completeness is stated honestly.
 
-## Required Safety and Offline Behavior
+## Implemented Safety and Offline Behavior
 
 - The runtime is bound to one exact Principal and Account. Wrong-Account reads
   or writes and wrong-Principal writes fail before any operation, overlay or
@@ -28,7 +26,7 @@ while completeness is stated honestly.
 - Authoritative rows appear only behind locally visible active-membership
   evidence. The same Principal's accepted pending rows remain visible as
   partial evidence before membership readback; hidden authority cannot replace
-  or reconcile them.
+  or reconcile them in either directory or exact-detail reads.
 - Client and Project stream completeness are independent reactive inputs. A
   global connection/has-synced flag cannot make either directory ready.
 - Raw Project rows are counted before Client joining. A delayed Client produces
@@ -50,27 +48,45 @@ retain their existing primary slice ownership.
 
 ## Excluded Scope
 
-This READY boundary does not decide or implement Project/Client archive
+This implementation does not decide or implement Project/Client archive
 mutation, text mutation, final sorting/search, Project card or budget preview,
 MCP pagination/list/get APIs, Firebase compatibility, source migration, hosted
 Auth/PowerSync, deployment, production access, release or cutover. O-024/O-025,
 O-040 and O-042/O-043 remain outside. A-003/A-004 remain proposed.
 
-## Review and Verification Plan
+## Independent Review
 
-The planned executable suite covers pending and authoritative rows, same-name
-identity, active/archived projection, current selection revalidation, exact
-detail navigation, encrypted restart, default and reactive completeness,
-missing relationships, malformed rows, Account/Principal/membership isolation,
-hidden-authority ordering, exact overlay cleanup, allocation preservation,
-consumer cancellation, fresh-runtime integration and both staging builds.
+The first independent implementation review rejected the candidate for four P1
+defects and two P2 integration defects: one shared non-reactive completeness
+flag, fresh pending rows hidden until membership arrived, missing runtime scope
+guards, Project core readback deleting allocation optimism, stale Client
+selection at Project submission, and directory tasks escaping the SwiftUI task
+lifetime. Each defect was corrected with direct regression coverage.
 
-Independent implementation review is required again after the READY checkpoint;
-local SQL isolation must never be reported as hosted RLS/Sync proof.
+A second independent review found one remaining P1: a matching authoritative row
+could replace and reconcile the caller's pending row before membership became
+visible. SQL precedence now hides authority until active membership, retains the
+same Principal's pending values without a reconciliation ID, and a direct test
+proves both overlays survive.
+
+A third independent final review then rejected the corrected directory because
+exact Client/Project detail readers still preferred matching authoritative rows
+without requiring membership. The Principal/Account-bound detail readers now
+use the same membership-gated precedence and reconciliation policy as the
+directory. An end-to-end regression selects pending rows, opens both exact
+details while conflicting authority is locally present but membership is not,
+and proves the pending values and overlays survive. Another adversarial case
+proves pending rows owned by a different Principal do not enter either local
+directory. Final corrected-diff review returned executable GO with no P0-P2;
+its sole P3 was this evidence package's stale 14-test label, corrected to 16
+before commit. Local SQL isolation is still not reported as hosted RLS/Sync
+proof.
 
 ## READY Validation
 
-The synchronized comment-only package passes locally before commit:
+The synchronized comment-only package passed locally and at exact READY commit
+`2417d20bd03540288575bb2a33b96130e7edd4c2` / immutable Actions run
+`33915624174`:
 
 - conversion/query-port/query-authority/source-query/capability/residual checks
   and M0, with only the three pre-existing retired-path warnings;
@@ -82,10 +98,33 @@ The synchronized comment-only package passes locally before commit:
   RPC/Data API authorization/replay checks.
 
 These results prove the READY control package did not break existing target
-behavior. They do not claim the comment-only provider implementation exists or
-that hosted PowerSync authorization has been exercised.
+behavior. They do not claim that hosted PowerSync authorization was exercised.
 
 The generated Xcode project also catches up its source-directory membership for
 the pre-existing comment-only `ClientRenameStagingExercise.swift` DRAFT file.
 That deterministic generated-project change adds no executable rename behavior;
 the file remains blocked by O-042/O-043 under its existing primary ownership.
+
+## Local Implementation Verification
+
+The synchronized implementation passes locally:
+
+- 16 focused Client/Project directory tests;
+- all seven Project provider tests, including the corrected core-only readback
+  case that retains all three pending allocations;
+- all 358 target Swift tests in 69 suites;
+- cross-Account and cross-Principal runtime mutation/read refusal before any
+  operation, overlay or PowerSync upload row exists;
+- independently reactive Client/Project completeness, zero-row transitions,
+  hidden-authority/pending precedence across directory and exact detail,
+  same-Principal pending-row isolation, missing-relationship truth, encrypted
+  restart, content-version change, exact selection/detail navigation and
+  cancellation;
+- all 11 target MCP tests, strict TypeScript/contract checks, byte-stable Xcode
+  generation, both staging builds, local schema lint, all 42 pgTAP assertions,
+  and Client/Project RPC/RLS/replay checks.
+
+The exact implementation commit and its immutable workflow remain pending at
+this checkpoint. `DIRPROVIDER-TEST-004` remains planned because it requires real
+isolated authenticated PowerSync streams; that prevents `verified` or
+`rehearsed` status and keeps A-004 proposed.

@@ -2,16 +2,26 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
+public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
+    case accountScopeMismatch
+    case principalScopeMismatch
+}
+
 public final class LedgerOfflineClientRuntime: @unchecked Sendable {
     private let database: any PowerSyncDatabaseProtocol
     private let creationStore: ClientCreationPowerSyncStore
     private let detailsQuery: ClientCoreDetailsPowerSyncQuery
     private let projectSetupStore: ProjectSetupPowerSyncStore
     private let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
+    private let directoryQuery: ClientProjectDirectoryPowerSyncQuery
+    private let principalId: PrincipalID
+    private let accountId: AccountID
 
-    public init(
+    init(
         absoluteDatabasePath: String,
         encryptionKey: LedgerPowerSyncEncryptionKey,
+        principalId: PrincipalID,
+        accountId: AccountID,
         now: @Sendable @escaping () -> Date = Date.init
     ) throws {
         let database = try LedgerPowerSyncDatabaseFactory.open(
@@ -20,29 +30,73 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
         )
         self.database = database
         creationStore = ClientCreationPowerSyncStore(database: database, now: now)
-        detailsQuery = ClientCoreDetailsPowerSyncQuery(database: database, now: now)
+        detailsQuery = ClientCoreDetailsPowerSyncQuery(
+            database: database,
+            principalId: principalId,
+            accountId: accountId,
+            now: now
+        )
         projectSetupStore = ProjectSetupPowerSyncStore(database: database, now: now)
-        projectDetailsQuery = ProjectCoreDetailsPowerSyncQuery(database: database, now: now)
+        projectDetailsQuery = ProjectCoreDetailsPowerSyncQuery(
+            database: database,
+            principalId: principalId,
+            accountId: accountId,
+            now: now
+        )
+        directoryQuery = ClientProjectDirectoryPowerSyncQuery(
+            database: database,
+            principalId: principalId,
+            accountId: accountId,
+            now: now
+        )
+        self.principalId = principalId
+        self.accountId = accountId
     }
 
     public func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
-        try await creationStore.create(command)
+        guard command.envelope.accountId == accountId else {
+            throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+        }
+        guard command.envelope.actorPrincipalId == principalId else {
+            throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+        }
+        return try await creationStore.create(command)
     }
 
     public func watchClient(
         _ request: ClientCoreDetailsRequest
     ) -> AsyncThrowingStream<ClientCoreDetailsUpdate, Error> {
-        detailsQuery.watchClientCoreDetails(request)
+        guard request.accountId == accountId else {
+            return Self.failedStream(LedgerOfflineClientRuntimeFailure.accountScopeMismatch)
+        }
+        return detailsQuery.watchClientCoreDetails(request)
     }
 
     public func createProject(_ command: CreateProjectCommand) async throws -> OperationReceipt {
-        try await projectSetupStore.create(command)
+        guard command.envelope.accountId == accountId else {
+            throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+        }
+        guard command.envelope.actorPrincipalId == principalId else {
+            throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+        }
+        return try await projectSetupStore.create(command)
     }
 
     public func watchProject(
         _ request: ProjectCoreDetailsRequest
     ) -> AsyncThrowingStream<ProjectCoreDetailsUpdate, Error> {
-        projectDetailsQuery.watchProjectCoreDetails(request)
+        guard request.accountId == accountId else {
+            return Self.failedStream(LedgerOfflineClientRuntimeFailure.accountScopeMismatch)
+        }
+        return projectDetailsQuery.watchProjectCoreDetails(request)
+    }
+
+    public func watchClients() -> AsyncThrowingStream<ClientListSnapshot, Error> {
+        directoryQuery.watchClients(accountId: accountId)
+    }
+
+    public func watchProjects() -> AsyncThrowingStream<ProjectListSnapshot, Error> {
+        directoryQuery.watchProjects(accountId: accountId)
     }
 
     public func pendingUploadCount() async throws -> Int64 {
@@ -59,6 +113,14 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
 
     public func close(deleteDatabase: Bool = false) async throws {
         try await database.close(deleteDatabase: deleteDatabase)
+    }
+
+    private static func failedStream<Value: Sendable>(
+        _ error: Error
+    ) -> AsyncThrowingStream<Value, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.finish(throwing: error)
+        }
     }
 }
 
@@ -90,7 +152,9 @@ public enum LedgerPowerSyncLocalBootstrap {
         )
         return try LedgerOfflineClientRuntime(
             absoluteDatabasePath: directory.appendingPathComponent("ledger.sqlite").path,
-            encryptionKey: key
+            encryptionKey: key,
+            principalId: principalId,
+            accountId: accountId
         )
     }
 }

@@ -13,13 +13,13 @@
   "surfaces": [
     {
       "id": "SWIFT-B23F91245E50",
-      "acknowledgeSourceHash": "1390c6f9845919ff50a7233449e9f8c634b5cf21f22a339c3f23cf847a26d92f",
-      "currentBehavior": "Contains only the reviewed READY boundary for the Account/Principal-bound PowerSync Client/Project directory adapter; it declares no executable type or query.",
+      "acknowledgeSourceHash": "e974e63d8da66e74dead6a21359af89347aa32a146bee6512414bfd2a3db1282",
+      "currentBehavior": "Implements the Account/Principal-bound PowerSync ClientProjectDirectoryQuerying adapter: it combines local rows with independently reactive Client/Project completeness, exposes only caller-owned pending creates before membership as partial, gates authoritative rows and reconciliation on active membership, preserves incomplete Project-to-Client joins, derives content-bound local versions, and cancels both observations with the consumer.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
-      "notes": "Comment-only READY scaffold; implementation must preserve explicit incomplete and pending truth.",
+      "notes": "Implemented and locally verified with synthetic encrypted databases; real hosted Sync authorization remains required before verification/rehearsal.",
       "target": {
         "owner": "Client and Project Directory",
         "surfaces": ["PowerSync ClientProjectDirectoryQuerying adapter", "Account/Principal-bound directory runtime"],
@@ -31,19 +31,19 @@
         "reconciliation": ["Exact authorized authoritative readback clears only the matching owned overlay", "Project allocation optimism remains until aggregate-aware proof"]
       },
       "verification": {
-        "tests": ["ClientProjectDirectoryPowerSyncQueryTests", "ProjectPowerSyncVerticalSliceTests"],
-        "acceptance": ["All planned local read, isolation, readiness, restart, cancellation and reconciliation cases pass before status advancement"]
+        "tests": ["16 ClientProjectDirectoryPowerSyncQueryTests", "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"],
+        "acceptance": ["Local read, isolation, readiness, restart, cancellation, navigation and aggregate-safe reconciliation cases pass without claiming hosted Sync authorization"]
       }
     },
     {
       "id": "TEST-5AAEE26660C8",
-      "acknowledgeSourceHash": "c84ff0f66d2494a94d153dc6307d6a562e24c618a947f18bdf36bf40e13ee278",
-      "currentBehavior": "Contains only the reviewed READY test boundary for synthetic disposable Client/Project directory provider verification; it runs no tests.",
+      "acknowledgeSourceHash": "82574e88cabe4e32f1d3284ab5de54759b670c9856ddc39c7ae2dae0a4add6e5",
+      "currentBehavior": "Runs 16 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards and cancellation.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
-      "notes": "Comment-only READY scaffold using no hosted endpoint or production data.",
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed.",
       "target": {
         "owner": "Client and Project Directory",
         "surfaces": ["Client/Project PowerSync directory provider test suite"],
@@ -56,7 +56,7 @@
       },
       "verification": {
         "tests": ["npm run target:powersync:test", "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"],
-        "acceptance": ["Every planned case becomes executable before the provider slice advances beyond ready"]
+        "acceptance": ["All 16 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"]
       }
     }
   ]

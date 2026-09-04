@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T20:18:08.268Z",
+    "lastSynchronizedAt": "2026-09-04T20:50:07.450Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17548,12 +17548,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "10895f7c911e9bc246e0dfdf19b5264fa898e60faae293189a41ce1efdd1a530",
-      "acknowledgedSourceHash": "10895f7c911e9bc246e0dfdf19b5264fa898e60faae293189a41ce1efdd1a530",
+      "observedSourceHash": "8a2badc86b60c013cad175a9814a67acf47a794c836e2a2254f04c4d874aaf80",
+      "acknowledgedSourceHash": "8a2badc86b60c013cad175a9814a67acf47a794c836e2a2254f04c4d874aaf80",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client and Project creation/readback without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -17590,7 +17590,8 @@
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -20124,12 +20125,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "b37c217dfa8142a088761ae932e9fc7087592a87f9ee834fb20bac6eb53b59e1",
-      "acknowledgedSourceHash": "b37c217dfa8142a088761ae932e9fc7087592a87f9ee834fb20bac6eb53b59e1",
+      "observedSourceHash": "680490b2ac5f11790f92f375f0e7bba827f8e44dc0d863a66ebcbe067eeb5437",
+      "acknowledgedSourceHash": "680490b2ac5f11790f92f375f0e7bba827f8e44dc0d863a66ebcbe067eeb5437",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements Client core-details observation from authoritative plus local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority wins and removes the linked pending overlay before it can later resurrect.",
+      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative plus exact caller-owned local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority is visible and may remove the linked pending overlay only while active membership is locally present.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -20163,7 +20164,8 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
       "notes": "No direct network or backend SDK leaks through the core query port.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
@@ -23244,12 +23246,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "69c380a8ba7d88baf9646bb25d34e91226bf39c44c7147a879d55a156a8bfcca",
-      "acknowledgedSourceHash": "69c380a8ba7d88baf9646bb25d34e91226bf39c44c7147a879d55a156a8bfcca",
+      "observedSourceHash": "7ffc93ba2a81109fbbaf20ce6d0a3b71ad76df2c4ddbcf9f4c73a56740a3af12",
+      "acknowledgedSourceHash": "7ffc93ba2a81109fbbaf20ce6d0a3b71ad76df2c4ddbcf9f4c73a56740a3af12",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime and exposes Client/Project create/watch operations, pending-upload count, cipher inspection and explicit close/delete behavior.",
+      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, and exposes Client/Project creation, detail and directory watches, pending-upload count, cipher inspection and explicit close/delete behavior.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -23284,7 +23286,8 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
       "notes": "The local staging shell opens no hosted connection.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
@@ -23355,12 +23358,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "f742b093971dae44892110a13b0178b95ffadadb66539280873a65c252ae1aa3",
-      "acknowledgedSourceHash": "f742b093971dae44892110a13b0178b95ffadadb66539280873a65c252ae1aa3",
+      "observedSourceHash": "e247e9377d9379dd039afe417ed79ac42f59400f6653cfc86da7f94aa375d6a4",
+      "acknowledgedSourceHash": "e247e9377d9379dd039afe417ed79ac42f59400f6653cfc86da7f94aa375d6a4",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Observes one Project and its authoritative Client from local PowerSync data, overlays pending Project/new-Client setup without claiming authority, and removes the complete local optimistic aggregate after authoritative Project/Client readback is visible.",
+      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -23372,7 +23375,7 @@
           "Every lookup binds exact Account and Project identity"
         ],
         "syncRequirements": [
-          "Pending evidence is partial; authoritative rows win and cause linked overlays to be removed"
+          "Pending evidence is partial; authoritative core rows remove only linked core overlays, while allocation optimism waits for allocation-aware proof"
         ]
       },
       "migration": {
@@ -23383,10 +23386,10 @@
       },
       "verification": {
         "tests": [
-          "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesProjectAggregate"
+          "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"
         ],
         "acceptance": [
-          "Authoritative readback renders once and removes Project, allocation and new-Client overlays"
+          "Authoritative core readback renders once, removes exact Project/new-Client core overlays and retains pending allocations"
         ]
       },
       "status": "target_mapped",
@@ -23394,7 +23397,8 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-PROJECT-SETUP-PROVIDER-001"
+        "EVID-PROJECT-SETUP-PROVIDER-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
       "notes": "The query currently owns Project core details only; budget-segment and history queries remain separate slices.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
@@ -30595,12 +30599,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "1390c6f9845919ff50a7233449e9f8c634b5cf21f22a339c3f23cf847a26d92f",
-      "acknowledgedSourceHash": "1390c6f9845919ff50a7233449e9f8c634b5cf21f22a339c3f23cf847a26d92f",
+      "observedSourceHash": "e974e63d8da66e74dead6a21359af89347aa32a146bee6512414bfd2a3db1282",
+      "acknowledgedSourceHash": "e974e63d8da66e74dead6a21359af89347aa32a146bee6512414bfd2a3db1282",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed READY boundary for the Account/Principal-bound PowerSync Client/Project directory adapter; it declares no executable type or query.",
+      "currentBehavior": "Implements the Account/Principal-bound PowerSync ClientProjectDirectoryQuerying adapter: it combines local rows with independently reactive Client/Project completeness, exposes only caller-owned pending creates before membership as partial, gates authoritative rows and reconciliation on active membership, preserves incomplete Project-to-Client joins, derives content-bound local versions, and cancels both observations with the consumer.",
       "disposition": "redesign",
       "target": {
         "owner": "Client and Project Directory",
@@ -30628,21 +30632,21 @@
       },
       "verification": {
         "tests": [
-          "ClientProjectDirectoryPowerSyncQueryTests",
-          "ProjectPowerSyncVerticalSliceTests"
+          "16 ClientProjectDirectoryPowerSyncQueryTests",
+          "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"
         ],
         "acceptance": [
-          "All planned local read, isolation, readiness, restart, cancellation and reconciliation cases pass before status advancement"
+          "Local read, isolation, readiness, restart, cancellation, navigation and aggregate-safe reconciliation cases pass without claiming hosted Sync authorization"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
-      "notes": "Comment-only READY scaffold; implementation must preserve explicit incomplete and pending truth.",
+      "notes": "Implemented and locally verified with synthetic encrypted databases; real hosted Sync authorization remains required before verification/rehearsal.",
       "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
     },
     {
@@ -38524,12 +38528,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "7b40b2d6e853cb458eb65955ee7764afefb60851f4b699560de3e431e9e82cbe",
-      "acknowledgedSourceHash": "7b40b2d6e853cb458eb65955ee7764afefb60851f4b699560de3e431e9e82cbe",
+      "observedSourceHash": "709d0c95ac1f6194e5d4a933278b3da2c22bc984f0c6017c98fd5d7eacaeb6f3",
+      "acknowledgedSourceHash": "709d0c95ac1f6194e5d4a933278b3da2c22bc984f0c6017c98fd5d7eacaeb6f3",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs seven target-only PowerSync Project tests for cross-runtime canonical parity, encrypted atomic restart durability, authoritative overlay reconciliation, existing/new Client branches, zero categories, aggregate rejection cleanup, mixed command FIFO dispatch and Int64 RPC precision.",
+      "currentBehavior": "Runs seven target-only PowerSync Project tests for cross-runtime canonical parity, encrypted atomic restart durability, Project/Client core-only authoritative reconciliation with allocation retention, existing/new Client branches, zero categories, complete rejection cleanup, mixed command FIFO dispatch and Int64 RPC precision.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -38540,7 +38544,7 @@
           "Tests assert encrypted persistence, scoped credentials and malformed/rebound refusal"
         ],
         "syncRequirements": [
-          "Tests assert one command transaction, aggregate cleanup and Client/Project FIFO behavior"
+          "Tests assert one command transaction, aggregate cleanup on rejection, allocation retention after core-only readback and Client/Project FIFO behavior"
         ]
       },
       "migration": {
@@ -38554,7 +38558,7 @@
           "npm run target:powersync:test"
         ],
         "acceptance": [
-          "All seven Project PowerSync tests pass"
+          "All seven Project PowerSync tests pass, including core-only reconciliation that retains all three pending allocations"
         ]
       },
       "status": "target_mapped",
@@ -38563,7 +38567,8 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-PROJECT-SETUP-PROVIDER-001"
+        "EVID-PROJECT-SETUP-PROVIDER-001",
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
       "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
@@ -38972,12 +38977,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "c84ff0f66d2494a94d153dc6307d6a562e24c618a947f18bdf36bf40e13ee278",
-      "acknowledgedSourceHash": "c84ff0f66d2494a94d153dc6307d6a562e24c618a947f18bdf36bf40e13ee278",
+      "observedSourceHash": "82574e88cabe4e32f1d3284ab5de54759b670c9856ddc39c7ae2dae0a4add6e5",
+      "acknowledgedSourceHash": "82574e88cabe4e32f1d3284ab5de54759b670c9856ddc39c7ae2dae0a4add6e5",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the reviewed READY test boundary for synthetic disposable Client/Project directory provider verification; it runs no tests.",
+      "currentBehavior": "Runs 16 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards and cancellation.",
       "disposition": "redesign",
       "target": {
         "owner": "Client and Project Directory",
@@ -39003,17 +39008,17 @@
           "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"
         ],
         "acceptance": [
-          "Every planned case becomes executable before the provider slice advances beyond ready"
+          "All 16 directory-provider tests pass and distinguish local scope proof from later hosted Sync authorization proof"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
       ],
-      "notes": "Comment-only READY scaffold using no hosted endpoint or production data.",
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed.",
       "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
     },
     {
@@ -42670,12 +42675,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "de4d74577376af3cf1280252f85f3c69e41f64a98e97ee98a9a1cf38dc253c87",
-      "acknowledgedSourceHash": "de4d74577376af3cf1280252f85f3c69e41f64a98e97ee98a9a1cf38dc253c87",
+      "observedSourceHash": "a6d9a90ae3435e605fbae996446d389fe5d96fb4678ade94169639072c3bc160",
+      "acknowledgedSourceHash": "a6d9a90ae3435e605fbae996446d389fe5d96fb4678ade94169639072c3bc160",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, authoritative overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
+      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",

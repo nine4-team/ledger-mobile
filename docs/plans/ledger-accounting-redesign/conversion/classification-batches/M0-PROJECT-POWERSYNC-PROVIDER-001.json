@@ -109,26 +109,26 @@
     },
     {
       "id": "SWIFT-56CB8BCDD85C",
-      "acknowledgeSourceHash": "f742b093971dae44892110a13b0178b95ffadadb66539280873a65c252ae1aa3",
-      "currentBehavior": "Observes one Project and its authoritative Client from local PowerSync data, overlays pending Project/new-Client setup without claiming authority, and removes the complete local optimistic aggregate after authoritative Project/Client readback is visible.",
+      "acknowledgeSourceHash": "e247e9377d9379dd039afe417ed79ac42f59400f6653cfc86da7f94aa375d6a4",
+      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-004"],
-      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
       "notes": "The query currently owns Project core details only; budget-segment and history queries remain separate slices.",
       "target": {
         "owner": "Project Setup",
         "surfaces": ["PowerSync Project core-details query adapter", "Optimistic Project aggregate reconciliation"],
         "securityRequirements": ["Every lookup binds exact Account and Project identity"],
-        "syncRequirements": ["Pending evidence is partial; authoritative rows win and cause linked overlays to be removed"]
+        "syncRequirements": ["Pending evidence is partial; authoritative core rows remove only linked core overlays, while allocation optimism waits for allocation-aware proof"]
       },
       "migration": {
         "rule": "Read target local rows only and never a Firebase cache.",
         "reconciliation": ["Evicting an authoritative row cannot resurrect a previously reconciled optimistic Project"]
       },
       "verification": {
-        "tests": ["ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesProjectAggregate"],
-        "acceptance": ["Authoritative readback renders once and removes Project, allocation and new-Client overlays"]
+        "tests": ["ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesOnlyProjectCore"],
+        "acceptance": ["Authoritative core readback renders once, removes exact Project/new-Client core overlays and retains pending allocations"]
       }
     },
     {
@@ -157,18 +157,18 @@
     },
     {
       "id": "TEST-3F2CAFC760D5",
-      "acknowledgeSourceHash": "7b40b2d6e853cb458eb65955ee7764afefb60851f4b699560de3e431e9e82cbe",
-      "currentBehavior": "Runs seven target-only PowerSync Project tests for cross-runtime canonical parity, encrypted atomic restart durability, authoritative overlay reconciliation, existing/new Client branches, zero categories, aggregate rejection cleanup, mixed command FIFO dispatch and Int64 RPC precision.",
+      "acknowledgeSourceHash": "709d0c95ac1f6194e5d4a933278b3da2c22bc984f0c6017c98fd5d7eacaeb6f3",
+      "currentBehavior": "Runs seven target-only PowerSync Project tests for cross-runtime canonical parity, encrypted atomic restart durability, Project/Client core-only authoritative reconciliation with allocation retention, existing/new Client branches, zero categories, complete rejection cleanup, mixed command FIFO dispatch and Int64 RPC precision.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
       "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only.",
       "target": {
         "owner": "Project Setup",
         "surfaces": ["Project setup PowerSync vertical-slice test suite"],
         "securityRequirements": ["Tests assert encrypted persistence, scoped credentials and malformed/rebound refusal"],
-        "syncRequirements": ["Tests assert one command transaction, aggregate cleanup and Client/Project FIFO behavior"]
+        "syncRequirements": ["Tests assert one command transaction, aggregate cleanup on rejection, allocation retention after core-only readback and Client/Project FIFO behavior"]
       },
       "migration": {
         "rule": "Use synthetic target-only commands and disposable databases.",
@@ -176,7 +176,7 @@
       },
       "verification": {
         "tests": ["npm run target:powersync:test"],
-        "acceptance": ["All seven Project PowerSync tests pass"]
+        "acceptance": ["All seven Project PowerSync tests pass, including core-only reconciliation that retains all three pending allocations"]
       }
     },
     {

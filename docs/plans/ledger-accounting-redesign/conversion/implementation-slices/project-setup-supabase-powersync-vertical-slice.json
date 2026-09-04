@@ -50,7 +50,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
       "section": "Offline Contract",
-      "invariant": "The app accepts the whole Project setup without network, stores the operation plus optional Client, Project and complete allocation optimism atomically in encrypted local storage, renders it as partial, and preserves it until durable rejection or authoritative readback reconciles the entire aggregate.",
+      "invariant": "The app accepts the whole Project setup without network, stores the operation plus optional Client, Project and complete allocation optimism atomically in encrypted local storage, renders it as partial, and preserves each portion until durable rejection removes the entire aggregate or an aggregate-aware authoritative read proves that portion has arrived.",
       "decisionIds": [],
       "verificationIds": ["PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-003", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-007", "PROJECTPROVIDER-TEST-012"]
     },
@@ -129,7 +129,7 @@
     "localOffline": {
       "items": [
         "Offline acceptance atomically writes local operation evidence, optional new-Client optimism, Project optimism, the complete allocation optimism and one insert-only Project command into encrypted per-Principal/Account PowerSync storage.",
-        "Pending rows remain partial; durable rejection removes the entire optimistic aggregate, while authoritative Project/Client readback wins and deletes linked local-only overlays so later authority eviction cannot resurrect stale optimism.",
+        "Pending rows remain partial; durable rejection removes the entire optimistic aggregate. Active-membership-visible authoritative Project/Client core readback deletes only the linked core overlays so later authority eviction cannot resurrect them; without membership, exact caller-owned pending details retain precedence and are not reconciled. Pending category allocations remain until an allocation-aware authoritative read proves their replacement.",
         "The upload connector validates exact local operation/overlay linkage and dispatches Client and Project commands in FIFO order only after matching immutable terminal results."
       ],
       "notApplicable": ""
@@ -181,7 +181,7 @@
       "kind": "offline_restart",
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift",
       "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-003", "PROJECTPROVIDER-REQ-004"],
-      "expected": "New/existing Client setup, zero categories and exact nullable/zero/mixed-currency allocations persist atomically in encrypted local storage across close/reopen with one upload command.",
+      "expected": "New/existing Client setup, zero categories and exact nullable/zero/mixed-currency allocations persist atomically in encrypted local storage across close/reopen with one upload command; core-only readback cannot discard allocation optimism.",
       "status": "passed",
       "evidence": []
     },

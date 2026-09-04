@@ -39,8 +39,11 @@ capability, category-visibility and cross-tenant boundaries.
   upload command;
 - Client/Project FIFO command dispatch with exact local operation/overlay and
   terminal-result validation;
-- authoritative Project/Client readback that removes the complete linked local
-  optimistic aggregate, preventing stale resurrection after later eviction;
+- active-membership-visible authoritative Project/Client core readback that
+  removes only the exact linked
+  core overlays, preventing their stale resurrection after later eviction while
+  retaining pending category allocations until an allocation-aware read proves
+  authoritative replacement;
 - a scoped-user Swift Supabase RPC adapter preserving `Int64` Money and nullable
   allocation/description fields;
 - seven Project PowerSync tests and five target MCP Project tests with one shared
@@ -88,7 +91,9 @@ corrected:
 - missing Project SQL, REST, offline, transport and cross-runtime tests;
 - an upload connector that initially recognized only Client commands;
 - missing exact local operation/overlay linkage validation; and
-- successful overlays that were not removed after authoritative readback.
+- successful core overlays that were not removed after authoritative readback;
+  the corrected shared reconciler removes those core rows but deliberately
+  retains allocation optimism until aggregate-aware evidence exists.
 
 ## Explicit Open Gates
 

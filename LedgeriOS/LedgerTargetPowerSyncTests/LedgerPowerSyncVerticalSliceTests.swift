@@ -167,6 +167,8 @@ struct LedgerPowerSyncVerticalSliceTests {
         )
         let query = ClientCoreDetailsPowerSyncQuery(
             database: database,
+            principalId: command.envelope.actorPrincipalId,
+            accountId: command.envelope.accountId,
             now: { Self.observedAt }
         )
         var iterator = query.watchClientCoreDetails(request).makeAsyncIterator()
@@ -202,6 +204,19 @@ struct LedgerPowerSyncVerticalSliceTests {
         let database = try fixture.open()
         let command = try Self.command()
         _ = try await ClientCreationPowerSyncStore(database: database).create(command)
+        _ = try await database.execute(
+            sql: """
+            INSERT INTO spike_account_memberships (
+              id, account_id, principal_id, role, state,
+              can_manage_clients, can_manage_projects,
+              can_manage_project_budgets, financial_access
+            ) VALUES ('membership-owner', ?, ?, 'owner', 'active', 1, 1, 1, 'full')
+            """,
+            parameters: [
+                command.envelope.accountId.rawValue,
+                command.envelope.actorPrincipalId.rawValue
+            ]
+        )
         let createdAtMilliseconds = Int64(Self.capturedAt.timeIntervalSince1970 * 1_000)
         _ = try await database.execute(
             sql: """
@@ -226,6 +241,8 @@ struct LedgerPowerSyncVerticalSliceTests {
         )
         var iterator = ClientCoreDetailsPowerSyncQuery(
             database: database,
+            principalId: command.envelope.actorPrincipalId,
+            accountId: command.envelope.accountId,
             now: { Self.observedAt }
         ).watchClientCoreDetails(request).makeAsyncIterator()
         _ = try await iterator.next()

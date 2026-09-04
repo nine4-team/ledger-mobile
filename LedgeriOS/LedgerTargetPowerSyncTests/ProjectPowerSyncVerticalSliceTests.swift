@@ -94,6 +94,8 @@ struct ProjectPowerSyncVerticalSliceTests {
 
         let query = ProjectCoreDetailsPowerSyncQuery(
             database: reopened,
+            principalId: command.envelope.actorPrincipalId,
+            accountId: command.envelope.accountId,
             now: { Self.observedAt }
         )
         let request = try ProjectCoreDetailsRequest(
@@ -138,12 +140,25 @@ struct ProjectPowerSyncVerticalSliceTests {
         fixture.removeDirectory()
     }
 
-    @Test("Authoritative Project readback removes the complete optimistic aggregate")
-    func authoritativeReadbackReconcilesProjectAggregate() async throws {
+    @Test("Authoritative core readback retains allocation optimism until aggregate proof")
+    func authoritativeReadbackReconcilesOnlyProjectCore() async throws {
         let fixture = try ProjectDatabaseFixture()
         let database = try fixture.open()
         let command = try Self.newClientCommand()
         _ = try await ProjectSetupPowerSyncStore(database: database).create(command)
+        _ = try await database.execute(
+            sql: """
+            INSERT INTO spike_account_memberships (
+              id, account_id, principal_id, role, state,
+              can_manage_clients, can_manage_projects,
+              can_manage_project_budgets, financial_access
+            ) VALUES ('membership-owner', ?, ?, 'owner', 'active', 1, 1, 1, 'full')
+            """,
+            parameters: [
+                command.envelope.accountId.rawValue,
+                command.envelope.actorPrincipalId.rawValue
+            ]
+        )
         let timestamp = Int64(Self.capturedAt.timeIntervalSince1970 * 1_000)
         _ = try await database.execute(
             sql: """
@@ -187,6 +202,8 @@ struct ProjectPowerSyncVerticalSliceTests {
         )
         var iterator = ProjectCoreDetailsPowerSyncQuery(
             database: database,
+            principalId: command.envelope.actorPrincipalId,
+            accountId: command.envelope.accountId,
             now: { Self.observedAt }
         ).watchProjectCoreDetails(request).makeAsyncIterator()
         _ = try await iterator.next()
@@ -204,7 +221,7 @@ struct ProjectPowerSyncVerticalSliceTests {
             try await Self.count(
                 "spike_pending_project_category_allocations",
                 database: database
-            ) == 0
+            ) == 3
         )
 
         try await database.close(deleteDatabase: true)

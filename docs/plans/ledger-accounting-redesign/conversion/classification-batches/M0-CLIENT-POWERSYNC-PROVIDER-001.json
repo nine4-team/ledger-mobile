@@ -99,10 +99,10 @@
     {
       "id": "SWIFT-2ADDF7B64EA0",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b37c217dfa8142a088761ae932e9fc7087592a87f9ee834fb20bac6eb53b59e1",
-      "currentBehavior": "Implements Client core-details observation from authoritative plus local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority wins and removes the linked pending overlay before it can later resurrect.",
+      "acknowledgeSourceHash": "680490b2ac5f11790f92f375f0e7bba827f8e44dc0d863a66ebcbe067eeb5437",
+      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative plus exact caller-owned local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority is visible and may remove the linked pending overlay only while active membership is locally present.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "No direct network or backend SDK leaks through the core query port.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"], "notes": "No direct network or backend SDK leaks through the core query port.",
       "target": {"owner": "Client Identity", "surfaces": ["PowerSync Client core-details query adapter"], "securityRequirements": ["Queries bind exact Account and Client identifiers"], "syncRequirements": ["Pending local operation evidence overrides earlier has-synced state and keeps the view partial"]},
       "migration": {"rule": "Use target local rows only; do not read Firebase cache through this adapter.", "reconciliation": ["Server-synchronized rows clear local optimism and may become ready"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.optimisticReadinessIsHonest", "LedgerPowerSyncVerticalSliceTests.pendingRowRemainsPartialAfterEarlierSync"], "acceptance": ["Optimistic rows render immediately but never as authoritative"]}
@@ -121,10 +121,10 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "69c380a8ba7d88baf9646bb25d34e91226bf39c44c7147a879d55a156a8bfcca",
-      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime and exposes Client/Project create/watch operations, pending-upload count, cipher inspection and explicit close/delete behavior.",
+      "acknowledgeSourceHash": "7ffc93ba2a81109fbbaf20ce6d0a3b71ad76df2c4ddbcf9f4c73a56740a3af12",
+      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, and exposes Client/Project creation, detail and directory watches, pending-upload count, cipher inspection and explicit close/delete behavior.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
       "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}
@@ -176,8 +176,8 @@
     {
       "id": "TEST-E0636D89C442",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "de4d74577376af3cf1280252f85f3c69e41f64a98e97ee98a9a1cf38dc253c87",
-      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, authoritative overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
+      "acknowledgeSourceHash": "a6d9a90ae3435e605fbae996446d389fe5d96fb4678ade94169639072c3bc160",
+      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; no hosted provider access.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync vertical-slice test suite"], "securityRequirements": ["Tests assert encryption, scoped credentials and malformed/rebound refusal"], "syncRequirements": ["Tests assert exact CRUD transaction, terminal drain and non-authoritative optimism"]},

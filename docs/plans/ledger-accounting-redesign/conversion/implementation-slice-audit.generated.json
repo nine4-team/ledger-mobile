@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T20:18:08.268Z",
+  "generatedFromManifestSync": "2026-09-04T20:50:07.450Z",
   "totals": {
     "slices": 72,
     "claimedTargetSurfaces": 201,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 147
+    "implementationAdvancedTargetSurfaces": 149
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 1,
+    "implemented": 2,
     "verified": 66,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -173,7 +173,7 @@
       "sliceId": "client-project-directory-powersync-provider",
       "title": "Browse local Clients and Projects through the PowerSync directory port",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Client and Project Directory",
       "surfaceIds": [
         "SWIFT-B23F91245E50",
