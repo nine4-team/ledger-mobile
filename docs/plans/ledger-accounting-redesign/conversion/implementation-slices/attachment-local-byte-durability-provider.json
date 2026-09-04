@@ -3,7 +3,7 @@
   "sliceId": "attachment-local-byte-durability-provider",
   "title": "Accept an offline attachment only after protected local bytes and queue evidence re-verify",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Attachment Local Durability Provider",
   "surfaceIds": [
     "SWIFT-68F4E18977D4",
@@ -43,7 +43,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
       "section": "Required Offline Fault Cases",
-      "invariant": "Interruption, corruption, missing bytes, wrong keys, permission failure, storage exhaustion and metadata failure produce explicit fail-closed state; a failed new capture never evicts or silently discards previously accepted work.",
+      "invariant": "Interruption, corruption, missing bytes, wrong keys and deterministically injected storage/queue-boundary failures produce explicit fail-closed state; a failed new capture never evicts or silently discards previously accepted work. Physical permission and storage-exhaustion evidence remains a SPIKE-MED-001 obligation.",
       "decisionIds": [],
       "verificationIds": ["ATTACHDUR-TEST-003", "ATTACHDUR-TEST-004", "ATTACHDUR-TEST-006", "ATTACHDUR-TEST-008"]
     },
@@ -125,10 +125,10 @@
     },
     "storageMedia": {
       "items": [
-        "A trusted scoped root uses an internally generated filename derived only after rejecting dot/reserved components and link substitution, platform complete data-protection attributes and backup exclusion, plus authenticated encryption under an injected per-namespace 256-bit key distinct from SQLCipher.",
+        "A trusted scoped root and directory-descriptor-relative byte operations use an internally generated filename derived only after rejecting dot/reserved components and link substitution, platform complete data-protection attributes and backup exclusion, plus authenticated encryption under an injected per-namespace 256-bit key distinct from SQLCipher.",
         "Authenticated associated data binds the contract version, namespace, scope, parent, Attachment, byte count and content digest; reads revalidate AEAD, count and digest before returning bytes.",
         "A recoverable staging/final-object protocol classifies interruption orphans; exact replay deduplicates by Attachment ID, while equal bytes under different IDs remain separate.",
-        "Injected storage pressure and filesystem faults refuse only the new capture and preserve all previously accepted ciphertext and queue evidence."
+        "Deterministically injected failures at every storage and queue boundary refuse only the new capture and preserve all previously accepted ciphertext and queue evidence; real low-storage and permission evidence remains deferred to SPIKE-MED-001."
       ],
       "notApplicable": ""
     },
@@ -163,8 +163,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-001", "ATTACHDUR-REQ-002", "ATTACHDUR-REQ-005", "ATTACHDUR-REQ-007"],
       "expected": "Synthetic capture yields the exact existing receipt only after ciphertext and queue evidence re-verify; raw files/metadata contain no plaintext bytes or provider/path locator.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-002",
@@ -172,8 +172,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-001", "ATTACHDUR-REQ-002", "ATTACHDUR-REQ-003", "ATTACHDUR-REQ-008"],
       "expected": "Closing and recreating the vault/database with the same scoped root and keys recovers the identical receipt, pending count/order and verified bytes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-003",
@@ -181,8 +181,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-002", "ATTACHDUR-REQ-004"],
       "expected": "At every injected interruption before/after staging write, synchronization, promotion, queue commit and receipt return, recovery yields either one exact accepted record or an explicitly inventoried non-success staging/final orphan; no final file/row mismatch is invisible and only a committed exact replay may return the receipt.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-004",
@@ -190,8 +190,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-001", "ATTACHDUR-REQ-002", "ATTACHDUR-REQ-003", "ATTACHDUR-REQ-004", "ATTACHDUR-REQ-007", "ATTACHDUR-REQ-008"],
       "expected": "Missing/truncated/tampered ciphertext, wrong key, changed count/digest and malformed metadata fail closed, remain counted as unresolved evidence and are never silently deleted or returned for upload.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-005",
@@ -199,17 +199,17 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-002", "ATTACHDUR-REQ-005"],
       "expected": "Sequential and concurrent exact Attachment replay returns one identical receipt/row/object; concurrent changed-payload replay rejects deterministically, changed bytes/scope/parent/identity cannot rebind, and equal bytes with different Attachment IDs remain distinct.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-006",
       "kind": "media_fault",
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-004"],
-      "expected": "Simulated insufficient space, permission, write, synchronization, promotion and SQLite failures return no receipt and never evict older accepted work.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Deterministically injected failures at every staging-write, synchronization, promotion and queue-commit boundary return no receipt and never evict older accepted work; physical permission and storage-exhaustion proof remains deferred to SPIKE-MED-001.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-007",
@@ -217,8 +217,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-003", "ATTACHDUR-REQ-006", "ATTACHDUR-REQ-007"],
       "expected": "Different environment, Principal or Account fixtures cannot enumerate, open, enqueue into or read one another's attachment namespace.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-008",
@@ -226,17 +226,17 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-001", "ATTACHDUR-REQ-003", "ATTACHDUR-REQ-004", "ATTACHDUR-REQ-005", "ATTACHDUR-REQ-008"],
       "expected": "Pending order/count survive recreation, structured rows contain no raw bytes/provider locator, and reading a verified future-upload candidate never marks it uploaded or removes evidence.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-010",
       "kind": "sync_authorization",
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-001", "ATTACHDUR-REQ-005"],
-      "expected": "Enqueue writes only the isolated localOnly attachment table, leaves ps_crud empty, appears in no structured upload path or Sync Stream, and cross-scope local reads return no candidate.",
-      "status": "planned",
-      "evidence": []
+      "expected": "Enqueue writes only isolated localOnly attachment tables, leaves ps_crud empty, and those tables are absent from the shared Ledger PowerSync schema; structured upload and Sync Stream composition remain absent by implementation boundary rather than simulated locally.",
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-011",
@@ -244,8 +244,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift",
       "covers": ["ATTACHDUR-REQ-002", "ATTACHDUR-REQ-007"],
       "expected": "Dot/reserved local-object identities, tampered path metadata, symlink/hardlink substitution and root escape fail closed; queue rows and diagnostics contain no key, absolute path, plaintext or provider locator, and protection/backup attributes are asserted where exposed by the platform.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     },
     {
       "id": "ATTACHDUR-TEST-009",
@@ -257,8 +257,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY scope is limited to deterministic local-provider proof. It deliberately exposes no remote success, retention/deletion behavior, shared runtime integration or app UI. O-023 remains fully open; A-003/A-004 and SPIKE-MED-001 remain unadvanced."
+  "notes": "The deterministic local provider is implemented and locally verified. Immutable exact-commit CI is pending, so this dossier is not verified. It deliberately exposes no remote success, retention/deletion behavior, shared runtime integration or app UI. O-023 remains fully open; A-003/A-004 and SPIKE-MED-001 remain unadvanced."
 }

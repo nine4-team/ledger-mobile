@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 260
+State version: 261
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-SETUP-SUPABASE-POWERSYNC-IMPLEMENTED-LOCAL
+- Checkpoint: ATTACHMENT-LOCAL-DURABILITY-PROVIDER-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,9 +36,9 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 261 status-bearing rows: 67
-  done, four verified, one implemented, 12 in progress, 25 design, 60 blocked,
-  90 not started, and two existing-source rows. Most completed rows are
+- The implementation tracker currently contains 262 status-bearing rows: 67
+  done, four verified, one implemented, one awaiting verification, 12 in
+  progress, 25 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
 - Two provider-backed product slices now work locally: offline Client creation
@@ -47,12 +47,34 @@ without modifying the running Firebase application before hard cutover.
   gated target MCP boundaries. The exact Project implementation checkpoint now
   passes immutable CI; both slices remain incomplete until a real isolated
   PowerSync/Auth round-trip passes.
+- One supporting provider slice now durably accepts encrypted attachment bytes
+  offline in an isolated, scope-bound local PowerSync database. It is not yet an
+  upload/display product path and does not advance the physical hosted media
+  spike.
 - Future progress reports must separately state (1) planning/control coverage,
   (2) locally executable provider-backed slices, (3) hosted rehearsal, and
   (4) cutover readiness. A single percentage may be given only with that
   denominator stated.
 
 ## Completed at This Checkpoint
+
+- Implemented the protected local attachment-byte durability provider behind
+  the existing backend-neutral capture port. Acceptance now encrypts bytes with
+  a distinct media key, authenticates scope/parent/identity/count/digest,
+  promotes through directory-descriptor-relative atomic storage, commits exact
+  localOnly SQLCipher queue evidence, rereads/decrypts/re-hashes, and only then
+  returns a path-free receipt. Pending/missing/corrupt work survives recreation;
+  exact replay deduplicates; changed concurrent replay, scope rebinding, missing
+  scope bindings, wrong keys, malformed evidence, links, and unsafe identities
+  fail closed. Independent review found and drove corrections for path races,
+  unbounded reads, mutable-scope hiding, ineffective wrong-key/SQLCipher tests,
+  a CI filter that omitted the suite, and physical-fault overclaims. Ten focused
+  tests pass with Swift warnings as errors, and the actual 19-test PowerSync
+  command also passes.
+  Immutable exact-commit CI is pending; hosted upload/Storage/Auth/Sync,
+  physical-device/low-storage/power-loss/soak evidence, app composition,
+  O-023 retention/deletion behavior, migration, production and cutover remain
+  unadvanced; `EVID-ATTACHMENT-DURABILITY-PROVIDER-001`.
 
 - Implemented the first complete Project setup provider slice locally on top of
   the verified provider-free contracts. One offline transaction stores local

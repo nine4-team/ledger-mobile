@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T16:47:02.200Z",
+    "lastSynchronizedAt": "2026-09-04T17:44:37.051Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -24438,12 +24438,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentLocalByteVault.swift"
         }
       ],
-      "observedSourceHash": "a3f9a2da668919452d71f8c08e2428d763fb844002c4fb986305c1dac28879c5",
-      "acknowledgedSourceHash": "a3f9a2da668919452d71f8c08e2428d763fb844002c4fb986305c1dac28879c5",
+      "observedSourceHash": "fd6100a7efefbbf2196dea9e8c66d12d5473a21675dee1b08ec082e025901483",
+      "acknowledgedSourceHash": "fd6100a7efefbbf2196dea9e8c66d12d5473a21675dee1b08ec082e025901483",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "READY-only scaffold for an encrypted, protected and scope-partitioned attachment byte vault whose opaque object names and authenticated metadata expose no caller path or provider locator.",
+      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, and explicit orphan evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -24472,12 +24472,13 @@
           "Encryption, restart, interruption, corruption, scope isolation and storage-pressure cases fail closed without losing prior accepted bytes"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
-        "EVID-ATTACHMENT-CAPTURE-001"
+        "EVID-ATTACHMENT-CAPTURE-001",
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"
       ],
       "notes": "Local disposable provider only. It does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
@@ -35813,12 +35814,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentCapturePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "a3f9a2da668919452d71f8c08e2428d763fb844002c4fb986305c1dac28879c5",
-      "acknowledgedSourceHash": "a3f9a2da668919452d71f8c08e2428d763fb844002c4fb986305c1dac28879c5",
+      "observedSourceHash": "d5fc58365db81a619d1600208997d0108a19c701486a02f88a7139263600fade",
+      "acknowledgedSourceHash": "d5fc58365db81a619d1600208997d0108a19c701486a02f88a7139263600fade",
       "metadata": {
-        "firebaseCoupling": "none_detected"
+        "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "READY-only scaffold for the existing backend-neutral attachment-capture port's PowerSync-backed local durability adapter and isolated local-only queue schema.",
+      "currentBehavior": "Implemented backend-neutral attachment-capture adapter with an encrypted, scope-bound isolated PowerSync database, localOnly queue/binding tables, exact replay protection, pending evidence, and non-consuming verified upload candidates.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -35847,12 +35848,13 @@
           "Queue count/order and exact receipt survive adapter/database recreation without false upload or cleanup claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
-        "EVID-ATTACHMENT-CAPTURE-001"
+        "EVID-ATTACHMENT-CAPTURE-001",
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"
       ],
       "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
@@ -41530,12 +41532,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift"
         }
       ],
-      "observedSourceHash": "b71ad3e516ff166f0dcabfcb31272b7a35c5cb28d587c8e84e21f7c91286aae6",
-      "acknowledgedSourceHash": "b71ad3e516ff166f0dcabfcb31272b7a35c5cb28d587c8e84e21f7c91286aae6",
+      "observedSourceHash": "2a648c0affc727337a7936f1a3789c1b170e876666d37b2f9b80376fc76a86c9",
+      "acknowledgedSourceHash": "2a648c0affc727337a7936f1a3789c1b170e876666d37b2f9b80376fc76a86c9",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "READY-only scaffold for deterministic local attachment durability, restart, fault, corruption, replay, storage-pressure and scope-isolation verification.",
+      "currentBehavior": "Implemented deterministic local attachment durability tests for encryption, restart, interruption, wrong-key/corruption, concurrent replay, scope/database binding, SQLCipher leakage, localOnly isolation, path/link defense, and non-consuming reads.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -41558,19 +41560,20 @@
       "verification": {
         "tests": [
           "npm run target:powersync:test",
-          "npm run target:swift:test"
+          "swift test --package-path LedgeriOS"
         ],
         "acceptance": [
           "Focused and complete target suites plus immutable CI pass on exact synchronized commits"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-ATTACHMENT-CAPTURE-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"
       ],
       "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"

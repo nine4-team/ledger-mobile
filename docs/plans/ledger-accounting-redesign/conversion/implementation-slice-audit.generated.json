@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T16:47:02.200Z",
+  "generatedFromManifestSync": "2026-09-04T17:44:37.051Z",
   "totals": {
     "slices": 70,
     "claimedTargetSurfaces": 190,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 144
+    "implementationAdvancedTargetSurfaces": 147
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 1,
+    "implemented": 2,
     "verified": 65,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -51,7 +51,7 @@
       "sliceId": "attachment-local-byte-durability-provider",
       "title": "Accept an offline attachment only after protected local bytes and queue evidence re-verify",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Attachment Local Durability Provider",
       "surfaceIds": [
         "SWIFT-68F4E18977D4",
