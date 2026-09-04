@@ -1,0 +1,83 @@
+{
+  "batchId": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
+  "title": "Target protected local attachment-byte durability provider",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-ATTACHMENT-CAPTURE-001",
+    "EVID-TARGET-ENVIRONMENT-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-68F4E18977D4",
+      "acknowledgeSourceHash": "a3f9a2da668919452d71f8c08e2428d763fb844002c4fb986305c1dac28879c5",
+      "currentBehavior": "READY-only scaffold for an encrypted, protected and scope-partitioned attachment byte vault whose opaque object names and authenticated metadata expose no caller path or provider locator.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"],
+      "notes": "Local disposable provider only. It does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
+      "target": {
+        "owner": "Attachment Local Durability Provider",
+        "surfaces": ["Protected encrypted local attachment-byte vault"],
+        "securityRequirements": ["Bytes and paths are partitioned by validated environment, Principal and Account scope", "Ciphertext authentication binds Attachment, parent, scope, digest and byte count"],
+        "syncRequirements": ["Raw bytes never enter PowerSync structured upload data or a Sync Stream"]
+      },
+      "migration": {
+        "rule": "Use only synthetic bytes in disposable target fixtures; read no Firebase path, URL or object.",
+        "reconciliation": ["Every accepted queue row resolves to exactly one locally verifiable ciphertext object"]
+      },
+      "verification": {
+        "tests": ["AttachmentDurabilityProviderTests"],
+        "acceptance": ["Encryption, restart, interruption, corruption, scope isolation and storage-pressure cases fail closed without losing prior accepted bytes"]
+      }
+    },
+    {
+      "id": "SWIFT-F850F907B87F",
+      "acknowledgeSourceHash": "a3f9a2da668919452d71f8c08e2428d763fb844002c4fb986305c1dac28879c5",
+      "currentBehavior": "READY-only scaffold for the existing backend-neutral attachment-capture port's PowerSync-backed local durability adapter and isolated local-only queue schema.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001"],
+      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized.",
+      "target": {
+        "owner": "Attachment Local Durability Provider",
+        "surfaces": ["PowerSync local-only attachment durability queue", "AttachmentCaptureStoring provider adapter"],
+        "securityRequirements": ["Exact environment, Principal, Account, parent, Attachment, byte-count and digest rebinding is denied"],
+        "syncRequirements": ["A success receipt is returned only after byte and metadata evidence re-verify; reading a future upload candidate does not mark remote success"]
+      },
+      "migration": {
+        "rule": "Create no Firebase adapter or dual-write path and do not compose into a production runtime.",
+        "reconciliation": ["Exact replay yields one receipt, one queue row and one local object while malformed or missing evidence remains explicit"]
+      },
+      "verification": {
+        "tests": ["AttachmentDurabilityProviderTests"],
+        "acceptance": ["Queue count/order and exact receipt survive adapter/database recreation without false upload or cleanup claims"]
+      }
+    },
+    {
+      "id": "TEST-CE5D3D0516D1",
+      "acknowledgeSourceHash": "b71ad3e516ff166f0dcabfcb31272b7a35c5cb28d587c8e84e21f7c91286aae6",
+      "currentBehavior": "READY-only scaffold for deterministic local attachment durability, restart, fault, corruption, replay, storage-pressure and scope-isolation verification.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-TARGET-ENVIRONMENT-001"],
+      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal.",
+      "target": {
+        "owner": "Attachment Local Durability Provider",
+        "surfaces": ["Attachment local durability provider test suite"],
+        "securityRequirements": ["Raw-file, cross-scope and tamper cases are negative assertions rather than success-path assumptions"],
+        "syncRequirements": ["Tests prove bytes remain outside ps_crud and local reads cannot manufacture uploaded state"]
+      },
+      "migration": {
+        "rule": "Use temporary directories, synthetic scoped identities and no hosted credentials.",
+        "reconciliation": ["Injected interruption points yield either an exact recoverable accepted record or an explainable non-success orphan"]
+      },
+      "verification": {
+        "tests": ["npm run target:powersync:test", "npm run target:swift:test"],
+        "acceptance": ["Focused and complete target suites plus immutable CI pass on exact synchronized commits"]
+      }
+    }
+  ]
+}

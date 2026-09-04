@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T16:27:42.651Z",
+  "generatedFromManifestSync": "2026-09-04T16:47:02.200Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 869,
-    "targetRelevantSurfaces": 609,
-    "batches": 21,
+    "surfaces": 872,
+    "targetRelevantSurfaces": 612,
+    "batches": 22,
     "productScopeSurfaces": 709,
-    "technicalControlSurfaces": 160
+    "technicalControlSurfaces": 163
   },
   "canonicalTargetCoverage": [
     {
@@ -105,10 +105,11 @@
     {
       "path": "docs/specs/session-ending-pending-work.md",
       "batchIds": [
+        "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001"
       ],
-      "surfaceCount": 15,
-      "targetRelevantSurfaceCount": 12
+      "surfaceCount": 18,
+      "targetRelevantSurfaceCount": 15
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -305,6 +306,57 @@
         "TEST-C1A3D3DA5E75",
         "TEST-E106594B9EF3",
         "TEST-F9037F34FAF9"
+      ]
+    },
+    {
+      "batchId": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
+      "title": "Target protected local attachment-byte durability provider",
+      "scope": "technical_control",
+      "rationale": "The isolated attachment provider slice proves only protected encrypted local byte durability, exact scope binding, restart recovery and fail-closed local queue evidence without choosing product retention/deletion policy or claiming hosted Storage and PowerSync behavior.",
+      "surfaceCount": 3,
+      "targetRelevantSurfaceCount": 3,
+      "authorities": [
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-68F4E18977D4",
+        "SWIFT-F850F907B87F",
+        "TEST-CE5D3D0516D1"
       ]
     },
     {
