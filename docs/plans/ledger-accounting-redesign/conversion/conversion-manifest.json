@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T22:51:37.383Z",
+    "lastSynchronizedAt": "2026-09-04T23:13:42.556Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -17549,12 +17549,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "8a2badc86b60c013cad175a9814a67acf47a794c836e2a2254f04c4d874aaf80",
-      "acknowledgedSourceHash": "8a2badc86b60c013cad175a9814a67acf47a794c836e2a2254f04c4d874aaf80",
+      "observedSourceHash": "8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed",
+      "acknowledgedSourceHash": "8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through Account-workspace bootstrap, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -22912,12 +22912,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerWorkspaceRuntimeIsolation.swift"
         }
       ],
-      "observedSourceHash": "de20b88fa8b301fddb8fbc9f01bf63e52242b876cc66cfe515b09b9426e1d663",
-      "acknowledgedSourceHash": "de20b88fa8b301fddb8fbc9f01bf63e52242b876cc66cfe515b09b9426e1d663",
+      "observedSourceHash": "bf6add0067554cea32f839a5a4e6b5ba25dad79462a491a85d37704cd6d61846",
+      "acknowledgedSourceHash": "bf6add0067554cea32f839a5a4e6b5ba25dad79462a491a85d37704cd6d61846",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for validated environment-bound, opaque Account-workspace physical namespace derivation.",
+      "currentBehavior": "Derives one deterministic opaque, path-contained Account-workspace database URL and composite Keychain identity from the validated environment persistence binding plus canonical Principal and Account scope, rejecting invalid namespace/root evidence before side effects.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -22946,12 +22946,12 @@
           "Environment/bundle/persistence-relevant-manifest/Principal/Account isolation and failure ordering pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
       ],
-      "notes": "No executable behavior before exact READY review and CI.",
+      "notes": "Local deterministic implementation only; it opens no hosted service and owns no workspace activation or deletion.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
     },
     {
@@ -23356,12 +23356,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "7ffc93ba2a81109fbbaf20ce6d0a3b71ad76df2c4ddbcf9f4c73a56740a3af12",
-      "acknowledgedSourceHash": "7ffc93ba2a81109fbbaf20ce6d0a3b71ad76df2c4ddbcf9f4c73a56740a3af12",
+      "observedSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
+      "acknowledgedSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, and exposes Client/Project creation, detail and directory watches, pending-upload count, cipher inspection and explicit close/delete behavior.",
+      "currentBehavior": "Composes the encrypted validated-environment/Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, exposes Client/Project creation, detail and directory watches, pending-upload count and cipher inspection, and permits only non-destructive ordinary close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -23400,7 +23400,7 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are frozen in the Account workspace runtime isolation READY slice.",
+      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified by the Account workspace runtime isolation slice.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -38809,12 +38809,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerWorkspaceRuntimeIsolationTests.swift"
         }
       ],
-      "observedSourceHash": "e9f40190bb3060152f7bd3e0689d52c119d9824449dd639daada04a9d9c5664a",
-      "acknowledgedSourceHash": "e9f40190bb3060152f7bd3e0689d52c119d9824449dd639daada04a9d9c5664a",
+      "observedSourceHash": "765099c482cdce38e9bedd4e15e193c0142988d32c82cbdde855e0612b800d8c",
+      "acknowledgedSourceHash": "765099c482cdce38e9bedd4e15e193c0142988d32c82cbdde855e0612b800d8c",
       "metadata": {
-        "firebaseCoupled": true
+        "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for Account workspace namespace, side-effect ordering, encryption restart and non-destructive close tests.",
+      "currentBehavior": "Runs four deterministic tests for stable opaque containment, every individual persistence-relevant environment/scope dimension, dotted-ID collision resistance, pre-side-effect invalid-namespace refusal and encrypted queued-evidence survival across non-destructive close/reopen.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -38843,7 +38843,7 @@
           "All local isolation obligations pass before implementation status"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
@@ -39255,8 +39255,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "82574e88cabe4e32f1d3284ab5de54759b670c9856ddc39c7ae2dae0a4add6e5",
-      "acknowledgedSourceHash": "82574e88cabe4e32f1d3284ab5de54759b670c9856ddc39c7ae2dae0a4add6e5",
+      "observedSourceHash": "df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b",
+      "acknowledgedSourceHash": "df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -39297,7 +39297,7 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
       ],
-      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. The Account workspace isolation slice explicitly owns the later mechanical update from the runtime delete flag to non-destructive close plus direct fixture-directory cleanup.",
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now use non-destructive close plus direct fixture-directory cleanup as verified by the Account workspace isolation slice.",
       "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
     },
     {

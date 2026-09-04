@@ -1,6 +1,6 @@
 # EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001 — Account Workspace Runtime Isolation
 
-- Status: READY reviewed; comment-only new implementation leaves; immutable CI pending
+- Status: implemented locally; exact implementation CI pending
 - Date: 2026-09-04
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
@@ -49,7 +49,47 @@ no remaining P0-P3 finding. Before GO, the package was corrected to:
   authorized opening and one-workspace-at-a-time enforcement to the later
   activation/switch coordinator.
 
-## Planned Verification
+The exact READY commit `428f522553b631f0f34cf9ab8775175e1c1fccd3`
+passed all three jobs in immutable Actions run `33927257913` before executable
+work began.
+
+## Implementation Result
+
+- `LedgerWorkspaceRuntimeIsolation` derives one opaque contained database path
+  and composite Keychain identity from the validated environment persistence
+  binding plus canonical Principal and Account identities.
+- `LedgerPowerSyncLocalBootstrap` no longer accepts a free namespace prefix. It
+  resolves and validates the complete binding before invoking filesystem or
+  Keychain side effects.
+- `LedgerOfflineClientRuntime.close()` always preserves the encrypted database
+  and key; there is no public delete flag.
+- The staging shell retains `ValidatedLedgerEnvironment` through runtime
+  construction.
+- Existing directory-provider runtime tests use non-destructive close and
+  explicitly remove their disposable fixture directories.
+
+The initial executable review returned NO-GO because its first test changed all
+contract/resource values together and could miss one omitted binding field. A
+second pass required explicit Keychain-identity assertions for Principal and
+Account changes. The corrected matrix varies the valid namespace prefix, each
+contract version, every resource component, environment/profile, bundle,
+Principal and Account independently; confirms display name is intentionally
+nonbinding; and covers the old dotted-ID delimiter collision. Final independent
+corrected-diff review returned GO with no remaining P0-P3 finding.
+
+## Local Verification
+
+- four focused workspace-isolation tests pass;
+- all 16 affected directory-provider tests pass;
+- all 372 target tests in 71 suites pass;
+- target environment checks and deterministic project generation pass;
+- macOS and iOS Simulator staging builds pass; and
+- `git diff --check` passes.
+
+The exact implementation commit and immutable run are still pending, so this
+evidence does not advance to hosted verification or rehearsal.
+
+## Verified Locally
 
 - identical environment/bundle/persistence-relevant-manifest/Principal/Account
   binding reopens exact

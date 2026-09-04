@@ -283,7 +283,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         let clientDetail = try #require(try await clientDetailIterator.next())
         guard case .snapshot(let clientSnapshot) = clientDetail.state else {
             Issue.record("Expected pending Client detail snapshot")
-            try await runtime.close(deleteDatabase: true)
+            try await runtime.close()
             fixture.removeDirectory()
             return
         }
@@ -305,7 +305,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         let projectDetail = try #require(try await projectDetailIterator.next())
         guard case .snapshot(let projectSnapshot) = projectDetail.state else {
             Issue.record("Expected pending Project detail snapshot")
-            try await runtime.close(deleteDatabase: true)
+            try await runtime.close()
             fixture.removeDirectory()
             return
         }
@@ -313,7 +313,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         #expect(projectSnapshot.row?.project.client.displayName.rawValue == "Pending Client")
         #expect(projectSnapshot.local.quality == .partial)
 
-        try await runtime.close(deleteDatabase: false)
+        try await runtime.close()
         let reopened = try fixture.open()
         #expect(try await Self.count("spike_pending_clients", reopened) == 1)
         #expect(try await Self.count("spike_pending_projects", reopened) == 1)
@@ -389,14 +389,14 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         let detail = try #require(try await detailIterator.next())
         guard case .snapshot(let snapshot) = detail.state else {
             Issue.record("Expected local Project detail snapshot")
-            try await runtime.close(deleteDatabase: true)
+            try await runtime.close()
             fixture.removeDirectory()
             return
         }
         #expect(snapshot.row?.project.id.rawValue == "project-runtime")
         #expect(snapshot.local.quality == .partial)
 
-        try await runtime.close(deleteDatabase: true)
+        try await runtime.close()
         fixture.removeDirectory()
     }
 
@@ -679,7 +679,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         }
 
         #expect(try await runtime.pendingUploadCount() == 0)
-        try await runtime.close(deleteDatabase: true)
+        try await runtime.close()
         fixture.removeDirectory()
     }
 

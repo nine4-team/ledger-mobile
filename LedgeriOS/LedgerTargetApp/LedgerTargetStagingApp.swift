@@ -16,20 +16,17 @@ struct LedgerTargetStagingApp: App {
                 TargetAppDependencies(environment: environment)
             }
             rootView = TargetStagingRootView(
-                diagnostics: dependencies.environment.diagnostics,
-                localDataNamespacePrefix: dependencies.environment.manifest.localDataNamespacePrefix,
+                environment: dependencies.environment,
                 failureCode: nil
             )
         } catch let failure as LedgerEnvironmentValidationFailure {
             rootView = TargetStagingRootView(
-                diagnostics: nil,
-                localDataNamespacePrefix: nil,
+                environment: nil,
                 failureCode: failure.diagnosticCode
             )
         } catch {
             rootView = TargetStagingRootView(
-                diagnostics: nil,
-                localDataNamespacePrefix: nil,
+                environment: nil,
                 failureCode: "target_startup_unknown_failure"
             )
         }
@@ -43,8 +40,7 @@ struct LedgerTargetStagingApp: App {
 }
 
 private struct TargetStagingRootView: View {
-    let diagnostics: LedgerEnvironmentDiagnostics?
-    let localDataNamespacePrefix: String?
+    let environment: ValidatedLedgerEnvironment?
     let failureCode: String?
 
     var body: some View {
@@ -58,7 +54,8 @@ private struct TargetStagingRootView: View {
                 .accessibilityIdentifier("target-staging-banner")
 
             Group {
-                if let diagnostics {
+                if let environment {
+                    let diagnostics = environment.diagnostics
                     List {
                         Section("Target Environment") {
                             LabeledContent("Environment", value: diagnostics.environment.rawValue)
@@ -77,11 +74,7 @@ private struct TargetStagingRootView: View {
                             Text("This build uses encrypted PowerSync storage and an isolated local Supabase schema. Hosted sync and production access are disabled.")
                         }
 
-                        if let localDataNamespacePrefix {
-                            OfflineProviderSpikeView(
-                                localDataNamespacePrefix: localDataNamespacePrefix
-                            )
-                        }
+                        OfflineProviderSpikeView(environment: environment)
                     }
                 } else {
                     ContentUnavailableView(
@@ -96,7 +89,7 @@ private struct TargetStagingRootView: View {
 }
 
 private struct OfflineProviderSpikeView: View {
-    let localDataNamespacePrefix: String
+    let environment: ValidatedLedgerEnvironment
     @State private var model = OfflineClientSpikeModel()
 
     var body: some View {
@@ -205,7 +198,7 @@ private struct OfflineProviderSpikeView: View {
             }
         }
         .task {
-            await model.start(localDataNamespacePrefix: localDataNamespacePrefix)
+            await model.start(validatedEnvironment: environment)
         }
     }
 }
@@ -260,11 +253,11 @@ private final class OfflineClientSpikeModel {
         return !selectedExistingClientId.isEmpty
     }
 
-    func start(localDataNamespacePrefix: String) async {
+    func start(validatedEnvironment: ValidatedLedgerEnvironment) async {
         guard runtime == nil else { return }
         do {
             let runtime = try LedgerPowerSyncLocalBootstrap.open(
-                localDataNamespacePrefix: localDataNamespacePrefix,
+                validatedEnvironment: validatedEnvironment,
                 principalId: principalId,
                 accountId: accountId
             )

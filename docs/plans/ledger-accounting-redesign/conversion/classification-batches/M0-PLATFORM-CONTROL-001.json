@@ -296,8 +296,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8a2badc86b60c013cad175a9814a67acf47a794c836e2a2254f04c4d874aaf80",
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
+      "acknowledgeSourceHash": "8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through Account-workspace bootstrap, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],

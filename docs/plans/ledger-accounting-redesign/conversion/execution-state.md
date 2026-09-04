@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 277
+State version: 278
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-READY-REVIEWED
+- Checkpoint: ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-IMPLEMENTED-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -37,7 +37,7 @@ without modifying the running Firebase application before hard cutover.
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
 - The implementation tracker currently contains 266 status-bearing rows: 68
-  done, four verified, three implemented, one ready, zero awaiting verification,
+  done, four verified, four implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -89,7 +89,16 @@ without modifying the running Firebase application before hard cutover.
   surface, incorrect authority citations, overclaimed stored-binding rejection,
   imprecise manifest scope and an unenforced workspace-exclusivity claim. All
   were corrected; final corrected-diff review returned GO with no remaining
-  P0-P3 finding. Immutable READY CI is the next gate.
+  P0-P3 finding. Exact READY commit `428f5225` then passed all three immutable
+  jobs in run `33927257913`. The executable slice now derives an opaque contained
+  database path and composite Keychain identity, passes validated environment
+  evidence through staging/bootstrap, rejects invalid namespace evidence before
+  Keychain/filesystem work, and removes the runtime delete flag. Executable
+  review twice returned NO-GO until every individual contract/resource/prefix
+  and Principal/Account Keychain dimension plus the old dotted-ID collision had
+  direct assertions; final corrected-diff review returned GO with no remaining
+  P0-P3. Four focused/all 372 target tests in 71 suites and both staging builds
+  pass locally. Exact synchronized implementation CI is next.
 
 - Implemented the four-leaf local-only Account discovery provider slice after
   exact corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`

@@ -111,8 +111,10 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
         }
     }
 
-    public func close(deleteDatabase: Bool = false) async throws {
-        try await database.close(deleteDatabase: deleteDatabase)
+    /// Ordinary close preserves the encrypted database and its Keychain key.
+    /// Destructive cleanup belongs to the later session-ending coordinator.
+    public func close() async throws {
+        try await database.close(deleteDatabase: false)
     }
 
     private static func failedStream<Value: Sendable>(
@@ -126,32 +128,56 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
 
 public enum LedgerPowerSyncLocalBootstrap {
     public static func open(
-        localDataNamespacePrefix: String,
+        validatedEnvironment: ValidatedLedgerEnvironment,
         principalId: PrincipalID,
         accountId: AccountID
     ) throws -> LedgerOfflineClientRuntime {
-        let principalNamespace = "\(principalId.rawValue).\(accountId.rawValue)"
-        let keychain = try LedgerPowerSyncKeychain(
-            service: "\(localDataNamespacePrefix).powersync.database-key"
-        )
-        let key = try keychain.loadOrCreateKey(principalNamespace: principalNamespace)
         guard let applicationSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first else {
             throw LedgerPowerSyncDatabaseFailure.invalidDatabasePath
         }
-        let directory = applicationSupport
-            .appendingPathComponent(localDataNamespacePrefix, isDirectory: true)
-            .appendingPathComponent(principalId.rawValue, isDirectory: true)
-            .appendingPathComponent(accountId.rawValue, isDirectory: true)
-        try FileManager.default.createDirectory(
-            at: directory,
-            withIntermediateDirectories: true,
-            attributes: [.protectionKey: FileProtectionType.complete]
+        return try open(
+            validatedEnvironment: validatedEnvironment,
+            principalId: principalId,
+            accountId: accountId,
+            applicationSupportDirectory: applicationSupport,
+            loadOrCreateKey: { service, account in
+                let keychain = try LedgerPowerSyncKeychain(service: service)
+                return try keychain.loadOrCreateKey(principalNamespace: account)
+            },
+            createDirectory: { directory in
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true,
+                    attributes: [.protectionKey: FileProtectionType.complete]
+                )
+            }
         )
+    }
+
+    static func open(
+        validatedEnvironment: ValidatedLedgerEnvironment,
+        principalId: PrincipalID,
+        accountId: AccountID,
+        applicationSupportDirectory: URL,
+        loadOrCreateKey: (_ service: String, _ account: String) throws -> LedgerPowerSyncEncryptionKey,
+        createDirectory: (_ directory: URL) throws -> Void
+    ) throws -> LedgerOfflineClientRuntime {
+        let location = try LedgerWorkspaceRuntimeIsolation.resolve(
+            validatedEnvironment: validatedEnvironment,
+            principalId: principalId,
+            accountId: accountId,
+            applicationSupportDirectory: applicationSupportDirectory
+        )
+        let key = try loadOrCreateKey(
+            location.keychainService,
+            location.keychainAccount
+        )
+        try createDirectory(location.databaseURL.deletingLastPathComponent())
         return try LedgerOfflineClientRuntime(
-            absoluteDatabasePath: directory.appendingPathComponent("ledger.sqlite").path,
+            absoluteDatabasePath: location.databaseURL.path,
             encryptionKey: key,
             principalId: principalId,
             accountId: accountId

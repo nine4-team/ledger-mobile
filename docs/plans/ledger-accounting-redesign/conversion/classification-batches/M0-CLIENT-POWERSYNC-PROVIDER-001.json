@@ -121,10 +121,10 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "7ffc93ba2a81109fbbaf20ce6d0a3b71ad76df2c4ddbcf9f4c73a56740a3af12",
-      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, and exposes Client/Project creation, detail and directory watches, pending-upload count, cipher inspection and explicit close/delete behavior.",
+      "acknowledgeSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
+      "currentBehavior": "Composes the encrypted validated-environment/Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, exposes Client/Project creation, detail and directory watches, pending-upload count and cipher inspection, and permits only non-destructive ordinary close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"], "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are frozen in the Account workspace runtime isolation READY slice.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"], "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified by the Account workspace runtime isolation slice.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
       "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}

@@ -38,13 +38,13 @@
     },
     {
       "id": "TEST-5AAEE26660C8",
-      "acknowledgeSourceHash": "82574e88cabe4e32f1d3284ab5de54759b670c9856ddc39c7ae2dae0a4add6e5",
+      "acknowledgeSourceHash": "df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b",
       "currentBehavior": "Runs 16 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards and cancellation.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"],
-      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. The Account workspace isolation slice explicitly owns the later mechanical update from the runtime delete flag to non-destructive close plus direct fixture-directory cleanup.",
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now use non-destructive close plus direct fixture-directory cleanup as verified by the Account workspace isolation slice.",
       "target": {
         "owner": "Client and Project Directory",
         "surfaces": ["Client/Project PowerSync directory provider test suite"],

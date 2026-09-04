@@ -23,8 +23,10 @@ isolates the existing Account workspace database/key namespace by validated
 bundle, environment, persistence-relevant manifest, Principal and Account before
 the pending-work summary provider is implemented; it exposes no hosted or
 destructive behavior and preserves the separate Principal discovery database.
-The corrected-diff independent READY review is GO with no remaining P0-P3;
-immutable READY CI is pending before executable work begins.
+Exact READY `428f5225` / immutable run `33927257913` pass. The runtime-isolation
+implementation now passes final independent corrected-diff review, four focused
+tests, all 372 target tests in 71 suites and both staging builds; exact
+implementation CI is pending.
 The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T22:51:37.383Z",
+  "generatedFromManifestSync": "2026-09-04T23:13:42.556Z",
   "totals": {
     "slices": 74,
     "claimedTargetSurfaces": 207,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 153
+    "implementationAdvancedTargetSurfaces": 155
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 3,
+    "implemented": 4,
     "verified": 66,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -53,7 +53,7 @@
       "sliceId": "account-workspace-runtime-isolation",
       "title": "Bind every local Account workspace database to one validated target environment",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Environment and Composition Control",
       "surfaceIds": [
         "SWIFT-4E250D0D302E",
