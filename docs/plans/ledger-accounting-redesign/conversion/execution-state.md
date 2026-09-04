@@ -53,7 +53,10 @@ modifying the running Firebase application before hard cutover.
   with empty blockers while zero of 386 rows have outcomes, so the dossier remains
   `draft`; no package/workflow/generated reconciliation artifact, executable
   control, runtime, provider, hosted, production, release or cutover behavior
-  advances; `EVID-SOURCE-QUERY-RECONCILIATION-001`.
+  advances. Exact DRAFT commit
+  `570f54a50405376ee4b642f1abc11ea04eb0a4bb` passed immutable GitHub Actions
+  run `33861320397`, including conversion traceability, target contracts and
+  macOS/iOS Simulator builds; `EVID-SOURCE-QUERY-RECONCILIATION-001`.
 
 - Verified the complete target query logical-authority crosswalk
   above the verified TQUERY inventory. One reviewed JSON registry binds the

@@ -11,8 +11,9 @@
 - Slice dossier:
   `conversion/implementation-slices/source-query-reconciliation-control.json`
 - Production reads or mutations: none
-- Verification state: draft; all 386 QUERY IDs are human-reviewed and assigned
-  exactly once, while zero reconciliation rows are populated
+- Verification state: immutable DRAFT checkpoint `570f54a50405376ee4b642f1abc11ea04eb0a4bb`
+  passed GitHub Actions run `33861320397`; all 386 QUERY IDs are human-reviewed
+  and assigned exactly once, while zero reconciliation rows are populated
 
 ## Draft Outcome
 
@@ -229,3 +230,12 @@ Canonical production-profile evidence remains a precise dossier blocker only
 for later rows whose source use or retirement safety cannot be established from
 repository authority. It is not a blocker on either CONFIG surface and does not
 create an evidence-blocked outcome category.
+
+## Immutable DRAFT Verification
+
+Exact DRAFT commit `570f54a50405376ee4b642f1abc11ea04eb0a4bb`
+passed GitHub Actions run `33861320397`. Both `Conversion state and
+traceability` and `Isolated target environment` completed successfully,
+including target contract tests plus macOS and generic iOS Simulator builds.
+This verifies the committed draft boundary only; it does not populate or
+approve any reconciliation outcome and does not advance the slice to READY.
