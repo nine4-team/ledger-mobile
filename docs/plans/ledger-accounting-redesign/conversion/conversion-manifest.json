@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T06:07:14.791Z",
+    "lastSynchronizedAt": "2026-09-04T06:13:14.907Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -245,7 +245,7 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The target query-port implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; immutable implementation CI for the new Linux-before-macOS gate remains pending. Prior run 33567370249 proves the earlier 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The target query-port implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485 with the new Linux-before-macOS dependency, all 316 Swift tests and both staging builds. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
