@@ -1,7 +1,7 @@
 # EVID-CLIENT-RENAME-USE-CASE-001 — Client Rename Use Case
 
 - Timestamp: 2026-09-03
-- Class: implemented locally / provider-free typed Client-rename application dispatch; exact implementation CI pending
+- Class: verified implementation / provider-free typed Client-rename application dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
 - Prior verified conversion baseline: exact commit
@@ -26,8 +26,9 @@
   remain `target_mapped`
 - Slice dossier:
   `conversion/implementation-slices/client-rename-use-case-contracts.json`
-- Verification state: implementation passes locally and remains `implemented`,
-  not `verified`, until its exact commit passes immutable CI
+- Verification state: verified at exact implementation commit
+  `0f000b8e491019a9307c46437312b7ae0f5711dc` and immutable Actions run
+  `33821354656`
 
 ## Selection and Authority
 
@@ -165,10 +166,12 @@ test used Swift String equality without separately proving UTF-8 byte equality.
 The test now compares `Data` built from the actual and expected UTF-8 views.
 That reviewer and a second independent full-slice reviewer both return GO with
 no remaining P0-P3 finding. This local evidence satisfies
-`CRENAMEUSE-TEST-001` through `CRENAMEUSE-TEST-009`.
-`CRENAMEUSE-TEST-010` remains planned until the exact implementation commit and
-immutable CI pass; the two surfaces therefore remain `implemented`, not
-`verified`.
+`CRENAMEUSE-TEST-001` through `CRENAMEUSE-TEST-009`. Exact implementation
+commit `0f000b8e491019a9307c46437312b7ae0f5711dc` passed immutable Actions run
+`33821354656`: traceability completed in 11 seconds and the isolated target job
+completed in 6 minutes 59 seconds with all tests, both staging builds and clean
+tracked artifacts. The immutable run satisfies `CRENAMEUSE-TEST-010`; the
+dossier and its two target leaves are verified.
 
 ## Permanent Exclusions
 

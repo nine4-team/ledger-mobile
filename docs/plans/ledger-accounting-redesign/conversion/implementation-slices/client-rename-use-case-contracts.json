@@ -3,7 +3,7 @@
   "sliceId": "client-rename-use-case-contracts",
   "title": "Dispatch one typed Client display-name replacement",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Client Rename Use Case",
   "surfaceIds": ["SWIFT-2F4458F40735", "TEST-341B2CD23B6A"],
   "requirements": [
@@ -206,12 +206,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-CLIENT-RENAME-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 passed immutable run 33819792298, above verified ClientRenameOperation.swift/tests at exact implementation 3282f8e3 / run 33612902860 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Exactly two executable leaves implement the public typed Client-rename intent and application path: construction before one port call, validation after it, all 12 typed failures plus cancellation preserved, and unknown port errors bounded. Eight focused tests plus review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009; CRENAMEUSE-TEST-010 remains planned until immutable exact-implementation-SHA CI passes. Both independent implementation reviewers returned GO after one reviewer caught and the implementation corrected a missing explicit UTF-8 byte-equality assertion for the more-than-8-KiB Unicode payload. Focused and full local gates pass. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, Project projection/reassignment, Client archive/delete/merge, frozen-history rewrite, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded."
+  "notes": "Verified at exact implementation commit 0f000b8e491019a9307c46437312b7ae0f5711dc / immutable run 33821354656 after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 / run 33819792298, above verified ClientRenameOperation.swift/tests at exact implementation 3282f8e3 / run 33612902860 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Exactly two executable leaves implement the public typed Client-rename intent and application path: construction before one port call, validation after it, all 12 typed failures plus cancellation preserved, and unknown port errors bounded. Eight focused tests plus review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009; immutable exact-implementation-SHA CI satisfies CRENAMEUSE-TEST-010. Both independent implementation reviewers returned GO after one reviewer caught and the implementation corrected a missing explicit UTF-8 byte-equality assertion for the more-than-8-KiB Unicode payload. All 302 target tests, complete target controls, repeatable generation and both staging builds pass locally and in CI. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, Project projection/reassignment, Client archive/delete/merge, frozen-history rewrite, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded."
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T00:16:28.371Z",
+  "generatedFromManifestSync": "2026-09-04T00:29:16.767Z",
   "totals": {
     "slices": 62,
     "claimedTargetSurfaces": 149,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 60,
+    "implemented": 0,
+    "verified": 61,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -156,7 +156,7 @@
       "sliceId": "client-rename-use-case-contracts",
       "title": "Dispatch one typed Client display-name replacement",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Client Rename Use Case",
       "surfaceIds": [
         "SWIFT-2F4458F40735",

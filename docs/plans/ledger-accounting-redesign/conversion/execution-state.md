@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 233
+State version: 234
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-RENAME-USE-CASE-IMPLEMENTED-LOCAL
+- Checkpoint: CLIENT-RENAME-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,7 +32,7 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Implemented the bounded typed Client rename application dispatch after exact
+- Verified the bounded typed Client rename application dispatch after exact
   READY commit `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
   `33819792298`. Exactly two leaves, `SWIFT-2F4458F40735` and
   `TEST-341B2CD23B6A`, now provide a public non-Codable Account/Client/revision/
@@ -46,9 +46,11 @@ modifying the running Firebase application before hard cutover.
   Unicode payload; the corrected test compares actual and expected UTF-8 `Data`.
   Both independent implementation reviewers now return GO with no remaining
   P0-P3 finding. `CRENAMEUSE-TEST-001` through `-009` pass. Exact implementation
-  commit/CI for `CRENAMEUSE-TEST-010` remains pending, so the dossier and two
-  leaves are `implemented`, not `verified`. Every named source UI/service/model/
-  validation/MCP surface and all persistence, authorization, provider/schema/
+  commit `0f000b8e491019a9307c46437312b7ae0f5711dc` passed immutable Actions run
+  `33821354656` (traceability 11 seconds; isolated target 6 minutes 59 seconds),
+  satisfying `CRENAMEUSE-TEST-010`. The dossier and both leaves are verified.
+  Every named source UI/service/model/validation/MCP surface and all
+  persistence, authorization, provider/schema/
   RLS/Sync, migration, hosted and production behavior remain unadvanced.
 
 - Implemented the bounded typed Project rename application dispatch after exact
@@ -3309,7 +3311,9 @@ modifying the running Firebase application before hard cutover.
   Two independent implementation reviewers return GO after one caught and the
   implementation corrected missing explicit UTF-8 byte-equality proof for the
   large Unicode payload. `CRENAMEUSE-TEST-001` through `-009` pass locally;
-  exact implementation commit/CI for `-010` remains pending. Client reads/
+  exact implementation commit `0f000b8e491019a9307c46437312b7ae0f5711dc` /
+  immutable run `33821354656` passes and satisfies `-010`, promoting the dossier
+  and both leaves to verified. Client reads/
   readiness/lifecycle/no-op/UI, Project reassignment/projection, frozen-history
   rewrite, broader mutation, physical persistence, authorization, provider/
   schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
@@ -3636,13 +3640,13 @@ Continue without waiting on the two M1 evidence blockers:
    hosted or production behavior. Preserve the verified rename operation/tests
    and directory dependency plus all named source statuses, including
    ProjectDetailView and ProjectDetailContainer.
-   Treat implemented `client-rename-use-case-contracts` and
-   `EVID-CLIENT-RENAME-USE-CASE-001` as the active verification candidate.
+   Treat verified `client-rename-use-case-contracts` and
+   `EVID-CLIENT-RENAME-USE-CASE-001` as the frozen application boundary.
    Preserve exactly the two executable leaves `ClientRenameUseCase.swift`
    (`SWIFT-2F4458F40735`) and `ClientRenameUseCaseTests.swift`
-   (`TEST-341B2CD23B6A`) while synchronizing control evidence, committing the
-   exact implementation and requiring immutable CI before verification
-   promotion. The boundary consumes an already-validated `ClientDisplayName`,
+   (`TEST-341B2CD23B6A`). Exact implementation commit `0f000b8e` / immutable
+   run `33821354656` passed, and both independent implementation reviewers
+   returned GO. The boundary consumes an already-validated `ClientDisplayName`,
    constructs the verified draft and command before exactly one
    `ClientRenaming.rename` call, validates the receipt afterward, preserves
    every typed failure plus cancellation and bounds only unknown port errors.

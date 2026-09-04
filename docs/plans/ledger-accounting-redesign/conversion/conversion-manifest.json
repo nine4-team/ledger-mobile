@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T00:16:28.371Z",
+    "lastSynchronizedAt": "2026-09-04T00:29:16.767Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -18783,7 +18783,7 @@
           "Implementation tests must prove only the frozen provider-free typed Client rename application path and permanent exclusions"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -18791,7 +18791,7 @@
         "EVID-CLIENT-RENAME-001",
         "EVID-CLIENT-RENAME-USE-CASE-001"
       ],
-      "notes": "Implemented locally after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 passed immutable Actions run 33819792298. The public non-Codable intent contains exact Account/Client/revision/ClientDisplayName; the use case constructs the verified draft/command, calls ClientRenaming.rename once, validates the receipt, preserves all 12 typed failures/cancellation and bounds unknown port errors. Focused and full local tests, complete local controls and two independent implementation reviews pass. Exact implementation commit and immutable CI remain pending, so this leaf is implemented rather than verified. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, Project ownership/projection, frozen-history rewrite, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Verified at exact implementation commit 0f000b8e491019a9307c46437312b7ae0f5711dc in immutable Actions run 33821354656 after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 passed run 33819792298. The public non-Codable intent contains exact Account/Client/revision/ClientDisplayName; the use case constructs the verified draft/command, calls ClientRenaming.rename once, validates the receipt, preserves all 12 typed failures/cancellation and bounds unknown port errors. Local and CI tests plus two independent implementation reviews pass. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, Project ownership/projection, frozen-history rewrite, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
@@ -35558,7 +35558,7 @@
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executes eight provider-free public-consumer tests covering the frozen behavioral obligations for typed intent shape/access, exact UTF-8 display-name bytes, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009 while exact-implementation-SHA CI remains pending for CRENAMEUSE-TEST-010.",
+      "currentBehavior": "Executes eight provider-free public-consumer tests covering the frozen behavioral obligations for typed intent shape/access, exact UTF-8 display-name bytes, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009, and immutable exact-implementation-SHA CI satisfies CRENAMEUSE-TEST-010.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Rename Use Case Tests",
@@ -35590,7 +35590,7 @@
           "Implementation tests must prove only the frozen provider-free Client rename use case and exclusions"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
@@ -35598,7 +35598,7 @@
         "EVID-CLIENT-RENAME-001",
         "EVID-CLIENT-RENAME-USE-CASE-001"
       ],
-      "notes": "Implemented locally after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 / immutable run 33819792298. Eight tests cover ordinary public construction, exact typed-name UTF-8 bytes including accepted whitespace and more than 8 KiB Unicode, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership against literal baseline/delta expectations with recording/canned fakes only, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009; CRENAMEUSE-TEST-010 remains planned until exact-implementation-SHA CI passes. Both independent reviewers returned GO; focused and full local gates pass. No source, service, provider or production behavior advances.",
+      "notes": "Verified at exact implementation commit 0f000b8e491019a9307c46437312b7ae0f5711dc in immutable Actions run 33821354656 after exact READY commit 9cc34f4c / run 33819792298. Eight tests cover ordinary public construction, exact typed-name UTF-8 bytes including accepted whitespace and more than 8 KiB Unicode, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership against literal baseline/delta expectations with recording/canned fakes only, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009; immutable exact-implementation-SHA CI satisfies CRENAMEUSE-TEST-010. Both independent reviewers returned GO; all 302 target tests and complete local and CI gates pass. No source, service, provider or production behavior advances.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
