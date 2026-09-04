@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T02:51:14.089Z",
+    "lastSynchronizedAt": "2026-09-04T03:27:25.461Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -33127,12 +33127,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ItemSpaceClearingUseCase.swift"
         }
       ],
-      "observedSourceHash": "c8c161d7a3490bdd75669ff7f025e0858ed28a81df1ca1aed4dcfb37255c825a",
-      "acknowledgedSourceHash": "c8c161d7a3490bdd75669ff7f025e0858ed28a81df1ca1aed4dcfb37255c825a",
+      "observedSourceHash": "bec36d9ddbf5be470aa224a108138b71e88f8007632b90a0d039bd2f0e1f7709",
+      "acknowledgedSourceHash": "bec36d9ddbf5be470aa224a108138b71e88f8007632b90a0d039bd2f0e1f7709",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY contract for one future provider-free Item Space-clearing application boundary that binds exact typed Account/scope/Item/revision/current-Space intent and dispatches the verified clear command; no executable behavior exists.",
+      "currentBehavior": "Implements one provider-free Item Space-clearing application boundary that binds exact typed Account/scope/Item/revision/current-Space conflict evidence, constructs the verified clear command, invokes one narrow port, and validates its receipt.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Clearing Use Case",
@@ -33146,7 +33146,7 @@
           "Caller-supplied current-Space and scope values are untrusted conflict evidence only, never proof of actual placement, membership or authorization; raw port errors cannot cross the application boundary"
         ],
         "syncRequirements": [
-          "Future provider-free orchestration constructs the verified internally consistent clear draft/command before one narrow port call and validates the exact receipt afterward; later trusted handling must revalidate actual scope and current placement",
+          "Provider-free orchestration constructs the verified internally consistent clear draft/command before one narrow port call and validates the exact receipt afterward; later trusted handling must revalidate actual scope and current placement",
           "No physical persistence, optimistic Item placement or marker mutation, authoritative apply, retry/rejection recovery, or synchronized visibility is claimed"
         ]
       },
@@ -33164,7 +33164,7 @@
           "Implementation tests must prove only the frozen provider-free Item Space-clearing application path and permanent exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -33172,7 +33172,7 @@
         "EVID-ITEM-SPACE-CLEARING-001",
         "EVID-ITEM-SPACE-CLEARING-USE-CASE-001"
       ],
-      "notes": "Comment-only READY scaffold at exact conversion baseline 31fd8881499ff6668b9abd14bfdd9284774ab302. It freezes a public transient Account/scope/typed-Item-revision-current-Space intent and future one-call application orchestration over the verified clearing operation. It advances no unassigned/no-op policy, read/UI eligibility, destination assignment, archive, attachment/reference/byte deletion, marker mutation, scope movement, accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior.",
+      "notes": "Locally implemented after exact READY commit 8154f8bf0c63576e64ac609b1e1b18d53f60ed32 / immutable Actions run 33831367527. Exact executable-only implementation commit f7ce8bca5ef3d36fc621ed577e85b2d25c1fd7a4 changed only the two frozen leaves; its immutable run 33832447988 passed the isolated-target job with all 316 tests and both builds but failed traceability solely because the intentionally separate promotion had not synchronized the two implemented leaf hashes. This control checkpoint synchronizes those hashes at implemented status; its complete immutable CI must pass before a later checkpoint may promote verified. The public transient Account/scope/typed-Item-revision-current-Space intent and one-call application orchestration compose the verified clearing operation. Caller-supplied scope/current-Space values remain untrusted conflict evidence, construction occurs before the port boundary, receipt validation occurs afterward, all 15 typed failures and cancellation remain exact, and unknown port errors are bounded. It advances no unassigned/no-op policy, read/UI eligibility, destination assignment, archive, attachment/reference/byte deletion, marker mutation, scope movement, accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -39458,12 +39458,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift"
         }
       ],
-      "observedSourceHash": "1317398a7d86a0395ec16703b3d6fc3733e825836253d7e57892deca16c4ec9f",
-      "acknowledgedSourceHash": "1317398a7d86a0395ec16703b3d6fc3733e825836253d7e57892deca16c4ec9f",
+      "observedSourceHash": "fe593aac3cb925f22570a1bb156199297420ae73aaf88e8fbfe45a6bd02ca6cd",
+      "acknowledgedSourceHash": "fe593aac3cb925f22570a1bb156199297420ae73aaf88e8fbfe45a6bd02ca6cd",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY contract for a future ordinary-import Item Space-clearing use-case suite covering exact transient intent, literal command ownership, zero/one-call boundaries, typed failure containment, diagnostics/topology, and exclusions; no executable test exists.",
+      "currentBehavior": "Implements seven ordinary-import Item Space-clearing use-case tests covering exact transient intent, Project/Inventory and mixed-Space dispatch, literal command ownership, zero/one-call boundaries, all 15 typed failures, cancellation and unknown-error containment, diagnostics/topology, and exclusions.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Clearing Use Case Tests",
@@ -39478,7 +39478,7 @@
           "Stable failures reveal no raw identity, display value, source path, credential, service payload, attachment data, accounting value, or production identifier"
         ],
         "syncRequirements": [
-          "A future in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "The in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
           "Construction failure makes zero calls; stale assigned-looking conflict evidence may dispatch for later authoritative refusal, and exact receipt states return without optimistic or authoritative Item/Space/marker state"
         ]
       },
@@ -39496,7 +39496,7 @@
           "Implementation tests must prove only the frozen provider-free Item Space-clearing use case and exclusions"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -39504,7 +39504,7 @@
         "EVID-ITEM-SPACE-CLEARING-001",
         "EVID-ITEM-SPACE-CLEARING-USE-CASE-001"
       ],
-      "notes": "Comment-only READY scaffold at exact conversion baseline 31fd8881499ff6668b9abd14bfdd9284774ab302. Ten planned obligations require ordinary import without @testable, exact three-field public shape, Project/Inventory and mixed-current-Space dispatch, literal reciprocal non-mirrored leaf ownership, construction zero-call and receipt one-call boundaries, all 15 operation failures plus cancellation/raw mapping, diagnostics/topology, exact allowlists, and immutable READY/implementation CI. No source app, MCP, service, provider, hosted, migration, or production behavior advances.",
+      "notes": "Locally implemented after exact READY commit 8154f8bf0c63576e64ac609b1e1b18d53f60ed32 / immutable Actions run 33831367527. Seven focused and all 316 tests pass locally with warnings as errors. Exact executable-only implementation commit f7ce8bca5ef3d36fc621ed577e85b2d25c1fd7a4 changed only the two frozen leaves; immutable run 33832447988 passed the isolated-target job with all 316 tests and both builds but failed traceability solely because the separate control checkpoint had not yet synchronized the new leaf hashes. A complete green immutable run on this synchronized implemented checkpoint is required before verified promotion. The tests prove ordinary import without @testable, exact three-field public shape, Project/Inventory single and mixed-current-Space dispatch, reordered canonical identity, literal reciprocal non-mirrored leaf ownership, construction zero-call and receipt one-call boundaries, all 15 operation failures plus cancellation/unknown mapping, diagnostics/topology and exact allowlists. READY review missed a P3 free-text preservation-ID typo, SWIFT-4D0D546A02D instead of SWIFT-4D0D546A02D8; the manifest/classification/source status and frozen executable test scaffold used the correct ID, so there was no executable or status impact. No source app, MCP, service, provider, hosted, migration, or production behavior advances.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

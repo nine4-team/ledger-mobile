@@ -173,6 +173,30 @@ has reached the corresponding status.
    production. Authority activation, source freeze, final import, rollback and
    monitoring remain coordinated program gates requiring explicit approval.
 
+### Immutable-CI checkpoint sequencing
+
+The conversion manifest records content hashes, so an executable-only commit
+above a synchronized READY checkpoint is knowingly traceability-red. Use this
+sequence for every future slice:
+
+1. commit the reviewed comment-only READY package with synchronized scaffold
+   hashes and pass the complete immutable workflow;
+2. in one bounded implementation checkpoint, replace only the authorized
+   executable leaves **and** synchronize their new hashes, dossier, manifest,
+   evidence, tracker and generated controls at `implemented` status;
+3. pass the complete immutable workflow on that exact implemented commit; and
+4. only then create a separate docs/control-only checkpoint that advances the
+   dossier and claimed surfaces to `verified`, records the exact green
+   implementation run, regenerates controls and itself passes immutable CI.
+
+Do not push a known-red executable-only checkpoint merely to preserve a
+two-leaf implementation diff. Prove that allowlist relative to the READY commit
+inside the synchronized implementation checkpoint's evidence and review. If a
+legacy executable-only checkpoint already exists, record its isolated-target
+and traceability jobs separately, synchronize at honest `implemented` status,
+require a complete green immutable run on that recovery checkpoint, and only
+then promote. Never describe a partially failed workflow as passed.
+
 ## Change Control During Implementation
 
 When a spec, confirmed decision, security model, Sync boundary, migration rule,
