@@ -1,6 +1,6 @@
 # EVID-ACCOUNT-DISCOVERY-PROVIDER-001 — Account Discovery PowerSync Provider
 
-- Status: READY candidate; comment-only implementation leaves
+- Status: implemented locally; exact implementation-checkpoint CI pending
 - Date: 2026-09-04
 - Environment: isolated target worktree and synthetic/disposable local fixtures only
 - Production/Firebase impact: none
@@ -15,9 +15,10 @@ honest bootstrap readiness, define those states in a build-only isolated staging
 component, and create one explicit local selection intent from the exact current
 snapshot through the canonical policy.
 
-The four implementation leaves contain comments only. No runtime, query, UI,
-hosted resource or production behavior is executable until this synchronized
-READY checkpoint passes review and immutable CI.
+The four implementation leaves now contain the reviewed local implementation:
+the PowerSync-backed query, encrypted Principal bootstrap runtime, ten-test
+focused suite and build-only staging component. No hosted resource, existing
+staging-root wiring or production behavior is included.
 
 ## Authority and Boundary
 
@@ -54,7 +55,7 @@ must emit without row changes, and a reopened cache starts partial or stale
 until current-process evidence arrives. Historical connection-wide sync status
 cannot certify this query.
 
-## Planned Verification
+## Local Implementation Verification
 
 - exact environment/Principal binding and cross-scope refusal;
 - zero/one/many/equal-name lists and no automatic choice;
@@ -73,6 +74,11 @@ cannot certify this query.
 - no server-schema, Data API grant or RLS claim in this local-only slice; and
 - no hosted Sync claim; authenticated bootstrap/revocation proof belongs to the
   separate gated hosted identity-bootstrap slice.
+
+All ten focused tests pass locally. The complete Swift suite and both target
+staging builds are rerun at the synchronized implementation checkpoint; the
+operational verification item remains planned until that exact commit passes
+immutable CI.
 
 ## Isolation Statement
 
@@ -126,3 +132,29 @@ regenerated conversion/audit outputs that remained dirty locally. Its workflow
 run `33921970523` was administratively cancelled as soon as that omission was
 observed and is not acceptance evidence. The next checkpoint must include the
 entire synchronized generated-artifact set and prove a clean checkout.
+
+Corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`
+then passed all three jobs in immutable Actions run `33922033391`: conversion
+traceability, the isolated target suite/builds and local Supabase provider
+checks. This exact green READY checkpoint authorized the bounded executable
+work above.
+
+## Independent Implementation Review
+
+The first executable review found six material issues before commit:
+completeness was coupled incorrectly to freshness; public close exposed
+destructive deletion; malformed sentinel/cardinality and membership IDs could
+be accepted; raw Principal text could traverse the filesystem namespace; and
+namespace failure could create a Keychain entry before validation. Corrections
+separate completeness from freshness, preserve the database and key on close,
+require exact sentinel/cardinality and canonical IDs, hash Principal scope into
+an opaque contained path, and validate the directory before any Keychain
+mutation. Cached rows also remain visible through bounded staging failures.
+Final corrected-diff review returned GO with no remaining P0-P3 finding; the
+focused suite passes 10/10, cancellation passed 50 repeated runs, and
+`git diff --check` passes. The synchronized local implementation also passes
+all 368 Swift tests in 70 suites, generated app/MCP contracts, all 11 target MCP
+tests, target-environment isolation, the complete conversion/source-query
+control gate, deterministic target-project generation and sequential macOS and
+generic iOS Simulator staging builds. Exact implementation-checkpoint CI is the
+remaining operational proof.

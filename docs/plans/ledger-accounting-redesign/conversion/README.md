@@ -13,10 +13,12 @@ evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The local Client/Project PowerSync directory and browse
 provider is implemented with 16 focused tests and independent review; exact
 implementation commit `a1b57a37` passes immutable run `33918240622`. Hosted
-Auth/Sync proof remains pending. A four-leaf, comment-only READY candidate now
-defines the separate local-only Account discovery and explicit-selection
-provider; it explicitly does not reuse the current broad illustrative Sync
-configuration or activate a workspace. The Client/Project directory
+Auth/Sync proof remains pending. A separate four-leaf local-only Account
+discovery and explicit-selection provider is now implemented with ten focused
+tests and final independent-review GO; exact READY commit `5a5f2def` passed
+immutable run `33922033391`, while exact implementation-checkpoint CI remains
+pending. It does not reuse the current broad illustrative Sync configuration or
+activate a workspace. The Client/Project directory
 read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

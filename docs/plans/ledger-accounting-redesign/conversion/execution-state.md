@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 273
+State version: 274
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-DISCOVERY-POWERSYNC-READY-CANDIDATE
+- Checkpoint: ACCOUNT-DISCOVERY-POWERSYNC-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -37,12 +37,13 @@ without modifying the running Firebase application before hard cutover.
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
 - The implementation tracker currently contains 265 status-bearing rows: 68
-  done, four verified, two implemented, one ready, zero awaiting verification,
+  done, four verified, three implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Three provider-backed product slices have working local behavior: Client
-  creation, Project setup and the Client/Project directory. The two mutation
+- Four provider-backed product slices have working local behavior: Client
+  creation, Project setup, the Client/Project directory and Principal-scoped
+  Account discovery. The two mutation
   slices have local identity, ordinary-name
   command, encrypted-offline, RLS, replay and readback mechanics: Client
   creation and Project setup. O-043 now correctly gates final Client-name
@@ -50,7 +51,9 @@ without modifying the running Firebase application before hard cutover.
   current Swift, MCP and PostgreSQL validators disagree on edge inputs, so the
   ordinary-name fixture is not final validation evidence. The exact Project
   implementation checkpoint passes immutable CI; both slices also remain
-  incomplete until a real isolated PowerSync/Auth round-trip passes.
+  incomplete until a real isolated PowerSync/Auth round-trip passes. Account
+  discovery is intentionally local-only and cannot advance beyond implemented
+  until safe hosted identity bootstrap and authorization are proven.
 - One supporting provider slice now durably accepts encrypted attachment bytes
   offline in an isolated, scope-bound local PowerSync database and passes exact
   immutable CI. It is not yet an upload/display product path and does not
@@ -62,13 +65,14 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
-- Prepared a four-leaf, comment-only READY candidate for the next local-only
-  Account discovery provider slice. The candidate implements no behavior yet;
-  it freezes the Principal/environment-bound `AccountQuerying` adapter, a
-  principal-scoped encrypted bootstrap runtime, false-empty/readiness/freshness/
-  bounded-failure/restart/cancellation coverage and a build-only isolated
-  explicit-selection component. Existing staging-root runtime wiring is
-  excluded. A
+- Implemented the four-leaf local-only Account discovery provider slice after
+  exact corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`
+  passed all three jobs in immutable Actions run `33922033391`. The executable
+  boundary includes the Principal/environment-bound `AccountQuerying` adapter,
+  a principal-scoped encrypted bootstrap runtime, ten focused tests covering
+  false-empty/readiness/freshness/bounded-failure/restart/cancellation and a
+  build-only isolated explicit-selection component. Existing staging-root
+  runtime wiring is excluded. A
   feature-specific authority audit confirmed that the canonical Account spec
   settles this local outcome and that session-ending/pending-work can follow as
   a separate slice because selection intent activates and tears down nothing.
@@ -82,20 +86,28 @@ without modifying the running Firebase application before hard cutover.
   deferred because O-039 blocks mutation and note history also needs this
   shared scope/readiness foundation. The first independent review returned
   NO-GO over accidental unclaimed pgTAP/root work and underspecified freshness,
-  failure and pre-query scope-refusal tests. A second review caught three stale
-  wording inconsistencies. All findings are corrected; final corrected-diff
-  review returned GO with no P0-P3 finding. Conversion controls, target
-  environment/contracts, all 11 MCP tests, all 358 Swift tests in 69 suites,
-  deterministic project generation, both staging builds and clean formatting
-  pass locally. Initial exact READY commit `a34a51e9` was rejected by immutable
+  failure and pre-query scope-refusal tests. A second READY review caught three
+  stale wording inconsistencies. During executable review, six additional
+  issues were corrected before commit: completeness/freshness coupling,
+  destructive close exposure, malformed sentinel/cardinality acceptance,
+  malformed membership IDs, raw Principal filesystem traversal and Keychain
+  mutation before namespace validation. Final corrected-diff implementation
+  review returned GO with no P0-P3 finding; ten focused tests pass, including
+  contained opaque namespaces and encrypted close/reopen. All 368 Swift tests
+  in 70 suites, generated app/MCP contracts, 11 MCP tests, conversion controls,
+  target isolation, deterministic project generation and sequential macOS/iOS
+  staging builds pass locally. Initial exact READY
+  commit `a34a51e9` was rejected by immutable
   run `33921833216` solely because the M2 residual report was stale; the
   shorthand local gate had omitted that check. CI correctly prevented dependent
   jobs. The report is now regenerated at 443 mapped / 184 residual / 47 blocker
   rows. Follow-up commit `900fcd67` omitted other regenerated audit/manifest
   outputs still visible in the local status; run `33921970523` was cancelled
-  immediately and supplies no evidence. The next corrected checkpoint includes
-  the complete generated-artifact set and must pass the complete workflow plus
-  a clean-checkout proof. No Firebase, hosted or production state changed;
+  immediately and supplies no evidence. Corrected READY commit `5a5f2def` then
+  included the complete generated-artifact set and passed the complete workflow
+  plus clean-checkout proof. The local implementation is being synchronized and
+  must pass the same exact-commit workflow before its operational verification
+  item advances. No Firebase, hosted or production state changed;
   `EVID-ACCOUNT-DISCOVERY-PROVIDER-001`.
 
 - Implemented the reviewed Client/Project directory and browse provider after

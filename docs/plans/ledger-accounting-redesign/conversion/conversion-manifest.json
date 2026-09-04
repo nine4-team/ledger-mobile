@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T21:38:19.004Z",
+    "lastSynchronizedAt": "2026-09-04T22:17:24.275Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -21272,12 +21272,12 @@
           "path": "LedgeriOS/LedgerTargetApp/AccountDiscoveryStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "57be7c8038247f068cd5c9efa75f651b0ae95dc40102b9f5bdac0226f9c1ceac",
-      "acknowledgedSourceHash": "57be7c8038247f068cd5c9efa75f651b0ae95dc40102b9f5bdac0226f9c1ceac",
+      "observedSourceHash": "da83ef23844d560fc22cd28b141e96a6d2f29fb8c28ee9e1aa03ab5fe9f89825",
+      "acknowledgedSourceHash": "da83ef23844d560fc22cd28b141e96a6d2f29fb8c28ee9e1aa03ab5fe9f89825",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for isolated staging rendering and explicit Account-selection intent creation.",
+      "currentBehavior": "Executable isolated staging rendering and exact Account-selection intent creation over the backend-neutral query port.",
       "disposition": "redesign",
       "target": {
         "owner": "Identity, Membership, and Workspace Context",
@@ -21306,14 +21306,14 @@
           "An explicit current-row action creates the exact selection intent without defaulting"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
       ],
-      "notes": "The staging component is build-only and existing staging-root runtime wiring is explicitly excluded. No automatic selection, workspace activation, hosted connection or production behavior.",
+      "notes": "The staging component is build-only and existing staging-root runtime wiring is explicitly excluded. Cached rows remain visible after a bounded provider failure; no automatic selection, workspace activation, hosted connection or production behavior.",
       "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
     },
     {
@@ -27591,12 +27591,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPrincipalOfflineRuntime.swift"
         }
       ],
-      "observedSourceHash": "8362c17ad913c299798c26ea5070adb7b0c04f9f6df0f948af8a17916cab5ebf",
-      "acknowledgedSourceHash": "8362c17ad913c299798c26ea5070adb7b0c04f9f6df0f948af8a17916cab5ebf",
+      "observedSourceHash": "c1dde365e3bf02c139afb3132be32c9fe3e6a3dfe3c26b87c3aba58a5024ab8b",
+      "acknowledgedSourceHash": "c1dde365e3bf02c139afb3132be32c9fe3e6a3dfe3c26b87c3aba58a5024ab8b",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for one encrypted environment/Principal bootstrap runtime that exposes AccountQuerying without activating an Account workspace.",
+      "currentBehavior": "Executable encrypted environment/Principal bootstrap runtime that exposes AccountQuerying without activating an Account workspace.",
       "disposition": "redesign",
       "target": {
         "owner": "Identity, Membership, and Workspace Context",
@@ -27625,14 +27625,14 @@
           "Runtime rejects rebinding and preserves encrypted cached discovery state"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
       ],
-      "notes": "No Auth, stream connector, workspace switch or deletion behavior exists.",
+      "notes": "The runtime validates a contained opaque filesystem namespace before any Keychain mutation and preserves local data on close; no Auth, stream connector, workspace switch or deletion behavior exists.",
       "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
     },
     {
@@ -29845,12 +29845,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountDiscoveryPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "d28fae5d68443a23f80c4fe5544fbf5e2cdbb5c4625d517e1d67d3acb0024d47",
-      "acknowledgedSourceHash": "d28fae5d68443a23f80c4fe5544fbf5e2cdbb5c4625d517e1d67d3acb0024d47",
+      "observedSourceHash": "4958cb452006f0252b1c080fc9cfee4182ac960190e2c5a4487af65ef1e78148",
+      "acknowledgedSourceHash": "4958cb452006f0252b1c080fc9cfee4182ac960190e2c5a4487af65ef1e78148",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for an AccountQuerying adapter over exact Principal bootstrap rows and independently reactive query-specific completeness plus freshness.",
+      "currentBehavior": "Executable local AccountQuerying adapter over exact Principal bootstrap rows and independently reactive query-specific completeness plus freshness.",
       "disposition": "redesign",
       "target": {
         "owner": "Identity, Membership, and Workspace Context",
@@ -29883,14 +29883,14 @@
           "Exact local scope/readiness/failure/restart/cancellation and selection-intent behavior passes"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
       ],
-      "notes": "No executable provider behavior before the exact READY checkpoint passes immutable CI.",
+      "notes": "Local-only implementation; hosted bootstrap authorization and Sync proof remain excluded.",
       "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
     },
     {
@@ -42512,12 +42512,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "c381c575ce9ab471348f989c7a48be686679b5cb7fdec4a0160d26b9e1fe0be6",
-      "acknowledgedSourceHash": "c381c575ce9ab471348f989c7a48be686679b5cb7fdec4a0160d26b9e1fe0be6",
+      "observedSourceHash": "508843fcfee0b36715d3203bb4542de94637d9da16445a3039a45ff9cd037f37",
+      "acknowledgedSourceHash": "508843fcfee0b36715d3203bb4542de94637d9da16445a3039a45ff9cd037f37",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for local Account discovery, readiness/freshness, isolation, bounded failures, restart, cancellation and explicit-selection tests.",
+      "currentBehavior": "Executable ten-test local suite for Account discovery, readiness/freshness, isolation, bounded failures, restart, cancellation, namespace containment and explicit selection.",
       "disposition": "redesign",
       "target": {
         "owner": "Identity, Membership, and Workspace Context",
@@ -42548,7 +42548,7 @@
           "All planned local obligations pass before implementation status"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],

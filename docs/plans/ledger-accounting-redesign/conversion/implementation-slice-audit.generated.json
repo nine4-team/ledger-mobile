@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T21:38:19.004Z",
+  "generatedFromManifestSync": "2026-09-04T22:17:24.275Z",
   "totals": {
     "slices": 73,
     "claimedTargetSurfaces": 205,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 149
+    "implementationAdvancedTargetSurfaces": 153
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 2,
+    "implemented": 3,
     "verified": 66,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -36,7 +36,7 @@
       "sliceId": "account-discovery-powersync-provider",
       "title": "Read locally available Accounts and make one explicit workspace choice",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Identity, Membership, and Workspace Context",
       "surfaceIds": [
         "SWIFT-3BFEA9F12A91",
