@@ -44,7 +44,10 @@ jobs:
   target-environment:
     name: Isolated target environment
     needs: conversion-control
-    runs-on: macos-15
+    # PowerSync 1.16.1 uses swift-collections BasicContainers APIs that require
+    # the Swift 6.2 toolchain bundled with Xcode 26. Keep this runner explicit so
+    # CI exercises the same supported compiler floor as the target app.
+    runs-on: macos-26
     timeout-minutes: 20
 
     steps:

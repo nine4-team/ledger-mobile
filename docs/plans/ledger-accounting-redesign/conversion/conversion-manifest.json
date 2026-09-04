@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T15:08:30.263Z",
+    "lastSynchronizedAt": "2026-09-04T15:15:46.081Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -262,10 +262,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "786b2146c88addcfb3f95bf8c37aabb029e511023450194e276c173850647d78",
-      "acknowledgedSourceHash": "786b2146c88addcfb3f95bf8c37aabb029e511023450194e276c173850647d78",
+      "observedSourceHash": "3955a52d4830c755231a3affc2a3abb5fb7653cffa92e4d25bf98c62988c7052",
+      "acknowledgedSourceHash": "3955a52d4830c755231a3affc2a3abb5fb7653cffa92e4d25bf98c62988c7052",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates a macOS job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",

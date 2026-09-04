@@ -16,8 +16,8 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "786b2146c88addcfb3f95bf8c37aabb029e511023450194e276c173850647d78",
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates a macOS job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
+      "acknowledgeSourceHash": "3955a52d4830c755231a3affc2a3abb5fb7653cffa92e4d25bf98c62988c7052",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
