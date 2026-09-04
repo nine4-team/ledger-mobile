@@ -5,7 +5,8 @@
   "evidence": [
     "EVID-ATTACHMENT-CAPTURE-001",
     "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
-    "EVID-TARGET-ENVIRONMENT-001"
+    "EVID-TARGET-ENVIRONMENT-001",
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
   ],
   "surfaces": [
     {
@@ -39,8 +40,8 @@
       "disposition": "redesign",
       "status": "verified",
       "blockers": ["A-004"],
-      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"],
-      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized.",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
+      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized. The pending-work READY package freezes this shared surface at its current hash for one path-free queue-plus-orphan observation API that distinguishes blocking missing/corrupt evidence from unavailable/interrupted observation; primary ownership remains here.",
       "target": {
         "owner": "Attachment Local Durability Provider",
         "surfaces": ["PowerSync local-only attachment durability queue", "AttachmentCaptureStoring provider adapter"],
@@ -63,8 +64,8 @@
       "disposition": "redesign",
       "status": "verified",
       "blockers": ["A-004"],
-      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"],
-      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal.",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
+      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. The pending-work READY package freezes this shared surface at its current hash for queue-plus-orphan and failure-distinction regressions; primary ownership remains here.",
       "target": {
         "owner": "Attachment Local Durability Provider",
         "surfaces": ["Attachment local durability provider test suite"],

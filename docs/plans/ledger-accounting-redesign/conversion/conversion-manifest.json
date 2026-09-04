@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T23:23:30.707Z",
+    "lastSynchronizedAt": "2026-09-04T23:41:09.961Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19229,9 +19229,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "Target provider layer only.",
+      "notes": "Target provider layer only. The pending-work READY package freezes this shared surface at its current hash for one local-only observation journal; primary ownership remains here.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -22345,6 +22346,60 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-4AB6FC526AA5",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/PendingWorkPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/PendingWorkPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "7edf895286fd9d19a0c733cd41aa4607a6504dbc3e91135be34bc6eaab7e19b6",
+      "acknowledgedSourceHash": "7edf895286fd9d19a0c733cd41aa4607a6504dbc3e91135be34bc6eaab7e19b6",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only corrected READY scaffold for exact scope-bound operation, attachment queue and vault-orphan observation with serialized transactional journaling, post-commit revalidation and durable stable summary evidence.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Session Ending and Pending-Work Provider",
+        "surfaces": [
+          "Local PowerSync pending-work summary query"
+        ],
+        "securityRequirements": [
+          "Validate environment, Principal and Account scope and every observed row before returning a summary",
+          "Database, attachment, journal, malformed, orphaned, overflow or concurrent-mutation failures never become authoritative zero"
+        ],
+        "syncRequirements": [
+          "Count queued, applying and unresolved-rejected local operations plus every still-present unverified attachment",
+          "Preserve stable observation identity across unchanged reads and encrypted restart while advancing monotonically on any evidence change"
+        ]
+      },
+      "migration": {
+        "rule": "Read only disposable target-local evidence; import no Firebase cache, pending write, media or session state.",
+        "reconciliation": [
+          "Summary counts and identity digest reconcile exactly to validated local operation and attachment evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "PendingWorkPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Exact counts, terminal exclusion, stable/monotonic observation, restart, scope and failure behavior pass without physical session ending"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+      ],
+      "notes": "No executable behavior before exact READY review and immutable CI.",
+      "classificationBatch": "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-4AC6C92BBF6D",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/ThumbnailGrid.swift",
@@ -23398,9 +23453,10 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified by the Account workspace runtime isolation slice.",
+      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified by the Account workspace runtime isolation slice. The pending-work READY package freezes this shared surface at its current hash for one internal actor-owned summary provider; primary ownership remains here.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -36602,9 +36658,10 @@
       ],
       "evidence": [
         "EVID-ATTACHMENT-CAPTURE-001",
-        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized.",
+      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized. The pending-work READY package freezes this shared surface at its current hash for one path-free queue-plus-orphan observation API that distinguishes blocking missing/corrupt evidence from unavailable/interrupted observation; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -37899,6 +37956,60 @@
       ],
       "notes": "Target-only provider-free tests use synthetic hashes, IDs, versions and timestamps and do not create files, invoke share/print/download UI, select client-visible report contents, inspect attachments or contact a provider. Four focused/51 total tests and both target builds passed exact implementation Actions run 33569882379.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-2053D13BB3B5",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "37d2888f2fffb13a924976c0dd8efa553f46a3e51e7e0127529b694935b9e38d",
+      "acknowledgedSourceHash": "37d2888f2fffb13a924976c0dd8efa553f46a3e51e7e0127529b694935b9e38d",
+      "metadata": {
+        "firebaseCoupled": true
+      },
+      "currentBehavior": "Comment-only corrected READY scaffold for exact counts, queue-free orphan refusal, failure distinction, restart, post-journal concurrency, scope and fail-closed provider tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Session Ending and Pending-Work Provider",
+        "surfaces": [
+          "Pending-work PowerSync provider verification"
+        ],
+        "securityRequirements": [
+          "Unknown, null, malformed and cross-scope evidence fails closed",
+          "Tests inject store and journal failures without leaking operation, media, path or credential data"
+        ],
+        "syncRequirements": [
+          "Tests distinguish local operation lifecycle state, ps_crud transport work and attachment durability evidence",
+          "Concurrent cross-store mutation cannot yield a silently mixed or falsely clean observation"
+        ]
+      },
+      "migration": {
+        "rule": "Use temporary encrypted target databases, synthetic identities and synthetic attachment bytes only.",
+        "reconciliation": [
+          "Each returned summary is reproducible from one stable validated evidence set"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter PendingWorkPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "All local provider obligations pass before implementation status advances"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+      ],
+      "notes": "Synthetic local evidence only; no deletion, signout, hosted Sync, Firebase or cutover claim.",
+      "classificationBatch": "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "TEST-22878D176671",
@@ -42488,9 +42599,10 @@
       "evidence": [
         "EVID-ATTACHMENT-CAPTURE-001",
         "EVID-TARGET-ENVIRONMENT-001",
-        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal.",
+      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. The pending-work READY package freezes this shared surface at its current hash for queue-plus-orphan and failure-distinction regressions; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 279
+State version: 281
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-IMPLEMENTED
+- Checkpoint: PENDING-WORK-POWERSYNC-PROVIDER-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -102,6 +102,25 @@ without modifying the running Firebase application before hard cutover.
   passes all three jobs in immutable run `33928708863`. The next bounded slice is
   the local pending-work summary provider; physical synchronization, logout,
   deletion, Auth and workspace switching remain excluded.
+
+- Prepared a comment-only READY candidate for the target-local pending-work
+  summary provider. It freezes exact operation lifecycle and protected
+  attachment evidence, stable restart-safe revision/time/fingerprint,
+  same-count identity change detection, bounded cross-store consistency and
+  fail-closed scope/storage/journal behavior. The two new executable leaves are
+  comments only; all affected/shared schema, runtime, attachment and policy
+  surfaces remain byte-unchanged pending independent review and immutable READY
+  CI. The slice performs no synchronization, cleanup, signout, Auth, workspace
+  switching, hosted access, migration, Firebase work or cutover action.
+  Initial independent review returned NO-GO because queue-free vault orphans
+  could appear clean, an older digest could race journal commit, the current
+  attachment evidence API collapses unavailable vault failures into corrupt
+  evidence, and shared surfaces were vague. The corrected candidate now refuses
+  orphan inventory, serializes callers, transactionally updates then
+  post-validates the journal, defines a path-free failure-distinguishing
+  attachment observation, and freezes exact affected surface IDs/hashes.
+  Independent corrected-diff review is GO with no remaining P0-P3 finding;
+  immutable READY CI on the exact comment-only checkpoint is next.
 
 - Implemented the four-leaf local-only Account discovery provider slice after
   exact corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`

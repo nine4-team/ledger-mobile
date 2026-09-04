@@ -1,0 +1,81 @@
+{
+  "batchId": "M0-PENDING-WORK-POWERSYNC-PROVIDER-001",
+  "title": "Target local pending-work summary provider",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-SESSION-ENDING-POLICY-001",
+    "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-4AB6FC526AA5",
+      "acknowledgeSourceHash": "7edf895286fd9d19a0c733cd41aa4607a6504dbc3e91135be34bc6eaab7e19b6",
+      "currentBehavior": "Comment-only corrected READY scaffold for exact scope-bound operation, attachment queue and vault-orphan observation with serialized transactional journaling, post-commit revalidation and durable stable summary evidence.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
+      "notes": "No executable behavior before exact READY review and immutable CI.",
+      "target": {
+        "owner": "Session Ending and Pending-Work Provider",
+        "surfaces": ["Local PowerSync pending-work summary query"],
+        "securityRequirements": [
+          "Validate environment, Principal and Account scope and every observed row before returning a summary",
+          "Database, attachment, journal, malformed, orphaned, overflow or concurrent-mutation failures never become authoritative zero"
+        ],
+        "syncRequirements": [
+          "Count queued, applying and unresolved-rejected local operations plus every still-present unverified attachment",
+          "Preserve stable observation identity across unchanged reads and encrypted restart while advancing monotonically on any evidence change"
+        ]
+      },
+      "migration": {
+        "rule": "Read only disposable target-local evidence; import no Firebase cache, pending write, media or session state.",
+        "reconciliation": [
+          "Summary counts and identity digest reconcile exactly to validated local operation and attachment evidence"
+        ]
+      },
+      "verification": {
+        "tests": ["PendingWorkPowerSyncQueryTests"],
+        "acceptance": [
+          "Exact counts, terminal exclusion, stable/monotonic observation, restart, scope and failure behavior pass without physical session ending"
+        ]
+      }
+    },
+    {
+      "id": "TEST-2053D13BB3B5",
+      "acknowledgeSourceHash": "37d2888f2fffb13a924976c0dd8efa553f46a3e51e7e0127529b694935b9e38d",
+      "currentBehavior": "Comment-only corrected READY scaffold for exact counts, queue-free orphan refusal, failure distinction, restart, post-journal concurrency, scope and fail-closed provider tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
+      "notes": "Synthetic local evidence only; no deletion, signout, hosted Sync, Firebase or cutover claim.",
+      "target": {
+        "owner": "Session Ending and Pending-Work Provider",
+        "surfaces": ["Pending-work PowerSync provider verification"],
+        "securityRequirements": [
+          "Unknown, null, malformed and cross-scope evidence fails closed",
+          "Tests inject store and journal failures without leaking operation, media, path or credential data"
+        ],
+        "syncRequirements": [
+          "Tests distinguish local operation lifecycle state, ps_crud transport work and attachment durability evidence",
+          "Concurrent cross-store mutation cannot yield a silently mixed or falsely clean observation"
+        ]
+      },
+      "migration": {
+        "rule": "Use temporary encrypted target databases, synthetic identities and synthetic attachment bytes only.",
+        "reconciliation": [
+          "Each returned summary is reproducible from one stable validated evidence set"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter PendingWorkPowerSyncQueryTests"],
+        "acceptance": [
+          "All local provider obligations pass before implementation status advances"
+        ]
+      }
+    }
+  ]
+}

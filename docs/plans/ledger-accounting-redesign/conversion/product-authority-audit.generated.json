@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T23:23:30.707Z",
+  "generatedFromManifestSync": "2026-09-04T23:41:09.961Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 889,
-    "targetRelevantSurfaces": 629,
-    "batches": 26,
+    "surfaces": 891,
+    "targetRelevantSurfaces": 631,
+    "batches": 27,
     "productScopeSurfaces": 724,
-    "technicalControlSurfaces": 165
+    "technicalControlSurfaces": 167
   },
   "canonicalTargetCoverage": [
     {
@@ -111,10 +111,11 @@
       "batchIds": [
         "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
-        "M0-IDENTITY-LIFECYCLE-001"
+        "M0-IDENTITY-LIFECYCLE-001",
+        "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 20,
-      "targetRelevantSurfaceCount": 17
+      "surfaceCount": 22,
+      "targetRelevantSurfaceCount": 19
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -1603,6 +1604,48 @@
         "TEST-43FF2E5D6451",
         "TEST-AE45E8FB9289",
         "TEST-BA04EFCE369C"
+      ]
+    },
+    {
+      "batchId": "M0-PENDING-WORK-POWERSYNC-PROVIDER-001",
+      "title": "Target local pending-work summary provider",
+      "scope": "technical_control",
+      "rationale": "The target-local pending-work provider must derive the canonical scoped summary from validated operation and attachment evidence with stable restart-safe observation identity and fail-closed cross-store behavior, without performing synchronization, deletion or signout.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-4AB6FC526AA5",
+        "TEST-2053D13BB3B5"
       ]
     },
     {
