@@ -2,7 +2,7 @@
   "batchId": "M0-CAPABILITY-CONTROL-001",
   "title": "Capability evolution guidance and deterministic conversion coverage controls",
   "reviewedAt": "2026-09-03",
-  "evidence": ["EVID-CAPABILITY-001", "EVID-CONTROL-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+  "evidence": ["EVID-CAPABILITY-001", "EVID-CONTROL-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
   "surfaces": [
     {
       "id": "FILE-7FD1F9FEF537",
@@ -20,17 +20,17 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "031b0bb927a5e215efeb80874236aafb4b03b76e56a08af70e24fc03ed34c526",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, and the two explicitly configured target query-port inventory control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Target query-port control leaves are excluded from Firebase audit/repair discovery even when their contract prose names Firestore exclusions. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "acknowledgeSourceHash": "6b7c21212c23664bf18a10b9501b421edf25e9e8107020c8b2e7559718b56eec",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two comment-only target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are excluded from Firebase audit/repair discovery even when their contract prose names Firebase exclusions. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
       "verification": {
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors or warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY change adds exact CONFIG discovery for the target query-port generator/test scaffolds and prevents false Firebase-tool duplication; status and ownership remain unchanged."
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY changes add exact CONFIG discovery first for the target query-port inventory generator/test leaves and now for the target query logical-authority generator/test scaffolds; no Firebase-tool duplication, status change, or ownership change is claimed."
     },
     {
       "id": "CONFIG-9B16CFCB67A4",
@@ -115,6 +115,91 @@
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
       "notes": "Verified after immutable READY run 33837081633 and exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485. All 20 focused tests and the independent adversarial matrix pass."
+    },
+    {
+      "id": "CONFIG-5422E6C6A047",
+      "acknowledgeSourceHash": "713dd34cc2304b2603724f6e3d7f92ca4281a3d42d2d8112ed3ff8ef63eb73cf",
+      "currentBehavior": "Comment-only READY scaffold freezing the future dependency-free JSON logical-authority crosswalk generator/checker contract over every generated TQUERY. The future validator is limited to closed-schema keys/types/exact enums and allowlists, exact references/bindings and deterministic bytes; it performs no free-text keyword or Markdown semantic/status parsing. The scaffold contains no executable implementation or generated output.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query Logical-Authority Control",
+        "surfaces": [
+          "closed-schema target query logical-authority registry validator",
+          "stable TACCESS identity and separate mapping-drift evidence",
+          "deterministic read-only generated JSON freshness control"
+        ],
+        "securityRequirements": [
+          "Read only repository JSON/control metadata; no credential, tenant data, provider endpoint, hosted resource or production access",
+          "Logical scope fields narrow expected reads but never authorize access or select RLS policy"
+        ],
+        "syncRequirements": [
+          "Every data-domain label remains a proposed_architecture_dependency and cannot authorize or claim an implemented Sync Stream",
+          "Postgres and local physical planes remain globally deferred under A-003 and A-004"
+        ]
+      },
+      "migration": {
+        "rule": "Review target logical authority only; do not map or translate Firebase queries, indexes or data.",
+        "reconciliation": [
+          "Bind exactly one reviewed row to each of the 18 current generated TQUERY methods",
+          "Leave all 386 QUERY source occurrences for a separate downstream reconciliation slice"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/generate-target-query-logical-authority-crosswalk.mjs",
+          "future immutable READY and implementation CI under the slice dossier"
+        ],
+        "acceptance": [
+          "READY leaf remains comment-only and claims no generated artifact or executable behavior",
+          "Future implementation rejects stale bindings, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
+      "notes": "READY only. No parser, generator, package command, CI hook, physical access design, provider, runtime or production behavior exists."
+    },
+    {
+      "id": "CONFIG-ED6818A70D4E",
+      "acknowledgeSourceHash": "815c5008529619b162796af731cc1434030b6da1d2c4cb7a55395508ec2f350b",
+      "currentBehavior": "Comment-only READY scaffold freezing the future JSON-only logical-authority structural test contract, including exact schema/enums/allowlists and the canonical-row mapping-hash formula while explicitly excluding free-text semantic inference. It contains no executable test implementation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query Logical-Authority Control",
+        "surfaces": [
+          "exact 18-row inventory/signature binding tests",
+          "closed-schema and discriminated-axis rejection matrix",
+          "deterministic identity, mapping hash, stale artifact and lifecycle-allowlist tests"
+        ],
+        "securityRequirements": [
+          "Use repository metadata and synthetic JSON fixtures only; perform no hosted or production access",
+          "Prove the closed schema has no authorization-policy implementation field; free-text meaning remains human-reviewed"
+        ],
+        "syncRequirements": [
+          "Accept only the exact proposed_architecture_dependency state and frozen domain-value enum; do not infer stream authorization from free text"
+        ]
+      },
+      "migration": {
+        "rule": "Test target logical-authority metadata only; perform no source export, source-query matching or target migration.",
+        "reconciliation": [
+          "Prove exact TQUERY set equality and signature freshness",
+          "Prove the downstream 386-source-query reconciliation boundary remains explicit and untouched"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
+          "future exact test/generate/check and CI integration under the slice dossier"
+        ],
+        "acceptance": [
+          "READY leaf remains comment-only",
+          "Future tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
+      "notes": "READY only. Machine tests may prove structure and freshness; row semantics remain a required human review surface."
     }
   ]
 }

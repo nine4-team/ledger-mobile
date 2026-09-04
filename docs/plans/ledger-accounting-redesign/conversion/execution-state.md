@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 244
+State version: 245
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-QUERY-PORT-INVENTORY-CONTROL-VERIFIED
+- Checkpoint: TARGET-QUERY-LOGICAL-AUTHORITY-CROSSWALK-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -31,6 +31,37 @@ modifying the running Firebase application before hard cutover.
   decisions, migration, and production authority remain gated.
 
 ## Completed at This Checkpoint
+
+- Prepared the complete READY-only target query logical-authority crosswalk
+  above the verified TQUERY inventory. One reviewed JSON registry binds the
+  exact inventory digest and all 18 method signature hashes, then records only
+  authority references, six logical axes, proposed architecture data-domain
+  dependencies and explicit unresolved axes. Project preference is
+  decision-blocked by O-040; O-026 is limited to exact reference-data
+  visibility/download/capability; O-007/O-015 remain only on Item occurrence/
+  provenance persistence. Item section/upstream order is reviewed while only
+  physical storage order remains undefined; budget contribution-source
+  eligibility/taxonomy is explicitly not defined; unresolved Operations include
+  only queued/applying/rejected and transient failure requeues. Account issuer/
+  subject correlation and Operation authorization/merge/routing remain explicit
+  uncertainty. Every row cites its owning verified query-contract evidence and
+  every domain label is `proposed_architecture_dependency`. Postgres and local physical planes are
+  globally deferred under proposed A-003/A-004; there are no per-row physical
+  IDs, names, indexes, SQL, RLS or Sync assignments. Exactly
+  `CONFIG-5422E6C6A047` and `CONFIG-ED6818A70D4E` are new `target_mapped`
+  comment-only scaffolds. The executable JSON validator, generated artifact,
+  package/CI hooks and immutable READY run remain future work. The deliberately
+  future validator is exact structural validation only, with no free-text
+  keyword or Markdown semantic/status parsing. The changed conversion discoverer is re-acknowledged at its exact reviewed hash
+  without changing its verified status or ownership; package/workflow and all
+  16 query owners remain unadvanced. The 386 source `QUERY-*` occurrence
+  reconciliation remains a separate downstream slice. Synchronized conversion
+  controls record 839 surfaces / 824 currently discovered, 395 target-mapped-or-
+  later, 184 residuals, 46 blockers, and 66 slices / 157 claimed / 140
+  implementation-advanced, with only the three established retired-path
+  warnings. No Swift, schema, RLS, Sync, provider, Firebase, hosted, production,
+  migration, release or cutover behavior advances;
+  `EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001`.
 
 - Verified the decision-independent target query-port inventory control after
   exact READY commit `0ecabf4761874599d8a37a5a89ffced393b4cd63` passed
@@ -3447,6 +3478,23 @@ modifying the running Firebase application before hard cutover.
   excluded.
 
 ## Next Action
+
+First, commit only the exact READY allowlist for
+`target-query-logical-authority-crosswalk-control`, obtain immutable READY CI,
+and review that exact commit before replacing either comment-only scaffold.
+Implementation must consume the reviewed JSON registry and generated TQUERY
+inventory, validate exact 18/18 set/digest/signature binding and the closed
+discriminated-axis schema with the dossier's exact enum/ID/reference allowlists,
+derive collision-checked TACCESS identities by the frozen domain-separated hash
+and mapping hashes from the frozen mapping separator plus recursively key-sorted
+canonical minified registry-row JSON, and emit/check one deterministic JSON
+artifact. It must perform no free-text keyword or Markdown semantic/status
+parsing; human review owns meaning and blocker placement. It may
+add only the frozen package commands and Ubuntu conversion-control gate while
+preserving the existing macOS dependency. It must not parse Swift or Markdown
+semantics, create physical index identities/SQL/RLS/Sync assignments, advance
+any query owner, or reconcile the 386 source `QUERY-*` occurrences. Human
+row-by-row semantic review remains required after generation.
 
 Continue without waiting on the two M1 evidence blockers:
 

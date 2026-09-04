@@ -1377,8 +1377,10 @@ function discoverConfiguration() {
     "scripts/build-testflight.sh",
     "scripts/check-target-environment.mjs",
     "scripts/distribute-testflight-external.sh",
+    "scripts/generate-target-query-logical-authority-crosswalk.mjs",
     "scripts/generate-target-query-port-inventory.mjs",
     "scripts/release-testflight.sh",
+    "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
     "scripts/tests/generate-target-query-port-inventory.test.mjs",
   ];
   return candidates.flatMap((rel) => {

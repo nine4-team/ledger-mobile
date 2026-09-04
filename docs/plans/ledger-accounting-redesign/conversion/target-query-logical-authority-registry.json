@@ -1,0 +1,435 @@
+{
+  "inventoryDigest": "b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2",
+  "physicalPlanes": {
+    "postgres": {"status": "deferred", "decision": "A-003"},
+    "local": {"status": "deferred", "decision": "A-004"}
+  },
+  "rows": [
+    {
+      "tqueryId": "TQUERY-C7BD4AEAAB98",
+      "expectedSignatureHash": "24169668e287e28a867b1813983c3145d349f60701cdce5c46eac3e4794a259c",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/proto-item-capture.md", "section": "Accounting-State Rule"},
+        {"role": "canonical_target", "path": "docs/specs/proto-item-capture.md", "section": "One Item Identity"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Project workspace"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ITEM-ACCOUNTING-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and Project; rows retain exact Client and stable Item identity."},
+        "result": {"state": "reviewed", "value": "Project Items plus client-paid Purchase relationships and billable charge/credit occurrences derive Unaccounted For, Accounted For, or unresolved without writable derived authority."},
+        "ordering": {"state": "reviewed", "value": "Unaccounted For first, Accounted For second; preserve upstream Item order within each section."},
+        "pagination": {"state": "reviewed", "value": "Unpaged observation over the provider-free currently supplied working set."},
+        "readiness": {"state": "reviewed", "value": "Authoritative relationship absence requires complete ready evidence; incomplete absence remains unresolved."},
+        "authorization": {"state": "reviewed", "value": "Requested scope only narrows rows already authorized for Account membership and financial visibility."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "project_workspace"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "occurrence_and_provenance_persistence", "state": "decision_blocked", "blockerIds": ["O-007", "O-015"]},
+        {"axis": "deterministic_storage_order", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ITEM-ACCOUNTING-001.md#Permanent Limits"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-CD97754157F6",
+      "expectedSignatureHash": "32ed6e84f2fb69457b6440d1bb479fe90348d3c4b32b544f1cf2e053cf41224a",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Space Fields"},
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Checklists"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Synchronization Streams"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md", "section": "Frozen Contract and Exclusions"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and Space; immutable Space scope is one Project or Business Inventory."},
+        "result": {"state": "reviewed", "value": "Zero-or-one Space core record with lifecycle, revision, timestamps, ordered checklist hierarchy, and derived counts."},
+        "ordering": {"state": "reviewed", "value": "Singleton; nested checklist and item order is explicit presentation order then stable identity."},
+        "pagination": {"state": "reviewed", "value": "None; zero-or-one observation."},
+        "readiness": {"state": "reviewed", "value": "Ready found and authoritative absence remain distinct from incomplete, partial, stale, unavailable, and failed."},
+        "authorization": {"state": "reviewed", "value": "Space identity and scope narrow an already-authorized Account working set and never authorize access."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "project_workspace_or_inventory_by_immutable_scope"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-BD89A02A23F2",
+      "expectedSignatureHash": "454d9faabcdaad494e46ddfb100a07ee6aa01df4d3e59e85626d530ca179a48a",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Receipt Details"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-VENDOR-SUGGESTION-REFERENCE-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account."},
+        "result": {"state": "reviewed", "value": "Visible vendor/source suggestion entries remain convenience values, not Vendor or accounting identity."},
+        "ordering": {"state": "reviewed", "value": "Presentation order ascending, then stable suggestion ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged Account reference observation."},
+        "readiness": {"state": "reviewed", "value": "Complete empty, incomplete, partial, stale, and failed states remain distinct."},
+        "authorization": {"state": "decision_blocked", "blockerIds": ["O-026"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "exact_visibility_download_capability", "state": "decision_blocked", "blockerIds": ["O-026"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-A95F4BE0B9D8",
+      "expectedSignatureHash": "1993ff350fadb2e748510c75e442be1313bc746efee28d6f08e0b7272e0a4052",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Item Assignment"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Synchronization Streams"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md", "section": "Enhanced Pilot Review and Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and exact Project-or-Business-Inventory placement scope."},
+        "result": {"state": "reviewed", "value": "Only active destination Spaces with stable identity, normalized display name, and revision."},
+        "ordering": {"state": "reviewed", "value": "Case-folded display name, exact display name, then stable Space ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged scoped destination observation."},
+        "readiness": {"state": "reviewed", "value": "Authoritative empty, incomplete, partial, stale, and failure are distinct."},
+        "authorization": {"state": "reviewed", "value": "Scope is selection evidence only and narrows an already-authorized local working set."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "project_workspace_or_inventory_by_immutable_scope"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-2D53E545A090",
+      "expectedSignatureHash": "e926b9911787018ecf3ae04ce25cd3edddb45204c3959b767650b06ecc35d6c1",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Destination picker"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "section": "Read models"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TRANSFER-DESTINATION-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Source Project; candidates must be other active Projects with exact same Account and Client identity."},
+        "result": {"state": "reviewed", "value": "Derived eligible ProjectTransferRoute candidates; Business Inventory and the source Project are excluded."},
+        "ordering": {"state": "reviewed", "value": "Preserves the reviewed Project-directory upstream order without defining a new comparator."},
+        "pagination": {"state": "reviewed", "value": "None; derived from one Project-directory snapshot."},
+        "readiness": {"state": "reviewed", "value": "Available, authoritative no destination, and incomplete directory are distinct."},
+        "authorization": {"state": "reviewed", "value": "Eligibility is local evidence only; the source and directory never grant server authorization."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "derived_from_project_directory_without_separate_canonical_authority"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-2ACE415664D8",
+      "expectedSignatureHash": "5771115e01a49239c02b000af000059eef65d551f1b5eaf7c81cd6a53e4a8be9",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Storage and identity"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account."},
+        "result": {"state": "reviewed", "value": "Unique Client summaries with stable identity, name, lifecycle, and audit fields."},
+        "ordering": {"state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md#Permanent Limits"]},
+        "pagination": {"state": "reviewed", "value": "Unpaged Account directory observation."},
+        "readiness": {"state": "reviewed", "value": "Authoritative empty, incomplete, partial, and stale scope remain distinct."},
+        "authorization": {"state": "reviewed", "value": "Account ID narrows active-membership visibility and never grants it."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "canonical_directory_order", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md#Permanent Limits"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-C84BC7558133",
+      "expectedSignatureHash": "af320cc19e4234215ee55dcebcdb0f4dbb09c94ee54de26f87104e1c06a50013",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Project relationship"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account; every Project retains its exact same-Account Client relationship."},
+        "result": {"state": "reviewed", "value": "Unique Project summaries with current Client summary, display fields, and lifecycle."},
+        "ordering": {"state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-PRESENTATION-001.md#Preflight Corrections"]},
+        "pagination": {"state": "reviewed", "value": "Unpaged Account directory observation."},
+        "readiness": {"state": "reviewed", "value": "Authoritative empty, incomplete, partial, and stale scope remain distinct."},
+        "authorization": {"state": "reviewed", "value": "Account ID narrows active-membership visibility and never grants it."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "canonical_directory_order", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-PRESENTATION-001.md#Preflight Corrections"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-961BF10129CC",
+      "expectedSignatureHash": "10442fae8ce31d6e69ae630bc9c9d15a443a2e89941a0c00137c06204c4d6ba8",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Budget Progress"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Workspace queries"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BUDGET-SEGMENT-001.md", "section": "Frozen Safe Boundary"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account, Project, and currency."},
+        "result": {"state": "reviewed", "value": "Per-category signed client-paid and invoicing-unpaid values with derived recognized sum and accounting projection revision."},
+        "ordering": {"state": "reviewed", "value": "Category presentation order ascending, then stable category ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged Project budget-segment observation."},
+        "readiness": {"state": "reviewed", "value": "Local readiness and LocalDataVersion remain distinct from accounting projection authority."},
+        "authorization": {"state": "reviewed", "value": "This query consumes only an already-authorized visible snapshot; financial authorization and download policy are not defined by this contract."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"},
+        {"state": "proposed_architecture_dependency", "value": "project_workspace"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "contribution_source_eligibility_and_taxonomy", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BUDGET-SEGMENT-001.md#Frozen Safe Boundary"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-E8233F3CB7D5",
+      "expectedSignatureHash": "73e0c1887a642de3431ddd3c7aa9b92c813255d34272abc206e026426310fa5f",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/projects.md", "section": "Target Redesign Requirements"},
+        {"role": "canonical_target", "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Project relationship"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CORE-DETAILS-001.md", "section": "Frozen Contract and Exclusions"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and Project."},
+        "result": {"state": "reviewed", "value": "Zero-or-one Project core record with exact Client relationship and locally observed revision."},
+        "ordering": {"state": "reviewed", "value": "Singleton."},
+        "pagination": {"state": "reviewed", "value": "None; zero-or-one observation."},
+        "readiness": {"state": "reviewed", "value": "Ready found and authoritative absence remain distinct from incomplete, partial, stale, unavailable, and failed."},
+        "authorization": {"state": "reviewed", "value": "Requested Project narrows an already-authorized Account workspace and never authorizes it."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "project_workspace"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-975125F40458",
+      "expectedSignatureHash": "4d59e6990c4e7007025cc7ff5b36ca161b47087d1f69a54f8d53114cf4475544",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/spaces.md", "section": "Space Templates"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-TEMPLATE-REFERENCE-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account."},
+        "result": {"state": "reviewed", "value": "Visible template structure with lifecycle/revision and no copied completion state."},
+        "ordering": {"state": "reviewed", "value": "Template, checklist, and item presentation order ascending with stable identity tie-breakers."},
+        "pagination": {"state": "reviewed", "value": "Unpaged Account reference observation."},
+        "readiness": {"state": "reviewed", "value": "Complete empty, incomplete, partial, stale, and failed states remain distinct."},
+        "authorization": {"state": "decision_blocked", "blockerIds": ["O-026"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "exact_visibility_download_capability", "state": "decision_blocked", "blockerIds": ["O-026"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-EDEC33C918C3",
+      "expectedSignatureHash": "2551568d75047c8d4d6711a762177211b5d24965b41073ba71a1ef328326652a",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Budget Progress"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-BUDGET-CATEGORY-REFERENCE-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account."},
+        "result": {"state": "reviewed", "value": "Visible category definitions with stable identity, kind, lifecycle, system/exclusion state, order, and revision."},
+        "ordering": {"state": "reviewed", "value": "Presentation order ascending, then stable category ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged Account reference observation."},
+        "readiness": {"state": "reviewed", "value": "Authorized empty, incomplete, partial, stale, and failed states remain distinct."},
+        "authorization": {"state": "decision_blocked", "blockerIds": ["O-026"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "exact_visibility_download_capability", "state": "decision_blocked", "blockerIds": ["O-026"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-7B6C178A522D",
+      "expectedSignatureHash": "b925f93d1670e44500aa0f9c66831b87ccd0e6e296305ecfe6da12b51da13aa2",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Operation status"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Synchronization Streams"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Operation ID; returned snapshot carries its Account scope."},
+        "result": {"state": "reviewed", "value": "One operation lifecycle snapshot, potentially composed from local journal state and synchronized authoritative outcome."},
+        "ordering": {"state": "reviewed", "value": "Singleton."},
+        "pagination": {"state": "reviewed", "value": "None; single-operation observation."},
+        "readiness": {"state": "reviewed", "value": "Queued local state remains distinct from authoritative applied or rejected outcome."},
+        "authorization": {"state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "multi_domain_local_journal_and_authoritative_outcomes"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "authorization_merge_and_domain_routing", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-BAFDEB7B1FDF",
+      "expectedSignatureHash": "d736eeace0c100f7f2e9516efaeeab49ebffbfaaa69e2c45687fd3deb2774256",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Operation status"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "section": "Synchronization Streams"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account; no Principal scope is present in the port signature or OperationSnapshot."},
+        "result": {"state": "reviewed", "value": "Unresolved operation snapshots across relevant local and synchronized operation domains."},
+        "ordering": {"state": "reviewed", "value": "Accepted-at ascending, then stable Operation ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged unresolved Account observation."},
+        "readiness": {"state": "reviewed", "value": "Only queued, applying, and rejected operations are unresolved; draft, applied, superseded, and resolved operations are excluded. Transient failure requeues rather than creating a new unresolved state."},
+        "authorization": {"state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "multi_domain_identity_project_inventory_and_local_journal"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "authorization_merge_and_domain_routing", "state": "not_defined_by_current_contract", "authorityRefs": ["docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md#Explicit Limits"]},
+        {"axis": "optimistic_projection_representation_if_required", "state": "decision_blocked", "blockerIds": ["A-015"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-2932CD350E5E",
+      "expectedSignatureHash": "7d5f9f4afbec603fdfaceed47da70841a0f9090ac28cab9883ede6408ab3c209",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "conversion_control", "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "section": "Target Observable Contract — Backend Neutral"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-NOTE-READ-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and Project."},
+        "result": {"state": "reviewed", "value": "Visibility-safe live/edit/tombstone note rows with stable audit and continuation evidence."},
+        "ordering": {"state": "reviewed", "value": "Created-at descending, then stable note ID descending."},
+        "pagination": {"state": "reviewed", "value": "Keyset page after the exact scoped created-at/note-ID cursor; page size 1 through 200."},
+        "readiness": {"state": "reviewed", "value": "Local page completeness is distinct from complete Project-history coverage."},
+        "authorization": {"state": "reviewed", "value": "Only already-authorized Account/Project rows and visible counts may appear; request scope does not authorize."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "project_workspace"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-4C3A96B8C83F",
+      "expectedSignatureHash": "88b08881e92b63a1a7f645770b000a8b76e077ae5d56623510043fcb6c01c2fe",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/account-discovery-and-workspace-selection.md", "section": "Authorized Account Discovery"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Account discovery and membership"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-DISCOVERY-SELECTION-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Compiled environment and already-established stable Principal."},
+        "result": {"state": "reviewed", "value": "Visibility-safe authorized Account summaries with no membership directory or provider identity payload."},
+        "ordering": {"state": "reviewed", "value": "Normalized display value then stable Account ID, with a currently visible remembered Account optionally moved first."},
+        "pagination": {"state": "reviewed", "value": "Unpaged bootstrap observation."},
+        "readiness": {"state": "reviewed", "value": "Complete ready zero remains distinct from loading, partial, stale, unavailable, and failure."},
+        "authorization": {"state": "not_defined_by_current_contract", "authorityRefs": ["docs/architecture/redesign/architecture-decisions.md#A-007 — Target Authentication Choice", "docs/architecture/redesign/architecture-decisions.md#A-010 — Provider-Independent Principals"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "identity_bootstrap"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "issuer_subject_to_principal_resolution", "state": "decision_blocked", "blockerIds": ["A-007", "A-010"]},
+        {"axis": "offline_unlock_and_revocation_window", "state": "decision_blocked", "blockerIds": ["A-016"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-87E07EB9A4B3",
+      "expectedSignatureHash": "f639640392c2cc999f544474defb0487b54f6038d33e5fe790225e3079d639fa",
+      "reviewClass": "decision_blocked",
+      "authorityRefs": [
+        {"role": "conversion_control", "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "section": "Target Observable Contract — Backend Neutral"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "section": "Read models"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-PREFERENCE-READ-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Candidate representation is exact Account and Principal, with one row per Project."},
+        "result": {"state": "reviewed", "value": "Candidate stored row preserves ordered category IDs and revision; lookup distinguishes stored, notStored, and notAvailable."},
+        "ordering": {"state": "reviewed", "value": "Stable Project ID ascending; pin order is preserved within a candidate stored row."},
+        "pagination": {"state": "reviewed", "value": "Candidate representation is an unpaged Account/Principal directory."},
+        "readiness": {"state": "reviewed", "value": "Missing means notStored only when directory evidence is complete; otherwise notAvailable."},
+        "authorization": {"state": "decision_blocked", "blockerIds": ["O-040"]}
+      },
+      "proposedDataDomains": [],
+      "unresolvedAxes": [
+        {"axis": "feature_retention_target_stream_authorization_and_migration", "state": "decision_blocked", "blockerIds": ["O-040"]},
+        {"axis": "project_workspace_dependency_if_retained", "state": "decision_blocked", "blockerIds": ["O-040"]}
+      ]
+    },
+    {
+      "tqueryId": "TQUERY-136644A3C02A",
+      "expectedSignatureHash": "c90bdaf7f57251c6fa31ee56208ae5d6a82b33f5d65b49be03b102f2da7fdc50",
+      "reviewClass": "mapped",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/client-identity-and-project-transfers.md", "section": "Storage and identity"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "section": "Read models"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md", "section": "Frozen Boundary and Tests"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and Client."},
+        "result": {"state": "reviewed", "value": "Zero-or-one Client core record with lifecycle/audit fields and locally observed revision."},
+        "ordering": {"state": "reviewed", "value": "Singleton."},
+        "pagination": {"state": "reviewed", "value": "None; zero-or-one observation."},
+        "readiness": {"state": "reviewed", "value": "Only complete ready zero is authoritative absence; incomplete, partial, stale, unavailable, and failed remain distinct."},
+        "authorization": {"state": "reviewed", "value": "Requested Client narrows an already-authorized Account catalog and never authorizes it."}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"}
+      ],
+      "unresolvedAxes": []
+    },
+    {
+      "tqueryId": "TQUERY-9FA1EEF3437A",
+      "expectedSignatureHash": "38669ee6e5578023a4658a531cb6afbffb62a068932875c91bfc787b8681ea5c",
+      "reviewClass": "mapped_with_unresolved_axes",
+      "authorityRefs": [
+        {"role": "canonical_target", "path": "docs/specs/invoice-centered-project-accounting.md", "section": "Budget Progress"},
+        {"role": "architecture_authority", "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "section": "Clients, Projects, notes, preferences, and reference data"},
+        {"role": "verification_evidence", "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-CATEGORY-CONFIGURATION-001.md", "section": "Implemented Contract"}
+      ],
+      "logicalAxes": {
+        "scope": {"state": "reviewed", "value": "Exact Account and Project over visible category definitions."},
+        "result": {"state": "reviewed", "value": "Every visible category distinguishes no relationship, enabled without allocation, explicit zero, positive allocation, or incomplete relationship evidence."},
+        "ordering": {"state": "reviewed", "value": "Category presentation order ascending, then stable category ID ascending."},
+        "pagination": {"state": "reviewed", "value": "Unpaged Project configuration observation."},
+        "readiness": {"state": "reviewed", "value": "Incomplete relationships never collapse to no relationship; authorized empty, partial, and stale remain distinct."},
+        "authorization": {"state": "decision_blocked", "blockerIds": ["O-026"]}
+      },
+      "proposedDataDomains": [
+        {"state": "proposed_architecture_dependency", "value": "account_catalog"},
+        {"state": "proposed_architecture_dependency", "value": "project_workspace"}
+      ],
+      "unresolvedAxes": [
+        {"axis": "exact_visibility_download_capability", "state": "decision_blocked", "blockerIds": ["O-026"]}
+      ]
+    }
+  ]
+}
