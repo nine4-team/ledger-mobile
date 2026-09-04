@@ -1,8 +1,8 @@
 {
   "batchId": "M0-CAPABILITY-CONTROL-001",
-  "title": "Capability evolution guidance and complete service/MCP surface catalog",
-  "reviewedAt": "2026-08-31",
-  "evidence": ["EVID-CAPABILITY-001", "EVID-CONTROL-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001"],
+  "title": "Capability evolution guidance and deterministic conversion coverage controls",
+  "reviewedAt": "2026-09-03",
+  "evidence": ["EVID-CAPABILITY-001", "EVID-CONTROL-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001"],
   "surfaces": [
     {
       "id": "FILE-7FD1F9FEF537",
@@ -20,17 +20,101 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "6630f91903ff9790cd36edbde0b2749aebf86314074093a50b5fe41d6faa63ad",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections and target contract configuration/resources; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "acknowledgeSourceHash": "031b0bb927a5e215efeb80874236aafb4b03b76e56a08af70e24fc03ed34c526",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, and the two explicitly configured target query-port inventory control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Target query-port control leaves are excluded from Firebase audit/repair discovery even when their contract prose names Firestore exclusions. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001"],
+      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001"],
       "verification": {
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors or warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority."
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY change adds exact CONFIG discovery for the target query-port generator/test scaffolds and prevents false Firebase-tool duplication; status and ownership remain unchanged."
+    },
+    {
+      "id": "CONFIG-9B16CFCB67A4",
+      "acknowledgeSourceHash": "cab9a8a3405e0cf807c1edfc1dd5a43f2fcc96fe1954afc1d784008812a2f19d",
+      "currentBehavior": "Comment-only READY contract for a dependency-free deterministic generator that inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying and fails closed on ambiguity or unsupported syntax.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query-Port Conversion Control",
+        "surfaces": [
+          "deterministic target Querying-protocol method inventory generator",
+          "stable TQUERY identity and separate signature-drift evidence",
+          "read-only stale generated-artifact check"
+        ],
+        "securityRequirements": [
+          "Read repository Swift and conversion metadata only; expose no credential, tenant data, local data or provider endpoint"
+        ],
+        "syncRequirements": [
+          "Inventory records declarations only and must not imply PowerSync visibility or local-row readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Generate target-port evidence only; do not transform Firebase data or infer source-query parity.",
+        "reconciliation": [
+          "Every emitted TQUERY is reviewed in the later logical access/index crosswalk",
+          "A later control reconciles the complete generated TQUERY set against all 386 QUERY-* source occurrences"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/generate-target-query-port-inventory.mjs",
+          "future npm run target:query-ports:test",
+          "future npm run target:query-ports:check"
+        ],
+        "acceptance": [
+          "Exactly 16 verified owners, 16 public exact-suffix Querying protocols and 18 direct methods are emitted at the frozen baseline",
+          "Unsupported, ambiguous, duplicate, empty or invalid-owner input fails closed",
+          "Check byte-compares deterministic JSON and Markdown without writing"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+      "notes": "Comment-only READY surface. Generated artifacts, package commands and Ubuntu workflow integration are frozen for implementation and do not exist yet."
+    },
+    {
+      "id": "CONFIG-C1C61B2D6569",
+      "acknowledgeSourceHash": "f20527a74ca8735336ec0f13c30a569ef91c2fd7012b19440427f7d1c82cb6e4",
+      "currentBehavior": "Comment-only READY contract for deterministic baseline, parser, fail-closed, stale-output, exact-allowlist and production-isolation tests for the target query-port inventory control.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target Query-Port Conversion Control",
+        "surfaces": [
+          "target query-port inventory generator contract tests",
+          "parser and normalization adversarial fixtures",
+          "exact baseline and stale-output regression control"
+        ],
+        "securityRequirements": [
+          "Fixtures are synthetic or repository-local and tests perform no hosted or production access"
+        ],
+        "syncRequirements": [
+          "Tests reject any interpretation of declaration inventory as Sync authorization, visibility or readiness proof"
+        ]
+      },
+      "migration": {
+        "rule": "Exercise repository and synthetic declaration fixtures only; perform no source export or target data migration.",
+        "reconciliation": [
+          "Exact baseline counts and multi-method protocol sets match repository declarations",
+          "Generated artifacts are byte-identical after generate then check"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node --check scripts/tests/generate-target-query-port-inventory.test.mjs",
+          "future npm run target:query-ports:test"
+        ],
+        "acceptance": [
+          "All supported syntax, exclusions, signature axes and fail-closed cases are covered",
+          "READY, implementation and promotion allowlists preserve unrelated surfaces"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
+      "notes": "Comment-only READY test surface; it proves no executable inventory behavior until the exact implementation checkpoint passes."
     }
   ]
 }

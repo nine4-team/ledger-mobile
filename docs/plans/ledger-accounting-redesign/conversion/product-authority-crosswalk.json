@@ -88,7 +88,12 @@
       "authorities": [
         { "path": "docs/plans/ledger-accounting-redesign/conversion/README.md", "role": "conversion_control" },
         { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-evolution-method.md", "role": "conversion_control" },
-        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" }
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/01-system-context-and-principles.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
       ]
     },
     "M0-CUTOVER-CONTROL-001": {

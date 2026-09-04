@@ -1299,7 +1299,12 @@ function discoverTooling() {
     {
       directory: path.join(ROOT, "scripts"),
       kind: "firebase_audit_repair_script",
-      predicate: (filePath) => /\.(mjs|js|ts|sh)$/.test(filePath),
+      predicate: (filePath) =>
+        /\.(mjs|js|ts|sh)$/.test(filePath) &&
+        !new Set([
+          "scripts/generate-target-query-port-inventory.mjs",
+          "scripts/tests/generate-target-query-port-inventory.test.mjs",
+        ]).has(relative(filePath)),
       contentPredicate: (text) =>
         /firebase-admin|Firestore|firestore|FIREBASE_PROJECT|ledger-nine4/.test(text),
     },
@@ -1372,7 +1377,9 @@ function discoverConfiguration() {
     "scripts/build-testflight.sh",
     "scripts/check-target-environment.mjs",
     "scripts/distribute-testflight-external.sh",
+    "scripts/generate-target-query-port-inventory.mjs",
     "scripts/release-testflight.sh",
+    "scripts/tests/generate-target-query-port-inventory.test.mjs",
   ];
   return candidates.flatMap((rel) => {
     const filePath = path.join(ROOT, rel);
