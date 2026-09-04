@@ -15,10 +15,10 @@ provider is implemented with 16 focused tests and independent review; exact
 implementation commit `a1b57a37` passes immutable run `33918240622`. Hosted
 Auth/Sync proof remains pending. A separate four-leaf local-only Account
 discovery and explicit-selection provider is now implemented with ten focused
-tests and final independent-review GO; exact READY commit `5a5f2def` passed
-immutable run `33922033391`, while exact implementation-checkpoint CI remains
-pending. It does not reuse the current broad illustrative Sync configuration or
-activate a workspace. The Client/Project directory
+tests and final independent-review GO; exact READY `5a5f2def` / run
+`33922033391` and exact implementation `011a9d05` / run `33925008015` pass all
+three immutable jobs. It does not reuse the current broad illustrative Sync
+configuration or activate a workspace. The Client/Project directory
 read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

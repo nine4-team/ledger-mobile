@@ -1,6 +1,6 @@
 # EVID-ACCOUNT-DISCOVERY-PROVIDER-001 — Account Discovery PowerSync Provider
 
-- Status: implemented locally; exact implementation-checkpoint CI pending
+- Status: implemented locally; exact implementation checkpoint verified by CI
 - Date: 2026-09-04
 - Environment: isolated target worktree and synthetic/disposable local fixtures only
 - Production/Firebase impact: none
@@ -76,9 +76,8 @@ cannot certify this query.
   separate gated hosted identity-bootstrap slice.
 
 All ten focused tests pass locally. The complete Swift suite and both target
-staging builds are rerun at the synchronized implementation checkpoint; the
-operational verification item remains planned until that exact commit passes
-immutable CI.
+staging builds were rerun at the synchronized implementation checkpoint, and
+the operational verification item passed on that exact commit in immutable CI.
 
 ## Isolation Statement
 
@@ -156,5 +155,11 @@ focused suite passes 10/10, cancellation passed 50 repeated runs, and
 all 368 Swift tests in 70 suites, generated app/MCP contracts, all 11 target MCP
 tests, target-environment isolation, the complete conversion/source-query
 control gate, deterministic target-project generation and sequential macOS and
-generic iOS Simulator staging builds. Exact implementation-checkpoint CI is the
-remaining operational proof.
+generic iOS Simulator staging builds.
+
+Exact synchronized implementation commit
+`011a9d0521c425e6b2e78fab7970826896c730dd` passed all three jobs in immutable
+Actions run `33925008015`: conversion state and traceability, isolated target
+environment, and local Supabase provider slices. This satisfies the local
+operational verification item without promoting the slice to hosted
+`verified` or `rehearsed` status.

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 274
+State version: 275
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-DISCOVERY-POWERSYNC-IMPLEMENTED-LOCAL
+- Checkpoint: ACCOUNT-DISCOVERY-POWERSYNC-IMPLEMENTED-CI-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -106,8 +106,10 @@ without modifying the running Firebase application before hard cutover.
   immediately and supplies no evidence. Corrected READY commit `5a5f2def` then
   included the complete generated-artifact set and passed the complete workflow
   plus clean-checkout proof. The local implementation is being synchronized and
-  must pass the same exact-commit workflow before its operational verification
-  item advances. No Firebase, hosted or production state changed;
+  exact implementation commit `011a9d0521c425e6b2e78fab7970826896c730dd`
+  passed all three immutable workflow jobs in run `33925008015`, satisfying its
+  operational verification item. The slice remains `implemented`, not hosted
+  `verified` or `rehearsed`. No Firebase, hosted or production state changed;
   `EVID-ACCOUNT-DISCOVERY-PROVIDER-001`.
 
 - Implemented the reviewed Client/Project directory and browse provider after
@@ -3820,13 +3822,18 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Obtain independent review of the exact comment-only Account-discovery READY
-candidate, correct every substantive finding, then commit and pass the complete
-  immutable workflow on that exact checkpoint. Only after it passes, implement
-  the four owned local leaves and synchronized evidence, without changing or
-  claiming the current Sync configuration. Keep hosted Auth/Sync, workspace
-activation, A-003/A-004/A-007/A-016, migration and cutover open; do not
-provision hosted resources, access production or modify Firebase.
+Prepare the smallest prerequisite to the local session-ending pending-work
+provider: Account-workspace runtime environment and namespace isolation. Freeze
+an exact comment-only READY dossier and focused-test scaffold before executable
+changes. The implementation must replace free namespace input and raw
+Principal/Account filesystem paths with validated compiled-environment evidence
+and an opaque contained namespace, include environment in Keychain scope,
+reject invalid/rebound evidence before filesystem/Keychain/database access,
+reopen the identical encrypted namespace and preserve it on ordinary close.
+Keep Auth, hosted Sync, workspace switching, destructive deletion, A-003/A-004/
+A-007/A-016, migration and cutover open; do not provision hosted resources,
+access production or modify Firebase. After that prerequisite passes, implement
+the local pending-work summary provider without claiming physical session end.
 
 Continue without waiting on the two M1 evidence blockers:
 
