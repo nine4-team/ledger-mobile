@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 236
+State version: 237
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-USE-CASE-READY-PREPARED
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-USE-CASE-LOCALLY-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -51,30 +51,30 @@ modifying the running Firebase application before hard cutover.
   `471f61a004a92afa961aba41ea6544a90a391cda` passed immutable Actions run
   `33825756789`.
 
-- Prepared the bounded Item-to-Space assignment application-use-case READY
-  package above verified `ItemSpaceAssignmentOperation.swift` at exact
-  implementation `c5fdf5c73763b5a629ff0416bebba92696af6581` / run
-  `33672006836` and verified `SpaceAssignmentDestinationData.swift` at exact
-  checkpoint `b0ffef836cc82f6011b802a5cb5f6a6ade05680a` / run
-  `33682239349`. Exact new paths resolve to `ItemSpaceAssignmentUseCase.swift`
-  (`SWIFT-0540BE125F5A`) and `ItemSpaceAssignmentUseCaseTests.swift`
-  (`TEST-DA67EAC9C2EF`); both remain comment-only. The `ready` dossier freezes a
-  public transient Account/scope/destination/typed-Item intent, exact local
-  Account/scope validation, stable-ID row resolution, Space revision derivation
-  from represented ready/partial/stale evidence, construction before exactly
-  one `ItemSpaceAssigning` call, receipt validation afterward, three application
-  and 16 operation failures, cancellation and bounded unknown errors. A missing
-  row is only not represented and never makes incomplete evidence authoritative.
-  Ten planned obligations require ordinary non-`@testable` import, literal
-  reciprocal non-mirrored command ownership, exact two-leaf allowlists and
-  separate immutable READY/implementation CI. Clear/no-op, Item selection UI/
-  read, archive, media/marker, scope movement, accounting/provenance, physical
-  persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration,
-  hosted, production, release and cutover remain excluded. The complete local
-  READY gate passes at 833 recorded / 818 discovered, 389 mapped / 184 residual
-  / 46 blockers, all 302 tests in 63 suites with warnings as errors, repeatable
-  hashes `0657194a` / `388303af` and both staging builds. Root/independent
-  actual-diff review and exact-READY-SHA CI still gate executable code.
+- Locally implemented the bounded Item-to-Space assignment application use case
+  after exact READY commit `d51ea1d338110d73a6c76ef3ffcf21f0b9113f99`
+  passed immutable Actions run `33827181145`. Exactly two leaves,
+  `SWIFT-0540BE125F5A` and `TEST-DA67EAC9C2EF`, now provide a public transient
+  Account/scope/destination/typed-Item intent and one application boundary above
+  verified assignment-operation and destination-directory contracts. The use
+  case validates exact Account/scope, resolves a represented stable SpaceID,
+  derives its revision from the row, constructs before one assigner call and
+  validates afterward. All six Project/Inventory × ready/partial/stale paths
+  dispatch; missing rows remain only not represented. Three pre-port application
+  failures, all 16 port operation failures and cancellation remain exact; every
+  other port error is bounded to `localAcceptanceFailed`. Primary and
+  independent review found and corrected two issues: the first implementation
+  leaked port-originated `ItemSpaceAssignmentUseCaseFailure`, and initial tests
+  omitted some scope/quality combinations. An adversarial containment test and
+  the full six-case matrix now pass; both reviewers returned GO with no
+  remaining P0-P3. Seven focused tests prove `ITEMSPACEUSE-TEST-001` through
+  `-008`; exact READY CI plus primary and independent corrected-diff reviews
+  prove `-009`. All 309 tests in 64 suites pass locally with warnings as errors. The slice
+  and both surfaces are `implemented`, not verified; exact implementation-commit
+  immutable CI remains required for `ITEMSPACEUSE-TEST-010`. Clear/no-op, Item
+  selection UI/read, archive, media/marker, scope movement, accounting/
+  provenance, physical persistence, authorization, provider/schema/RLS/Sync,
+  app/MCP, migration, hosted, production, release and cutover remain excluded.
 
 - Verified the bounded typed Client rename application dispatch after exact
   READY commit `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
@@ -3460,18 +3460,19 @@ Continue without waiting on the two M1 evidence blockers:
    are verified. Treat the verified `space-assignment-destination-read-contracts`
    dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
-   assignment-destination read semantics. Treat ready
+   assignment-destination read semantics. Treat locally implemented
    `item-space-assignment-use-case-contracts` and
-   `EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001` as the only active implementation
-   candidate after its exact READY commit passes immutable CI. Preserve exactly
-   the two comment-only leaves `ItemSpaceAssignmentUseCase.swift`
+   `EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001` as awaiting only its exact
+   implementation-commit immutable CI before verification. Preserve exactly
+   the two implemented leaves `ItemSpaceAssignmentUseCase.swift`
    (`SWIFT-0540BE125F5A`) and `ItemSpaceAssignmentUseCaseTests.swift`
-   (`TEST-DA67EAC9C2EF`) until that gate passes. Future implementation must
-   validate the intent against the current directory Account/scope, resolve the
-   destination only by represented stable ID, derive its expected revision from
-   that row, construct the verified command before exactly one assigner call,
-   validate afterward, preserve both typed failure families plus cancellation,
-   and bound only unknown port errors. Ready, partial and stale represented rows
+   (`TEST-DA67EAC9C2EF`) unchanged until that gate passes. The implementation
+   validates the intent against the current directory Account/scope, resolves the
+   destination only by represented stable ID, derives its expected revision from
+   that row, constructs the verified command before exactly one assigner call,
+   validates afterward, preserves pre-port application failures, port operation
+   failures and cancellation, and bounds every other port error. Ready, partial
+   and stale represented rows
    remain admissible; a missing row is not represented and never proves
    authoritative nonexistence. Do not introduce clearing/no-op, Item-selection
    UI/read, archive, media/marker, scope movement, accounting/provenance,
