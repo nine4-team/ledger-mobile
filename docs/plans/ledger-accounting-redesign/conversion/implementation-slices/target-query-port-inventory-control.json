@@ -3,7 +3,7 @@
   "sliceId": "target-query-port-inventory-control",
   "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Target Query-Port Conversion Control",
   "surfaceIds": ["CONFIG-9B16CFCB67A4", "CONFIG-C1C61B2D6569"],
   "requirements": [
@@ -249,12 +249,12 @@
       "owner": "Ubuntu conversion-control CI and human generated-diff review",
       "covers": ["TQUERYCONTROL-REQ-001", "TQUERYCONTROL-REQ-002", "TQUERYCONTROL-REQ-003", "TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-005", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-008", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-012", "TQUERYCONTROL-REQ-014", "TQUERYCONTROL-REQ-015"],
       "expected": "Immutable CI runs inventory test/check in the Ubuntu conversion-control job, makes the macOS target-environment job depend on its success, and rejects stale inventory before target Swift tests can start; evidence separately records human review of the generated diff and does not claim logical/physical query design, product behavior or production authority.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     }
   ],
   "implementationEvidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent technical-control implementation follows exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 and immutable READY run 33837081633. Exactly two CONFIG surfaces advance to implemented. A dependency-free scanner and 20-test adversarial suite emit and byte-check the reviewed 16-owner/16-protocol/18-method baseline, with package commands and Ubuntu-before-macOS CI gating. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated lexical context, split multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested type component boundaries, and silent omission of Unicode or backticked protocol identifiers; focused regressions cover nested ordinary/multiline/raw strings and regexes, division across comments, deterministic unterminated rejection, same-line/multiline first/later declaration prefixes, negative header/generic/parameter/tail matrices, nested invalid starts/endings, valid composition/member/function types, explicit identifier fail-closed behavior, opaque/attributed return continuations and all three identity inputs. TQUERYCONTROL-TEST-001 through -007 pass locally; -008 remains planned until immutable exact-implementation CI, while the generated diff has been reviewed separately. All query owners and existing package/workflow/discoverer/index surfaces retain their prior ownership and lifecycle state. A-003/A-004 and product D/O decisions are not applicable; promotion remains separate."
+  "notes": "Decision-independent technical-control implementation follows exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 and immutable READY run 33837081633. Exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485, authorizing this separate docs-only verified promotion. Exactly two CONFIG surfaces advance to verified. A dependency-free scanner and 20-test adversarial suite emit and byte-check the reviewed 16-owner/16-protocol/18-method baseline, with package commands and Ubuntu-before-macOS CI gating. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated lexical context, split multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested type component boundaries, and silent omission of Unicode or backticked protocol identifiers; focused regressions cover nested ordinary/multiline/raw strings and regexes, division across comments, deterministic unterminated rejection, same-line/multiline first/later declaration prefixes, negative header/generic/parameter/tail matrices, nested invalid starts/endings, valid composition/member/function types, explicit identifier fail-closed behavior, opaque/attributed return continuations and all three identity inputs. TQUERYCONTROL-TEST-001 through -008 pass, and the generated diff was reviewed separately by root and an independent reviewer. All query owners and existing package/workflow/discoverer/index surfaces retain their prior ownership and lifecycle state. A-003/A-004 and product D/O decisions are not applicable."
 }

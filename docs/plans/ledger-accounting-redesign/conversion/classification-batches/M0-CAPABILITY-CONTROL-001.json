@@ -70,10 +70,10 @@
           "Check byte-compares deterministic JSON and Markdown without writing"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
-      "notes": "Implemented after exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 passed immutable Actions run 33837081633. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated regex context, multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested types, and silent omission of Unicode or backticked protocol identifiers before checkpoint. Local generation/checking emits the reviewed 16-owner/16-protocol/18-method inventory; immutable implementation CI remains required before verification."
+      "notes": "Verified after exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 passed immutable Actions run 33837081633 and exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated regex context, multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested types, and silent omission of Unicode or backticked protocol identifiers before checkpoint. Generation/checking emits the reviewed 16-owner/16-protocol/18-method inventory."
     },
     {
       "id": "CONFIG-C1C61B2D6569",
@@ -111,10 +111,10 @@
           "READY, implementation and promotion allowlists preserve unrelated surfaces"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
-      "notes": "Implemented after immutable READY run 33837081633 and corrected after review. All 20 focused tests pass locally; exact implementation CI and later promotion remain pending."
+      "notes": "Verified after immutable READY run 33837081633 and exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485. All 20 focused tests and the independent adversarial matrix pass."
     }
   ]
 }

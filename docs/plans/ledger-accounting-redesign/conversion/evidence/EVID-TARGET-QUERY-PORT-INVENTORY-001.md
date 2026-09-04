@@ -1,12 +1,16 @@
 # EVID-TARGET-QUERY-PORT-INVENTORY-001 — Target Query-Port Inventory Control
 
 - Timestamp: 2026-09-03
-- Class: implemented / deterministic target query-port conversion control
+- Class: verified / deterministic target query-port conversion control
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
 - Exact READY checkpoint:
   `0ecabf4761874599d8a37a5a89ffced393b4cd63`; immutable GitHub Actions run
   `33837081633` passed before executable implementation began
+- Exact implementation checkpoint:
+  `a359c8622069c2dc8b75ca09a8fd89b95713f1bb`; immutable GitHub Actions run
+  `33842465485` passed both jobs, including the Linux inventory gate before the
+  dependent macOS target job, all 316 Swift tests and both staging builds
 - Claimed target surfaces: `CONFIG-9B16CFCB67A4`,
   `CONFIG-C1C61B2D6569`
 - Deliberately changed preserved control: `FILE-208B7E9D7F47` remains
@@ -16,10 +20,9 @@
 - Product decisions: none; A-003/A-004: not applicable
 - Production reads or mutations: none
 - Hosted Supabase/PowerSync resources contacted: none
-- Verification state: implemented locally; `TQUERYCONTROL-TEST-001` through
-  `-007` pass and the complete generated JSON/Markdown diff was reviewed;
-  `TQUERYCONTROL-TEST-008` remains planned until immutable exact-implementation
-  CI proves the Linux inventory gate prevents the macOS target job from starting
+- Verification state: verified; `TQUERYCONTROL-TEST-001` through `-008` pass,
+  the complete generated JSON/Markdown diff was reviewed, and independent
+  adversarial review returned GO with no remaining P0-P2 finding
 
 ## Operational Outcome and Authority
 
@@ -228,9 +231,9 @@ product UI/stories, app/MCP transport, migration, reconciliation, release or
 cutover. It does not advance `FILE-063B0E6EC659`, `MAN-INDEX-001`, any existing
 query owner, package/workflow/discoverer support surface, or A-003/A-004.
 
-## Implementation Checkpoint
+## Verified Checkpoint
 
-Both claimed leaves are executable and `implemented`. The generator, 20-test
+Both claimed leaves are executable and `verified`. The generator, 20-test
 suite, generated JSON/Markdown, exact package commands and Linux-before-macOS CI
 dependency match the implementation allowlist. The generated diff was inspected
 method by method: every owner ID/path/protocol/selector matches the frozen
@@ -238,8 +241,10 @@ baseline, exactly the two expected protocols have two methods, all 18 categories
 are `observation`, and canonical signatures stop at their own requirements.
 This human review is recorded separately from machine freshness. Existing query
 owners and package/workflow/discoverer/index surfaces retain their prior status
-and ownership. Immutable exact-implementation-SHA CI remains required for
-`TQUERYCONTROL-TEST-008` and promotion.
+and ownership. Exact implementation commit
+`a359c8622069c2dc8b75ca09a8fd89b95713f1bb` passed immutable Actions run
+`33842465485`; `TQUERYCONTROL-TEST-008` passes and authorizes this separate
+docs-only promotion.
 
 ## Local Implementation Verification
 
@@ -310,4 +315,11 @@ isolation and generated contract controls pass. All 316 Swift tests in 65 suites
 pass with warnings as errors. Repeatable target project generation, macOS and
 generic iOS Simulator staging builds pass. All changed JSON parses, exact-path
 status review finds no Swift/Firebase/provider/runtime change, and diff
-formatting passes. Immutable exact-implementation-SHA CI remains pending.
+formatting passes. Immutable exact-implementation-SHA Actions run `33842465485`
+passed both jobs. The Linux conversion-control job completed before the
+dependent macOS target job, which then passed generated contracts, all 316 Swift
+tests in 65 suites, macOS and generic iOS Simulator staging builds, and
+clean-artifact checking. Independent final review confirmed all frozen hashes,
+every generated identity and signature hash, the full invalid/valid adversarial
+matrix, exact scope and lifecycle preservation, and returned GO with no
+actionable P0-P2 finding.

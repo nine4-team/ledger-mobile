@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T05:53:47.901Z",
+  "generatedFromManifestSync": "2026-09-04T06:07:14.791Z",
   "totals": {
     "slices": 65,
     "claimedTargetSurfaces": 155,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 63,
+    "implemented": 0,
+    "verified": 64,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -893,7 +893,7 @@
       "sliceId": "target-query-port-inventory-control",
       "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Target Query-Port Conversion Control",
       "surfaceIds": [
         "CONFIG-9B16CFCB67A4",

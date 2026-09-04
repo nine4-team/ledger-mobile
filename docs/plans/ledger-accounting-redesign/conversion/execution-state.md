@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 243
+State version: 244
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-QUERY-PORT-INVENTORY-CONTROL-IMPLEMENTED
+- Checkpoint: TARGET-QUERY-PORT-INVENTORY-CONTROL-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,10 +32,10 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Implemented the decision-independent target query-port inventory control after
+- Verified the decision-independent target query-port inventory control after
   exact READY commit `0ecabf4761874599d8a37a5a89ffced393b4cd63` passed
   immutable Actions run `33837081633`. Exactly `CONFIG-9B16CFCB67A4` and
-  `CONFIG-C1C61B2D6569` advance to `implemented`: a dependency-free Node lexical
+  `CONFIG-C1C61B2D6569` advance to `verified`: a dependency-free Node lexical
   scanner and 20-test adversarial suite inventory every direct instance method
   in public exact-suffix `Querying` protocols or fail closed. Deterministic
   JSON/Markdown records exactly 16 verified owners, 16 protocols and 18 methods,
@@ -44,8 +44,10 @@ modifying the running Firebase application before hard cutover.
   from normalized signature drift. Exact root generate/check/test commands and
   a Linux conversion-control gate now precede the dependent macOS target job.
   Human review of every generated row passed and remains distinct from machine
-  freshness. `TQUERYCONTROL-TEST-001` through `-007` pass locally; `-008` awaits
-  immutable exact-implementation CI. The package and workflow hashes are
+  freshness. Exact implementation commit
+  `a359c8622069c2dc8b75ca09a8fd89b95713f1bb` passed immutable Actions run
+  `33842465485`; `TQUERYCONTROL-TEST-001` through `-008` pass, and independent
+  final review returned GO. The package and workflow hashes are
   deliberately re-acknowledged without changing their existing status or
   ownership; `FILE-208B7E9D7F47`, all 16 query owners, `FILE-063B0E6EC659` and
   `MAN-INDEX-001` are unchanged. Later slices must review every TQUERY into the
@@ -66,7 +68,8 @@ modifying the running Firebase application before hard cutover.
   conversion/capability/query/residual/M0 controls,
   target isolation/contracts, all 316 Swift tests in 65 suites with warnings as
   errors, repeatable project generation, both staging builds, JSON validation
-  and diff formatting. Immutable implementation CI remains pending.
+  and diff formatting. Immutable implementation CI is green and this separate
+  docs-only promotion records verification.
 
 - Rejected the Project-preference update application-use-case candidate before
   READY, commit or executable implementation. Independent authority review found
