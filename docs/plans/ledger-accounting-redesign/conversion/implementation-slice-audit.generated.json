@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T02:15:35.719Z",
+  "generatedFromManifestSync": "2026-09-04T02:26:52.235Z",
   "totals": {
     "slices": 63,
     "claimedTargetSurfaces": 151,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 61,
+    "implemented": 0,
+    "verified": 62,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -233,7 +233,7 @@
       "sliceId": "item-space-assignment-use-case-contracts",
       "title": "Validate one local Space destination and dispatch one exact Item assignment",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Item Space Assignment Use Case",
       "surfaceIds": [
         "SWIFT-0540BE125F5A",

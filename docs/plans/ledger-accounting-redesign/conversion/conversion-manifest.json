@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T02:15:35.719Z",
+    "lastSynchronizedAt": "2026-09-04T02:26:52.235Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16057,7 +16057,7 @@
           "Implementation tests must prove only the frozen provider-free Item-to-Space application path and permanent exclusions"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -16066,7 +16066,7 @@
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
         "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"
       ],
-      "notes": "Locally implemented after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 passed immutable Actions run 33827181145. The public transient Account/scope/destination/typed-Item intent and one-call application orchestration compose the verified destination-directory and assignment-operation contracts. Expected Space revision derives only from the exact represented row; all six Project/Inventory × ready/partial/stale combinations dispatch. Missing rows never claim authoritative nonexistence. Port-originated application failures are bounded to localAcceptanceFailed rather than leaking an impossible lower-layer type. Seven focused/all 309 tests in 64 suites plus primary and independent corrected-diff reviews pass locally; exact implementation-commit CI remains required before verification. No clear/archive/media/scope/accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior advances.",
+      "notes": "Verified after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable Actions run 33827181145 and exact implementation commit 04331950dc9fe4dea32493e11a9c367530e3baea / immutable Actions run 33828908233. The public transient Account/scope/destination/typed-Item intent and one-call application orchestration compose the verified destination-directory and assignment-operation contracts. Expected Space revision derives only from the exact represented row; all six Project/Inventory × ready/partial/stale combinations dispatch. Missing rows never claim authoritative nonexistence. Port-originated application failures are bounded to localAcceptanceFailed rather than leaking an impossible lower-layer type. Seven focused/all 309 tests in 64 suites plus primary and independent corrected-diff reviews pass; immutable implementation CI passed traceability in 11 seconds and isolated target in 6 minutes 32 seconds, including both builds. No clear/archive/media/scope/accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior advances.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -39668,7 +39668,7 @@
           "Implementation tests must prove only the frozen provider-free Item-to-Space use case and exclusions"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
@@ -39677,7 +39677,7 @@
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
         "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"
       ],
-      "notes": "Locally implemented after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable run 33827181145. Seven tests prove ordinary import without @testable, exact public shape, all six Project/Inventory × ready/partial/stale represented-row paths, directory-derived revision, literal reciprocal non-mirrored leaf ownership, zero/one-call failures, three pre-port application failures, all 16 operation failures, cancellation/raw mapping and diagnostics/topology. Exact READY CI plus primary and independent corrected-diff reviews prove the allowlists and preserved dependency/source/provider scope. Independent review first found leakage of a port-originated application failure and incomplete represented-row coverage; corrected tests prove that impossible lower-layer error is bounded and cover all six combinations. Focused 7/all 309 tests pass locally; exact implementation-commit CI remains required before verification. No source, service, provider, or production behavior advances.",
+      "notes": "Verified after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable run 33827181145 and exact implementation commit 04331950dc9fe4dea32493e11a9c367530e3baea / immutable run 33828908233. Seven tests prove ordinary import without @testable, exact public shape, all six Project/Inventory × ready/partial/stale represented-row paths, directory-derived revision, literal reciprocal non-mirrored leaf ownership, zero/one-call failures, three pre-port application failures, all 16 operation failures, cancellation/raw mapping and diagnostics/topology. Exact READY CI plus primary and independent corrected-diff reviews prove the allowlists and preserved dependency/source/provider scope. Independent review first found leakage of a port-originated application failure and incomplete represented-row coverage; corrected tests prove that impossible lower-layer error is bounded and cover all six combinations. Immutable implementation CI passed traceability in 11 seconds and isolated target in 6 minutes 32 seconds, including all 309 tests and both builds. No source, service, provider, or production behavior advances.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

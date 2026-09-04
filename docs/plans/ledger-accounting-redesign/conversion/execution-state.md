@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 237
+State version: 238
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-USE-CASE-LOCALLY-IMPLEMENTED
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -51,7 +51,7 @@ modifying the running Firebase application before hard cutover.
   `471f61a004a92afa961aba41ea6544a90a391cda` passed immutable Actions run
   `33825756789`.
 
-- Locally implemented the bounded Item-to-Space assignment application use case
+- Verified the bounded Item-to-Space assignment application use case
   after exact READY commit `d51ea1d338110d73a6c76ef3ffcf21f0b9113f99`
   passed immutable Actions run `33827181145`. Exactly two leaves,
   `SWIFT-0540BE125F5A` and `TEST-DA67EAC9C2EF`, now provide a public transient
@@ -69,9 +69,12 @@ modifying the running Firebase application before hard cutover.
   the full six-case matrix now pass; both reviewers returned GO with no
   remaining P0-P3. Seven focused tests prove `ITEMSPACEUSE-TEST-001` through
   `-008`; exact READY CI plus primary and independent corrected-diff reviews
-  prove `-009`. All 309 tests in 64 suites pass locally with warnings as errors. The slice
-  and both surfaces are `implemented`, not verified; exact implementation-commit
-  immutable CI remains required for `ITEMSPACEUSE-TEST-010`. Clear/no-op, Item
+  prove `-009`. Exact implementation commit
+  `04331950dc9fe4dea32493e11a9c367530e3baea` passed immutable Actions run
+  `33828908233`: traceability completed in 11 seconds and isolated target in
+  6 minutes 32 seconds, with all steps green including all 309 tests in 64
+  suites and both builds. `ITEMSPACEUSE-TEST-010` therefore passes, and the
+  slice and both surfaces are verified. Clear/no-op, Item
   selection UI/read, archive, media/marker, scope movement, accounting/
   provenance, physical persistence, authorization, provider/schema/RLS/Sync,
   app/MCP, migration, hosted, production, release and cutover remain excluded.
@@ -3460,13 +3463,14 @@ Continue without waiting on the two M1 evidence blockers:
    are verified. Treat the verified `space-assignment-destination-read-contracts`
    dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
-   assignment-destination read semantics. Treat locally implemented
+   assignment-destination read semantics. Treat the verified
    `item-space-assignment-use-case-contracts` and
-   `EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001` as awaiting only its exact
-   implementation-commit immutable CI before verification. Preserve exactly
-   the two implemented leaves `ItemSpaceAssignmentUseCase.swift`
+   `EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001` as the sole provider-free
+   local-destination-to-assignment application authority. Its exact
+   implementation commit and both CI jobs are verified. Preserve exactly
+   the two verified leaves `ItemSpaceAssignmentUseCase.swift`
    (`SWIFT-0540BE125F5A`) and `ItemSpaceAssignmentUseCaseTests.swift`
-   (`TEST-DA67EAC9C2EF`) unchanged until that gate passes. The implementation
+   (`TEST-DA67EAC9C2EF`) as dependencies for subsequent slices. The implementation
    validates the intent against the current directory Account/scope, resolves the
    destination only by represented stable ID, derives its expected revision from
    that row, constructs the verified command before exactly one assigner call,

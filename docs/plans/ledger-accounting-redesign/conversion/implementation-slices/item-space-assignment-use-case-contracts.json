@@ -3,7 +3,7 @@
   "sliceId": "item-space-assignment-use-case-contracts",
   "title": "Validate one local Space destination and dispatch one exact Item assignment",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Item Space Assignment Use Case",
   "surfaceIds": ["SWIFT-0540BE125F5A", "TEST-DA67EAC9C2EF"],
   "requirements": [
@@ -224,12 +224,12 @@
       "owner": "CI and conversion control plane",
       "covers": ["ITEMSPACEUSE-REQ-001", "ITEMSPACEUSE-REQ-002", "ITEMSPACEUSE-REQ-003", "ITEMSPACEUSE-REQ-004", "ITEMSPACEUSE-REQ-005", "ITEMSPACEUSE-REQ-006", "ITEMSPACEUSE-REQ-007", "ITEMSPACEUSE-REQ-008", "ITEMSPACEUSE-REQ-009", "ITEMSPACEUSE-REQ-010", "ITEMSPACEUSE-REQ-011"],
       "expected": "Separate exact READY and implementation commits pass immutable traceability, source/provider isolation, generated contracts, complete tests, repeatable project generation, both staging builds and clean artifacts; only implementation CI can promote the two target leaves to verified.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"]
     }
   ],
   "implementationEvidence": ["EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Locally implemented above exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable Actions run 33827181145. Exactly two target leaves implement the application boundary joining verified Item assignment operation c5fdf5c73763b5a629ff0416bebba92696af6581 / run 33672006836 and verified Space destination read b0ffef836cc82f6011b802a5cb5f6a6ade05680a / run 33682239349. The use case validates Account/scope, resolves the exact stable destination ID, derives the Space revision from a represented ready/partial/stale row, constructs before one call and validates afterward. Seven focused tests prove ITEMSPACEUSE-TEST-001 through -008; exact READY CI plus primary and independent corrected-diff reviews prove ITEMSPACEUSE-TEST-009. All 309 tests in 64 suites pass with warnings as errors. Independent review found and corrected two issues: port-originated ItemSpaceAssignmentUseCaseFailure is now bounded to localAcceptanceFailed, with an adversarial test, and represented-row coverage now spans all six Project/Inventory × ready/partial/stale combinations. Root and independent reviewers returned GO. O-037/O-023/O-007/O-015 remain outside because archive, media, accounting/provenance and physical apply are excluded. ITEMSPACEUSE-TEST-010 and verified status still require exact implementation-commit immutable CI."
+  "notes": "Verified after exact READY commit d51ea1d338110d73a6c76ef3ffcf21f0b9113f99 / immutable Actions run 33827181145 and exact implementation commit 04331950dc9fe4dea32493e11a9c367530e3baea / immutable Actions run 33828908233. Exactly two target leaves implement the application boundary joining verified Item assignment operation c5fdf5c73763b5a629ff0416bebba92696af6581 / run 33672006836 and verified Space destination read b0ffef836cc82f6011b802a5cb5f6a6ade05680a / run 33682239349. The use case validates Account/scope, resolves the exact stable destination ID, derives the Space revision from a represented ready/partial/stale row, constructs before one call and validates afterward. Seven focused tests prove ITEMSPACEUSE-TEST-001 through -008; exact READY CI plus primary and independent corrected-diff reviews prove ITEMSPACEUSE-TEST-009. All 309 tests in 64 suites pass with warnings as errors. Independent review found and corrected two issues: port-originated ItemSpaceAssignmentUseCaseFailure is now bounded to localAcceptanceFailed, with an adversarial test, and represented-row coverage now spans all six Project/Inventory × ready/partial/stale combinations. Root and independent reviewers returned GO. Immutable implementation CI passed ITEMSPACEUSE-TEST-010: traceability completed in 11 seconds and isolated target in 6 minutes 32 seconds with all steps green, including 309 tests and both builds. O-037/O-023/O-007/O-015 remain outside because archive, media, accounting/provenance and physical apply are excluded."
 }

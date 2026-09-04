@@ -1,7 +1,7 @@
 # EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001 — Item Space Assignment Use Case
 
 - Timestamp: 2026-09-03
-- Class: local implementation / provider-free local-destination validation and
+- Class: verified implementation / provider-free local-destination validation and
   typed Item assignment dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
@@ -20,9 +20,11 @@
   remain `characterized`; `SWIFT-7F24BFB8649C` remains `target_mapped`
 - Slice dossier:
   `conversion/implementation-slices/item-space-assignment-use-case-contracts.json`
-- Verification state: locally `implemented`; `ITEMSPACEUSE-TEST-001` through
-  `-009` pass, while `ITEMSPACEUSE-TEST-010` and `verified` status remain gated
-  on immutable CI for the exact implementation commit
+- Exact implementation commit:
+  `04331950dc9fe4dea32493e11a9c367530e3baea`; immutable Actions run
+  `33828908233` passed traceability in 11 seconds and isolated target in
+  6 minutes 32 seconds, including all 309 tests and both builds
+- Verification state: `verified`; `ITEMSPACEUSE-TEST-001` through `-010` pass
 
 ## Selection and Authority
 
@@ -80,9 +82,9 @@ port and remain exact. All 16 operation failures thrown by the port and
 impossible port-originated `ItemSpaceAssignmentUseCaseFailure`—maps to
 `ItemSpaceAssignmentFailure.localAcceptanceFailed`.
 
-## Implemented Artifacts
+## Verified Artifacts
 
-The exact local implementation hashes are:
+The exact verified implementation hashes are:
 
 - `ItemSpaceAssignmentUseCase.swift` —
   `e8425a84155c07b6ab860a23cf298246b0ab43a45a55fcf931523300e9db24a9`;
@@ -91,8 +93,9 @@ The exact local implementation hashes are:
 
 The exact READY commit
 `d51ea1d338110d73a6c76ef3ffcf21f0b9113f99` passed immutable Actions run
-`33827181145` before executable implementation began. No implementation commit
-or immutable implementation-SHA CI evidence is claimed yet.
+`33827181145` before executable implementation began. Exact implementation
+commit `04331950dc9fe4dea32493e11a9c367530e3baea` then passed immutable Actions
+run `33828908233` with all steps green.
 
 ## Local Verification
 
@@ -126,9 +129,11 @@ target isolation/contracts, JSON parsing and clean diff formatting pass. The
 root review confirms only the two allowlisted Swift leaves changed relative to
 the exact READY commit.
 
-`ITEMSPACEUSE-TEST-010` remains `planned`: the exact implementation commit must
-pass immutable traceability and isolated-target CI before the dossier or either
-surface may advance to `verified`.
+`ITEMSPACEUSE-TEST-010` passes: exact implementation commit
+`04331950dc9fe4dea32493e11a9c367530e3baea` passed immutable traceability in
+11 seconds and isolated-target CI in 6 minutes 32 seconds. The isolated target
+job passed all 309 tests and both staging builds, so the dossier and both target
+surfaces are `verified`.
 
 ## Review Findings and Corrections
 
