@@ -11,8 +11,9 @@ to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The local Client/Project PowerSync directory and browse
-provider is implemented with 16 focused tests and independent review; exact-
-implementation-commit CI and hosted Auth/Sync proof remain pending. The Client/Project directory
+provider is implemented with 16 focused tests and independent review; exact
+implementation commit `a1b57a37` passes immutable run `33918240622`. Hosted
+Auth/Sync proof remains pending. The Client/Project directory
 read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

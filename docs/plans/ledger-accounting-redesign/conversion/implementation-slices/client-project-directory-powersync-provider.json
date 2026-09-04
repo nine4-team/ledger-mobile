@@ -225,8 +225,8 @@
       "owner": ".github/workflows/supabase-conversion-control.yml",
       "covers": ["DIRPROVIDER-REQ-002", "DIRPROVIDER-REQ-004"],
       "expected": "Immutable CI passes synchronized conversion controls, all target tests and both isolated staging builds with no tracked rewrite.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"]
     },
     {
       "id": "DIRPROVIDER-TEST-008",
@@ -250,5 +250,5 @@
   "implementationEvidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "The local Client/Project directory and browse provider is implemented and its local obligations pass, including Principal/Account- and membership-bound exact details. Final corrected-diff review returned executable GO with no P0-P2 and its sole P3 stale count was corrected. Hosted authenticated Sync authorization and exact-commit implementation CI remain planned, so the slice is not verified or rehearsed. Existing schema, grants, RLS and Sync definitions remain owned by their current provider slices. O-024/O-025 archive behavior, O-040 Project card/budget presentation, O-042/O-043 text-mutation rules, MCP pagination/search, migration and cutover are excluded. A-003/A-004 remain proposed."
+  "notes": "The local Client/Project directory and browse provider is implemented and its local obligations plus exact implementation CI pass, including Principal/Account- and membership-bound exact details. Final corrected-diff review returned executable GO with no P0-P2 and its sole P3 stale count was corrected. Hosted authenticated Sync authorization remains planned, so the slice is not verified or rehearsed. Existing schema, grants, RLS and Sync definitions remain owned by their current provider slices. O-024/O-025 archive behavior, O-040 Project card/budget presentation, O-042/O-043 text-mutation rules, MCP pagination/search, migration and cutover are excluded. A-003/A-004 remain proposed."
 }

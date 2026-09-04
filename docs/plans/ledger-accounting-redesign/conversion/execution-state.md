@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 268
+State version: 269
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-PROJECT-DIRECTORY-POWERSYNC-IMPLEMENTED-LOCAL
+- Checkpoint: CLIENT-PROJECT-DIRECTORY-POWERSYNC-IMPLEMENTATION-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -85,8 +85,10 @@ without modifying the running Firebase application before hard cutover.
   other-Principals' pending rows. Final corrected-diff review returned
   executable GO with no P0-P2; its sole P3 stale test-count label was corrected
   before commit. Sixteen focused directory tests, seven Project tests and all
-  358 target tests in 69 suites pass locally. Exact implementation CI and
-  real hosted Auth/Sync proof remain planned, so the slice and its two owned
+  358 target tests in 69 suites pass locally. Exact synchronized implementation
+  commit `a1b57a37a750486246273664606e33d086b2801c` passes all three jobs in
+  immutable run `33918240622`. Real hosted Auth/Sync proof remains planned, so
+  the slice and its two owned
   leaves are `implemented`, not `verified` or `rehearsed`. A-003/A-004 remain
   proposed; no Firebase, hosted or production state changed.
 
@@ -3768,14 +3770,14 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Finish synchronizing every changed Client/Project directory implementation
-surface, corrected Project-provider reconciliation evidence, dossier, generated
-controls and tracker at honest `implemented` status. Rerun the complete local
-provider/Swift/MCP/build/control suite, commit and push the synchronized
-checkpoint, then require all three immutable workflow jobs to pass on that exact
-implementation commit. Keep hosted Auth/Sync proof and A-003/A-004 open; do not
-provision hosted resources, access production, modify Firebase, migrate data or
-authorize cutover.
+Prepare the next decision-independent provider-backed slice from the verified
+Project-note read and creation contracts. Audit current note behavior and
+canonical redesign specs into one bounded dossier covering Postgres schema and
+handler, grants/RLS, PowerSync local durability/readiness, target app/MCP parity,
+migration exclusions and executable verification before advancing any source to
+READY. Keep hosted Auth/Sync proof and A-003/A-004 open; do not provision hosted
+resources, access production, modify Firebase, migrate data or authorize
+cutover.
 
 Continue without waiting on the two M1 evidence blockers:
 

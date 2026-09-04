@@ -1,6 +1,6 @@
 # EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001 — Client/Project PowerSync Directory Provider
 
-- Status: implemented locally; exact implementation CI and hosted Sync proof pending
+- Status: implemented and exact implementation CI passed; hosted Sync proof pending
 - Date: 2026-09-04
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
@@ -124,7 +124,12 @@ The synchronized implementation passes locally:
   generation, both staging builds, local schema lint, all 42 pgTAP assertions,
   and Client/Project RPC/RLS/replay checks.
 
-The exact implementation commit and its immutable workflow remain pending at
-this checkpoint. `DIRPROVIDER-TEST-004` remains planned because it requires real
-isolated authenticated PowerSync streams; that prevents `verified` or
-`rehearsed` status and keeps A-004 proposed.
+Exact synchronized implementation commit
+`a1b57a37a750486246273664606e33d086b2801c` passed immutable Actions run
+`33918240622`: conversion traceability completed in 41 seconds, local Supabase
+provider slices in 1 minute 52 seconds, and the isolated target environment in
+7 minutes 6 seconds. All three jobs passed with no tracked rewrite.
+
+`DIRPROVIDER-TEST-004` remains planned because it requires real isolated
+authenticated PowerSync streams; that prevents `verified` or `rehearsed`
+status and keeps A-004 proposed.
