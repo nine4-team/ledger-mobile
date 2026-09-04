@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 254
+State version: 255
 
 ## Objective
 
@@ -90,6 +90,14 @@ modifying the running Firebase application before hard cutover.
   returned GO with no P0-P3 finding after re-deriving the complete row/outcome,
   evidence, authority, compatibility, retention and conflict controls;
   `EVID-SOURCE-QUERY-RECONCILIATION-001`.
+
+  Exact READY commit `4618c7e5b9fc3a24cd917239bf795aec6117ea5c`
+  then passed immutable Actions run `33872927608`, including traceability, all
+  316 target tests and both staging builds. Read-only implementation preflight
+  matched the prior query-control topology and froze the exact 30-path
+  implementation diff plus the two READY scaffold hashes against that full
+  commit SHA. The generated artifact remains excluded from capability discovery
+  to prevent an artifact-to-manifest-to-artifact hash cycle.
 
 - Verified the complete target query logical-authority crosswalk
   above the verified TQUERY inventory. One reviewed JSON registry binds the
@@ -3550,10 +3558,11 @@ modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Run the full conversion/target gates and obtain immutable CI for the exact READY
-checkpoint. Then freeze its exact implementation allowlist and scaffold hashes
-before replacing the comment-only generator/checker and adversarial tests with
-executable control. Preserve the verified logical-authority
+Replace the two frozen comment scaffolds with the dependency-free aggregate
+generator/checker and adversarial suite inside the exact 30-path implementation
+allowlist. Add one deterministic generated JSON artifact, three exact package
+commands and an Ubuntu gate after target-query authority checks and before
+conversion/Swift work. Preserve the verified logical-authority
 registry as the target side of the join; do not translate Firestore syntax or
 indexes, advance globally deferred A-003/A-004 physical planes, access
 production, or silently resolve any blocker.

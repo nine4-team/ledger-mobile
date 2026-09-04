@@ -28,7 +28,10 @@
   conflict-schema model passed bounded corrected-model re-review with no P0-P3
   finding. The synchronized registry, ten batches and slice are now READY for
   the separate executable-control implementation checkpoint; READY authorizes
-  no provider, runtime, migration, retirement, production or cutover action
+  no provider, runtime, migration, retirement, production or cutover action.
+  Exact READY commit `4618c7e5b9fc3a24cd917239bf795aec6117ea5c`
+  passed immutable Actions run `33872927608`; its 30-path implementation
+  allowlist and both scaffold hashes are frozen before executable edits
 
 ## READY Classification Outcome
 
@@ -106,7 +109,7 @@ The current READY hashes are:
 - aggregate registry:
   `4220ab67bccaa0fa081745fca42eecf5e096a0b6fd4a3ff1ac28a4ba36faed59`;
 - READY dossier:
-  `c61548cf5c45d50597d96a06bda5f65adccff873a43bb046ec5cd5b8b2f943a2`;
+  `c700e637ccf1c7b3d3e3ff74770d2a0f462bd2703c6580823136792ee57e420e`;
 - product-authority crosswalk:
   `92dbdf08b4aa4fa875817c974475eb92af95066b0594a022d9d44d29cf29a7d4`;
 - conversion discoverer:

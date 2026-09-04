@@ -379,10 +379,56 @@
           "docs/plans/ledger-accounting-redesign/implementation-tracker.md"
         ]
       },
-      "implementation": {"status":"unfrozen","baseCommit":"pending immutable READY checkpoint","paths":[]},
+      "implementation": {
+        "status": "frozen",
+        "baseCommit": "4618c7e5b9fc3a24cd917239bf795aec6117ea5c",
+        "paths": [
+          ".github/workflows/supabase-conversion-control.yml",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-PLATFORM-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-QUERY-PROFILE-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation.generated.json",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md",
+          "package.json",
+          "scripts/generate-source-query-reconciliation.mjs",
+          "scripts/tests/generate-source-query-reconciliation.test.mjs"
+        ]
+      },
       "promotion": {"status":"unfrozen","baseCommit":"pending immutable implementation checkpoint","paths":[]}
     },
     "allowlistRule": "Every lifecycle checkpoint compares the exact changed-path set against its frozen byte-sorted unique paths array and exact base commit. DRAFT completion changes only comment scaffolds, reviewed metadata, product-decision documentation and regenerated control artifacts. READY/implementation/promotion remain unavailable while status is unfrozen or paths are empty. No allowlist may include source runtime, target query owner, schema, RLS, Sync, provider, hosted, production, release or Firebase implementation paths.",
+    "implementationBaselineScaffolds": {
+      "generator": {
+        "path": "scripts/generate-source-query-reconciliation.mjs",
+        "sha256": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c"
+      },
+      "tests": {
+        "path": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+        "sha256": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60"
+      },
+      "rule": "At implemented lifecycle, full-history Git evidence must show that both exact paths at implementation.baseCommit have these hashes before replacement; changed-path validation uses NUL-delimited tracked diff plus untracked candidates locally and never follows symlinks."
+    },
     "physicalDecisionBoundaries": [
       "docs/architecture/redesign/architecture-decisions.md#A-003 — Supabase Postgres as Target Authority",
       "docs/architecture/redesign/architecture-decisions.md#A-004 — PowerSync as Target Local Data Plane"
@@ -544,5 +590,5 @@
   "implementationEvidence": [],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545. The corrected control synchronizes registry/batch/slice lifecycle; closes nested schemas and paths; applies a strict retention-before-retirement milestone order; removes owner-manifest self-authorization in favor of four exact content-hashed authorities; carries complete selected evidence-owner/ref/hash/blocker bindings; freezes current_source_compatibility to exactly two BatchWriting rows; and evaluates every outcome pair through a complete symmetric conflict matrix. The exact 22-path READY freeze includes only lifecycle/evidence documentation plus deterministic conversion metadata regenerated from the dossier status. O-041 separately owns vendor-spend semantics and remains proposed only. CONFIG-A8BD153106B8 and CONFIG-40F01696B8A6 remain target_mapped with empty blockers while executable validation is absent. READY means classification completeness only: unresolved outcome counts remain downstream fail-closed gates. No generated reconciliation artifact, package/workflow hook, executable logic, Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access or production operation is authorized. Later implementation may replace only the two scaffolds, add one deterministic generated JSON artifact plus exact package/workflow commands/gate, and synchronize allowed metadata after its exact implementation allowlist is frozen. Promotion remains a separate immutable-CI and human-review checkpoint."
+  "notes": "READY contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545; exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed immutable Actions run 33872927608. The corrected control synchronizes registry/batch/slice lifecycle; closes nested schemas and paths; applies a strict retention-before-retirement milestone order; removes owner-manifest self-authorization in favor of four exact content-hashed authorities; carries complete selected evidence-owner/ref/hash/blocker bindings; freezes current_source_compatibility to exactly two BatchWriting rows; and evaluates every outcome pair through a complete symmetric conflict matrix. The exact 22-path READY freeze includes only lifecycle/evidence documentation plus deterministic conversion metadata regenerated from the dossier status. The exact 30-path implementation allowlist and both READY scaffold hashes are now frozen against the full READY SHA. O-041 separately owns vendor-spend semantics and remains proposed only. CONFIG-A8BD153106B8 and CONFIG-40F01696B8A6 remain target_mapped with empty blockers while executable validation is absent. READY means classification completeness only: unresolved outcome counts remain downstream fail-closed gates. No generated reconciliation artifact, package/workflow hook, executable logic, Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access or production operation is authorized. Implementation may replace only the two scaffolds, add one deterministic generated JSON artifact plus exact package/workflow commands/gate, and synchronize the allowlisted metadata. Promotion remains a separate immutable-CI and human-review checkpoint."
 }
