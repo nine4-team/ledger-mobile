@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 265
+State version: 266
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-RENAME-PROVIDER-DRAFT-AUTHORITY-GAPS-CAPTURED
+- Checkpoint: CLIENT-PROJECT-DIRECTORY-POWERSYNC-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,8 +36,8 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 263 status-bearing rows: 68
-  done, four verified, one implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 264 status-bearing rows: 68
+  done, four verified, one implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -59,6 +59,30 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Prepared the Client/Project directory and browse PowerSync provider as an
+  exact comment-only READY checkpoint. Two automatically discovered leaves
+  (`SWIFT-B23F91245E50`, `TEST-5AAEE26660C8`) now have a complete dossier,
+  reviewed classification, evidence-index entry and tracker row before any
+  executable code advances. The boundary reuses the verified backend-neutral
+  read/projection contracts and current local Client/Project membership,
+  schema, grants, RLS, Sync and pending-create mechanics. It requires exact
+  Account/Principal scope, membership-gated authoritative rows, caller-owned
+  pending visibility, independent reactive Client/Project completeness,
+  missing-relationship truth, content-bound local versions, encrypted restart,
+  cancellation, exact selection/detail navigation and aggregate-safe overlay
+  reconciliation. The already developed implementation has received two
+  independent reviews and was corrected for completeness coupling, pre-
+  membership authority leakage, runtime scope enforcement, premature Project-
+  allocation cleanup, stale current selection and task-lifetime defects; it
+  remains outside this READY checkpoint until the exact READY commit passes
+  immutable CI. O-024/O-025, O-040, O-042/O-043, hosted Auth/Sync, MCP list/
+  search, migration, production and cutover remain excluded. A-003/A-004 stay
+  proposed. Deterministic Xcode generation also incorporated the pre-existing
+  comment-only `ClientRenameStagingExercise.swift` file committed in the prior
+  DRAFT checkpoint because the staging target owns that source directory; the
+  file still declares no executable behavior. No Firebase or production state
+  changed.
 
 - Independent review rejected the first comment-only Client rename READY package
   from base `e6620875ef6a8c5488929972329545a2204750ed`. It correctly found that the
@@ -3712,18 +3736,16 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Finish synchronizing and validating the rejected Client rename package as an
-honest DRAFT, preserving O-042/O-043 and the proposed decision packet without
-implementing either choice. The O-043 impact audit is complete and its promotion
-gates are recorded. Then implement the larger decision-independent Client/
-Project directory and browse PowerSync batch: full local Client and Project
-directories, pending-create composition, active-Client Project selection,
-active/archived Project browsing and selected-row detail navigation. Reuse the
-verified provider-free read/projection contracts and current schema/RLS/Sync
-tables; do not invent archive or text-edit policy. Use the same root-plus-
-independent-review quality-control policy and only disposable local fixtures;
-do not provision hosted resources, access production, modify Firebase, migrate
-data or advance A-003/A-004 from local evidence.
+Commit this synchronized comment-only Client/Project directory PowerSync READY
+checkpoint and require both immutable workflow jobs to pass on that exact
+commit. Then restore the already reviewed executable implementation, inspect
+the READY-relative allowlist, synchronize every changed surface and the dossier
+at honest `implemented` status, correct the existing Project-provider evidence
+so core-row reconciliation no longer overclaims allocation cleanup, rerun the
+complete local provider/Swift/build/control suite, and require immutable CI on
+that exact implementation checkpoint. Do not provision hosted resources,
+access production, modify Firebase, migrate data or advance A-003/A-004 from
+local evidence.
 
 Continue without waiting on the two M1 evidence blockers:
 

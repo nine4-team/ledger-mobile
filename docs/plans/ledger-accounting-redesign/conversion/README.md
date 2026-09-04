@@ -5,12 +5,15 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 437 of 621 target-relevant
+Status: M0 backend-surface classification complete; 439 of 623 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
-by this directory. The Client/Project directory read-contract slice is verified
+by this directory. The local Client/Project PowerSync directory and browse
+provider is at a comment-only READY checkpoint pending exact-commit CI; hosted
+Auth/Sync and production behavior are not claimed. The Client/Project directory
+read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit
 `031a240a`. The provider-free exact same-Client Transfer destination-selection

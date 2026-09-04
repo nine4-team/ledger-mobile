@@ -165,6 +165,7 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "41921d7f9da4f21fe636d5f35e8d9773b609ef6c8e54f4b2759c62bf7389f12c",
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
       "status": "target_mapped",

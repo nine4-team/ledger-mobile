@@ -1,0 +1,63 @@
+{
+  "batchId": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
+  "title": "Target Client and Project PowerSync directory and browse provider",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-001",
+    "EVID-PROJECT-BROWSING-PRESENTATION-001",
+    "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
+    "EVID-CLIENT-CREATION-PROVIDER-001",
+    "EVID-PROJECT-SETUP-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-B23F91245E50",
+      "acknowledgeSourceHash": "1390c6f9845919ff50a7233449e9f8c634b5cf21f22a339c3f23cf847a26d92f",
+      "currentBehavior": "Contains only the reviewed READY boundary for the Account/Principal-bound PowerSync Client/Project directory adapter; it declares no executable type or query.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
+      "notes": "Comment-only READY scaffold; implementation must preserve explicit incomplete and pending truth.",
+      "target": {
+        "owner": "Client and Project Directory",
+        "surfaces": ["PowerSync ClientProjectDirectoryQuerying adapter", "Account/Principal-bound directory runtime"],
+        "securityRequirements": ["Authoritative rows require active local membership evidence", "Only exact same-Principal pending rows remain visible without membership", "Cross-Account runtime calls fail before persistence"],
+        "syncRequirements": ["Client and Project completion are independent reactive signals", "Missing Project-to-Client joins cannot become authoritative empty", "Cleanup never outruns aggregate evidence"]
+      },
+      "migration": {
+        "rule": "Use only target local rows; read no Firebase cache and create no compatibility adapter.",
+        "reconciliation": ["Exact authorized authoritative readback clears only the matching owned overlay", "Project allocation optimism remains until aggregate-aware proof"]
+      },
+      "verification": {
+        "tests": ["ClientProjectDirectoryPowerSyncQueryTests", "ProjectPowerSyncVerticalSliceTests"],
+        "acceptance": ["All planned local read, isolation, readiness, restart, cancellation and reconciliation cases pass before status advancement"]
+      }
+    },
+    {
+      "id": "TEST-5AAEE26660C8",
+      "acknowledgeSourceHash": "c84ff0f66d2494a94d153dc6307d6a562e24c618a947f18bdf36bf40e13ee278",
+      "currentBehavior": "Contains only the reviewed READY test boundary for synthetic disposable Client/Project directory provider verification; it runs no tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
+      "notes": "Comment-only READY scaffold using no hosted endpoint or production data.",
+      "target": {
+        "owner": "Client and Project Directory",
+        "surfaces": ["Client/Project PowerSync directory provider test suite"],
+        "securityRequirements": ["Negative Account, Principal, membership and hidden-authority cases are mandatory"],
+        "syncRequirements": ["Reactive per-directory completion, restart, missing join, cancellation and aggregate-safe readback are mandatory"]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities and disposable encrypted databases.",
+        "reconciliation": ["Tests distinguish local SQL scope proof from later hosted Sync authorization proof"]
+      },
+      "verification": {
+        "tests": ["npm run target:powersync:test", "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"],
+        "acceptance": ["Every planned case becomes executable before the provider slice advances beyond ready"]
+      }
+    }
+  ]
+}

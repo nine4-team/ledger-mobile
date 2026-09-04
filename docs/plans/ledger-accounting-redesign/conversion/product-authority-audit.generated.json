@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T19:36:56.504Z",
+  "generatedFromManifestSync": "2026-09-04T20:18:08.268Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 881,
-    "targetRelevantSurfaces": 621,
-    "batches": 23,
-    "productScopeSurfaces": 718,
+    "surfaces": 883,
+    "targetRelevantSurfaces": 623,
+    "batches": 24,
+    "productScopeSurfaces": 720,
     "technicalControlSurfaces": 163
   },
   "canonicalTargetCoverage": [
@@ -67,6 +67,7 @@
         "M0-BACKEND-RULES-001",
         "M0-CLIENT-POWERSYNC-PROVIDER-001",
         "M0-CLIENT-POWERSYNC-SPIKE-001",
+        "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
         "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-INVENTORY-TRANSACTION-001",
@@ -74,17 +75,18 @@
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 481,
-      "targetRelevantSurfaceCount": 365
+      "surfaceCount": 483,
+      "targetRelevantSurfaceCount": 367
     },
     {
       "path": "docs/specs/projects.md",
       "batchIds": [
+        "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 120,
-      "targetRelevantSurfaceCount": 118
+      "surfaceCount": 122,
+      "targetRelevantSurfaceCount": 120
     },
     {
       "path": "docs/specs/spaces.md",
@@ -775,6 +777,68 @@
       "surfaceIds": [
         "MCPMOD-68F7991697DD",
         "MCPMOD-EDF53EB768EB"
+      ]
+    },
+    {
+      "batchId": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
+      "title": "Target Client and Project PowerSync directory and browse provider",
+      "scope": "product",
+      "rationale": "The isolated Client and Project directory provider must preserve canonical stable identity and Project-to-Client relationships while proving membership-scoped local visibility, honest independent readiness, offline pending-row usability, reconciliation and target-app navigation without authorizing hosted or production behavior.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-B23F91245E50",
+        "TEST-5AAEE26660C8"
       ]
     },
     {

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T19:36:56.504Z",
+    "lastSynchronizedAt": "2026-09-04T20:18:08.268Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -424,8 +424,8 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "78fb582779621fe64273e483e9107116d34739e751e2e384ddde2db59c6adff9",
-      "acknowledgedSourceHash": "78fb582779621fe64273e483e9107116d34739e751e2e384ddde2db59c6adff9",
+      "observedSourceHash": "41921d7f9da4f21fe636d5f35e8d9773b609ef6c8e54f4b2759c62bf7389f12c",
+      "acknowledgedSourceHash": "41921d7f9da4f21fe636d5f35e8d9773b609ef6c8e54f4b2759c62bf7389f12c",
       "metadata": {},
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
@@ -30585,6 +30585,67 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-B23F91245E50",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "1390c6f9845919ff50a7233449e9f8c634b5cf21f22a339c3f23cf847a26d92f",
+      "acknowledgedSourceHash": "1390c6f9845919ff50a7233449e9f8c634b5cf21f22a339c3f23cf847a26d92f",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed READY boundary for the Account/Principal-bound PowerSync Client/Project directory adapter; it declares no executable type or query.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client and Project Directory",
+        "surfaces": [
+          "PowerSync ClientProjectDirectoryQuerying adapter",
+          "Account/Principal-bound directory runtime"
+        ],
+        "securityRequirements": [
+          "Authoritative rows require active local membership evidence",
+          "Only exact same-Principal pending rows remain visible without membership",
+          "Cross-Account runtime calls fail before persistence"
+        ],
+        "syncRequirements": [
+          "Client and Project completion are independent reactive signals",
+          "Missing Project-to-Client joins cannot become authoritative empty",
+          "Cleanup never outruns aggregate evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use only target local rows; read no Firebase cache and create no compatibility adapter.",
+        "reconciliation": [
+          "Exact authorized authoritative readback clears only the matching owned overlay",
+          "Project allocation optimism remains until aggregate-aware proof"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ClientProjectDirectoryPowerSyncQueryTests",
+          "ProjectPowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "All planned local read, isolation, readiness, restart, cancellation and reconciliation cases pass before status advancement"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+      ],
+      "notes": "Comment-only READY scaffold; implementation must preserve explicit incomplete and pending truth.",
+      "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
+    },
+    {
       "id": "SWIFT-B2CF26BDA1A8",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/LedgerReleaseManifest.swift",
@@ -38899,6 +38960,61 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-5AAEE26660C8",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "c84ff0f66d2494a94d153dc6307d6a562e24c618a947f18bdf36bf40e13ee278",
+      "acknowledgedSourceHash": "c84ff0f66d2494a94d153dc6307d6a562e24c618a947f18bdf36bf40e13ee278",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the reviewed READY test boundary for synthetic disposable Client/Project directory provider verification; it runs no tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client and Project Directory",
+        "surfaces": [
+          "Client/Project PowerSync directory provider test suite"
+        ],
+        "securityRequirements": [
+          "Negative Account, Principal, membership and hidden-authority cases are mandatory"
+        ],
+        "syncRequirements": [
+          "Reactive per-directory completion, restart, missing join, cancellation and aggregate-safe readback are mandatory"
+        ]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities and disposable encrypted databases.",
+        "reconciliation": [
+          "Tests distinguish local SQL scope proof from later hosted Sync authorization proof"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:powersync:test",
+          "swift test --package-path LedgeriOS --filter ClientProjectDirectoryPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Every planned case becomes executable before the provider slice advances beyond ready"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+      ],
+      "notes": "Comment-only READY scaffold using no hosted endpoint or production data.",
+      "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
     },
     {
       "id": "TEST-5D923CEA7853",
