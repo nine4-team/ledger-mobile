@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T04:28:44.648Z",
+    "lastSynchronizedAt": "2026-09-04T05:53:47.901Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -205,10 +205,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "8583f1b2f3b91be56b98d10d268bfa28e873d916c18cc1b30095a902671e311b",
-      "acknowledgedSourceHash": "8583f1b2f3b91be56b98d10d268bfa28e873d916c18cc1b30095a902671e311b",
+      "observedSourceHash": "e5cc5bfcfa4d6425005a4729305b5e3a88e8098e8fe8aabbd38945ca29e8a460",
+      "acknowledgedSourceHash": "e5cc5bfcfa4d6425005a4729305b5e3a88e8098e8fe8aabbd38945ca29e8a460",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, installs the isolated target TypeScript compiler, checks generated Swift/TypeScript/MCP contract parity, executes the complete target package test suite, builds staging for macOS/iOS Simulator, and rejects tracked rewrites.",
+      "currentBehavior": "Runs conversion traceability and target query-port inventory test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -242,9 +242,10 @@
       "evidence": [
         "EVID-CONTINUITY-001",
         "EVID-TARGET-ENVIRONMENT-001",
-        "EVID-CONTRACT-CATALOG-001"
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "CI definition is implemented and claimed by target-environment-isolation; immutable run 33567370249 proves the complete 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The target query-port implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; immutable implementation CI for the new Linux-before-macOS gate remains pending. Prior run 33567370249 proves the earlier 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -924,10 +925,10 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "37af17b61f27bebf9e44f3f6a8dcdc941599faed72b02d70f3bbcb3d0e92cf77",
-      "acknowledgedSourceHash": "37af17b61f27bebf9e44f3f6a8dcdc941599faed72b02d70f3bbcb3d0e92cf77",
+      "observedSourceHash": "3025354c8841cfc2bfd53150141d7a1fce443d61b1b63a83f75f9689f150f177",
+      "acknowledgedSourceHash": "3025354c8841cfc2bfd53150141d7a1fce443d61b1b63a83f75f9689f150f177",
       "metadata": {},
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue and target contract generation/checking; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract and target query-port inventory generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -950,9 +951,10 @@
         "EVID-PROFILER-001",
         "EVID-CAPABILITY-001",
         "EVID-M2-DECISION-PACKETS-001",
-        "EVID-CONTRACT-CATALOG-001"
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "These are operator commands, not product runtime dependencies.",
+      "notes": "These are operator commands, not product runtime dependencies. The target query-port implementation re-acknowledges the exact package hash while preserving characterized status and existing ownership.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
     },
     {
@@ -1081,10 +1083,10 @@
           "path": "scripts/generate-target-query-port-inventory.mjs"
         }
       ],
-      "observedSourceHash": "cab9a8a3405e0cf807c1edfc1dd5a43f2fcc96fe1954afc1d784008812a2f19d",
-      "acknowledgedSourceHash": "cab9a8a3405e0cf807c1edfc1dd5a43f2fcc96fe1954afc1d784008812a2f19d",
+      "observedSourceHash": "52202829194b8ce52be51224f6597d20082206f26891aef9b36bdfb6fe6bd562",
+      "acknowledgedSourceHash": "52202829194b8ce52be51224f6597d20082206f26891aef9b36bdfb6fe6bd562",
       "metadata": {},
-      "currentBehavior": "Comment-only READY contract for a dependency-free deterministic generator that inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying and fails closed on ambiguity or unsupported syntax.",
+      "currentBehavior": "Dependency-free deterministic Node lexical scanner that recursively inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying, masks nested ordinary/multiline/raw strings and regex literals without declaration leakage, uses already-masked lexical context to distinguish regex from division across comments, preserves split multiline return types through direct-member boundaries, validates declaration prefixes plus protocol-header, generic-parameter, parameter-clause and function-tail grammar recursively through nonempty nested types with valid component start/end states, rejects unsupported non-ASCII code tokens, emits stable timestamp-free JSON/Markdown with separate identity and signature drift, and fails closed on malformed, ambiguous, duplicate, unsupported or invalid-owner input; check byte-compares both artifacts without writing.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -1110,8 +1112,8 @@
       "verification": {
         "tests": [
           "node --check scripts/generate-target-query-port-inventory.mjs",
-          "future npm run target:query-ports:test",
-          "future npm run target:query-ports:check"
+          "npm run target:query-ports:test",
+          "npm run target:query-ports:check"
         ],
         "acceptance": [
           "Exactly 16 verified owners, 16 public exact-suffix Querying protocols and 18 direct methods are emitted at the frozen baseline",
@@ -1119,12 +1121,12 @@
           "Check byte-compares deterministic JSON and Markdown without writing"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "Comment-only READY surface. Generated artifacts, package commands and Ubuntu workflow integration are frozen for implementation and do not exist yet.",
+      "notes": "Implemented after exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 passed immutable Actions run 33837081633. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated regex context, multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested types, and silent omission of Unicode or backticked protocol identifiers before checkpoint. Local generation/checking emits the reviewed 16-owner/16-protocol/18-method inventory; immutable implementation CI remains required before verification.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -1427,10 +1429,10 @@
           "path": "scripts/tests/generate-target-query-port-inventory.test.mjs"
         }
       ],
-      "observedSourceHash": "f20527a74ca8735336ec0f13c30a569ef91c2fd7012b19440427f7d1c82cb6e4",
-      "acknowledgedSourceHash": "f20527a74ca8735336ec0f13c30a569ef91c2fd7012b19440427f7d1c82cb6e4",
+      "observedSourceHash": "ad956e93111280201c87739b5bfa0b5389ad5d2123a4d26bacf2209fdb09bd46",
+      "acknowledgedSourceHash": "ad956e93111280201c87739b5bfa0b5389ad5d2123a4d26bacf2209fdb09bd46",
       "metadata": {},
-      "currentBehavior": "Comment-only READY contract for deterministic baseline, parser, fail-closed, stale-output, exact-allowlist and production-isolation tests for the target query-port inventory control.",
+      "currentBehavior": "Twenty dependency-free Node tests prove the exact target query-port baseline, deterministic normalization and order, identity changes across selector/protocol/owner while signature-only drift preserves identity, nested string/regex interpolation safety, comment-separated regex and division behavior, declaration-prefix and protocol-header/generic-parameter/parameter-clause/function-tail validation including nested component start/end states, valid composition/member/function types, explicit non-ASCII and backticked-name rejection, multiline and adversarial Swift syntax including split opaque/attributed returns, exact exclusions, fail-closed invalid inputs before artifact overwrite, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -1456,19 +1458,19 @@
       "verification": {
         "tests": [
           "node --check scripts/tests/generate-target-query-port-inventory.test.mjs",
-          "future npm run target:query-ports:test"
+          "npm run target:query-ports:test"
         ],
         "acceptance": [
           "All supported syntax, exclusions, signature axes and fail-closed cases are covered",
           "READY, implementation and promotion allowlists preserve unrelated surfaces"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "Comment-only READY test surface; it proves no executable inventory behavior until the exact implementation checkpoint passes.",
+      "notes": "Implemented after immutable READY run 33837081633 and corrected after review. All 20 focused tests pass locally; exact implementation CI and later promotion remain pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {

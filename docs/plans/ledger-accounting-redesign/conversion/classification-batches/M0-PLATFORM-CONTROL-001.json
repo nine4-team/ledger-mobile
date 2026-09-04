@@ -8,23 +8,25 @@
     "EVID-OPERATIONAL-HEALTH-001",
     "EVID-DETERMINISTIC-TEST-SUPPORT-001",
     "EVID-TARGET-COMPOSITION-001",
-    "EVID-DOMAIN-PRIMITIVES-001"
+    "EVID-DOMAIN-PRIMITIVES-001",
+    "EVID-TARGET-QUERY-PORT-INVENTORY-001"
   ],
   "surfaces": [
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8583f1b2f3b91be56b98d10d268bfa28e873d916c18cc1b30095a902671e311b",
-      "currentBehavior": "Runs conversion traceability controls on Linux and defines a separate macOS job that validates the target boundary, installs the isolated target TypeScript compiler, checks generated Swift/TypeScript/MCP contract parity, executes the complete target package test suite, builds staging for macOS/iOS Simulator, and rejects tracked rewrites.",
+      "acknowledgeSourceHash": "e5cc5bfcfa4d6425005a4729305b5e3a88e8098e8fe8aabbd38945ca29e8a460",
+      "currentBehavior": "Runs conversion traceability and target query-port inventory test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
       "evidence": [
         "EVID-CONTINUITY-001",
         "EVID-TARGET-ENVIRONMENT-001",
-        "EVID-CONTRACT-CATALOG-001"
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "CI definition is implemented and claimed by target-environment-isolation; immutable run 33567370249 proves the complete 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The target query-port implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; immutable implementation CI for the new Linux-before-macOS gate remains pending. Prior run 33567370249 proves the earlier 47-test package suite plus both builds and clean diff, while signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

@@ -3,7 +3,7 @@
   "sliceId": "target-query-port-inventory-control",
   "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Target Query-Port Conversion Control",
   "surfaceIds": ["CONFIG-9B16CFCB67A4", "CONFIG-C1C61B2D6569"],
   "requirements": [
@@ -186,7 +186,7 @@
       "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
       "covers": ["TQUERYCONTROL-REQ-001", "TQUERYCONTROL-REQ-002", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-013", "TQUERYCONTROL-REQ-014", "TQUERYCONTROL-REQ-015"],
       "expected": "Repository fixture proves exactly 16 verified owner surfaces, 16 exact-suffix public Querying protocols, 18 direct methods, all watch observations, and the exact two multi-method protocol method sets with one row per requirement.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -195,7 +195,7 @@
       "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
       "covers": ["TQUERYCONTROL-REQ-008", "TQUERYCONTROL-REQ-013"],
       "expected": "Repeated runs and CRLF, harmless whitespace and masked comment/string variants emit byte-identical sorted JSON/Markdown, stable TQUERY IDs and signature hashes without timestamps.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -204,7 +204,7 @@
       "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
       "covers": ["TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-008", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-013"],
       "expected": "Added, removed or renamed protocols/methods and independent label, parameter/return type, generic, attribute, async, throws and where-clause changes make checked output stale while method identity and signature hash remain separate.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -213,7 +213,7 @@
       "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
       "covers": ["TQUERYCONTROL-REQ-001", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-015"],
       "expected": "Multiline declarations, attributes, nested generics and where clauses parse; comments, strings, implementations, extensions, private/internal protocols and non-exact Querying names are excluded without hiding direct requirements.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -222,7 +222,7 @@
       "owner": "scripts/tests/generate-target-query-port-inventory.test.mjs",
       "covers": ["TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-006", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-009", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-015"],
       "expected": "Unsupported direct functions, malformed/ambiguous declarations, duplicate selectors/overloads, empty Querying protocols, missing/ambiguous manifest owner and non-verified owner status all reject the full inventory with stable diagnostics.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -231,7 +231,7 @@
       "owner": "scripts/generate-target-query-port-inventory.mjs check and scripts/tests/generate-target-query-port-inventory.test.mjs",
       "covers": ["TQUERYCONTROL-REQ-003", "TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-005", "TQUERYCONTROL-REQ-007", "TQUERYCONTROL-REQ-011", "TQUERYCONTROL-REQ-013"],
       "expected": "Missing JSON or Markdown and stale bytes fail; check never writes; generate then check is clean; package generate/check/test commands are exact and dependency-free.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -240,7 +240,7 @@
       "owner": "conversion control and independent actual-diff review",
       "covers": ["TQUERYCONTROL-REQ-002", "TQUERYCONTROL-REQ-003", "TQUERYCONTROL-REQ-004", "TQUERYCONTROL-REQ-005", "TQUERYCONTROL-REQ-010", "TQUERYCONTROL-REQ-012", "TQUERYCONTROL-REQ-014", "TQUERYCONTROL-REQ-015"],
       "expected": "Exact READY/implementation/promotion allowlists pass. FILE-063B0E6EC659, MAN-INDEX-001, FILE-208B7E9D7F47, all 16 verified query owners and existing package/workflow surfaces preserve lifecycle status and ownership; generated TQUERY-to-logical-access and 386 QUERY-* reconciliation remain explicit later slices.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"]
     },
     {
@@ -256,5 +256,5 @@
   "implementationEvidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent technical-control READY design at prior verified checkpoint 3c7c52e07646236d0a9bb38298c1fcc5bf44fcc8. Exactly two comment-only CONFIG surfaces are claimed. The synchronized ledger records 837 surfaces / 822 currently discovered, 393 target-mapped-or-later, 184 residuals, 46 blockers, 65 slices / 155 claimed / 138 implementation-advanced. The verified 16-owner/16-protocol/18-method baseline is frozen without creating generated output or changing query owners, package scripts or CI. A-003/A-004 and product D/O decisions are not applicable. Implementation must first pass immutable READY CI, then add only the frozen generator/tests, generated JSON/Markdown, package commands, Ubuntu conversion-control hook and target-environment dependency; promotion remains separate."
+  "notes": "Decision-independent technical-control implementation follows exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 and immutable READY run 33837081633. Exactly two CONFIG surfaces advance to implemented. A dependency-free scanner and 20-test adversarial suite emit and byte-check the reviewed 16-owner/16-protocol/18-method baseline, with package commands and Ubuntu-before-macOS CI gating. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated lexical context, split multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested type component boundaries, and silent omission of Unicode or backticked protocol identifiers; focused regressions cover nested ordinary/multiline/raw strings and regexes, division across comments, deterministic unterminated rejection, same-line/multiline first/later declaration prefixes, negative header/generic/parameter/tail matrices, nested invalid starts/endings, valid composition/member/function types, explicit identifier fail-closed behavior, opaque/attributed return continuations and all three identity inputs. TQUERYCONTROL-TEST-001 through -007 pass locally; -008 remains planned until immutable exact-implementation CI, while the generated diff has been reviewed separately. All query owners and existing package/workflow/discoverer/index surfaces retain their prior ownership and lifecycle state. A-003/A-004 and product D/O decisions are not applicable; promotion remains separate."
 }

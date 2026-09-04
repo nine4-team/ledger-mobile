@@ -34,8 +34,8 @@
     },
     {
       "id": "CONFIG-9B16CFCB67A4",
-      "acknowledgeSourceHash": "cab9a8a3405e0cf807c1edfc1dd5a43f2fcc96fe1954afc1d784008812a2f19d",
-      "currentBehavior": "Comment-only READY contract for a dependency-free deterministic generator that inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying and fails closed on ambiguity or unsupported syntax.",
+      "acknowledgeSourceHash": "52202829194b8ce52be51224f6597d20082206f26891aef9b36bdfb6fe6bd562",
+      "currentBehavior": "Dependency-free deterministic Node lexical scanner that recursively inventories every direct instance-method requirement in every public LedgerTargetCore protocol ending exactly Querying, masks nested ordinary/multiline/raw strings and regex literals without declaration leakage, uses already-masked lexical context to distinguish regex from division across comments, preserves split multiline return types through direct-member boundaries, validates declaration prefixes plus protocol-header, generic-parameter, parameter-clause and function-tail grammar recursively through nonempty nested types with valid component start/end states, rejects unsupported non-ASCII code tokens, emits stable timestamp-free JSON/Markdown with separate identity and signature drift, and fails closed on malformed, ambiguous, duplicate, unsupported or invalid-owner input; check byte-compares both artifacts without writing.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -61,8 +61,8 @@
       "verification": {
         "tests": [
           "node --check scripts/generate-target-query-port-inventory.mjs",
-          "future npm run target:query-ports:test",
-          "future npm run target:query-ports:check"
+          "npm run target:query-ports:test",
+          "npm run target:query-ports:check"
         ],
         "acceptance": [
           "Exactly 16 verified owners, 16 public exact-suffix Querying protocols and 18 direct methods are emitted at the frozen baseline",
@@ -70,15 +70,15 @@
           "Check byte-compares deterministic JSON and Markdown without writing"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
-      "notes": "Comment-only READY surface. Generated artifacts, package commands and Ubuntu workflow integration are frozen for implementation and do not exist yet."
+      "notes": "Implemented after exact READY commit 0ecabf4761874599d8a37a5a89ffced393b4cd63 passed immutable Actions run 33837081633. Review found and the implementation corrected nested-interpolation and regex-literal declaration leakage including comment-separated regex context, multiline-return truncation, incomplete declaration-prefix/header/generic/parameter/tail validation including nested types, and silent omission of Unicode or backticked protocol identifiers before checkpoint. Local generation/checking emits the reviewed 16-owner/16-protocol/18-method inventory; immutable implementation CI remains required before verification."
     },
     {
       "id": "CONFIG-C1C61B2D6569",
-      "acknowledgeSourceHash": "f20527a74ca8735336ec0f13c30a569ef91c2fd7012b19440427f7d1c82cb6e4",
-      "currentBehavior": "Comment-only READY contract for deterministic baseline, parser, fail-closed, stale-output, exact-allowlist and production-isolation tests for the target query-port inventory control.",
+      "acknowledgeSourceHash": "ad956e93111280201c87739b5bfa0b5389ad5d2123a4d26bacf2209fdb09bd46",
+      "currentBehavior": "Twenty dependency-free Node tests prove the exact target query-port baseline, deterministic normalization and order, identity changes across selector/protocol/owner while signature-only drift preserves identity, nested string/regex interpolation safety, comment-separated regex and division behavior, declaration-prefix and protocol-header/generic-parameter/parameter-clause/function-tail validation including nested component start/end states, valid composition/member/function types, explicit non-ASCII and backticked-name rejection, multiline and adversarial Swift syntax including split opaque/attributed returns, exact exclusions, fail-closed invalid inputs before artifact overwrite, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query-Port Conversion Control",
@@ -104,17 +104,17 @@
       "verification": {
         "tests": [
           "node --check scripts/tests/generate-target-query-port-inventory.test.mjs",
-          "future npm run target:query-ports:test"
+          "npm run target:query-ports:test"
         ],
         "acceptance": [
           "All supported syntax, exclusions, signature axes and fail-closed cases are covered",
           "READY, implementation and promotion allowlists preserve unrelated surfaces"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
-      "notes": "Comment-only READY test surface; it proves no executable inventory behavior until the exact implementation checkpoint passes."
+      "notes": "Implemented after immutable READY run 33837081633 and corrected after review. All 20 focused tests pass locally; exact implementation CI and later promotion remain pending."
     }
   ]
 }

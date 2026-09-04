@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 242
+State version: 243
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-QUERY-PORT-INVENTORY-CONTROL-READY
+- Checkpoint: TARGET-QUERY-PORT-INVENTORY-CONTROL-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,37 +32,41 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Prepared a decision-independent comment-only READY package for a target
-  query-port inventory control. Exactly two new CONFIG leaves,
-  `CONFIG-9B16CFCB67A4` and `CONFIG-C1C61B2D6569`, freeze a dependency-free Node
-  lexical scanner and adversarial suite that must inventory every direct
-  instance method in public exact-suffix `Querying` protocols or fail closed.
-  The verified baseline is exactly 16 owner surfaces, 16 protocols and 18
-  methods, all presently `watch*` observations, with
-  `ClientProjectDirectoryQuerying` and `OperationQuerying` as the only
-  multi-method protocols. Stable TQUERY identity is separate from normalized
-  signature drift. Generated JSON/Markdown, root package generate/check/test
-  commands, the Ubuntu conversion-control hook and the target-environment job
-  dependency are frozen for implementation and do not exist in READY.
-  `FILE-208B7E9D7F47` is deliberately re-acknowledged
-  after adding exact CONFIG discovery and excluding these target controls from
-  false Firebase-tool discovery; its verified status and ownership remain
-  unchanged. All 16 query owners, `FILE-063B0E6EC659`, `MAN-INDEX-001`, package
-  and workflow surfaces retain their existing lifecycle state. Later slices
-  must review every generated TQUERY into the logical access/index crosswalk
-  and reconcile the target set against all 386 source `QUERY-*` occurrences.
-  No query predicates/order/page/readiness/result semantics, product behavior,
-  logical/physical index, SQL/EXPLAIN, RLS, Sync, PowerSync, provider, hosted,
-  production, migration, release or cutover work advances;
-  `EVID-TARGET-QUERY-PORT-INVENTORY-001`. The synchronized ledger records 837
-  surfaces / 822 currently discovered, 393 target-mapped-or-later, 184
-  residuals, 46 blockers, and 65 slices / 155 claimed / 138 implementation-
-  advanced, with only the three established retired-path warnings. The local
-  READY gate passes conversion/capability/query/residual/M0 controls, target
-  isolation/contracts, all 316 existing Swift tests in 65 suites with warnings
-  as errors, repeatable project generation, both staging builds, JSON and diff
-  checks. Primary every-line review and independent actual-diff review found no
-  remaining P0-P2 issue; immutable exact-READY-SHA CI remains pending.
+- Implemented the decision-independent target query-port inventory control after
+  exact READY commit `0ecabf4761874599d8a37a5a89ffced393b4cd63` passed
+  immutable Actions run `33837081633`. Exactly `CONFIG-9B16CFCB67A4` and
+  `CONFIG-C1C61B2D6569` advance to `implemented`: a dependency-free Node lexical
+  scanner and 20-test adversarial suite inventory every direct instance method
+  in public exact-suffix `Querying` protocols or fail closed. Deterministic
+  JSON/Markdown records exactly 16 verified owners, 16 protocols and 18 methods,
+  all present `watch*` observations; only `ClientProjectDirectoryQuerying` and
+  `OperationQuerying` have two methods. Stable TQUERY identity remains separate
+  from normalized signature drift. Exact root generate/check/test commands and
+  a Linux conversion-control gate now precede the dependent macOS target job.
+  Human review of every generated row passed and remains distinct from machine
+  freshness. `TQUERYCONTROL-TEST-001` through `-007` pass locally; `-008` awaits
+  immutable exact-implementation CI. The package and workflow hashes are
+  deliberately re-acknowledged without changing their existing status or
+  ownership; `FILE-208B7E9D7F47`, all 16 query owners, `FILE-063B0E6EC659` and
+  `MAN-INDEX-001` are unchanged. Later slices must review every TQUERY into the
+  logical access/index crosswalk and reconcile it against all 386 source
+  `QUERY-*` occurrences. No query semantics, product behavior, logical/physical
+  index, SQL/EXPLAIN, RLS, Sync, PowerSync, provider, hosted, production,
+  migration, release or cutover work advances; `EVID-TARGET-QUERY-PORT-INVENTORY-001`.
+  The synchronized ledger records 837 surfaces / 822 currently discovered, 393
+  target-mapped-or-later, 184 residuals, 46 blockers, and 65 slices / 155
+  claimed / 140 implementation-advanced, with only the three established
+  retired-path warnings. Root review found and the implementation corrected
+  nested string/regex declaration leakage, split multiline-return truncation,
+  detached declaration prefixes, malformed header/generic/parameter/tail
+  acceptance including nested component start/end states, comment-separated regex context and silent
+  Unicode/backticked identifier omission; focused regressions cover every
+  correction and identity input changes. The complete local gate passes: 20 focused Node tests,
+  generation/check freshness,
+  conversion/capability/query/residual/M0 controls,
+  target isolation/contracts, all 316 Swift tests in 65 suites with warnings as
+  errors, repeatable project generation, both staging builds, JSON validation
+  and diff formatting. Immutable implementation CI remains pending.
 
 - Rejected the Project-preference update application-use-case candidate before
   READY, commit or executable implementation. Independent authority review found

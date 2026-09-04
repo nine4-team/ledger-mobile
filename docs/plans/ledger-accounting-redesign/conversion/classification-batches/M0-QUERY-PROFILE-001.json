@@ -179,8 +179,8 @@
     },
     {
       "id": "CONFIG-7AE45AD102EA",
-      "acknowledgeSourceHash": "37af17b61f27bebf9e44f3f6a8dcdc941599faed72b02d70f3bbcb3d0e92cf77",
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue and target contract generation/checking; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "acknowledgeSourceHash": "3025354c8841cfc2bfd53150141d7a1fce443d61b1b63a83f75f9689f150f177",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract and target query-port inventory generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "status": "characterized",
       "blockers": [],
@@ -189,9 +189,10 @@
         "EVID-PROFILER-001",
         "EVID-CAPABILITY-001",
         "EVID-M2-DECISION-PACKETS-001",
-        "EVID-CONTRACT-CATALOG-001"
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "These are operator commands, not product runtime dependencies."
+      "notes": "These are operator commands, not product runtime dependencies. The target query-port implementation re-acknowledges the exact package hash while preserving characterized status and existing ownership."
     }
   ]
 }

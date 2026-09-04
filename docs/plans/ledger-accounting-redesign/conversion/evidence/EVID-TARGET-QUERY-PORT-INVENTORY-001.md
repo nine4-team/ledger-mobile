@@ -1,11 +1,12 @@
 # EVID-TARGET-QUERY-PORT-INVENTORY-001 — Target Query-Port Inventory Control
 
 - Timestamp: 2026-09-03
-- Class: READY / deterministic target query-port conversion control
+- Class: implemented / deterministic target query-port conversion control
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
-- Prior conversion baseline:
-  `3c7c52e07646236d0a9bb38298c1fcc5bf44fcc8`
+- Exact READY checkpoint:
+  `0ecabf4761874599d8a37a5a89ffced393b4cd63`; immutable GitHub Actions run
+  `33837081633` passed before executable implementation began
 - Claimed target surfaces: `CONFIG-9B16CFCB67A4`,
   `CONFIG-C1C61B2D6569`
 - Deliberately changed preserved control: `FILE-208B7E9D7F47` remains
@@ -15,9 +16,10 @@
 - Product decisions: none; A-003/A-004: not applicable
 - Production reads or mutations: none
 - Hosted Supabase/PowerSync resources contacted: none
-- Verification state: comment-only READY passed primary every-line and
-  independent actual-diff review; generator, generated artifacts, package
-  commands and CI hook remain unauthorized until exact-READY-SHA CI passes
+- Verification state: implemented locally; `TQUERYCONTROL-TEST-001` through
+  `-007` pass and the complete generated JSON/Markdown diff was reviewed;
+  `TQUERYCONTROL-TEST-008` remains planned until immutable exact-implementation
+  CI proves the Linux inventory gate prevents the macOS target job from starting
 
 ## Operational Outcome and Authority
 
@@ -85,12 +87,16 @@ ownership. The only multi-method protocols are
 
 ## Frozen Scanner Contract
 
-The future `scripts/generate-target-query-port-inventory.mjs` is a
+The implemented `scripts/generate-target-query-port-inventory.mjs` is a
 dependency-free Node lexical state machine. It recursively scans target-core
 Swift sources, masks line/block comments and strings, tracks braces,
 parentheses and generic delimiters, and supports multiline declarations,
 attributes, nested generics, `async`, `throws`, return clauses and `where`
-clauses.
+clauses. Ordinary, multiline and raw strings plus bare and extended regex
+literals are masked through nested interpolation, and already-masked lexical
+context preserves regex-versus-division classification across comments.
+Unsupported non-ASCII code tokens and public backticked protocol names reject
+rather than disappearing from the inventory.
 
 It includes every direct instance `func` requirement in a public protocol whose
 name ends exactly `Querying`; requirements need no redundant `public` keyword.
@@ -101,7 +107,12 @@ future non-watch selectors classify as `request_response`.
 Unsupported direct functions, malformed or ambiguous declarations, duplicate
 selectors/overloads, empty Querying protocols, missing or ambiguous manifest
 ownership and invalid owner lifecycle status reject the complete inventory.
-Nothing is silently skipped.
+Declaration prefixes, protocol headers, method generic parameters, typed
+parameter clauses and function tails are validated as complete phases, with
+recursive nonempty tuple/generic/bracket structure and valid component
+start/end states, so modifiers or unknown
+tokens cannot detach from a following method, be appended to a preceding one,
+or hide inside nested type syntax. Nothing is silently skipped.
 
 Each row receives a stable TQUERY ID derived only from owner surface ID,
 protocol and selector. A separate normalized signature hash detects parameter
@@ -111,22 +122,23 @@ whitespace and masked comments/strings.
 
 ## Frozen Artifact and CI Topology
 
-Implementation may create exactly these generated review artifacts:
+Implementation creates exactly these generated review artifacts:
 
 - `docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.json`;
 - `docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.md`.
 
-Root package commands will be exactly `target:query-ports:generate`,
+Root package commands are exactly `target:query-ports:generate`,
 `target:query-ports:check` and `target:query-ports:test`. The Ubuntu
-conversion-control job will run inventory test/check, and the macOS
-target-environment job will explicitly depend on that job succeeding. Target
+conversion-control job runs inventory test/check, and the macOS
+target-environment job now explicitly depends on that job succeeding. Target
 Swift tests and builds therefore cannot start after an inventory failure.
 `check` computes both artifacts in memory, byte-compares them and never writes.
 `generate` followed by `check` must be clean.
 
-No generated JSON/Markdown, package script or workflow hook exists in READY.
-Creating false generated output before the parser exists would defeat the
-control.
+The generator computes both renderings before writing. Check mode computes both
+artifacts in memory and byte-compares without writing. The reviewed generated
+inventory contains exactly 16 owner rows, 16 protocol rows and 18 method rows,
+all observations, with no timestamp or raw source data.
 
 The synchronized READY ledger records 837 surfaces / 822 currently discovered,
 393 target-mapped-or-later surfaces, 184 residuals and 46 blockers. Sixty-five
@@ -216,23 +228,30 @@ product UI/stories, app/MCP transport, migration, reconciliation, release or
 cutover. It does not advance `FILE-063B0E6EC659`, `MAN-INDEX-001`, any existing
 query owner, package/workflow/discoverer support surface, or A-003/A-004.
 
-## READY Gate
+## Implementation Checkpoint
 
-Both claimed leaves remain comment-only and `target_mapped`. Syntax checks can
-prove only valid comment-only modules. Exact baseline enumeration, generated
-artifacts, package commands, CI integration and every negative parser/freshness
-case remain planned until implementation. Primary every-line review and
-independent actual-diff review passed with no remaining P0-P2 findings. Immutable
-exact-READY-SHA CI must still pass before executable work begins.
+Both claimed leaves are executable and `implemented`. The generator, 20-test
+suite, generated JSON/Markdown, exact package commands and Linux-before-macOS CI
+dependency match the implementation allowlist. The generated diff was inspected
+method by method: every owner ID/path/protocol/selector matches the frozen
+baseline, exactly the two expected protocols have two methods, all 18 categories
+are `observation`, and canonical signatures stop at their own requirements.
+This human review is recorded separately from machine freshness. Existing query
+owners and package/workflow/discoverer/index surfaces retain their prior status
+and ownership. Immutable exact-implementation-SHA CI remains required for
+`TQUERYCONTROL-TEST-008` and promotion.
 
-## Local READY Verification
+## Local Implementation Verification
 
-The complete local READY gate passed on 2026-09-03:
+The focused executable control passed on 2026-09-03:
 
 ```bash
 node --check scripts/supabase-conversion-ledger.mjs
 node --check scripts/generate-target-query-port-inventory.mjs
 node --check scripts/tests/generate-target-query-port-inventory.test.mjs
+npm run target:query-ports:generate
+npm run target:query-ports:test
+npm run target:query-ports:check
 npm run conversion:check
 npm run conversion:report
 npm run conversion:gate:m0
@@ -248,21 +267,47 @@ npm run target:staging:build:ios
 git diff --check
 ```
 
-Results:
-
-- all three Node syntax checks pass while both new leaves remain comment-only;
-- conversion checking/reporting and M0 pass with zero errors and only the three
-  established retired-path warnings;
-- capability, 386-occurrence source-query and 393-mapped/184-residual/46-blocker
-  artifacts are current;
-- target isolation and generated contract controls pass;
-- all 316 existing Swift tests in 65 suites pass with warnings as errors;
-- repeatable target project generation plus macOS and generic iOS Simulator
-  staging builds pass;
-- the two future target query-port generated artifacts are absent as required;
-  package/workflow support files and all Swift query owners have no diff; and
-- tracked diff formatting and JSON parsing pass.
-
-These local results do not pass any planned generator obligation. They prove
-only that the synchronized READY package is internally valid and does not break
-the existing target foundation. Immutable exact-READY-SHA CI remains pending.
+Results: generation and read-only checking pass for inventory digest
+`b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2`;
+all 20 Node tests pass. They cover exact baseline and multi-method sets,
+deterministic order/bytes and normalization, identity/signature separation,
+every frozen signature axis, multiline attributes/nested generics/function and
+tuple types/where clauses, comments, ordinary/multiline/raw strings and bare or
+extended regex literals with nested interpolation, division non-regression,
+same-line/multiline first/later declaration-prefix rejection, protocol-header,
+generic-parameter, typed parameter-clause and function-tail negative matrices,
+recursive nested-type validation, explicit non-ASCII and backticked-name
+rejection, exact
+exclusions, malformed/unsupported/duplicate/empty/ownership rejection,
+missing/stale artifacts, read-only bytes/existence/mtime, and exact package/CI
+topology. Review identified parser defects before checkpoint:
+nested interpolation could expose an inner string as a fake declaration, and
+newline inference could truncate opaque or attributed multiline return types.
+The scanner now recursively consumes nested ordinary/multiline/raw interpolation
+and uses direct-member boundaries rather than newline completion guesses. Final
+review also found declaration modifiers could detach from later methods,
+regex-literal text could fabricate declarations, malformed protocol headers and
+method tails could be accepted, and Unicode identifiers could be silently
+omitted. The corrected state machine validates complete declaration boundaries,
+masks bare and extended regex literals without confusing repository division,
+validates header/tail phases, and deterministically rejects unsupported
+non-ASCII code tokens. Focused regressions prove all fixes, deterministic
+rejection of unterminated nested forms, and TQUERY identity changes for
+selector, protocol and owner-ID changes while signature-only axes preserve it.
+Subsequent adversarial review also closed empty/malformed method-generic and
+parameter clauses, recursive adjacent identifiers in tuple/generic types,
+backticked public protocol-name omission, and regex/division classification
+after masked block comments. Final endpoint regressions reject incomplete
+nested types ending in punctuation or beginning with invalid operators while
+preserving qualified member types, protocol compositions, `~Copyable`
+constraints and attributed function types.
+Generated baseline bytes and the inventory digest remain unchanged. Conversion
+checking/reporting and M0 pass
+with zero errors and only the three established retired-path warnings.
+Capability, 386-occurrence source-
+query and 393-mapped/184-residual/46-blocker artifacts are current. Target
+isolation and generated contract controls pass. All 316 Swift tests in 65 suites
+pass with warnings as errors. Repeatable target project generation, macOS and
+generic iOS Simulator staging builds pass. All changed JSON parses, exact-path
+status review finds no Swift/Firebase/provider/runtime change, and diff
+formatting passes. Immutable exact-implementation-SHA CI remains pending.

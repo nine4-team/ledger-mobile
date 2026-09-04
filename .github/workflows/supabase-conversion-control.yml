@@ -24,6 +24,8 @@ jobs:
 
       - name: Validate conversion control plane
         run: |
+          npm run target:query-ports:test
+          npm run target:query-ports:check
           npm run conversion:check
           npm run conversion:capabilities:check
           npm run conversion:queries:check
@@ -35,6 +37,7 @@ jobs:
 
   target-environment:
     name: Isolated target environment
+    needs: conversion-control
     runs-on: macos-15
     timeout-minutes: 20
 
