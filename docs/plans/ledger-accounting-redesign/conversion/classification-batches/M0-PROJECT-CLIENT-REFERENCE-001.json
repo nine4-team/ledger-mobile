@@ -3873,18 +3873,18 @@
     {
       "id": "SWIFT-2F4458F40735",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5b8a81c4ade68f37b30e9ad2155bed1d3dbecdaba41cbfaa0ee69207b03e8e18",
-      "currentBehavior": "Comment-only READY contract for one future provider-free typed Client-rename intent-to-application boundary above the verified rename operation; no executable behavior exists.",
+      "acknowledgeSourceHash": "9ea0ee0f7b88ea1f3b835644282303dcead3fc51427e7d498b3734d07433cd76",
+      "currentBehavior": "Implements a provider-free typed Client-rename intent-to-application boundary above the verified rename operation, with exact public transient input, command construction, one port call, bounded errors and validated receipt return.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-RENAME-001", "EVID-CLIENT-RENAME-USE-CASE-001"],
-      "notes": "Comment-only READY scaffold at exact conversion baseline 2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a. It freezes a public non-Codable Account/Client/revision/ClientDisplayName intent and future application orchestration over the verified Client rename command. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, Project ownership/projection, frozen-history rewrite, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
+      "notes": "Implemented locally after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 passed immutable Actions run 33819792298. The public non-Codable intent contains exact Account/Client/revision/ClientDisplayName; the use case constructs the verified draft/command, calls ClientRenaming.rename once, validates the receipt, preserves all 12 typed failures/cancellation and bounds unknown port errors. Focused and full local tests, complete local controls and two independent implementation reviews pass. Exact implementation commit and immutable CI remain pending, so this leaf is implemented rather than verified. It accepts no raw String and advances no UI/readiness/lifecycle/no-op, Project ownership/projection, frozen-history rewrite, broader mutation, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration or production behavior.",
       "target": {
         "owner": "Client Rename Use Case",
         "surfaces": ["ClientRenameIntent", "ClientRenameUseCase", "single ClientRenaming.rename invocation and receipt validation"],
         "securityRequirements": ["Typed transient intent binds exact AccountID, ClientID and expected revision without treating ClientDisplayName, route or provider path as identity or authorization", "Caller Operation, actor, contract and time remain exact; raw service errors cannot cross the application boundary"],
-        "syncRequirements": ["Future provider-free orchestration constructs the existing verified rename command before exactly one port call and validates the receipt", "No local persistence/restart, optimistic Client/Project row, authoritative rename or synchronized visibility is claimed"]
+        "syncRequirements": ["Provider-free orchestration constructs the existing verified rename command before exactly one port call and validates the receipt", "No local persistence/restart, optimistic Client/Project row, authoritative rename or synchronized visibility is claimed"]
       },
       "migration": {
         "rule": "Define target-only transient input and application orchestration; decode no Firebase Project document/clientName cluster, generic update dictionary, EditProject callback, MCP request, export row or migration disposition.",
@@ -3898,18 +3898,18 @@
     {
       "id": "TEST-341B2CD23B6A",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "94dca4aa8156e8b084f2e5a63c50691e9637f67459ee7c7b6ac095f6a3dc6431",
-      "currentBehavior": "Comment-only READY contract for a future ordinary-import Client rename use-case suite covering exact typed intent shape, byte preservation, literal reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; no executable test exists.",
+      "acknowledgeSourceHash": "e7bf7f4bbc1bb1296cbf87bed91b7969a1c341e0cfd1738cec0ace1ee51617d1",
+      "currentBehavior": "Executes eight provider-free public-consumer tests covering the frozen behavioral obligations for typed intent shape/access, exact UTF-8 display-name bytes, reciprocal command ownership, receipt/error boundaries, diagnostics/topology and exclusions; test and review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009 while exact-implementation-SHA CI remains pending for CRENAMEUSE-TEST-010.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-CAPABILITY-PROJECT-REFERENCE-001", "EVID-M2-PROJECT-REFERENCE-001", "EVID-CLIENT-RENAME-001", "EVID-CLIENT-RENAME-USE-CASE-001"],
-      "notes": "Comment-only READY scaffold at exact conversion baseline 2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a. Ten planned obligations require ordinary import without @testable, exact public shape, typed-name bytes, zero/max revisions, every receipt state, eight-axis literal non-mirrored leaf ownership, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics/topology, exact allowlists and immutable READY/implementation CI. No source, service, provider or production behavior advances.",
+      "notes": "Implemented locally after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 / immutable run 33819792298. Eight tests cover ordinary public construction, exact typed-name UTF-8 bytes including accepted whitespace and more than 8 KiB Unicode, zero/max revisions, every receipt state, eight-axis reciprocal encoded-leaf ownership against literal baseline/delta expectations with recording/canned fakes only, zero/one-call failures, all 12 typed failures plus cancellation/raw mapping, diagnostics, topology and exclusions. Test and review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009; CRENAMEUSE-TEST-010 remains planned until exact-implementation-SHA CI passes. Both independent reviewers returned GO; focused and full local gates pass. No source, service, provider or production behavior advances.",
       "target": {
         "owner": "Client Rename Use Case Tests",
         "surfaces": ["exact transient intent fixtures", "typed display-name and reciprocal literal encoded-field fixtures", "receipt-state, construction, typed/raw failure, cancellation, diagnostics and exclusion fixtures"],
         "securityRequirements": ["Fixtures use only synthetic Account, Client, Principal and Operation identities and prove typed local intent is non-authorizing", "Stable failures reveal no raw identity, Client name, credential, service payload or production identifier"],
-        "syncRequirements": ["A future in-memory port proves application choreography only, not physical local persistence or authenticated synchronization", "Construction failure must make zero calls and exact receipt states return without optimistic or authoritative Client/Project state"]
+        "syncRequirements": ["An in-memory port proves application choreography only, not physical local persistence or authenticated synchronization", "Construction failure makes zero calls and exact receipt states return without optimistic or authoritative Client/Project state"]
       },
       "migration": {
         "rule": "Use target-only synthetic values and load no Firebase Project/clientName/view/MCP/export data or source-to-target mapping.",

@@ -1,54 +1,68 @@
-// READY CONTRACT — CLIENT RENAME USE CASE
-//
-// This leaf is intentionally comment-only until its exact READY commit passes
-// the complete conversion gate. Implementation may replace only this comment.
-//
-// Frozen public API:
-//
-// public struct ClientRenameIntent: Equatable, Sendable {
-//     public let accountId: AccountID
-//     public let clientId: ClientID
-//     public let expectedRevision: ExpectedClientRevision
-//     public let newDisplayName: ClientDisplayName
-//
-//     public init(
-//         accountId: AccountID,
-//         clientId: ClientID,
-//         expectedRevision: ExpectedClientRevision,
-//         newDisplayName: ClientDisplayName
-//     )
-// }
-//
-// public struct ClientRenameUseCase<R: ClientRenaming>: Sendable {
-//     public init(renamer: R)
-//
-//     public func execute(
-//         input: ClientRenameIntent,
-//         operationId: OperationID,
-//         actorPrincipalId: PrincipalID,
-//         operationContractVersion: OperationContractVersion,
-//         capturedAt: Date
-//     ) async throws -> OperationReceipt
-// }
-//
-// ClientRenameIntent is transient and must not conform to Codable. Its stored
-// shape is exactly the four fields above. The caller supplies an already-
-// validated ClientDisplayName; this use case accepts no raw String and owns no
-// trimming, blank-name, length or other display-name normalization policy.
-//
-// execute constructs ClientRenameDraft and RenameClientCommand before the
-// port-error boundary, invokes ClientRenaming.rename exactly once, validates
-// the returned receipt outside that boundary, and returns the exact receipt
-// and LocalOperationState.
-//
-// CancellationError and every one of the 12 ClientRenameFailure values remain
-// distinct. Only an unknown error thrown by the port becomes
-// ClientRenameFailure.localAcceptanceFailed. Construction failures make zero
-// port calls; receipt mismatch follows exactly one call.
-//
-// This use case changes only one Client display name. It cannot read or decide
-// readiness/lifecycle/no-op/UI state; change Client identity, archive/delete/
-// merge state, Project ownership or reassignment, or frozen accounting/history
-// display evidence; persist or project a row; authorize a caller; define a
-// service implementation; wire app/MCP behavior; transform source data;
-// deploy, release or cut over.
+import Foundation
+
+/// Transient presentation input for one Client display-name replacement.
+///
+/// The display name is already validated by `ClientDisplayName`. This value is
+/// not persisted and deliberately does not conform to `Codable`.
+public struct ClientRenameIntent: Equatable, Sendable {
+    public let accountId: AccountID
+    public let clientId: ClientID
+    public let expectedRevision: ExpectedClientRevision
+    public let newDisplayName: ClientDisplayName
+
+    public init(
+        accountId: AccountID,
+        clientId: ClientID,
+        expectedRevision: ExpectedClientRevision,
+        newDisplayName: ClientDisplayName
+    ) {
+        self.accountId = accountId
+        self.clientId = clientId
+        self.expectedRevision = expectedRevision
+        self.newDisplayName = newDisplayName
+    }
+}
+
+/// Application-layer orchestration for one Client display-name replacement.
+public struct ClientRenameUseCase<R: ClientRenaming>: Sendable {
+    private let renamer: R
+
+    public init(renamer: R) {
+        self.renamer = renamer
+    }
+
+    public func execute(
+        input: ClientRenameIntent,
+        operationId: OperationID,
+        actorPrincipalId: PrincipalID,
+        operationContractVersion: OperationContractVersion,
+        capturedAt: Date
+    ) async throws -> OperationReceipt {
+        let draft = try ClientRenameDraft(
+            accountId: input.accountId,
+            actorPrincipalId: actorPrincipalId,
+            operationContractVersion: operationContractVersion,
+            clientId: input.clientId,
+            newDisplayName: input.newDisplayName,
+            expectedRevision: input.expectedRevision,
+            capturedAt: capturedAt
+        )
+        let command = try RenameClientCommand(
+            operationId: operationId,
+            draft: draft
+        )
+
+        let receipt: OperationReceipt
+        do {
+            receipt = try await renamer.rename(command)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as ClientRenameFailure {
+            throw failure
+        } catch {
+            throw ClientRenameFailure.localAcceptanceFailed
+        }
+
+        return try command.validate(receipt)
+    }
+}

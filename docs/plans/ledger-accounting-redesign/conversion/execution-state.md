@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 232
+State version: 233
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-RENAME-USE-CASE-READY-REVIEWED
+- Checkpoint: CLIENT-RENAME-USE-CASE-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -31,6 +31,25 @@ modifying the running Firebase application before hard cutover.
   decisions, migration, and production authority remain gated.
 
 ## Completed at This Checkpoint
+
+- Implemented the bounded typed Client rename application dispatch after exact
+  READY commit `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
+  `33819792298`. Exactly two leaves, `SWIFT-2F4458F40735` and
+  `TEST-341B2CD23B6A`, now provide a public non-Codable Account/Client/revision/
+  `ClientDisplayName` intent and a generic one-call use case above verified
+  `ClientRenameOperation.swift`. Construction occurs before the port boundary;
+  receipt validation occurs afterward; all 12 typed failures and cancellation
+  remain exact; only unknown port errors map to `localAcceptanceFailed`.
+  Eight focused/all 302 tests in 63 suites, complete local controls, repeatable
+  Xcode generation and both staging builds pass. One independent reviewer
+  caught missing explicit UTF-8 byte-equality proof for the more-than-8-KiB
+  Unicode payload; the corrected test compares actual and expected UTF-8 `Data`.
+  Both independent implementation reviewers now return GO with no remaining
+  P0-P3 finding. `CRENAMEUSE-TEST-001` through `-009` pass. Exact implementation
+  commit/CI for `CRENAMEUSE-TEST-010` remains pending, so the dossier and two
+  leaves are `implemented`, not `verified`. Every named source UI/service/model/
+  validation/MCP surface and all persistence, authorization, provider/schema/
+  RLS/Sync, migration, hosted and production behavior remain unadvanced.
 
 - Implemented the bounded typed Project rename application dispatch after exact
   READY commit `dc7c9779` passed immutable Actions run `33808493496`. Two leaves,
@@ -3279,21 +3298,22 @@ modifying the running Firebase application before hard cutover.
   `33816585123`. A feature-specific authority audit then selected only the typed
   Client display-name replacement application boundary above verified
   `ClientRenameOperation.swift`; standalone Client creation, note creation,
-  lifecycle/correction and provider work remain outside. Exact candidate paths
-  resolve to `ClientRenameUseCase.swift` (`SWIFT-2F4458F40735`) and
-  `ClientRenameUseCaseTests.swift` (`TEST-341B2CD23B6A`). Both are comment-only.
-  The `ready` dossier freezes one public non-Codable Account/Client/revision/
-  `ClientDisplayName` intent, construction before exactly one
-  `ClientRenaming.rename` call, receipt validation after it, all 12 typed
-  failures, cancellation and bounded unknown errors. Ten obligations require
-  ordinary import without `@testable`, literal non-mirrored encoded-leaf proof,
-  exact two-leaf implementation scope and immutable READY/implementation CI.
-  Client reads/readiness/lifecycle/no-op/UI, Project reassignment/projection,
-  frozen-history rewrite, broader mutation, physical persistence,
-  authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and
-  production behavior remain excluded. Fast registration controls and the
-  unchanged 294-test baseline suite pass; complete READY review and remaining
-  gates, then exact READY commit immutable CI, must pass before executable code.
+  lifecycle/correction and provider work remain outside. Exact READY commit
+  `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
+  `33819792298`, authorizing executable work in exactly
+  `ClientRenameUseCase.swift` (`SWIFT-2F4458F40735`) and
+  `ClientRenameUseCaseTests.swift` (`TEST-341B2CD23B6A`). Those leaves now
+  implement the public non-Codable Account/Client/revision/`ClientDisplayName`
+  intent and one-call application boundary. Eight focused/all 302 tests in 63
+  suites, complete local controls, repeatable generation and both builds pass.
+  Two independent implementation reviewers return GO after one caught and the
+  implementation corrected missing explicit UTF-8 byte-equality proof for the
+  large Unicode payload. `CRENAMEUSE-TEST-001` through `-009` pass locally;
+  exact implementation commit/CI for `-010` remains pending. Client reads/
+  readiness/lifecycle/no-op/UI, Project reassignment/projection, frozen-history
+  rewrite, broader mutation, physical persistence, authorization, provider/
+  schema/RLS/Sync, app/MCP, migration, hosted and production behavior remain
+  excluded.
 
 ## Next Action
 
@@ -3616,20 +3636,20 @@ Continue without waiting on the two M1 evidence blockers:
    hosted or production behavior. Preserve the verified rename operation/tests
    and directory dependency plus all named source statuses, including
    ProjectDetailView and ProjectDetailContainer.
-   Treat ready `client-rename-use-case-contracts` and
-   `EVID-CLIENT-RENAME-USE-CASE-001` as the only active implementation
-   candidate after its exact READY commit passes immutable CI. Preserve exactly
-   the two comment-only leaves `ClientRenameUseCase.swift`
+   Treat implemented `client-rename-use-case-contracts` and
+   `EVID-CLIENT-RENAME-USE-CASE-001` as the active verification candidate.
+   Preserve exactly the two executable leaves `ClientRenameUseCase.swift`
    (`SWIFT-2F4458F40735`) and `ClientRenameUseCaseTests.swift`
-   (`TEST-341B2CD23B6A`) until that gate passes. The future boundary must consume
-   an already-validated `ClientDisplayName`, construct the verified draft and
-   command before exactly one `ClientRenaming.rename` call, validate the receipt
-   afterward, preserve every typed failure plus cancellation and bound only
-   unknown port errors. Do not introduce raw String normalization, Client read/
-   readiness/lifecycle/no-op/UI policy, Client archive/delete/merge, Project
-   reassignment/current projection, frozen-history rewrite, persistence,
-   authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted or
-   production behavior.
+   (`TEST-341B2CD23B6A`) while synchronizing control evidence, committing the
+   exact implementation and requiring immutable CI before verification
+   promotion. The boundary consumes an already-validated `ClientDisplayName`,
+   constructs the verified draft and command before exactly one
+   `ClientRenaming.rename` call, validates the receipt afterward, preserves
+   every typed failure plus cancellation and bounds only unknown port errors.
+   Do not introduce raw String normalization, Client read/readiness/lifecycle/
+   no-op/UI policy, Client archive/delete/merge, Project reassignment/current
+   projection, frozen-history rewrite, persistence, authorization, provider/
+   schema/RLS/Sync, app/MCP, migration, hosted or production behavior.
    Do not resurrect the rejected direct-create form draft or removed phantom IDs.
    Keep
    first-use defaults,

@@ -3,7 +3,7 @@
   "sliceId": "client-rename-use-case-contracts",
   "title": "Dispatch one typed Client display-name replacement",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client Rename Use Case",
   "surfaceIds": ["SWIFT-2F4458F40735", "TEST-341B2CD23B6A"],
   "requirements": [
@@ -125,7 +125,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "A non-@testable consumer constructs the exact public four-field ClientRenameIntent. It is compile-time Equatable/Sendable, runtime non-Codable, stores no raw String, and preserves zero and UInt64.max revisions exactly.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -134,7 +134,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "An already-validated ClientDisplayName, including accepted outer/interior whitespace and more than 8 KiB Unicode, reaches draft and payload byte-exactly after one call; the use case accepts no raw String and performs no second normalization.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -143,7 +143,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "Every LocalOperationState returns in the exact validated receipt after exactly one call carrying one Client rename and one same-Client expected-revision precondition; revisions zero and UInt64.max dispatch exactly.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -152,7 +152,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "A reciprocal flattened encoded-leaf matrix independently varies Account, Client, revision, typed display name, Operation, actor, contract and time against literal flattened baseline expectations and exact literal changed-leaf sets for all eight axes. Recording/canned fakes and expectation helpers must not reconstruct expected commands with ClientRenameDraft, RenameClientCommand or production validation logic.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -161,7 +161,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "Positive infinity and NaN capture times fail during construction with zero calls, while a mismatched receipt fails after exactly one call; neither is reclassified as a port failure.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -170,7 +170,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "All 12 ClientRenameFailure values deliberately thrown by the port remain exact after one call, CancellationError remains structured cancellation, and only an unknown port error maps to localAcceptanceFailed.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -179,7 +179,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "All 12 diagnostic codes remain an exact stable enumeration and reveal no synthetic identity, Client name, raw error, credential, service payload or production identifier.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -188,7 +188,7 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "Exact nested command topology exposes only draft/envelope/subject/fingerprint ownership, typed replacement display name and one expected-revision precondition—never raw-name, Project ownership/reassignment, lifecycle, archive/delete/merge/alias, accounting, frozen history, UI or service detail.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -197,7 +197,7 @@
       "owner": "conversion control and independent actual-diff review",
       "covers": ["CRENAMEUSE-REQ-001", "CRENAMEUSE-REQ-002", "CRENAMEUSE-REQ-003", "CRENAMEUSE-REQ-004", "CRENAMEUSE-REQ-005", "CRENAMEUSE-REQ-006", "CRENAMEUSE-REQ-007", "CRENAMEUSE-REQ-008", "CRENAMEUSE-REQ-009"],
       "expected": "The READY commit changes only two comment scaffolds and control/evidence files, and preserves exact statuses/content for ClientRenameOperation/tests, ClientProjectDirectory/tests, ClientCoreDetailsData/tests, EditProjectModal, ProjectDetailView, ProjectDetailContainer, ProjectService/Protocol, Project model, ProjectFormValidation/tests, the projects MCP module, update_project and every app/provider surface.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-CLIENT-RENAME-USE-CASE-001"]
     },
     {
@@ -213,5 +213,5 @@
   "implementationEvidence": ["EVID-CLIENT-RENAME-USE-CASE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY is prepared at clean exact conversion baseline 2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a after Project-rename implementation 9c8e27cf / immutable run 33816585123 and verification promotion 2fa5a536. Exactly two comment-only target leaves freeze a typed Client-rename application boundary above verified ClientRenameOperation.swift/tests at exact implementation 3282f8e3 / run 33612902860 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Future implementation must construct before one port call, validate after it, preserve all 12 typed failures plus cancellation, and bound unknown errors. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, Project projection/reassignment, Client archive/delete/merge, frozen-history rewrite, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded. Fast local registration checks pass; complete local READY gates, independent actual-diff review and immutable exact-SHA CI still gate implementation."
+  "notes": "Implemented locally after exact READY commit 9cc34f4ca6004e7c3b3e1816f07112c55a70fe54 passed immutable run 33819792298, above verified ClientRenameOperation.swift/tests at exact implementation 3282f8e3 / run 33612902860 and verified ClientProjectDirectory.swift at 3c0b58b6 / run 33584456794. Exactly two executable leaves implement the public typed Client-rename intent and application path: construction before one port call, validation after it, all 12 typed failures plus cancellation preserved, and unknown port errors bounded. Eight focused tests plus review evidence satisfy CRENAMEUSE-TEST-001 through CRENAMEUSE-TEST-009; CRENAMEUSE-TEST-010 remains planned until immutable exact-implementation-SHA CI passes. Both independent implementation reviewers returned GO after one reviewer caught and the implementation corrected a missing explicit UTF-8 byte-equality assertion for the more-than-8-KiB Unicode payload. Focused and full local gates pass. Every listed source/app/MCP surface remains unadvanced; all raw normalization, read/readiness/lifecycle/no-op/UI, Project projection/reassignment, Client archive/delete/merge, frozen-history rewrite, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted and production behavior stays excluded."
 }

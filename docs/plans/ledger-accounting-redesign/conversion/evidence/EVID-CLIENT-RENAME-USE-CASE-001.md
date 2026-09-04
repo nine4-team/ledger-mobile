@@ -1,13 +1,16 @@
 # EVID-CLIENT-RENAME-USE-CASE-001 — Client Rename Use Case
 
 - Timestamp: 2026-09-03
-- Class: READY / provider-free typed Client-rename application dispatch
+- Class: implemented locally / provider-free typed Client-rename application dispatch; exact implementation CI pending
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
 - Prior verified conversion baseline: exact commit
   `2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a`; Project-rename implementation
   `9c8e27cfb26252f6d068841a822be578412c82e6` passed immutable Actions run
   `33816585123`
+- Ready baseline: exact commit
+  `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54`; immutable Actions run
+  `33819792298` passed both jobs
 - Claimed target surfaces: `SWIFT-2F4458F40735`, `TEST-341B2CD23B6A`
 - Preserved verified dependencies: `SWIFT-9CB51D74D41C`,
   `TEST-D1C8EFBDFDDE` at exact implementation `3282f8e3` / run `33612902860`;
@@ -23,8 +26,8 @@
   remain `target_mapped`
 - Slice dossier:
   `conversion/implementation-slices/client-rename-use-case-contracts.json`
-- Verification state: comment-only READY prepared; implementation remains
-  unauthorized until the reviewed exact READY commit passes immutable CI
+- Verification state: implementation passes locally and remains `implemented`,
+  not `verified`, until its exact commit passes immutable CI
 
 ## Selection and Authority
 
@@ -51,14 +54,14 @@ unadvanced.
 
 ## Frozen Boundary
 
-Exactly two comment-only target leaves are claimed:
+Exactly two target leaves are claimed:
 
 - `LedgeriOS/LedgerTargetCore/ClientRenameUseCase.swift`;
 - `LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift`.
 
-The future public `ClientRenameIntent` is a transient, non-Codable value with
+The public `ClientRenameIntent` is a transient, non-Codable value with
 exactly `accountId`, `clientId`, `expectedRevision` and `newDisplayName`, where
-the display name is the existing `ClientDisplayName`. The future generic
+the display name is the existing `ClientDisplayName`. The generic
 `ClientRenameUseCase<R: ClientRenaming>` receives that intent plus exact
 Operation, Principal, contract-version and finite capture-time values. It
 constructs `ClientRenameDraft` and `RenameClientCommand` before invoking
@@ -77,7 +80,7 @@ case may compose those contracts but cannot reproduce or extend them.
 
 ## Required Verification
 
-Ten planned obligations freeze proof for:
+Ten obligations freeze proof for:
 
 1. ordinary non-`@testable` public construction, exact four-field shape,
    Equatable/Sendable, runtime non-Codable intent, and zero/maximum revisions;
@@ -101,30 +104,71 @@ Ten planned obligations freeze proof for:
 
 ## Comment-Only READY Artifacts
 
-The exact current scaffold hashes are:
+The exact READY scaffold hashes were:
 
 - `ClientRenameUseCase.swift` —
   `5b8a81c4ade68f37b30e9ad2155bed1d3dbecdaba41cbfaa0ee69207b03e8e18`;
 - `ClientRenameUseCaseTests.swift` —
   `94dca4aa8156e8b084f2e5a63c50691e9637f67459ee7c7b6ac095f6a3dc6431`.
 
-The prior clean conversion baseline is exact commit
-`2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a`. Local validation is recorded
-below. Independent actual-diff review and an immutable exact-READY-SHA CI run
-remain required before either scaffold may contain executable code.
+The prior clean conversion baseline was exact commit
+`2fa5a536d4b4b8b490da4c7fea2691b53aaf9d1a`. Exact READY commit
+`9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
+`33819792298`: traceability completed in 13 seconds and the isolated target job
+completed in 7 minutes 1 second with all tests, both staging builds and clean
+generated artifacts.
 
 ## Local READY Gate
 
-Fast authoring validation passes: conversion sync/check/report records 831
+The complete READY gate passed: conversion sync/check/report recorded 831
 surfaces / 816 currently discovered with zero errors and only the three
 established retired-path warnings; residual controls are current at 397 mapped /
-174 residual / 45 blockers; capability/query checks, JSON parsing and clean
-diff formatting pass. The parent integration agent also reports the unchanged
-294-test baseline suite passing with the comment scaffolds.
+174 residual / 45 blockers; capability/query checks, M0, target isolation and
+generated contracts, JSON parsing and clean diff formatting passed. All 294
+target tests in 62 suites passed with Swift warnings as errors, as did
+repeatable Xcode generation at unchanged hashes `0657194a` / `388303af` and
+both staging builds.
 
-This local result does not authorize implementation. Complete READY review and
-remaining target gates, followed by an exact READY commit passing immutable CI,
-remain required before either scaffold may contain executable code.
+Two independent preflight reviews caught stale checkpoint metadata, authority
+overstatement and an omitted preserved MCP module. The corrected package
+assigned command mechanics to conversion-control evidence, preserved the
+projects MCP module explicitly and recorded the current checkpoint. Both
+corrected-diff reviewers returned GO, and the immutable READY run above
+authorized implementation.
+
+## Local Implementation Verification
+
+The exact implementation hashes are:
+
+- `ClientRenameUseCase.swift` —
+  `9ea0ee0f7b88ea1f3b835644282303dcead3fc51427e7d498b3734d07433cd76`;
+- `ClientRenameUseCaseTests.swift` —
+  `e7bf7f4bbc1bb1296cbf87bed91b7969a1c341e0cfd1738cec0ace1ee51617d1`.
+
+Eight focused tests prove ordinary public non-`@testable` construction, exact
+transient shape, UTF-8-byte-identical accepted whitespace and more-than-8-KiB
+Unicode display names, zero/maximum revisions, every receipt state, one-call
+dispatch, literal baseline and eight-axis changed-leaf ownership, zero/one-call
+failure boundaries, all 12 typed failures, cancellation, bounded unknown
+errors, exact privacy-safe diagnostics, command topology and permanent
+exclusions.
+
+The focused suite and all 302 target tests in 63 suites pass with Swift warnings
+as errors. Target isolation and generated contracts, repeatable project
+generation at `0657194a` / `388303af`, macOS and generic iOS Simulator staging
+builds, conversion/capability/query/residual/M0 controls and clean diff
+formatting pass. The implementation diff changes exactly the two authorized
+executable leaves plus synchronized control/evidence artifacts.
+
+One independent implementation reviewer found that the initial large-Unicode
+test used Swift String equality without separately proving UTF-8 byte equality.
+The test now compares `Data` built from the actual and expected UTF-8 views.
+That reviewer and a second independent full-slice reviewer both return GO with
+no remaining P0-P3 finding. This local evidence satisfies
+`CRENAMEUSE-TEST-001` through `CRENAMEUSE-TEST-009`.
+`CRENAMEUSE-TEST-010` remains planned until the exact implementation commit and
+immutable CI pass; the two surfaces therefore remain `implemented`, not
+`verified`.
 
 ## Permanent Exclusions
 
