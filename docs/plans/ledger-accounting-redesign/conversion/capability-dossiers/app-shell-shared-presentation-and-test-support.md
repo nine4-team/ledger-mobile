@@ -241,5 +241,5 @@ keyed identity are not target contracts.
 
 This dossier does not authorize target code, schema, RLS, Sync Streams,
 migration, production reads/mutations, release, or cutover. Product specs and
-the decision log remain product authority; open O-002–O-040 and architecture
+the decision log remain product authority; open O-002–O-041 and architecture
 spike gates remain in force where referenced by the owning dossiers.

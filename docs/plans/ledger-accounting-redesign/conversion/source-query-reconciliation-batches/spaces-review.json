@@ -22,6 +22,7 @@
     "O-037",
     "O-038"
   ],
+  "allowedEvidenceRequirementIds": [],
   "rows": [
     {
       "queryId": "QUERY-2F3C6023ACB6",
@@ -43,13 +44,8 @@
           "category": "retired",
           "scope": "source_query_mechanism_only",
           "retirementGate": "after_verified_target_cutover",
-          "authorityRefs": [
-            {
-              "path": "docs/architecture/redesign/architecture-decisions.md",
-              "role": "architecture_authority",
-              "section": "A-017 — Firebase Is a Migration Source Only"
-            }
-          ]
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
         }
       ]
     },
@@ -100,13 +96,8 @@
           "category": "retired",
           "scope": "source_query_mechanism_only",
           "retirementGate": "after_verified_target_cutover",
-          "authorityRefs": [
-            {
-              "path": "docs/architecture/redesign/architecture-decisions.md",
-              "role": "architecture_authority",
-              "section": "A-017 — Firebase Is a Migration Source Only"
-            }
-          ]
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
         }
       ]
     },
@@ -130,13 +121,8 @@
           "category": "retired",
           "scope": "source_query_mechanism_only",
           "retirementGate": "after_verified_target_cutover",
-          "authorityRefs": [
-            {
-              "path": "docs/architecture/redesign/architecture-decisions.md",
-              "role": "architecture_authority",
-              "section": "A-017 — Firebase Is a Migration Source Only"
-            }
-          ]
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
         }
       ]
     },
@@ -241,13 +227,8 @@
           "category": "retired",
           "scope": "source_query_mechanism_only",
           "retirementGate": "after_verified_target_cutover",
-          "authorityRefs": [
-            {
-              "path": "docs/architecture/redesign/architecture-decisions.md",
-              "role": "architecture_authority",
-              "section": "A-017 — Firebase Is a Migration Source Only"
-            }
-          ]
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
         }
       ]
     }

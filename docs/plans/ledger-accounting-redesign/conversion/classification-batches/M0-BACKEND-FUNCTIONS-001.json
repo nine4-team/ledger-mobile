@@ -192,12 +192,13 @@
       "disposition": "retire",
       "status": "characterized",
       "blockers": [
-        "Production logs/profile should confirm whether externally used"
+        "Production logs/profile should confirm whether externally used",
+        "O-040"
       ],
       "evidence": [
         "EVID-SOURCE-BACKEND-001"
       ],
-      "notes": "Current Admin-SDK authorization gap must not be reproduced; target Project creation is redesigned around Client identity."
+      "notes": "Current Admin-SDK authorization gap must not be reproduced; canonical production evidence must establish runtime/source-data use, while O-040 owns the implicit Furnishings preference behavior. Target Project creation is redesigned around Client identity."
     },
     {
       "id": "FUNCTION-64DF5B5FA8E6",

@@ -9,7 +9,7 @@ This register is the deterministic queue for target-relevant surfaces that canno
 - Target-relevant surfaces: 581
 - Target-mapped or later: 397
 - Residual surfaces: 184
-- Distinct blockers: 46
+- Distinct blockers: 47
 
 A surface may depend on more than one blocker, so blocker counts do not sum to the residual-surface count.
 
@@ -36,8 +36,8 @@ A surface may depend on more than one blocker, so blocker counts do not sum to t
 | 17 | `O-027` | 10 | product decision | Item Creation | One approved name/photo/note rule plus offline, API, and migration validation tests |
 | 18 | `O-033` | 10 | product decision | Collection/payment variance | Approved exact-match or explicit variance model plus mismatch, retry, rounding, allocation, receipt, budget and correction tests |
 | 19 | `O-006` | 9 | product decision | Expense / live Invoice | Field-by-state mutability matrix with concurrent edit/collection tests |
-| 20 | `O-035` | 9 | product decision | Client Summary financial meaning | Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests |
-| 21 | `O-037` | 9 | product decision | Space archive and Item assignment | Approved retain/clear/move rule plus assigned/empty, offline, search/report, concurrent assignment and scope-change tests |
+| 20 | `O-037` | 9 | product decision | Space archive and Item assignment | Approved retain/clear/move rule plus assigned/empty, offline, search/report, concurrent assignment and scope-change tests |
+| 21 | `O-035` | 8 | product decision | Client Summary financial meaning | Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests |
 | 22 | `O-039` | 8 | product decision | Project-note text validation | Approved cross-runtime trim/control/nonempty/byte rule plus app/MCP parity, zero-dispatch rejection, restart and lossless import/quarantine tests |
 | 23 | `A-015` | 7 | architecture decision | Architecture and target spike | blocked: Choose the optimistic projection mechanism for complex offline commands |
 | 24 | `O-036` | 7 | product decision | Client-shared receipt evidence | Approved omit/embed/attach/authorized-link policy plus token/path leakage, revocation, expiry, offline, sharing and retention tests |
@@ -59,10 +59,11 @@ A surface may depend on more than one blocker, so blocker counts do not sum to t
 | 40 | `O-020` | 2 | product decision | Compatibility | Target accounting-contract/budget evidence, migration reconciliation, and O-022 source cutoff |
 | 41 | `O-022` | 2 | product decision | Compatibility and Cutover | Approved quiescence, source-freeze, and recovery plan; proof late Firebase writes cannot bypass or be lost after final delta |
 | 42 | `O-028` | 2 | product decision | Vendor cancellation/non-cash credit | Approved representation that adds no fourth Transaction, conserves every credit cent, and creates Return only for actual money received |
-| 43 | `A-003` | 1 | architecture decision | Architecture and target spike | proposed: Supabase Postgres becomes target server authority |
-| 44 | `A-004` | 1 | architecture decision | Architecture and target spike | proposed: PowerSync SQLite becomes the target local data plane |
-| 45 | `O-017` | 1 | product decision | Item Creation UI/domain boundary | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
-| 46 | `Physical target verification` | 1 | target verification | Offline target spike and physical-device acceptance | Run the isolated Supabase/PowerSync target on physical devices and prove restart, offline lease, queue, readiness and reconnect behavior. |
+| 43 | `O-041` | 2 | product decision | Vendor-spend report semantics | Approved report meaning plus exact-cent, payer, scope, currency, credit, correction, security, offline-readiness, migration and app/MCP parity tests |
+| 44 | `A-003` | 1 | architecture decision | Architecture and target spike | proposed: Supabase Postgres becomes target server authority |
+| 45 | `A-004` | 1 | architecture decision | Architecture and target spike | proposed: PowerSync SQLite becomes the target local data plane |
+| 46 | `O-017` | 1 | product decision | Item Creation UI/domain boundary | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
+| 47 | `Physical target verification` | 1 | target verification | Offline target spike and physical-device acceptance | Run the isolated Supabase/PowerSync target on physical devices and prove restart, offline lease, queue, readiness and reconnect behavior. |
 
 ## Exact Affected Surfaces
 
@@ -609,26 +610,6 @@ Affected surfaces:
 - `SWIFT-6109B0A97167` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.
 - `TEST-880C5785FD49` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.
 
-### O-035 — 9 surfaces
-
-- Kind: product decision
-- Owning context: Client Summary financial meaning
-- Required closure: Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests
-- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
-- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
-
-Affected surfaces:
-
-- `MAN-REPORT-001` — `M0-REPORTING-SEARCH-001` — replace/characterized: Requires parity/reconciliation across reports, PDFs, CSV exports, search projections, MCP outputs, and client-visible totals.
-- `MCPMOD-917C20FEDA6A` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows.
-- `MCPTOOL-556E4BBD4A8C` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Adds raw noncanceled Transaction amounts by source/vendor without scope-relative accounting signs.
-- `MCPTOOL-EDD825A4C317` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Computes per-category budget variance from allocations and Transaction-only signs.
-- `MCPTOOL-F15CC6C9A7AC` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Builds Project health from raw Items/Transactions, cached assumptions, and legacy completeness.
-- `SWIFT-1772D7B7CE10` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Displays Client Summary active-Item totals, categories, receipt links, logo, and PDF sharing.
-- `SWIFT-602AA12C6003` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Builds payable cards and Invoice/Client/Property reports from independent mutable context arrays.
-- `SWIFT-6109B0A97167` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.
-- `TEST-880C5785FD49` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.
-
 ### O-037 — 9 surfaces
 
 - Kind: product decision
@@ -648,6 +629,25 @@ Affected surfaces:
 - `SWIFT-5BB6D8BE3292` — `M0-SPACES-REVIEW-001` — replace/characterized: Computes Space checklist progress, template-role availability, and detail summaries.
 - `SWIFT-8494F171316C` — `M0-SPACES-REVIEW-001` — replace/characterized: Implements Firestore Space CRUD/listeners, generic updates, attachment normalization, and hard delete.
 - `SWIFT-DDFAC91775DA` — `M0-SPACES-REVIEW-001` — redesign/characterized: Builds a large Firebase-listener Space detail that also composes Item media, movement, status, relation, delete, note and checklist actions.
+
+### O-035 — 8 surfaces
+
+- Kind: product decision
+- Owning context: Client Summary financial meaning
+- Required closure: Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests
+- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
+- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
+
+Affected surfaces:
+
+- `MAN-REPORT-001` — `M0-REPORTING-SEARCH-001` — replace/characterized: Requires parity/reconciliation across reports, PDFs, CSV exports, search projections, MCP outputs, and client-visible totals.
+- `MCPMOD-917C20FEDA6A` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows.
+- `MCPTOOL-EDD825A4C317` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Computes per-category budget variance from allocations and Transaction-only signs.
+- `MCPTOOL-F15CC6C9A7AC` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Builds Project health from raw Items/Transactions, cached assumptions, and legacy completeness.
+- `SWIFT-1772D7B7CE10` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Displays Client Summary active-Item totals, categories, receipt links, logo, and PDF sharing.
+- `SWIFT-602AA12C6003` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Builds payable cards and Invoice/Client/Property reports from independent mutable context arrays.
+- `SWIFT-6109B0A97167` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.
+- `TEST-880C5785FD49` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.
 
 ### O-039 — 8 surfaces
 
@@ -967,6 +967,19 @@ Affected surfaces:
 
 - `SWIFT-6109B0A97167` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.
 - `TEST-880C5785FD49` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.
+
+### O-041 — 2 surfaces
+
+- Kind: product decision
+- Owning context: Vendor-spend report semantics
+- Required closure: Approved report meaning plus exact-cent, payer, scope, currency, credit, correction, security, offline-readiness, migration and app/MCP parity tests
+- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
+- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
+
+Affected surfaces:
+
+- `MCPMOD-917C20FEDA6A` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows.
+- `MCPTOOL-556E4BBD4A8C` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Adds raw noncanceled Transaction amounts by source/vendor without scope-relative accounting signs.
 
 ### A-003 — 1 surface
 

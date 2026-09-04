@@ -207,8 +207,8 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690",
-      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. It contains no executable logic and makes no completeness, implementation, physical-access, provider, hosted, production, or cutover claim.",
+      "acknowledgeSourceHash": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c",
+      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. All 386 reviewed rows are populated in separate data, but this leaf contains no executable logic and makes no machine-validation, implementation, physical-access, provider, hosted, production, or cutover claim.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -225,7 +225,7 @@
         ]
       },
       "migration": {
-        "rule": "Draft the control contract without classifying any QUERY occurrence or implementing a generator.",
+        "rule": "Draft the complete reviewed classification/control contract without implementing a generator.",
         "reconciliation": [
           "All 386 frozen QUERY IDs are human-reviewed into one exact capability batch at DRAFT; a later READY registry must contain one exact row for each assignment"
         ]
@@ -242,12 +242,12 @@
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, complete reconciliation rows or READY status."
+      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, aggregate validation or READY status."
     },
     {
       "id": "CONFIG-40F01696B8A6",
-      "acknowledgeSourceHash": "f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758",
-      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition and later row equality. It contains no executable tests and proves no QUERY outcome mapping.",
+      "acknowledgeSourceHash": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60",
+      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition, complete row set, synchronized lifecycle, ordered retirement gates, exact authority/evidence binding and conflict matrix. It contains no executable tests and proves no aggregate control result.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -280,7 +280,7 @@
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, complete reconciliation rows or READY status."
+      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, aggregate validation or READY status."
     }
   ]
 }

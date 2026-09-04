@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 248
+State version: 253
 
 ## Objective
 
@@ -36,26 +36,37 @@ modifying the running Firebase application before hard cutover.
   clean baseline `76b2ff45ba4fffe68097919c32ec7b4fec48047c`. One aggregate
   registry binds the full unchanged source and target-authority artifacts plus
   stable selected manifest projections. Human semantic review assigned every
-  one of the 386 QUERY IDs exactly once across ten capability batches. The first
-  two bounded pilots now contain 9 independently reviewed rows: all 8 Spaces/
-  review assignments and 1 of 3 media-lifecycle assignments. The two remaining
-  runtime media reads stay absent because current authority does not yet bind
-  their destination-existence and atomic attachment-reference semantics to an
-  exact target contract. The two
-  future aggregate generator/test leaves are comment-only. The frozen row
-  model requires one QUERY ID, canonical full-occurrence hash, human-selected
-  exact manifest source owner/ref with a stable projection hash, and a nonempty
-  canonical set of only six outcome classes:
+  QUERY ID exactly once across ten capability batches. Bounded subagent
+  authoring plus root and independent review covered the first 375 rows. All
+  386 rows now carry 584 explicit outcomes: six rows bind same-owner E-001/E-002
+  production-read requirements, eight bind exact product authority, five carry
+  both independent blocker types, and two retain compiled Firebase BatchWriting
+  reads only as current-source compatibility through verified cutover
+  reconciliation. O-041 now separately owns Business Vendor Cash Movement
+  semantics because O-035 owns Client Summary only. The two future aggregate
+  generator/test leaves are comment-only. The frozen row
+  corrected model requires one QUERY ID, canonical full-occurrence hash,
+  human-selected exact manifest source owner/ref with a stable projection hash,
+  and a nonempty canonical set of exactly seven outcome classes:
   verified target query port, approved future target query, approved target
-  nonquery surface, source-only, retired or typed authority-blocked. Blocked
-  outcomes must bind the exact source owner, TQUERY row or target surface that
-  structurally carries every blocker; the M0 control crosswalk directly grants
-  the exact architecture-decisions authority used by A-003/A-004 boundaries.
+  nonquery surface, source-only, retired, typed authority-blocked or typed
+  evidence-blocked. Blocked outcomes bind the exact source owner, TQUERY row or
+  target surface that structurally carries every blocker; evidence outcomes now
+  bind the complete selected owner/ref/hash/blocker tuple. Registry, batches and
+  slice share one closed lifecycle; nested schemas and batch paths are closed;
+  `current_source_compatibility` is frozen to the two BatchWriting reads; 137
+  source-retention/mechanism-retirement pairs use an ordered milestone model,
+  with 102 retirement gates corrected to follow reconciliation/audit retention;
+  behavior retirement uses four independently extracted, content-hashed
+  authorities and never manifest self-authorization; every outcome pair is
+  governed by a complete symmetric conflict matrix. The M0 control crosswalk
+  directly grants the exact architecture-decisions authority used by
+  A-003/A-004 boundaries.
   No outcome
   is inferred from subsystem/path/symbol/expression. A-003/A-004 remain global-
   only physical deferrals. The stable control CONFIG owners are `target_mapped`
-  with empty blockers while only 9 of 386 rows have reviewed outcomes, so the
-  dossier and both pilot batches remain `draft`; no package/workflow/generated
+  with empty blockers while all 386 rows have explicit outcomes, so the
+  dossier and all batches remain `draft`; no package/workflow/generated
   reconciliation artifact, executable
   control, runtime, provider, hosted, production, release or cutover behavior
   advances. Exact DRAFT commit
@@ -64,7 +75,16 @@ modifying the running Firebase application before hard cutover.
   macOS/iOS Simulator builds. Its evidence-sync commit
   `b4d948e41f9ca6d5ea50da0ba9d8db6504ea06ae` passed immutable run
   `33861762639`, including the same gates and both isolated builds. Root and an
-  independent reviewer returned GO with no P0-P2 finding on each pilot;
+  independent reviewers returned GO after substantive corrections to target
+  mappings, blocker scope and retirement authority. Completion review then
+  re-derived all 386 occurrence/owner hashes and validated all 584 outcomes; its
+  one O-041 heterogeneous-event/scope finding is corrected. Separate adversarial
+  review correctly returned NO-GO on the control weaknesses summarized above.
+  Corrected-model completion and adversarial re-reviews then independently
+  returned GO with no P0-P3 finding after re-deriving the complete row/outcome,
+  evidence, authority, compatibility, retention and conflict controls. An
+  immutable complete-DRAFT checkpoint and exact READY freeze remain before
+  READY;
   `EVID-SOURCE-QUERY-RECONCILIATION-001`.
 
 - Verified the complete target query logical-authority crosswalk
@@ -3526,13 +3546,14 @@ modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Prepare the next bounded slice that reconciles all 386 frozen source `QUERY-*`
-occurrences through exactly the six frozen categories: verified target query
-port, approved future target query, approved target nonquery surface,
-source-only, retired, or authority-blocked. Preserve the verified
-logical-authority registry as the target side of that join; do not translate
-Firestore syntax or indexes, advance globally deferred A-003/A-004 physical
-planes, or silently resolve the registry's explicit product-decision blockers.
+Create an immutable complete-DRAFT checkpoint for the independently approved
+386-row/584-outcome model, then freeze exact READY
+hashes/allowlists and run the full conversion/target gates. Only after an
+immutable READY checkpoint passes may the comment-only generator/checker and
+adversarial tests become executable. Preserve the verified logical-authority
+registry as the target side of the join; do not translate Firestore syntax or
+indexes, advance globally deferred A-003/A-004 physical planes, access
+production, or silently resolve any blocker.
 
 Continue without waiting on the two M1 evidence blockers:
 
@@ -3957,7 +3978,7 @@ mapping for ready capabilities.
 
 ## Active Blockers and Gates
 
-- O-002 through O-040 remain product blockers where referenced by the decision
+- O-002 through O-041 remain product blockers where referenced by the decision
   traceability table.
 - A-003 and A-004 remain proposed until the vertical spike passes.
 - A-007 target authentication choice is open.

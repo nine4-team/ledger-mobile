@@ -36,6 +36,374 @@
     "O-031",
     "O-032"
   ],
-  "rows": [],
-  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+  "allowedEvidenceRequirementIds": [],
+  "rows": [
+    {
+      "queryId": "QUERY-0A9CAB36FAF3",
+      "expectedOccurrenceHash": "2a48100f2777fda6fcc8906da0c369db11c1b2d34e6b8055723903109659240a",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-130E0FE810B2",
+      "expectedOccurrenceHash": "5013f86a5cd4476ffe065fe1269b21308e9988e6b03f194e8f60df8e7f0b6902",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-130FD313A20C",
+      "expectedOccurrenceHash": "896c8cf7993f39e277e361d1dec50f9ebf84cea007014695c2fd9b3598c859f1",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1355478CCE9B",
+      "expectedOccurrenceHash": "20733f5faa50d60f9a1b8fb03cd16c6a9940fb955ccb154b9b7ab01563f9377e",
+      "sourceOwnerSurfaceId": "SWIFT-8B52C90F1043",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift"
+      },
+      "expectedSourceOwnerHash": "60309a9f89be2a3a4d56c5b31d8ab1706c4a785770eeebf7ec709a6cd58d84f8",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-17D9E588B7F8",
+      "expectedOccurrenceHash": "6a98f6086c3eddcefbe1c3e184b11bbbb391cbdd78c8db49a8312195c28ebe7e",
+      "sourceOwnerSurfaceId": "MCPTOOL-3FD87C59256C",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 423
+      },
+      "expectedSourceOwnerHash": "eb686d5cd3b56e692851113a0b8f6f0b702227051aeacd64025a90b809fff3f0",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1C6DCFEF5FB3",
+      "expectedOccurrenceHash": "30a01bf8955fcb00bc013e80b1c032ff8835d3b9f6de161052369e83817c0f66",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-49D5F187F95E",
+      "expectedOccurrenceHash": "771eb4c9aea30d6dc084a91bd6002147cf3bfb854e4bbbb2b515f76d600822ba",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-716662CCB889",
+      "expectedOccurrenceHash": "ea870a9f0722f4c0dda6ea4566cf59384da7f6fde4766ce298641d21d2126cb5",
+      "sourceOwnerSurfaceId": "MCPTOOL-3FD87C59256C",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 423
+      },
+      "expectedSourceOwnerHash": "eb686d5cd3b56e692851113a0b8f6f0b702227051aeacd64025a90b809fff3f0",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-7FE076971B68",
+      "expectedOccurrenceHash": "e7fbd37c8b213353827a896e7caf0541e77e136c48134692533d455416ecfbcb",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-80E36025A223",
+      "expectedOccurrenceHash": "4ac423d10e70791a46f5efb479e3336895b610d7b1fa78f6c25543eb353b9b63",
+      "sourceOwnerSurfaceId": "SWIFT-D2EEB690D6AD",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Views/Creation/NewItemView.swift"
+      },
+      "expectedSourceOwnerHash": "9cdf95323ab4e620270f34a98550133f1d021a3520e038ab14a0c23e71156fcd",
+      "outcomes": [
+        {
+          "category": "authority_blocked",
+          "blockedScope": "source_disposition",
+          "blockerIds": [
+            "O-016",
+            "O-027"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-016",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            },
+            {
+              "id": "O-027",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-845C71B9E61F",
+      "expectedOccurrenceHash": "8185d3946a3438fb5a806dac00b470c7b9e40b00ac226d4114034ad67fe4aafd",
+      "sourceOwnerSurfaceId": "MCPTOOL-3FD87C59256C",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 423
+      },
+      "expectedSourceOwnerHash": "eb686d5cd3b56e692851113a0b8f6f0b702227051aeacd64025a90b809fff3f0",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A69641396B0E",
+      "expectedOccurrenceHash": "b92ee00a1aa52fa3abf873efe3e1dc74d974a3634e23232b0eeecd5cd75498f1",
+      "sourceOwnerSurfaceId": "MCPTOOL-28AB94AA6869",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 625
+      },
+      "expectedSourceOwnerHash": "84ae64dd298c6b16fa1988f3e5f0e3f4757faa0f7438b9401c216752799c2272",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-AE6E6E08651B",
+      "expectedOccurrenceHash": "b2fdc84bb4ebdc5ad9ef965da509c25a2af927ba07a4f88ab47ce02c7695f12b",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BEC77C486C58",
+      "expectedOccurrenceHash": "4d73acb694a23bac8e5970fe98c4d9bee9b5e82abe96db22d85930785c66d4bf",
+      "sourceOwnerSurfaceId": "MCPTOOL-3FD87C59256C",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 423
+      },
+      "expectedSourceOwnerHash": "eb686d5cd3b56e692851113a0b8f6f0b702227051aeacd64025a90b809fff3f0",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E2139FC42DF4",
+      "expectedOccurrenceHash": "a8d487616ccf8e2d197f963fc16fd6ec207f7c41d4730cc38fc2b8d64700fed7",
+      "sourceOwnerSurfaceId": "MCPTOOL-9ACF50C26A5A",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 456
+      },
+      "expectedSourceOwnerHash": "c4529e93fb0d6c130690b27afbe4e4a690aad6a81c7f68bbe8efd2688ddadacf",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "MCPTOOL-9ACF50C26A5A",
+          "sourceRef": {
+            "path": "mcp-server/src/tools/quick-draft-items.ts",
+            "line": 456
+          },
+          "purpose": "audit",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E841907BAAD0",
+      "expectedOccurrenceHash": "613357555286ec0049037e90303f57bce7d1ca98dbb4f7ab4ef72a50d234886f",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E9AE08280D8B",
+      "expectedOccurrenceHash": "8c4707198183734bcec8580003db662b990e80dff01be8077e911d34eb3f0859",
+      "sourceOwnerSurfaceId": "MCPTOOL-1159AA7AC389",
+      "sourceRef": {
+        "path": "mcp-server/src/tools/quick-draft-items.ts",
+        "line": 364
+      },
+      "expectedSourceOwnerHash": "dfff90f6c88e2d97105ed35198da415f9c0fb8813696b7f154457e7496910d7b",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-ECADB2A11D46",
+      "expectedOccurrenceHash": "0ba21a5bf24483efabe1322de88ea91fd5571a0b7c758b348b95844d862d82e1",
+      "sourceOwnerSurfaceId": "SWIFT-8B52C90F1043",
+      "sourceRef": {
+        "path": "LedgeriOS/LedgeriOS/Services/ProtoItemsService.swift"
+      },
+      "expectedSourceOwnerHash": "60309a9f89be2a3a4d56c5b31d8ab1706c4a785770eeebf7ec709a6cd58d84f8",
+      "outcomes": [
+        {
+          "category": "retired",
+          "scope": "source_behavior",
+          "retirementGate": "at_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-003",
+          "expectedRetirementAuthorityHash": "64dee1b5fb5a3c8fa59f5d7c639e630eb7c6c1b2c1906f5c19abf085e7fc60a1"
+        }
+      ]
+    }
+  ],
+  "notes": "Human-reviewed DRAFT reconciliation populates all 18 assigned occurrences: D-025 explicitly authorizes retirement of sixteen proto/Quick Draft runtime reads only at verified cutover, the legacy candidate audit remains source-only through verified cutover reconciliation with required mechanism retirement, and the New Item category validation read remains owner-bound to O-016/O-027. Aggregate validation and promotion remain pending."
 }

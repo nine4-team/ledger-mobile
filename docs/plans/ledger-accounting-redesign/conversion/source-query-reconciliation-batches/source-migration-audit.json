@@ -178,6 +178,3749 @@
     "O-039",
     "O-040"
   ],
-  "rows": [],
-  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+  "allowedEvidenceRequirementIds": [],
+  "rows": [
+    {
+      "queryId": "QUERY-00401E45CFA6",
+      "expectedOccurrenceHash": "6a6c6123777279dbdb3e607d7f227ac6f36b0ad217fc5c47b2e75bd3315bcdf0",
+      "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+      "sourceRef": {
+        "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+      },
+      "expectedSourceOwnerHash": "625c2af9337c8bebf741060c038325c80967a6c90e622ad108cb241fcb6f11b8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+          "sourceRef": {
+            "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-01C2FDCB4E10",
+      "expectedOccurrenceHash": "7f9e7dad3dbe56ad078a2100b09a25a20be76c51c53b0f3aa2c58ab1470157da",
+      "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+      "sourceRef": {
+        "path": "migration/src/budget-backfill.ts"
+      },
+      "expectedSourceOwnerHash": "6871d972964dcc883525692c889e9c94207a920300ad0b68a8b2af96f94886ca",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+          "sourceRef": {
+            "path": "migration/src/budget-backfill.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-03D900AA10CB",
+      "expectedOccurrenceHash": "cb887e37547eb087fe1ba8e9a2ef1a2d8470ddbf273651f7d21a4cf6efc3e3d3",
+      "sourceOwnerSurfaceId": "FILE-BD14FF765DF6",
+      "sourceRef": {
+        "path": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs"
+      },
+      "expectedSourceOwnerHash": "dad604400b9a30377332c4e4a71721d9e865b0e88cd3618d37e9c6c12ec7ec36",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-BD14FF765DF6",
+          "sourceRef": {
+            "path": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-08F232E704EF",
+      "expectedOccurrenceHash": "d4cec498f3d3bb8f491787ab55b3d5feda23469566363835ae53e18270d3011c",
+      "sourceOwnerSurfaceId": "FILE-666B71D31EE1",
+      "sourceRef": {
+        "path": "scripts/revert-transactions-to-fee-expense.mjs"
+      },
+      "expectedSourceOwnerHash": "264000734f917f62f4bffd7b5eb382517896fa8588e38bc7c059063c204da96b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-666B71D31EE1",
+          "sourceRef": {
+            "path": "scripts/revert-transactions-to-fee-expense.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-0947628F73B6",
+      "expectedOccurrenceHash": "352d9df3b88314dcd1a1df7301fe3d7d242ed6576ec8314dc014f5221967c38e",
+      "sourceOwnerSurfaceId": "FILE-58B5ED36AB1D",
+      "sourceRef": {
+        "path": "migration/src/fix-thumbnails.ts"
+      },
+      "expectedSourceOwnerHash": "e9989cf4a7bd16a85ad5d48bc50fe829dac3a05723ac75c410f1545bcfa141ca",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-58B5ED36AB1D",
+          "sourceRef": {
+            "path": "migration/src/fix-thumbnails.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-0B413735C4AD",
+      "expectedOccurrenceHash": "f0eee67610ff72ffbadceead89bae719c00cc096302f644a6acdb55cd31c434e",
+      "sourceOwnerSurfaceId": "FILE-7E429B142402",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-project-price-floor.mjs"
+      },
+      "expectedSourceOwnerHash": "bbde4f010e1350cc86c249fa8eed3f7cc668d519a2d1175057e85fd0e607b0d3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7E429B142402",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-project-price-floor.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-0B4E9B4E469A",
+      "expectedOccurrenceHash": "1043ff6e821c0d62803d9e222ed517ce2ec7a66185ef3660219f9c7db1bbb857",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-13D3F4BD7C73",
+      "expectedOccurrenceHash": "2b5ce29c41b30a8ff9d7205d7c7329a57a410d3e824708796fbaf2833bc67e4e",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-13FF7BE3FB34",
+      "expectedOccurrenceHash": "1d95b772993d8d2808593264ef86d257ad696e8afc68d6f4f859979d02ca308a",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-15299F2038A9",
+      "expectedOccurrenceHash": "561931b379df7dcfb3b829978ba85d307272a4fdbe644f8a251135dbea95615c",
+      "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+      },
+      "expectedSourceOwnerHash": "98ae2aa95ac330d986d97642c35aec72fbd5f17cc7126c463f6f4bda1656fbe8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1588B585B92E",
+      "expectedOccurrenceHash": "edd4f715543200601283605029292a401228a11ceafa0ab8a531720b81b26d9b",
+      "sourceOwnerSurfaceId": "FILE-6200888CA628",
+      "sourceRef": {
+        "path": "migration/src/audit-parity.ts"
+      },
+      "expectedSourceOwnerHash": "6f7438357f85e52a0e7e7e92abde973910b781842cffbec64a3611d9b1099088",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-6200888CA628",
+          "sourceRef": {
+            "path": "migration/src/audit-parity.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-16E9586EA65D",
+      "expectedOccurrenceHash": "4e641aa4e445a87537288ffb37bc923fa0c8b6465ebe1b4e3abd1720eecc4028",
+      "sourceOwnerSurfaceId": "FILE-63127609E244",
+      "sourceRef": {
+        "path": "scripts/clear-legacy-transaction-status.mjs"
+      },
+      "expectedSourceOwnerHash": "8a04d3e636f0a40e5760702da681447e1feb2ee5ceba660c061cdd4aa4f289e8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-63127609E244",
+          "sourceRef": {
+            "path": "scripts/clear-legacy-transaction-status.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-16F2EF2BEA1D",
+      "expectedOccurrenceHash": "5ebda80755831ba13d4eab8cffcc1e8774a676d56731041fb8f444ad68a36997",
+      "sourceOwnerSurfaceId": "FILE-B0DFEF68D8C0",
+      "sourceRef": {
+        "path": "scripts/migrate-transactions-to-fee-expense.mjs"
+      },
+      "expectedSourceOwnerHash": "fdfd97521073da774e4781088ee6df303adca5db92da6fea364d3b5a5700a204",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B0DFEF68D8C0",
+          "sourceRef": {
+            "path": "scripts/migrate-transactions-to-fee-expense.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-16F46B7EDE15",
+      "expectedOccurrenceHash": "7cafbedaf84af3bac0123c8de2952a13fa6a9ec95488d163d47ef2cdd4653a85",
+      "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+      "sourceRef": {
+        "path": "scripts/repair-1584-install-category-blockers.mjs"
+      },
+      "expectedSourceOwnerHash": "1159684d90c99f8de431a162302794b6dbca637f56be576c566f65061b428b83",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+          "sourceRef": {
+            "path": "scripts/repair-1584-install-category-blockers.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1C5A94CC5403",
+      "expectedOccurrenceHash": "6173120ba95cf40348d60d640ca70826ac3e83f11fe7450719baffaff916e7cf",
+      "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+      "sourceRef": {
+        "path": "scripts/repair-1584-install-category-blockers.mjs"
+      },
+      "expectedSourceOwnerHash": "1159684d90c99f8de431a162302794b6dbca637f56be576c566f65061b428b83",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+          "sourceRef": {
+            "path": "scripts/repair-1584-install-category-blockers.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1D78FC597A16",
+      "expectedOccurrenceHash": "b372cf4d3420262c3910e61c311a6dbaeae317de378f489959f3946ebdd7cd47",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1DE732758C17",
+      "expectedOccurrenceHash": "0d401b317251f903917d08f6655bd28f6ac1849f4aff5bf4f67050ff6b1f19fd",
+      "sourceOwnerSurfaceId": "FILE-220AAA67895E",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-uncategorized-movements.mjs"
+      },
+      "expectedSourceOwnerHash": "d9087c5ea4b78fda615378ddc6c73f8ec599e221197c9446f5ad81e6c4c11d08",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-220AAA67895E",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-uncategorized-movements.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1E584D08669B",
+      "expectedOccurrenceHash": "8f1be609b04dc06f86dfdc7e612ff889ac70683c51c1b3186641bc829b2fe939",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1E77CFB69AAB",
+      "expectedOccurrenceHash": "27d55adc6372a14bbe3ca74d842c8c4b4af9c58132cfc450006732733d322f80",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1F989FB4CAE2",
+      "expectedOccurrenceHash": "6bb91aca6411333449e90cc1d7b4f32881c85ff3de82c41b5e224c3fe5208013",
+      "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+      "sourceRef": {
+        "path": "scripts/audit-category-type-migration.mjs"
+      },
+      "expectedSourceOwnerHash": "9cf38e1ad59f7522b672f928321caee396ccac3adceeaef489566fcf48f85015",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+          "sourceRef": {
+            "path": "scripts/audit-category-type-migration.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-1FB54627F810",
+      "expectedOccurrenceHash": "adcc490fa4c41ea756d49ff774ec83ab81bf533c3c0b444a2244672a7a812f96",
+      "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+      "sourceRef": {
+        "path": "migration/src/verify-user-doc.ts"
+      },
+      "expectedSourceOwnerHash": "a4c3b39df5971d207988eae5202b34b8e5887dc7d23a262c62fb3450e88d72b7",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+          "sourceRef": {
+            "path": "migration/src/verify-user-doc.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-21D5C5C3A43F",
+      "expectedOccurrenceHash": "c0d88bbee0dfd910f4de11fe4135e699d2113b03afb6e944b60377d31e49b694",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-22F660D9A18F",
+      "expectedOccurrenceHash": "7c1700928e2e96708de83b39bc276ff4e05da2bb96065eb4a6e286352165aafa",
+      "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-storage-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "6af2ad9ff806bae5335f148ce53406324d90674666cf180df45dc20437fcb3b3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-storage-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-23A1FF3A1594",
+      "expectedOccurrenceHash": "2de41f1ddfe81247b19f96415713c188cc192bff81914411a7f7d1c8ca65477f",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-26A07E46748E",
+      "expectedOccurrenceHash": "3a3d5e3e1df54ddf76f384cb5c41775d88da620d4f9637c61fdba9da0cb54bdc",
+      "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+      "sourceRef": {
+        "path": "migration/src/budget-backfill.ts"
+      },
+      "expectedSourceOwnerHash": "6871d972964dcc883525692c889e9c94207a920300ad0b68a8b2af96f94886ca",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+          "sourceRef": {
+            "path": "migration/src/budget-backfill.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-29D39BBFC6D5",
+      "expectedOccurrenceHash": "d7236760b6a93370a764745983803fed347536b113ca75cbf22fff761900d36c",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2A17B9AFEF20",
+      "expectedOccurrenceHash": "b354d6d921e24991b03aa7079f35763bae0ffbe91ceddb8856dd16609075855c",
+      "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+      "sourceRef": {
+        "path": "migration/src/backfill-return-itemids.ts"
+      },
+      "expectedSourceOwnerHash": "462424d5716d1f52e622cf7c406048fe5dbaf76a0e2c946cc38591b852e2198b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+          "sourceRef": {
+            "path": "migration/src/backfill-return-itemids.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2A23DFA94913",
+      "expectedOccurrenceHash": "147490de4ce073a746d7dee68a99fd3fad92d8812a1949447c9667a73ad1fd5c",
+      "sourceOwnerSurfaceId": "FILE-220AAA67895E",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-uncategorized-movements.mjs"
+      },
+      "expectedSourceOwnerHash": "d9087c5ea4b78fda615378ddc6c73f8ec599e221197c9446f5ad81e6c4c11d08",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-220AAA67895E",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-uncategorized-movements.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2AEFC45E1ADE",
+      "expectedOccurrenceHash": "700334a0f76c5920724d0cc3ccb754f9954c210c0e094bd4d0bd6631dba5ff44",
+      "sourceOwnerSurfaceId": "FILE-B0DFEF68D8C0",
+      "sourceRef": {
+        "path": "scripts/migrate-transactions-to-fee-expense.mjs"
+      },
+      "expectedSourceOwnerHash": "fdfd97521073da774e4781088ee6df303adca5db92da6fea364d3b5a5700a204",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B0DFEF68D8C0",
+          "sourceRef": {
+            "path": "scripts/migrate-transactions-to-fee-expense.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-2DC0847AC9EF",
+      "expectedOccurrenceHash": "0f1884f90a165966e8a01eba4ee081a387bb96692a65e1b7157ae98b2c2328e2",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-31117A4DEA31",
+      "expectedOccurrenceHash": "4da04622bf1603a6f2de3d3b61fb835f6c5a381c022b7ac40e0ee597d1741630",
+      "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+      "sourceRef": {
+        "path": "migration/src/budget-backfill.ts"
+      },
+      "expectedSourceOwnerHash": "6871d972964dcc883525692c889e9c94207a920300ad0b68a8b2af96f94886ca",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+          "sourceRef": {
+            "path": "migration/src/budget-backfill.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-321372A4E33B",
+      "expectedOccurrenceHash": "c2debfb002c919a0392ea851d7df4e6d05358e2279f99048837fd61e467afaeb",
+      "sourceOwnerSurfaceId": "FILE-93CD4D9994C1",
+      "sourceRef": {
+        "path": "scripts/export-transaction-receipt-attachments.mjs"
+      },
+      "expectedSourceOwnerHash": "079e542f8cae1ce7f39c457a5b26637c347df27af2d4bc3cdc48badc34c4dd71",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-93CD4D9994C1",
+          "sourceRef": {
+            "path": "scripts/export-transaction-receipt-attachments.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-335482FDA089",
+      "expectedOccurrenceHash": "51a4ea05e2b72e4d3651b480ebaac8f54da138143caf741349b3c7d8c40a0c3c",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-350047804211",
+      "expectedOccurrenceHash": "fd68e7b0b910df974c8f62fa72dbf5cef5ae52d5667cd2baad93277b533189e0",
+      "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+      "sourceRef": {
+        "path": "scripts/audit-invoice-line-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "0d4ba239049653f8427a6d49a5a246fa4f17bc3db8b0b5659f2386165744c2fe",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+          "sourceRef": {
+            "path": "scripts/audit-invoice-line-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-351776CFA5E4",
+      "expectedOccurrenceHash": "6f8c24866863a43cf63533f33012b7030627e0c692f0736c63a66c5ba14f9361",
+      "sourceOwnerSurfaceId": "FILE-0FDA0D22FE61",
+      "sourceRef": {
+        "path": "scripts/strip-billing-status.mjs"
+      },
+      "expectedSourceOwnerHash": "f2de21a4fbf27c2ad248567b47a7d1abb7628f59a668b5dec1e60e425a82d4e5",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-0FDA0D22FE61",
+          "sourceRef": {
+            "path": "scripts/strip-billing-status.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-3A8F4EE03E44",
+      "expectedOccurrenceHash": "b69d0a6fd0be0deb68a018f3a0e152a859a78a7df2df3e84a71aac6c0073ecfc",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-3C7D312ECDA7",
+      "expectedOccurrenceHash": "a0e8b77cf77f6cf130a2c0741e08deb225d2c1a00d788e70da8e5c48e0294626",
+      "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+      "sourceRef": {
+        "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "095c3b8480b040a0229f16b9e7a83b825fbaf52e2397f6682cde559a13060732",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+          "sourceRef": {
+            "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-4056AFD672C3",
+      "expectedOccurrenceHash": "3fbf7139ca8b6bde9817449e5e1229d3c08b98874a1a91aaea320151c74f641e",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-41B8408F0C7B",
+      "expectedOccurrenceHash": "e28a3fc5cff731178f1acdb72875053d64296c4476cafe42406887c600acffbe",
+      "sourceOwnerSurfaceId": "FILE-1D6E44FA8F89",
+      "sourceRef": {
+        "path": "scripts/migrate-categories-add-supported-types.mjs"
+      },
+      "expectedSourceOwnerHash": "fa0e8cbdff557b1adbe0bb0ccdb75d6cb0a3b72236551a11344f9b2a261e8e23",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-1D6E44FA8F89",
+          "sourceRef": {
+            "path": "scripts/migrate-categories-add-supported-types.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-436CCD79506D",
+      "expectedOccurrenceHash": "06275f45a4b961705de2ab46313388781fbd4c4f3d190dc3a9a4ec4c20f2f0a0",
+      "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+      "sourceRef": {
+        "path": "migration/src/verify-user-doc.ts"
+      },
+      "expectedSourceOwnerHash": "a4c3b39df5971d207988eae5202b34b8e5887dc7d23a262c62fb3450e88d72b7",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+          "sourceRef": {
+            "path": "migration/src/verify-user-doc.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-46DEF0F26699",
+      "expectedOccurrenceHash": "3229507cdcba4c2733207e04e1f94da41e151339e5d609b67b49b2df71880e77",
+      "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+      "sourceRef": {
+        "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "095c3b8480b040a0229f16b9e7a83b825fbaf52e2397f6682cde559a13060732",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+          "sourceRef": {
+            "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-491194C7C744",
+      "expectedOccurrenceHash": "825f359c9ae94ce4c2a314cd80ce2df4ec4ac1e4722f8a83de4b79b667f3f636",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-519E0CA5C806",
+      "expectedOccurrenceHash": "b111316c995aa22ccdbaf9604bb298892a264103b48694f561d391d08df7f65d",
+      "sourceOwnerSurfaceId": "FILE-7E429B142402",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-project-price-floor.mjs"
+      },
+      "expectedSourceOwnerHash": "bbde4f010e1350cc86c249fa8eed3f7cc668d519a2d1175057e85fd0e607b0d3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7E429B142402",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-project-price-floor.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-5471CD413720",
+      "expectedOccurrenceHash": "ae181ab620b71325909ea88ad39a780d81be8fae5619c29b5db879ab9b5f187b",
+      "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+      },
+      "expectedSourceOwnerHash": "98ae2aa95ac330d986d97642c35aec72fbd5f17cc7126c463f6f4bda1656fbe8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-54A4D6F87EE4",
+      "expectedOccurrenceHash": "cc93106622cf678f9829bc19fec0b16a97ad9a7532f291466f36ffbad855b32f",
+      "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+      "sourceRef": {
+        "path": "migration/src/backfill-return-itemids.ts"
+      },
+      "expectedSourceOwnerHash": "462424d5716d1f52e622cf7c406048fe5dbaf76a0e2c946cc38591b852e2198b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+          "sourceRef": {
+            "path": "migration/src/backfill-return-itemids.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-5EFB8B5776A7",
+      "expectedOccurrenceHash": "59aa11b95d680268fbf573e71667503d2cd7f23cc12cd0e545cd2f685738ca21",
+      "sourceOwnerSurfaceId": "FILE-5EA6862C568C",
+      "sourceRef": {
+        "path": "migration/src/check-urls.ts"
+      },
+      "expectedSourceOwnerHash": "2e4fb72b38feb0205e02a50c693ccb317945958bf66535a5645276df9564eb54",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-5EA6862C568C",
+          "sourceRef": {
+            "path": "migration/src/check-urls.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-60598F30D032",
+      "expectedOccurrenceHash": "65c224c460b5ef3285eda94013a4a5c68b8b23d7e84aa11f0c57c5cba744b133",
+      "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+      "sourceRef": {
+        "path": "migration/src/backfill-return-itemids.ts"
+      },
+      "expectedSourceOwnerHash": "462424d5716d1f52e622cf7c406048fe5dbaf76a0e2c946cc38591b852e2198b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+          "sourceRef": {
+            "path": "migration/src/backfill-return-itemids.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-67AAACBF8FFE",
+      "expectedOccurrenceHash": "dbc4ac6409907eb4c3f577b3e57c5e9e6d115e53b4686e1402fc703c05c120f1",
+      "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+      "sourceRef": {
+        "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+      },
+      "expectedSourceOwnerHash": "625c2af9337c8bebf741060c038325c80967a6c90e622ad108cb241fcb6f11b8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+          "sourceRef": {
+            "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-68C563F55A3D",
+      "expectedOccurrenceHash": "a30222a30604f95a1b198fbfaa106367426e4e5dfcc68dd273a5b04b47e53aca",
+      "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+      "sourceRef": {
+        "path": "scripts/audit-category-type-migration.mjs"
+      },
+      "expectedSourceOwnerHash": "9cf38e1ad59f7522b672f928321caee396ccac3adceeaef489566fcf48f85015",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+          "sourceRef": {
+            "path": "scripts/audit-category-type-migration.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-6B9408800422",
+      "expectedOccurrenceHash": "b049e32f8d4294394ff952edfdee8f0281a966c699f3c6e39ce3589f92327710",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-6BE99F8B7AEA",
+      "expectedOccurrenceHash": "476d01e23e8b8f4d1e1e08fc51e3d8fb0dd35b45014de504f62714c0a8a9c621",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-6C3DFC501558",
+      "expectedOccurrenceHash": "6d269a07e20e8cec1393d888573f2fecd861a51e427636cde2ae0b211169a4d1",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-6E488A8AAEF4",
+      "expectedOccurrenceHash": "0a14177323424cf70f38737b4d69f5258a177b89575c440fd71a2f01904961b7",
+      "sourceOwnerSurfaceId": "FILE-953CF1791F7A",
+      "sourceRef": {
+        "path": "migration/src/media-only-migrate.ts"
+      },
+      "expectedSourceOwnerHash": "a7bc7bf802652a3a838dd88a2c63438ad3b1555434f98c4bc11282553a42f47b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-953CF1791F7A",
+          "sourceRef": {
+            "path": "migration/src/media-only-migrate.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-701CC6F507C7",
+      "expectedOccurrenceHash": "6c295689fb3169c7161303a43706aca15f5032480cea964fbdf90ea54375de52",
+      "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+      "sourceRef": {
+        "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+      },
+      "expectedSourceOwnerHash": "625c2af9337c8bebf741060c038325c80967a6c90e622ad108cb241fcb6f11b8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+          "sourceRef": {
+            "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-70C9EE011943",
+      "expectedOccurrenceHash": "83c5b8aaec0429902fdb8762ffefe20384a1c3554b8833282f0e8956091d7a0f",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-70DFD4B5C5D1",
+      "expectedOccurrenceHash": "f0c4ad80577696b49e7b3b9180d37c6c650d9722810f5ef5dc6ddd9bb86450ad",
+      "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+      "sourceRef": {
+        "path": "scripts/audit-invoice-line-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "0d4ba239049653f8427a6d49a5a246fa4f17bc3db8b0b5659f2386165744c2fe",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+          "sourceRef": {
+            "path": "scripts/audit-invoice-line-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-72C091717415",
+      "expectedOccurrenceHash": "babbacbf69221f2c468b7327d371bb18a5ddf09e9df193c739d2f5a0ea635c34",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-749AB0ECE416",
+      "expectedOccurrenceHash": "cce6f4f940af932fdd3a5fa62979baabb49bd60ca506396b2a12c229d5b32001",
+      "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+      "sourceRef": {
+        "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+      },
+      "expectedSourceOwnerHash": "625c2af9337c8bebf741060c038325c80967a6c90e622ad108cb241fcb6f11b8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+          "sourceRef": {
+            "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-79295AA3576A",
+      "expectedOccurrenceHash": "df3bf18024a10101f7b72fd4adb00802d246f29bfd1345c2e07e6de19c9ecee7",
+      "sourceOwnerSurfaceId": "FILE-953CF1791F7A",
+      "sourceRef": {
+        "path": "migration/src/media-only-migrate.ts"
+      },
+      "expectedSourceOwnerHash": "a7bc7bf802652a3a838dd88a2c63438ad3b1555434f98c4bc11282553a42f47b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-953CF1791F7A",
+          "sourceRef": {
+            "path": "migration/src/media-only-migrate.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-79879F718314",
+      "expectedOccurrenceHash": "976d1e1b7d8318ae9d7ded7780bc07ed1becc4444a0a57764bb70c3031f6c87a",
+      "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+      "sourceRef": {
+        "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "095c3b8480b040a0229f16b9e7a83b825fbaf52e2397f6682cde559a13060732",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+          "sourceRef": {
+            "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-7C53168935A6",
+      "expectedOccurrenceHash": "a7b67676a39e22257af2cb7de090f8e6ed660c357833e181a83fcd13489777b2",
+      "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+      "sourceRef": {
+        "path": "scripts/audit-mixed-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "cb78ef1af0a3dedd06e8371c143ff2f6fe175ca159c0c0d56bedc5a55f1c4ee0",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+          "sourceRef": {
+            "path": "scripts/audit-mixed-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-7EB1A2240868",
+      "expectedOccurrenceHash": "027643fdebcd5b84b9892d0f3d3b9d084793ee46c8e935d4f13312e480f46371",
+      "sourceOwnerSurfaceId": "FILE-346E890221AE",
+      "sourceRef": {
+        "path": "scripts/backfill-invoice-lines.mjs"
+      },
+      "expectedSourceOwnerHash": "f23457834a908987051d7f22a75d044e0475bf65c9a04ce510382cc14be26c54",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-346E890221AE",
+          "sourceRef": {
+            "path": "scripts/backfill-invoice-lines.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-81B4539ED39A",
+      "expectedOccurrenceHash": "07201aa57b9ccaa014739a77dce3beddb00dc007e3548ebaecd89ce6977e4c1c",
+      "sourceOwnerSurfaceId": "FILE-1D6E44FA8F89",
+      "sourceRef": {
+        "path": "scripts/migrate-categories-add-supported-types.mjs"
+      },
+      "expectedSourceOwnerHash": "fa0e8cbdff557b1adbe0bb0ccdb75d6cb0a3b72236551a11344f9b2a261e8e23",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-1D6E44FA8F89",
+          "sourceRef": {
+            "path": "scripts/migrate-categories-add-supported-types.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-849742DA3C77",
+      "expectedOccurrenceHash": "0aaa081d35fe99608efde26aefca8dac01dbf650461881229d3c3167e2942aff",
+      "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+      "sourceRef": {
+        "path": "scripts/migrate-transaction-taxonomy.mjs"
+      },
+      "expectedSourceOwnerHash": "34e3905d4eb7068c82c804dbae10a6867318b2d98ba2406733ec49169e4ece49",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+          "sourceRef": {
+            "path": "scripts/migrate-transaction-taxonomy.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-8642E9C8FCE5",
+      "expectedOccurrenceHash": "0344513c76037e0a497b1f131851c160d3fe9833a8a66032693c50255c6aadf2",
+      "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+      "sourceRef": {
+        "path": "scripts/audit-category-type-migration.mjs"
+      },
+      "expectedSourceOwnerHash": "9cf38e1ad59f7522b672f928321caee396ccac3adceeaef489566fcf48f85015",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+          "sourceRef": {
+            "path": "scripts/audit-category-type-migration.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-867B14AB25AC",
+      "expectedOccurrenceHash": "542722c1f89dbe831503f568e0cb0cd9ad91358aaf0d8e26b04f8448a5d0fa4f",
+      "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+      "sourceRef": {
+        "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "095c3b8480b040a0229f16b9e7a83b825fbaf52e2397f6682cde559a13060732",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+          "sourceRef": {
+            "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-8853D2634E23",
+      "expectedOccurrenceHash": "7315965c5a6acc5e735e80254eac0dd4dabaec55221a51a05db1e42814037d27",
+      "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+      "sourceRef": {
+        "path": "scripts/migrate-transaction-taxonomy.mjs"
+      },
+      "expectedSourceOwnerHash": "34e3905d4eb7068c82c804dbae10a6867318b2d98ba2406733ec49169e4ece49",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+          "sourceRef": {
+            "path": "scripts/migrate-transaction-taxonomy.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-89A9C00DB875",
+      "expectedOccurrenceHash": "4ee3a90601a434e17d3762ceb55586d250ec05b56d97573cdb4cf549594ea1c3",
+      "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+      "sourceRef": {
+        "path": "scripts/audit-invoice-line-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "0d4ba239049653f8427a6d49a5a246fa4f17bc3db8b0b5659f2386165744c2fe",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+          "sourceRef": {
+            "path": "scripts/audit-invoice-line-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-8A017132A150",
+      "expectedOccurrenceHash": "ba87e90abc3b0594959ecde1cb3b2656c592c54867eeabb34a79dc56d1e22a6c",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-8A91CA7E0E4C",
+      "expectedOccurrenceHash": "9d5bf34f48cf40444e9c248d2bb71ffe1bfe15a004e6c75b6a10d8ded06fd223",
+      "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+      "sourceRef": {
+        "path": "scripts/migrate-transaction-taxonomy.mjs"
+      },
+      "expectedSourceOwnerHash": "34e3905d4eb7068c82c804dbae10a6867318b2d98ba2406733ec49169e4ece49",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+          "sourceRef": {
+            "path": "scripts/migrate-transaction-taxonomy.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-8FD38D3C36B5",
+      "expectedOccurrenceHash": "4d0ed828e7dd733131c9ef25862254987abf25ed30ca5011a78a37c55b96bb54",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-90039C772BA3",
+      "expectedOccurrenceHash": "e147839bce2c8e82893a732469b5c8946c1be5ca3b75440c170ddbcf6691d3b7",
+      "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "f2ea15bcf8a8b319faeb0dcc60f962d8527dee836e52a0ac73a48a452acd7f02",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B4119B3F03F3",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-firestore-auth-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-92B22169EA18",
+      "expectedOccurrenceHash": "08c8d7d2e6365c1f12942f6212cff831f230db11ebe809dc30414cd839ed7520",
+      "sourceOwnerSurfaceId": "FILE-DE824BF0DB8F",
+      "sourceRef": {
+        "path": "migration/src/migrate-images-only.ts"
+      },
+      "expectedSourceOwnerHash": "7f07c71adfbdc3df099ce044a1113354703aee3a2f4a796487f86348fa3a2684",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DE824BF0DB8F",
+          "sourceRef": {
+            "path": "migration/src/migrate-images-only.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-92F859AB41C3",
+      "expectedOccurrenceHash": "88647a73309b50b952681b04c16e2c1896e2ceac80bc250393711df12e6c731d",
+      "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+      "sourceRef": {
+        "path": "scripts/audit-mixed-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "cb78ef1af0a3dedd06e8371c143ff2f6fe175ca159c0c0d56bedc5a55f1c4ee0",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+          "sourceRef": {
+            "path": "scripts/audit-mixed-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-933918424959",
+      "expectedOccurrenceHash": "dd4878a4d5a126e75eb8f479bd5f8daf3e7a5dcedd16cd9a9651e7fbb2a2fabc",
+      "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+      "sourceRef": {
+        "path": "scripts/audit-invoice-line-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "0d4ba239049653f8427a6d49a5a246fa4f17bc3db8b0b5659f2386165744c2fe",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-F9A79784D576",
+          "sourceRef": {
+            "path": "scripts/audit-invoice-line-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-99A1C0E45C60",
+      "expectedOccurrenceHash": "7ebd9547d57e5b39003236d04184ed8528fb0163bd6f6c00fe196939cb89d06b",
+      "sourceOwnerSurfaceId": "FILE-7E429B142402",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-project-price-floor.mjs"
+      },
+      "expectedSourceOwnerHash": "bbde4f010e1350cc86c249fa8eed3f7cc668d519a2d1175057e85fd0e607b0d3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7E429B142402",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-project-price-floor.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A1278FC131CA",
+      "expectedOccurrenceHash": "a64e933187134c82637798024fe4c21670a44a1c547477e27d2b244cf149aa26",
+      "sourceOwnerSurfaceId": "FILE-42005FEF8FD8",
+      "sourceRef": {
+        "path": "scripts/migrate-transactions-delete-needsReview.mjs"
+      },
+      "expectedSourceOwnerHash": "474031212865a7bf562478d5900158b080900286585bfeef188cebd088966c70",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-42005FEF8FD8",
+          "sourceRef": {
+            "path": "scripts/migrate-transactions-delete-needsReview.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A1372680A237",
+      "expectedOccurrenceHash": "bac5dfbe8ccc529f9f72a89740bbe5d0a418535c94b3861438ec43d1c7c21c42",
+      "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-storage-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "6af2ad9ff806bae5335f148ce53406324d90674666cf180df45dc20437fcb3b3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-storage-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A31BBF018593",
+      "expectedOccurrenceHash": "57d681937247bfce65003fb84b74224deab27f613e11d0b9fe038735cdef3d43",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A391A17970BE",
+      "expectedOccurrenceHash": "9372d8514d17c9f4328cc4a3e08eb6e85e37b14c6c5f8eccbacabcadf45b7dc3",
+      "sourceOwnerSurfaceId": "FILE-63127609E244",
+      "sourceRef": {
+        "path": "scripts/clear-legacy-transaction-status.mjs"
+      },
+      "expectedSourceOwnerHash": "8a04d3e636f0a40e5760702da681447e1feb2ee5ceba660c061cdd4aa4f289e8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-63127609E244",
+          "sourceRef": {
+            "path": "scripts/clear-legacy-transaction-status.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A3C7BFE7C3AB",
+      "expectedOccurrenceHash": "5ca3803b408947923332db506659ad8e123d68a2c02e080516eb7b7798e68f83",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A86EA37AFBAE",
+      "expectedOccurrenceHash": "86b9d5ab5964381383e156402908cb20ccb85f0b507856e54ab26d31f931b62c",
+      "sourceOwnerSurfaceId": "FILE-BD14FF765DF6",
+      "sourceRef": {
+        "path": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs"
+      },
+      "expectedSourceOwnerHash": "dad604400b9a30377332c4e4a71721d9e865b0e88cd3618d37e9c6c12ec7ec36",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-BD14FF765DF6",
+          "sourceRef": {
+            "path": "scripts/repair-1584-budget-category-and-transaction-integrity.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A8F2629CAE1B",
+      "expectedOccurrenceHash": "0984f7420d34df3d833b6d0ea68c3a255b5362eb71cdf362b93dd3b2bf65acbb",
+      "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-storage-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "6af2ad9ff806bae5335f148ce53406324d90674666cf180df45dc20437fcb3b3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-storage-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-A989BEC8C74F",
+      "expectedOccurrenceHash": "54f7350ba97dae77a872f8549d7d2fe67cc28e072a7fe3978d1a27307c5130c0",
+      "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+      "sourceRef": {
+        "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "095c3b8480b040a0229f16b9e7a83b825fbaf52e2397f6682cde559a13060732",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A0F0403EA66A",
+          "sourceRef": {
+            "path": "scripts/repair-hal-roe-missing-budget-categories.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-AE11A64E1E17",
+      "expectedOccurrenceHash": "a9d3eb37336233750ae3a197337f96be3e546d160f843aa0b2acf1c2c54b45a4",
+      "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+      "sourceRef": {
+        "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+      },
+      "expectedSourceOwnerHash": "625c2af9337c8bebf741060c038325c80967a6c90e622ad108cb241fcb6f11b8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+          "sourceRef": {
+            "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B109728FCB49",
+      "expectedOccurrenceHash": "9cdf0bafe5c9ca87ef40f991a79eeb98acf33e0f8c960c86ac3bb6bea157e5b2",
+      "sourceOwnerSurfaceId": "FILE-DE824BF0DB8F",
+      "sourceRef": {
+        "path": "migration/src/migrate-images-only.ts"
+      },
+      "expectedSourceOwnerHash": "7f07c71adfbdc3df099ce044a1113354703aee3a2f4a796487f86348fa3a2684",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DE824BF0DB8F",
+          "sourceRef": {
+            "path": "migration/src/migrate-images-only.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B478F8C7BFD0",
+      "expectedOccurrenceHash": "b39dd604d9af0f79cb59a2dcaf89f21510badb8c104d4d1bb3ec653f664f0d1d",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B527D3337DFB",
+      "expectedOccurrenceHash": "8f7918d313e7a56467445fbe2ebb90bfb4278e2cad766d581317d0b40f47a79d",
+      "sourceOwnerSurfaceId": "FILE-346E890221AE",
+      "sourceRef": {
+        "path": "scripts/backfill-invoice-lines.mjs"
+      },
+      "expectedSourceOwnerHash": "f23457834a908987051d7f22a75d044e0475bf65c9a04ce510382cc14be26c54",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-346E890221AE",
+          "sourceRef": {
+            "path": "scripts/backfill-invoice-lines.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B7620E3A1719",
+      "expectedOccurrenceHash": "c7e3170fa0632dee65ab574089b112aacd1ae54c2f77ed51f407e2ce28562d4f",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-B9BC3D6DFAAF",
+      "expectedOccurrenceHash": "07b78288f846e3c2bc847617e2f29574b545609e5be592577266fc7c1928267f",
+      "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+      "sourceRef": {
+        "path": "migration/src/verify-user-doc.ts"
+      },
+      "expectedSourceOwnerHash": "a4c3b39df5971d207988eae5202b34b8e5887dc7d23a262c62fb3450e88d72b7",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+          "sourceRef": {
+            "path": "migration/src/verify-user-doc.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BBEE718A1886",
+      "expectedOccurrenceHash": "a2c5f0739b35301cf344cea44f83383044c059616427d74b3a88fbaa62a63f4e",
+      "sourceOwnerSurfaceId": "FILE-B0DFEF68D8C0",
+      "sourceRef": {
+        "path": "scripts/migrate-transactions-to-fee-expense.mjs"
+      },
+      "expectedSourceOwnerHash": "fdfd97521073da774e4781088ee6df303adca5db92da6fea364d3b5a5700a204",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-B0DFEF68D8C0",
+          "sourceRef": {
+            "path": "scripts/migrate-transactions-to-fee-expense.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BCE0A6EC4DA3",
+      "expectedOccurrenceHash": "829ecb4ac577ca1a170b49fc465199c46766728cb4f215bc105283f45a3ed66f",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BDE61B710942",
+      "expectedOccurrenceHash": "c0ecfbe7d2b183bd7441bb6377575cf0ddad82fb63e62450964d3ff608806e54",
+      "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-storage-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "6af2ad9ff806bae5335f148ce53406324d90674666cf180df45dc20437fcb3b3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-storage-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-BE1AB8AD1635",
+      "expectedOccurrenceHash": "42f0dd48c8469630cf6d5e483f15562f70c7e0956e181003206f03ca9b853694",
+      "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+      },
+      "expectedSourceOwnerHash": "98ae2aa95ac330d986d97642c35aec72fbd5f17cc7126c463f6f4bda1656fbe8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C0A8A8A0C835",
+      "expectedOccurrenceHash": "0ad8a27209ecf080782d78e3f82d29fff48107869efdd0e516b87acf8d89c6e9",
+      "sourceOwnerSurfaceId": "FILE-666B71D31EE1",
+      "sourceRef": {
+        "path": "scripts/revert-transactions-to-fee-expense.mjs"
+      },
+      "expectedSourceOwnerHash": "264000734f917f62f4bffd7b5eb382517896fa8588e38bc7c059063c204da96b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-666B71D31EE1",
+          "sourceRef": {
+            "path": "scripts/revert-transactions-to-fee-expense.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C450E6F7639E",
+      "expectedOccurrenceHash": "3c31d55230428a133673937513402a3553656959ed77b55d6cbeda1ce358c977",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C46355DD6930",
+      "expectedOccurrenceHash": "d7e804321bc7d0ebd05bc7ed8c1e925d06394098abf05ac310216a536444edee",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C56DDF1A6AC2",
+      "expectedOccurrenceHash": "81c07eb4a025e938fdf2e1c57cfa94bac645aeb231e51c3474a20c312a380bc9",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C6B16594B5BD",
+      "expectedOccurrenceHash": "7c297313379f1495b1d4eb2460b6063785053356982dcfb9887c5fcf00b623e5",
+      "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+      "sourceRef": {
+        "path": "migration/src/backfill-return-itemids.ts"
+      },
+      "expectedSourceOwnerHash": "462424d5716d1f52e622cf7c406048fe5dbaf76a0e2c946cc38591b852e2198b",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E2260562EE79",
+          "sourceRef": {
+            "path": "migration/src/backfill-return-itemids.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C85875C0D6EB",
+      "expectedOccurrenceHash": "efe59d6f6da199d257f346f91117108903e56b97e73e61417c70a75b80e74060",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-C99E0D246C54",
+      "expectedOccurrenceHash": "eb18724a3662d6a4aba6ad7015567346a46033673200eb3783031a34e5706eb1",
+      "sourceOwnerSurfaceId": "FILE-F47E5F16E9BB",
+      "sourceRef": {
+        "path": "migration/src/fix-assiist-biz-uid.ts"
+      },
+      "expectedSourceOwnerHash": "cb60d6b2ad5f6ac6f268833790cbb76dd25d47ed642b16c7c0e880a9d7d84ca5",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-F47E5F16E9BB",
+          "sourceRef": {
+            "path": "migration/src/fix-assiist-biz-uid.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CD9ACCE9C2F1",
+      "expectedOccurrenceHash": "a3f9e3b6a91ad22290e9e7f30f8f9fbef4a3e8b2c8e7c4ae452d61e9899c3234",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CE5D967C536F",
+      "expectedOccurrenceHash": "0eb91e6402daeec6e548f8c375c68fbf2aa4e256878ee44020355373823c0ca8",
+      "sourceOwnerSurfaceId": "FILE-CCEE1B274901",
+      "sourceRef": {
+        "path": "migration/src/regen-thumbnails.ts"
+      },
+      "expectedSourceOwnerHash": "2b3ae98ad1c635b44e938a99c5a65acff23e7f790355fc95d20609a14b55c148",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-CCEE1B274901",
+          "sourceRef": {
+            "path": "migration/src/regen-thumbnails.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-CFF03AFFEB33",
+      "expectedOccurrenceHash": "67284c6c2df17ee07040ddf7918b025ddfceab288cbfa0cf0df295125ab754a1",
+      "sourceOwnerSurfaceId": "FILE-CCEE1B274901",
+      "sourceRef": {
+        "path": "migration/src/regen-thumbnails.ts"
+      },
+      "expectedSourceOwnerHash": "2b3ae98ad1c635b44e938a99c5a65acff23e7f790355fc95d20609a14b55c148",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-CCEE1B274901",
+          "sourceRef": {
+            "path": "migration/src/regen-thumbnails.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D36B694A0573",
+      "expectedOccurrenceHash": "a03522b6051d09d506339f09d0ddfd73227445b875445d5e501914dd5fd80485",
+      "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+      "sourceRef": {
+        "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+      },
+      "expectedSourceOwnerHash": "ed9ebb60e96cadbba34f755c8bffc115986783fa74bd7f199c7557aec10fc635",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-845DA9FA06B6",
+          "sourceRef": {
+            "path": "scripts/audit-active-project-zero-price-sold-items.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D51AB7C74DF9",
+      "expectedOccurrenceHash": "85eff09f53b9d8b4b674c377d2a996bb3ecc5db424c2851f76211110a703a308",
+      "sourceOwnerSurfaceId": "FILE-6200888CA628",
+      "sourceRef": {
+        "path": "migration/src/audit-parity.ts"
+      },
+      "expectedSourceOwnerHash": "6f7438357f85e52a0e7e7e92abde973910b781842cffbec64a3611d9b1099088",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-6200888CA628",
+          "sourceRef": {
+            "path": "migration/src/audit-parity.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D69B66E7ADBC",
+      "expectedOccurrenceHash": "5bb477896bd55e50bf2d56fb22c1d1ac0bfe1e60d43fc7f2bb8cac15c04e1909",
+      "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+      "sourceRef": {
+        "path": "scripts/repair-1584-install-category-blockers.mjs"
+      },
+      "expectedSourceOwnerHash": "1159684d90c99f8de431a162302794b6dbca637f56be576c566f65061b428b83",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+          "sourceRef": {
+            "path": "scripts/repair-1584-install-category-blockers.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D6E2560673A0",
+      "expectedOccurrenceHash": "611cf55830aa8380c9ed06e8bf5dd8ba1b8f6d817f2b5086cb7c24ae2db5144e",
+      "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+      "sourceRef": {
+        "path": "scripts/audit-mixed-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "cb78ef1af0a3dedd06e8371c143ff2f6fe175ca159c0c0d56bedc5a55f1c4ee0",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+          "sourceRef": {
+            "path": "scripts/audit-mixed-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D7C1321AD168",
+      "expectedOccurrenceHash": "bacdfc89ae1ab5e7446c68674ebff9a0df550e029a752c00abedd400e7217457",
+      "sourceOwnerSurfaceId": "FILE-346E890221AE",
+      "sourceRef": {
+        "path": "scripts/backfill-invoice-lines.mjs"
+      },
+      "expectedSourceOwnerHash": "f23457834a908987051d7f22a75d044e0475bf65c9a04ce510382cc14be26c54",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-346E890221AE",
+          "sourceRef": {
+            "path": "scripts/backfill-invoice-lines.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-D8CC486F02DB",
+      "expectedOccurrenceHash": "5f06dc6d0d7154a6159457a81a7d5cbbe7cb7028a8b0b1e80a01e2abd46db680",
+      "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+      "sourceRef": {
+        "path": "scripts/audit-mixed-categories.mjs"
+      },
+      "expectedSourceOwnerHash": "cb78ef1af0a3dedd06e8371c143ff2f6fe175ca159c0c0d56bedc5a55f1c4ee0",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-01858E7D6F2F",
+          "sourceRef": {
+            "path": "scripts/audit-mixed-categories.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-DE56EFFCD656",
+      "expectedOccurrenceHash": "8702d7c5fec3a788dff996ef1a40b0ca352bf8771ca422f8b35ef4171f2da878",
+      "sourceOwnerSurfaceId": "FILE-8F9B6867A7A9",
+      "sourceRef": {
+        "path": "scripts/repair-witzenman-inperson-lineage.mjs"
+      },
+      "expectedSourceOwnerHash": "cffaf36ef42a43ebeb42004ff6793b55d66754a060a20674506bd4d173bfa7c3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-8F9B6867A7A9",
+          "sourceRef": {
+            "path": "scripts/repair-witzenman-inperson-lineage.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E189482AEBC5",
+      "expectedOccurrenceHash": "692a10ef14f9bfeb39145e87a6ca5463a1aa30333754c5ed24620b5fe837d678",
+      "sourceOwnerSurfaceId": "FILE-0FDA0D22FE61",
+      "sourceRef": {
+        "path": "scripts/strip-billing-status.mjs"
+      },
+      "expectedSourceOwnerHash": "f2de21a4fbf27c2ad248567b47a7d1abb7628f59a668b5dec1e60e425a82d4e5",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-0FDA0D22FE61",
+          "sourceRef": {
+            "path": "scripts/strip-billing-status.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E1944123FC24",
+      "expectedOccurrenceHash": "15bbc93019d5cef20f3cf6801634ad560924ba8ff12b110887abe71a09215931",
+      "sourceOwnerSurfaceId": "FILE-220AAA67895E",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-uncategorized-movements.mjs"
+      },
+      "expectedSourceOwnerHash": "d9087c5ea4b78fda615378ddc6c73f8ec599e221197c9446f5ad81e6c4c11d08",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-220AAA67895E",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-uncategorized-movements.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E267B35D02A0",
+      "expectedOccurrenceHash": "46566f2cc4d81afdc58ab26b951acce0c36a2b35241be4d389a4b62c8f09e40c",
+      "sourceOwnerSurfaceId": "FILE-58B5ED36AB1D",
+      "sourceRef": {
+        "path": "migration/src/fix-thumbnails.ts"
+      },
+      "expectedSourceOwnerHash": "e9989cf4a7bd16a85ad5d48bc50fe829dac3a05723ac75c410f1545bcfa141ca",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-58B5ED36AB1D",
+          "sourceRef": {
+            "path": "migration/src/fix-thumbnails.ts"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E457BD2C9C1C",
+      "expectedOccurrenceHash": "8d6c920e88df6bf11a05a7f1c43a76b6179731cfcc9473af6dbf19438b0af847",
+      "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+      "sourceRef": {
+        "path": "scripts/audit-category-type-migration.mjs"
+      },
+      "expectedSourceOwnerHash": "9cf38e1ad59f7522b672f928321caee396ccac3adceeaef489566fcf48f85015",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+          "sourceRef": {
+            "path": "scripts/audit-category-type-migration.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E4FA2B2C8E66",
+      "expectedOccurrenceHash": "574b98ca073aa16d4b3adc6742957d45a6fba08fa7902dce082166c188217626",
+      "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+      },
+      "expectedSourceOwnerHash": "98ae2aa95ac330d986d97642c35aec72fbd5f17cc7126c463f6f4bda1656fbe8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-5B2F34D7EB06",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-item-current-source.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E56EA8C6D287",
+      "expectedOccurrenceHash": "1d3d895649280024dea24c47cfe5041c556f256b30431a404cbff75557e7aed0",
+      "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+      "sourceRef": {
+        "path": "scripts/audit-category-type-migration.mjs"
+      },
+      "expectedSourceOwnerHash": "9cf38e1ad59f7522b672f928321caee396ccac3adceeaef489566fcf48f85015",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+          "sourceRef": {
+            "path": "scripts/audit-category-type-migration.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E68D019E19DA",
+      "expectedOccurrenceHash": "0dfef9d1c77f078127352c36f79504ae94ab5c417567a3c233b4d82f5cf95e69",
+      "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+      "sourceRef": {
+        "path": "scripts/collect-item-tag-fixtures.mjs"
+      },
+      "expectedSourceOwnerHash": "bcbfd00fc2037a06b52cc63ed89f5b0b3ba1ec30162c7f2dc75dab8b07ef87d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-DA9A57B158D0",
+          "sourceRef": {
+            "path": "scripts/collect-item-tag-fixtures.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E7671F837881",
+      "expectedOccurrenceHash": "3314c36df69a41d5c72ad4696a1cfd3efd86b4b6d250e3a524f9d20baa00891c",
+      "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+      "sourceRef": {
+        "path": "scripts/repair-1584-install-category-blockers.mjs"
+      },
+      "expectedSourceOwnerHash": "1159684d90c99f8de431a162302794b6dbca637f56be576c566f65061b428b83",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-4CBBAFBED6BB",
+          "sourceRef": {
+            "path": "scripts/repair-1584-install-category-blockers.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-E939256F42F5",
+      "expectedOccurrenceHash": "1e65aaea7d3183366aa6222f6542e6b39d788adb5cb1486142d2052d6a7c46d8",
+      "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+      "sourceRef": {
+        "path": "scripts/profile-firebase-storage-readonly.mjs"
+      },
+      "expectedSourceOwnerHash": "6af2ad9ff806bae5335f148ce53406324d90674666cf180df45dc20437fcb3b3",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-AE9A316AEDEF",
+          "sourceRef": {
+            "path": "scripts/profile-firebase-storage-readonly.mjs"
+          },
+          "purpose": "profiling",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-EB10F4D6AA48",
+      "expectedOccurrenceHash": "ff672a3a093f47d35e6e88e1a16088bc7e0a6462864442eac2c0952d0448af10",
+      "sourceOwnerSurfaceId": "FILE-CB878013686E",
+      "sourceRef": {
+        "path": "scripts/repair-kapcsos-zero-project-prices.mjs"
+      },
+      "expectedSourceOwnerHash": "5e5ce9b9b554f3c6f28b6060f05b36bcdd51b6fb648fc5769f5cd4f107b2d652",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-CB878013686E",
+          "sourceRef": {
+            "path": "scripts/repair-kapcsos-zero-project-prices.mjs"
+          },
+          "purpose": "repair",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-EE773FFA56C6",
+      "expectedOccurrenceHash": "e74d592db7fd4fd606b73f712a0b8a59205f22f0a1a1c908be9d70ff7fb4baad",
+      "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+      "sourceRef": {
+        "path": "scripts/migrate-transaction-taxonomy.mjs"
+      },
+      "expectedSourceOwnerHash": "34e3905d4eb7068c82c804dbae10a6867318b2d98ba2406733ec49169e4ece49",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-7276A7F79405",
+          "sourceRef": {
+            "path": "scripts/migrate-transaction-taxonomy.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-F8C4D7F1A5FD",
+      "expectedOccurrenceHash": "5dfdf2bb16294e0ba179a2910c7e11becff900ea4434f139990254bac2b9bc11",
+      "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+      "sourceRef": {
+        "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+      },
+      "expectedSourceOwnerHash": "625c2af9337c8bebf741060c038325c80967a6c90e622ad108cb241fcb6f11b8",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-008C2AF1A269",
+          "sourceRef": {
+            "path": "scripts/audit-transaction-taxonomy-impact.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-F9A47DB6E556",
+      "expectedOccurrenceHash": "d6495770d4869c800debbdec23d27ff9280f8f17289d39dcedd009500eebdc64",
+      "sourceOwnerSurfaceId": "FILE-42005FEF8FD8",
+      "sourceRef": {
+        "path": "scripts/migrate-transactions-delete-needsReview.mjs"
+      },
+      "expectedSourceOwnerHash": "474031212865a7bf562478d5900158b080900286585bfeef188cebd088966c70",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-42005FEF8FD8",
+          "sourceRef": {
+            "path": "scripts/migrate-transactions-delete-needsReview.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-FA8478EA29CE",
+      "expectedOccurrenceHash": "a4df75bab4543c20c0e110b1d9c4d6372409f575bec6818d99c9355252ab1627",
+      "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+      "sourceRef": {
+        "path": "scripts/audit-category-type-migration.mjs"
+      },
+      "expectedSourceOwnerHash": "9cf38e1ad59f7522b672f928321caee396ccac3adceeaef489566fcf48f85015",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-9476860F2E0F",
+          "sourceRef": {
+            "path": "scripts/audit-category-type-migration.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-FAAB2018EC69",
+      "expectedOccurrenceHash": "ee8d04091c9f80da5688d7e8d26717c46d2e676d96f06de6702e4d2e48586f3d",
+      "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+      "sourceRef": {
+        "path": "migration/src/budget-backfill.ts"
+      },
+      "expectedSourceOwnerHash": "6871d972964dcc883525692c889e9c94207a920300ad0b68a8b2af96f94886ca",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-E9D5488DD76F",
+          "sourceRef": {
+            "path": "migration/src/budget-backfill.ts"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-FC95EF49090A",
+      "expectedOccurrenceHash": "25a635e09e80adf45b08579daa520f7e07fd12596f65dd4962c6fe5b6117f1a8",
+      "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+      "sourceRef": {
+        "path": "migration/src/verify-user-doc.ts"
+      },
+      "expectedSourceOwnerHash": "a4c3b39df5971d207988eae5202b34b8e5887dc7d23a262c62fb3450e88d72b7",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-FE79A7FF0888",
+          "sourceRef": {
+            "path": "migration/src/verify-user-doc.ts"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-FE912248B2F2",
+      "expectedOccurrenceHash": "5935a1782989e8bce1c7b75c6bd97619e8e60ebe947050c54623c211dac7aed1",
+      "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+      "sourceRef": {
+        "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+      },
+      "expectedSourceOwnerHash": "2c24ca5d41fd7f9b1c6e06685c78b1a54f28c803b6086848f348bb198b760ded",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-2A0F5EACA247",
+          "sourceRef": {
+            "path": "scripts/audit-returned-paid-item-credit-transactions.mjs"
+          },
+          "purpose": "audit",
+          "retentionGate": "through_post_cutover_audit_signoff",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_post_cutover_audit_signoff",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    },
+    {
+      "queryId": "QUERY-FF693E6AFBE0",
+      "expectedOccurrenceHash": "b0064ed5a3579b0574c49542c84ba91a1c3282deb7a6f7e00911d380d3c05580",
+      "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+      },
+      "expectedSourceOwnerHash": "566fa8ff4adca6028187e2b0a44eb370e0cc65e056cb8792359e7cb9b254f6d4",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-A50BC51BFBA3",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/backfill-budget-summaries.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
+        }
+      ]
+    }
+  ],
+  "notes": "Human-reviewed source-only purpose, retention and source-mechanism retirement are populated for all 129 assigned rows; corrected-model independent review returned GO and status remains DRAFT pending immutable checkpoint evidence and aggregate implementation, with no physical target-access or production-execution claim."
 }

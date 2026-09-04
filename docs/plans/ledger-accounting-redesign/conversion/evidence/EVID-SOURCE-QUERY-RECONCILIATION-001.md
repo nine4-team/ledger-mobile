@@ -12,10 +12,18 @@
   `conversion/implementation-slices/source-query-reconciliation-control.json`
 - Production reads or mutations: none
 - Verification state: immutable DRAFT checkpoint `570f54a50405376ee4b642f1abc11ea04eb0a4bb`
-  passed GitHub Actions run `33861320397`, and evidence-sync commit
-  `b4d948e41f9ca6d5ea50da0ba9d8db6504ea06ae` passed run `33861762639`; all
-  386 QUERY IDs are human-reviewed and assigned exactly once, while 9 rows are
-  now populated and independently reviewed in two bounded pilots
+  passed GitHub Actions run `33861320397`, evidence-sync commit
+  `b4d948e41f9ca6d5ea50da0ba9d8db6504ea06ae` passed run `33861762639`, and
+  first scaled-population checkpoint `3504b473e16fc40b260652c001fdd6b903b81e40`
+  passed run `33862965822`; all 386 QUERY IDs are human-reviewed and assigned
+  exactly once; all 386 rows now carry 584 explicit outcomes. The 375-row
+  population plus retirement hardening passed bounded independent review. A
+  second reviewer re-derived all 386 occurrence/owner hashes and validated all
+  584 outcome bindings; its one O-041 scope/cursor finding is corrected. A
+  separate adversarial review found control-model gaps; the corrected lifecycle,
+  retention, retirement-authority, evidence-binding, compatibility-scope and
+  conflict-schema model passed bounded corrected-model re-review with no P0-P3
+  finding
 
 ## Draft Outcome
 
@@ -25,9 +33,19 @@ full source-query artifact, its source digest and the full verified target
 logical-authority artifact. Conversion-manifest references are bound per row
 through stable selected projections rather than a volatile full-manifest hash.
 Ten capability-sized batches contain a human-reviewed, disjoint and exhaustive
-assignment of all 386 QUERY IDs. Row population is now underway: 9 of 386 rows
-have passed both root review and a separate independent review, while the
-generator and test files remain comment-only.
+assignment of all 386 QUERY IDs. Row population is now complete at 386 rows and
+584 canonical outcomes. The first 375 rows and retirement hardening received
+root plus bounded independent review; findings corrected overbroad blockers,
+invalid target query mappings, and retirement authority that could otherwise
+bypass an unresolved source-owner blocker. Independent completion review then
+re-derived every occurrence/owner hash and checked all 584 canonical outcomes.
+The final 11 rows make six production-read evidence dependencies and eight
+product-authority dependencies explicit, with five rows correctly carrying
+both. Adversarial control review subsequently identified model-level weaknesses
+ordinary row validation did not expose. Those are corrected in DRAFT, and two
+bounded corrected-model reviews independently returned GO with no P0-P3
+finding. The generator and test files remain comment-only; immutable complete-
+DRAFT evidence and the exact READY freeze remain required before READY.
 
 The original DRAFT checkpoint established semantic batch ownership without
 choosing query outcomes. The current pilot adds reviewed outcomes but does not
@@ -38,46 +56,54 @@ the capability that must review its meaning. Mixed files, notably the Firebase
 function entry point, were split occurrence by occurrence rather than assigned
 as a file. No subsystem/path/symbol/expression rule produced the partition.
 
-## Reviewed Row-Population Pilots
+## Reviewed Row-Population Status
 
-Two deliberately small pilots tested subagent authoring plus root and independent
-quality control before scaling:
+The bounded subagent-author/root-review/independent-review process was first
+proved on Spaces/review and media, then scaled across the remaining capability
+batches. Current reviewed counts are:
 
-- `spaces-review.json`: all 8 assigned rows and 12 outcomes are populated. The
-  list/detail reads bind exact `ListSpacesQuery`/`GetSpaceQuery` target mappings;
-  the attachment transaction read binds the approved
-  `AttachmentOperations.attachToSpace` operation; and all four
-  `onSpaceArchived` reads remain exactly blocked on O-037 through their source
-  owner's `source_disposition`. Root and independent review returned GO with no
-  P0-P2 finding. Current file hash:
-  `47930d0459143508aebcab7439e93baa9587de77210b29024312bbe30eea9b3e`.
-- `media-lifecycle.json`: 1 of 3 assigned rows is populated. The Firebase Storage
-  emulator seed read is retained as source-only migration/rehearsal evidence and
-  its Firebase query mechanism retires only after verified target cutover under
-  A-017. `QUERY-FF1E88477925` and `QUERY-334B5E35D8A6` remain absent at DRAFT:
-  no exact current target authority binds their runtime destination-existence
-  and atomic attachment-reference read semantics, and inventing a mapping would
-  be unsound. Root and independent review returned GO with no P0-P2 finding.
-  Current file hash:
-  `ef19ee999a849de5e97253c0aa6120feddcc8b3cf14fda59c99d1436bbcfb3f2`.
+| Batch | Rows | Outcomes | Remaining QUERY IDs |
+|---|---:|---:|---|
+| Identity/lifecycle | 29/29 | 50 | none |
+| Projects/Clients/reference | 10/10 | 16 | none |
+| Inventory/Transactions/provenance | 123/123 | 126 | none |
+| Invoicing/collection/budget | 35/35 | 40 | none |
+| Item creation/accounting Link | 18/18 | 19 | none |
+| Media lifecycle | 3/3 | 6 | none |
+| Spaces/review | 8/8 | 12 | none |
+| Reporting/search/export | 13/13 | 18 | none |
+| Source migration/audit/repair/profile | 129/129 | 258 | none |
+| Platform/backend/control | 18/18 | 39 | none |
 
-The pilot result is 9 reviewed rows out of 386. It validates the bounded
-subagent/reviewer process, not READY completeness. The remaining 377
-assignments—including the two specifically absent media rows—still require
-exact authority and review before promotion.
+The final 11 rows do not manufacture resolution. Six use `evidence_blocked`
+against E-001/E-002 and the exact selected owner's matching blocker; eight use
+`authority_blocked` against O-023/O-038/O-040/O-041, with five rows carrying
+both independent blocker types. The two BatchWriting reads remain `source_only`
+for `current_source_compatibility` through verified cutover reconciliation, then
+retire only their Firebase mechanism after that reconciliation under A-017. No
+row claims a production read, resolved product decision or physical target
+implementation.
+
+Independent reviews already caused substantive corrections: the O-038 planning
+filters were removed from `ListTransactionsQuery`; O-026, O-035 and O-040 were
+prevented from authorizing unrelated semantics; O-041 now uses heterogeneous
+event cursors and distinguishes Inventory/1584 ownership from Project context;
+and behavior retirements now use only four independently extracted,
+content-hashed authority projections. Manifest disposition can no longer
+authorize its own retirement.
 
 The current draft hashes are:
 
 - generator scaffold:
-  `66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690`;
+  `8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c`;
 - test scaffold:
-  `f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758`;
+  `2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60`;
 - aggregate registry:
-  `219f7fc2b666fbcb836e550dd594a3647115d7422a23635a4f58d38a0d80a50e`;
+  `550e4e023ef314f99787b56d070b5d192b5d6bad3e9955c61106b6a305ccf48b`;
 - draft dossier:
-  `69a590269a7d047d15d2d24847a243d59ec975448ae690cb66e6f3323753afae`;
+  `51b3b244e53cdcbd0e3c61effbff80fec1ebc87070aea568da4dbab59103a210`;
 - product-authority crosswalk:
-  `71af1b9debb139febaa6d0912efd64361c81602ca68358731246e2f41e2a7f78`;
+  `92dbdf08b4aa4fa875817c974475eb92af95066b0594a022d9d44d29cf29a7d4`;
 - conversion discoverer:
   `8b1cc1ea52cfd864bebbdf7f77888c108147b205a6814838e9a7f639a9702cdd`;
   and
@@ -121,10 +147,11 @@ the uppercase first 12 hexadecimal characters of SHA-256 over UTF-8
 `${sourcePath}:${line}:${operation}`. Any mismatch fails closed.
 
 The machine binds the selected source owner/reference; it never infers owner
-from path or source mechanics. Each batch also has exact `assignedQueryIds`.
-At DRAFT, their pairwise-disjoint union must equal all 386 frozen IDs. During
-authoring, `rows` must be a subset of the batch assignments; at READY and later,
-the row-ID set must exactly equal them. Both ID arrays sort by ascending bytes.
+from path or source mechanics. Registry, ten batches and slice have one exact
+closed lifecycle. Each batch also has exact `assignedQueryIds`; their pairwise-
+disjoint union must equal all 386 frozen IDs. Only synchronized DRAFT authoring
+permits `rows` to be a subset of assignments. READY, implemented and verified
+require exact equality. Both ID arrays sort by ascending bytes.
 
 Outcome objects sort by their recursively canonicalized minified JSON bytes.
 They may be one-to-many because one source read can support more than one
@@ -143,13 +170,19 @@ independently authorized target or lifecycle outcome. The only categories are:
    a manifest `source_only` disposition, bounded purpose/retention gate and
    exact authority;
 5. `retired` — explicit behavior/mechanism scope, timing gate and exact
-   retirement authority; and
+   retirement authority;
 6. `authority_blocked` — one frozen `blockedScope`, nonempty unique named
    blocker IDs, and exact typed `{id,kind,path,section}` entries present in both
    the batch allowlist and registry authority table. Product O IDs point to
    `decision-log.md` section `Open Product Decisions`; architecture A IDs point
    to their exact `architecture-decisions.md` headings. O-021 and A-003/A-004
-   are forbidden.
+   are forbidden; and
+7. `evidence_blocked` — one evidence scope plus nonempty E IDs, exact registry
+   evidence entries and explicit selected bindings over the complete
+   QUERY-owner/ref/hash/blocker tuple. Each binding has a domain-separated
+   hash, appears in the batch allowlist and matches the selected manifest
+   owner's exact blocker. This records required evidence without claiming that
+   it exists or authorizing a production read.
 
 Authority-blocked cannot launder a blocker from unrelated authority. A
 `target_query_contract` outcome additionally binds the exact TQUERY/TACCESS/
@@ -171,30 +204,48 @@ mapping hash. `blocked` and `retired` status and `retire`/`source_only` target
 dispositions are rejected for future/nonquery target outcomes.
 
 Outcome category order is exactly verified target query, future target query,
-target nonquery, source-only, retired, then authority-blocked. Within a category,
-recursively canonicalized minified JSON bytes determine order. The dossier
-freezes identity fields and rejects duplicate identities.
+target nonquery, source-only, retired, authority-blocked, then evidence-blocked.
+Within a category, recursively canonicalized minified JSON bytes determine
+order. The dossier freezes identity fields and rejects duplicate identities.
 
-Source-only purpose is exactly one of `migration`, `audit`, `repair`, or
-`profiling`; retention is one of `through_migration_rehearsal`,
+Source-only purpose is exactly one of `migration`, `audit`, `repair`,
+`profiling`, or `current_source_compatibility`; retention is one of
+`through_migration_rehearsal`,
 `through_verified_cutover_reconciliation`, or
-`through_post_cutover_audit_signoff`. Retirement scope is exactly
-`source_query_mechanism_only` or `source_behavior`. Mechanism retirement uses
-only `after_verified_target_cutover` and requires a same-row replacement or
-source-only outcome. Behavior retirement uses only `at_verified_target_cutover`
-and requires either `{kind:"canonical_target_heading",path,section}` with an
-exact canonical target-spec path/heading,
-`{kind:"confirmed_decision",id:"D-NNN",path:"docs/plans/ledger-accounting-redesign/decision-log.md",section:"Confirmed Decisions"}` with that ID exactly once in that table section, or an `owner_manifest_retire` projection whose surface,
-sourceRef and hash equal the row owner and whose manifest disposition is
-`retire`. Arbitrary paths/headings are rejected. Behavior retirement cannot
-coexist with a same-row outcome preserving behavior.
-Authority-blocked scope is exactly target-query contract, target-nonquery
-contract, source disposition, or retirement and cannot duplicate a scope that
-the same row claims resolved.
+`through_post_cutover_audit_signoff`. `current_source_compatibility` is valid
+only for the two exact BatchWriting QUERY/owner/ref/hash bindings frozen in both
+the registry and dossier. Every source-only outcome carries the exact
+content-hashed A-017 lifecycle-authority binding rather than a bare path/heading.
+
+Retirement scope is exactly `source_query_mechanism_only` or
+`source_behavior`. One ordered milestone model requires mechanism retirement
+strictly after every same-row source-only retain-through obligation. Thus 60
+reconciliation-retained rows use `after_verified_cutover_reconciliation`, 42
+post-audit rows use `after_post_cutover_audit_signoff`, and only the 35 rows
+whose source obligation ends at migration rehearsal may retain
+`after_verified_target_cutover`. Source-only is a retention obligation and
+never counts as target replacement or present retirement. Every mechanism-
+retirement outcome carries the same independently re-derived content-hashed
+A-017 authority.
+
+Behavior retirement uses `at_verified_target_cutover` and an exact
+`retirementAuthorityId` plus domain-separated projection hash. The four
+allowlisted authorities are two unique canonical target headings, confirmed
+D-025's unique table row, and architecture decision A-017's unique heading.
+Their bounded content is independently re-extracted and hashed; arbitrary or
+stale headings/decisions and owner-manifest self-authorization reject.
+
+An exhaustive symmetric matrix normalizes every outcome category, evaluates
+every unordered pair through exact allow/deny/conditional values, and defines
+named gate/identity predicates plus cardinalities. In particular, behavior
+retirement conflicts with target/source preservation and any unresolved
+evidence; any retirement conflicts with an unresolved retirement outcome;
+source retention conflicts with an unresolved source disposition; and a target
+block conflicts only with the exact target identity it blocks.
 
 The registry freezes typed authority for A-007 target authentication, A-010
 provider-independent principals, A-015 complex-command optimistic projection
-and A-016 offline-access lease, plus O-002 through O-040 except UI-only O-021.
+and A-016 offline-access lease, plus O-002 through O-041 except UI-only O-021.
 Each batch carries only the byte-sorted subset semantically relevant to its
 assigned capability. An authority-blocked row may use only the intersection of
 that batch allowlist and registry table.
@@ -237,19 +288,29 @@ assignment counts are respectively 29, 10, 123, 35, 18, 3, 8, 13, 129 and 18.
 
 The exact registry-order counts are 29, 10, 123, 35, 18, 3, 8, 13, 129 and 18.
 Batch assignment is itself reviewed semantic ownership. A file, subsystem or
-symbol may contribute rows to different capability batches. Exact directory
-contents are the ten ordered batch filenames recorded in the dossier plus
+symbol may contribute rows to different capability batches. Registry
+path/batch-ID/owner objects exactly equal the dossier's ten frozen metadata
+entries. Exact directory contents are those ten ordered batch filenames plus
 `_template.json`; only that exact template filename is excluded by the future
-validator. No other underscore or JSON file receives implicit exclusion.
+validator. No other underscore, file, directory or symlink receives implicit
+exclusion. All nested objects are closed-schema and every input is a repository-
+contained regular non-symlink file.
 
 ## Lifecycle Boundary
 
-DRAFT changes only the exact 33-path allowlist recorded in the dossier, including
+DRAFT completion changes only the exact 40-path allowlist recorded in the
+dossier relative to `3504b473e16fc40b260652c001fdd6b903b81e40`, including
 the product-authority crosswalk addition that grants this technical-control
 batch the architecture-decisions authority directly. The two
 stable CONFIG owners are `target_mapped` with empty blockers while the slice
-remains DRAFT. READY requires all 386 rows, independent outcome review and
-synchronized hashes. Implementation may then replace only the two
+remains DRAFT. Corrected-model independent review is complete. READY still
+requires synchronized registry/batch/slice lifecycle, all 386 rows and
+synchronized immutable hashes. READY is
+classification completeness only: it may report unresolved authority/evidence
+outcomes and grants no implementation, migration, source-retirement,
+production, or cutover authority. The generated artifact must expose exact
+unresolved counts and downstream promotion/cutover consumers must reject
+applicable nonzero counts. Implementation may then replace only the two
 comment scaffolds, add one generated JSON artifact, add exact package commands
 and an Ubuntu conversion-control gate before target Swift work, and synchronize
 the same control metadata. Promotion records immutable CI and human review.
@@ -258,10 +319,12 @@ The current source and target generated query artifacts, target registry, all
 Swift query owners, package/workflow, schema, RLS, Sync, provider, hosted and
 production systems remain unchanged by this draft.
 
-Canonical production-profile evidence remains a precise dossier blocker only
-for later rows whose source use or retirement safety cannot be established from
-repository authority. It is not a blocker on either CONFIG surface and does not
-create an evidence-blocked outcome category.
+Canonical production-read evidence remains a precise row-level requirement for
+the six outcomes whose source use or reference safety cannot be established
+from repository authority. E-001/E-002 bind the exact required artifact and
+complete selected owner/ref/hash/blocker tuple through a re-derived binding
+hash; they are not evidence that a production read occurred. Neither is a
+blocker on the two CONFIG control surfaces.
 
 ## Immutable DRAFT Verification
 

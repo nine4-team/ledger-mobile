@@ -1,6 +1,6 @@
 # EVID-M2-DECISION-PACKETS-001 — High-Impact Residual Decision Packets
 
-- Timestamp: 2026-09-03 correction
+- Timestamp: 2026-09-04 O-041 amendment
 - Class: target mapping design / product-decision preparation
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
   from the history now carried by `firebase`; the historical audit began from a
@@ -12,8 +12,8 @@
 
 ## Result
 
-The deterministic 184-surface M2 residual is grouped under 46 exact blockers.
-Nineteen reviewable packets now cover all 38 product blockers in the generated
+The deterministic 184-surface M2 residual is grouped under 47 exact blockers.
+Twenty reviewable packets now cover all 39 product blockers in the generated
 queue:
 
 | Packet | Decisions | Unique surfaces in packet cluster |
@@ -37,6 +37,7 @@ queue:
 | Inventory destination planning | O-038 | 5 |
 | Project-note text validation | O-039 | 8 |
 | Project budget pinning | O-040 | 18 |
+| Vendor-spend report semantics | O-041 | 2 |
 
 Because surfaces can depend on multiple decisions, these clusters overlap.
 Together they touch all 177 residual surfaces that have any product-decision
@@ -77,10 +78,12 @@ The generated register validates every blocker against the product/architecture
 authority and lists every exact affected surface. Packet links are recorded in
 the decision log and product-to-architecture traceability rows.
 
-A structural audit of all nineteen packet files also verified each contains the
+A structural audit of the first nineteen packet files verified each contains the
 decision requested, confirmed constraints, mutually exclusive options,
 conceptual target ownership, authorization/Sync treatment, migration/
-reconciliation, acceptance tests, approval consequences, and checklist.
+reconciliation, acceptance tests, approval consequences, and checklist. The
+twentieth O-041 packet follows the same required shape and awaits its bounded
+independent final review with the source-query reconciliation control.
 
 ## Guardrails Preserved
 

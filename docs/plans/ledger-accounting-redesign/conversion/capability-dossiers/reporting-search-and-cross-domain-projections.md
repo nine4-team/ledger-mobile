@@ -206,6 +206,7 @@ per-tool accounting logic are not target contracts.
 | O-003–O-015/O-028–O-034 | Reports expose only approved credit, occurrence, receipt, correction, variance and sent-revision behavior; blocked semantics remain visibly unavailable |
 | O-035 | Client Summary financial labels and aggregation basis remain blocked; current active-Item “spent” is not adopted |
 | O-036 | Client-shared receipt inclusion/delivery remains blocked; raw paths and bearer URLs are prohibited regardless |
+| O-041 | Business Vendor Cash Movement payer perspective, included Purchase/Expense/Return facts, signs, scope/date basis, credit treatment, currency partition and exact label-snapshot grouping remain blocked; current raw Transaction sum is not adopted |
 
 ## Behavior Decisions
 
@@ -217,7 +218,7 @@ per-tool accounting logic are not target contracts.
 | Redesign | `UniversalSearchPage`, `ReportSnapshot`, and `ExportSnapshot`; one canonical query resolver per accounting/provenance value; Invoice live/frozen revision rendering; visibility-safe server aggregates; MCP queries over the same profiles; typed action capabilities that invoke owning commands |
 | Retire | Target ProtoItem search; generic all-reimbursable “Invoice” report; MCP raw/full document mode and arbitrary field picker; source `budgetSummary` report authority; legacy Sale/payment-to-business/reimbursement export fields as normal target columns; expiring Storage URL export |
 | Source only | Firebase array/query mechanics, legacy report/CSV shapes, cached summary values, status-only paid rendering and source parity fixtures after cutover |
-| Open | O-003–O-015/O-023/O-028–O-036, A-003/A-004/A-015/A-016, final target query/index measurements and migration classifications |
+| Open | O-003–O-015/O-023/O-028–O-036/O-041, A-003/A-004/A-015/A-016, final target query/index measurements and migration classifications |
 
 ## Target Query Contracts
 
@@ -309,7 +310,8 @@ List/search resources use opaque stable cursors and page sizes plus response-byt
 budgets. Truncation never changes the cursor contract. Analytics query canonical
 budget, Inventory, posting-readiness and provenance projections; they do not
 reimplement signs, infer payment from status, or query raw rows through a service
-credential without caller-bound policy.
+credential without caller-bound policy. No vendor-spend aggregate is a target
+contract until O-041 approves its payer perspective and exact accounting basis.
 
 ## Security and Privacy
 

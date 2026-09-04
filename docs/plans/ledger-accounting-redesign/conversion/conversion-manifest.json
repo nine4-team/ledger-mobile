@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T10:22:24.907Z",
+    "lastSynchronizedAt": "2026-09-04T12:14:28.488Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -595,10 +595,10 @@
           "path": "scripts/tests/generate-source-query-reconciliation.test.mjs"
         }
       ],
-      "observedSourceHash": "f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758",
-      "acknowledgedSourceHash": "f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758",
+      "observedSourceHash": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60",
+      "acknowledgedSourceHash": "2093c906b75cc1dd507d62eda0e752a1df8ffae9bafbcff07682e2d7329f1a60",
       "metadata": {},
-      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition and later row equality. It contains no executable tests and proves no QUERY outcome mapping.",
+      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition, complete row set, synchronized lifecycle, ordered retirement gates, exact authority/evidence binding and conflict matrix. It contains no executable tests and proves no aggregate control result.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -633,7 +633,7 @@
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, complete reconciliation rows or READY status.",
+      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, aggregate validation or READY status.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -1356,10 +1356,10 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690",
-      "acknowledgedSourceHash": "66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690",
+      "observedSourceHash": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c",
+      "acknowledgedSourceHash": "8a87ea132249c0008efea0793d592c6c0ff51c59465a7f808f13f1ba49ce182c",
       "metadata": {},
-      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. It contains no executable logic and makes no completeness, implementation, physical-access, provider, hosted, production, or cutover claim.",
+      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. All 386 reviewed rows are populated in separate data, but this leaf contains no executable logic and makes no machine-validation, implementation, physical-access, provider, hosted, production, or cutover claim.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -1376,7 +1376,7 @@
         ]
       },
       "migration": {
-        "rule": "Draft the control contract without classifying any QUERY occurrence or implementing a generator.",
+        "rule": "Draft the complete reviewed classification/control contract without implementing a generator.",
         "reconciliation": [
           "All 386 frozen QUERY IDs are human-reviewed into one exact capability batch at DRAFT; a later READY registry must contain one exact row for each assignment"
         ]
@@ -1395,7 +1395,7 @@
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, complete reconciliation rows or READY status.",
+      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, aggregate validation or READY status.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -6392,12 +6392,13 @@
       },
       "status": "characterized",
       "blockers": [
-        "Production logs/profile should confirm whether externally used"
+        "Production logs/profile should confirm whether externally used",
+        "O-040"
       ],
       "evidence": [
         "EVID-SOURCE-BACKEND-001"
       ],
-      "notes": "Current Admin-SDK authorization gap must not be reproduced; target Project creation is redesigned around Client identity.",
+      "notes": "Current Admin-SDK authorization gap must not be reproduced; canonical production evidence must establish runtime/source-data use, while O-040 owns the implicit Furnishings preference behavior. Target Project creation is redesigned around Client identity.",
       "classificationBatch": "M0-BACKEND-FUNCTIONS-001"
     },
     {
@@ -8773,12 +8774,13 @@
       "blockers": [
         "O-031",
         "O-032",
-        "O-035"
+        "O-035",
+        "O-041"
       ],
       "evidence": [
         "EVID-CAPABILITY-REPORTING-SEARCH-001"
       ],
-      "notes": "M2 withheld: O-031/O-032/O-035 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority.",
+      "notes": "M2 withheld: O-031/O-032/O-035/O-041 change report/analytics meaning, receipt delivery, posting readiness, vendor-spend aggregation or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority.",
       "classificationBatch": "M0-REPORTING-SEARCH-001"
     },
     {
@@ -11784,12 +11786,14 @@
         ]
       },
       "status": "target_mapped",
-      "blockers": [],
+      "blockers": [
+        "O-038"
+      ],
       "evidence": [
         "EVID-CAPABILITY-INVENTORY-TRANSACTION-001",
         "EVID-M2-INVENTORY-TRANSACTION-001"
       ],
-      "notes": "Target lists authorized local/server projections in stable event-date/time/ID order. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
+      "notes": "Target lists authorized local/server projections in stable event-date/time/ID order. O-038 separately blocks the source Purchase-level destination-planning filters; they are not part of the generic target Transaction query. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
     },
     {
@@ -12290,12 +12294,12 @@
       },
       "status": "characterized",
       "blockers": [
-        "O-035"
+        "O-041"
       ],
       "evidence": [
         "EVID-CAPABILITY-REPORTING-SEARCH-001"
       ],
-      "notes": "M2 withheld: O-035 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority.",
+      "notes": "M2 withheld: O-041 must define vendor-spend scope, sign, event basis, credit/Return treatment and currency partitioning. O-035 owns Client Summary and cannot authorize this report. Raw/cached Firebase projections are not provisional target authority.",
       "classificationBatch": "M0-REPORTING-SEARCH-001"
     },
     {

@@ -9,6 +9,9 @@
   "allowedBlockerIds": [
     "O-040"
   ],
+  "allowedEvidenceRequirementIds": [
+    "E-001"
+  ],
   "rows": [
     {
       "queryId": "QUERY-000000000000",
@@ -45,22 +48,15 @@
           },
           "purpose": "migration",
           "retentionGate": "through_verified_cutover_reconciliation",
-          "authorityRef": {
-            "path": "docs/architecture/redesign/architecture-decisions.md",
-            "section": "A-017 — Firebase Is a Migration Source Only"
-          }
+          "sourceLifecycleAuthorityId": "RETIRE-AUTH-004",
+          "expectedSourceLifecycleAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
         },
         {
           "category": "retired",
           "scope": "source_query_mechanism_only",
-          "retirementGate": "after_verified_target_cutover",
-          "authorityRefs": [
-            {
-              "path": "docs/architecture/redesign/architecture-decisions.md",
-              "role": "architecture_authority",
-              "section": "A-017 — Firebase Is a Migration Source Only"
-            }
-          ]
+          "retirementGate": "after_verified_cutover_reconciliation",
+          "retirementAuthorityId": "RETIRE-AUTH-004",
+          "expectedRetirementAuthorityHash": "ab30ac209806e3439d27fe8d214884242dd285a57dad1bbff34512f08a9b9ca5"
         },
         {
           "category": "authority_blocked",
@@ -77,6 +73,34 @@
               "kind": "product_decision",
               "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
               "section": "Open Product Decisions"
+            }
+          ]
+        },
+        {
+          "category": "evidence_blocked",
+          "blockedScope": "source_runtime_use",
+          "evidenceRequirementIds": [
+            "E-001"
+          ],
+          "evidenceRefs": [
+            {
+              "id": "E-001",
+              "kind": "production_read_profile",
+              "path": "docs/plans/ledger-accounting-redesign/conversion/current-backend-contract.md",
+              "section": "Required Production-Read Confirmation",
+              "requiredArtifact": "Versioned hashed read-only production profile/export confirming existence and counts of template request, quota, object and callable-created records plus separately authorized bounded invocation evidence where record shape cannot establish runtime use"
+            }
+          ],
+          "ownerBindings": [
+            {
+              "evidenceRequirementId": "E-001",
+              "surfaceId": "REPLACE-000000000000",
+              "sourceRef": {
+                "path": "replace/with/exact/source/path"
+              },
+              "expectedSourceOwnerHash": "replace-with-lowercase-sha256",
+              "blocker": "Replace with exact manifest blocker",
+              "expectedBindingHash": "replace-with-lowercase-sha256"
             }
           ]
         }

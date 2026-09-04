@@ -11,7 +11,7 @@
     "targetRelevant": 581,
     "targetMapped": 397,
     "residualSurfaces": 184,
-    "distinctBlockers": 46
+    "distinctBlockers": 47
   },
   "blockers": [
     {
@@ -2562,80 +2562,6 @@
       ]
     },
     {
-      "id": "O-035",
-      "kind": "product decision",
-      "owner": "Client Summary financial meaning",
-      "requirement": "Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests",
-      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
-      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
-      "count": 9,
-      "surfaces": [
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "MAN-REPORT-001",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Requires parity/reconciliation across reports, PDFs, CSV exports, search projections, MCP outputs, and client-visible totals."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "MCPMOD-917C20FEDA6A",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "MCPTOOL-556E4BBD4A8C",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Adds raw noncanceled Transaction amounts by source/vendor without scope-relative accounting signs."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "MCPTOOL-EDD825A4C317",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Computes per-category budget variance from allocations and Transaction-only signs."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "MCPTOOL-F15CC6C9A7AC",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Builds Project health from raw Items/Transactions, cached assumptions, and legacy completeness."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "SWIFT-1772D7B7CE10",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Displays Client Summary active-Item totals, categories, receipt links, logo, and PDF sharing."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "SWIFT-602AA12C6003",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Builds payable cards and Invoice/Client/Property reports from independent mutable context arrays."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "SWIFT-6109B0A97167",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces."
-        },
-        {
-          "batchId": "M0-REPORTING-SEARCH-001",
-          "id": "TEST-880C5785FD49",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status."
-        }
-      ]
-    },
-    {
       "id": "O-037",
       "kind": "product decision",
       "owner": "Space archive and Item assignment",
@@ -2706,6 +2632,73 @@
           "disposition": "redesign",
           "status": "characterized",
           "currentBehavior": "Builds a large Firebase-listener Space detail that also composes Item media, movement, status, relation, delete, note and checklist actions."
+        }
+      ]
+    },
+    {
+      "id": "O-035",
+      "kind": "product decision",
+      "owner": "Client Summary financial meaning",
+      "requirement": "Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests",
+      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
+      "count": 8,
+      "surfaces": [
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "MAN-REPORT-001",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Requires parity/reconciliation across reports, PDFs, CSV exports, search projections, MCP outputs, and client-visible totals."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "MCPMOD-917C20FEDA6A",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "MCPTOOL-EDD825A4C317",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Computes per-category budget variance from allocations and Transaction-only signs."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "MCPTOOL-F15CC6C9A7AC",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Builds Project health from raw Items/Transactions, cached assumptions, and legacy completeness."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "SWIFT-1772D7B7CE10",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Displays Client Summary active-Item totals, categories, receipt links, logo, and PDF sharing."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "SWIFT-602AA12C6003",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Builds payable cards and Invoice/Client/Property reports from independent mutable context arrays."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "SWIFT-6109B0A97167",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "TEST-880C5785FD49",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status."
         }
       ]
     },
@@ -3595,6 +3588,31 @@
           "disposition": "redesign",
           "status": "characterized",
           "currentBehavior": "Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status."
+        }
+      ]
+    },
+    {
+      "id": "O-041",
+      "kind": "product decision",
+      "owner": "Vendor-spend report semantics",
+      "requirement": "Approved report meaning plus exact-cent, payer, scope, currency, credit, correction, security, offline-readiness, migration and app/MCP parity tests",
+      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
+      "count": 2,
+      "surfaces": [
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "MCPMOD-917C20FEDA6A",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Computes Project health, Inventory value, vendor spend, budget variance, and Item attention directly from raw Firebase rows."
+        },
+        {
+          "batchId": "M0-REPORTING-SEARCH-001",
+          "id": "MCPTOOL-556E4BBD4A8C",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Adds raw noncanceled Transaction amounts by source/vendor without scope-relative accounting signs."
         }
       ]
     },

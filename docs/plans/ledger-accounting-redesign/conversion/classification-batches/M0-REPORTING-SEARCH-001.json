@@ -171,12 +171,13 @@
       "blockers": [
         "O-031",
         "O-032",
-        "O-035"
+        "O-035",
+        "O-041"
       ],
       "evidence": [
         "EVID-CAPABILITY-REPORTING-SEARCH-001"
       ],
-      "notes": "M2 withheld: O-031/O-032/O-035 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+      "notes": "M2 withheld: O-031/O-032/O-035/O-041 change report/analytics meaning, receipt delivery, posting readiness, vendor-spend aggregation or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
     },
     {
       "id": "MCPMOD-B4D4B0CAEF8C",
@@ -446,12 +447,12 @@
       "disposition": "redesign",
       "status": "characterized",
       "blockers": [
-        "O-035"
+        "O-041"
       ],
       "evidence": [
         "EVID-CAPABILITY-REPORTING-SEARCH-001"
       ],
-      "notes": "M2 withheld: O-035 changes report/analytics meaning, receipt delivery, posting readiness or generic-mutation behavior for this source responsibility. Raw/cached Firebase projections are not provisional target authority."
+      "notes": "M2 withheld: O-041 must define vendor-spend scope, sign, event basis, credit/Return treatment and currency partitioning. O-035 owns Client Summary and cannot authorize this report. Raw/cached Firebase projections are not provisional target authority."
     },
     {
       "id": "MCPTOOL-5C0CCE378BDA",
