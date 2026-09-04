@@ -119,3 +119,10 @@ that checkpoint. The residual report is regenerated at 443 mapped / 184
 residual / 47 blocker rows, and the complete workflow command set—not the
 earlier shorthand subset—must pass locally and on the corrected exact READY
 commit before executable work.
+
+Follow-up commit `900fcd673d783c2a5c99d162bcd379dead83ab6a`
+contained the corrected residual report but accidentally omitted other
+regenerated conversion/audit outputs that remained dirty locally. Its workflow
+run `33921970523` was administratively cancelled as soon as that omission was
+observed and is not acceptance evidence. The next checkpoint must include the
+entire synchronized generated-artifact set and prove a clean checkout.
