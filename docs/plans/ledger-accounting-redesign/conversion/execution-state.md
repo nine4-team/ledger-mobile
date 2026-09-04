@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 235
+State version: 236
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: PROJECT-PREFERENCE-USE-CASE-REJECTED-O040
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-USE-CASE-READY-PREPARED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -47,7 +47,34 @@ modifying the running Firebase application before hard cutover.
   corrected control plane records 387 target-mapped-or-later surfaces, 184
   residual surfaces, 46 blockers, 19 proposed packets and 38 product blockers.
   No source app, Firebase, MCP, provider, hosted, migration or production
-  implementation changed.
+  implementation changed. Exact remediation commit
+  `471f61a004a92afa961aba41ea6544a90a391cda` passed immutable Actions run
+  `33825756789`.
+
+- Prepared the bounded Item-to-Space assignment application-use-case READY
+  package above verified `ItemSpaceAssignmentOperation.swift` at exact
+  implementation `c5fdf5c73763b5a629ff0416bebba92696af6581` / run
+  `33672006836` and verified `SpaceAssignmentDestinationData.swift` at exact
+  checkpoint `b0ffef836cc82f6011b802a5cb5f6a6ade05680a` / run
+  `33682239349`. Exact new paths resolve to `ItemSpaceAssignmentUseCase.swift`
+  (`SWIFT-0540BE125F5A`) and `ItemSpaceAssignmentUseCaseTests.swift`
+  (`TEST-DA67EAC9C2EF`); both remain comment-only. The `ready` dossier freezes a
+  public transient Account/scope/destination/typed-Item intent, exact local
+  Account/scope validation, stable-ID row resolution, Space revision derivation
+  from represented ready/partial/stale evidence, construction before exactly
+  one `ItemSpaceAssigning` call, receipt validation afterward, three application
+  and 16 operation failures, cancellation and bounded unknown errors. A missing
+  row is only not represented and never makes incomplete evidence authoritative.
+  Ten planned obligations require ordinary non-`@testable` import, literal
+  reciprocal non-mirrored command ownership, exact two-leaf allowlists and
+  separate immutable READY/implementation CI. Clear/no-op, Item selection UI/
+  read, archive, media/marker, scope movement, accounting/provenance, physical
+  persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration,
+  hosted, production, release and cutover remain excluded. The complete local
+  READY gate passes at 833 recorded / 818 discovered, 389 mapped / 184 residual
+  / 46 blockers, all 302 tests in 63 suites with warnings as errors, repeatable
+  hashes `0657194a` / `388303af` and both staging builds. Root/independent
+  actual-diff review and exact-READY-SHA CI still gate executable code.
 
 - Verified the bounded typed Client rename application dispatch after exact
   READY commit `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
@@ -3433,7 +3460,23 @@ Continue without waiting on the two M1 evidence blockers:
    are verified. Treat the verified `space-assignment-destination-read-contracts`
    dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
-   assignment-destination read semantics. Treat the verified
+   assignment-destination read semantics. Treat ready
+   `item-space-assignment-use-case-contracts` and
+   `EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001` as the only active implementation
+   candidate after its exact READY commit passes immutable CI. Preserve exactly
+   the two comment-only leaves `ItemSpaceAssignmentUseCase.swift`
+   (`SWIFT-0540BE125F5A`) and `ItemSpaceAssignmentUseCaseTests.swift`
+   (`TEST-DA67EAC9C2EF`) until that gate passes. Future implementation must
+   validate the intent against the current directory Account/scope, resolve the
+   destination only by represented stable ID, derive its expected revision from
+   that row, construct the verified command before exactly one assigner call,
+   validate afterward, preserve both typed failure families plus cancellation,
+   and bound only unknown port errors. Ready, partial and stale represented rows
+   remain admissible; a missing row is not represented and never proves
+   authoritative nonexistence. Do not introduce clearing/no-op, Item-selection
+   UI/read, archive, media/marker, scope movement, accounting/provenance,
+   persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration,
+   hosted or production behavior. Treat the verified
    `project-budget-segment-read-contracts` dossier and
    `EVID-PROJECT-BUDGET-SEGMENT-001` as the sole provider-free source for exact
    Project category client-paid/invoicing-unpaid segments and their internally

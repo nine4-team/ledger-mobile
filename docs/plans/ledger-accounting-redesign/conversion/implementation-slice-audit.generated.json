@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T01:16:44.134Z",
+  "generatedFromManifestSync": "2026-09-04T01:44:08.827Z",
   "totals": {
-    "slices": 62,
-    "claimedTargetSurfaces": 149,
+    "slices": 63,
+    "claimedTargetSurfaces": 151,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 134
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 61,
@@ -228,6 +228,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-operation-contracts.json"
+    },
+    {
+      "sliceId": "item-space-assignment-use-case-contracts",
+      "title": "Validate one local Space destination and dispatch one exact Item assignment",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Item Space Assignment Use Case",
+      "surfaceIds": [
+        "SWIFT-0540BE125F5A",
+        "TEST-DA67EAC9C2EF"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-use-case-contracts.json"
     },
     {
       "sliceId": "item-space-clearing-operation-contracts",

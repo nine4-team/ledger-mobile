@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T01:16:44.134Z",
+    "lastSynchronizedAt": "2026-09-04T01:44:08.827Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -16007,6 +16007,67 @@
       ],
       "notes": "M2 withheld: O-029 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "SWIFT-0540BE125F5A",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ItemSpaceAssignmentUseCase.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ItemSpaceAssignmentUseCase.swift"
+        }
+      ],
+      "observedSourceHash": "9a99462ee952e78c8eb788fef3ea4e6f5eb09bb5ad61026f57cd3b8207f0084b",
+      "acknowledgedSourceHash": "9a99462ee952e78c8eb788fef3ea4e6f5eb09bb5ad61026f57cd3b8207f0084b",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY contract for one future provider-free Item-to-Space application boundary that validates an exact local destination and dispatches the verified assignment command; no executable behavior exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Item Space Assignment Use Case",
+        "surfaces": [
+          "ItemSpaceAssignmentUseCaseFailure",
+          "ItemSpaceAssignmentIntent",
+          "ItemSpaceAssignmentUseCase",
+          "exact destination resolution, one ItemSpaceAssigning call, and receipt validation"
+        ],
+        "securityRequirements": [
+          "Transient intent and current local directory must bind the same exact AccountID and Project-or-Business-Inventory scope; SpaceID and typed Item identities cannot be replaced by names, routes, paths, media, or accounting values",
+          "A represented local row supplies conflict evidence only, never authorization; raw port errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Future provider-free orchestration may use an exact represented active row from ready, partial, or stale local evidence and derives the expected Space revision from that row before one verified assignment call",
+          "An absent row refuses as not represented without treating incomplete local data as authoritative nonexistence; no physical persistence, optimistic placement, authoritative apply, or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define only target transient intent and application orchestration; decode no source Item/Space document, Account-wide array, route state, generic field dictionary, photo marker, export row, or migration disposition.",
+        "reconciliation": [
+          "Synthetic typed Account/scope/Space/Item/revision evidence and operation metadata must reach one verified assignment command while all source app/service/provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentUseCaseTests"
+        ],
+        "acceptance": [
+          "Implementation tests must prove only the frozen provider-free Item-to-Space application path and permanent exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"
+      ],
+      "notes": "Comment-only READY scaffold at exact conversion baseline 471f61a004a92afa961aba41ea6544a90a391cda. It freezes a public transient Account/scope/destination/typed-Item intent and future application orchestration over the verified destination-directory and assignment-operation contracts. It derives the destination revision only from an exact represented row, permits that row from ready/partial/stale local evidence, and makes no authoritative-nonexistence claim when a row is absent. It advances no clear/archive/media/scope/accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "SWIFT-061553E63650",
@@ -39557,6 +39618,67 @@
       ],
       "notes": "Preserve presentation cases and add authoritative Accounted For projection cases. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "TEST-DA67EAC9C2EF",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ItemSpaceAssignmentUseCaseTests.swift"
+        }
+      ],
+      "observedSourceHash": "8cc26f267f49f47588587a4af80f64638e59ed01a605719a636bd7db0d7a1ece",
+      "acknowledgedSourceHash": "8cc26f267f49f47588587a4af80f64638e59ed01a605719a636bd7db0d7a1ece",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY contract for a future ordinary-import Item-to-Space use-case suite covering exact intent shape, represented-row readiness, literal command ownership, zero/one-call boundaries, typed failures, diagnostics/topology, and exclusions; no executable test exists.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Item Space Assignment Use Case Tests",
+        "surfaces": [
+          "exact transient intent fixtures",
+          "ready, partial, stale, missing, cross-Account, and cross-scope destination fixtures",
+          "literal Space/Item/revision and operation-field ownership fixtures",
+          "receipt-state, construction, typed/raw failure, cancellation, diagnostics, topology, and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project, Space, Item, Principal, and Operation identities and prove typed local evidence is non-authorizing",
+          "Stable failures reveal no raw identity, display value, source path, credential, service payload, or production identifier"
+        ],
+        "syncRequirements": [
+          "A future in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Missing or mismatched local evidence and construction failure make zero calls; exact receipt states return without optimistic or authoritative Item/Space state"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no source Item/Space DTO, Account-wide array, UI route, generic write, media marker, export/profile, or source-to-target mapping.",
+        "reconciliation": [
+          "Tests must preserve canonical target dispatch while all named source UI/service/model and provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentUseCaseTests"
+        ],
+        "acceptance": [
+          "Implementation tests must prove only the frozen provider-free Item-to-Space use case and exclusions"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
+        "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001"
+      ],
+      "notes": "Comment-only READY scaffold at exact conversion baseline 471f61a004a92afa961aba41ea6544a90a391cda. Ten planned obligations require ordinary import without @testable, exact public shape, ready/partial/stale represented-row dispatch, directory-derived revision, literal reciprocal non-mirrored leaf ownership, zero/one-call failures, three application and 16 operation failures plus cancellation/raw mapping, diagnostics/topology, exact allowlists, and immutable READY/implementation CI. No source, service, provider, or production behavior advances.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "TEST-DAD87DF6C1DB",
