@@ -3,7 +3,7 @@
   "sliceId": "attachment-local-byte-durability-provider",
   "title": "Accept an offline attachment only after protected local bytes and queue evidence re-verify",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Attachment Local Durability Provider",
   "surfaceIds": [
     "SWIFT-68F4E18977D4",
@@ -253,12 +253,12 @@
       "owner": "pull-request CI Isolated target environment job",
       "covers": ["ATTACHDUR-REQ-005", "ATTACHDUR-REQ-006"],
       "expected": "The exact synchronized commits pass focused and complete target tests, conversion/environment/contract controls and both staging builds without hosted access or source-app changes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"]
     }
   ],
   "implementationEvidence": ["EVID-ATTACHMENT-DURABILITY-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "The deterministic local provider is implemented and locally verified. Immutable exact-commit CI is pending, so this dossier is not verified. It deliberately exposes no remote success, retention/deletion behavior, shared runtime integration or app UI. O-023 remains fully open; A-003/A-004 and SPIKE-MED-001 remain unadvanced."
+  "notes": "The deterministic local provider is verified at exact implementation commit ecfcdc3ba3fc928d77cab575cc64d46c08f1f71f by immutable Actions run 33902466636. It deliberately exposes no remote success, retention/deletion behavior, shared runtime integration or app UI. O-023 remains fully open; A-003/A-004 and SPIKE-MED-001 remain unadvanced."
 }

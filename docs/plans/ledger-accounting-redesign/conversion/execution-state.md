@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 261
+State version: 262
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ATTACHMENT-LOCAL-DURABILITY-PROVIDER-IMPLEMENTED-LOCAL
+- Checkpoint: ATTACHMENT-LOCAL-DURABILITY-PROVIDER-VERIFIED-IMMUTABLE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,8 +36,8 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 262 status-bearing rows: 67
-  done, four verified, one implemented, one awaiting verification, 12 in
+- The implementation tracker currently contains 262 status-bearing rows: 68
+  done, four verified, one implemented, zero awaiting verification, 12 in
   progress, 25 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -48,9 +48,9 @@ without modifying the running Firebase application before hard cutover.
   passes immutable CI; both slices remain incomplete until a real isolated
   PowerSync/Auth round-trip passes.
 - One supporting provider slice now durably accepts encrypted attachment bytes
-  offline in an isolated, scope-bound local PowerSync database. It is not yet an
-  upload/display product path and does not advance the physical hosted media
-  spike.
+  offline in an isolated, scope-bound local PowerSync database and passes exact
+  immutable CI. It is not yet an upload/display product path and does not
+  advance the physical hosted media spike.
 - Future progress reports must separately state (1) planning/control coverage,
   (2) locally executable provider-backed slices, (3) hosted rehearsal, and
   (4) cutover readiness. A single percentage may be given only with that
@@ -70,8 +70,11 @@ without modifying the running Firebase application before hard cutover.
   unbounded reads, mutable-scope hiding, ineffective wrong-key/SQLCipher tests,
   a CI filter that omitted the suite, and physical-fault overclaims. Ten focused
   tests pass with Swift warnings as errors, and the actual 19-test PowerSync
-  command also passes.
-  Immutable exact-commit CI is pending; hosted upload/Storage/Auth/Sync,
+  command also passes. Exact implementation commit
+  `ecfcdc3ba3fc928d77cab575cc64d46c08f1f71f` passed immutable Actions run
+  `33902466636`, including conversion controls, all 342 Swift tests, both
+  staging builds, isolated local Supabase provider checks and clean artifacts.
+  Hosted upload/Storage/Auth/Sync,
   physical-device/low-storage/power-loss/soak evidence, app composition,
   O-023 retention/deletion behavior, migration, production and cutover remain
   unadvanced; `EVID-ATTACHMENT-DURABILITY-PROVIDER-001`.
@@ -3676,15 +3679,16 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Prepare the next bounded provider slice for attachment durability: trace the
-verified attachment-capture/local-durability contract into protected local byte
-storage, metadata and an upload-queue boundary; define crash/restart,
-missing-byte, deduplication, retry and storage-pressure tests before code. Keep
-Supabase Storage behind a scoped adapter and use only disposable local fixtures;
-do not provision hosted resources, choose O-023 retention/deletion policy,
-access production, or advance A-003/A-004 from local evidence. Independently
-review the dossier before implementation and independently review the first
-implementation diff, continuing the early subagent quality-control policy.
+Prepare the next bounded provider-backed product slice for Client rename. Trace
+the verified Client rename operation and application-use-case authority into
+one trusted Postgres command/RPC with membership/capability checks, exact
+revision and replay semantics, Client-row RLS, PowerSync optimistic local state
+and authoritative readback, isolated target-app exercise, and the existing MCP
+contract boundary. Freeze the dossier and failure/restart/concurrency tests
+before executable work. Use only disposable local Supabase fixtures; do not
+provision hosted resources, access production, modify Firebase, migrate data or
+advance A-003/A-004 from local evidence. Independently review the dossier and
+the first implementation diff under the early subagent quality-control policy.
 
 Continue without waiting on the two M1 evidence blockers:
 

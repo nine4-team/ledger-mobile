@@ -9,7 +9,9 @@
 - Slice dossier:
   `conversion/implementation-slices/attachment-local-byte-durability-provider.json`
 - Verification state: implementation and deterministic local verification pass;
-  immutable exact-commit CI and physical/hosted media rehearsal remain pending
+  exact implementation commit `ecfcdc3ba3fc928d77cab575cc64d46c08f1f71f`
+  passed immutable Actions run `33902466636`; physical/hosted media rehearsal
+  remains pending
 
 ## Outcome
 
@@ -43,6 +45,10 @@ cleanup, remote-success, or retention action while O-023 remains open.
   symlink rejection, invalid namespace/object identities, repeated orphan
   inventories, stable pending order, and non-consuming verified reads.
 - `git diff --check` passes.
+- Immutable Actions run `33902466636` passed all three jobs for exact commit
+  `ecfcdc3ba3fc928d77cab575cc64d46c08f1f71f`: conversion state and
+  traceability, the isolated target environment with all 342 Swift tests and
+  both staging builds, and isolated local Supabase schema/RLS/RPC/replay tests.
 
 ## Independent Review Corrections
 
@@ -69,8 +75,9 @@ corrected all cited proof and implementation gaps:
 
 ## Explicit Open Gates
 
-- Immutable CI on the synchronized implementation commit is still required
-  before promotion from `implemented` to `verified`.
+- The deterministic local-provider dossier and its three implementation
+  surfaces are verified by the exact implementation commit and immutable CI
+  run above.
 - A-003/A-004 remain proposed. This does not prove a hosted PowerSync stream,
   Supabase Storage policy, Auth strategy, upload completion, physical-device
   data protection, low-storage handling, process-kill/power-loss durability, or

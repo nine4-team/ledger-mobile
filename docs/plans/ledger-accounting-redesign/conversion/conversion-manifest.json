@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T17:44:37.051Z",
+    "lastSynchronizedAt": "2026-09-04T17:59:27.221Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -24472,7 +24472,7 @@
           "Encryption, restart, interruption, corruption, scope isolation and storage-pressure cases fail closed without losing prior accepted bytes"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [
         "A-004"
       ],
@@ -35848,7 +35848,7 @@
           "Queue count/order and exact receipt survive adapter/database recreation without false upload or cleanup claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [
         "A-004"
       ],
@@ -41566,7 +41566,7 @@
           "Focused and complete target suites plus immutable CI pass on exact synchronized commits"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [
         "A-004"
       ],
