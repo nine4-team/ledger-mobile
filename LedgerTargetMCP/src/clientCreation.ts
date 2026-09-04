@@ -1,6 +1,14 @@
 import { createHash } from "node:crypto";
+import {
+  canonicalJSON,
+  TargetMCPFailure,
+  validateIdentifier,
+  validateTerminalResult,
+  type TargetMCPRequestContext,
+} from "./contractSupport.js";
 
-const IDENTIFIER = /^[\p{L}\p{N}_.:-]+$/u;
+export { TargetMCPFailure, type TargetMCPRequestContext } from "./contractSupport.js";
+
 const CONTRACT_VERSION = "client-create-v1";
 
 export type CreateClientToolInput = Readonly<{
@@ -8,12 +16,6 @@ export type CreateClientToolInput = Readonly<{
   clientId: string;
   displayName: string;
   clientCreatedAtMilliseconds: number;
-}>;
-
-export type TargetMCPRequestContext = Readonly<{
-  accountId: string;
-  principalId: string;
-  accessToken: string;
 }>;
 
 export type ClientCreationRPCRequest = Readonly<{
@@ -43,51 +45,6 @@ export interface ClientCreationApplying {
     request: ClientCreationRPCRequest,
     context: TargetMCPRequestContext,
   ): Promise<ClientCreationRPCResult>;
-}
-
-export class TargetMCPFailure extends Error {
-  readonly code: string;
-  readonly statusCode: number | undefined;
-
-  constructor(code: string, statusCode?: number) {
-    super(code);
-    this.name = "TargetMCPFailure";
-    this.code = code;
-    this.statusCode = statusCode;
-  }
-}
-
-function validateIdentifier(value: string, code: string): string {
-  const bytes = new TextEncoder().encode(value);
-  if (
-    value.trim() !== value
-    || bytes.length === 0
-    || bytes.length > 128
-    || !IDENTIFIER.test(value)
-  ) {
-    throw new TargetMCPFailure(code);
-  }
-  return value;
-}
-
-function canonicalJSON(value: unknown): string {
-  if (value === null || typeof value === "boolean" || typeof value === "number") {
-    return JSON.stringify(value);
-  }
-  if (typeof value === "string") {
-    return JSON.stringify(value).replaceAll("/", "\\/");
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(canonicalJSON).join(",")}]`;
-  }
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    return `{${Object.keys(record)
-      .sort()
-      .map((key) => `${canonicalJSON(key)}:${canonicalJSON(record[key])}`)
-      .join(",")}}`;
-  }
-  throw new TargetMCPFailure("client_creation_command_encoding_invalid");
 }
 
 export function makeClientCreationRPCRequest(
@@ -121,7 +78,10 @@ export function makeClientCreationRPCRequest(
     payload: { clientId, displayName: input.displayName },
     preconditions: [],
   };
-  const envelopeJSON = canonicalJSON(envelope);
+  const envelopeJSON = canonicalJSON(
+    envelope,
+    "client_creation_command_encoding_invalid",
+  );
   const fingerprint = createHash("sha256").update(envelopeJSON).digest("hex");
 
   return {
@@ -215,13 +175,12 @@ export class SupabaseClientCreationApplier implements ClientCreationApplying {
     const phase = body.phase;
     const resultCode = body.result_code;
     const errorCode = body.error_code;
-    if (
-      (phase !== "applied" && phase !== "rejected")
-      || (phase === "applied" && (typeof resultCode !== "string" || errorCode !== null))
-      || (phase === "rejected" && (resultCode !== null || typeof errorCode !== "string"))
-    ) {
-      throw new TargetMCPFailure("client_creation_server_result_mismatch");
-    }
+    validateTerminalResult(
+      phase,
+      resultCode,
+      errorCode,
+      "client_creation_server_result_mismatch",
+    );
     return {
       operationId: String(body.operation_id),
       accountId: String(body.account_id),

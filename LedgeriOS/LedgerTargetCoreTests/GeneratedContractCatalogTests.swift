@@ -90,7 +90,7 @@ struct GeneratedContractCatalogTests {
         }
     }
 
-    @Test("The catalog separates available platform contracts from the gated Client spike")
+    @Test("The catalog separates available platform contracts from gated product slices")
     func catalogDoesNotAdvertiseUnapprovedProductCommands() throws {
         let catalog = try GeneratedTargetContractCatalog.load()
         let availableCapabilityIDs = Set(catalog.capabilities
@@ -108,9 +108,10 @@ struct GeneratedContractCatalogTests {
             "operation_status",
             "sync_health"
         ])
-        #expect(gatedCapabilityIDs == ["client_management"])
+        #expect(gatedCapabilityIDs == ["client_management", "project_setup"])
         #expect(contractIDs == [
             "create_client",
+            "create_project",
             "get_capabilities",
             "get_contract_catalog",
             "observe_sync_health",
@@ -120,6 +121,8 @@ struct GeneratedContractCatalogTests {
         ])
         #expect(catalog.contracts.first { $0.id.rawValue == "create_client" }?.capability.rawValue
             == "client_management")
+        #expect(catalog.contracts.first { $0.id.rawValue == "create_project" }?.capability.rawValue
+            == "project_setup")
         #expect(catalog.deprecations.isEmpty)
     }
 

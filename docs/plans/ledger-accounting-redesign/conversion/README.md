@@ -1,6 +1,11 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 387 of 571 target-relevant
+Terminology: the **backend surface map** is the complete manifest of places
+Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
+narrower **source-query register** records individual source query call sites.
+Neither term refers to Ledger's Business Inventory product area.
+
+Status: M0 backend-surface classification complete; 397 of 581 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile

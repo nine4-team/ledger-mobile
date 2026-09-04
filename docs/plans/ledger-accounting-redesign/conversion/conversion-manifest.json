@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T15:15:46.081Z",
+    "lastSynchronizedAt": "2026-09-04T16:17:08.727Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -144,6 +144,56 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-09CEA78268BF",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/project_setup_vertical_slice.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/project_setup_vertical_slice.test.sql"
+        }
+      ],
+      "observedSourceHash": "0cd482632e8da8f5ac1cd35f8e5b6bec8cde9a0fc390ac85a04350514655fcdd",
+      "acknowledgedSourceHash": "0cd482632e8da8f5ac1cd35f8e5b6bec8cde9a0fc390ac85a04350514655fcdd",
+      "metadata": {},
+      "currentBehavior": "Runs 22 pgTAP assertions for both Client-selection branches, exact replay/rebinding refusal, byte-preserved names, nullable/zero/mixed-currency allocations, invalid discriminators/categories, direct-write denial, capability/financial visibility and cross-Account isolation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Project setup Postgres invariant and authorization tests"
+        ],
+        "securityRequirements": [
+          "Tests execute with synthetic authenticated identities and assert negative RLS and Data API cases"
+        ],
+        "syncRequirements": [
+          "Handler results match the app/MCP operation contract"
+        ]
+      },
+      "migration": {
+        "rule": "Use no production-derived rows or credentials.",
+        "reconciliation": [
+          "Every accepted operation has exactly one Project and one complete selected allocation set"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:db"
+        ],
+        "acceptance": [
+          "All 22 Project assertions pass together with the Client suite from a clean reset"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "Synthetic local database test only.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "CONFIG-0C8B77A5FB08",
       "kind": "application_or_backend_configuration",
       "name": "LedgeriOS/Package.resolved",
@@ -262,10 +312,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "3955a52d4830c755231a3affc2a3abb5fb7653cffa92e4d25bf98c62988c7052",
-      "acknowledgedSourceHash": "3955a52d4830c755231a3affc2a3abb5fb7653cffa92e4d25bf98c62988c7052",
+      "observedSourceHash": "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e",
+      "acknowledgedSourceHash": "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -305,7 +355,7 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client provider slice; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -709,10 +759,10 @@
           "path": "powersync/sync-streams.yaml"
         }
       ],
-      "observedSourceHash": "8abbacbcc4f70addde30fbc87af70c561108a657be02117c6dc35745f1538fc2",
-      "acknowledgedSourceHash": "8abbacbcc4f70addde30fbc87af70c561108a657be02117c6dc35745f1538fc2",
+      "observedSourceHash": "bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528",
+      "acknowledgedSourceHash": "bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528",
       "metadata": {},
-      "currentBehavior": "Defines edition-3 target Sync Streams for the authenticated Principal, active memberships and Accounts, Account-scoped Clients, and immutable operation results.",
+      "currentBehavior": "Defines edition-3 target Sync Streams for the authenticated Principal, active memberships and Accounts, Account-scoped Clients and Projects, visibility-filtered budget categories/allocations, and immutable operation results.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -1315,10 +1365,10 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "92f3215289acd15fbdf1d495ec3a0bdd5ae63caf48dae2750e7c99c8f57f9218",
-      "acknowledgedSourceHash": "92f3215289acd15fbdf1d495ec3a0bdd5ae63caf48dae2750e7c99c8f57f9218",
+      "observedSourceHash": "640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89",
+      "acknowledgedSourceHash": "640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89",
       "metadata": {},
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build plus local Supabase Client/Project database/API test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -1635,8 +1685,8 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "07a6acb805099b1a01c6ecbf68c57134f5b5c34c05d5e7909da286c159227d32",
-      "acknowledgedSourceHash": "07a6acb805099b1a01c6ecbf68c57134f5b5c34c05d5e7909da286c159227d32",
+      "observedSourceHash": "fe003598df334cde7350c47ef35668c9c5fa322560a20a46315d5627570e2cda",
+      "acknowledgedSourceHash": "fe003598df334cde7350c47ef35668c9c5fa322560a20a46315d5627570e2cda",
       "metadata": {},
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step while every verification step remains fail-closed.",
       "disposition": "redesign",
@@ -1690,8 +1740,8 @@
           "path": "LedgerTargetContracts/catalog.json"
         }
       ],
-      "observedSourceHash": "534ee67ba1b0f4cc6f51db9fd097a06ec31ba08379081045ac1f3b414c521fa3",
-      "acknowledgedSourceHash": "534ee67ba1b0f4cc6f51db9fd097a06ec31ba08379081045ac1f3b414c521fa3",
+      "observedSourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa",
+      "acknowledgedSourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa",
       "metadata": {},
       "currentBehavior": "Defines the canonical target-only version, enum, authorization-policy, telemetry, stable-error, capability, contract and deprecation registry.",
       "disposition": "redesign",
@@ -1730,7 +1780,7 @@
         "EVID-M2-PLATFORM-001",
         "EVID-CONTRACT-CATALOG-001"
       ],
-      "notes": "The registry retains implemented platform contracts and now carries one gated Client-management capability/create command owned by the provider slice. Gated is not deployed or production-active.",
+      "notes": "The registry retains implemented platform contracts and now carries gated Client/Project/budget-management capabilities, financial-visibility policy, and Client/Project create commands owned by provider slices. Gated is not deployed or production-active, and O-026 remains open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -1866,6 +1916,64 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-C1B257780C7C",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260904151946_project_setup_vertical_slice.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260904151946_project_setup_vertical_slice.sql"
+        }
+      ],
+      "observedSourceHash": "e3da858f16caee3dd6a7f6e0c686ed3f7662006f078712ac1d348de29afb68c4",
+      "acknowledgedSourceHash": "e3da858f16caee3dd6a7f6e0c686ed3f7662006f078712ac1d348de29afb68c4",
+      "metadata": {},
+      "currentBehavior": "Extends the isolated spike schema with Project-management capabilities, visibility-classified budget categories, Projects and exact nullable per-Project allocations; exposes one idempotent trusted Project-setup RPC with explicit grants, RLS, authorization, identity locking and durable applied/rejected results.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Project/category/allocation Postgres schema",
+          "Trusted Project-setup command handler",
+          "Project/category/allocation RLS"
+        ],
+        "securityRequirements": [
+          "Direct writes are denied",
+          "The handler re-derives authenticated Principal, membership, Project and budget-management capability",
+          "Financial categories and their allocations fail closed for principals without full visibility"
+        ],
+        "syncRequirements": [
+          "One exact Project operation creates its optional Client, Project, complete allocation set and immutable terminal result atomically"
+        ]
+      },
+      "migration": {
+        "rule": "This is local target-spike DDL, not final import DDL or production deployment authority.",
+        "reconciliation": [
+          "Exact replay creates no duplicate identity or allocation; changed replay cannot rebind the OperationID"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "supabase/tests/project_setup_vertical_slice.test.sql",
+          "scripts/test-local-project-creation-rpc.mjs"
+        ],
+        "acceptance": [
+          "Local database and Data API tests prove atomic setup, exact replay, least privilege, category visibility and tenant isolation"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "All relations remain spike_-prefixed in disposable local Supabase. O-026 is represented only as a provisional stronger policy and is not promoted to product authority.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "CONFIG-C1C61B2D6569",
       "kind": "release_or_build_tool",
       "name": "scripts/tests/generate-target-query-port-inventory.test.mjs",
@@ -1969,10 +2077,10 @@
           "path": "supabase/seed.sql"
         }
       ],
-      "observedSourceHash": "d4a19f5ae6aa9afe46aafd4c6b482c84e602c3b9e2cceadbda09c2a6f0fec537",
-      "acknowledgedSourceHash": "d4a19f5ae6aa9afe46aafd4c6b482c84e602c3b9e2cceadbda09c2a6f0fec537",
+      "observedSourceHash": "835ef698d56f9d6a68202c3992d6e9a1fd64f9d2da3dfae9eafb5dcefef031c6",
+      "acknowledgedSourceHash": "835ef698d56f9d6a68202c3992d6e9a1fd64f9d2da3dfae9eafb5dcefef031c6",
       "metadata": {},
-      "currentBehavior": "Seeds three synthetic auth users, Principals, two Accounts, and owner/restricted/other-account memberships for local authorization tests.",
+      "currentBehavior": "Seeds three synthetic auth users, Principals, two Accounts, owner/restricted/other-account memberships, an existing Client and ordinary/financial/system categories for local Client and Project authorization tests.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -2119,6 +2227,56 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-E1332AB9A867",
+      "kind": "release_or_build_tool",
+      "name": "scripts/test-local-project-creation-rpc.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/test-local-project-creation-rpc.mjs"
+        }
+      ],
+      "observedSourceHash": "20c96b1435bd3b73b7307eb62fff4c2e4e5daad891d933f4bf66414fda3eed68",
+      "acknowledgedSourceHash": "20c96b1435bd3b73b7307eb62fff4c2e4e5daad891d933f4bf66414fda3eed68",
+      "metadata": {},
+      "currentBehavior": "Calls the local Supabase Data API with short-lived synthetic user JWTs and verifies Project apply/replay/readback, complete allocations, cross-Account hiding, restricted-member denial and direct-write denial.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Local Project setup Data API integration test"
+        ],
+        "securityRequirements": [
+          "Only local synthetic user tokens and the local publishable key are used"
+        ],
+        "syncRequirements": [
+          "REST result and row shapes match the typed app/MCP contracts"
+        ]
+      },
+      "migration": {
+        "rule": "Run only against the disposable local Supabase stack.",
+        "reconciliation": [
+          "API readback observes one Project, its selected Client and exact allocation set after replay"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:rpc"
+        ],
+        "acceptance": [
+          "Local Project REST apply/replay/RLS/direct-write checks pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "Reads local CLI status without printing keys and contacts no hosted endpoint.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "CONFIG-E8340EBE4EBA",
       "kind": "release_or_build_tool",
       "name": "scripts/test-local-client-creation-rpc.mjs",
@@ -2179,8 +2337,8 @@
           "path": "LedgerTargetMCP/resources/contract-catalog.json"
         }
       ],
-      "observedSourceHash": "28e70b84d60e64d672f549272cd8b46976ee8e27f714d3700464950abee29788",
-      "acknowledgedSourceHash": "28e70b84d60e64d672f549272cd8b46976ee8e27f714d3700464950abee29788",
+      "observedSourceHash": "3559b2cef0fd3cbd8acb1aef8b03ee4a7d61728c38678a170a06dcf4cd806c72",
+      "acknowledgedSourceHash": "3559b2cef0fd3cbd8acb1aef8b03ee4a7d61728c38678a170a06dcf4cd806c72",
       "metadata": {},
       "currentBehavior": "Publishes the bounded generated MCP contract resource with the canonical catalog and hash.",
       "disposition": "redesign",
@@ -2217,7 +2375,7 @@
         "EVID-M2-PLATFORM-001",
         "EVID-CONTRACT-CATALOG-001"
       ],
-      "notes": "Build artifact includes the gated Client-create contract, but no target MCP server endpoint or deployment is active.",
+      "notes": "Build artifact includes the gated Client- and Project-create contracts, but no target MCP server endpoint or deployment is active.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -2854,8 +3012,8 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "1ba1022347ee0d813841c613ee80501ee14274d768971c535838090689bdfe2c",
-      "acknowledgedSourceHash": "1ba1022347ee0d813841c613ee80501ee14274d768971c535838090689bdfe2c",
+      "observedSourceHash": "b25d2ea27a7ab7062f9de21f841d002a6a4bc2bae3e469f72f013e083150c2a9",
+      "acknowledgedSourceHash": "b25d2ea27a7ab7062f9de21f841d002a6a4bc2bae3e469f72f013e083150c2a9",
       "metadata": {},
       "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, and the draft source-query reconciliation control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
@@ -8489,6 +8647,63 @@
       "classificationBatch": "M0-BACKEND-AUTH-001"
     },
     {
+      "id": "MCPMOD-3C6E07498EC9",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/tests/projectCreation.test.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/tests/projectCreation.test.ts"
+        }
+      ],
+      "observedSourceHash": "2a072fb0083739d958034be737a18da215adbc92fc3393b0bb961342b56bac0a",
+      "acknowledgedSourceHash": "2a072fb0083739d958034be737a18da215adbc92fc3393b0bb961342b56bac0a",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Runs five deterministic target MCP Project tests for canonical Swift parity, context-owned scope, malformed allocation/input refusal, exact terminal-result refusal and scoped HTTP behavior.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Target MCP Project command tests",
+          "Cross-runtime fingerprint fixture"
+        ],
+        "securityRequirements": [
+          "Tests prove context scope and absence of service-role credentials"
+        ],
+        "syncRequirements": [
+          "Canonical command and terminal result remain byte/field compatible with Swift and Postgres"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only identities.",
+        "reconciliation": [
+          "Every result field used for completion is checked against the exact command"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm --prefix LedgerTargetMCP test"
+        ],
+        "acceptance": [
+          "All five Project MCP tests pass deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001",
+        "EVID-CONTRACT-CATALOG-001"
+      ],
+      "notes": "Synthetic fakes/local-only tests; no hosted provider access.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "MCPMOD-3E4E627EC002",
       "kind": "mcp_module",
       "name": "mcp-server/src/userState.ts",
@@ -8769,8 +8984,8 @@
           "path": "LedgerTargetMCP/src/clientCreation.ts"
         }
       ],
-      "observedSourceHash": "6b4d8e305ef28ba025cf5119f09e5a386e53df501d9e892fdb3fc0c03ad5b04b",
-      "acknowledgedSourceHash": "6b4d8e305ef28ba025cf5119f09e5a386e53df501d9e892fdb3fc0c03ad5b04b",
+      "observedSourceHash": "d90cba8a5a37848437b982a4b3f1e0431b644730be89a7b1b561078fa0278234",
+      "acknowledgedSourceHash": "d90cba8a5a37848437b982a4b3f1e0431b644730be89a7b1b561078fa0278234",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -9828,6 +10043,64 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "MCPMOD-C5E2CD8754AB",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/src/contractSupport.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/src/contractSupport.ts"
+        }
+      ],
+      "observedSourceHash": "f4c2a76f9502a7f0a1a4bbc2996d9829f215cc91aaf8293f047c3a1d534a7fb2",
+      "acknowledgedSourceHash": "f4c2a76f9502a7f0a1a4bbc2996d9829f215cc91aaf8293f047c3a1d534a7fb2",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Provides shared target MCP canonical-JSON, identifier, context-scope and immutable terminal-result validation used by Client and Project command tools.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Target MCP Contracts",
+        "surfaces": [
+          "Shared canonical command support",
+          "Shared scoped terminal-result validator"
+        ],
+        "securityRequirements": [
+          "Account and Principal are derived from authenticated tool context"
+        ],
+        "syncRequirements": [
+          "Every target command uses deterministic JSON and exact terminal identity checks"
+        ]
+      },
+      "migration": {
+        "rule": "Activate only in the target MCP composition.",
+        "reconciliation": [
+          "Client and Project tools share one validated transport contract without backend leakage into domain code"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm --prefix LedgerTargetMCP run check",
+          "npm --prefix LedgerTargetMCP test"
+        ],
+        "acceptance": [
+          "Strict compilation and both tool suites pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001",
+        "EVID-CONTRACT-CATALOG-001"
+      ],
+      "notes": "Target-only transport support with no Firebase imports or privileged credential.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "MCPMOD-C6CA65EAAF8D",
       "kind": "mcp_module",
       "name": "mcp-server/src/http.ts",
@@ -9937,8 +10210,8 @@
           "path": "LedgerTargetMCP/generated/contracts.ts"
         }
       ],
-      "observedSourceHash": "588a3943f770b67642fa9d36a6c469e03bbefe409f5cd26b20f7f8e8965b9986",
-      "acknowledgedSourceHash": "588a3943f770b67642fa9d36a6c469e03bbefe409f5cd26b20f7f8e8965b9986",
+      "observedSourceHash": "cffa8e977c26e511634cd2d376e47f32ae61a467d7f3b2d0b824a413771208ca",
+      "acknowledgedSourceHash": "cffa8e977c26e511634cd2d376e47f32ae61a467d7f3b2d0b824a413771208ca",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -9979,7 +10252,7 @@
         "EVID-M2-PLATFORM-001",
         "EVID-CONTRACT-CATALOG-001"
       ],
-      "notes": "Separate target projection imported by the gated target Client-create handler; the current Firebase MCP runtime does not import it.",
+      "notes": "Separate target projection imported by the gated target Client- and Project-create handlers; the current Firebase MCP runtime does not import it.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -10414,6 +10687,66 @@
       ],
       "notes": "Retain stdio transport with validated environment and Principal-bound authorization mode. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "MCPMOD-E9B4396B90B9",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/src/projectCreation.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/src/projectCreation.ts"
+        }
+      ],
+      "observedSourceHash": "eb89eeaedc632b3a38b3d1b1d7cb3fce2e00983ef2a99be9746697bd95175dff",
+      "acknowledgedSourceHash": "eb89eeaedc632b3a38b3d1b1d7cb3fce2e00983ef2a99be9746697bd95175dff",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Defines the gated target create_project MCP command, canonical Project envelope/fingerprint, context-scoped Supabase RPC adapter and exact applied/rejected result validation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "create_project target MCP tool",
+          "Canonical Project command encoder",
+          "Scoped Supabase Project RPC adapter"
+        ],
+        "securityRequirements": [
+          "Account and Principal scope come from authenticated context and no service-role key is accepted"
+        ],
+        "syncRequirements": [
+          "MCP and Swift encode byte-identical project-create-v1 envelopes and validate the same result identity"
+        ]
+      },
+      "migration": {
+        "rule": "Do not alter or import the Firebase MCP implementation before explicit cutover.",
+        "reconciliation": [
+          "App and MCP fixtures produce the same canonical envelope and SHA-256 fingerprint"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm --prefix LedgerTargetMCP run check",
+          "npm --prefix LedgerTargetMCP test",
+          "npm run target:supabase:test:rpc"
+        ],
+        "acceptance": [
+          "Malformed input never calls the backend; scoped requests use no privileged credential; mismatched results fail closed"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001",
+        "EVID-CONTRACT-CATALOG-001"
+      ],
+      "notes": "The tool is target-only and not registered in a deployed server.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "MCPMOD-EDF53EB768EB",
@@ -16930,12 +17263,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "6005aab3c912c94c30d20045fde931b66e391092338734a6c2a13438cc33324d",
-      "acknowledgedSourceHash": "6005aab3c912c94c30d20045fde931b66e391092338734a6c2a13438cc33324d",
+      "observedSourceHash": "10895f7c911e9bc246e0dfdf19b5264fa898e60faae293189a41ce1efdd1a530",
+      "acknowledgedSourceHash": "10895f7c911e9bc246e0dfdf19b5264fa898e60faae293189a41ce1efdd1a530",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client creation and local readback without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client and Project creation/readback without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -18570,12 +18903,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "b257e7b261c0d9ef9e21fbd27dfa994f27e75e938573943a1a4a0781529f68a8",
-      "acknowledgedSourceHash": "b257e7b261c0d9ef9e21fbd27dfa994f27e75e938573943a1a4a0781529f68a8",
+      "observedSourceHash": "669344548be498d1dd0a065f78de7e47d6048110203bab27468d44fa65adec1a",
+      "acknowledgedSourceHash": "669344548be498d1dd0a065f78de7e47d6048110203bab27468d44fa65adec1a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, insert-only Client command, local-only operation evidence and immutable server results.",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project commands, local-only optimistic aggregates/operation evidence and immutable server results.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -19506,12 +19839,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "848e66f904ee082f76a3d2bb199f98b058f942a2d59c215a52f657214334e810",
-      "acknowledgedSourceHash": "848e66f904ee082f76a3d2bb199f98b058f942a2d59c215a52f657214334e810",
+      "observedSourceHash": "b37c217dfa8142a088761ae932e9fc7087592a87f9ee834fb20bac6eb53b59e1",
+      "acknowledgedSourceHash": "b37c217dfa8142a088761ae932e9fc7087592a87f9ee834fb20bac6eb53b59e1",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements Client core-details observation from local PowerSync rows with explicit waiting, partial, stale and ready truth; pending optimistic rows can never be labeled authoritative.",
+      "currentBehavior": "Implements Client core-details observation from authoritative plus local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority wins and removes the linked pending overlay before it can later resurrect.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -19837,8 +20170,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCreationPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "ed87781c0a3d71f5edc4218867881852ffcdf15261c417e533f1d4116a4b7423",
-      "acknowledgedSourceHash": "ed87781c0a3d71f5edc4218867881852ffcdf15261c417e533f1d4116a4b7423",
+      "observedSourceHash": "bb5ff3e637adf5e7e6f56e1becf3b0903f12c34c3acfce794dea8897c5bd12f1",
+      "acknowledgedSourceHash": "bb5ff3e637adf5e7e6f56e1becf3b0903f12c34c3acfce794dea8897c5bd12f1",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -19853,7 +20186,7 @@
           "Caller cannot omit Account, actor, contract or fingerprint binding from the typed command"
         ],
         "syncRequirements": [
-          "The Client projection and command enter one two-row PowerSync CRUD transaction"
+          "Local operation evidence, the local-only Client overlay and one insert-only command are accepted atomically; only the command enters the PowerSync CRUD queue"
         ]
       },
       "migration": {
@@ -22626,12 +22959,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "4dcd3c33910b6f5a948fa65c4a203b06e7eb04a9404b9e93031aec45493ee4ac",
-      "acknowledgedSourceHash": "4dcd3c33910b6f5a948fa65c4a203b06e7eb04a9404b9e93031aec45493ee4ac",
+      "observedSourceHash": "69c380a8ba7d88baf9646bb25d34e91226bf39c44c7147a879d55a156a8bfcca",
+      "acknowledgedSourceHash": "69c380a8ba7d88baf9646bb25d34e91226bf39c44c7147a879d55a156a8bfcca",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Composes the encrypted per-Principal/Account local Client runtime and exposes create, watch, pending-upload count, cipher inspection and explicit close/delete behavior.",
+      "currentBehavior": "Composes the encrypted per-Principal/Account local target runtime and exposes Client/Project create/watch operations, pending-upload count, cipher inspection and explicit close/delete behavior.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -22725,6 +23058,61 @@
       ],
       "notes": "Preserve fast offline creation and implement real template application. M2 map reviewed under target-mapping-method.md; stable Space/checklist/assignment identities and typed operations replace Firebase arrays/CRUD.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "SWIFT-56CB8BCDD85C",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ProjectCoreDetailsPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ProjectCoreDetailsPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "f742b093971dae44892110a13b0178b95ffadadb66539280873a65c252ae1aa3",
+      "acknowledgedSourceHash": "f742b093971dae44892110a13b0178b95ffadadb66539280873a65c252ae1aa3",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Observes one Project and its authoritative Client from local PowerSync data, overlays pending Project/new-Client setup without claiming authority, and removes the complete local optimistic aggregate after authoritative Project/Client readback is visible.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "PowerSync Project core-details query adapter",
+          "Optimistic Project aggregate reconciliation"
+        ],
+        "securityRequirements": [
+          "Every lookup binds exact Account and Project identity"
+        ],
+        "syncRequirements": [
+          "Pending evidence is partial; authoritative rows win and cause linked overlays to be removed"
+        ]
+      },
+      "migration": {
+        "rule": "Read target local rows only and never a Firebase cache.",
+        "reconciliation": [
+          "Evicting an authoritative row cannot resurrect a previously reconciled optimistic Project"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectPowerSyncVerticalSliceTests.authoritativeReadbackReconcilesProjectAggregate"
+        ],
+        "acceptance": [
+          "Authoritative readback renders once and removes Project, allocation and new-Client overlays"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "The query currently owns Project core details only; budget-segment and history queries remain separate slices.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-57F289B15D4B",
@@ -23392,6 +23780,60 @@
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
+      "id": "SWIFT-5D88C2B47970",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift"
+        }
+      ],
+      "observedSourceHash": "3c585a69fc8c75ca5727a33abcb2b252819851845f2ba54f1c0fcb0a28a46c71",
+      "acknowledgedSourceHash": "3c585a69fc8c75ca5727a33abcb2b252819851845f2ba54f1c0fcb0a28a46c71",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, an optional new-Client overlay, a Project overlay, the complete allocation overlays and one insert-only upload command; exact replay is stable and changed replay is refused.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Offline Project setup operation adapter"
+        ],
+        "securityRequirements": [
+          "Typed command scope, actor, contract, identities and fingerprint cannot be omitted"
+        ],
+        "syncRequirements": [
+          "The whole optimistic aggregate and one command are committed or rolled back together"
+        ]
+      },
+      "migration": {
+        "rule": "Create no Firebase write adapter and no dual-write path.",
+        "reconciliation": [
+          "Restart restores the exact aggregate until rejection or authoritative readback removes its overlays"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectPowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "New/existing Client, zero-category, nullable/zero/mixed-currency and restart cases remain atomic"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-5E15CB2D9DF7",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/ReturnTransactionPickerModal.swift",
@@ -23593,12 +24035,12 @@
           "path": "LedgeriOS/LedgerTargetCore/GeneratedContractCatalog.swift"
         }
       ],
-      "observedSourceHash": "0735890397eefbb11d66e67867585fd0d4d87c958872ebcd0b4a3a3dc7236f08",
-      "acknowledgedSourceHash": "0735890397eefbb11d66e67867585fd0d4d87c958872ebcd0b4a3a3dc7236f08",
+      "observedSourceHash": "b506bee5068c7f807ca807dd441d1c93c3e3949555f3efbf2aae4d165fcb404a",
+      "acknowledgedSourceHash": "b506bee5068c7f807ca807dd441d1c93c3e3949555f3efbf2aae4d165fcb404a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Embeds the generated canonical target contract bytes/hash, including gated Client management/create metadata, and loads them through the typed Swift catalog validator.",
+      "currentBehavior": "Embeds the generated canonical target contract bytes/hash, including gated Client/Project management, financial-visibility and create-command metadata, and loads them through the typed Swift catalog validator.",
       "disposition": "redesign",
       "target": {
         "owner": "MCP Platform and Contract Registry",
@@ -25375,6 +25817,61 @@
       ],
       "notes": "Preserve list capability while adding readiness and relationship-derived accounting sections. M2 map reviewed under target-mapping-method.md; one physical Item identity and typed query/operation authority replace Firebase/proto mechanics.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "SWIFT-7FCF476FF67C",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SupabaseProjectCreationRPC.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SupabaseProjectCreationRPC.swift"
+        }
+      ],
+      "observedSourceHash": "9486a3f6cbef6e935809e13f165ca46b3d0cf07df9c0ddd50c0d65cb1a958c29",
+      "acknowledgedSourceHash": "9486a3f6cbef6e935809e13f165ca46b3d0cf07df9c0ddd50c0d65cb1a958c29",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Posts the typed Project command to Supabase with an injected scoped user token and publishable key, preserves Int64 Money precision and nullable values, decodes the terminal result and validates exact Operation, Account, fingerprint and Project identity.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Swift Supabase Project setup RPC adapter"
+        ],
+        "securityRequirements": [
+          "Only injected user authorization and a public publishable key are sent"
+        ],
+        "syncRequirements": [
+          "Result identity/fingerprint mismatch fails before queue completion"
+        ]
+      },
+      "migration": {
+        "rule": "Use only with a validated isolated target environment and target session.",
+        "reconciliation": [
+          "Swift, MCP and REST tests share the same RPC field/result contract"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectPowerSyncVerticalSliceTests.projectRPCBoundary",
+          "scripts/test-local-project-creation-rpc.mjs"
+        ],
+        "acceptance": [
+          "Typed request/result boundaries preserve full Money precision and exact nullable fields"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "No service-role or hosted credential is embedded.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-7FD35B52D248",
@@ -28930,12 +29427,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncUploadConnector.swift"
         }
       ],
-      "observedSourceHash": "0b08830d01d09a02d6db19d210d86528247ecc8d8ce6ac94f6eff7cd5b8c0907",
-      "acknowledgedSourceHash": "0b08830d01d09a02d6db19d210d86528247ecc8d8ce6ac94f6eff7cd5b8c0907",
+      "observedSourceHash": "db88157684d67eece8c16bc9005d7f657d249dc76635bd298a07061c53ba2135",
+      "acknowledgedSourceHash": "db88157684d67eece8c16bc9005d7f657d249dc76635bd298a07061c53ba2135",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Validates the exact optimistic Client plus insert-only command transaction, calls the trusted Client handler, drains applied or durably rejected operations, and updates local-only terminal state.",
+      "currentBehavior": "Dispatches one insert-only Client or Project command per PowerSync transaction, validates its exact local operation and optimistic aggregate linkage, calls the matching trusted handler, and drains only a matching applied or durable rejected terminal result.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -37386,6 +37883,61 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "TEST-3F2CAFC760D5",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift"
+        }
+      ],
+      "observedSourceHash": "7b40b2d6e853cb458eb65955ee7764afefb60851f4b699560de3e431e9e82cbe",
+      "acknowledgedSourceHash": "7b40b2d6e853cb458eb65955ee7764afefb60851f4b699560de3e431e9e82cbe",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Runs seven target-only PowerSync Project tests for cross-runtime canonical parity, encrypted atomic restart durability, authoritative overlay reconciliation, existing/new Client branches, zero categories, aggregate rejection cleanup, mixed command FIFO dispatch and Int64 RPC precision.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup",
+        "surfaces": [
+          "Project setup PowerSync vertical-slice test suite"
+        ],
+        "securityRequirements": [
+          "Tests assert encrypted persistence, scoped credentials and malformed/rebound refusal"
+        ],
+        "syncRequirements": [
+          "Tests assert one command transaction, aggregate cleanup and Client/Project FIFO behavior"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only commands and disposable databases.",
+        "reconciliation": [
+          "Swift canonical bytes/hash match the target MCP fixture exactly"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:powersync:test"
+        ],
+        "acceptance": [
+          "All seven Project PowerSync tests pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-SETUP-PROVIDER-001"
+      ],
+      "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only.",
+      "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "TEST-43E8D2F232DE",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgeriOSTests/BillingSummaryCalculationTests.swift",
@@ -40695,12 +41247,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/GeneratedContractCatalogTests.swift"
         }
       ],
-      "observedSourceHash": "2cf78e4f8ee9dd7f7760ae943a21adea779a27e50d505752c20747ea714bcd88",
-      "acknowledgedSourceHash": "2cf78e4f8ee9dd7f7760ae943a21adea779a27e50d505752c20747ea714bcd88",
+      "observedSourceHash": "8380fdf8ca24cdd01bc065c288754f3a9a1d521e4852ef5685a0f6f056219b7a",
+      "acknowledgedSourceHash": "8380fdf8ca24cdd01bc065c288754f3a9a1d521e4852ef5685a0f6f056219b7a",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, available-versus-gated capability separation, provider/credential/persistence exclusion and noncanonical-hash refusal.",
+      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, available platform versus gated Client/Project capability separation, provider/credential/persistence exclusion and noncanonical-hash refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "MCP Platform and Contract Registry",
@@ -41318,12 +41870,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "c4cbfb290f38f8d37efca1ab700a9648ea9ba4f0b39a2e9dc842f146a88e2043",
-      "acknowledgedSourceHash": "c4cbfb290f38f8d37efca1ab700a9648ea9ba4f0b39a2e9dc842f146a88e2043",
+      "observedSourceHash": "de4d74577376af3cf1280252f85f3c69e41f64a98e97ee98a9a1cf38dc253c87",
+      "acknowledgedSourceHash": "de4d74577376af3cf1280252f85f3c69e41f64a98e97ee98a9a1cf38dc253c87",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs eight target-only PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, permanent rejection, readiness honesty, OperationID rebinding refusal, cross-runtime fingerprint parity, millisecond timestamp preservation, credential refusal and Swift RPC boundaries.",
+      "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, authoritative overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -41348,7 +41900,7 @@
           "npm run target:powersync:test"
         ],
         "acceptance": [
-          "All eight isolated PowerSync tests pass"
+          "All nine isolated Client PowerSync tests pass"
         ]
       },
       "status": "target_mapped",

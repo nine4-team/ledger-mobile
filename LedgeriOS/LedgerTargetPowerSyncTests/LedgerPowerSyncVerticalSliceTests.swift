@@ -46,8 +46,14 @@ struct LedgerPowerSyncVerticalSliceTests {
         #expect(receipt.operationId == command.envelope.operationId)
         #expect(receipt.localState == .queued)
 
-        let clientCount = try await firstDatabase.get(
+        let authoritativeClientCount = try await firstDatabase.get(
             sql: "SELECT count(*) AS count FROM spike_clients WHERE id = ?",
+            parameters: [command.draft.clientId.rawValue]
+        ) { cursor in
+            try cursor.getInt64(name: "count")
+        }
+        let pendingClientCount = try await firstDatabase.get(
+            sql: "SELECT count(*) AS count FROM spike_pending_clients WHERE id = ?",
             parameters: [command.draft.clientId.rawValue]
         ) { cursor in
             try cursor.getInt64(name: "count")
@@ -58,7 +64,8 @@ struct LedgerPowerSyncVerticalSliceTests {
         ) { cursor in
             try cursor.getInt64(name: "count")
         }
-        #expect(clientCount == 1)
+        #expect(authoritativeClientCount == 0)
+        #expect(pendingClientCount == 1)
         #expect(operationCount == 1)
 
         try await firstDatabase.close()
@@ -66,20 +73,17 @@ struct LedgerPowerSyncVerticalSliceTests {
         #expect(!String(decoding: rawBytes, as: UTF8.self).contains("North House"))
 
         let reopened = try fixture.open()
-        let restoredClientCount = try await reopened.get(
-            sql: "SELECT count(*) AS count FROM spike_clients WHERE id = ?",
+        let restoredPendingClientCount = try await reopened.get(
+            sql: "SELECT count(*) AS count FROM spike_pending_clients WHERE id = ?",
             parameters: [command.draft.clientId.rawValue]
         ) { cursor in
             try cursor.getInt64(name: "count")
         }
-        #expect(restoredClientCount == 1)
+        #expect(restoredPendingClientCount == 1)
 
         let queued = try await reopened.getNextCrudTransaction()
-        #expect(queued?.crud.count == 2)
-        #expect(Set(queued?.crud.map(\.table) ?? []) == Set([
-            LedgerPowerSyncTable.clients,
-            LedgerPowerSyncTable.clientCommands
-        ]))
+        #expect(queued?.crud.count == 1)
+        #expect(queued?.crud.first?.table == LedgerPowerSyncTable.clientCommands)
 
         let applier = RecordingClientCreationApplier()
         let connector = LedgerPowerSyncUploadConnector(
@@ -97,6 +101,8 @@ struct LedgerPowerSyncVerticalSliceTests {
             try cursor.getString(name: "local_state")
         }
         #expect(localState == "applied")
+        let replay = try await ClientCreationPowerSyncStore(database: reopened).create(command)
+        #expect(replay.localState == .applied)
 
         try await reopened.close(deleteDatabase: true)
         #expect(!FileManager.default.fileExists(atPath: fixture.databaseURL.path))
@@ -190,6 +196,60 @@ struct LedgerPowerSyncVerticalSliceTests {
         fixture.removeDirectory()
     }
 
+    @Test("Authoritative Client readback removes its local optimistic overlay")
+    func authoritativeReadbackReconcilesPendingClient() async throws {
+        let fixture = try DatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.command()
+        _ = try await ClientCreationPowerSyncStore(database: database).create(command)
+        let createdAtMilliseconds = Int64(Self.capturedAt.timeIntervalSince1970 * 1_000)
+        _ = try await database.execute(
+            sql: """
+            INSERT INTO spike_clients (
+              id, account_id, display_name, lifecycle, revision,
+              created_at_ms, updated_at_ms, created_by_principal_id
+            ) VALUES (?, ?, ?, 'active', 1, ?, ?, ?)
+            """,
+            parameters: [
+                command.draft.clientId.rawValue,
+                command.envelope.accountId.rawValue,
+                command.draft.displayName.rawValue,
+                createdAtMilliseconds,
+                createdAtMilliseconds,
+                command.envelope.actorPrincipalId.rawValue
+            ]
+        )
+
+        let request = try ClientCoreDetailsRequest(
+            accountId: command.envelope.accountId,
+            clientId: command.draft.clientId
+        )
+        var iterator = ClientCoreDetailsPowerSyncQuery(
+            database: database,
+            now: { Self.observedAt }
+        ).watchClientCoreDetails(request).makeAsyncIterator()
+        _ = try await iterator.next()
+        let update = try await iterator.next()
+
+        guard case .snapshot(let snapshot)? = update?.state else {
+            Issue.record("Expected authoritative Client snapshot")
+            try await database.close(deleteDatabase: true)
+            fixture.removeDirectory()
+            return
+        }
+        #expect(snapshot.row?.client.id == command.draft.clientId)
+        let pendingCount = try await database.get(
+            sql: "SELECT count(*) FROM spike_pending_clients WHERE id = ?",
+            parameters: [command.draft.clientId.rawValue]
+        ) { cursor in
+            try cursor.getInt64(index: 0)
+        }
+        #expect(pendingCount == 0)
+
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
     @Test("A repeated OperationID cannot be rebound locally")
     func replayCannotChangePayload() async throws {
         let fixture = try DatabaseFixture()
@@ -206,12 +266,12 @@ struct LedgerPowerSyncVerticalSliceTests {
             try await store.create(changed)
         }
 
-        let clientCount = try await database.get(
-            "SELECT count(*) FROM spike_clients"
+        let pendingClientCount = try await database.get(
+            "SELECT count(*) FROM spike_pending_clients"
         ) { cursor in
             try cursor.getInt64(index: 0)
         }
-        #expect(clientCount == 1)
+        #expect(pendingClientCount == 1)
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }
@@ -238,6 +298,15 @@ struct LedgerPowerSyncVerticalSliceTests {
             try cursor.getString(name: "local_state")
         }
         #expect(localState == "rejected")
+        let pendingClientCount = try await database.get(
+            sql: "SELECT count(*) FROM spike_pending_clients WHERE id = ?",
+            parameters: [command.draft.clientId.rawValue]
+        ) { cursor in
+            try cursor.getInt64(index: 0)
+        }
+        #expect(pendingClientCount == 0)
+        let replay = try await ClientCreationPowerSyncStore(database: database).create(command)
+        #expect(replay.localState == .rejected)
         try await database.close(deleteDatabase: true)
         fixture.removeDirectory()
     }

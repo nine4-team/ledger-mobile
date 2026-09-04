@@ -130,6 +130,27 @@
         { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
       ]
     },
+    "M0-PROJECT-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated Project setup provider slice must preserve stable Project/Client identity and exact nullable category allocations while proving atomic Postgres authorization, encrypted offline durability, upload/reconciliation and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/budget-management.md", "role": "current_product" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-CUTOVER-CONTROL-001": {
       "scope": "technical_control",
       "rationale": "The final source freeze, late-writer recovery, and hard cutover are migration controls; they must preserve approved target behavior without implementing it in Firebase.",

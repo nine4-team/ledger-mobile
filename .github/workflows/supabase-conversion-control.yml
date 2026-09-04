@@ -84,8 +84,8 @@ jobs:
       - name: Confirm target checks did not rewrite tracked artifacts
         run: git diff --exit-code
 
-  local-supabase-client-slice:
-    name: Local Supabase Client slice
+  local-supabase-provider-slices:
+    name: Local Supabase provider slices
     needs: conversion-control
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -104,7 +104,7 @@ jobs:
           npx --yes supabase@2.116.0 start
           -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
 
-      - name: Verify Client schema, RLS, RPC, and replay behavior
+      - name: Verify Client and Project schema, RLS, RPC, and replay behavior
         run: |
           npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning
           npm run target:supabase:test:db

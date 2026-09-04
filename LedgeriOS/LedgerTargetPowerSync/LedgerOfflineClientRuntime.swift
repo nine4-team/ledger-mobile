@@ -6,6 +6,8 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
     private let database: any PowerSyncDatabaseProtocol
     private let creationStore: ClientCreationPowerSyncStore
     private let detailsQuery: ClientCoreDetailsPowerSyncQuery
+    private let projectSetupStore: ProjectSetupPowerSyncStore
+    private let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
 
     public init(
         absoluteDatabasePath: String,
@@ -19,6 +21,8 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
         self.database = database
         creationStore = ClientCreationPowerSyncStore(database: database, now: now)
         detailsQuery = ClientCoreDetailsPowerSyncQuery(database: database, now: now)
+        projectSetupStore = ProjectSetupPowerSyncStore(database: database, now: now)
+        projectDetailsQuery = ProjectCoreDetailsPowerSyncQuery(database: database, now: now)
     }
 
     public func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
@@ -29,6 +33,16 @@ public final class LedgerOfflineClientRuntime: @unchecked Sendable {
         _ request: ClientCoreDetailsRequest
     ) -> AsyncThrowingStream<ClientCoreDetailsUpdate, Error> {
         detailsQuery.watchClientCoreDetails(request)
+    }
+
+    public func createProject(_ command: CreateProjectCommand) async throws -> OperationReceipt {
+        try await projectSetupStore.create(command)
+    }
+
+    public func watchProject(
+        _ request: ProjectCoreDetailsRequest
+    ) -> AsyncThrowingStream<ProjectCoreDetailsUpdate, Error> {
+        projectDetailsQuery.watchProjectCoreDetails(request)
     }
 
     public func pendingUploadCount() async throws -> Int64 {

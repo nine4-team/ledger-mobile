@@ -40,9 +40,9 @@ const EXPECTED_VERIFICATION_STABLE_SHA =
 const EXPECTED_CONTRACTS_SHA =
   "171e3464ca4d26ed9446d7da0b0cc892e433226fd59d4a14e0410c83d657bacd";
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
-  "4961cf2885698d768efeba4db7b46417c5751f65467d7f469f503d76c681d095";
+  "dce10f968ed39ea2a0078fd8c270ee476080ea19a6eaaf06c27b37a32c5b8731";
 const EXPECTED_WORKFLOW_INTEGRATION_SHA =
-  "786b2146c88addcfb3f95bf8c37aabb029e511023450194e276c173850647d78";
+  "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e";
 
 const EXPECTED_COUNTS = Object.freeze({ queries: 386, outcomes: 584, batches: 10 });
 const LIFECYCLES = Object.freeze(["draft", "ready", "implemented", "verified"]);
@@ -440,7 +440,7 @@ export function validateIntegrationHooks(packageJson, workflowText) {
   );
   const localSupabaseStart = uniqueLineIndex(
     lines,
-    /^  local-supabase-client-slice:\s*$/,
+    /^  local-supabase-provider-slices:\s*$/,
     "local Supabase Client job",
   );
   if (conversionStart >= targetStart) fail("conversion-control job must precede target-environment job");
@@ -496,8 +496,8 @@ export function validateIntegrationHooks(packageJson, workflowText) {
   if (!targetLines.some((line) => /^    needs: conversion-control\s*$/.test(line))) {
     fail("target-environment job must depend on conversion-control");
   }
-  if (!targetLines.some((line) => /^    runs-on: macos-15\s*$/.test(line))) {
-    fail("target-environment job must run on macos-15");
+  if (!targetLines.some((line) => /^    runs-on: macos-26\s*$/.test(line))) {
+    fail("target-environment job must run on macos-26");
   }
   if (!targetLines.some((line) => /^        run: swift test --package-path LedgeriOS\s*$/.test(line))) {
     fail("target-environment job must retain the Swift test gate");

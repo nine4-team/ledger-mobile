@@ -26,12 +26,39 @@ public final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @
                     ))
                     let rows = try database.watch(
                         sql: """
-                        SELECT id, account_id, display_name, lifecycle, revision,
-                               created_at_ms, updated_at_ms, pending_operation_id
-                        FROM \(LedgerPowerSyncTable.clients)
-                        WHERE account_id = ? AND id = ?
+                        SELECT authoritative.id, authoritative.account_id,
+                               authoritative.display_name, authoritative.lifecycle,
+                               authoritative.revision, authoritative.created_at_ms,
+                               authoritative.updated_at_ms,
+                               NULL AS pending_operation_id,
+                               pending.operation_id AS reconciliation_operation_id
+                        FROM \(LedgerPowerSyncTable.clients) AS authoritative
+                        LEFT JOIN \(LedgerPowerSyncTable.pendingClients) AS pending
+                          ON pending.account_id = authoritative.account_id
+                         AND pending.id = authoritative.id
+                        WHERE authoritative.account_id = ? AND authoritative.id = ?
+                        UNION ALL
+                        SELECT pending.id, pending.account_id,
+                               pending.display_name, pending.lifecycle,
+                               pending.revision, pending.created_at_ms,
+                               pending.updated_at_ms,
+                               pending.operation_id AS pending_operation_id,
+                               NULL AS reconciliation_operation_id
+                        FROM \(LedgerPowerSyncTable.pendingClients) AS pending
+                        WHERE pending.account_id = ? AND pending.id = ?
+                          AND NOT EXISTS (
+                            SELECT 1
+                            FROM \(LedgerPowerSyncTable.clients) AS authoritative
+                            WHERE authoritative.account_id = pending.account_id
+                              AND authoritative.id = pending.id
+                          )
                         """,
-                        parameters: [request.accountId.rawValue, request.clientId.rawValue]
+                        parameters: [
+                            request.accountId.rawValue,
+                            request.clientId.rawValue,
+                            request.accountId.rawValue,
+                            request.clientId.rawValue
+                        ]
                     ) { cursor in
                         try PowerSyncClientRow(cursor: cursor)
                     }
@@ -59,6 +86,18 @@ public final class ClientCoreDetailsPowerSyncQuery: ClientCoreDetailsQuerying, @
                             ),
                             asOf: now()
                         )
+                        for row in localRows {
+                            guard let operationId = row.reconciliationOperationId else {
+                                continue
+                            }
+                            try await database.execute(
+                                sql: """
+                                DELETE FROM \(LedgerPowerSyncTable.pendingClients)
+                                WHERE id = ? AND account_id = ? AND operation_id = ?
+                                """,
+                                parameters: [row.id, row.accountId, operationId]
+                            )
+                        }
                         continuation.yield(try ClientCoreDetailsUpdate(
                             request: request,
                             state: .snapshot(local)
@@ -102,6 +141,7 @@ private struct PowerSyncClientRow: Sendable {
     let createdAtMilliseconds: Int64
     let updatedAtMilliseconds: Int64
     let pendingOperationId: String?
+    let reconciliationOperationId: String?
 
     init(cursor: any SqlCursor) throws {
         id = try cursor.getString(name: "id")
@@ -112,6 +152,9 @@ private struct PowerSyncClientRow: Sendable {
         createdAtMilliseconds = try cursor.getInt64(name: "created_at_ms")
         updatedAtMilliseconds = try cursor.getInt64(name: "updated_at_ms")
         pendingOperationId = try cursor.getStringOptional(name: "pending_operation_id")
+        reconciliationOperationId = try cursor.getStringOptional(
+            name: "reconciliation_operation_id"
+        )
     }
 
     func snapshot() throws -> ClientCoreDetailsSnapshot {

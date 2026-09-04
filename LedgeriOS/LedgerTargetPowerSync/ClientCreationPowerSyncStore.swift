@@ -24,23 +24,30 @@ public actor ClientCreationPowerSyncStore: ClientCreationOperating {
 
         do {
             let receipt = try await database.writeTransaction { transaction in
-                let existingFingerprint = try transaction.getOptional(
+                let existingOperation = try transaction.getOptional(
                     sql: """
-                    SELECT fingerprint FROM \(LedgerPowerSyncTable.localOperations)
+                    SELECT fingerprint, local_state
+                    FROM \(LedgerPowerSyncTable.localOperations)
                     WHERE id = ?
                     """,
                     parameters: [command.envelope.operationId.rawValue]
                 ) { cursor in
-                    try cursor.getString(name: "fingerprint")
+                    (
+                        try cursor.getString(name: "fingerprint"),
+                        try cursor.getString(name: "local_state")
+                    )
                 }
 
-                if let existingFingerprint {
-                    guard existingFingerprint == command.fingerprint.sha256 else {
+                if let existingOperation {
+                    guard existingOperation.0 == command.fingerprint.sha256 else {
                         throw OperationContractFailure.payloadMismatch(command.envelope.operationId)
+                    }
+                    guard let localState = LocalOperationState(rawValue: existingOperation.1) else {
+                        throw ClientCreationFailure.localAcceptanceFailed
                     }
                     return OperationReceipt(
                         operationId: command.envelope.operationId,
-                        localState: .queued
+                        localState: localState
                     )
                 }
 
@@ -66,10 +73,10 @@ public actor ClientCreationPowerSyncStore: ClientCreationOperating {
 
                 _ = try transaction.execute(
                     sql: """
-                    INSERT INTO \(LedgerPowerSyncTable.clients) (
+                    INSERT INTO \(LedgerPowerSyncTable.pendingClients) (
                       id, account_id, display_name, lifecycle, revision,
                       created_at_ms, updated_at_ms, created_by_principal_id,
-                      pending_operation_id
+                      operation_id
                     ) VALUES (?, ?, ?, 'active', 1, ?, ?, ?, ?)
                     """,
                     parameters: [

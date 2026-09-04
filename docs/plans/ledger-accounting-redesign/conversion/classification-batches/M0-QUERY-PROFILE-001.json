@@ -183,8 +183,8 @@
     },
     {
       "id": "CONFIG-7AE45AD102EA",
-      "acknowledgeSourceHash": "92f3215289acd15fbdf1d495ec3a0bdd5ae63caf48dae2750e7c99c8f57f9218",
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "acknowledgeSourceHash": "640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build plus local Supabase Client/Project database/API test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "status": "characterized",
       "blockers": [],

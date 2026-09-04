@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T15:15:46.081Z",
+  "generatedFromManifestSync": "2026-09-04T16:17:08.727Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 859,
-    "targetRelevantSurfaces": 599,
-    "batches": 20,
-    "productScopeSurfaces": 699,
+    "surfaces": 869,
+    "targetRelevantSurfaces": 609,
+    "batches": 21,
+    "productScopeSurfaces": 709,
     "technicalControlSurfaces": 160
   },
   "canonicalTargetCoverage": [
@@ -70,18 +70,20 @@
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-INVENTORY-TRANSACTION-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 462,
-      "targetRelevantSurfaceCount": 346
+      "surfaceCount": 472,
+      "targetRelevantSurfaceCount": 356
     },
     {
       "path": "docs/specs/projects.md",
       "batchIds": [
-        "M0-PROJECT-CLIENT-REFERENCE-001"
+        "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-PROJECT-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 110,
-      "targetRelevantSurfaceCount": 108
+      "surfaceCount": 120,
+      "targetRelevantSurfaceCount": 118
     },
     {
       "path": "docs/specs/spaces.md",
@@ -1687,6 +1689,88 @@
         "TEST-E591BE8A4B58",
         "TEST-E8DC4AE52ED7",
         "TEST-F304037D32B6"
+      ]
+    },
+    {
+      "batchId": "M0-PROJECT-POWERSYNC-PROVIDER-001",
+      "title": "Target Project setup Supabase and PowerSync provider slice",
+      "scope": "product",
+      "rationale": "The isolated Project setup provider slice must preserve stable Project/Client identity and exact nullable category allocations while proving atomic Postgres authorization, encrypted offline durability, upload/reconciliation and app/MCP parity without authorizing production.",
+      "surfaceCount": 10,
+      "targetRelevantSurfaceCount": 10,
+      "authorities": [
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/budget-management.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/financial-access-controls.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-09CEA78268BF",
+        "CONFIG-C1B257780C7C",
+        "CONFIG-E1332AB9A867",
+        "MCPMOD-3C6E07498EC9",
+        "MCPMOD-C5E2CD8754AB",
+        "MCPMOD-E9B4396B90B9",
+        "SWIFT-56CB8BCDD85C",
+        "SWIFT-5D88C2B47970",
+        "SWIFT-7FCF476FF67C",
+        "TEST-3F2CAFC760D5"
       ]
     },
     {

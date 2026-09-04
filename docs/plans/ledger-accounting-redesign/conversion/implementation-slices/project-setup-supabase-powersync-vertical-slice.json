@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-setup-supabase-powersync-vertical-slice",
+  "title": "Create and read one complete Project setup offline through Supabase, PowerSync, the target app, and target MCP",
+  "kind": "product",
+  "status": "in_progress",
+  "owner": "Project Setup",
+  "surfaceIds": [
+    "CONFIG-C1B257780C7C",
+    "CONFIG-09CEA78268BF",
+    "CONFIG-E1332AB9A867",
+    "SWIFT-5D88C2B47970",
+    "SWIFT-56CB8BCDD85C",
+    "SWIFT-7FCF476FF67C",
+    "TEST-3F2CAFC760D5",
+    "MCPMOD-C5E2CD8754AB",
+    "MCPMOD-E9B4396B90B9",
+    "MCPMOD-3C6E07498EC9"
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "One accepted setup creates one stable Account-scoped Project related to one stable same-Account Client and durably records the complete selected category set and exact nullable allocations as one observable operation; description is optional and attachment upload remains separate.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-003", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-008", "PROJECTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "PROJECTPROVIDER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Project setup selects an existing Client or creates one preallocated new Client in the same atomic operation; copied Client display text never owns identity, scope or authorization.",
+      "decisionIds": ["D-006", "O-025"],
+      "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-008", "PROJECTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "PROJECTPROVIDER-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Missing allocation row means disabled, a selected null allocation means enabled without a stated budget, and selected zero or positive typed Money remains exact; zero selected categories is valid under the corrected target Project contract.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-008", "PROJECTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "PROJECTPROVIDER-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "The app accepts the whole Project setup without network, stores the operation plus optional Client, Project and complete allocation optimism atomically in encrypted local storage, renders it as partial, and preserves it until durable rejection or authoritative readback reconciles the entire aggregate.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-003", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-007", "PROJECTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "PROJECTPROVIDER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Command Authorization",
+      "invariant": "The trusted handler re-derives authenticated Principal, active Account membership and applicable Project, Client-management, budget-management and financial-visibility authority; direct table mutation and cross-Account reads fail closed. The exact final capability matrix remains gated by O-026 rather than silently becoming product authority from this spike.",
+      "decisionIds": ["O-026"],
+      "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-006", "PROJECTPROVIDER-TEST-007", "PROJECTPROVIDER-TEST-010", "PROJECTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "PROJECTPROVIDER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "The target app and gated target MCP tool use the same project-create-v1 command bytes, fingerprint, scoped-user RPC and terminal-result validation; neither accepts a service-role credential or caller-authored Account/Principal scope.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-009", "PROJECTPROVIDER-TEST-012"]
+    },
+    {
+      "id": "PROJECTPROVIDER-REQ-007",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "All work remains spike-prefixed, synthetic and isolated from Firebase, hosted target and production systems; it grants no deployment, migration, release or cutover authority, and A-003/A-004 remain proposed until the complete physical vertical-spike gate passes.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["PROJECTPROVIDER-TEST-006", "PROJECTPROVIDER-TEST-007", "PROJECTPROVIDER-TEST-010", "PROJECTPROVIDER-TEST-011", "PROJECTPROVIDER-TEST-012"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse ProjectSetupDraft, CreateProjectCommand, ProjectSetupOperating and ProjectCoreDetailsQuerying without provider types crossing into LedgerTargetCore.",
+        "One canonical sorted JSON envelope binds Account, actor, Operation, Project, existing/new Client selection, exact names/description, complete canonical allocations and client-created time; Swift, MCP and the trusted handler validate the same SHA-256 fingerprint."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "spike_projects stores stable Project identity, same-Account Client FK, display fields, lifecycle, revision and server audit evidence.",
+        "spike_budget_categories and spike_project_category_allocations preserve Account/category identity, lifecycle/type/visibility and absent versus null versus zero/positive Money states with indexed FKs and uniqueness.",
+        "spike_operation_results stores one immutable applied/rejected result per Project operation and binds the exact command fingerprint and Project subject."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [
+        "ledger_private.spike_create_project authenticates and authorizes, locks Operation/Project/new-Client identities, validates the exact envelope and canonical category order, and creates optional Client, Project, allocations and terminal result atomically.",
+        "Exact replay returns the immutable result; changed replay cannot rebind; invalid selection/category/payload and concurrent identity conflicts become bounded durable outcomes where permitted by the authenticated scope."
+      ],
+      "notApplicable": ""
+    },
+    "dataApiGrants": {
+      "items": [
+        "Authenticated users receive only visibility-filtered SELECT and explicit RPC/helper execution; anon and authenticated receive no direct Project, Client, category, allocation or operation-result write privilege.",
+        "Private security-definer helpers revoke PUBLIC execution and validate auth.uid() through Principal/membership evidence."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Every exposed Project/category/allocation relation has RLS; Project reads require active Account membership, and category/allocation reads also require applicable financial visibility.",
+        "Direct authenticated DML is denied and cross-Account rows are non-enumerable through both table and RPC paths."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Project streams derive active Account scope from auth.user_id() and synchronize Projects, visible categories, visible allocations and immutable operation results needed by the local slice.",
+        "Real authenticated Sync Stream validation remains required before A-004 can advance."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Offline acceptance atomically writes local operation evidence, optional new-Client optimism, Project optimism, the complete allocation optimism and one insert-only Project command into encrypted per-Principal/Account PowerSync storage.",
+        "Pending rows remain partial; durable rejection removes the entire optimistic aggregate, while authoritative Project/Client readback wins and deletes linked local-only overlays so later authority eviction cannot resurrect stale optimism.",
+        "The upload connector validates exact local operation/overlay linkage and dispatches Client and Project commands in FIFO order only after matching immutable terminal results."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Project setup contains no attachment bytes or hero-image claim. Media remains the separate S6 durability obligation and prevents A-003/A-004 advancement from this slice alone."
+    },
+    "appMcp": {
+      "items": [
+        "The isolated target staging shell can create a new- or existing-Client Project offline and immediately read the local partial Project while retaining its permanent no-hosted-services banner.",
+        "The gated create_project MCP tool derives Account/Principal from request context and uses the same canonical command, scoped-user RPC and result validation as Swift.",
+        "Swift and TypeScript pin the identical representative Project envelope and SHA-256 fingerprint."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase snapshot is read or imported. Final Project/clientName/category/media synthesis and reconciliation remain separate migration slices."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Local verification exposes bounded pass/fail and stable error codes without logging credentials, names, descriptions, Money payloads or canonical envelopes.",
+        "A later connected rehearsal must record operation correlation, queue age, retry count, sync latency and terminal state without private payloads."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The slice exists only in the separate target worktree/app and spike-prefixed local schema; Firebase remains unchanged and authoritative.",
+        "Project setup authorization and target MCP activation remain gated; no hosted resource, deployment, source import, release or production switch occurs.",
+        "Rollback during local development is disposal of the isolated local database/configuration; source data is never mutated."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "PROJECTPROVIDER-TEST-001",
+      "kind": "database_invariant",
+      "owner": "supabase/tests/project_setup_vertical_slice.test.sql",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-003", "PROJECTPROVIDER-REQ-005"],
+      "expected": "A clean local reset passes all 22 Project schema, branch, allocation, identity, replay, authorization and tenant-isolation assertions together with the Client suite.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-002",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-003", "PROJECTPROVIDER-REQ-004"],
+      "expected": "New/existing Client setup, zero categories and exact nullable/zero/mixed-currency allocations persist atomically in encrypted local storage across close/reopen with one upload command.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-003",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-004"],
+      "expected": "A durable rejected result drains once, records rejected locally and removes pending Client, Project and allocation overlays without poisoning later FIFO commands.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-004",
+      "kind": "app_mcp_contract",
+      "owner": "LedgerTargetMCP/tests/projectCreation.test.ts and LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-003", "PROJECTPROVIDER-REQ-004", "PROJECTPROVIDER-REQ-006"],
+      "expected": "Swift and MCP share exact command bytes/hash, preserve Int64 Money and nullable fields, use scoped user credentials and reject mismatched terminal identity.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-005",
+      "kind": "handler_idempotency",
+      "owner": "supabase/tests/project_setup_vertical_slice.test.sql and scripts/test-local-project-creation-rpc.mjs",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-005", "PROJECTPROVIDER-REQ-006"],
+      "expected": "Exact OperationID replay returns one immutable result and changed fingerprint/payload cannot rebind or duplicate Client, Project or allocation identities.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-006",
+      "kind": "rls_negative",
+      "owner": "supabase/tests/project_setup_vertical_slice.test.sql and scripts/test-local-project-creation-rpc.mjs",
+      "covers": ["PROJECTPROVIDER-REQ-005", "PROJECTPROVIDER-REQ-007"],
+      "expected": "Anonymous, direct-write, missing-capability, hidden-financial-category and cross-Account attempts fail without exposing rows.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-007",
+      "kind": "sync_authorization",
+      "owner": "Future isolated hosted PowerSync vertical-spike rehearsal",
+      "covers": ["PROJECTPROVIDER-REQ-004", "PROJECTPROVIDER-REQ-005", "PROJECTPROVIDER-REQ-007"],
+      "expected": "Real authenticated streams deliver only Account-authorized Projects/categories/allocations/results, upload queued setup, reconcile all overlays and preserve tenant/financial isolation under role change and reconnect faults.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-008",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests Project setup suites plus cross-runtime provider fixtures",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-003"],
+      "expected": "Provider-free Project setup contracts and provider adapters preserve exact identity, selection, description and complete allocation semantics without generic backend fields.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-009",
+      "kind": "rls_positive",
+      "owner": "supabase/tests/project_setup_vertical_slice.test.sql and scripts/test-local-project-creation-rpc.mjs",
+      "covers": ["PROJECTPROVIDER-REQ-006"],
+      "expected": "An authenticated authorized member can call the RPC and read the resulting Project, Client, visible categories, allocations and terminal result in the same Account.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-010",
+      "kind": "advisor",
+      "owner": "Supabase Postgres security, indexing, collation and locking review",
+      "covers": ["PROJECTPROVIDER-REQ-005", "PROJECTPROVIDER-REQ-007"],
+      "expected": "Review confirms explicit grants/RLS, private security-definer functions, auth checks, indexed FKs/policies, byte-length and canonical-order parity, identity locks and no unresolved high-risk finding.",
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-011",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["PROJECTPROVIDER-REQ-007"],
+      "expected": "Immutable CI passes local Supabase DB/API tests, target/MCP tests, conversion/environment controls and both staging builds with a clean worktree.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-012",
+      "kind": "end_to_end",
+      "owner": "Future isolated authenticated target app and MCP rehearsal",
+      "covers": ["PROJECTPROVIDER-REQ-001", "PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-003", "PROJECTPROVIDER-REQ-004", "PROJECTPROVIDER-REQ-005", "PROJECTPROVIDER-REQ-006", "PROJECTPROVIDER-REQ-007"],
+      "expected": "A real target session accepts Project setup offline, reconnects through PowerSync, reaches the trusted Supabase handler, receives authoritative Client/Project/allocation/result rows and matches the MCP path without production access.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Local implementation and deterministic tests pass, but the dossier remains in_progress. A-003/A-004 remain proposed until real isolated Auth, Sync Streams, device, media, schema-evolution, performance and fault phases pass. O-026 remains open: the local spike intentionally tests a stronger least-privilege capability/financial-visibility model, but this does not approve the final product matrix. A permanently unauthorized queued command still requires an approved terminal-resolution policy during the connected Auth/Sync phase. Stable IDs are globally unique opaque identifiers while every relationship and authorization remains Account-scoped. No hosted resource, source import, production access, migration, release or cutover is authorized."
+}

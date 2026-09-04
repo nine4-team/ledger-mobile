@@ -55,6 +55,10 @@
       "description": "Derive the Principal from authentication and require active membership with Client-management capability in the requested Account."
     },
     {
+      "id": "project_setup_manager",
+      "description": "Derive the Principal from authentication; require active Project-management capability, Client-management capability when creating a Client, and Project-budget capability plus category visibility when allocations are present."
+    },
+    {
       "id": "local_principal_account",
       "description": "Require the active local Principal and Account namespace; this is local scope, not fresh server authorization."
     },
@@ -83,6 +87,10 @@
     {
       "id": "client_creation_write",
       "description": "Record bounded Client creation outcomes and contract version without Client names, tokens, or command payloads."
+    },
+    {
+      "id": "project_setup_write",
+      "description": "Record bounded Project setup outcomes and contract version without Project, Client, allocation, token, or command payload content."
     }
   ],
   "errors": [
@@ -165,6 +173,111 @@
       "code": "client_creation_request_rejected",
       "category": "transientInfrastructure",
       "retryDisposition": "automatic"
+    },
+    {
+      "code": "project_setup_operation_id_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_project_id_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_client_id_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_directory_project_name_invalid",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_created_at_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_client_selection_invalid",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_category_identity_invalid",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_category_identity_duplicate",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_category_allocation_negative",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_category_currency_invalid",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_command_encoding_invalid",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_payload_invalid",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_envelope_mismatch",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_fingerprint_mismatch",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_identity_conflict",
+      "category": "conflict",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_new_client_identity_conflict",
+      "category": "conflict",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_client_not_selectable",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "project_setup_category_not_selectable",
+      "category": "authorization",
+      "retryDisposition": "afterReauthentication"
+    },
+    {
+      "code": "project_setup_server_result_mismatch",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "project_setup_request_rejected",
+      "category": "transientInfrastructure",
+      "retryDisposition": "automatic"
+    },
+    {
+      "code": "project_setup_configuration_invalid",
+      "category": "invariant",
+      "retryDisposition": "never"
     }
   ],
   "capabilities": [
@@ -215,6 +328,14 @@
       "authorizationPolicy": "client_manager",
       "telemetryClass": "client_creation_write",
       "testOwner": "LedgerTargetMCP/tests/clientCreation.test.ts"
+    },
+    {
+      "id": "project_setup",
+      "version": "1",
+      "availability": "gated",
+      "authorizationPolicy": "project_setup_manager",
+      "telemetryClass": "project_setup_write",
+      "testOwner": "LedgerTargetMCP/tests/projectCreation.test.ts"
     }
   ],
   "contracts": [
@@ -314,6 +435,45 @@
       ],
       "telemetryClass": "client_creation_write",
       "testOwner": "LedgerTargetMCP/tests/clientCreation.test.ts",
+      "deprecation": null
+    },
+    {
+      "id": "create_project",
+      "kind": "operation",
+      "version": "1",
+      "capability": "project_setup",
+      "authorizationPolicy": "project_setup_manager",
+      "resultContract": "ProjectCreationRPCResult",
+      "errorCodes": [
+        "account_not_authorized",
+        "authentication_required",
+        "client_update_required",
+        "contract_unsupported",
+        "project_setup_operation_id_invalid",
+        "project_setup_project_id_invalid",
+        "project_setup_client_id_invalid",
+        "client_directory_client_name_invalid",
+        "client_directory_project_name_invalid",
+        "project_setup_created_at_invalid",
+        "project_setup_client_selection_invalid",
+        "project_setup_category_identity_invalid",
+        "project_setup_category_identity_duplicate",
+        "project_setup_category_allocation_negative",
+        "project_setup_category_currency_invalid",
+        "project_setup_command_encoding_invalid",
+        "project_setup_payload_invalid",
+        "project_setup_envelope_mismatch",
+        "project_setup_fingerprint_mismatch",
+        "project_setup_identity_conflict",
+        "project_setup_new_client_identity_conflict",
+        "project_setup_client_not_selectable",
+        "project_setup_category_not_selectable",
+        "project_setup_server_result_mismatch",
+        "project_setup_request_rejected",
+        "project_setup_configuration_invalid"
+      ],
+      "telemetryClass": "project_setup_write",
+      "testOwner": "LedgerTargetMCP/tests/projectCreation.test.ts",
       "deprecation": null
     }
   ],

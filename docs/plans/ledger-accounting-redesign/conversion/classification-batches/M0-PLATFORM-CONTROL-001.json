@@ -16,8 +16,8 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "3955a52d4830c755231a3affc2a3abb5fb7653cffa92e4d25bf98c62988c7052",
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
+      "acknowledgeSourceHash": "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -29,7 +29,7 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client provider slice; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+  "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
@@ -293,8 +293,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6005aab3c912c94c30d20045fde931b66e391092338734a6c2a13438cc33324d",
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client creation and local readback without opening a hosted connection.",
+      "acknowledgeSourceHash": "10895f7c911e9bc246e0dfdf19b5264fa898e60faae293189a41ce1efdd1a530",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client and Project creation/readback without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -2889,13 +2889,13 @@
     {
       "id": "CONFIG-B2A2BF619303",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "534ee67ba1b0f4cc6f51db9fd097a06ec31ba08379081045ac1f3b414c521fa3",
+      "acknowledgeSourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa",
       "currentBehavior": "Defines the canonical target-only version, enum, authorization-policy, telemetry, stable-error, capability, contract and deprecation registry.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "The registry retains implemented platform contracts and now carries one gated Client-management capability/create command owned by the provider slice. Gated is not deployed or production-active.",
+      "notes": "The registry retains implemented platform contracts and now carries gated Client/Project/budget-management capabilities, financial-visibility policy, and Client/Project create commands owned by provider slices. Gated is not deployed or production-active, and O-026 remains open.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Canonical target contract registry", "Capability manifest source", "Deprecation registry source"],
@@ -2914,13 +2914,13 @@
     {
       "id": "CONFIG-E8C1EA5B72F9",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "28e70b84d60e64d672f549272cd8b46976ee8e27f714d3700464950abee29788",
+      "acknowledgeSourceHash": "3559b2cef0fd3cbd8acb1aef8b03ee4a7d61728c38678a170a06dcf4cd806c72",
       "currentBehavior": "Publishes the bounded generated MCP contract resource with the canonical catalog and hash.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Build artifact includes the gated Client-create contract, but no target MCP server endpoint or deployment is active.",
+      "notes": "Build artifact includes the gated Client- and Project-create contracts, but no target MCP server endpoint or deployment is active.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Generated VersionedContractCatalog MCP resource payload", "Catalog hash projection"],
@@ -2964,13 +2964,13 @@
     {
       "id": "MCPMOD-CE84DA4C8EA4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "588a3943f770b67642fa9d36a6c469e03bbefe409f5cd26b20f7f8e8965b9986",
+      "acknowledgeSourceHash": "cffa8e977c26e511634cd2d376e47f32ae61a467d7f3b2d0b824a413771208ca",
       "currentBehavior": "Provides the generated strict TypeScript target contract catalog and canonical hash.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Separate target projection imported by the gated target Client-create handler; the current Firebase MCP runtime does not import it.",
+      "notes": "Separate target projection imported by the gated target Client- and Project-create handlers; the current Firebase MCP runtime does not import it.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Generated TypeScript contract catalog", "TargetContractCatalog type", "Canonical catalog hash"],
@@ -2989,8 +2989,8 @@
     {
       "id": "SWIFT-5FA3004D3855",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "0735890397eefbb11d66e67867585fd0d4d87c958872ebcd0b4a3a3dc7236f08",
-      "currentBehavior": "Embeds the generated canonical target contract bytes/hash, including gated Client management/create metadata, and loads them through the typed Swift catalog validator.",
+      "acknowledgeSourceHash": "b506bee5068c7f807ca807dd441d1c93c3e3949555f3efbf2aae4d165fcb404a",
+      "currentBehavior": "Embeds the generated canonical target contract bytes/hash, including gated Client/Project management, financial-visibility and create-command metadata, and loads them through the typed Swift catalog validator.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
@@ -3039,8 +3039,8 @@
     {
       "id": "TEST-C8A63111BD2B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "2cf78e4f8ee9dd7f7760ae943a21adea779a27e50d505752c20747ea714bcd88",
-      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, available-versus-gated capability separation, provider/credential/persistence exclusion and noncanonical-hash refusal.",
+      "acknowledgeSourceHash": "8380fdf8ca24cdd01bc065c288754f3a9a1d521e4852ef5685a0f6f056219b7a",
+      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, available platform versus gated Client/Project capability separation, provider/credential/persistence exclusion and noncanonical-hash refusal.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],

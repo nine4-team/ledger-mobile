@@ -78,7 +78,7 @@ private struct TargetStagingRootView: View {
                         }
 
                         if let localDataNamespacePrefix {
-                            OfflineClientSpikeView(
+                            OfflineProviderSpikeView(
                                 localDataNamespacePrefix: localDataNamespacePrefix
                             )
                         }
@@ -95,7 +95,7 @@ private struct TargetStagingRootView: View {
     }
 }
 
-private struct OfflineClientSpikeView: View {
+private struct OfflineProviderSpikeView: View {
     let localDataNamespacePrefix: String
     @State private var model = OfflineClientSpikeModel()
 
@@ -122,6 +122,45 @@ private struct OfflineClientSpikeView: View {
                     .accessibilityIdentifier("target-client-diagnostic")
             }
         }
+        Section("Offline Project Creation") {
+            TextField("Project name", text: $model.projectName)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("target-project-name")
+            Toggle("Create a new Client", isOn: $model.projectUsesNewClient)
+            if model.projectUsesNewClient {
+                TextField("New Client name", text: $model.projectClientName)
+                    .textFieldStyle(.roundedBorder)
+            } else {
+                LabeledContent(
+                    "Existing Client",
+                    value: model.lastCreatedName ?? "Create a Client above first"
+                )
+            }
+            TextField("Description (optional)", text: $model.projectDescription)
+                .textFieldStyle(.roundedBorder)
+            Toggle("Enable Furnishings budget", isOn: $model.enablesFurnishings)
+            if model.enablesFurnishings {
+                TextField(
+                    "Allocation in cents (blank means enabled without allocation)",
+                    text: $model.furnishingsMinorUnits
+                )
+                .textFieldStyle(.roundedBorder)
+            }
+            Button("Create Project while offline") {
+                Task { await model.createProject() }
+            }
+            .disabled(!model.canCreateProject)
+            .accessibilityIdentifier("target-create-project")
+
+            if let lastCreatedProject = model.lastCreatedProject {
+                LabeledContent("Local Project", value: lastCreatedProject)
+            }
+            if let diagnostic = model.projectDiagnostic {
+                Text(diagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-project-diagnostic")
+            }
+        }
         .task {
             await model.start(localDataNamespacePrefix: localDataNamespacePrefix)
         }
@@ -132,17 +171,39 @@ private struct OfflineClientSpikeView: View {
 @Observable
 private final class OfflineClientSpikeModel {
     var displayName = ""
+    var projectName = ""
+    var projectClientName = ""
+    var projectDescription = ""
+    var projectUsesNewClient = true
+    var enablesFurnishings = true
+    var furnishingsMinorUnits = ""
     private(set) var databaseState = "Opening…"
     private(set) var pendingUploadCount = "—"
     private(set) var lastCreatedName: String?
     private(set) var diagnostic: String?
+    private(set) var lastCreatedProject: String?
+    private(set) var projectDiagnostic: String?
 
     private var runtime: LedgerOfflineClientRuntime?
+    private var lastCreatedClientId: ClientID?
     private let accountId = try! AccountID(validating: "account-primary")
     private let principalId = try! PrincipalID(validating: "principal-owner")
 
     var canCreate: Bool {
         runtime != nil && !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var canCreateProject: Bool {
+        guard runtime != nil,
+              !projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        if projectUsesNewClient {
+            return !projectClientName.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ).isEmpty
+        }
+        return lastCreatedClientId != nil
     }
 
     func start(localDataNamespacePrefix: String) async {
@@ -186,6 +247,7 @@ private final class OfflineClientSpikeModel {
                 )
             )
             _ = try await runtime.createClient(command)
+            lastCreatedClientId = clientId
             pendingUploadCount = String(try await runtime.pendingUploadCount())
 
             let request = try ClientCoreDetailsRequest(
@@ -204,6 +266,91 @@ private final class OfflineClientSpikeModel {
             diagnostic = failure.diagnosticCode
         } catch {
             diagnostic = "client_creation_local_failed"
+        }
+    }
+
+    func createProject() async {
+        guard let runtime else { return }
+        projectDiagnostic = nil
+        do {
+            let selection: ProjectClientSelectionInput
+            if projectUsesNewClient {
+                selection = try ProjectClientSelectionInput(
+                    newClientId: ClientID(
+                        validating: "client-\(UUID().uuidString.lowercased())"
+                    ),
+                    displayName: ClientDisplayName(validating: projectClientName)
+                )
+            } else if let lastCreatedClientId {
+                selection = ProjectClientSelectionInput(existing: lastCreatedClientId)
+            } else {
+                projectDiagnostic = "project_setup_client_selection_invalid"
+                return
+            }
+
+            var allocations: [NullableCategoryAllocation] = []
+            if enablesFurnishings {
+                let money: Money?
+                if furnishingsMinorUnits.isEmpty {
+                    money = nil
+                } else if let minorUnits = Int64(furnishingsMinorUnits), minorUnits >= 0 {
+                    money = Money(
+                        minorUnits: minorUnits,
+                        currency: try CurrencyCode(validating: "USD")
+                    )
+                } else {
+                    projectDiagnostic = "project_setup_category_allocation_invalid"
+                    return
+                }
+                allocations.append(try NullableCategoryAllocation(
+                    categoryId: BudgetCategoryID(validating: "category-furnishings"),
+                    allocation: money
+                ))
+            }
+
+            let projectId = try ProjectID(
+                validating: "project-\(UUID().uuidString.lowercased())"
+            )
+            let command = try CreateProjectCommand(
+                operationId: OperationID(
+                    validating: "operation-\(UUID().uuidString.lowercased())"
+                ),
+                draft: ProjectSetupDraft(
+                    accountId: accountId,
+                    actorPrincipalId: principalId,
+                    operationContractVersion: OperationContractVersion(
+                        validating: "project-create-v1"
+                    ),
+                    projectId: projectId,
+                    clientSelection: selection,
+                    displayName: ProjectDisplayName(validating: projectName),
+                    description: ProjectDescriptionReplacement(projectDescription).value,
+                    categoryAllocations: allocations,
+                    capturedAt: Date()
+                )
+            )
+            _ = try await runtime.createProject(command)
+            pendingUploadCount = String(try await runtime.pendingUploadCount())
+
+            let request = try ProjectCoreDetailsRequest(
+                accountId: accountId,
+                projectId: projectId
+            )
+            for try await update in runtime.watchProject(request) {
+                if case .snapshot(let snapshot) = update.state,
+                   let project = snapshot.row?.project {
+                    lastCreatedProject = "\(project.displayName.rawValue) — queued locally"
+                    break
+                }
+            }
+            projectName = ""
+            projectClientName = ""
+            projectDescription = ""
+            furnishingsMinorUnits = ""
+        } catch let failure as ProjectSetupFailure {
+            projectDiagnostic = failure.diagnosticCode
+        } catch {
+            projectDiagnostic = "project_setup_local_failed"
         }
     }
 }

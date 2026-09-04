@@ -20,7 +20,7 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "1ba1022347ee0d813841c613ee80501ee14274d768971c535838090689bdfe2c",
+      "acknowledgeSourceHash": "b25d2ea27a7ab7062f9de21f841d002a6a4bc2bae3e469f72f013e083150c2a9",
       "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, and the draft source-query reconciliation control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "status": "verified",
@@ -207,7 +207,7 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "07a6acb805099b1a01c6ecbf68c57134f5b5c34c05d5e7909da286c159227d32",
+      "acknowledgeSourceHash": "fe003598df334cde7350c47ef35668c9c5fa322560a20a46315d5627570e2cda",
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step while every verification step remains fail-closed.",
       "disposition": "redesign",
       "target": {

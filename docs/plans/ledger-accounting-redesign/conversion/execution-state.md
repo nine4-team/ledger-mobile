@@ -1,19 +1,19 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 257
+State version: 259
 
 ## Objective
 
-Create a complete, evidence-backed inventory and Supabase/PowerSync target
-mapping for the entire Ledger application, then implement and rehearse it without
-modifying the running Firebase application before hard cutover.
+Create a complete, evidence-backed backend surface map and Supabase/PowerSync
+target mapping for the entire Ledger application, then implement and rehearse it
+without modifying the running Firebase application before hard cutover.
 
 ## Current Checkpoint
 
 - Phase: provider-backed target implementation is active after the completed
-  inventory, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-CREATION-SUPABASE-POWERSYNC-IMPLEMENTED-LOCAL
+  backend-surface mapping, architecture, and provider-free foundation work
+- Checkpoint: PROJECT-SETUP-SUPABASE-POWERSYNC-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,24 +33,51 @@ modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Whole-program completion is currently estimated at **10–15%**. This measures
+- Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 258 status-bearing rows: 67
-  done, four verified, four in progress, 27 design, 61 blocked, and 95 not
-  started. Most completed rows are architecture, conversion controls, or
-  provider-free foundations; they are prerequisites, not migrated features.
-- One provider-backed product slice now works locally: offline Client creation
-  and readback through encrypted PowerSync SQLite, a trusted Supabase/Postgres
-  handler with RLS, the isolated target app, and the gated target MCP boundary.
-  It is not complete until immutable CI and a real isolated PowerSync/Auth
-  round-trip pass.
+- The implementation tracker currently contains 261 status-bearing rows: 67
+  done, four verified, one implemented, 12 in progress, 25 design, 60 blocked,
+  90 not started, and two existing-source rows. Most completed rows are
+  architecture, conversion controls, or provider-free foundations; they are
+  prerequisites, not migrated features.
+- Two provider-backed product slices now work locally: offline Client creation
+  and offline Project setup/readback through encrypted PowerSync SQLite,
+  trusted Supabase/Postgres handlers with RLS, the isolated target app, and
+  gated target MCP boundaries. They are not complete until immutable CI and a
+  real isolated PowerSync/Auth round-trip pass.
 - Future progress reports must separately state (1) planning/control coverage,
   (2) locally executable provider-backed slices, (3) hosted rehearsal, and
   (4) cutover readiness. A single percentage may be given only with that
   denominator stated.
 
 ## Completed at This Checkpoint
+
+- Implemented the first complete Project setup provider slice locally on top of
+  the verified provider-free contracts. One offline transaction stores local
+  operation evidence, an optional new-Client overlay, the Project overlay, the
+  complete absent/null/zero/positive allocation set and one insert-only upload
+  command in encrypted PowerSync SQLite. The trusted spike-prefixed Postgres
+  handler validates the exact canonical command/fingerprint, re-derives
+  authenticated membership/capabilities, enforces Project/category/allocation
+  RLS and financial visibility, locks Operation/Project/new-Client identities,
+  atomically creates the optional Client, Project, allocations and immutable
+  terminal result, and refuses OperationID rebinding. Swift and target MCP use
+  the same scoped-user RPC and exact fingerprint. Authoritative Client/Project
+  readback removes the complete linked optimistic aggregate so later eviction
+  cannot resurrect stale local data. Independent early SQL/PowerSync reviews
+  found missing grants, a null-discriminator bypass, capability/visibility and
+  identity-race gaps, canonical byte/order mismatches, missing command dispatch,
+  missing local-link verification and missing overlay reconciliation; all were
+  independently inspected and corrected with regression coverage. Local reset,
+  41 combined pgTAP assertions, Client/Project REST checks, 9 Client plus 7
+  Project PowerSync tests, 10 MCP tests, strict TypeScript, generated contracts
+  and complete conversion controls, all 332 Swift tests, database lint, and both
+  macOS and generic iOS Simulator staging builds pass. Immutable CI is pending
+  this checkpoint. A-003/A-004 and O-026 remain open;
+  real Auth/Sync/device/media/performance/fault rehearsal, permanent-
+  authorization terminal handling, production migration and cutover are not
+  claimed; `EVID-PROJECT-SETUP-PROVIDER-001`.
 
 - Implemented the first provider-backed Client vertical slice locally without
   changing the Firebase application. A spike-prefixed Postgres schema and
@@ -63,8 +90,8 @@ modifying the running Firebase application before hard cutover.
   transactions/results, and drains applied or durably rejected operations. The
   isolated target app exercises offline creation/readback and the gated target
   MCP tool uses the same canonical command/RPC boundary. Local pgTAP (19
-  assertions), Data API/RLS integration, MCP tests, eight focused PowerSync
-  tests, all 324 Swift tests, contract/environment checks, and the latest iOS
+  assertions), Data API/RLS integration, MCP tests, nine focused PowerSync
+  tests, all 332 Swift tests, contract/environment checks, and the latest iOS
   Simulator build pass. Immutable CI, real hosted Sync Streams/Auth, media,
   evolution, scale, and fault rehearsal remain open; this is not migration or
   cutover authority.

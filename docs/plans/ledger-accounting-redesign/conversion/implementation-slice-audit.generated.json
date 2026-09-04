@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T15:15:46.081Z",
+  "generatedFromManifestSync": "2026-09-04T16:17:08.727Z",
   "totals": {
-    "slices": 68,
-    "claimedTargetSurfaces": 177,
+    "slices": 69,
+    "claimedTargetSurfaces": 187,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 144
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
-    "in_progress": 2,
+    "in_progress": 3,
     "implemented": 1,
     "verified": 65,
     "rehearsed": 0,
@@ -666,6 +666,29 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-operation-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-supabase-powersync-vertical-slice",
+      "title": "Create and read one complete Project setup offline through Supabase, PowerSync, the target app, and target MCP",
+      "kind": "product",
+      "status": "in_progress",
+      "owner": "Project Setup",
+      "surfaceIds": [
+        "CONFIG-09CEA78268BF",
+        "CONFIG-C1B257780C7C",
+        "CONFIG-E1332AB9A867",
+        "MCPMOD-3C6E07498EC9",
+        "MCPMOD-C5E2CD8754AB",
+        "MCPMOD-E9B4396B90B9",
+        "SWIFT-56CB8BCDD85C",
+        "SWIFT-5D88C2B47970",
+        "SWIFT-7FCF476FF67C",
+        "TEST-3F2CAFC760D5"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-supabase-powersync-vertical-slice.json"
     },
     {
       "sliceId": "project-setup-use-case-contracts",

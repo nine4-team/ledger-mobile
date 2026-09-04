@@ -178,7 +178,7 @@
       "id": "CLIENTPROVIDER-TEST-002", "kind": "offline_restart",
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift",
       "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-002", "CLIENTPROVIDER-REQ-004"],
-      "expected": "Offline create is atomic, encrypted, immediately queryable as partial, durable across close/reopen, idempotent, and produces exactly one validated two-entry upload transaction.",
+      "expected": "Offline create is atomic, encrypted, immediately queryable as partial, durable across close/reopen, idempotent, and produces exactly one validated insert-only command transaction while the optimistic Client remains local-only.",
       "status": "passed", "evidence": []
     },
     {

@@ -5,7 +5,14 @@ public enum LedgerPowerSyncTable {
     public static let accounts = "spike_accounts"
     public static let memberships = "spike_account_memberships"
     public static let clients = "spike_clients"
+    public static let pendingClients = "spike_pending_clients"
     public static let clientCommands = "spike_client_commands"
+    public static let budgetCategories = "spike_budget_categories"
+    public static let projects = "spike_projects"
+    public static let pendingProjects = "spike_pending_projects"
+    public static let projectCategoryAllocations = "spike_project_category_allocations"
+    public static let pendingProjectCategoryAllocations = "spike_pending_project_category_allocations"
+    public static let projectCommands = "spike_project_commands"
     public static let localOperations = "spike_local_operations"
     public static let operationResults = "spike_operation_results"
 }
@@ -24,7 +31,9 @@ public enum LedgerPowerSyncSchema {
             name: LedgerPowerSyncTable.memberships,
             columns: [
                 .text("account_id"), .text("principal_id"), .text("role"),
-                .text("state"), .integer("can_manage_clients")
+                .text("state"), .integer("can_manage_clients"),
+                .integer("can_manage_projects"),
+                .integer("can_manage_project_budgets"), .text("financial_access")
             ],
             indexes: [
                 .ascending(
@@ -38,8 +47,7 @@ public enum LedgerPowerSyncSchema {
             columns: [
                 .text("account_id"), .text("display_name"), .text("lifecycle"),
                 .integer("revision"), .integer("created_at_ms"),
-                .integer("updated_at_ms"), .text("created_by_principal_id"),
-                .text("pending_operation_id")
+                .integer("updated_at_ms"), .text("created_by_principal_id")
             ],
             indexes: [
                 .ascending(
@@ -49,11 +57,125 @@ public enum LedgerPowerSyncSchema {
             ]
         ),
         Table(
+            name: LedgerPowerSyncTable.pendingClients,
+            columns: [
+                .text("account_id"), .text("display_name"), .text("lifecycle"),
+                .integer("revision"), .integer("created_at_ms"),
+                .integer("updated_at_ms"), .text("created_by_principal_id"),
+                .text("operation_id")
+            ],
+            indexes: [
+                .ascending(name: "pending_client_account", columns: ["account_id"]),
+                .ascending(name: "pending_client_operation", columns: ["operation_id"])
+            ],
+            localOnly: true
+        ),
+        Table(
             name: LedgerPowerSyncTable.clientCommands,
             columns: [
                 .text("account_id"), .text("actor_principal_id"),
                 .text("contract_version"), .integer("client_created_at_ms"),
                 .text("client_id"), .text("display_name"), .text("fingerprint"),
+                .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.budgetCategories,
+            columns: [
+                .text("account_id"), .text("display_name"), .text("kind"),
+                .text("lifecycle"), .integer("is_system"),
+                .integer("excludes_from_overall_budget"),
+                .text("visibility_class"), .integer("presentation_order"),
+                .integer("revision"),
+                .integer("created_at_ms"), .integer("updated_at_ms")
+            ],
+            indexes: [
+                .ascending(
+                    name: "budget_category_account_order",
+                    columns: ["account_id", "presentation_order"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.projects,
+            columns: [
+                .text("account_id"), .text("client_id"), .text("display_name"),
+                .text("description"), .text("lifecycle"), .integer("revision"),
+                .integer("created_at_ms"), .integer("updated_at_ms"),
+                .text("created_by_principal_id")
+            ],
+            indexes: [
+                .ascending(name: "project_account", columns: ["account_id"]),
+                .ascending(
+                    name: "project_account_client",
+                    columns: ["account_id", "client_id"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.pendingProjects,
+            columns: [
+                .text("account_id"), .text("client_id"), .text("display_name"),
+                .text("description"), .text("lifecycle"), .integer("revision"),
+                .integer("created_at_ms"), .integer("updated_at_ms"),
+                .text("created_by_principal_id"), .text("operation_id")
+            ],
+            indexes: [
+                .ascending(name: "pending_project_account", columns: ["account_id"]),
+                .ascending(name: "pending_project_operation", columns: ["operation_id"])
+            ],
+            localOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.projectCategoryAllocations,
+            columns: [
+                .text("account_id"), .text("project_id"), .text("category_id"),
+                .integer("allocation_minor_units"), .text("allocation_currency"),
+                .integer("revision"), .integer("created_at_ms"),
+                .integer("updated_at_ms"), .text("created_by_principal_id")
+            ],
+            indexes: [
+                .ascending(
+                    name: "project_allocation_project",
+                    columns: ["account_id", "project_id"]
+                ),
+                .ascending(
+                    name: "project_allocation_category",
+                    columns: ["account_id", "category_id"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.pendingProjectCategoryAllocations,
+            columns: [
+                .text("account_id"), .text("project_id"), .text("category_id"),
+                .integer("allocation_minor_units"), .text("allocation_currency"),
+                .integer("revision"), .integer("created_at_ms"),
+                .integer("updated_at_ms"), .text("created_by_principal_id"),
+                .text("operation_id")
+            ],
+            indexes: [
+                .ascending(
+                    name: "pending_project_allocation_project",
+                    columns: ["account_id", "project_id"]
+                ),
+                .ascending(
+                    name: "pending_project_allocation_operation",
+                    columns: ["operation_id"]
+                )
+            ],
+            localOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.projectCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .integer("project_created_at_ms"),
+                .text("project_id"), .text("client_selection_kind"),
+                .text("client_id"), .text("new_client_display_name"),
+                .text("project_display_name"), .text("description"),
+                .text("category_allocations_json"), .text("fingerprint"),
                 .text("envelope_json")
             ],
             insertOnly: true

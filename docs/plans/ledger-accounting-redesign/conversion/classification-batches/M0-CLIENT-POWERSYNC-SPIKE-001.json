@@ -10,7 +10,7 @@
     {
       "id": "MCPMOD-68F7991697DD",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6b4d8e305ef28ba025cf5119f09e5a386e53df501d9e892fdb3fc0c03ad5b04b",
+      "acknowledgeSourceHash": "d90cba8a5a37848437b982a4b3f1e0431b644730be89a7b1b561078fa0278234",
       "currentBehavior": "Defines the target-only create_client tool boundary, canonical cross-runtime Client command bytes/fingerprint, scoped-user Supabase RPC adapter, strict applied/rejected result-shape validation and gated tool metadata.",
       "disposition": "redesign",
       "status": "target_mapped",
