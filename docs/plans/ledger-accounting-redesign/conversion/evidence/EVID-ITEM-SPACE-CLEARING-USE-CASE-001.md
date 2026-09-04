@@ -1,7 +1,7 @@
 # EVID-ITEM-SPACE-CLEARING-USE-CASE-001 — Item Space Clearing Use Case
 
 - Timestamp: 2026-09-03
-- Class: local implementation / provider-free typed Item Space-clear dispatch
+- Class: verified implementation / provider-free typed Item Space-clear dispatch
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app unchanged
 - Prior conversion baseline:
@@ -21,9 +21,12 @@
   `33832447988` passed the isolated-target job with all 316 tests and both builds,
   but its traceability job failed solely because the deliberately separate
   control checkpoint had not yet synchronized the two changed leaf hashes
-- Verification state: `implemented`; `ITEMSPACECLEARUSE-TEST-001` through `-009`
-  pass, while `-010` and `verified` status require immutable green CI on this
-  synchronized implemented checkpoint
+- Exact synchronized implemented checkpoint:
+  `8181512d78783d9ae7561475ed0d63c42d1e9b1e`; immutable Actions run
+  `33833543735` passed traceability in 11 seconds and isolated target with all
+  316 tests in 65 suites, generated contracts, both builds and clean artifacts
+- Verification state: `verified`; `ITEMSPACECLEARUSE-TEST-001` through `-010`
+  pass
 
 ## Selection and Authority
 
@@ -44,7 +47,7 @@ may not restate or extend their semantic authority.
 
 Caller-supplied scope and current-Space values are untrusted conflict evidence.
 The operation proves that its command and preconditions are internally
-consistent; neither it nor this future use case proves actual current placement,
+consistent; neither it nor this use case proves actual current placement,
 membership, or authorization. Stale assigned-looking evidence may be accepted
 locally and later conflict when a trusted handler revalidates authoritative
 state.
@@ -56,9 +59,9 @@ list, and this slice neither derives nor mutates marker relationships. The
 future trusted handler owns authoritative closure of affected green Item-linked
 photo-checkmark relationships without deleting photos or bytes.
 
-## Implemented Boundary
+## Verified Boundary
 
-Exactly two implemented target leaves are claimed:
+Exactly two verified target leaves are claimed:
 
 - `LedgeriOS/LedgerTargetCore/ItemSpaceClearingUseCase.swift`;
 - `LedgeriOS/LedgerTargetCoreTests/ItemSpaceClearingUseCaseTests.swift`.
@@ -119,16 +122,16 @@ The exact clear-space source and integration surfaces retain these statuses:
 - `MCPMOD-82DC4C25B1B8` — `characterized`;
 - `MCPMOD-155A4AB80AC9` — `target_mapped`.
 
-## Implemented Artifacts and Obligations
+## Verified Artifacts and Obligations
 
-The exact implemented hashes are:
+The exact verified hashes are:
 
 - `ItemSpaceClearingUseCase.swift` —
   `bec36d9ddbf5be470aa224a108138b71e88f8007632b90a0d039bd2f0e1f7709`;
 - `ItemSpaceClearingUseCaseTests.swift` —
   `fe593aac3cb925f22570a1bb156199297420ae73aaf88e8fbfe45a6bd02ca6cd`.
 
-Nine passed obligations and one pending operational obligation cover:
+Ten passed obligations prove:
 
 1. ordinary non-`@testable` import and exact public three-field transient,
    non-Codable intent shape;
@@ -157,9 +160,8 @@ Nine passed obligations and one pending operational obligation cover:
 
 The implementation test leaf proves obligations 1–8. Conversion controls and
 the exact READY/implementation/promotion allowlists prove obligation 9. Exact
-READY CI is green; obligation 10 remains pending until this synchronized
-implemented checkpoint passes the complete immutable workflow. That green run
-will authorize a separate docs-only `verified` promotion.
+READY CI and exact synchronized implemented checkpoint CI prove obligation 10
+and authorize this docs-only `verified` promotion.
 
 ## Local Verification
 
@@ -174,20 +176,22 @@ will authorize a separate docs-only `verified` promotion.
 - repeatable XcodeGen output: unchanged project/scheme SHA-256 prefixes
   `0657194a` / `388303af`;
 - implementation diff from exact READY commit: only the two frozen target
-  leaves; current recovery diff: documentation/control/generated artifacts only;
+  leaves; current promotion diff: documentation/control/generated artifacts only;
 - exact leaf SHA-256 values match both synchronized manifest values; JSON
   parsing and clean diff formatting pass.
 
-Immutable implementation run `33832447988` provides durable target evidence:
-its isolated-target job passed dependency/environment isolation, generated
-contracts, all 316 tests, both staging builds and clean tracked artifacts. The
-same workflow is not described as green because its traceability job failed on
-the two expected stale READY hashes. The synchronized recovery checkpoint must
-close that final operational gate.
+Immutable run `33832447988` provides durable target evidence for executable-only
+commit `f7ce8bca`: its isolated-target job passed dependency/environment
+isolation, generated contracts, all 316 tests, both staging builds and clean
+tracked artifacts. The same workflow is not described as green because its
+traceability job failed on the two expected stale READY hashes. Synchronized
+implemented checkpoint `8181512d78783d9ae7561475ed0d63c42d1e9b1e` corrected
+that process defect without executable changes; immutable run `33833543735`
+then passed the complete workflow and authorizes verification.
 
 ## Excluded Claims
 
-This implemented application boundary does not implement or prove:
+This verified application boundary does not implement or prove:
 
 - archive behavior or O-037 resolution;
 - attachment reference removal, byte deletion, retention, or O-023 resolution;
@@ -206,7 +210,7 @@ This implemented application boundary does not implement or prove:
 - app/MCP wiring, source decoding, migration, reconciliation, deployment,
   release, production access, or cutover.
 
-## Pending Verification Gate and Review Correction
+## Verification Gate and Review Correction
 
 Exact READY commit `8154f8bf0c63576e64ac609b1e1b18d53f60ed32`
 changed only the two comment scaffolds plus named dossier/evidence/control
@@ -214,14 +218,15 @@ artifacts and passed immutable Actions run `33831367527`. Exact executable-only
 commit `f7ce8bca5ef3d36fc621ed577e85b2d25c1fd7a4` changed only the two target
 leaves. Immutable run `33832447988` passed its isolated-target job with all 316
 tests in 65 suites and both builds, but its traceability job failed because the
-manifest still held the intentional READY scaffold hashes. This recovery
-checkpoint changes documentation and generated conversion controls only,
-synchronizes the implemented hashes, and must pass the complete immutable
-workflow before a later docs-only checkpoint may promote `verified`.
+manifest still held the intentional READY scaffold hashes. Synchronized
+implemented checkpoint `8181512d78783d9ae7561475ed0d63c42d1e9b1e` corrected
+the hashes and control evidence without executable changes; immutable run
+`33833543735` passed the complete workflow. This promotion changes documentation
+and generated conversion controls only.
 
 READY review missed one P3 free-text preservation-ID typo in the dossier and
 this evidence record: `SWIFT-4D0D546A02D` omitted the final `8`. The actual
 manifest/classification entry and source status used the correct
 `SWIFT-4D0D546A02D8`, and the frozen executable test scaffold also asserted the
 correct ID. No executable, status, scope, or preservation behavior was affected;
-the free-text references are corrected in this recovery checkpoint.
+the free-text references were corrected in the implemented checkpoint.

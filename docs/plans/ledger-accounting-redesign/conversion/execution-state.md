@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 240
+State version: 241
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-CLEARING-USE-CASE-IMPLEMENTED-CONTROL-SYNC-PREPARED
+- Checkpoint: ITEM-SPACE-CLEARING-USE-CASE-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -79,7 +79,7 @@ modifying the running Firebase application before hard cutover.
   provenance, physical persistence, authorization, provider/schema/RLS/Sync,
   app/MCP, migration, hosted, production, release and cutover remain excluded.
 
-- Locally implemented the bounded Item Space-clearing application use case above
+- Verified the bounded Item Space-clearing application use case above
   verified `ItemSpaceClearingOperation.swift` at exact implementation
   `f5a7ac7598f77859239b66666bc703ee4639c233` / immutable run
   `33677087616`. Exact READY commit
@@ -91,10 +91,12 @@ modifying the running Firebase application before hard cutover.
   run `33832447988` passed its isolated-target job with all 316 tests in 65
   suites and both builds, but traceability failed solely because the
   intentionally separate control checkpoint had not synchronized the two new
-  leaf hashes. This recovery checkpoint synchronizes those hashes plus dossier,
-  manifest and evidence at `implemented`; its complete immutable CI remains
-  required before a separate docs-only checkpoint may promote `verified`. The
-  public transient non-Codable
+  leaf hashes. Exact synchronized implemented checkpoint
+  `8181512d78783d9ae7561475ed0d63c42d1e9b1e` corrected those hashes plus
+  dossier, manifest and evidence without executable changes; immutable Actions
+  run `33833543735` passed traceability in 11 seconds and isolated target with
+  all 316 tests in 65 suites, generated contracts, both builds and clean
+  artifacts. The public transient non-Codable
   Account/scope/typed-Item-revision-current-Space intent constructs the verified
   draft/command before exactly one `ItemSpaceAssignmentClearing` call and
   validates its receipt afterward. Caller-supplied scope and current-Space values
@@ -105,15 +107,14 @@ modifying the running Firebase application before hard cutover.
   prove Project/Inventory single and mixed-Space dispatch, reordered canonical
   commands, literal reciprocal ownership, zero/one-call boundaries, all 15
   typed failures, cancellation, unknown-error containment, diagnostics,
-  topology and exclusions. Dossier obligations 001–009 pass; operational
-  obligation 010 remains pending on green immutable CI for this synchronized
-  checkpoint. READY review
-  missed a P3 free-text preservation-ID typo: `SWIFT-4D0D546A02D` should have
-  been `SWIFT-4D0D546A02D8`. The manifest/classification/source status and
+  topology and exclusions. All ten dossier obligations pass; the slice and both
+  leaves are verified. READY review missed a P3 free-text preservation-ID typo:
+  `SWIFT-4D0D546A02D` should have been `SWIFT-4D0D546A02D8`. The manifest/
+  classification/source status and
   frozen executable test scaffold used the correct ID, so no executable or
-  status behavior was affected; this recovery checkpoint corrects the free
-  text. Read/UI
-  eligibility and mixed assigned/unassigned admission, archive/O-037,
+  status behavior was affected; the implemented checkpoint corrected the free
+  text. Read/UI eligibility and mixed assigned/unassigned admission,
+  archive/O-037,
   attachment references/bytes/O-023, marker mutation, destination/scope/
   accounting/provenance, physical persistence, authorization, provider/schema/
   RLS/Sync, app/MCP, migration, hosted, production, release and cutover remain
@@ -3500,14 +3501,11 @@ Continue without waiting on the two M1 evidence blockers:
    `item-space-clearing-operation-contracts` dossier and
    `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for explicit
    Item-placement clearing. Its exact implementation commit and both CI jobs
-   are verified. Treat implemented `item-space-clearing-use-case-contracts` and
-   `EVID-ITEM-SPACE-CLEARING-USE-CASE-001` as the provider-free typed
-   intent-to-clearing application candidate awaiting complete immutable CI on
-   its synchronized control checkpoint. The exact executable-only commit's
-   isolated-target job is green, but its traceability job failed on the stale
-   READY hashes; do not promote verified until a synchronized implemented
-   checkpoint passes the complete workflow. Preserve the two implemented leaves
-   `ItemSpaceClearingUseCase.swift` (`SWIFT-EEAC86485FF6`) and
+   are verified. Treat verified `item-space-clearing-use-case-contracts` and
+   `EVID-ITEM-SPACE-CLEARING-USE-CASE-001` as the sole provider-free typed
+   intent-to-clearing application authority. Its synchronized implemented
+   checkpoint and complete immutable workflow are verified. Preserve the two
+   verified leaves `ItemSpaceClearingUseCase.swift` (`SWIFT-EEAC86485FF6`) and
    `ItemSpaceClearingUseCaseTests.swift` (`TEST-CA84B398990C`) as dependencies
    for subsequent slices. They bind exact typed Account/scope/Item/revision/
    current-Space conflict evidence through the verified draft and command before

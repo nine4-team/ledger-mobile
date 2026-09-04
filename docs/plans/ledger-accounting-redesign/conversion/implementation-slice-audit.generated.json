@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T03:27:25.461Z",
+  "generatedFromManifestSync": "2026-09-04T03:45:40.074Z",
   "totals": {
     "slices": 64,
     "claimedTargetSurfaces": 153,
@@ -11,8 +11,8 @@
     "draft": 0,
     "ready": 0,
     "in_progress": 1,
-    "implemented": 1,
-    "verified": 62,
+    "implemented": 0,
+    "verified": 63,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -263,7 +263,7 @@
       "sliceId": "item-space-clearing-use-case-contracts",
       "title": "Bind one typed Item placement-clear intent and dispatch the verified clear operation",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Item Space Clearing Use Case",
       "surfaceIds": [
         "SWIFT-EEAC86485FF6",
