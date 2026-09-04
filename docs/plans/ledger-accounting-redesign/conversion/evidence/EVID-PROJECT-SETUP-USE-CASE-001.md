@@ -139,6 +139,12 @@ Implementation hashes:
 
 ## Permanent Exclusions
 
+The verified application dispatch remains valid, but the new-Client branch
+currently consumes a provisional `ClientDisplayName`. O-043 must define and
+prove the raw-input submission boundary before provider promotion; this evidence
+does not claim cross-runtime name validation. The existing-Client branch is
+unaffected.
+
 This evidence does not authorize SwiftUI steps/copy/loading/validation display,
 defaults, preselect-all, at-least-one-category, missing-as-zero, category
 creation/mutation, hero attachment identity/bytes/upload/reference/removal/

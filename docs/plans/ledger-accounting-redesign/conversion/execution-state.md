@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 262
+State version: 265
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ATTACHMENT-LOCAL-DURABILITY-PROVIDER-VERIFIED-IMMUTABLE
+- Checkpoint: CLIENT-RENAME-PROVIDER-DRAFT-AUTHORITY-GAPS-CAPTURED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,17 +36,19 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 262 status-bearing rows: 68
-  done, four verified, one implemented, zero awaiting verification, 12 in
-  progress, 25 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
+- The implementation tracker currently contains 263 status-bearing rows: 68
+  done, four verified, one implemented, zero ready, zero awaiting verification,
+  12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Two provider-backed product slices now work locally: offline Client creation
-  and offline Project setup/readback through encrypted PowerSync SQLite,
-  trusted Supabase/Postgres handlers with RLS, the isolated target app, and
-  gated target MCP boundaries. The exact Project implementation checkpoint now
-  passes immutable CI; both slices remain incomplete until a real isolated
-  PowerSync/Auth round-trip passes.
+- Two provider-backed product slices have working local identity, ordinary-name
+  command, encrypted-offline, RLS, replay and readback mechanics: Client
+  creation and Project setup. O-043 now correctly gates final Client-name
+  submission parity for Client creation and only the new-Client Project branch;
+  current Swift, MCP and PostgreSQL validators disagree on edge inputs, so the
+  ordinary-name fixture is not final validation evidence. The exact Project
+  implementation checkpoint passes immutable CI; both slices also remain
+  incomplete until a real isolated PowerSync/Auth round-trip passes.
 - One supporting provider slice now durably accepts encrypted attachment bytes
   offline in an isolated, scope-bound local PowerSync database and passes exact
   immutable CI. It is not yet an upload/display product path and does not
@@ -56,7 +58,38 @@ without modifying the running Firebase application before hard cutover.
   (4) cutover readiness. A single percentage may be given only with that
   denominator stated.
 
-## Completed at This Checkpoint
+## Corrected at This Checkpoint
+
+- Independent review rejected the first comment-only Client rename READY package
+  from base `e6620875ef6a8c5488929972329545a2204750ed`. It correctly found that the
+  draft inferred archived-Client rename eligibility and same-value revision
+  advancement without canonical authority; incorrectly denied same-Account
+  restricted-member Client/result reads that existing RLS and Sync intentionally
+  permit; left the migration, pgTAP suite and local Data API runner outside
+  machine discovery; omitted replay-after-later-overlay and unknown-terminal-code
+  cases; and ignored that Swift accepts U+0000/unbounded names that PostgreSQL
+  text/jsonb cannot represent. The corrected dossier is DRAFT on O-042/O-043.
+  All nine new comment-only leaves are now automatically discovered and hash-
+  enforced in `M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001`; the pgTAP leaf still
+  contains only its runner-validity placeholder. The bounded design retains
+  separate local rename command/overlay state, pending-create/chained FIFO,
+  exact readback reconciliation, auth-first trusted-handler mutation, UInt64
+  precision, and app/MCP parity without choosing the unresolved user-visible
+  policies. No executable rename behavior, hosted call, Firebase/source-app
+  change, migration, production access, commit or push exists. A-003/A-004 stay
+  proposed.
+
+- Follow-up O-043 audit found that the same cross-runtime boundary also gates
+  promotion of the already local Client-create path and the new-Client branch
+  of Project setup. Their stable identity, existing-Client selection,
+  encrypted-offline queue, RLS, replay and readback mechanics remain valid, but
+  Foundation whitespace handling, JavaScript `trim`, PostgreSQL `btrim`, NUL
+  representation and unbounded name indexes are not equivalent. A locally
+  accepted edge input can currently fail before a durable terminal server
+  result. Both provider dossiers now record planned shared-vector and zero-local-
+  dispatch proof, ordinary-name parity claims are narrowed, and dedicated
+  `EVID-CLIENT-CREATION-PROVIDER-001` replaces the incorrectly reused
+  provider-free evidence. O-043 is not silently decided or implemented.
 
 - Implemented the protected local attachment-byte durability provider behind
   the existing backend-neutral capture port. Acceptance now encrypts bytes with
@@ -3679,16 +3712,18 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Prepare the next bounded provider-backed product slice for Client rename. Trace
-the verified Client rename operation and application-use-case authority into
-one trusted Postgres command/RPC with membership/capability checks, exact
-revision and replay semantics, Client-row RLS, PowerSync optimistic local state
-and authoritative readback, isolated target-app exercise, and the existing MCP
-contract boundary. Freeze the dossier and failure/restart/concurrency tests
-before executable work. Use only disposable local Supabase fixtures; do not
-provision hosted resources, access production, modify Firebase, migrate data or
-advance A-003/A-004 from local evidence. Independently review the dossier and
-the first implementation diff under the early subagent quality-control policy.
+Finish synchronizing and validating the rejected Client rename package as an
+honest DRAFT, preserving O-042/O-043 and the proposed decision packet without
+implementing either choice. The O-043 impact audit is complete and its promotion
+gates are recorded. Then implement the larger decision-independent Client/
+Project directory and browse PowerSync batch: full local Client and Project
+directories, pending-create composition, active-Client Project selection,
+active/archived Project browsing and selected-row detail navigation. Reuse the
+verified provider-free read/projection contracts and current schema/RLS/Sync
+tables; do not invent archive or text-edit policy. Use the same root-plus-
+independent-review quality-control policy and only disposable local fixtures;
+do not provision hosted resources, access production, modify Firebase, migrate
+data or advance A-003/A-004 from local evidence.
 
 Continue without waiting on the two M1 evidence blockers:
 
@@ -4113,7 +4148,7 @@ mapping for ready capabilities.
 
 ## Active Blockers and Gates
 
-- O-002 through O-041 remain product blockers where referenced by the decision
+- O-002 through O-043 remain product blockers where referenced by the decision
   traceability table.
 - A-003 and A-004 remain proposed until the vertical spike passes.
 - A-007 target authentication choice is open.

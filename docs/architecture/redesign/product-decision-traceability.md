@@ -2,7 +2,7 @@
 
 Status: active crosswalk; product authority remains external
 Architecture version: 0.1
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-04
 
 ## Purpose
 
@@ -93,6 +93,8 @@ is still open.
 | O-039 | Project-note text validation | Shared app/MCP create/edit normalization, scalar/control rules, UTF-8 size, local rejection, stored command text and legacy import preservation; proposed contract is in the [O-039 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-039-project-note-text-validation.md) | Approved cross-runtime trim/control/nonempty/byte rule plus app/MCP parity, zero-dispatch rejection, restart and lossless import/quarantine tests |
 | O-040 | Personal Project budget pinning | Whether pins survive; typed category/Overall targets; complete replacement/order; missing versus explicit empty; no-pin/default Project-detail and Project-card fallbacks; category lifecycle/cleanup; own-Principal authorization; app/MCP parity and source migration; proposed contract is in the [O-040 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-040-project-budget-pinning.md) | Approved feature, target, missing/empty/no-pin/default/card and lifecycle policy plus no-render-write, cross-user, offline conflict/recovery and migration tests |
 | O-041 | Vendor-spend report semantics | 1584 versus Client payer/recipient perspective; canonical included events and signs; Project/Inventory/Account scope; posting/effective date; non-cash vendor-credit treatment; currency partition; exact vendor-label snapshots without repurposing VendorSuggestion identity; app/MCP parity; proposed contract is in the [O-041 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-041-vendor-spend-report-semantics.md) | Approved report meaning plus exact-cent, payer, scope, currency, credit, correction, security, offline-readiness, migration and app/MCP parity tests |
+| O-042 | Client rename lifecycle and unchanged-save semantics | Archived-Client edit eligibility; same-value reject/no-change/revision behavior; operation result, offline overlay, conflict, audit and app/MCP parity; proposed contract is in the [combined O-042/O-043 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-042-O-043-client-rename-and-display-name-boundary.md) | Approved archived eligibility and unchanged-save/revision policy plus active/archived, same-value, replay, offline and concurrency tests |
+| O-043 | Client display-name cross-runtime boundary | Exact edge trimming, unsafe controls/NUL, Unicode preservation, UTF-8 maximum, app/MCP/Postgres validation, legacy import and quarantine; proposed contract is in the [combined O-042/O-043 decision packet](../../plans/ledger-accounting-redesign/decision-packets/O-042-O-043-client-rename-and-display-name-boundary.md) | Approved scalar/control/trim/byte rule plus cross-runtime fixtures, zero-dispatch invalid-input tests and lossless migration/quarantine proof |
 
 ## Traceability Enforcement
 

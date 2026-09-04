@@ -3,7 +3,7 @@
 Status: proposed foundation for adoption
 Architecture version: 0.1
 Created: 2026-08-31
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-04
 
 This package defines the technical foundation for the redesigned Ledger app. It
 describes a local-first application whose product and domain code do not depend
@@ -49,7 +49,7 @@ Read these in order:
 9. [Architecture Decision Register](architecture-decisions.md) — decisions,
    alternatives, consequences, and decisions still requiring evidence.
 10. [Product-to-Architecture Traceability](product-decision-traceability.md) —
-    every confirmed D-001–D-027 and open O-002–O-041 mapped to its owning
+    every confirmed D-001–D-027 and open O-002–O-043 mapped to its owning
     context, target surfaces, verification, and implementation block.
 11. [Vertical Spike Protocol](../../plans/ledger-accounting-redesign/vertical-spike-protocol.md)
     — executable isolated tests, fixtures, evidence, thresholds, Auth/optimism

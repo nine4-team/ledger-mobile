@@ -172,6 +172,13 @@ production claim.
 
 ## Permanent Limits
 
+The verified Project setup identity/allocation/envelope structure consumes an
+already-constructed `ClientDisplayName` on its new-Client branch. That value is
+provisional under O-043: this evidence does not establish raw-input parity among
+Swift, MCP and PostgreSQL, bounded Client-name indexability, or a shared
+submission-versus-stored-read representation. Existing-Client selection and all
+non-Client-name Project setup behavior remain unaffected.
+
 This provider-free implementation cannot:
 
 - create a local/server Project, Client, category or allocation row;

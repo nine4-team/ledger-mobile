@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "client-rename-supabase-powersync-vertical-slice",
+  "title": "Rename one Client offline through Supabase, PowerSync, the target app, and target MCP",
+  "kind": "product",
+  "status": "draft",
+  "owner": "Client Identity",
+  "surfaceIds": [
+    "SWIFT-5ABC145B2FAF",
+    "SWIFT-5CB20A965406",
+    "SWIFT-6816C6E0F96A",
+    "TEST-77ABFEE573E1",
+    "MCPMOD-A23569C60118",
+    "MCPMOD-EFFAAFBBD1AD",
+    "CONFIG-EC93D3BAC0C4",
+    "CONFIG-3193C7F8A5F9",
+    "CONFIG-B3D8C4F9F504"
+  ],
+  "requirements": [
+    {
+      "id": "CRENAMEPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "One authorized rename replaces the current display value of one stable Account-scoped ClientID. Equal names remain non-identifying display text, and the operation cannot change Account, Client identity, creation audit or any relationship.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-001", "CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-003", "CRENAMEPROVIDER-TEST-004", "CRENAMEPROVIDER-TEST-005", "CRENAMEPROVIDER-TEST-007", "CRENAMEPROVIDER-TEST-008", "CRENAMEPROVIDER-TEST-009", "CRENAMEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Project relationship",
+      "invariant": "Current Project display resolves the renamed Client value through stable ClientID without changing the Project row or revision. Frozen Invoice, report, paid-history and audit name snapshots are never command members and are not rewritten.",
+      "decisionIds": ["D-006"],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-007", "CRENAMEPROVIDER-TEST-008", "CRENAMEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Client lifecycle",
+      "invariant": "Rename and archive are distinct operations, and rename cannot mutate lifecycle. The canonical lifecycle text does not decide whether an already archived Client is eligible for rename; O-042 must settle that user-visible precondition before READY.",
+      "decisionIds": ["D-006", "O-042"],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-004", "CRENAMEPROVIDER-TEST-005", "CRENAMEPROVIDER-TEST-008"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-004",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "RenameClient remains distinct from CreateClient, ArchiveClient, ChangeProjectClient and MergeClients. O-042 must decide whether a submitted value equal to current display rejects, returns a successful no-change result, or advances revision; the provider may not infer that policy from the provider-free dispatch boundary.",
+      "decisionIds": ["O-024", "O-025", "O-042"],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-001", "CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-003", "CRENAMEPROVIDER-TEST-007", "CRENAMEPROVIDER-TEST-009"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "With no network, one accepted rename atomically stores immutable operation evidence, one insert-only command and one separate local-only Client rename overlay in the encrypted Principal/Account database, renders Client and joined Project display immediately as partial, and survives termination/restart until durable rejection or qualifying authoritative readback.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-007", "CRENAMEPROVIDER-TEST-008", "CRENAMEPROVIDER-TEST-011", "CRENAMEPROVIDER-TEST-012"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Complex Offline Optimism",
+      "invariant": "Pending Client creation then rename dispatches FIFO, and multiple offline renames chain from the latest effective local revision N to projected N+1 and N+2 while a second command still based on stale N is refused. Rejection removes only its exact overlay; applied optimism remains until matching applied evidence plus authoritative revision/name readback makes cleanup safe.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-007", "CRENAMEPROVIDER-TEST-008", "CRENAMEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Conflict Policy",
+      "invariant": "The verified UInt64 expected revision is preserved as exact decimal/canonical JSON evidence without JavaScript Number coercion. Signed Postgres/SQLite Client revisions never wrap: expected values outside the representable authoritative row range cannot match, and a row at signed-bigint maximum rejects as revision exhausted. Concurrent same-revision commands produce one apply and one durable conflict.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-001", "CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-003", "CRENAMEPROVIDER-TEST-007", "CRENAMEPROVIDER-TEST-009", "CRENAMEPROVIDER-TEST-010"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Command Authorization",
+      "invariant": "The trusted handler derives authenticated Principal, verifies payload actor, active Account membership and Client-management capability before disclosing operation or Client existence, locks the exact Account/Client row, validates contract/state/revision/replay, mutates only the Client current-display fields, and records one immutable terminal result. Direct Client/result mutation and cross-Account reads fail closed.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-003", "CRENAMEPROVIDER-TEST-004", "CRENAMEPROVIDER-TEST-005", "CRENAMEPROVIDER-TEST-006", "CRENAMEPROVIDER-TEST-010", "CRENAMEPROVIDER-TEST-011"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "The isolated app and gated target MCP path use the same client-rename-v1 command bytes, UInt64-safe canonicalization, scoped-user RPC and immutable terminal-result validation. Account/Principal scope comes from the authenticated context, and neither path accepts a service-role credential or logs Client text/command bytes.",
+      "decisionIds": [],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-001", "CRENAMEPROVIDER-TEST-004", "CRENAMEPROVIDER-TEST-005", "CRENAMEPROVIDER-TEST-009", "CRENAMEPROVIDER-TEST-011", "CRENAMEPROVIDER-TEST-012"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "Implementation remains spike-prefixed, synthetic and isolated from Firebase, hosted target and production systems. It grants no migration, release or cutover authority, and A-003/A-004 remain proposed until the complete physical vertical-spike exit gate passes.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-006", "CRENAMEPROVIDER-TEST-010", "CRENAMEPROVIDER-TEST-011", "CRENAMEPROVIDER-TEST-012"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-REQ-011",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Storage and identity",
+      "invariant": "App, MCP, local storage and Postgres must accept and preserve the same Client display-name bytes. The current canonical spec does not define the scalar/control/edge-whitespace/UTF-8-size boundary, while the verified Swift type accepts U+0000 that PostgreSQL text and jsonb cannot represent; O-043 must settle the shared contract before READY.",
+      "decisionIds": ["D-006", "O-043"],
+      "verificationIds": ["CRENAMEPROVIDER-TEST-002", "CRENAMEPROVIDER-TEST-009", "CRENAMEPROVIDER-TEST-013"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse the verified ExpectedClientRevision, ClientRenameDraft, RenameClientCommand, ClientRenaming, ClientRenameIntent and ClientRenameUseCase unchanged; provider types do not cross into LedgerTargetCore.",
+        "client-rename-v1 binds exact Operation, Account, actor, Client, validated replacement name, finite capture milliseconds, one same-Client UInt64 expected revision and SHA-256 fingerprint. The provider cannot implement unchanged-value or display-name admissibility semantics until O-042/O-043 update canonical domain authority."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {
+      "items": [
+        "Reuse spike_clients as the sole current Client row and extend immutable spike_operation_results to recognize rename_client; create no second Client identity or rename-history authority.",
+        "The physical revision remains nonnegative signed bigint. Command JSON preserves the entire UInt64 lexical range; values above signed-bigint maximum cannot match a physical row, and signed-bigint maximum cannot increment.",
+        "No schema object may permit this command to mutate Account ownership, Client lifecycle/creation audit, Project rows, Invoice/report/paid-history snapshots or other domain rows. PostgreSQL validation must implement the approved O-043 scalar/byte contract exactly rather than approximate Swift or JavaScript trimming."
+      ],
+      "notApplicable": ""
+    },
+    "serverHandlers": {
+      "items": [
+        "A private search-path-pinned trusted handler authenticates and authorizes before OperationID lookup, validates exact canonical command text/fingerprint and UInt64 decimal evidence, then locks one exact Account/Client row FOR UPDATE.",
+        "Exact replay returns the immutable result; changed or cross-command reuse cannot rebind. Missing Client, stale/future/out-of-range revision, revision exhaustion and permanent validation failures become bounded durable outcomes only after non-enumerating scope authorization.",
+        "An apply may update only display_name, revision and server-maintained updated time in one transaction with its result. Archived eligibility and same-value result/revision behavior follow the future approved O-042 rule exactly; concurrent mutating same-revision calls yield one apply and one conflict.",
+        "The handler performs no external I/O, keeps the transaction bounded, and acquires any operation-result and Client locks in one documented deterministic order so replay and same-Client concurrency cannot introduce an avoidable deadlock."
+      ],
+      "notApplicable": ""
+    },
+    "dataApiGrants": {
+      "items": [
+        "Expose one explicit security-invoker Client-rename RPC and grant authenticated execution only; anon/authenticated receive no direct Client or operation-result write privilege.",
+        "The private SECURITY DEFINER function has PUBLIC/anon execution revoked, performs its own auth checks and receives no service-role shortcut from app or MCP."
+      ],
+      "notApplicable": ""
+    },
+    "rlsPolicies": {
+      "items": [
+        "Reuse active-membership Account-scoped Client/Project/result SELECT policies. Active same-Account restricted members retain authorized read visibility but cannot execute rename or directly mutate; revoked, anonymous and cross-Account callers cannot enumerate rows.",
+        "Do not add a direct Client UPDATE policy. Current-display mutation is authorized only inside the trusted handler after can_manage_clients and exact scope checks.",
+        "Membership, capability, Client, Project-join and operation-result predicates use indexed Account/Principal/identity equality paths; stable auth identity evaluation is hoisted once per statement where the policy form permits it."
+      ],
+      "notApplicable": ""
+    },
+    "syncStreams": {
+      "items": [
+        "Existing Account-catalog streams synchronize authoritative Clients, joined Projects and permitted operation results; pending rename overlays/commands never enter a download stream as authority.",
+        "Sync authorization tests must prove an unauthorized Client/result is absent locally, not merely rejected by RLS, and current Project display has enough local Client evidence to update offline.",
+        "Real authenticated PowerSync validation remains required before A-004 can advance."
+      ],
+      "notApplicable": ""
+    },
+    "localOffline": {
+      "items": [
+        "Add localOnly spike_pending_client_renames keyed by OperationID with exact Account/Client/name, expected/projected revision decimal text and projected update time; add insertOnly spike_client_rename_commands with exact canonical command text/fingerprint. Do not reuse pending Client-create rows as rename state.",
+        "Offline acceptance commits operation, command and overlay atomically. A rename may target a pending-created Client, and chained renames derive from the latest effective overlay revision while stale-base commands refuse before mutation. An effective local revision at signed-bigint maximum rejects as exhausted before mutation; a UInt64 expected revision above signed range is compared as exact decimal command evidence but cannot match local authority or create a projected overlay.",
+        "Client and Project queries share one effective Client projection: authoritative or pending-create base plus newest valid rename overlay. Any pending rename is partial. Rejection deletes only its overlay. Applied overlays persist until matching local applied evidence exists and authority is either newer, or equal to the projection with exact name; stale readback never clears optimism and authoritative supersession cannot resurrect it.",
+        "The upload path validates exact operation/command/overlay linkage, dispatches create then rename and chained renames FIFO, retains transient failures, and drains a matching applied/durable-rejected result without blocking later unrelated work."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "Client rename owns no attachment reference or bytes. The separate media durability/upload/display/retention gates remain unchanged."
+    },
+    "appMcp": {
+      "items": [
+        "The isolated target staging shell watches one exact Client/revision, invokes the verified ClientRenameUseCase, renders queued/partial/conflict state, and demonstrates joined Project current-name update without Project revision change.",
+        "The gated rename_client MCP input represents expected revision as canonical unsigned decimal text, derives Account/Principal from authenticated context, applies the future approved O-043 display-name boundary, emits the exact unquoted integer token in canonical command JSON, calls the same scoped-user RPC and validates the same terminal result as Swift.",
+        "Shared contract/error catalog and privacy-safe telemetry gain Client-rename identifiers without logging names, canonical JSON or credentials; target MCP production composition remains unclaimed."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {
+      "items": [],
+      "notApplicable": "No Firebase snapshot is read or imported. Client identity correlation and frozen-display migration remain separate source-migration slices; this command only proves target current-display behavior."
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Local evidence records stable result/error codes, operation correlation, queue state and bounded retry/concurrency outcomes without Client names, canonical payloads, tokens or keys.",
+        "A connected rehearsal must measure upload retry, conflict and authoritative readback latency; permanent authorization loss for already queued work remains an explicit shared connected-phase policy gate."
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "The DRAFT and any later implementation slice stay in the separate target worktree and spike-prefixed local schema; the Firebase application remains unchanged and authoritative.",
+        "Rollback during local implementation is disposal of synthetic local target data. No hosted resource, source import, deployment, production write, migration, release, authority switch or A-003/A-004 promotion is authorized."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "CRENAMEPROVIDER-TEST-001",
+      "kind": "domain",
+      "owner": "LedgeriOS/LedgerTargetCoreTests/ClientRenameOperationTests.swift and LedgeriOS/LedgerTargetCoreTests/ClientRenameUseCaseTests.swift",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-004", "CRENAMEPROVIDER-REQ-007", "CRENAMEPROVIDER-REQ-009"],
+      "expected": "The pre-existing verified command/use case preserve exact stable identity, full UInt64 revision, replacement-name bytes, one-call dispatch, replay/refusal and bounded failures without provider behavior.",
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-RENAME-001", "EVID-CLIENT-RENAME-USE-CASE-001"]
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-002",
+      "kind": "database_invariant",
+      "owner": "supabase/tests/client_rename_vertical_slice.test.sql",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-002", "CRENAMEPROVIDER-REQ-003", "CRENAMEPROVIDER-REQ-004", "CRENAMEPROVIDER-REQ-007", "CRENAMEPROVIDER-REQ-008", "CRENAMEPROVIDER-REQ-011"],
+      "expected": "After O-042/O-043 approval, a clean local reset proves the approved active/archived and same-value cases, exact cross-runtime name admissibility, exact mutation columns, byte-preserved accepted name, correct revision/time behavior, Project-row/frozen-scope immutability, signed-boundary conflicts/exhaustion and tenant isolation.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-003",
+      "kind": "handler_idempotency",
+      "owner": "supabase/tests/client_rename_vertical_slice.test.sql and scripts/test-local-client-rename-rpc.mjs",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-004", "CRENAMEPROVIDER-REQ-007", "CRENAMEPROVIDER-REQ-008"],
+      "expected": "Exact OperationID replay returns one immutable result; changed/cross-command reuse cannot rebind; lost-response retry creates no second revision; parallel same-revision calls produce exactly one apply and one durable conflict.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-004",
+      "kind": "rls_positive",
+      "owner": "supabase/tests/client_rename_vertical_slice.test.sql and scripts/test-local-client-rename-rpc.mjs",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-003", "CRENAMEPROVIDER-REQ-008", "CRENAMEPROVIDER-REQ-009"],
+      "expected": "An authenticated active Client manager can rename every O-042-approved same-Account Client state through the scoped RPC and read the authorized Client, joined Project display and terminal result.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-005",
+      "kind": "rls_negative",
+      "owner": "supabase/tests/client_rename_vertical_slice.test.sql and scripts/test-local-client-rename-rpc.mjs",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-003", "CRENAMEPROVIDER-REQ-008", "CRENAMEPROVIDER-REQ-009"],
+      "expected": "An active same-Account restricted member retains the existing authorized Client/result reads but cannot execute rename or directly mutate rows. Revoked, anonymous and other-Account callers cannot enumerate or mutate Client/result rows; actor mismatch and direct table writes fail; authorization occurs before operation/subject disclosure.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-006",
+      "kind": "sync_authorization",
+      "owner": "Future isolated authenticated PowerSync Client rename rehearsal",
+      "covers": ["CRENAMEPROVIDER-REQ-008", "CRENAMEPROVIDER-REQ-010"],
+      "expected": "A real scoped session downloads only authorized Client/Project/result rows; revocation removes future entitlement and unauthorized rows are absent from the local database while pending work follows the approved disposition policy.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-007",
+      "kind": "offline_restart",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientRenamePowerSyncVerticalSliceTests.swift",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-002", "CRENAMEPROVIDER-REQ-004", "CRENAMEPROVIDER-REQ-005", "CRENAMEPROVIDER-REQ-006", "CRENAMEPROVIDER-REQ-007"],
+      "expected": "Atomic encrypted acceptance survives close/reopen; pending-create then rename and N→N+1→N+2 chain FIFO; stale-base N refuses; Client and Project render the latest partial name; exact replay adds no row even when replayed after a later chained overlay or after a pending-create successor; revision boundary bytes remain exact.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-008",
+      "kind": "offline_rejection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientRenamePowerSyncVerticalSliceTests.swift",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-002", "CRENAMEPROVIDER-REQ-003", "CRENAMEPROVIDER-REQ-005", "CRENAMEPROVIDER-REQ-006", "CRENAMEPROVIDER-REQ-008"],
+      "expected": "Transient failure retains command/overlay; malformed CRUD/result and unknown terminal result/error codes fail closed; durable rejection removes only its exact overlay and does not poison later unrelated operations; a dependent chained rename proceeds to its own explainable outcome; applied waits for readback; stale readback cannot clear optimism; exact/newer authority reconciles without resurrection.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-009",
+      "kind": "app_mcp_contract",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientRenamePowerSyncVerticalSliceTests.swift and LedgerTargetMCP/tests/clientRename.test.ts",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-004", "CRENAMEPROVIDER-REQ-007", "CRENAMEPROVIDER-REQ-009", "CRENAMEPROVIDER-REQ-011"],
+      "expected": "Swift and MCP emit identical canonical bytes/hash for 0, safe-integer edges, signed maximum and UInt64 maximum; MCP uses decimal-string input without Number conversion; both apply the approved O-043 boundary to whitespace-only variants, NUL/controls, slash/quote/backslash, composed/decomposed Unicode, emoji/U+2028 and the existing greater-than-8-KiB case; both send scoped-user credentials and reject mismatched or unknown terminal results.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-010",
+      "kind": "advisor",
+      "owner": "Supabase Postgres security, indexing, collation, locking and numeric-precision review",
+      "covers": ["CRENAMEPROVIDER-REQ-007", "CRENAMEPROVIDER-REQ-008", "CRENAMEPROVIDER-REQ-010"],
+      "expected": "Review confirms explicit least-privilege grants/RLS, private search-path-pinned SECURITY DEFINER handling, auth-first non-enumeration, indexed lock/policy/join paths, once-per-statement auth evaluation where applicable, bounded transactions, deterministic lock order, exact numeric parsing, no wraparound and no unresolved high-risk finding.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-011",
+      "kind": "end_to_end",
+      "owner": "Future isolated authenticated target app and MCP rehearsal",
+      "covers": ["CRENAMEPROVIDER-REQ-001", "CRENAMEPROVIDER-REQ-002", "CRENAMEPROVIDER-REQ-005", "CRENAMEPROVIDER-REQ-006", "CRENAMEPROVIDER-REQ-008", "CRENAMEPROVIDER-REQ-009", "CRENAMEPROVIDER-REQ-010"],
+      "expected": "A real target session accepts rename offline, restarts, reconnects through PowerSync, reaches the trusted handler, receives authoritative Client/result readback, updates current joined Project display only, and matches MCP without production access.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-012",
+      "kind": "operational",
+      "owner": ".github/workflows/supabase-conversion-control.yml",
+      "covers": ["CRENAMEPROVIDER-REQ-005", "CRENAMEPROVIDER-REQ-009", "CRENAMEPROVIDER-REQ-010"],
+      "expected": "The synchronized DRAFT checkpoint passes conversion controls, verifies all nine machine-discovered leaves remain comment-only, permits only the pgTAP runner-validity placeholder, and passes target/MCP tests, both staging builds and clean-artifact checks without executing rename DDL/DML, network, hosted, production or Firebase behavior.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "CRENAMEPROVIDER-TEST-013",
+      "kind": "domain",
+      "owner": "Future approved Client display-name submission contract and shared Swift/MCP/Postgres fixture set",
+      "covers": ["CRENAMEPROVIDER-REQ-011"],
+      "expected": "O-043 approval is implemented once at the domain/application boundary and reproduced exactly by MCP and trusted Postgres validation, including scalar/control/trim/byte limits, no Unicode normalization, zero local/provider mutation for invalid input and lossless legacy migration or explicit quarantine.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": ["O-042", "O-043"],
+  "notes": "Independent READY review rejected the initial package because it inferred archived-Client and same-value behavior without authority, contradicted existing restricted-member read visibility, omitted three provider files from machine discovery, and failed to reconcile Swift ClientDisplayName with JavaScript/Postgres scalar rules. This corrected DRAFT claims all nine new leaves through automatic discovery, records the ordering-sensitive replay and unknown-result tests, and permits no executable Client rename until O-042/O-043 are approved and a later synchronized READY review passes. Existing shared Client/Project provider runtime, schema, query, upload, staging, contract-support and Sync/config surfaces retain their primary slices and status and are dependencies rather than duplicate claims. A-003/A-004 remain proposed and block hosted/physical claims. O-024/O-025 are not selected: no delete, merge, reassignment or lifecycle mutation is added. Permanent authorization loss for queued commands remains a connected-phase shared policy gate. No hosted resource, source import, production access, migration, release or cutover is authorized."
+}

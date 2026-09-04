@@ -16,7 +16,7 @@
       "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
       "section": "Storage and identity",
       "invariant": "A create intent preallocates one stable opaque ClientID inside one immutable Account and supplies one required current display name; display text is not identity, relationship or authorization evidence, and two Clients may retain equal names as distinct IDs.",
-      "decisionIds": ["D-006"],
+      "decisionIds": ["D-006", "O-043"],
       "verificationIds": ["CLIENTCREATE-TEST-001", "CLIENTCREATE-TEST-002", "CLIENTCREATE-TEST-003", "CLIENTCREATE-TEST-004", "CLIENTCREATE-TEST-005"]
     },
     {
@@ -178,5 +178,5 @@
   "implementationEvidence": ["EVID-CLIENT-CREATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 command boundary only. D-006 settles stable Account-scoped Client identity and display-name non-authority. O-025 remains fully open because no rename/archive/merge/reassignment exists. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+  "notes": "The verified command/envelope structure remains reusable. D-006 settles stable Account-scoped Client identity and display-name non-authority, but O-043 now gates the exact new-submission boundary consumed through ClientDisplayName; this slice does not prove raw Swift/MCP/Postgres parity or stored-versus-submission representation. O-025 remains fully open because no rename/archive/merge/reassignment exists. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
 }

@@ -52,7 +52,7 @@ issues identity tokens; it grants no Firestore or Firebase Storage access.
 | Physical verification | Does the real app survive termination, device lock, network loss, storage pressure and reconnect? | Mandatory physical-device matrix passes; simulator-only evidence is insufficient |
 
 Product blockers remain separate. The spike may use fixed synthetic behavior to
-exercise infrastructure, but that fixture cannot close O-002–O-041.
+exercise infrastructure, but that fixture cannot close O-002–O-043.
 
 ## Prerequisites
 

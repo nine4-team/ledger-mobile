@@ -32,9 +32,9 @@
       "authorityRole": "canonical_target",
       "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
       "section": "Project relationship",
-      "invariant": "Project setup selects an existing Client or creates one preallocated new Client in the same atomic operation; copied Client display text never owns identity, scope or authorization.",
-      "decisionIds": ["D-006", "O-025"],
-      "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-008", "PROJECTPROVIDER-TEST-012"]
+      "invariant": "Project setup selects an existing Client or creates one preallocated new Client in the same atomic operation; copied Client display text never owns identity, scope or authorization. The new-Client branch's exact cross-runtime display-name submission boundary remains governed by O-043; existing-Client selection is unaffected.",
+      "decisionIds": ["D-006", "O-025", "O-043"],
+      "verificationIds": ["PROJECTPROVIDER-TEST-001", "PROJECTPROVIDER-TEST-002", "PROJECTPROVIDER-TEST-004", "PROJECTPROVIDER-TEST-005", "PROJECTPROVIDER-TEST-008", "PROJECTPROVIDER-TEST-012", "PROJECTPROVIDER-TEST-013"]
     },
     {
       "id": "PROJECTPROVIDER-REQ-003",
@@ -85,7 +85,7 @@
   "contracts": {
     "domain": {
       "items": [
-        "Reuse ProjectSetupDraft, CreateProjectCommand, ProjectSetupOperating and ProjectCoreDetailsQuerying without provider types crossing into LedgerTargetCore.",
+        "Reuse ProjectSetupDraft, CreateProjectCommand, ProjectSetupOperating and ProjectCoreDetailsQuerying without provider types crossing into LedgerTargetCore. The new-Client branch's current ClientDisplayName dependency is provisional until O-043 separates new submission from stored/read evidence.",
         "One canonical sorted JSON envelope binds Account, actor, Operation, Project, existing/new Client selection, exact names/description, complete canonical allocations and client-created time; Swift, MCP and the trusted handler validate the same SHA-256 fingerprint."
       ],
       "notApplicable": ""
@@ -142,7 +142,7 @@
       "items": [
         "The isolated target staging shell can create a new- or existing-Client Project offline and immediately read the local partial Project while retaining its permanent no-hosted-services banner.",
         "The gated create_project MCP tool derives Account/Principal from request context and uses the same canonical command, scoped-user RPC and result validation as Swift.",
-        "Swift and TypeScript pin the identical representative Project envelope and SHA-256 fingerprint."
+        "Swift and TypeScript pin the identical representative Project envelope and SHA-256 fingerprint for one ordinary new-Client name; that fixture does not prove O-043 cross-runtime input-boundary parity."
       ],
       "notApplicable": ""
     },
@@ -253,7 +253,7 @@
       "kind": "advisor",
       "owner": "Supabase Postgres security, indexing, collation and locking review",
       "covers": ["PROJECTPROVIDER-REQ-005", "PROJECTPROVIDER-REQ-007"],
-      "expected": "Review confirms explicit grants/RLS, private security-definer functions, auth checks, indexed FKs/policies, byte-length and canonical-order parity, identity locks and no unresolved high-risk finding.",
+      "expected": "Review confirms explicit grants/RLS, private security-definer functions, auth checks, indexed FKs/policies, identifier byte bounds, canonical allocation order, identity locks and no unresolved high-risk finding. Client display-name byte/scalar parity is excluded pending O-043.",
       "status": "passed",
       "evidence": []
     },
@@ -274,10 +274,19 @@
       "expected": "A real target session accepts Project setup offline, reconnects through PowerSync, reaches the trusted Supabase handler, receives authoritative Client/Project/allocation/result rows and matches the MCP path without production access.",
       "status": "planned",
       "evidence": []
+    },
+    {
+      "id": "PROJECTPROVIDER-TEST-013",
+      "kind": "app_mcp_contract",
+      "owner": "Future shared O-043 Swift/MCP/Postgres/migration fixture suite",
+      "covers": ["PROJECTPROVIDER-REQ-002", "PROJECTPROVIDER-REQ-004", "PROJECTPROVIDER-REQ-006"],
+      "expected": "After O-043 approval, the new-Client branch uses the same Swift/MCP/PostgreSQL scalar and UTF-8 rules, rejects invalid input before any local aggregate or upload command, returns a durable defensive server rejection, and preserves stored/imported Client-name read evidence separately. The existing-Client branch remains unchanged.",
+      "status": "planned",
+      "evidence": []
     }
   ],
   "implementationEvidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Local implementation and deterministic tests pass, but the dossier remains in_progress. A-003/A-004 remain proposed until real isolated Auth, Sync Streams, device, media, schema-evolution, performance and fault phases pass. O-026 remains open: the local spike intentionally tests a stronger least-privilege capability/financial-visibility model, but this does not approve the final product matrix. A permanently unauthorized queued command still requires an approved terminal-resolution policy during the connected Auth/Sync phase. Stable IDs are globally unique opaque identifiers while every relationship and authorization remains Account-scoped. No hosted resource, source import, production access, migration, release or cutover is authorized."
+  "notes": "Local Project identity, existing-Client selection, allocation, ordinary-name command, offline, authorization, replay and readback mechanics pass, but the dossier remains in_progress. O-043 is a promotion gate only for the new-Client branch: current Swift, MCP and PostgreSQL Client-name validators are not equivalent, and the representative fingerprint fixture does not prove the final submission boundary or durable invalid-name handling. Existing-Client setup and Project-name/description behavior are unaffected by this newly recorded Client-name gap. A-003/A-004 remain proposed until real isolated Auth, Sync Streams, device, media, schema-evolution, performance and fault phases pass. O-026 remains open: the local spike intentionally tests a stronger least-privilege capability/financial-visibility model, but this does not approve the final product matrix. A permanently unauthorized queued command still requires an approved terminal-resolution policy during the connected Auth/Sync phase. Stable IDs are globally unique opaque identifiers while every relationship and authorization remains Account-scoped. No hosted resource, source import, production access, migration, release or cutover is authorized."
 }

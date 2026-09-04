@@ -1,0 +1,27 @@
+-- DRAFT scaffold only: no executable DDL exists at this checkpoint.
+--
+-- The implementation checkpoint may add the isolated spike Client-rename
+-- handler and its supporting constraints only after O-042/O-043 are approved
+-- and a later synchronized READY package passes review and immutable CI. The
+-- bounded design is tracked in client-rename-supabase-powersync-vertical-slice.json.
+--
+-- * only spike_clients.display_name, revision, updated_at and updated_at_ms may
+--   change; account, identity, lifecycle, creation audit, Projects and frozen
+--   history are immutable for this command;
+-- * the public entry point remains SECURITY INVOKER and delegates to a private,
+--   search-path-pinned SECURITY DEFINER handler with PUBLIC execution revoked;
+-- * authentication, actor binding, active Account membership and
+--   can_manage_clients authorization precede subject/replay disclosure;
+-- * the exact client-rename-v1 canonical JSON text is parsed without IEEE-754
+--   coercion, and its UInt64 expected revision is validated as decimal numeric
+--   evidence even though the physical Client revision is signed bigint;
+-- * one exact Account/Client row is locked before revision comparison; a row at
+--   signed-bigint maximum rejects as revision exhausted rather than wrapping;
+-- * exact OperationID replay returns one immutable result, changed replay
+--   cannot rebind, and concurrent same-revision attempts yield one apply and
+--   one durable conflict;
+-- * archived-Client eligibility and same-value result/revision semantics remain
+--   blocked on O-042, and the exact language-neutral display-name scalar,
+--   control, trimming and UTF-8-size contract remains blocked on O-043; and
+-- * authenticated/anon roles receive no direct Client or result mutation
+--   grant. RLS and RPC tests must independently prove non-enumeration.

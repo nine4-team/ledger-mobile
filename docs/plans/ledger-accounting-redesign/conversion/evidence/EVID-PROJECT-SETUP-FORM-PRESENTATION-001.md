@@ -174,6 +174,12 @@ No implementation or speculative scaffold was accepted for those candidates.
 
 ## Permanent Exclusions
 
+The verified preparation/derivation structure remains valid, but the
+new-Client branch currently consumes a provisional `ClientDisplayName`. O-043
+must define and prove the raw-input submission boundary before provider
+promotion; this evidence does not claim cross-runtime name validation. The
+existing-Client branch is unaffected.
+
 This evidence does not authorize SwiftUI layout, wording, step count, category
 defaults, category creation, hero media, a Project-specific submission reducer,
 actual operation invocation, authorization, physical local persistence,

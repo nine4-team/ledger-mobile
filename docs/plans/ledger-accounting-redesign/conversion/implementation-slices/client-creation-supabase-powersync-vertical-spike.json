@@ -31,9 +31,9 @@
       "authorityRole": "canonical_target",
       "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
       "section": "Storage and identity",
-      "invariant": "An authorized create allocates one stable Account-scoped Client identity and required display name; equal names remain distinct when Client IDs differ, and name text never becomes identity or authorization.",
-      "decisionIds": ["D-006"],
-      "verificationIds": ["CLIENTPROVIDER-TEST-001", "CLIENTPROVIDER-TEST-002", "CLIENTPROVIDER-TEST-003", "CLIENTPROVIDER-TEST-004", "CLIENTPROVIDER-TEST-008", "CLIENTPROVIDER-TEST-010"]
+      "invariant": "An authorized create allocates one stable Account-scoped Client identity and required display name; equal names remain distinct when Client IDs differ, and name text never becomes identity or authorization. The exact cross-runtime new-submission boundary remains governed by O-043 and is not settled by the working ordinary-name fixture.",
+      "decisionIds": ["D-006", "O-043"],
+      "verificationIds": ["CLIENTPROVIDER-TEST-001", "CLIENTPROVIDER-TEST-002", "CLIENTPROVIDER-TEST-003", "CLIENTPROVIDER-TEST-004", "CLIENTPROVIDER-TEST-008", "CLIENTPROVIDER-TEST-010", "CLIENTPROVIDER-TEST-013"]
     },
     {
       "id": "CLIENTPROVIDER-REQ-002",
@@ -84,7 +84,7 @@
   "contracts": {
     "domain": {
       "items": [
-        "Reuse ClientCreationDraft, CreateClientCommand, ClientCreationOperating and ClientCoreDetailsQuerying without provider types crossing into LedgerTargetCore.",
+        "Reuse ClientCreationDraft, CreateClientCommand, ClientCreationOperating and ClientCoreDetailsQuerying without provider types crossing into LedgerTargetCore; their current ClientDisplayName dependency is provisional until O-043 separates new-submission validation from stored/read evidence.",
         "Use one canonical sorted JSON envelope with milliseconds-since-epoch dates and one SHA-256 fingerprint shared by Swift, MCP and the trusted handler."
       ],
       "notApplicable": ""
@@ -100,7 +100,7 @@
     "serverHandlers": {
       "items": [
         "ledger_private.spike_create_client authenticates and authorizes before taking a transaction-scoped OperationID advisory lock.",
-        "Exact replay returns the stored result; payload rebinding raises conflict; permanent payload validation persists a rejected result; accepted input inserts Client and result atomically.",
+        "Exact replay returns the stored result; payload rebinding raises conflict; permanent payload validation persists a rejected result; accepted input inserts Client and result atomically. O-043 must add an equivalent server-side Client-name validator before promotion so invalid local input cannot fail before a terminal result.",
         "public.spike_create_client is the sole security-invoker Data API entry and delegates to the private trusted handler."
       ],
       "notApplicable": ""
@@ -142,7 +142,7 @@
       "items": [
         "The isolated target staging shell opens the encrypted local runtime and can create/watch a synthetic Account-scoped Client while permanently showing LOCAL SPIKE / NO HOSTED SERVICES.",
         "The gated target create_client MCP tool derives Account/Principal from request context, validates input and exact terminal result, and calls the same Supabase RPC with user token plus publishable key.",
-        "Swift and TypeScript pin an identical canonical envelope and SHA-256 fingerprint fixture."
+        "Swift and TypeScript pin one identical ordinary-name canonical envelope and SHA-256 fingerprint fixture; this does not prove the cross-runtime input boundary required by O-043."
       ],
       "notApplicable": ""
     },
@@ -250,10 +250,17 @@
       "covers": ["CLIENTPROVIDER-REQ-005", "CLIENTPROVIDER-REQ-006"],
       "expected": "The app accepts offline, reconnects through real PowerSync, reaches the trusted Supabase handler, receives authoritative readback, and the MCP path produces the same result without production access.",
       "status": "planned", "evidence": []
+    },
+    {
+      "id": "CLIENTPROVIDER-TEST-013", "kind": "app_mcp_contract",
+      "owner": "Future shared O-043 Swift/MCP/Postgres/migration fixture suite",
+      "covers": ["CLIENTPROVIDER-REQ-001", "CLIENTPROVIDER-REQ-002", "CLIENTPROVIDER-REQ-004", "CLIENTPROVIDER-REQ-005"],
+      "expected": "After O-043 approval, Swift, MCP and PostgreSQL accept and preserve the same exact Client-name scalar/UTF-8 vectors, reject invalid values before any local operation or overlay, return a durable server result for defensive rejection, and keep stored/imported read evidence distinct from the new-submission converter.",
+      "status": "planned", "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-CLIENT-CREATION-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "The local implementation path is working and test-backed, but this dossier deliberately remains in_progress. A-003/A-004 remain proposed until the full isolated vertical spike, including real Sync Streams/Auth/device/media/evolution/performance/failure phases, passes. No isolated hosted Supabase/PowerSync environment or target authentication strategy has been authorized or provisioned. This grants no hosted, migration, cutover or production authority."
+  "notes": "The local identity, ordinary-name command, offline, authorization, replay and readback mechanics are working and test-backed, but this dossier deliberately remains in_progress. O-043 is a promotion gate: current Swift, MCP and PostgreSQL Client-name validators are not cross-runtime equivalent, stored/read evidence is not separated from new submission, and the ordinary-name fingerprint fixture proves transport parity only. No final Client-name validity, bounded indexability or durable invalid-name terminal behavior is claimed. A-003/A-004 remain proposed until the full isolated vertical spike, including real Sync Streams/Auth/device/media/evolution/performance/failure phases, passes. No isolated hosted Supabase/PowerSync environment or target authentication strategy has been authorized or provisioned. This grants no hosted, migration, cutover or production authority."
 }

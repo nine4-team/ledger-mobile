@@ -1,6 +1,6 @@
 # EVID-M2-DECISION-PACKETS-001 — High-Impact Residual Decision Packets
 
-- Timestamp: 2026-09-04 O-041 amendment
+- Timestamp: 2026-09-04 O-042/O-043 amendment
 - Class: target mapping design / product-decision preparation
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
   from the history now carried by `firebase`; the historical audit began from a
@@ -13,8 +13,9 @@
 ## Result
 
 The deterministic 184-surface M2 residual is grouped under 47 exact blockers.
-Twenty reviewable packets now cover all 39 product blockers in the generated
-queue:
+Twenty-one reviewable packets now cover all 39 product blockers in the generated
+residual queue plus O-042/O-043, which were discovered while reviewing the
+already target-mapped Client-rename provider draft:
 
 | Packet | Decisions | Unique surfaces in packet cluster |
 |---|---|---:|
@@ -38,6 +39,7 @@ queue:
 | Project-note text validation | O-039 | 8 |
 | Project budget pinning | O-040 | 18 |
 | Vendor-spend report semantics | O-041 | 2 |
+| Client rename and display-name boundary | O-042/O-043 | 0 residual; 9 target-mapped draft surfaces |
 
 Because surfaces can depend on multiple decisions, these clusters overlap.
 Together they touch all 177 residual surfaces that have any product-decision
@@ -82,8 +84,9 @@ A structural audit of the first nineteen packet files verified each contains the
 decision requested, confirmed constraints, mutually exclusive options,
 conceptual target ownership, authorization/Sync treatment, migration/
 reconciliation, acceptance tests, approval consequences, and checklist. The
-twentieth O-041 packet follows the same required shape and awaits its bounded
-independent final review with the source-query reconciliation control.
+twentieth O-041 packet and twenty-first O-042/O-043 packet follow the same
+required shape. O-042/O-043 were created after independent review rejected a
+Client-rename READY attempt; their recommendations approve nothing.
 
 ## Guardrails Preserved
 

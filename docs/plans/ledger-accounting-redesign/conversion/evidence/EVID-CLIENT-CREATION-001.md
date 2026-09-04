@@ -19,11 +19,11 @@
 
 After verifying the attachment-capture receipt boundary, the Phase 1 dependency
 audit selected Client creation as the smallest next user-meaningful operation.
-D-006 and the canonical Client spec already settle stable Account-scoped Client
-identity, the minimal current display name and the rule that text never owns a
-relationship or authorization. A typed CreateClient command is required before
-Project setup can select or create a Client without restoring free-text
-`project.clientName` as authority.
+D-006 and the canonical Client spec settle stable Account-scoped Client identity
+and the rule that text never owns a relationship or authorization. They do not
+settle the exact cross-runtime new-submission rule now recorded as O-043. A typed
+CreateClient command is required before Project setup can select or create a
+Client without restoring free-text `project.clientName` as authority.
 
 Exactly two target-only comment scaffolds are claimed in the provider-free core
 and test roots. Existing Firebase Project/Client mechanics, current app/MCP
@@ -109,6 +109,13 @@ named in the dossier.
 The implementation reuses `OperationJournal` only through a deterministic test
 adapter. It does not claim physical durable storage, server authorization,
 authoritative Client creation or synchronized visibility.
+
+The structural command/envelope result remains verified, but its
+`ClientDisplayName` input is a provisional validated value. This evidence does
+not prove that Swift, MCP and PostgreSQL accept the same raw Client-name inputs,
+or that stored/imported display evidence can safely share the future
+new-submission converter. O-043 must be approved and implemented before provider
+promotion; the existing verified structure need not be discarded.
 
 ## Local Implementation Verification
 

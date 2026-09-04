@@ -1,7 +1,7 @@
 # Product Decision Packets
 
 Status: proposed recommendations; not product authority
-Last reviewed: 2026-09-03
+Last reviewed: 2026-09-04
 
 These packets turn exact conversion blockers into reviewable senior-level
 choices. They exist so the implementation does not guess product behavior or
@@ -70,6 +70,7 @@ recommendation alone does not reduce the residual count.
 | O-039 | [Project-note text validation](O-039-project-note-text-validation.md) | Proposed: shared app/MCP outer trim, one-character minimum, exact interior text, lossless legacy import |
 | O-040 | [Project budget pinning](O-040-project-budget-pinning.md) | Proposed: decide whether pins survive, then explicitly choose typed targets, missing/empty/no-pin defaults, Project-detail/card fallbacks, lifecycle and cleanup; no fallback is approved by the packet itself |
 | O-041 | [Vendor-spend report semantics](O-041-vendor-spend-report-semantics.md) | Proposed: per-currency Business Vendor Cash Movement with 1584-paid Purchases/Expenses, Returns to 1584, exact label-snapshot buckets and separate non-cash credit fields |
+| O-042/O-043 | [Client rename and display-name boundary](O-042-O-043-client-rename-and-display-name-boundary.md) | Proposed: archived rename plus successful no-change semantics, and one exact 512-byte cross-runtime name-submission contract; neither is approved |
 | O-002/O-011–O-014 | [Transfer edge policy](O-002-O-011-O-014-transfer-edge-policy.md) | Proposed: sent revision, contextual tag/Space, paired reversal, current-Project credit |
 | O-016/O-017/O-027 | [Item capture and acquisition readiness](O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) | Proposed: name/photo/note minimum, no persisted hint, explicit unresolved acquisition |
 | O-018/O-019/O-020/O-022 | [Proto migration and authority cutover](O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Proposed: deterministic Item/review mapping and hard freeze/import/reconcile/activate |

@@ -14,12 +14,14 @@
 
 ## Outcome
 
-The isolated target now implements the first complete Project setup path on top
-of the provider-free Project contracts. With no network, the app can accept one
+The isolated target now implements the first local Project setup path on top of
+the provider-free Project contracts. With no network, the app can accept one
 Project using an existing Client or one preallocated new Client, persist the
 entire optimistic aggregate in encrypted PowerSync storage, and enqueue one
-canonical `project-create-v1` command. The same command can be applied through a
-trusted Supabase Postgres handler from Swift or the gated target MCP tool.
+canonical `project-create-v1` command. The same ordinary-name command can be
+applied through a trusted Supabase Postgres handler from Swift or the gated
+target MCP tool. O-043 still gates the new-Client name-submission boundary; it
+does not affect the existing-Client branch.
 
 The server transaction creates the optional Client, Project, complete selected
 category allocation set and immutable operation result together. Exact replay
@@ -81,7 +83,8 @@ corrected:
 - missing Project/budget-management capability initialization and category
   financial-visibility enforcement;
 - Project/new-Client identity race windows that could escape durable rejection;
-- UTF-8 byte-limit and deterministic category-order mismatches;
+- identifier byte-limit and deterministic category-order mismatches (not final
+  Client display-name scalar/byte parity, which remains open under O-043);
 - missing Project SQL, REST, offline, transport and cross-runtime tests;
 - an upload connector that initially recognized only Client commands;
 - missing exact local operation/overlay linkage validation; and
@@ -89,6 +92,11 @@ corrected:
 
 ## Explicit Open Gates
 
+- O-043 gates only the new-Client branch. Swift, MCP and PostgreSQL currently
+  disagree on some Client-name whitespace/control/NUL/size cases, and stored/read
+  evidence is not yet distinct from the new-submission converter. The existing
+  ordinary-name fixture proves command transport parity, not final validation
+  parity or durable rejection for every invalid name.
 - A-003/A-004 remain proposed. No hosted Supabase or PowerSync environment has
   been provisioned, and no real Auth/Sync Stream upload/readback has passed.
 - O-026 remains open. The spike tests a deliberately stricter capability and

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T17:59:27.221Z",
+  "generatedFromManifestSync": "2026-09-04T19:36:56.504Z",
   "totals": {
-    "slices": 70,
-    "claimedTargetSurfaces": 190,
+    "slices": 71,
+    "claimedTargetSurfaces": 199,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 147
   },
   "statusCounts": {
-    "draft": 0,
+    "draft": 1,
     "ready": 0,
     "in_progress": 3,
     "implemented": 1,
@@ -165,7 +165,7 @@
         "TEST-E0636D89C442"
       ],
       "requirementCount": 6,
-      "verificationCount": 12,
+      "verificationCount": 13,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-creation-supabase-powersync-vertical-spike.json"
     },
@@ -198,6 +198,28 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-rename-supabase-powersync-vertical-slice",
+      "title": "Rename one Client offline through Supabase, PowerSync, the target app, and target MCP",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Client Identity",
+      "surfaceIds": [
+        "CONFIG-3193C7F8A5F9",
+        "CONFIG-B3D8C4F9F504",
+        "CONFIG-EC93D3BAC0C4",
+        "MCPMOD-A23569C60118",
+        "MCPMOD-EFFAAFBBD1AD",
+        "SWIFT-5ABC145B2FAF",
+        "SWIFT-5CB20A965406",
+        "SWIFT-6816C6E0F96A",
+        "TEST-77ABFEE573E1"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 13,
+      "blockerCount": 2,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-supabase-powersync-vertical-slice.json"
     },
     {
       "sliceId": "client-rename-use-case-contracts",
@@ -702,7 +724,7 @@
         "TEST-3F2CAFC760D5"
       ],
       "requirementCount": 7,
-      "verificationCount": 12,
+      "verificationCount": 13,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-supabase-powersync-vertical-slice.json"
     },

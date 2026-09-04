@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T17:59:27.221Z",
+  "generatedFromManifestSync": "2026-09-04T19:36:56.504Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 872,
-    "targetRelevantSurfaces": 612,
-    "batches": 22,
-    "productScopeSurfaces": 709,
+    "surfaces": 881,
+    "targetRelevantSurfaces": 621,
+    "batches": 23,
+    "productScopeSurfaces": 718,
     "technicalControlSurfaces": 163
   },
   "canonicalTargetCoverage": [
@@ -67,14 +67,15 @@
         "M0-BACKEND-RULES-001",
         "M0-CLIENT-POWERSYNC-PROVIDER-001",
         "M0-CLIENT-POWERSYNC-SPIKE-001",
+        "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-INVENTORY-TRANSACTION-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 472,
-      "targetRelevantSurfaceCount": 356
+      "surfaceCount": 481,
+      "targetRelevantSurfaceCount": 365
     },
     {
       "path": "docs/specs/projects.md",
@@ -774,6 +775,79 @@
       "surfaceIds": [
         "MCPMOD-68F7991697DD",
         "MCPMOD-EDF53EB768EB"
+      ]
+    },
+    {
+      "batchId": "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001",
+      "title": "Target Client rename Supabase and PowerSync provider slice",
+      "scope": "product",
+      "rationale": "The isolated Client rename provider slice must preserve stable Client identity, current-display replacement and frozen-history separation while proving revision-safe Postgres authorization, encrypted offline chaining/reconciliation and app/MCP parity without authorizing production.",
+      "surfaceCount": 9,
+      "targetRelevantSurfaceCount": 9,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-operation-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-rename-use-case-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-3193C7F8A5F9",
+        "CONFIG-B3D8C4F9F504",
+        "CONFIG-EC93D3BAC0C4",
+        "MCPMOD-A23569C60118",
+        "MCPMOD-EFFAAFBBD1AD",
+        "SWIFT-5ABC145B2FAF",
+        "SWIFT-5CB20A965406",
+        "SWIFT-6816C6E0F96A",
+        "TEST-77ABFEE573E1"
       ]
     },
     {

@@ -35,7 +35,8 @@
       "invariant": "Project setup explicitly selects an existing Client or supplies a preallocated new Client identity and validated display name; it cannot rename, archive, merge or delete a Client or reassign an existing Project, so O-025 remains open.",
       "decisionIds": [
         "D-006",
-        "O-025"
+        "O-025",
+        "O-043"
       ],
       "verificationIds": [
         "PROJECTSETUP-TEST-001",
@@ -311,5 +312,5 @@
   ],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 command boundary only. D-006 settles stable Account-scoped Client identity. Existing/new Client selection is one atomic Project setup intent; category definitions are referenced but never mutated. O-023/O-024/O-025/O-026 remain fully open because media reference lifecycle, Project deletion, Client correction/reassignment and shared reference-data mutation/authorization are excluded. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
+  "notes": "The verified Project identity/allocation/envelope structure remains reusable. D-006 settles stable Account-scoped Client identity, while O-043 gates only the new-Client display-name submission value consumed by this contract; existing-Client selection is unaffected. O-023/O-024/O-025/O-026 remain fully open because media reference lifecycle, Project deletion, Client correction/reassignment and shared reference-data mutation/authorization are excluded. The slice stops before physical durable storage, server apply, schema/RLS/Sync/Auth/provider, app/MCP, source migration, hosted resources, production access or cutover."
 }
