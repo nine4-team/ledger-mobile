@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sliceId": "project-preference-read-contracts",
-  "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
+  "title": "Represent current-Principal Project preference-shaped reads without confusing absence with unsynchronized data",
   "kind": "product",
   "status": "verified",
   "owner": "Project Preference Read Contracts",
@@ -15,8 +15,8 @@
       "authorityRole": "canonical_target",
       "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
       "section": "Budget Progress",
-      "invariant": "Personal pins may select which canonical Project category progress values are presented and in what user-defined order, but preference data never supplies spend, allocation or contribution authority and cannot change the paid-plus-unpaid accounting formula.",
-      "decisionIds": [],
+      "invariant": "This provider-free primitive can represent ordered category-identity evidence if O-040 retains personal pins, but it neither approves that feature nor supplies spend, allocation or contribution authority. O-040 separately owns pin survival/types and every no-pin/default/detail/card presentation outcome.",
+      "decisionIds": ["O-040"],
       "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
     },
     {
@@ -24,8 +24,8 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
       "section": "Target Observable Contract — Backend Neutral",
-      "invariant": "One preference row is bound to stable AccountID, PrincipalID and ProjectID, carries an ordered unique list of stable BudgetCategoryIDs and a monotonic revision, and contains no user-selected backend path, category label or financial value.",
-      "decisionIds": [],
+      "invariant": "The verified primitive binds one candidate row shape to AccountID, PrincipalID and ProjectID with ordered unique BudgetCategoryIDs and revision, but this is representational evidence rather than approval of a target row, pin feature, Overall target, missing/empty/default/fallback or lifecycle policy.",
+      "decisionIds": ["O-040"],
       "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
     },
     {
@@ -42,8 +42,8 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
       "section": "Migration Contract",
-      "invariant": "Preference identity and pin order are preserved independently of category lifecycle. Archived or presently unresolved category IDs remain preference evidence for later visibility-safe resolution; this read contract neither deletes nor silently repairs them and imports no source preference row.",
-      "decisionIds": [],
+      "invariant": "The primitive can preserve identity/order evidence without deleting unresolved IDs, but O-040 decides whether and how those source facts map to target preference, typed Overall, lifecycle and cleanup behavior. This read contract imports no source row and approves no migration disposition.",
+      "decisionIds": ["O-040"],
       "verificationIds": ["PROJECTPREFERENCE-TEST-001", "PROJECTPREFERENCE-TEST-002", "PROJECTPREFERENCE-TEST-003", "PROJECTPREFERENCE-TEST-004", "PROJECTPREFERENCE-TEST-005"]
     },
     {
@@ -77,7 +77,7 @@
   "contracts": {
     "domain": {
       "items": [
-        "ProjectPreferenceSnapshot binds one stable AccountID, PrincipalID and ProjectID to an ordered duplicate-free list of BudgetCategoryIDs and one revision. Empty pins are valid stored preference state; no category name, lifecycle, amount, budget result, user path or provider value is carried.",
+        "ProjectPreferenceSnapshot is a verified provider-free representational primitive binding stable AccountID, PrincipalID and ProjectID to ordered duplicate-free BudgetCategoryIDs and revision. Its empty-row capability is not product approval that pins survive or that missing/empty/no-pin/default/card outcomes have any particular meaning under O-040.",
         "ProjectPreferenceDirectoryRequest binds exact Account/Principal expected scope to one derived query fingerprint. Serialized requests reconstruct the fingerprint rather than trusting caller-supplied derived evidence.",
         "ProjectPreferenceDirectorySnapshot validates request fingerprint, finite as-of time, exact row scope, unique Project rows and already-authorized visible count, then canonicalizes rows by ProjectID without changing pin order.",
         "ProjectPreferenceLookupState distinguishes stored preference, authoritative notStored from a complete directory, and notAvailable from incomplete local evidence. It does not synthesize first-use defaults or resolve category visibility.",
@@ -133,7 +133,7 @@
       "items": [
         "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
         "The slice cannot authorize a Principal, persist/display a preference, resolve category visibility, calculate budgets, write pins, define schema/RLS/Sync/provider/migration behavior, activate a feature, deploy, release or cut over.",
-        "A-003/A-004/A-007/A-016, physical offline verification, canonical production preference profiling and all hosted-resource authority remain outside this read boundary."
+        "O-040, A-003/A-004/A-007/A-016, physical offline verification, canonical production preference profiling and all hosted-resource authority remain outside this read boundary."
       ],
       "notApplicable": ""
     }
@@ -188,5 +188,5 @@
   "implementationEvidence": ["EVID-PROJECT-PREFERENCE-READ-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Verified decision-independent Phase 1 read contract at exact implementation commit 59526ccc33c5317768dc0e986f6c91bf24b2a441 and immutable Actions run 33624655214. It preserves exact current-Principal preference scope, ordered stable pin identities, revision and authoritative absence versus incomplete-local truth. It does not invent a first-use default, resolve archived/stale category visibility, calculate budgets, authorize a caller, write preferences, define schema/RLS/Sync/Auth/provider behavior, wire app/MCP, migrate source data, provision hosted resources or authorize production/cutover."
+  "notes": "Verified provider-free Phase 1 representational primitive at exact implementation commit 59526ccc33c5317768dc0e986f6c91bf24b2a441 and immutable Actions run 33624655214. It proves typed current-Principal-shaped scope, ordered stable category-ID evidence, revision and absence-versus-incomplete-local mechanics only. It is not canonical product approval that pinning survives and does not decide typed Overall, missing/empty/no-pin/default/detail/card fallback, lifecycle or cleanup under O-040. It does not calculate budgets, authorize a caller, define schema/RLS/Sync/Auth/provider behavior, wire app/MCP, migrate source data, provision hosted resources or authorize production/cutover."
 }

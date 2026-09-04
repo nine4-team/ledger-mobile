@@ -18,25 +18,30 @@
 
 ## Selection and Scope
 
-After verifying current-Principal Project preference reads, the next Phase 1
-dependency audit selected `UpdateProjectPreferences` as the smallest complete
-decision-independent mutation. The canonical specs settle that pins are
-per-user, per-Project, ordered presentation state; they do not affect category
-definitions or budget accounting. The reviewed capability and architecture
-contracts explicitly name a current-Principal preference command and require a
-conflict-aware durable operation.
+After verifying current-Principal Project-preference-shaped reads, the Phase 1
+dependency audit selected `UpdateProjectPreferences` as a bounded provider-free
+operation primitive. O-040 now records that canonical target authority did not
+settle whether personal pins survive, their target types, or any missing/empty/
+no-pin/default/detail/card outcome. The implementation therefore proves only a
+BudgetCategoryID-list operation representation and conflict mechanics, not an
+approved product mutation.
 
-The command will replace the complete ordered pin set. Its expected state must
+The primitive can replace a complete ordered category-ID set. Its expected state must
 be either authoritatively not stored or one exact revision, preserving the
 difference between an absent row and a stored empty preference. This gives an
 offline first write enough intent to detect concurrent edits without inventing
 merge or last-write-wins behavior.
 
-O-026 does not block this slice: it governs shared categories, templates and
+O-026 does not invalidate this primitive: it governs shared categories, templates and
 vendor suggestions. This command cannot create, edit, archive, reorder or grant
 authority over any shared reference. Category lifecycle resolution, automatic
 first-use Furnishings behavior and deleted-reference cleanup remain separate
 later responsibilities rather than hidden command behavior.
+
+O-040 blocks any application, schema, provider or migration use of this
+primitive until product authority decides whether it is retained or revised,
+including typed Overall, missing/empty/no-pin/default/detail/card behavior and
+category lifecycle/cleanup.
 
 Exactly two target-only comment scaffolds are claimed in the provider-free core
 and test roots. No current app/MCP surface is treated as replaced until concrete
@@ -150,6 +155,8 @@ This ready plan cannot:
 - persist, display or authoritatively apply a Project preference;
 - authorize the caller, target another Principal or resolve membership;
 - create/edit/archive/reorder a category or decide O-026;
+- approve that personal pins survive or decide typed Overall, missing versus
+  empty, no-pin/default/detail/card fallback, lifecycle or cleanup under O-040;
 - synthesize a first-use default, validate category visibility, silently clean
   stale/deleted references or calculate any budget value;
 - define a Postgres table, handler, grant, RLS policy, Sync Stream, optimistic

@@ -1,9 +1,10 @@
 # EVID-M2-PROJECT-REFERENCE-001 — Client, Project, and Reference-Data Target Mapping
 
-- Timestamp: 2026-08-31
+- Timestamp: 2026-09-03 correction
 - Class: target mapping design evidence
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
-  on `dev`; shared worktree was already dirty
+  from the history now carried by `firebase`; the historical audit began from a
+  dirty source checkout
 - Production reads or mutations: none
 - Target implementation/schema/RLS/Sync Stream changes: none
 - Operator: Codex
@@ -12,16 +13,16 @@
 
 ## Scope and Result
 
-The batch contains 52 `replace`, `redesign`, or `migrate` surfaces. Thirty-six
-now have complete target maps. Sixteen remain deliberately `characterized`
-because O-024, O-025 or O-026 can still change the exact deletion/correction
-command, dependency/retention behavior, writer ownership or authorization
-policy.
+The batch contains 52 `replace`, `redesign`, or `migrate` surfaces. Twenty-nine
+now have complete target maps. Twenty-three remain deliberately `characterized`
+because O-024, O-025, O-026 or O-040 can still change the exact deletion/
+correction command, dependency/retention behavior, writer ownership,
+authorization or Project budget-pin product contract.
 
 The completed map covers stable Client/Project identity and local directories,
-Project setup, detail/card/selection projections, Project notes, personal
-preferences, category/vendor/template read models, Project category/allocation
-views, bounded application ports, capability-driven settings/pickers, MCP
+Project setup and stable selection projections, Project notes, provider-free
+preference-shaped primitives, category/vendor/template read models, Project
+category/allocation views, bounded application ports, capability-driven settings/pickers, MCP
 Project/note/reference queries and semantic target tests.
 
 ## Mapping Decisions
@@ -39,8 +40,10 @@ Project/note/reference queries and semantic target tests.
 - Project notes have stable IDs, immutable creator/creation evidence, revision/
   tombstone state and deterministic `(createdAt,id)` paging/search. App and MCP
   use one operation/query contract.
-- Project preferences are downloaded/writable only for their authenticated
-  Principal. Account membership alone does not authorize another user's rows.
+- Verified Project-preference leaves prove provider-free row/operation shapes
+  only. O-040 decides whether pins survive, typed targets, missing/empty/no-pin
+  defaults, Project-detail/card fallbacks and lifecycle/cleanup; no target
+  download/write/app behavior is mapped yet.
 - Categories, vendor suggestions and Space templates use stable revisioned
   entries and local reference snapshots. Suggestion selection preserves
   free-text source data; it does not create Vendor identity. Template application
@@ -60,15 +63,18 @@ remain withheld on O-024/O-025. Ten category/vendor/template/configuration
 writer surfaces remain withheld on O-026 because the approved capability matrix
 can change their public operation and security boundary. Their batch entries
 name only those decision IDs; no source generic CRUD behavior is provisional.
+Seven preference, Project creation/list/card/test and MCP surfaces are newly
+withheld on O-040; five already-held Project/context/service/calculation
+surfaces also carry O-040 without a status change.
 
 ## Verification
 
-The batch must contain 52 target-relevant surfaces, 36 `target_mapped` entries
-and 16 named holds. Every mapped entry must have non-empty owner, target
+The batch must contain 52 target-relevant surfaces, 29 `target_mapped` entries
+and 23 named holds. Every mapped entry must have non-empty owner, target
 surfaces, security, Sync, migration rule, reconciliation, tests and acceptance
 fields. Conversion/capability/query checks and M0 remain required. M1 remains
 blocked only by the canonical production profile and O-022 cutover evidence.
 
 This evidence proves reviewed target mapping only. It does not resolve
-O-024–O-026, create Supabase tables/policies or PowerSync streams, implement
+O-024–O-026/O-040, create Supabase tables/policies or PowerSync streams, implement
 app/MCP commands, access production, migrate data, release, or cut over.

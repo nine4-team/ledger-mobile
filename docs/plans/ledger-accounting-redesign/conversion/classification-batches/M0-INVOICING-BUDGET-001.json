@@ -595,12 +595,13 @@
       "disposition": "redesign",
       "status": "characterized",
       "blockers": [
-        "O-005"
+        "O-005",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001"
       ],
-      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+      "notes": "M2 withheld: O-005 changes the exact budget value and credit display contract, while O-040 leaves pin targets, no-pin/absence/empty behavior, defaults, fallback, ordering and stale/archive presentation unresolved. Current Transaction-only arithmetic and pin mechanics are not provisional target authority."
     },
     {
       "id": "SWIFT-263BA57A580A",
@@ -809,12 +810,13 @@
       "disposition": "redesign",
       "status": "characterized",
       "blockers": [
-        "O-005"
+        "O-005",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001"
       ],
-      "notes": "M2 withheld: O-005 changes the exact Invoice source, collection, contribution, lifecycle, display or correction contract for this responsibility. Current embedded-line/partial-collection/Transaction-only mechanics are not provisional target authority."
+      "notes": "M2 withheld: O-005 changes the exact budget value and credit display contract, while O-040 leaves the Project budget screen's pin targets, no-pin/absence/empty behavior, implicit Furnishings write, fallback and stale/archive behavior unresolved. Current source rendering/writes are evidence, not provisional target authority."
     },
     {
       "id": "SWIFT-86F17626EE66",
@@ -1089,13 +1091,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Displays pinned category progress from current single-segment budget values.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001"
       ],
-      "notes": "Preserve pins and ordering over paid/unpaid category projections. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "notes": "M2 withheld: O-040 must decide whether personal pins survive and the exact typed target, no-pin/absence/empty/default/card fallback, ordering and stale/archive presentation behavior. This source component is current-product evidence only; verified budget-value primitives do not approve its pin UX.",
       "target": {
         "owner": "Budget and Contribution Projections",
         "surfaces": [
@@ -1277,13 +1281,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Tests current budget-tab Transaction/category/allocation arithmetic.",
       "disposition": "redesign",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-INVOICING-BUDGET-001",
         "EVID-M2-INVOICING-BUDGET-001"
       ],
-      "notes": "Replace with canonical paid/unpaid, collection-neutrality, credit, Transfer, and readiness fixtures. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
+      "notes": "M2 withheld: canonical paid/unpaid arithmetic fixtures remain separately required, but O-040 must first decide which pin/no-pin/default/fallback/order behaviors belong in target presentation tests. Current Transaction-only and source pin expectations cannot be promoted as target authority.",
       "target": {
         "owner": "Budget and Contribution Contract Tests",
         "surfaces": [

@@ -168,22 +168,22 @@ not share one target authorization policy with the app.
 | `client-identity-and-project-transfers.md` / D-003–D-006 | Canonical target authority for Client ID and the required Project relationship. Free-text source behavior is migration evidence only |
 | `invoice-centered-project-accounting.md` | Canonical target budget/accounting boundary constrains Project/category projections; current cached summary mechanics are not authority |
 | `projects.md` | Shipped UX remains useful, but Firestore paths, free-text Client validation, partial background writes and orphaning hard delete are current-state behavior, not target requirements |
-| `budget-management.md` | Category intent, Project enablement, nullable-versus-zero allocation and personal pins remain useful. Transaction-only arithmetic and blanket last-write-wins do not govern the target |
+| `budget-management.md` | Category intent, Project enablement and nullable-versus-zero allocation remain useful current-product evidence. Personal pins, the `overall` sentinel, missing/empty/no-pin defaults and Project-detail/card fallbacks require O-040; Transaction-only arithmetic and blanket last-write-wins do not govern the target |
 | `spaces.md` | Template definition/apply/save behavior remains intended; static review confirms current creation/save callers are stubs and create-from-Space does not reset checks |
 | `financial-access-controls.md` | Server/download enforcement remains required. Current account-member-wide preset and preference permissions are insufficient |
 | A-003/A-004 | Target vendor selection remains proposed until the vertical spike; contracts below do not authorize target DDL or production migration |
-| O-024/O-025/O-026 | Project deletion, Client correction/merge and reference-data administration are recorded blockers rather than guessed behavior |
+| O-024/O-025/O-026/O-040 | Project deletion, Client correction/merge, reference-data administration and personal Project budget-pin outcomes are recorded blockers rather than guessed behavior |
 
 ## Behavior Decisions
 
 | Classification | Decision |
 |---|---|
-| Preserve | Project ID/name/description/archive; Project list/detail/cards/search; one Client owning multiple Projects; Project notes with authorship/source; account category definitions; per-Project enablement/allocation; personal pins; free-text vendor/source capture with reusable suggestions; Space templates; offline access to synchronized scope |
+| Preserve | Project ID/name/description/archive; Project list/detail/cards/search; one Client owning multiple Projects; Project notes with authorship/source; account category definitions; per-Project enablement/allocation; free-text vendor/source capture with reusable suggestions; Space templates; offline access to synchronized scope. Existing personal pins remain source evidence pending O-040 rather than a preservation decision |
 | Correct | Free-text Client as identity; partial create/edit success; orphaning Project delete; cross-user preference access; broad unvalidated setting writes; system-category mutation; null-to-zero loss; array/reorder races; false-success/silent-error UI; template checked-state copy; no-op template callers; direct Settings signout |
 | Improve | Stable local IDs; durable operation receipts; explicit readiness/partial-history state; atomic Project setup/configuration; revision/precondition conflicts; stable note ordering; archive-first lifecycle; stable ordered reference entries; one authorized query/command contract shared by app and MCP |
 | Redesign | Project selects/creates an authoritative Client; Client rename is separate from Project rename; Project Client reassignment and Client merge are explicit correction workflows; target category/budget projection uses the approved accounting model rather than cached Firebase summary mechanics |
 | Retire | Firebase types and `[String: Any]` application contracts; independent listener bags as the domain boundary; direct `clientName` editing; generic Project hard delete that leaves orphans; unused AccountPresets wrapper; target reliance on legacy `budgetSummary`; fake Save as Template success; reverse migration as target importer |
-| Open | O-024 persisted Project deletion; O-025 Client reassignment/merge; O-026 reference-data administrators; production Client-name clustering and orphan/reference variants until profiling |
+| Open | O-024 persisted Project deletion; O-025 Client reassignment/merge; O-026 reference-data administrators; O-040 whether personal pins survive plus typed targets, missing/empty/no-pin defaults, Project-detail/card fallbacks and lifecycle/cleanup; production Client-name clustering and orphan/reference variants until profiling |
 
 ## Target Observable Contract — Backend Neutral
 
@@ -216,9 +216,12 @@ not share one target authorization policy with the app.
    source UI's arbitrary 32-bit maximum.
 8. Updating Project details and the complete selected-category/allocation set is
    one idempotent conflict-aware operation, not a fan-out of silent writes.
-9. Personal Project preferences are readable/writable only by their principal
-   (or an explicit approved administrator), partitioned by account/environment,
-   and tolerate archived/deleted reference IDs according to the product spec.
+9. Verified provider-free Project-preference read/update values are provisional
+   primitives, not canonical approval that personal pins survive. If O-040
+   retains the feature, reads/writes are limited to the authenticated principal
+   (or an explicitly approved administrator), partitioned by account/environment,
+   and use the approved typed targets, missing/empty/no-pin default, Project-
+   detail/card fallback and archived/deleted-reference policy.
 10. Vendor suggestions are ordered account configuration with stable identity
     or an equivalent conflict-safe ordered-set contract. Selecting one writes a
     free-text source snapshot; it does not silently create a canonical Vendor or
@@ -293,8 +296,10 @@ promise that each command becomes one public database function or table.
 7. Preserve category IDs, type/archive/system metadata, Project enablement and
    null-versus-zero allocation. Rebuild budget projections from approved
    canonical sources rather than importing `budgetSummary` as authority.
-8. Preserve each principal's pins without cross-principal leakage; report stale
-   category/Project IDs.
+8. Preserve source preference documents losslessly as migration evidence while
+   O-040 is open. If pinning is retained, transform only under the approved
+   target/default/fallback/lifecycle policy, prevent cross-principal leakage,
+   and report stale category/Project IDs rather than silently dropping them.
 9. Preserve vendor suggestion spelling/order and template content, normalize
    template checklist state according to the confirmed unchecked invariant, and
    record every semantic correction.
@@ -325,7 +330,8 @@ promise that each command becomes one public database function or table.
 ### Authorization and MCP parity
 
 - cross-account Client/Project/note/reference reads and writes fail;
-- one member cannot read/write another principal's Project preferences;
+- if O-040 retains Project preferences, one member cannot read/write another
+  principal's rows and no render-only fallback writes data;
 - restricted member download exposes no protected category/financial metadata;
 - system-category and unauthorized preset mutations fail in app and MCP;
 - MCP cannot create/update a Project with arbitrary Client text or account ID;
@@ -350,13 +356,14 @@ promise that each command becomes one public database function or table.
 
 - **Ready for target-independent mapping:** IDs/read models, Client/Project
   boundary, archive/rename commands, Project setup receipt, note ordering,
-  category enablement, preference isolation, vendor/template configuration,
-  error/conflict taxonomy and migration correlation.
+  category enablement, vendor/template configuration, error/conflict taxonomy
+  and migration correlation. Verified preference primitives remain available
+  as representational evidence, but pin product outcomes are not mapped.
 - **Ready for a bounded spike:** offline Client+Project creation, local query
-  readiness, one atomic Project configuration command, own-principal
-  preference security and ordered-reference conflict behavior using synthetic
-  data.
-- **Blocked for final schema/writer policy:** O-024, O-025, O-026, A-003/A-004
+  readiness, one atomic Project configuration command and ordered-reference
+  conflict behavior using synthetic data. Preference security can be exercised
+  only as a nonauthoritative fixture while O-040 remains open.
+- **Blocked for final schema/writer policy:** O-024, O-025, O-026, O-040, A-003/A-004
   spike approval, production shapes, and final target identity/authorization
   decisions from A-007/A-016 where session state intersects offline writes.
 

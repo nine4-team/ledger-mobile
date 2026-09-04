@@ -68,6 +68,7 @@ recommendation alone does not reduce the residual count.
 | O-037 | [Space archive and Item assignment](O-037-space-archive-and-item-assignment.md) | Proposed: archive-only, retained resolvable assignments, explicit move/clear |
 | O-038 | [Inventory destination planning](O-038-inventory-destination-planning.md) | Proposed: Item-level Project plans with a non-authoritative Purchase default, no category authority, and explicit lifecycle |
 | O-039 | [Project-note text validation](O-039-project-note-text-validation.md) | Proposed: shared app/MCP outer trim, one-character minimum, exact interior text, lossless legacy import |
+| O-040 | [Project budget pinning](O-040-project-budget-pinning.md) | Proposed: decide whether pins survive, then explicitly choose typed targets, missing/empty/no-pin defaults, Project-detail/card fallbacks, lifecycle and cleanup; no fallback is approved by the packet itself |
 | O-002/O-011–O-014 | [Transfer edge policy](O-002-O-011-O-014-transfer-edge-policy.md) | Proposed: sent revision, contextual tag/Space, paired reversal, current-Project credit |
 | O-016/O-017/O-027 | [Item capture and acquisition readiness](O-016-O-017-O-027-item-capture-and-acquisition-readiness.md) | Proposed: name/photo/note minimum, no persisted hint, explicit unresolved acquisition |
 | O-018/O-019/O-020/O-022 | [Proto migration and authority cutover](O-018-O-020-O-022-proto-migration-and-authority-cutover.md) | Proposed: deterministic Item/review mapping and hard freeze/import/reconcile/activate |

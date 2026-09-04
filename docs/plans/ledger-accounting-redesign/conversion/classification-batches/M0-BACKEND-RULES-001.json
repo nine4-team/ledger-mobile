@@ -200,13 +200,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Per-user project preference document has member-wide CRUD; the rule does not restrict writes to the uid named in the path.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-SOURCE-BACKEND-001",
         "EVID-M2-BACKEND-CONTROL-001"
       ],
-      "notes": "Target authorization must decide whether preferences are user-owned or account-admin managed. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
+      "notes": "M2 withheld: O-040 must first decide whether personal Project budget pins survive and their exact ownership, target types, absence/empty/default/fallback and lifecycle behavior. Current member-wide Firebase path rules are source evidence, not target authorization or schema authority; no Firebase application adapter is planned.",
       "target": {
         "owner": "Personal Project Preferences",
         "surfaces": [

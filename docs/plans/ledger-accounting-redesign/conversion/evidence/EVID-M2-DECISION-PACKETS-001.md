@@ -1,6 +1,6 @@
 # EVID-M2-DECISION-PACKETS-001 — High-Impact Residual Decision Packets
 
-- Timestamp: 2026-08-31
+- Timestamp: 2026-09-03 correction
 - Class: target mapping design / product-decision preparation
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
   from the history now carried by `firebase`; the historical audit began from a
@@ -12,8 +12,8 @@
 
 ## Result
 
-The deterministic 174-surface M2 residual is grouped under 45 exact blockers.
-Eighteen reviewable packets now cover all 37 product blockers in the generated
+The deterministic 184-surface M2 residual is grouped under 46 exact blockers.
+Nineteen reviewable packets now cover all 38 product blockers in the generated
 queue:
 
 | Packet | Decisions | Unique surfaces in packet cluster |
@@ -36,9 +36,10 @@ queue:
 | Vendor adjustment and credit balance | O-028 | 2 |
 | Inventory destination planning | O-038 | 5 |
 | Project-note text validation | O-039 | 8 |
+| Project budget pinning | O-040 | 18 |
 
 Because surfaces can depend on multiple decisions, these clusters overlap.
-Together they touch all 167 residual surfaces that have any product-decision
+Together they touch all 177 residual surfaces that have any product-decision
 blocker. The other seven surfaces depend only on architecture/spike, physical-
 target verification, or canonical-production-evidence blockers. This means a
 proposal is available for every product blocker; it does **not** mean those
@@ -76,7 +77,7 @@ The generated register validates every blocker against the product/architecture
 authority and lists every exact affected surface. Packet links are recorded in
 the decision log and product-to-architecture traceability rows.
 
-A structural audit of all eighteen packet files also verified each contains the
+A structural audit of all nineteen packet files also verified each contains the
 decision requested, confirmed constraints, mutually exclusive options,
 conceptual target ownership, authorization/Sync treatment, migration/
 reconciliation, acceptance tests, approval consequences, and checklist.

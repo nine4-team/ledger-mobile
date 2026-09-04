@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T00:29:16.767Z",
+  "generatedFromManifestSync": "2026-09-04T01:16:44.134Z",
   "totals": {
     "slices": 62,
     "claimedTargetSurfaces": 149,
@@ -518,7 +518,7 @@
     },
     {
       "sliceId": "project-preference-read-contracts",
-      "title": "Read current-Principal Project preferences without confusing absence with unsynchronized data",
+      "title": "Represent current-Principal Project preference-shaped reads without confusing absence with unsynchronized data",
       "kind": "product",
       "status": "verified",
       "owner": "Project Preference Read Contracts",
@@ -533,7 +533,7 @@
     },
     {
       "sliceId": "project-preference-update-operation-contracts",
-      "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
+      "title": "Represent one current-Principal Project preference-shaped replacement without last-write-wins ambiguity",
       "kind": "product",
       "status": "verified",
       "owner": "Project Preference Update Operation Contracts",

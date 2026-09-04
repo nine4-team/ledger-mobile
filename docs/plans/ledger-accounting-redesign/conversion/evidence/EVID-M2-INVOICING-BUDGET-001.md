@@ -1,9 +1,10 @@
 # EVID-M2-INVOICING-BUDGET-001 — Invoicing, Collection, and Budget Target Mapping
 
-- Timestamp: 2026-08-31
+- Timestamp: 2026-09-03 correction
 - Class: target mapping design evidence
 - Repository baseline: `d83c64724fe4e92be27c62f425979bd30fcfc9bb`
-  on `dev`; shared worktree was already dirty
+  from the history now carried by `firebase`; the historical audit began from a
+  dirty source checkout
 - Production reads or mutations: none
 - Target implementation/schema/RLS/Sync Stream changes: none
 - Operator: Codex
@@ -12,10 +13,10 @@
 
 ## Scope and Result
 
-The batch contains 44 `replace`, `redesign`, or `migrate` surfaces. Twenty-one
+The batch contains 44 `replace`, `redesign`, or `migrate` surfaces. Nineteen
 stable budget/Invoice/billing/authorization/vendor-intake/port/test surfaces now
-have complete target maps. Twenty-three remain deliberately `characterized`
-because O-003–O-010, O-015, O-029, O-033, O-034 or A-015 can still change their
+have complete target maps. Twenty-five remain deliberately `characterized`
+because O-003–O-010, O-015, O-029, O-033, O-034, O-040 or A-015 can still change their
 exact source, collection, lifecycle, display, correction or delivery contract.
 
 ## Mapping Decisions
@@ -48,16 +49,19 @@ vendor-document intake operations.
 
 ## Withheld Surfaces
 
-The 23 held entries list only mapping-changing decisions. In particular O-009
+The 25 held entries list only mapping-changing decisions. In particular O-009
 manual adjustments and O-010 zero-dollar Invoice behavior remain first-class
 schema/validation blockers, and O-033/O-034 remain collection-payment and sent-
 membership/delivery blockers. Current embedded lines, partial collection and
 Transaction-only budgets are never provisional target behavior.
+O-040 additionally withholds the pinned-budget component and current budget
+tests, and is attached to the already-held budget screen/calculation surfaces;
+verified budget-segment values do not approve pin/no-pin/default/card behavior.
 
 ## Verification
 
-The batch must contain 44 target-relevant surfaces, 21 `target_mapped` entries
-and 23 named holds. Every mapped entry must have non-empty owner, target
+The batch must contain 44 target-relevant surfaces, 19 `target_mapped` entries
+and 25 named holds. Every mapped entry must have non-empty owner, target
 surfaces, security, Sync, migration rule, reconciliation, tests and acceptance
 fields. Conversion/capability/query checks and M0 remain required. M1 remains
 blocked only by the canonical production profile and O-022 cutover evidence.

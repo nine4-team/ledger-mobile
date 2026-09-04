@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sliceId": "project-preference-update-operation-contracts",
-  "title": "Replace one current-Principal Project pin order without last-write-wins ambiguity",
+  "title": "Represent one current-Principal Project preference-shaped replacement without last-write-wins ambiguity",
   "kind": "product",
   "status": "verified",
   "owner": "Project Preference Update Operation Contracts",
@@ -15,8 +15,8 @@
       "authorityRole": "canonical_target",
       "authorityPath": "docs/specs/invoice-centered-project-accounting.md",
       "section": "Budget Progress",
-      "invariant": "Personal Project pins may select and order which canonical category-progress values are presented, but replacing a preference can never supply or change category definitions, contributions, spend, allocations, paid/unpaid state or canonical budget arithmetic.",
-      "decisionIds": [],
+      "invariant": "This provider-free primitive can represent an ordered category-identity replacement if O-040 retains personal pins, but it neither approves that feature nor changes category definitions, contributions, spend, allocations, paid/unpaid state or canonical budget arithmetic.",
+      "decisionIds": ["O-040"],
       "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
     },
     {
@@ -24,8 +24,8 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
       "section": "Target Observable Contract — Backend Neutral",
-      "invariant": "UpdateProjectPreferences is one idempotent own-Principal operation over an immutable AccountID and ProjectID plus a complete ordered duplicate-free pin replacement. It carries no user-selected backend path, category label, lifecycle state, financial value or mutation of shared reference data.",
-      "decisionIds": ["O-026"],
+      "invariant": "The verified primitive represents one idempotent own-Principal-shaped operation over AccountID, ProjectID and a complete ordered duplicate-free BudgetCategoryID replacement. It is not approval of target pin survival, typed Overall, missing/empty/no-pin/default/fallback or lifecycle policy under O-040 and carries no shared reference mutation under O-026.",
+      "decisionIds": ["O-026", "O-040"],
       "verificationIds": ["PROJECTPREFERENCEUPDATE-TEST-001", "PROJECTPREFERENCEUPDATE-TEST-002", "PROJECTPREFERENCEUPDATE-TEST-003", "PROJECTPREFERENCEUPDATE-TEST-004", "PROJECTPREFERENCEUPDATE-TEST-005"]
     },
     {
@@ -132,7 +132,7 @@
       "items": [
         "Implementation remains inside provider-free LedgerTargetCore and tests and does not change or link either application project.",
         "The slice cannot authorize a Principal, persist/display/apply a preference, resolve category validity or visibility, calculate budgets, mutate shared reference data, define schema/RLS/Sync/provider/migration behavior, activate a feature, deploy, release or cut over.",
-        "O-026 remains open for shared reference-data administration; A-003/A-004/A-007/A-016, physical offline verification, canonical production preference profiling and all hosted-resource authority remain outside this command boundary."
+        "O-026 remains open for shared reference-data administration and O-040 remains open for the pin product contract; A-003/A-004/A-007/A-016, physical offline verification, canonical production preference profiling and all hosted-resource authority remain outside this command boundary."
       ],
       "notApplicable": ""
     }
@@ -187,5 +187,5 @@
   "implementationEvidence": ["EVID-PROJECT-PREFERENCE-UPDATE-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Verified decision-independent Phase 1 command boundary. Exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 passed immutable Actions run 33628801064: conversion traceability in 10 seconds and the isolated target environment in 2 minutes 29 seconds with all 136 tests in 31 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. Personal pinning and the reviewed capability/architecture contracts settle a complete current-Principal replacement plus explicit absent/revision concurrency. O-026 remains fully open because this operation cannot mutate shared category definitions or grant reference-data authority. The slice stops before authentication, category resolution/defaults, physical durability, authoritative server apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
+  "notes": "Verified provider-free Phase 1 representational primitive. Exact implementation commit 0e652548d3d4009c392ddacb298d0ef66db61aa2 passed immutable Actions run 33628801064: conversion traceability in 10 seconds and the isolated target environment in 2 minutes 29 seconds with all 136 tests in 31 suites, graph/generated-contract checks, both staging builds and clean tracked artifacts. It proves complete ordered BudgetCategoryID replacement encoding, explicit absent/revision concurrency and shared operation mechanics only; it is not canonical product approval that personal pinning survives or that Overall, missing/empty/no-pin/default/detail/card fallback, lifecycle or cleanup has any target meaning. O-040 owns those choices and O-026 remains open for shared reference-data authority. The slice stops before authentication, physical durability, authoritative apply, schema/RLS/Sync/provider, app/MCP, migration, hosted resources, production access or cutover."
 }

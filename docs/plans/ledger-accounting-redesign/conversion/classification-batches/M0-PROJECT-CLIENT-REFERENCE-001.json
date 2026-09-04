@@ -24,12 +24,13 @@
       "status": "characterized",
       "blockers": [
         "O-024",
-        "O-025"
+        "O-025",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
-      "notes": "M2 withheld: O-024/O-025 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+      "notes": "M2 withheld: O-024/O-025 changes Project lifecycle/correction responsibility, and O-040 changes the Project preference/default/fallback boundary reached through this generic service. No legacy generic mutation or Project-coupled pin behavior is provisional target authority."
     },
     {
       "id": "SWIFT-27CA6EAC7092",
@@ -39,12 +40,13 @@
       "status": "characterized",
       "blockers": [
         "O-024",
-        "O-025"
+        "O-025",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
-      "notes": "M2 withheld: O-024/O-025 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+      "notes": "M2 withheld: O-024/O-025 changes Project lifecycle/correction responsibility, and O-040 changes the Project preference/default/fallback operations that a target seam may expose. The Firebase-shaped generic protocol is not provisional target authority."
     },
     {
       "id": "SWIFT-A3AB0F29E150",
@@ -225,25 +227,28 @@
       "status": "characterized",
       "blockers": [
         "O-024",
-        "O-039"
+        "O-039",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
-      "notes": "M2 withheld: O-024 changes broad target command availability, ownership, dependency/retention behavior or authorization policy, and O-039 leaves target note-create normalization/minimum policy unresolved; no legacy generic mutation is provisional authority."
+      "notes": "M2 withheld: O-024 changes lifecycle authority, O-039 leaves note submission unresolved, and O-040 leaves Project preference readiness, absence/empty, defaults, fallback and pin presentation unresolved. The listener aggregate and its derived state are source evidence, not target authority."
     },
     {
       "id": "SWIFT-58A14BD25578",
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Creates a Project from name and free-text clientName, dismisses after the first local Firestore write, then independently and silently writes selected category allocations and enqueues hero media. Missing allocation input becomes explicit zero.",
       "disposition": "redesign",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Target selects/creates Client and durably accepts Project plus exact nullable allocations as one operation; media state remains explicit. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: verified Project setup primitives do not decide whether Project creation also yields a personal pin row, a no-pin/default/fallback presentation, or any card behavior; O-040 owns that product outcome. Current independent writes remain source evidence, not a target orchestration contract.",
       "target": {
         "owner": "Client and Project",
         "surfaces": [
@@ -294,13 +299,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Shows active/archived Project cards from the account cache, sorted by Project name, and independently subscribes to every current user's Project preferences for denormalized budget previews.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Preserve list UX from local read models while using Client identity and own-principal preferences. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-040 must decide whether Project cards show pins at all and the exact no-pin/absence/empty/default/fallback, ordering and stale/archive behavior. Current preference listeners and denormalized previews are source evidence, not target card authority.",
       "target": {
         "owner": "Client and Project",
         "surfaces": [
@@ -381,12 +388,13 @@
       "disposition": "redesign",
       "status": "characterized",
       "blockers": [
-        "O-024"
+        "O-024",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
-      "notes": "M2 withheld: O-024 changes the target command availability, ownership, dependency/retention behavior or authorization policy for this source responsibility; no legacy generic mutation is provisional authority."
+      "notes": "M2 withheld: O-024 changes Project lifecycle responsibility, and O-040 leaves Project-detail pin/no-pin/default/fallback presentation unresolved. Current tab composition and destructive actions are source evidence, not target authority."
     },
     {
       "id": "SWIFT-7DC1AEC51D21",
@@ -607,12 +615,13 @@
       "status": "characterized",
       "blockers": [
         "Adapt search input to resolved Client display",
-        "Target budget projection ownership"
+        "Target budget projection ownership",
+        "O-040"
       ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001"
       ],
-      "notes": "Preserve visible filtering/sorting where still product-correct; do not preserve copied Client identity or cached-summary authority."
+      "notes": "Preserve visible filtering/sorting where still product-correct; do not preserve copied Client identity or cached-summary authority. O-040 must decide whether cards expose personal pins and the exact no-pin/absence/empty/default/fallback and ordering semantics before the budget-order helper can be target-mapped."
     },
     {
       "id": "TEST-E591BE8A4B58",
@@ -660,13 +669,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Tests Project archive filters, Project/clientName search, name sorting, empty copy and budget preview ordering.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Preserve visible list behavior while changing fixtures from copied identity text and source summary shapes. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: archive/search/sort source tests remain evidence, but O-040 must decide card pin visibility, no-pin/absence/empty/default/fallback and ordering before target budget-preview expectations can be written. Current copied identity and source-summary fixtures are not target authority.",
       "target": {
         "owner": "Client and Project Contract Tests",
         "surfaces": [
@@ -811,13 +822,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Directly listens to one/all Project preference documents under a supplied user path and merge-writes pinned IDs. Listener errors become nil/empty and no caller/path principal equality is enforced in this service.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Target read/write scope is bound to authenticated principal and exposes readiness/errors. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-040 must decide whether personal Project budget pins survive and their exact typed targets, owner, absence/empty/no-pin/default/fallback, order and stale/archive behavior. Current path/listener/merge-write mechanics are source evidence; verified provider-free read/update primitives are not canonical product approval.",
       "target": {
         "owner": "Personal Project Preferences",
         "surfaces": [
@@ -852,13 +865,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Defines a Firestore-Codable Project preference with redundant account/user/Project IDs and pinned category IDs while omitting timestamps from explicit Codable keys.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Preserve personal pins with immutable scope, revision and stale-reference policy. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: O-040 must decide whether the personal-pin feature and Overall sentinel survive, plus missing versus explicit empty, no-pin/default/card fallback, ordering and stale/archive policy. This Firestore DTO is migration/source evidence, not target schema authority; verified provider-free primitives remain provisional representational support only.",
       "target": {
         "owner": "Personal Project Preferences",
         "surfaces": [
@@ -1266,13 +1281,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Registers Project list/get/budget/create/update/archive tools over Admin SDK. Client is free text; create/update/note side effects are independent; Project get scans Items; budget recomputes current Transaction-only arithmetic.",
       "disposition": "replace",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Target MCP invokes shared authorized queries/commands and cannot own separate Project or accounting semantics. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: target MCP must share app semantics, but O-040 leaves Project pin/no-pin/default/fallback/card outcomes unresolved. The combined source module's budget and Project behavior cannot authorize a target MCP contract or separate accounting/preference semantics.",
       "target": {
         "owner": "Client and Project",
         "surfaces": [
@@ -1389,13 +1406,15 @@
       "acknowledgeCurrentSource": true,
       "currentBehavior": "Creates a Project with name/free-text clientName and then independently creates an optional nested note; no Client identity, Project category setup or shared idempotency result exists.",
       "disposition": "redesign",
-      "status": "target_mapped",
-      "blockers": [],
+      "status": "characterized",
+      "blockers": [
+        "O-040"
+      ],
       "evidence": [
         "EVID-CAPABILITY-PROJECT-REFERENCE-001",
         "EVID-M2-PROJECT-REFERENCE-001"
       ],
-      "notes": "Target accepts ClientID or authorized nested Client creation and one operation ID. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
+      "notes": "M2 withheld: Project creation identity/setup primitives remain verified, but O-040 must decide whether creation produces a personal preference, no-pin/default/fallback result or later card projection. The current MCP tool's independent writes do not decide that shared app/MCP product outcome.",
       "target": {
         "owner": "Client and Project",
         "surfaces": [

@@ -19,11 +19,11 @@
 
 After verifying Project-note creation, the remaining Phase 1 Project/Client/
 reference dependency audit excluded Project-note edit/removal because their
-explicit role policy is not settled. It selected the current-Principal Project
-preference read as the next smallest complete dependency. This read is needed
-by Project list/detail presentation and can be defined without deciding a
-preference writer, Auth provider, schema, Sync implementation or budget
-calculation.
+explicit role policy is not settled. It selected a provider-free current-
+Principal Project-preference-shaped read primitive as the next smallest
+technical dependency. The primitive can support a later approved Project
+list/detail policy, but O-040 now records that pin survival, targets and all
+missing/empty/no-pin/default/card outcomes were not canonical product authority.
 
 Exactly two target-only comment scaffolds are claimed in the provider-free core
 and test roots. The slice covers ordered pinned category identities, revision,
@@ -37,9 +37,10 @@ provider work, migration and production remain unadvanced.
 - Canonical Project budget authority remains the paid-plus-unpaid contribution
   model. A personal pin may affect presentation order but cannot supply or
   modify a budget amount, allocation or contribution.
-- The reviewed Project/Client/reference dossier preserves per-Principal,
-  per-Project pins and requires that only the authenticated Principal's
-  revisioned preferences synchronize inside the exact Account/environment.
+- The verified primitive can represent per-Principal/per-Project ordered
+  category identities and revisions. It does not approve that target pins
+  survive; if O-040 retains them, a later authenticated boundary must enforce
+  exact Principal/Account ownership.
 - AccountID and PrincipalID in a provider-free request are expected scope, not
   proof of identity. A later trusted session/RLS/Sync boundary must derive and
   enforce the authenticated Principal.
@@ -53,7 +54,7 @@ provider work, migration and production remain unadvanced.
 This boundary improves the current service, which can collapse listener failure
 or missing local data to nil/empty and accepts caller-selected user paths.
 
-## Why Open Decisions Do Not Block This Slice
+## Why Open Decisions Do Not Invalidate This Primitive
 
 - O-026 controls shared reference-data mutation, not reading a Principal's own
   preference identities. No shared category writer or preference writer is
@@ -68,6 +69,10 @@ or missing local data to nil/empty and accepts caller-selected user paths.
 - First-use default pins, category visibility composition and optional list/grid
   preferences are presentation behavior and are not invented by this bounded
   stored-preference read.
+- O-040 now explicitly owns whether pinning survives plus typed Overall,
+  missing/empty/no-pin defaults, Project-detail/card fallback, lifecycle and
+  cleanup. Those open choices can change or retire this primitive's consumers
+  without invalidating the already-tested provider-free scope/readiness codec.
 
 ## Ready-Gate Contract
 
@@ -197,6 +202,9 @@ This ready plan cannot:
   Principal's preferences;
 - persist, synchronize, display or mutate preference rows;
 - synthesize first-use/default pins or decide list/grid presentation;
+- approve that personal pins survive or decide typed Overall, missing versus
+  empty, no-pin behavior, Project-detail/card fallback, lifecycle or cleanup
+  under O-040;
 - resolve category names, lifecycle or visibility, or delete archived/stale
   category identities;
 - calculate or modify Project budget allocations, contributions or totals;

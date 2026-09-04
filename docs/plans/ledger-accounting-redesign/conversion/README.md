@@ -1,7 +1,7 @@
 # Supabase Conversion Control Plane
 
-Status: M0 inventory classification complete; 393 of 567 target-relevant
-surfaces are target-mapped or later and the remaining 174 are explicitly tied
+Status: M0 inventory classification complete; 387 of 571 target-relevant
+surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
@@ -64,20 +64,25 @@ exact Project/text/requested-source intent to the shared operation lifecycle,
 exclude caller-authored authoritative creator/time/source evidence and reserve
 non-enumerating parent preflight for a later trusted handler. No note row,
 provider, app/MCP, migration or production behavior exists at this checkpoint.
-The provider-free current-Principal Project preference read slice is verified at
+The provider-free current-Principal Project preference-shaped read primitive is verified at
 exact implementation commit `59526ccc`, including all 132 target tests and both
-staging builds. Exactly two target surfaces preserve ordered stable pin
-identities, revision, exact Account/Principal/Project binding and authoritative
-absence versus incomplete local evidence. Preference writes,
+staging builds. Exactly two target surfaces preserve ordered stable identities,
+revision, exact Account/Principal/Project binding and authoritative absence
+versus incomplete local evidence as representational mechanics. O-040 owns
+whether target pins exist and every no-pin/default/detail/card fallback outcome.
+Preference writes,
 authentication, schema/RLS/Sync/provider behavior, category resolution, budget
 calculation, app/MCP, migration and production remain excluded.
-The provider-free current-Principal Project preference update slice is
-verified. Exactly two target surfaces define a complete ordered pin replacement,
+The provider-free current-Principal Project preference-shaped replacement
+primitive is verified. Exactly two target surfaces define a complete ordered
+identity replacement,
 explicit not-stored versus exact-revision concurrency, canonical restart/refusal
 and the shared operation lifecycle. Exact implementation commit `0e652548`
 and immutable Actions run `33628801064` pass all 136 target tests, graph/
 generated-contract checks, both staging builds and clean artifacts.
-Authentication, category mutation/resolution, defaults, physical persistence,
+This verifies a technical primitive, not canonical product approval. O-040 owns
+pin existence, defaults, fallback and lifecycle semantics. Authentication,
+category mutation/resolution, physical persistence,
 schema/RLS/Sync/provider behavior, app/MCP, migration and production remain
 excluded.
 The provider-free vendor-suggestion reference read slice is verified. Exactly
@@ -581,6 +586,20 @@ repeatable generation and both staging builds passed. Exact implementation commi
 `33767120461` (traceability 12 seconds; isolated target 3 minutes 3 seconds), so
 the two leaves and dossier are verified. No Firebase, provider, hosted, migration
 or production behavior changed.
+
+The later Project-preference update application-use-case candidate was likewise
+rejected before READY, commit or executable implementation. Independent review
+found that the verified preference read/update leaves are reusable provider-free
+representation and operation primitives, not canonical product approval that
+personal budget pins survive the redesign. Its two speculative Swift comment
+scaffolds, dossier and evidence were removed. O-040 and a proposed packet now
+hold the exact pin-existence, migration-survival, typed-target, missing/empty,
+Project-detail fallback, Project-card fallback, implicit-write and lifecycle
+choices. Exactly ten over-advanced source/integration surfaces were demoted and
+O-040 was attached to those ten plus eight already-characterized surfaces; the
+verified primitive leaves retain verified status without broader authority.
+No source app, Firebase, MCP, provider, hosted, migration or production
+implementation changed.
 
 Verification-promotion commit `b0fcd6cbba8c7312fc4f4f8ae3d8c1c74f4a4b47`
 passed immutable Actions run `33768000016`, freezing the Client archive use case.

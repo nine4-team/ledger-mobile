@@ -408,12 +408,13 @@
         "O-030",
         "O-031",
         "O-032",
-        "O-037"
+        "O-037",
+        "O-040"
       ],
       "evidence": [
         "EVID-SOURCE-BACKEND-001"
       ],
-      "notes": "M2 withheld: A-007/A-015/A-016/O-007/O-015/O-022/O-026/O-029/O-030/O-031/O-032/O-037 changes or is required to discover the exact target security, data, lifecycle or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics are not provisional target implementation."
+      "notes": "M2 withheld: A-007/A-015/A-016/O-007/O-015/O-022/O-026/O-029/O-030/O-031/O-032/O-037/O-040 changes or is required to discover the exact target security, data, lifecycle, Project-pin default/fallback or migration mapping for this source responsibility. Firebase rules/Functions/Admin/Storage mechanics and starter-pin writes are not provisional target implementation."
     },
     {
       "id": "FUNCMOD-78D697A89342",

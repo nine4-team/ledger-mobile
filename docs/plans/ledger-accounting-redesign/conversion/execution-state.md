@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 234
+State version: 235
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: CLIENT-RENAME-USE-CASE-VERIFIED
+- Checkpoint: PROJECT-PREFERENCE-USE-CASE-REJECTED-O040
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -31,6 +31,23 @@ modifying the running Firebase application before hard cutover.
   decisions, migration, and production authority remain gated.
 
 ## Completed at This Checkpoint
+
+- Rejected the Project-preference update application-use-case candidate before
+  READY, commit or executable implementation. Independent authority review found
+  that the existing provider-free read/update leaves prove only reusable
+  preference-shaped representation and operation mechanics: neither canonical
+  target specs nor confirmed decisions establish that Project budget pins must
+  exist, survive migration, default to any category, fall back to Overall or
+  another category in Project detail/cards, or write a fallback implicitly.
+  Removed the two speculative Swift comment scaffolds, their implementation-slice
+  dossier and evidence record. Added O-040 and its proposed decision packet;
+  demoted exactly ten over-advanced source/integration surfaces to
+  `characterized`, attached O-040 to those ten plus eight already-characterized
+  surfaces, and left the verified preference primitive leaves verified. The
+  corrected control plane records 387 target-mapped-or-later surfaces, 184
+  residual surfaces, 46 blockers, 19 proposed packets and 38 product blockers.
+  No source app, Firebase, MCP, provider, hosted, migration or production
+  implementation changed.
 
 - Verified the bounded typed Client rename application dispatch after exact
   READY commit `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
@@ -3369,12 +3386,17 @@ Continue without waiting on the two M1 evidence blockers:
    identity/envelope/representation authority only. It does not decide shared
    app/MCP create/edit normalization, controls, maximum size or minimum; O-039
    owns that unresolved product policy. Treat the verified
-   `project-preference-read-contracts` dossier
-   and `EVID-PROJECT-PREFERENCE-READ-001` as the sole current-Principal Project
-   preference read semantics. Treat the verified
+   `project-preference-read-contracts` dossier and
+   `EVID-PROJECT-PREFERENCE-READ-001` only as a provider-free current-Principal
+   Project preference-shaped read primitive. Treat the verified
    `project-preference-update-operation-contracts` dossier and
-   `EVID-PROJECT-PREFERENCE-UPDATE-001` as the sole UpdateProjectPreferences
-   semantics. Treat the verified `vendor-suggestion-reference-read-contracts`
+   `EVID-PROJECT-PREFERENCE-UPDATE-001` only as a provider-free ordered
+   replacement/concurrency primitive. Neither is canonical approval that target
+   Project budget pins exist. Do not create a preference application use case or
+   advance any source/app/MCP/provider surface until O-040 independently resolves
+   pin existence, migration survival, no-pin/default, Project-detail fallback,
+   Project-card fallback and whether any fallback performs a write. Treat the
+   verified `vendor-suggestion-reference-read-contracts`
    dossier and `EVID-VENDOR-SUGGESTION-REFERENCE-001` as the sole vendor-
    suggestion read semantics. Treat the verified
    `space-template-reference-read-contracts` dossier and
@@ -3702,7 +3724,7 @@ mapping for ready capabilities.
 
 ## Active Blockers and Gates
 
-- O-002 through O-039 remain product blockers where referenced by the decision
+- O-002 through O-040 remain product blockers where referenced by the decision
   traceability table.
 - A-003 and A-004 remain proposed until the vertical spike passes.
 - A-007 target authentication choice is open.

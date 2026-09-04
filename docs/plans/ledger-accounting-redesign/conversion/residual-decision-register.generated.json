@@ -9,9 +9,9 @@
   },
   "summary": {
     "targetRelevant": 571,
-    "targetMapped": 397,
-    "residualSurfaces": 174,
-    "distinctBlockers": 45
+    "targetMapped": 387,
+    "residualSurfaces": 184,
+    "distinctBlockers": 46
   },
   "blockers": [
     {
@@ -1355,6 +1355,136 @@
           "disposition": "replace",
           "status": "characterized",
           "currentBehavior": "Computes Space checklist progress, template-role availability, and detail summaries."
+        }
+      ]
+    },
+    {
+      "id": "O-040",
+      "kind": "product decision",
+      "owner": "Personal Project budget pinning",
+      "requirement": "Approved feature, target, missing/empty/no-pin/default/card and lifecycle policy plus no-render-write, cross-user, offline conflict/recovery and migration tests",
+      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
+      "count": 17,
+      "surfaces": [
+        {
+          "batchId": "M0-BACKEND-FUNCTIONS-001",
+          "id": "FUNCMOD-B42AA317B971",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills."
+        },
+        {
+          "batchId": "M0-BACKEND-RULES-001",
+          "id": "RULE-684AA9BB1569",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Per-user project preference document has member-wide CRUD; the rule does not restrict writes to the uid named in the path."
+        },
+        {
+          "batchId": "M0-INVOICING-BUDGET-001",
+          "id": "SWIFT-14D0C2F1019A",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Derives budget-tab rows and single spent progress from current Transaction/category/allocation arrays."
+        },
+        {
+          "batchId": "M0-INVOICING-BUDGET-001",
+          "id": "SWIFT-800DE43469FC",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Builds the Project budget screen from independent context listeners and Transaction-only calculations."
+        },
+        {
+          "batchId": "M0-INVOICING-BUDGET-001",
+          "id": "SWIFT-D6F4A0ED81EF",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Displays pinned category progress from current single-segment budget values."
+        },
+        {
+          "batchId": "M0-INVOICING-BUDGET-001",
+          "id": "TEST-04DAF7B43B47",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Tests current budget-tab Transaction/category/allocation arithmetic."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPMOD-8FC7F6247E2F",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Registers Project list/get/budget/create/update/archive tools over Admin SDK. Client is free text; create/update/note side effects are independent; Project get scans Items; budget recomputes current Transaction-only arithmetic."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPTOOL-55857D0737AE",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Creates a Project with name/free-text clientName and then independently creates an optional nested note; no Client identity, Project category setup or shared idempotency result exists."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-093E5E4F8D20",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Directly listens to one/all Project preference documents under a supplied user path and merge-writes pinned IDs. Listener errors become nil/empty and no caller/path principal equality is enforced in this service."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-1DA3D2CE9B31",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Activates nine independent Project-scoped listeners, stores partial results in memory, applies financial filtering locally, derives budget state, and exposes Project archive/delete and note CRUD. It does not expose a complete-history or durable operation state."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-27CA6EAC7092",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Defines the Project service seam in Firebase ListenerRegistration and untyped field dictionaries, including free-text clientName creation and unconditional delete."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-58A14BD25578",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Creates a Project from name and free-text clientName, dismisses after the first local Firestore write, then independently and silently writes selected category allocations and enqueues hero media. Missing allocation input becomes explicit zero."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-B6C3B72884E1",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Defines a Firestore-Codable Project preference with redundant account/user/Project IDs and pinned category IDs while omitting timestamps from explicit Codable keys."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-D73C92887393",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Displays Project and free-text Client name, owns tabs/export/quick note/edit/archive, and offers destructive Project deletion that warns only about Items while leaving all children orphaned."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-E1A771F6A409",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Provides generic Firestore Project get/create/update/delete and unfiltered account listeners. Creation generates a Project with free-text clientName; update accepts arbitrary field dictionaries; delete removes only the Project document."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-E23DAF7A18FA",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Shows active/archived Project cards from the account cache, sorted by Project name, and independently subscribes to every current user's Project preferences for denormalized budget previews."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "TEST-3D0D949763A1",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Tests Project archive filters, Project/clientName search, name sorting, empty copy and budget preview ordering."
         }
       ]
     },

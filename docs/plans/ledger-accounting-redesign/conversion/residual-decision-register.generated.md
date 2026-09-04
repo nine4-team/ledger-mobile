@@ -7,9 +7,9 @@ This register is the deterministic queue for target-relevant surfaces that canno
 ## Summary
 
 - Target-relevant surfaces: 571
-- Target-mapped or later: 397
-- Residual surfaces: 174
-- Distinct blockers: 45
+- Target-mapped or later: 387
+- Residual surfaces: 184
+- Distinct blockers: 46
 
 A surface may depend on more than one blocker, so blocker counts do not sum to the residual-surface count.
 
@@ -24,44 +24,45 @@ A surface may depend on more than one blocker, so blocker counts do not sum to t
 | 5 | `O-005` | 20 | product decision | Budget presentation | Approved arithmetic/visual specification and signed-value snapshot tests |
 | 6 | `O-029` | 20 | product decision | Transaction lifecycle | Approved state/dependency policy plus stale-plan, paid/Invoice/Item/lineage/media, retry, human-confirmation and immutable-evidence tests |
 | 7 | `O-026` | 19 | product decision | Shared reference-data authorization | Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests |
-| 8 | `O-031` | 16 | product decision | Item price/tax basis | Approved tax-inclusive or explicit per-Item allocation rule with mixed-tax, migration and no-silent-inheritance tests |
-| 9 | `O-009` | 15 | product decision | Invoice sources | Decision to retire adjustments or define typed category, provenance, edit, and audit rules |
-| 10 | `O-034` | 15 | product decision | Sent Invoice revision/delivery | Approved sent-mutation policy plus live-value, membership, resend, offline conflict, collection-race and historical-render tests |
-| 11 | `O-003` | 13 | product decision | Credit Settlement | Approved settlement routes and proof that only actual cash refund creates Return |
-| 12 | `O-004` | 13 | product decision | Credit Settlement / Invoice lifecycle | Explicit terminal states, accounting effects, and collection rejection tests |
-| 13 | `O-010` | 13 | product decision | Invoice lifecycle | Approved cancel/noncollectible behavior and last-line concurrency tests |
-| 14 | `O-008` | 11 | product decision | Receipt Lines and Invoicing | Per-line treatment model and exact-cent collection/report tests |
-| 15 | `O-030` | 11 | product decision | Receipt completeness | Approved explicit-rounding-line or visible-tolerance behavior with exact-cent fixtures and no inferred tax/discount |
-| 16 | `O-027` | 10 | product decision | Item Creation | One approved name/photo/note rule plus offline, API, and migration validation tests |
-| 17 | `O-033` | 10 | product decision | Collection/payment variance | Approved exact-match or explicit variance model plus mismatch, retry, rounding, allocation, receipt, budget and correction tests |
-| 18 | `O-006` | 9 | product decision | Expense / live Invoice | Field-by-state mutability matrix with concurrent edit/collection tests |
-| 19 | `O-035` | 9 | product decision | Client Summary financial meaning | Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests |
-| 20 | `O-037` | 9 | product decision | Space archive and Item assignment | Approved retain/clear/move rule plus assigned/empty, offline, search/report, concurrent assignment and scope-change tests |
-| 21 | `O-039` | 8 | product decision | Project-note text validation | Approved cross-runtime trim/control/nonempty/byte rule plus app/MCP parity, zero-dispatch rejection, restart and lossless import/quarantine tests |
-| 22 | `A-015` | 7 | architecture decision | Architecture and target spike | blocked: Choose the optimistic projection mechanism for complex offline commands |
-| 23 | `O-036` | 7 | product decision | Client-shared receipt evidence | Approved omit/embed/attach/authorized-link policy plus token/path leakage, revocation, expiry, offline, sharing and retention tests |
-| 24 | `O-011` | 6 | product decision | Transfer / Item tags | Approved carry/clear/reselect rule and source/destination projection tests |
-| 25 | `O-012` | 6 | product decision | Transfer / Space placement | Approved default/optional selection behavior and atomic destination-scope tests |
-| 26 | `O-013` | 6 | product decision | Transfer correction | Approved reversal rules; retry/concurrency and immutable-original tests |
-| 27 | `O-014` | 6 | product decision | Credit after Transfer | Approved hosting rule and multi-transfer credit/budget tests |
-| 28 | `A-016` | 5 | architecture decision | Architecture and target spike | blocked: Approve the bounded offline-access lease |
-| 29 | `Canonical production reference/object profile` | 5 | production evidence | Attachment source profiling and migration | Approve and hash the production Firestore-reference/Storage-object graph, including shared, dangling, missing and retained evidence variants. |
-| 30 | `O-024` | 5 | product decision | Project lifecycle | Approved archive/delete policy plus empty, child-bearing, financial-history, offline-retry and concurrent-child tests |
-| 31 | `O-025` | 5 | product decision | Client/Project correction | Approved mutability boundaries plus cross-Client, prior-Transfer, paid-history, retry and concurrent-change tests |
-| 32 | `O-038` | 5 | product decision | Inventory destination planning | Approved retention/granularity/lifecycle and source migration, plus D-013 category isolation, offline, race, security and no-accounting-effect tests |
-| 33 | `A-007` | 4 | architecture decision | Architecture and target spike | proposed: Choose Supabase Auth at launch or a temporary Firebase Auth integration |
-| 34 | `O-002` | 4 | product decision | Transfer and live Invoice membership | Approved recall/removal rule plus concurrency and audit tests |
-| 35 | `O-018` | 3 | product decision | Proto migration and Compatibility | Mapping policy, unresolved queue, source-freeze gate, rollback, and no-loss tests |
-| 36 | `O-019` | 3 | product decision | Item reconciliation | Deterministic identity winner, relationship/media merge, audit, and retry tests |
-| 37 | `Canonical production profile` | 2 | production evidence | Source data profiling and migration | Approve and hash a canonical immutable production export/profile that proves extant paths, shapes, variants, orphans and counts. |
-| 38 | `O-016` | 2 | product decision | Inventory acquisition evidence | Approved state and later-resolution command without fabricated Purchase |
-| 39 | `O-020` | 2 | product decision | Compatibility | Target accounting-contract/budget evidence, migration reconciliation, and O-022 source cutoff |
-| 40 | `O-022` | 2 | product decision | Compatibility and Cutover | Approved quiescence, source-freeze, and recovery plan; proof late Firebase writes cannot bypass or be lost after final delta |
-| 41 | `O-028` | 2 | product decision | Vendor cancellation/non-cash credit | Approved representation that adds no fourth Transaction, conserves every credit cent, and creates Return only for actual money received |
-| 42 | `A-003` | 1 | architecture decision | Architecture and target spike | proposed: Supabase Postgres becomes target server authority |
-| 43 | `A-004` | 1 | architecture decision | Architecture and target spike | proposed: PowerSync SQLite becomes the target local data plane |
-| 44 | `O-017` | 1 | product decision | Item Creation UI/domain boundary | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
-| 45 | `Physical target verification` | 1 | target verification | Offline target spike and physical-device acceptance | Run the isolated Supabase/PowerSync target on physical devices and prove restart, offline lease, queue, readiness and reconnect behavior. |
+| 8 | `O-040` | 17 | product decision | Personal Project budget pinning | Approved feature, target, missing/empty/no-pin/default/card and lifecycle policy plus no-render-write, cross-user, offline conflict/recovery and migration tests |
+| 9 | `O-031` | 16 | product decision | Item price/tax basis | Approved tax-inclusive or explicit per-Item allocation rule with mixed-tax, migration and no-silent-inheritance tests |
+| 10 | `O-009` | 15 | product decision | Invoice sources | Decision to retire adjustments or define typed category, provenance, edit, and audit rules |
+| 11 | `O-034` | 15 | product decision | Sent Invoice revision/delivery | Approved sent-mutation policy plus live-value, membership, resend, offline conflict, collection-race and historical-render tests |
+| 12 | `O-003` | 13 | product decision | Credit Settlement | Approved settlement routes and proof that only actual cash refund creates Return |
+| 13 | `O-004` | 13 | product decision | Credit Settlement / Invoice lifecycle | Explicit terminal states, accounting effects, and collection rejection tests |
+| 14 | `O-010` | 13 | product decision | Invoice lifecycle | Approved cancel/noncollectible behavior and last-line concurrency tests |
+| 15 | `O-008` | 11 | product decision | Receipt Lines and Invoicing | Per-line treatment model and exact-cent collection/report tests |
+| 16 | `O-030` | 11 | product decision | Receipt completeness | Approved explicit-rounding-line or visible-tolerance behavior with exact-cent fixtures and no inferred tax/discount |
+| 17 | `O-027` | 10 | product decision | Item Creation | One approved name/photo/note rule plus offline, API, and migration validation tests |
+| 18 | `O-033` | 10 | product decision | Collection/payment variance | Approved exact-match or explicit variance model plus mismatch, retry, rounding, allocation, receipt, budget and correction tests |
+| 19 | `O-006` | 9 | product decision | Expense / live Invoice | Field-by-state mutability matrix with concurrent edit/collection tests |
+| 20 | `O-035` | 9 | product decision | Client Summary financial meaning | Approved paid/open/recognized presentation plus no-double-count, credit, Transfer, open-source, collection and label tests |
+| 21 | `O-037` | 9 | product decision | Space archive and Item assignment | Approved retain/clear/move rule plus assigned/empty, offline, search/report, concurrent assignment and scope-change tests |
+| 22 | `O-039` | 8 | product decision | Project-note text validation | Approved cross-runtime trim/control/nonempty/byte rule plus app/MCP parity, zero-dispatch rejection, restart and lossless import/quarantine tests |
+| 23 | `A-015` | 7 | architecture decision | Architecture and target spike | blocked: Choose the optimistic projection mechanism for complex offline commands |
+| 24 | `O-036` | 7 | product decision | Client-shared receipt evidence | Approved omit/embed/attach/authorized-link policy plus token/path leakage, revocation, expiry, offline, sharing and retention tests |
+| 25 | `O-011` | 6 | product decision | Transfer / Item tags | Approved carry/clear/reselect rule and source/destination projection tests |
+| 26 | `O-012` | 6 | product decision | Transfer / Space placement | Approved default/optional selection behavior and atomic destination-scope tests |
+| 27 | `O-013` | 6 | product decision | Transfer correction | Approved reversal rules; retry/concurrency and immutable-original tests |
+| 28 | `O-014` | 6 | product decision | Credit after Transfer | Approved hosting rule and multi-transfer credit/budget tests |
+| 29 | `A-016` | 5 | architecture decision | Architecture and target spike | blocked: Approve the bounded offline-access lease |
+| 30 | `Canonical production reference/object profile` | 5 | production evidence | Attachment source profiling and migration | Approve and hash the production Firestore-reference/Storage-object graph, including shared, dangling, missing and retained evidence variants. |
+| 31 | `O-024` | 5 | product decision | Project lifecycle | Approved archive/delete policy plus empty, child-bearing, financial-history, offline-retry and concurrent-child tests |
+| 32 | `O-025` | 5 | product decision | Client/Project correction | Approved mutability boundaries plus cross-Client, prior-Transfer, paid-history, retry and concurrent-change tests |
+| 33 | `O-038` | 5 | product decision | Inventory destination planning | Approved retention/granularity/lifecycle and source migration, plus D-013 category isolation, offline, race, security and no-accounting-effect tests |
+| 34 | `A-007` | 4 | architecture decision | Architecture and target spike | proposed: Choose Supabase Auth at launch or a temporary Firebase Auth integration |
+| 35 | `O-002` | 4 | product decision | Transfer and live Invoice membership | Approved recall/removal rule plus concurrency and audit tests |
+| 36 | `O-018` | 3 | product decision | Proto migration and Compatibility | Mapping policy, unresolved queue, source-freeze gate, rollback, and no-loss tests |
+| 37 | `O-019` | 3 | product decision | Item reconciliation | Deterministic identity winner, relationship/media merge, audit, and retry tests |
+| 38 | `Canonical production profile` | 2 | production evidence | Source data profiling and migration | Approve and hash a canonical immutable production export/profile that proves extant paths, shapes, variants, orphans and counts. |
+| 39 | `O-016` | 2 | product decision | Inventory acquisition evidence | Approved state and later-resolution command without fabricated Purchase |
+| 40 | `O-020` | 2 | product decision | Compatibility | Target accounting-contract/budget evidence, migration reconciliation, and O-022 source cutoff |
+| 41 | `O-022` | 2 | product decision | Compatibility and Cutover | Approved quiescence, source-freeze, and recovery plan; proof late Firebase writes cannot bypass or be lost after final delta |
+| 42 | `O-028` | 2 | product decision | Vendor cancellation/non-cash credit | Approved representation that adds no fourth Transaction, conserves every credit cent, and creates Return only for actual money received |
+| 43 | `A-003` | 1 | architecture decision | Architecture and target spike | proposed: Supabase Postgres becomes target server authority |
+| 44 | `A-004` | 1 | architecture decision | Architecture and target spike | proposed: PowerSync SQLite becomes the target local data plane |
+| 45 | `O-017` | 1 | product decision | Item Creation UI/domain boundary | Decision that hint is omitted or explicitly non-authoritative; Link remains authority |
+| 46 | `Physical target verification` | 1 | target verification | Offline target spike and physical-device acceptance | Run the isolated Supabase/PowerSync target on physical devices and prove restart, offline lease, queue, readiness and reconnect behavior. |
 
 ## Exact Affected Surfaces
 
@@ -322,6 +323,34 @@ Affected surfaces:
 - `SWIFT-E00DB27DF0BA` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Manages templates with create/edit/hard-delete and independent per-row reorder writes, suppressing all persistence errors.
 - `MCPMOD-D391DC704D1F` — `M0-SPACES-REVIEW-001` — replace/characterized: Implements Firebase Space list/get/create/update tools and generic fields.
 - `SWIFT-5BB6D8BE3292` — `M0-SPACES-REVIEW-001` — replace/characterized: Computes Space checklist progress, template-role availability, and detail summaries.
+
+### O-040 — 17 surfaces
+
+- Kind: product decision
+- Owning context: Personal Project budget pinning
+- Required closure: Approved feature, target, missing/empty/no-pin/default/card and lifecycle policy plus no-render-write, cross-user, offline conflict/recovery and migration tests
+- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
+- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
+
+Affected surfaces:
+
+- `FUNCMOD-B42AA317B971` — `M0-BACKEND-FUNCTIONS-001` — redesign/characterized: Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills.
+- `RULE-684AA9BB1569` — `M0-BACKEND-RULES-001` — replace/characterized: Per-user project preference document has member-wide CRUD; the rule does not restrict writes to the uid named in the path.
+- `SWIFT-14D0C2F1019A` — `M0-INVOICING-BUDGET-001` — redesign/characterized: Derives budget-tab rows and single spent progress from current Transaction/category/allocation arrays.
+- `SWIFT-800DE43469FC` — `M0-INVOICING-BUDGET-001` — redesign/characterized: Builds the Project budget screen from independent context listeners and Transaction-only calculations.
+- `SWIFT-D6F4A0ED81EF` — `M0-INVOICING-BUDGET-001` — replace/characterized: Displays pinned category progress from current single-segment budget values.
+- `TEST-04DAF7B43B47` — `M0-INVOICING-BUDGET-001` — redesign/characterized: Tests current budget-tab Transaction/category/allocation arithmetic.
+- `MCPMOD-8FC7F6247E2F` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Registers Project list/get/budget/create/update/archive tools over Admin SDK. Client is free text; create/update/note side effects are independent; Project get scans Items; budget recomputes current Transaction-only arithmetic.
+- `MCPTOOL-55857D0737AE` — `M0-PROJECT-CLIENT-REFERENCE-001` — redesign/characterized: Creates a Project with name/free-text clientName and then independently creates an optional nested note; no Client identity, Project category setup or shared idempotency result exists.
+- `SWIFT-093E5E4F8D20` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Directly listens to one/all Project preference documents under a supplied user path and merge-writes pinned IDs. Listener errors become nil/empty and no caller/path principal equality is enforced in this service.
+- `SWIFT-1DA3D2CE9B31` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Activates nine independent Project-scoped listeners, stores partial results in memory, applies financial filtering locally, derives budget state, and exposes Project archive/delete and note CRUD. It does not expose a complete-history or durable operation state.
+- `SWIFT-27CA6EAC7092` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Defines the Project service seam in Firebase ListenerRegistration and untyped field dictionaries, including free-text clientName creation and unconditional delete.
+- `SWIFT-58A14BD25578` — `M0-PROJECT-CLIENT-REFERENCE-001` — redesign/characterized: Creates a Project from name and free-text clientName, dismisses after the first local Firestore write, then independently and silently writes selected category allocations and enqueues hero media. Missing allocation input becomes explicit zero.
+- `SWIFT-B6C3B72884E1` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Defines a Firestore-Codable Project preference with redundant account/user/Project IDs and pinned category IDs while omitting timestamps from explicit Codable keys.
+- `SWIFT-D73C92887393` — `M0-PROJECT-CLIENT-REFERENCE-001` — redesign/characterized: Displays Project and free-text Client name, owns tabs/export/quick note/edit/archive, and offers destructive Project deletion that warns only about Items while leaving all children orphaned.
+- `SWIFT-E1A771F6A409` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Provides generic Firestore Project get/create/update/delete and unfiltered account listeners. Creation generates a Project with free-text clientName; update accepts arbitrary field dictionaries; delete removes only the Project document.
+- `SWIFT-E23DAF7A18FA` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Shows active/archived Project cards from the account cache, sorted by Project name, and independently subscribes to every current user's Project preferences for denormalized budget previews.
+- `TEST-3D0D949763A1` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Tests Project archive filters, Project/clientName search, name sorting, empty copy and budget preview ordering.
 
 ### O-031 — 16 surfaces
 
