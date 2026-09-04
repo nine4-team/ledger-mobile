@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 278
+State version: 279
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-IMPLEMENTED-CANDIDATE
+- Checkpoint: ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -98,7 +98,10 @@ without modifying the running Firebase application before hard cutover.
   and Principal/Account Keychain dimension plus the old dotted-ID collision had
   direct assertions; final corrected-diff review returned GO with no remaining
   P0-P3. Four focused/all 372 target tests in 71 suites and both staging builds
-  pass locally. Exact synchronized implementation CI is next.
+  pass locally. Exact implementation commit `3bf8e9ed4e4251b7adcd9c276d0e7259cad8bf18`
+  passes all three jobs in immutable run `33928708863`. The next bounded slice is
+  the local pending-work summary provider; physical synchronization, logout,
+  deletion, Auth and workspace switching remain excluded.
 
 - Implemented the four-leaf local-only Account discovery provider slice after
   exact corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`

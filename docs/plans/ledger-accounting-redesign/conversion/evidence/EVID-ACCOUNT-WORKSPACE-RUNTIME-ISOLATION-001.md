@@ -1,6 +1,6 @@
 # EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001 — Account Workspace Runtime Isolation
 
-- Status: implemented locally; exact implementation CI pending
+- Status: implemented; exact implementation CI passed
 - Date: 2026-09-04
 - Environment: isolated target worktree and disposable local fixtures only
 - Production/Firebase impact: none
@@ -86,8 +86,9 @@ corrected-diff review returned GO with no remaining P0-P3 finding.
 - macOS and iOS Simulator staging builds pass; and
 - `git diff --check` passes.
 
-The exact implementation commit and immutable run are still pending, so this
-evidence does not advance to hosted verification or rehearsal.
+Exact implementation commit `3bf8e9ed4e4251b7adcd9c276d0e7259cad8bf18`
+passed all three jobs in immutable Actions run `33928708863`. This evidence does
+not advance to hosted verification or rehearsal.
 
 ## Verified Locally
 

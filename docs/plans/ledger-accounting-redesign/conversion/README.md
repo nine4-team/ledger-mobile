@@ -25,8 +25,8 @@ the pending-work summary provider is implemented; it exposes no hosted or
 destructive behavior and preserves the separate Principal discovery database.
 Exact READY `428f5225` / immutable run `33927257913` pass. The runtime-isolation
 implementation now passes final independent corrected-diff review, four focused
-tests, all 372 target tests in 71 suites and both staging builds; exact
-implementation CI is pending.
+tests, all 372 target tests in 71 suites and both staging builds. Exact
+implementation `3bf8e9ed` / immutable run `33928708863` pass all three jobs.
 The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit
