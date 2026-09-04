@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 259
+State version: 260
 
 ## Objective
 
@@ -44,8 +44,9 @@ without modifying the running Firebase application before hard cutover.
 - Two provider-backed product slices now work locally: offline Client creation
   and offline Project setup/readback through encrypted PowerSync SQLite,
   trusted Supabase/Postgres handlers with RLS, the isolated target app, and
-  gated target MCP boundaries. They are not complete until immutable CI and a
-  real isolated PowerSync/Auth round-trip pass.
+  gated target MCP boundaries. The exact Project implementation checkpoint now
+  passes immutable CI; both slices remain incomplete until a real isolated
+  PowerSync/Auth round-trip passes.
 - Future progress reports must separately state (1) planning/control coverage,
   (2) locally executable provider-backed slices, (3) hosted rehearsal, and
   (4) cutover readiness. A single percentage may be given only with that
@@ -73,8 +74,10 @@ without modifying the running Firebase application before hard cutover.
   41 combined pgTAP assertions, Client/Project REST checks, 9 Client plus 7
   Project PowerSync tests, 10 MCP tests, strict TypeScript, generated contracts
   and complete conversion controls, all 332 Swift tests, database lint, and both
-  macOS and generic iOS Simulator staging builds pass. Immutable CI is pending
-  this checkpoint. A-003/A-004 and O-026 remain open;
+  macOS and generic iOS Simulator staging builds pass. Exact implementation
+  commit `e57b874d4c75f7f833f77221df794cafa0c0d72c` passed immutable Actions run
+  `33894323498`, including the new local-Supabase provider job. A-003/A-004 and
+  O-026 remain open;
   real Auth/Sync/device/media/performance/fault rehearsal, permanent-
   authorization terminal handling, production migration and cutover are not
   claimed; `EVID-PROJECT-SETUP-PROVIDER-001`.
@@ -3651,14 +3654,15 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Replace the two frozen comment scaffolds with the dependency-free aggregate
-generator/checker and adversarial suite inside the exact 30-path implementation
-allowlist. Add one deterministic generated JSON artifact, three exact package
-commands and an Ubuntu gate after target-query authority checks and before
-conversion/Swift work. Preserve the verified logical-authority
-registry as the target side of the join; do not translate Firestore syntax or
-indexes, advance globally deferred A-003/A-004 physical planes, access
-production, or silently resolve any blocker.
+Prepare the next bounded provider slice for attachment durability: trace the
+verified attachment-capture/local-durability contract into protected local byte
+storage, metadata and an upload-queue boundary; define crash/restart,
+missing-byte, deduplication, retry and storage-pressure tests before code. Keep
+Supabase Storage behind a scoped adapter and use only disposable local fixtures;
+do not provision hosted resources, choose O-023 retention/deletion policy,
+access production, or advance A-003/A-004 from local evidence. Independently
+review the dossier before implementation and independently review the first
+implementation diff, continuing the early subagent quality-control policy.
 
 Continue without waiting on the two M1 evidence blockers:
 

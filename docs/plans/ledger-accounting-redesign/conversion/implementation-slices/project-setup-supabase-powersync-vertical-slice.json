@@ -263,8 +263,8 @@
       "owner": ".github/workflows/supabase-conversion-control.yml",
       "covers": ["PROJECTPROVIDER-REQ-007"],
       "expected": "Immutable CI passes local Supabase DB/API tests, target/MCP tests, conversion/environment controls and both staging builds with a clean worktree.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"]
     },
     {
       "id": "PROJECTPROVIDER-TEST-012",
@@ -276,7 +276,7 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
   "notes": "Local implementation and deterministic tests pass, but the dossier remains in_progress. A-003/A-004 remain proposed until real isolated Auth, Sync Streams, device, media, schema-evolution, performance and fault phases pass. O-026 remains open: the local spike intentionally tests a stronger least-privilege capability/financial-visibility model, but this does not approve the final product matrix. A permanently unauthorized queued command still requires an approved terminal-resolution policy during the connected Auth/Sync phase. Stable IDs are globally unique opaque identifiers while every relationship and authorization remains Account-scoped. No hosted resource, source import, production access, migration, release or cutover is authorized."

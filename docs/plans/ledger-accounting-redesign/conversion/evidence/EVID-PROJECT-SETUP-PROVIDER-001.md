@@ -7,8 +7,10 @@
 - Target branch: `codex/supabase-powersync-implementation`
 - Slice dossier:
   `conversion/implementation-slices/project-setup-supabase-powersync-vertical-slice.json`
-- Verification state: local implementation passed; immutable CI and connected
-  Auth/PowerSync rehearsal pending
+- Verification state: local implementation and immutable exact-commit CI passed;
+  connected Auth/PowerSync rehearsal pending
+- Implementation commit: `e57b874d4c75f7f833f77221df794cafa0c0d72c`
+- Immutable Actions run: `33894323498`
 
 ## Outcome
 
@@ -64,8 +66,10 @@ The following evidence passed against disposable local resources:
 - the isolated macOS and generic iOS Simulator staging target builds.
 
 The complete conversion gates pass after the durable tracker is synchronized.
-Immutable exact-commit CI remains pending. Passing local and immutable CI checks
-still does not satisfy the physical hosted vertical-spike gate.
+Exact implementation commit `e57b874d4c75f7f833f77221df794cafa0c0d72c`
+passed immutable Actions run `33894323498`, including all three conversion,
+target-environment and local-Supabase jobs. This still does not satisfy the
+physical hosted vertical-spike gate.
 
 ## Review Corrections
 
