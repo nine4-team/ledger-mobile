@@ -111,4 +111,11 @@ regeneration, final corrected-diff review returned GO with no P0-P3 finding.
   Simulator staging builds pass; and
 - `git diff --check` passes.
 
-Immutable CI on the exact READY commit remains required before executable work.
+Initial exact READY commit `a34a51e94e58b1b0b9106204e2b74b09217a31f9`
+was correctly rejected by immutable Actions run `33921833216`: the conversion
+job found only that the generated M2 residual report was stale, so dependent
+target and local-Supabase jobs did not run. No executable behavior existed at
+that checkpoint. The residual report is regenerated at 443 mapped / 184
+residual / 47 blocker rows, and the complete workflow command set—not the
+earlier shorthand subset—must pass locally and on the corrected exact READY
+commit before executable work.

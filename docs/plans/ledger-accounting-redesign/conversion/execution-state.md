@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 271
+State version: 272
 
 ## Objective
 
@@ -87,8 +87,12 @@ without modifying the running Firebase application before hard cutover.
   review returned GO with no P0-P3 finding. Conversion controls, target
   environment/contracts, all 11 MCP tests, all 358 Swift tests in 69 suites,
   deterministic project generation, both staging builds and clean formatting
-  pass locally. Exact READY commit and immutable CI remain next. No Firebase,
-  hosted or production state changed;
+  pass locally. Initial exact READY commit `a34a51e9` was rejected by immutable
+  run `33921833216` solely because the M2 residual report was stale; the
+  shorthand local gate had omitted that check. CI correctly prevented dependent
+  jobs. The report is now regenerated at 443 mapped / 184 residual / 47 blocker
+  rows, and the corrected checkpoint must pass the complete workflow command
+  set. No Firebase, hosted or production state changed;
   `EVID-ACCOUNT-DISCOVERY-PROVIDER-001`.
 
 - Implemented the reviewed Client/Project directory and browse provider after
