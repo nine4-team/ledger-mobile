@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 245
+State version: 246
 
 ## Objective
 
@@ -52,7 +52,14 @@ modifying the running Firebase application before hard cutover.
   comment-only scaffolds. The executable JSON validator, generated artifact,
   package/CI hooks and immutable READY run remain future work. The deliberately
   future validator is exact structural validation only, with no free-text
-  keyword or Markdown semantic/status parsing. The changed conversion discoverer is re-acknowledged at its exact reviewed hash
+  keyword or Markdown semantic/status parsing. A bounded READY addendum makes
+  `discoverTooling()` path-exclude both logical-authority control leaves from
+  generic Firebase audit/repair discovery; contiguous `firestoreQuery` and
+  `firestoreIndex` comment sentinels in the test scaffold prove the exclusion.
+  The current-query extractor also exact-path-excludes that test fixture, so its
+  existing candidate/source totals and all 386 QUERY occurrences remain
+  unchanged/current. The changed conversion discoverer and query extractor are
+  deliberately re-acknowledged at their exact reviewed hashes
   without changing its verified status or ownership; package/workflow and all
   16 query owners remain unadvanced. The 386 source `QUERY-*` occurrence
   reconciliation remains a separate downstream slice. Synchronized conversion

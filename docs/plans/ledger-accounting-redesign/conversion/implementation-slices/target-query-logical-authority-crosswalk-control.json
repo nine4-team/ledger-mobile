@@ -111,7 +111,7 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
       "section": "Pull Request and Checkpoint Evidence",
-      "invariant": "READY, implementation and promotion use exact allowlists, preserve all 16 query-owner surfaces plus FILE-063B0E6EC659 and MAN-INDEX-001 at their existing lifecycle state, and never confuse structural validation with semantic approval.",
+      "invariant": "READY, implementation and promotion use exact allowlists, preserve all 16 query-owner surfaces plus FILE-063B0E6EC659 and MAN-INDEX-001 at their existing lifecycle state, path-exclude both logical-authority control leaves from generic Firebase audit/repair discovery, exact-path-exclude the logical-authority test fixture from current-source query candidate inspection, preserve the 386 QUERY inventory, and never confuse structural validation with semantic approval.",
       "decisionIds": [],
       "verificationIds": ["TQUERYAUTH-TEST-007", "TQUERYAUTH-TEST-008"]
     }
@@ -157,7 +157,7 @@
     },
     "rolloutRollback": {
       "items": [
-        "READY changes only the reviewed JSON registry, two comment-only scaffolds, dossier/evidence/control metadata, and deliberate discoverer re-acknowledgment.",
+        "READY changes only the reviewed JSON registry, two comment-only scaffolds, dossier/evidence/control metadata, the bounded discoverTooling exclusion plus deliberate discoverer re-acknowledgment, and one exact-path current-query extractor exclusion plus deliberate FILE-49BE7A26CE03 re-acknowledgment. The test scaffold contains contiguous firestoreQuery and firestoreIndex sentinels so normal discovery proves both exclusions instead of relying on content evasion; generated QUERY artifacts and their 386 occurrences remain unchanged.",
         "Implementation may replace the two scaffolds, add only target-query-logical-authority-crosswalk.generated.json, exact package commands and the Ubuntu conversion-control hook, plus synchronized control metadata.",
         "Promotion is documentation/control-only after immutable implementation CI and human review. Reverting this control changes no runtime, provider or production behavior."
       ],
@@ -224,7 +224,7 @@
       "kind": "operational",
       "owner": "conversion control and exact diff review",
       "covers": ["TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-006", "TQUERYAUTH-REQ-007", "TQUERYAUTH-REQ-009", "TQUERYAUTH-REQ-010", "TQUERYAUTH-REQ-012"],
-      "expected": "Exact READY, implementation and promotion allowlists pass; all 16 query owners, FILE-063B0E6EC659, MAN-INDEX-001 and existing package/workflow surfaces preserve status and ownership.",
+      "expected": "Exact READY, implementation and promotion allowlists pass; both logical-authority leaves remain CONFIG-only and the 386-occurrence query inventory remains current/unchanged even with contiguous firestoreQuery/firestoreIndex scaffold sentinels; FILE-49BE7A26CE03 is deliberately re-acknowledged without status/owner change; all 16 query owners, FILE-063B0E6EC659, MAN-INDEX-001 and existing package/workflow surfaces preserve status and ownership.",
       "status": "planned",
       "evidence": []
     },
@@ -259,5 +259,5 @@
   "implementationEvidence": [],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY only. The registry reviews all 18 current TQUERY methods while preserving field-level uncertainty. Budget contribution-source eligibility/taxonomy is explicitly not defined by its current contract; O-040 blocks Project-preference target retention/data-plane work; O-026 blocks only exact reference-data visibility/download/capability policy; O-007/O-015 block only Item occurrence/provenance persistence. Operation queries remain Account-scoped and multi-domain with no invented Principal predicate. A-003/A-004 keep both physical planes globally deferred. The future validator is structural only and cannot approve free-text meaning. The JSON-only validator and generated JSON artifact are not implemented at READY."
+  "notes": "READY only. The registry reviews all 18 current TQUERY methods while preserving field-level uncertainty. Budget contribution-source eligibility/taxonomy is explicitly not defined by its current contract; O-040 blocks Project-preference target retention/data-plane work; O-026 blocks only exact reference-data visibility/download/capability policy; O-007/O-015 block only Item occurrence/provenance persistence. Operation queries remain Account-scoped and multi-domain with no invented Principal predicate. A-003/A-004 keep both physical planes globally deferred. The future validator is structural only and cannot approve free-text meaning. The bounded READY addendum makes discoverTooling genuinely exclude both logical-authority leaves from generic Firebase audit/repair discovery and makes the current-query extractor exclude the exact test fixture while preserving all 386 occurrences. The JSON-only validator and generated JSON artifact remain unimplemented at READY."
 }

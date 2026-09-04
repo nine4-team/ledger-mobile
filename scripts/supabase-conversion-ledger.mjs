@@ -1302,7 +1302,9 @@ function discoverTooling() {
       predicate: (filePath) =>
         /\.(mjs|js|ts|sh)$/.test(filePath) &&
         !new Set([
+          "scripts/generate-target-query-logical-authority-crosswalk.mjs",
           "scripts/generate-target-query-port-inventory.mjs",
+          "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
           "scripts/tests/generate-target-query-port-inventory.test.mjs",
         ]).has(relative(filePath)),
       contentPredicate: (text) =>

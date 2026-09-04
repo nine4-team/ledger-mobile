@@ -20,8 +20,8 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "6b7c21212c23664bf18a10b9501b421edf25e9e8107020c8b2e7559718b56eec",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two comment-only target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are excluded from Firebase audit/repair discovery even when their contract prose names Firebase exclusions. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "acknowledgeSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two comment-only target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are explicitly path-excluded from Firebase audit/repair discovery even when their tests or contract prose contain contiguous Firebase/source-query sentinel terms. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
@@ -30,7 +30,7 @@
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors or warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY changes add exact CONFIG discovery first for the target query-port inventory generator/test leaves and now for the target query logical-authority generator/test scaffolds; no Firebase-tool duplication, status change, or ownership change is claimed."
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY changes add exact CONFIG discovery for the target query logical-authority generator/test scaffolds and path-exclude those same leaves from generic Firebase audit/repair discovery; contiguous test sentinels prove that exclusion. No status or ownership change is claimed."
     },
     {
       "id": "CONFIG-9B16CFCB67A4",
@@ -161,8 +161,8 @@
     },
     {
       "id": "CONFIG-ED6818A70D4E",
-      "acknowledgeSourceHash": "815c5008529619b162796af731cc1434030b6da1d2c4cb7a55395508ec2f350b",
-      "currentBehavior": "Comment-only READY scaffold freezing the future JSON-only logical-authority structural test contract, including exact schema/enums/allowlists and the canonical-row mapping-hash formula while explicitly excluding free-text semantic inference. It contains no executable test implementation.",
+      "acknowledgeSourceHash": "84090b5d61ce7953561cab02959e1686ae0b26280a4335396b575770bac4eb53",
+      "currentBehavior": "Comment-only READY scaffold freezing the future JSON-only logical-authority structural test contract, including exact schema/enums/allowlists and the canonical-row mapping-hash formula while explicitly excluding free-text semantic inference. Contiguous firestoreQuery and firestoreIndex sentinels prove this CONFIG leaf is path-excluded from generic Firebase audit/repair discovery. It contains no executable test implementation.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -199,7 +199,7 @@
       "status": "target_mapped",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
-      "notes": "READY only. Machine tests may prove structure and freshness; row semantics remain a required human review surface."
+      "notes": "READY only. Machine tests may prove structure and freshness; row semantics remain a required human review surface. The contiguous forbidden-key sentinels are comments solely for discovery-exclusion verification."
     }
   ]
 }

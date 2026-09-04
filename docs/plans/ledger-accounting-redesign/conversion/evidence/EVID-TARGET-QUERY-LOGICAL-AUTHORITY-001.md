@@ -52,6 +52,22 @@ Independent review required seven changes before this package was written:
 7. start Account discovery from an already-established stable Principal while
    preserving unresolved issuer/subject correlation under A-007/A-010.
 
+The bounded READY addendum also corrects `discoverTooling()` so both logical-
+authority generator/test paths are excluded from generic Firebase audit/repair
+discovery, matching the already-declared CONFIG-only ownership. The comment-only
+test scaffold contains contiguous `firestoreQuery` and `firestoreIndex`
+sentinels; normal synchronization therefore proves the path exclusion works and
+does not merely evade content discovery.
+
+The same sentinels make the current-source query extractor recognize the
+comment-only test file as a candidate even though they create no occurrence.
+The addendum therefore exact-path-excludes only
+`scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs` from
+candidate inspection. `FILE-49BE7A26CE03` is deliberately re-acknowledged at
+its exact hash without status or ownership change; both generated QUERY
+artifacts, their source/candidate totals, and all 386 occurrences remain byte-
+unchanged.
+
 The validator contract was also narrowed to JSON-only structural checking. It
 may confirm exact keys/types/enums, set equality, digests, signatures, literal
 authority references, exact allowlisted IDs, stable generated identities and
@@ -139,7 +155,11 @@ READY is limited to:
 - the reviewed registry;
 - the two comment-only executable scaffolds;
 - this dossier/evidence pair;
-- adding only those two scaffold paths to `discoverConfiguration()`;
+- adding only those two scaffold paths to `discoverConfiguration()` and to the
+  bounded `discoverTooling()` Firebase audit/repair exclusion set;
+- adding the exact logical-authority test path to the current-query extractor's
+  target-control exclusion and deliberately re-acknowledging
+  `FILE-49BE7A26CE03` without changing its status or ownership;
 - classifying only their two CONFIG surfaces `target_mapped`; and
 - synchronized manifest, generated conversion audits/counts, evidence index,
   tracker and execution-state updates.
@@ -168,16 +188,18 @@ Firestore syntax or indexes and is not part of this READY package.
 The exact reviewed READY content hashes are:
 
 - discoverer `scripts/supabase-conversion-ledger.mjs`:
-  `6b7c21212c23664bf18a10b9501b421edf25e9e8107020c8b2e7559718b56eec`;
+  `d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd`;
+- current-query extractor `scripts/extract-firestore-query-contract.mjs`:
+  `326a97771630e5426a9628e4f2926470867604fc43e4f6212880b617fc131a2a`;
 - generator scaffold:
   `713dd34cc2304b2603724f6e3d7f92ca4281a3d42d2d8112ed3ff8ef63eb73cf`;
 - test scaffold:
-  `815c5008529619b162796af731cc1434030b6da1d2c4cb7a55395508ec2f350b`;
+  `84090b5d61ce7953561cab02959e1686ae0b26280a4335396b575770bac4eb53`;
 - reviewed registry:
   `b67abf7dbdb78c9b89f1eb9e58852e319426f2497a9a9b376f25bc1c9a0416cb`;
   and
 - READY dossier:
-  `411618087de1c990f751735907e2083a86dd8d6c51ca9d8ddef312339bbae7e8`.
+  `23891fb174cfa2a70229458f545f9ae2a00b3db1c8b33e41896027c1dbc90f97`.
 
 Local syntax and JSON parsing pass. `conversion:sync`, `conversion:report` and
 `conversion:check` pass at 839 recorded / 824 currently discovered surfaces,
@@ -187,9 +209,19 @@ current-query, residual and M0 checks pass; the residual register is current at
 inventory tests, its 16/16/18 generated-artifact check, target-environment
 isolation and target contract/TypeScript checks pass. The READY diff contains no
 Swift, package, workflow, generated logical-authority artifact, schema, RLS,
-Sync, provider, runtime or Firebase change. Swift tests and staging builds were
-not rerun because this READY checkpoint changes only documentation/control JSON
-and comment-only Node leaves; those gates remain required for implementation.
+Sync, provider, or Firebase application/backend/runtime change. Its executable
+changes are limited to the two exact-path discovery/extraction exclusions; the
+logical-authority test scaffold remains comment-only. Swift tests and staging
+builds were not rerun because the addendum changes only those repository-local
+control exclusions, documentation/control JSON, and the comment-only scaffold;
+those gates remain required for implementation.
+
+The literal `firestoreQuery`/`firestoreIndex` sentinel check passes while the
+logical-authority generator/test remain exactly their two CONFIG surfaces and
+the current-query artifacts remain byte-unchanged/current at 170 inspected
+candidates, 74 files with occurrences and exactly 386 occurrences. The bounded
+READY addendum changes exactly 16 paths, including synchronized generated
+conversion audits; it creates no extra FILE surface.
 
 No hosted service or production system was contacted, and no implementation or
 cutover authority is created by this evidence.

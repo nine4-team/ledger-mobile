@@ -118,6 +118,7 @@ function extract() {
       const sourcePath = relative(filePath);
       if (
         sourcePath === "scripts/extract-firestore-query-contract.mjs" ||
+        sourcePath === "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs" ||
         sourcePath.startsWith("scripts/check-target-") ||
         sourcePath.startsWith("scripts/generate-target-")
       ) {

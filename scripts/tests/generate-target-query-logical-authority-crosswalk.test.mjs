@@ -9,3 +9,6 @@
 // allowlists, and global physical-plane deferral. Tests must prove structural
 // validation only and must not pretend to infer semantics from free text or
 // Markdown. The separate 386-source-query reconciliation remains out of scope.
+// The implementation negative matrix must include the contiguous forbidden keys
+// firestoreQuery and firestoreIndex. Their presence here deliberately proves
+// this control leaf is excluded from Firebase audit/repair discovery by path.

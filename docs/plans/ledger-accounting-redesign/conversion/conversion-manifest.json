@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T07:05:45.432Z",
+    "lastSynchronizedAt": "2026-09-04T07:38:13.853Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1794,10 +1794,10 @@
           "path": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs"
         }
       ],
-      "observedSourceHash": "815c5008529619b162796af731cc1434030b6da1d2c4cb7a55395508ec2f350b",
-      "acknowledgedSourceHash": "815c5008529619b162796af731cc1434030b6da1d2c4cb7a55395508ec2f350b",
+      "observedSourceHash": "84090b5d61ce7953561cab02959e1686ae0b26280a4335396b575770bac4eb53",
+      "acknowledgedSourceHash": "84090b5d61ce7953561cab02959e1686ae0b26280a4335396b575770bac4eb53",
       "metadata": {},
-      "currentBehavior": "Comment-only READY scaffold freezing the future JSON-only logical-authority structural test contract, including exact schema/enums/allowlists and the canonical-row mapping-hash formula while explicitly excluding free-text semantic inference. It contains no executable test implementation.",
+      "currentBehavior": "Comment-only READY scaffold freezing the future JSON-only logical-authority structural test contract, including exact schema/enums/allowlists and the canonical-row mapping-hash formula while explicitly excluding free-text semantic inference. Contiguous firestoreQuery and firestoreIndex sentinels prove this CONFIG leaf is path-excluded from generic Firebase audit/repair discovery. It contains no executable test implementation.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -1836,7 +1836,7 @@
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "READY only. Machine tests may prove structure and freshness; row semantics remain a required human review surface.",
+      "notes": "READY only. Machine tests may prove structure and freshness; row semantics remain a required human review surface. The contiguous forbidden-key sentinels are comments solely for discovery-exclusion verification.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2361,10 +2361,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "6b7c21212c23664bf18a10b9501b421edf25e9e8107020c8b2e7559718b56eec",
-      "acknowledgedSourceHash": "6b7c21212c23664bf18a10b9501b421edf25e9e8107020c8b2e7559718b56eec",
+      "observedSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
+      "acknowledgedSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two comment-only target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are excluded from Firebase audit/repair discovery even when their contract prose names Firebase exclusions. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two comment-only target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are explicitly path-excluded from Firebase audit/repair discovery even when their tests or contract prose contain contiguous Firebase/source-query sentinel terms. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -2413,7 +2413,7 @@
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY changes add exact CONFIG discovery first for the target query-port inventory generator/test leaves and now for the target query logical-authority generator/test scaffolds; no Firebase-tool duplication, status change, or ownership change is claimed.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY changes add exact CONFIG discovery for the target query logical-authority generator/test scaffolds and path-exclude those same leaves from generic Firebase audit/repair discovery; contiguous test sentinels prove that exclusion. No status or ownership change is claimed.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2958,10 +2958,10 @@
           "path": "scripts/extract-firestore-query-contract.mjs"
         }
       ],
-      "observedSourceHash": "63ca3a3f4c1b16d78afe58cf7f8289149b3ccf4235eef03218e04e2f16138dc7",
-      "acknowledgedSourceHash": "63ca3a3f4c1b16d78afe58cf7f8289149b3ccf4235eef03218e04e2f16138dc7",
+      "observedSourceHash": "326a97771630e5426a9628e4f2926470867604fc43e4f6212880b617fc131a2a",
+      "acknowledgedSourceHash": "326a97771630e5426a9628e4f2926470867604fc43e4f6212880b617fc131a2a",
       "metadata": {},
-      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only check/generation scripts, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
+      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only check/generation scripts including the exact logical-authority test fixture path, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
       "disposition": "source_only",
       "target": {
         "owner": "",
@@ -2988,9 +2988,10 @@
       "blockers": [],
       "evidence": [
         "EVID-QUERY-001",
-        "EVID-CONTRACT-CATALOG-001"
+        "EVID-CONTRACT-CATALOG-001",
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity.",
+      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity. The bounded READY addendum excludes only the exact logical-authority test fixture path so its contiguous forbidden-key sentinels cannot change the reviewed 386-occurrence source inventory. Status and ownership remain unchanged.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
     },
     {
