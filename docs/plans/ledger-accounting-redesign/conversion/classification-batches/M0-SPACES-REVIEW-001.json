@@ -2090,6 +2090,91 @@
         "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceAssignmentUseCaseTests"],
         "acceptance": ["Implementation tests must prove only the frozen provider-free Item-to-Space use case and exclusions"]
       }
+    },
+    {
+      "id": "SWIFT-EEAC86485FF6",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "c8c161d7a3490bdd75669ff7f025e0858ed28a81df1ca1aed4dcfb37255c825a",
+      "currentBehavior": "Comment-only READY contract for one future provider-free Item Space-clearing application boundary that binds exact typed Account/scope/Item/revision/current-Space intent and dispatches the verified clear command; no executable behavior exists.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001",
+        "EVID-ITEM-SPACE-CLEARING-USE-CASE-001"
+      ],
+      "notes": "Comment-only READY scaffold at exact conversion baseline 31fd8881499ff6668b9abd14bfdd9284774ab302. It freezes a public transient Account/scope/typed-Item-revision-current-Space intent and future one-call application orchestration over the verified clearing operation. It advances no unassigned/no-op policy, read/UI eligibility, destination assignment, archive, attachment/reference/byte deletion, marker mutation, scope movement, accounting/provenance, persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration, hosted, or production behavior.",
+      "target": {
+        "owner": "Item Space Clearing Use Case",
+        "surfaces": [
+          "ItemSpaceClearingIntent",
+          "ItemSpaceClearingUseCase",
+          "exact Account/scope binding, one ItemSpaceAssignmentClearing call, and receipt validation"
+        ],
+        "securityRequirements": [
+          "Transient intent and verified command must bind one exact AccountID, one Project-or-Business-Inventory scope, and typed Item identity/revision/current-Space candidates; names, routes, paths, nullable fields, marker payloads, media and accounting values cannot replace them",
+          "Caller-supplied current-Space and scope values are untrusted conflict evidence only, never proof of actual placement, membership or authorization; raw port errors cannot cross the application boundary"
+        ],
+        "syncRequirements": [
+          "Future provider-free orchestration constructs the verified internally consistent clear draft/command before one narrow port call and validates the exact receipt afterward; later trusted handling must revalidate actual scope and current placement",
+          "No physical persistence, optimistic Item placement or marker mutation, authoritative apply, retry/rejection recovery, or synchronized visibility is claimed"
+        ]
+      },
+      "migration": {
+        "rule": "Define only target transient clearing intent and application orchestration; decode no source Item/Space document, nullable field patch, AccountContext array, route state, attachment marker, export row, or migration disposition.",
+        "reconciliation": [
+          "Synthetic typed Account/scope/Item/revision/current-Space evidence and operation metadata must reach one verified clear command while all source app/MCP/service/provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceClearingUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Item Space-clearing application path and permanent exclusions"]
+      }
+    },
+    {
+      "id": "TEST-CA84B398990C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1317398a7d86a0395ec16703b3d6fc3733e825836253d7e57892deca16c4ec9f",
+      "currentBehavior": "Comment-only READY contract for a future ordinary-import Item Space-clearing use-case suite covering exact transient intent, literal command ownership, zero/one-call boundaries, typed failure containment, diagnostics/topology, and exclusions; no executable test exists.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-ITEM-SPACE-CLEARING-001",
+        "EVID-ITEM-SPACE-CLEARING-USE-CASE-001"
+      ],
+      "notes": "Comment-only READY scaffold at exact conversion baseline 31fd8881499ff6668b9abd14bfdd9284774ab302. Ten planned obligations require ordinary import without @testable, exact three-field public shape, Project/Inventory and mixed-current-Space dispatch, literal reciprocal non-mirrored leaf ownership, construction zero-call and receipt one-call boundaries, all 15 operation failures plus cancellation/raw mapping, diagnostics/topology, exact allowlists, and immutable READY/implementation CI. No source app, MCP, service, provider, hosted, migration, or production behavior advances.",
+      "target": {
+        "owner": "Item Space Clearing Use Case Tests",
+        "surfaces": [
+          "exact transient clearing intent fixtures",
+          "Project, Business Inventory, single-Item and mixed-current-Space bulk fixtures",
+          "literal Account/scope/Item/revision/current-Space and operation-field ownership fixtures",
+          "receipt-state, construction, typed/raw failure, cancellation, diagnostics, topology, and exclusion fixtures"
+        ],
+        "securityRequirements": [
+          "Fixtures use only synthetic Account, Project, Space, Item, Principal, and Operation identities and prove typed local input is non-authorizing",
+          "Stable failures reveal no raw identity, display value, source path, credential, service payload, attachment data, accounting value, or production identifier"
+        ],
+        "syncRequirements": [
+          "A future in-memory port proves application choreography only, not physical local persistence or authenticated synchronization",
+          "Construction failure makes zero calls; stale assigned-looking conflict evidence may dispatch for later authoritative refusal, and exact receipt states return without optimistic or authoritative Item/Space/marker state"
+        ]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic values and load no source Item/Space DTO, Account-wide array, UI route, generic null write, media marker, export/profile, or source-to-target mapping.",
+        "reconciliation": [
+          "Tests must preserve canonical target clear dispatch while all named source UI/MCP/service/provider surfaces remain unadvanced"
+        ]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceClearingUseCaseTests"],
+        "acceptance": ["Implementation tests must prove only the frozen provider-free Item Space-clearing use case and exclusions"]
+      }
     }
   ]
 }

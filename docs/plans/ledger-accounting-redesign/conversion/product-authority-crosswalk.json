@@ -272,6 +272,7 @@
         { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
         { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md", "role": "conversion_control" },
         { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ITEM-SPACE-ASSIGNMENT-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ITEM-SPACE-CLEARING-001.md", "role": "conversion_control" },
         { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md", "role": "conversion_control" },
         { "path": "docs/plans/ledger-accounting-redesign/conversion/target-mapping-method.md", "role": "conversion_control" },
         { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },

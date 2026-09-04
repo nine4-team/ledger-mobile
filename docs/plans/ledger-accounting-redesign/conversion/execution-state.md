@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-03
-State version: 238
+State version: 239
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: ITEM-SPACE-ASSIGNMENT-USE-CASE-VERIFIED
+- Checkpoint: ITEM-SPACE-CLEARING-USE-CASE-READY-PREPARED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -78,6 +78,35 @@ modifying the running Firebase application before hard cutover.
   selection UI/read, archive, media/marker, scope movement, accounting/
   provenance, physical persistence, authorization, provider/schema/RLS/Sync,
   app/MCP, migration, hosted, production, release and cutover remain excluded.
+
+- Prepared the bounded Item Space-clearing application-use-case READY package
+  above verified `ItemSpaceClearingOperation.swift` at exact implementation
+  `f5a7ac7598f77859239b66666bc703ee4639c233` / immutable run
+  `33677087616`. Exact new paths resolve to `ItemSpaceClearingUseCase.swift`
+  (`SWIFT-EEAC86485FF6`) and `ItemSpaceClearingUseCaseTests.swift`
+  (`TEST-CA84B398990C`); both remain comment-only. The `ready` dossier freezes a
+  public transient non-Codable Account/scope/typed-Item-revision-current-Space
+  intent, draft/command construction before exactly one
+  `ItemSpaceAssignmentClearing` call, receipt validation afterward, all 15
+  operation failures, cancellation and bounded unknown errors. Caller-supplied
+  scope and current-Space values remain untrusted conflict evidence: command
+  construction proves only internal consistency, stale assigned-looking
+  evidence may dispatch, and trusted apply must validate actual placement,
+  membership and authorization. Nil/no-current-Space intent is structurally
+  unrepresentable, empty selection rejects, and no synthetic no-op receipt
+  exists. Ten obligations freeze ordinary non-`@testable` import, literal
+  reciprocal non-mirrored command ownership, every dependency/sibling/source
+  status, distinct READY/implementation/promotion allowlists and immutable CI.
+  Read/UI eligibility and mixed assigned/unassigned admission, archive/O-037,
+  attachment references/bytes/O-023, marker mutation, destination/scope/
+  accounting/provenance, physical persistence, authorization, provider/schema/
+  RLS/Sync, app/MCP, migration, hosted, production, release and cutover remain
+  excluded. The complete local READY gate passes at 835 recorded / 820
+  discovered, 391 mapped / 184 residual / 46 blockers, all 309 tests in 64
+  suites with warnings as errors, repeatable project hashes `0657194a` /
+  `388303af`, and both staging builds. Three established retired-path warnings
+  remain unchanged. Primary every-line review, independent actual-diff review
+  and exact-READY-SHA CI still gate executable code.
 
 - Verified the bounded typed Client rename application dispatch after exact
   READY commit `9cc34f4ca6004e7c3b3e1816f07112c55a70fe54` passed immutable Actions run
@@ -3460,7 +3489,25 @@ Continue without waiting on the two M1 evidence blockers:
    `item-space-clearing-operation-contracts` dossier and
    `EVID-ITEM-SPACE-CLEARING-001` as the sole authority for explicit
    Item-placement clearing. Its exact implementation commit and both CI jobs
-   are verified. Treat the verified `space-assignment-destination-read-contracts`
+   are verified. Treat ready `item-space-clearing-use-case-contracts` and
+   `EVID-ITEM-SPACE-CLEARING-USE-CASE-001` as the only active implementation
+   candidate after its exact READY commit passes immutable CI. Preserve the two
+   comment-only leaves `ItemSpaceClearingUseCase.swift`
+   (`SWIFT-EEAC86485FF6`) and `ItemSpaceClearingUseCaseTests.swift`
+   (`TEST-CA84B398990C`) until that gate passes. Future implementation must bind
+   exact typed Account/scope/Item/revision/current-Space conflict evidence
+   through the verified draft and command before exactly one clearer call,
+   validate afterward, preserve all 15 operation failures plus cancellation and
+   bound only unknown port errors. It must not treat scope/current-Space input as
+   authoritative truth: stale assigned-looking evidence may dispatch and later
+   conflict. Nil/no-current-Space intent is structurally unrepresentable, empty
+   selection rejects, and no synthetic no-op receipt exists. Preserve every
+   dependency, sibling and exact clear-space source ID/status enumerated in the
+   dossier. Do not introduce mixed assigned/unassigned admission/filtering,
+   read/UI eligibility, archive, attachment reference/byte deletion, marker
+   mutation, destination assignment, scope movement, accounting/provenance,
+   persistence, authorization, provider/schema/RLS/Sync, app/MCP, migration,
+   hosted or production behavior. Treat the verified `space-assignment-destination-read-contracts`
    dossier and
    `EVID-SPACE-ASSIGNMENT-DESTINATION-001` as the sole verified provider-free
    assignment-destination read semantics. Treat the verified

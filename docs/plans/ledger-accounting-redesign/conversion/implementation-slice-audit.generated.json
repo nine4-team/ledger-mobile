@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T02:26:52.235Z",
+  "generatedFromManifestSync": "2026-09-04T02:51:14.089Z",
   "totals": {
-    "slices": 63,
-    "claimedTargetSurfaces": 151,
+    "slices": 64,
+    "claimedTargetSurfaces": 153,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 136
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 1,
     "implemented": 0,
     "verified": 62,
@@ -258,6 +258,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json"
+    },
+    {
+      "sliceId": "item-space-clearing-use-case-contracts",
+      "title": "Bind one typed Item placement-clear intent and dispatch the verified clear operation",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Item Space Clearing Use Case",
+      "surfaceIds": [
+        "SWIFT-EEAC86485FF6",
+        "TEST-CA84B398990C"
+      ],
+      "requirementCount": 9,
+      "verificationCount": 10,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json"
     },
     {
       "sliceId": "migration-run-plan-and-journal-integrity",
