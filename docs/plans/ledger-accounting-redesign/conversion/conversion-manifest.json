@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T07:38:13.853Z",
+    "lastSynchronizedAt": "2026-09-04T08:18:16.064Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -205,10 +205,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "e5cc5bfcfa4d6425005a4729305b5e3a88e8098e8fe8aabbd38945ca29e8a460",
-      "acknowledgedSourceHash": "e5cc5bfcfa4d6425005a4729305b5e3a88e8098e8fe8aabbd38945ca29e8a460",
+      "observedSourceHash": "efdbeb6df6503c5a17c0d37e42f6e6ca668623650d6cec6afd6ea9b6189e3dbe",
+      "acknowledgedSourceHash": "efdbeb6df6503c5a17c0d37e42f6e6ca668623650d6cec6afd6ea9b6189e3dbe",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability and target query-port inventory test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
+      "currentBehavior": "Runs conversion traceability, target query-port inventory, and target query logical-authority test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -243,9 +243,10 @@
         "EVID-CONTINUITY-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CONTRACT-CATALOG-001",
-        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001",
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The target query-port implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485 with the new Linux-before-macOS dependency, all 316 Swift tests and both staging builds. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The target query logical-authority implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; its Linux structural test/check gate runs before the existing dependent macOS job. Exact prior implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485 with all 316 Swift tests and both staging builds; immutable CI for the new control is pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -686,10 +687,10 @@
           "path": "scripts/generate-target-query-logical-authority-crosswalk.mjs"
         }
       ],
-      "observedSourceHash": "713dd34cc2304b2603724f6e3d7f92ca4281a3d42d2d8112ed3ff8ef63eb73cf",
-      "acknowledgedSourceHash": "713dd34cc2304b2603724f6e3d7f92ca4281a3d42d2d8112ed3ff8ef63eb73cf",
+      "observedSourceHash": "50eb4ba95cc01d8f7fdd76f0b868eded68063dcf2f84860c7e64859cf613dc5b",
+      "acknowledgedSourceHash": "50eb4ba95cc01d8f7fdd76f0b868eded68063dcf2f84860c7e64859cf613dc5b",
       "metadata": {},
-      "currentBehavior": "Comment-only READY scaffold freezing the future dependency-free JSON logical-authority crosswalk generator/checker contract over every generated TQUERY. The future validator is limited to closed-schema keys/types/exact enums and allowlists, exact references/bindings and deterministic bytes; it performs no free-text keyword or Markdown semantic/status parsing. The scaffold contains no executable implementation or generated output.",
+      "currentBehavior": "Dependency-free JSON logical-authority crosswalk generator/checker over every generated TQUERY. It fully re-derives the closed upstream inventory schema, relationships, ordering, totals, signature/category/TQUERY identities and digest; enforces registry schemas, exact enums/allowlists/references and review-class consistency; derives collision-checked TACCESS identities and canonical registry-row mapping hashes; canonicalizes all nested output object keys while preserving array order; and accepts exactly one CLI mode. Repository inputs, authority paths, artifact and artifact parent are realpath-contained regular non-symlink paths. Generate uses an unpredictable exclusive no-follow sibling temporary and atomic rename; check is read-only and byte-exact. It performs no free-text keyword or Markdown semantic/status parsing.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -717,19 +718,21 @@
       "verification": {
         "tests": [
           "node --check scripts/generate-target-query-logical-authority-crosswalk.mjs",
-          "future immutable READY and implementation CI under the slice dossier"
+          "npm run target:query-authority:generate",
+          "npm run target:query-authority:check",
+          "immutable implementation CI under the slice dossier"
         ],
         "acceptance": [
-          "READY leaf remains comment-only and claims no generated artifact or executable behavior",
-          "Future implementation rejects stale bindings, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
+          "Generated JSON binds all 18 current TQUERY methods and exact signatures to the reviewed registry",
+          "Implementation rejects stale or internally inconsistent inventory/registry bindings, unsafe roots/symlinks, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "READY only. No parser, generator, package command, CI hook, physical access design, provider, runtime or production behavior exists.",
+      "notes": "Implemented locally from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363. Physical access, provider, runtime and production behavior remain excluded; immutable implementation CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -982,10 +985,10 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "3025354c8841cfc2bfd53150141d7a1fce443d61b1b63a83f75f9689f150f177",
-      "acknowledgedSourceHash": "3025354c8841cfc2bfd53150141d7a1fce443d61b1b63a83f75f9689f150f177",
+      "observedSourceHash": "40eb2f5e5ab8242633b7e932bc3b75e02108e2bdbe94d3a88e20339a02a1153b",
+      "acknowledgedSourceHash": "40eb2f5e5ab8242633b7e932bc3b75e02108e2bdbe94d3a88e20339a02a1153b",
       "metadata": {},
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract and target query-port inventory generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
+      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory and target query logical-authority generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build/test commands. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -1009,9 +1012,10 @@
         "EVID-CAPABILITY-001",
         "EVID-M2-DECISION-PACKETS-001",
         "EVID-CONTRACT-CATALOG-001",
-        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001",
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "These are operator commands, not product runtime dependencies. The target query-port implementation re-acknowledges the exact package hash while preserving characterized status and existing ownership.",
+      "notes": "These are operator commands, not product runtime dependencies. The target query logical-authority implementation re-acknowledges the exact package hash while preserving characterized status and existing ownership.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
     },
     {
@@ -1794,10 +1798,10 @@
           "path": "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs"
         }
       ],
-      "observedSourceHash": "84090b5d61ce7953561cab02959e1686ae0b26280a4335396b575770bac4eb53",
-      "acknowledgedSourceHash": "84090b5d61ce7953561cab02959e1686ae0b26280a4335396b575770bac4eb53",
+      "observedSourceHash": "0679f744957c3a7972a3f09a185310487e0f34f97286ef16bad5acceb74ad96c",
+      "acknowledgedSourceHash": "0679f744957c3a7972a3f09a185310487e0f34f97286ef16bad5acceb74ad96c",
       "metadata": {},
-      "currentBehavior": "Comment-only READY scaffold freezing the future JSON-only logical-authority structural test contract, including exact schema/enums/allowlists and the canonical-row mapping-hash formula while explicitly excluding free-text semantic inference. Contiguous firestoreQuery and firestoreIndex sentinels prove this CONFIG leaf is path-excluded from generic Firebase audit/repair discovery. It contains no executable test implementation.",
+      "currentBehavior": "Executable 23-test JSON-only logical-authority structural suite covering fully derived upstream inventory schema/relations/totals/identities, exact registry schema/enums/allowlists, 18/18 binding, review-class consistency including count-preserving swaps, authority heading and realpath/symlink safety, stable identities and mapping hashes, recursive object-key canonicalization with preserved array order, exclusive temporary-file refusal, deterministic bytes, missing/stale read-only checking, no-overwrite failures, exact CLI arity, package/CI topology and the explicit absence of free-text semantic inference.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Query Logical-Authority Control",
@@ -1824,19 +1828,21 @@
       "verification": {
         "tests": [
           "node --check scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
-          "future exact test/generate/check and CI integration under the slice dossier"
+          "npm run target:query-authority:test",
+          "npm run target:query-authority:generate",
+          "npm run target:query-authority:check"
         ],
         "acceptance": [
-          "READY leaf remains comment-only",
-          "Future tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
+          "All 23 focused tests pass locally",
+          "Tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "READY only. Machine tests may prove structure and freshness; row semantics remain a required human review surface. The contiguous forbidden-key sentinels are comments solely for discovery-exclusion verification.",
+      "notes": "Implemented locally from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363. Contiguous firestoreQuery/firestoreIndex cases remain executable and the committed discovery exclusions prevent false source-surface/query inventory drift. Machine tests prove structure and freshness only; row semantics remain a required human review surface, and immutable implementation CI is pending.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2364,7 +2370,7 @@
       "observedSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
       "acknowledgedSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two comment-only target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are explicitly path-excluded from Firebase audit/repair discovery even when their tests or contract prose contain contiguous Firebase/source-query sentinel terms. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain contiguous Firebase/source-query sentinel terms. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -2413,7 +2419,7 @@
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. Its deliberate READY changes add exact CONFIG discovery for the target query logical-authority generator/test scaffolds and path-exclude those same leaves from generic Firebase audit/repair discovery; contiguous test sentinels prove that exclusion. No status or ownership change is claimed.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. The amended READY baseline adds exact CONFIG discovery and genuine path exclusions for the target query logical-authority controls; contiguous implementation test cases prove the exclusion. No status or ownership change is claimed.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {

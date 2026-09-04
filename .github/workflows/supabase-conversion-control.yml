@@ -26,6 +26,8 @@ jobs:
         run: |
           npm run target:query-ports:test
           npm run target:query-ports:check
+          npm run target:query-authority:test
+          npm run target:query-authority:check
           npm run conversion:check
           npm run conversion:capabilities:check
           npm run conversion:queries:check

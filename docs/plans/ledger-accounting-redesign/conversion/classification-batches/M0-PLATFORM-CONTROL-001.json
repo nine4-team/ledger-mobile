@@ -9,14 +9,15 @@
     "EVID-DETERMINISTIC-TEST-SUPPORT-001",
     "EVID-TARGET-COMPOSITION-001",
     "EVID-DOMAIN-PRIMITIVES-001",
-    "EVID-TARGET-QUERY-PORT-INVENTORY-001"
+    "EVID-TARGET-QUERY-PORT-INVENTORY-001",
+    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
   ],
   "surfaces": [
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e5cc5bfcfa4d6425005a4729305b5e3a88e8098e8fe8aabbd38945ca29e8a460",
-      "currentBehavior": "Runs conversion traceability and target query-port inventory test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
+      "acknowledgeSourceHash": "efdbeb6df6503c5a17c0d37e42f6e6ca668623650d6cec6afd6ea9b6189e3dbe",
+      "currentBehavior": "Runs conversion traceability, target query-port inventory, and target query logical-authority test/check controls on Linux, then gates a macOS job on that success before validating the target boundary, installing the isolated target TypeScript compiler, checking generated Swift/TypeScript/MCP contract parity, executing the complete target package test suite, building staging for macOS/iOS Simulator, and rejecting tracked rewrites.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -24,9 +25,10 @@
         "EVID-CONTINUITY-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CONTRACT-CATALOG-001",
-        "EVID-TARGET-QUERY-PORT-INVENTORY-001"
+        "EVID-TARGET-QUERY-PORT-INVENTORY-001",
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The target query-port implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; exact implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485 with the new Linux-before-macOS dependency, all 316 Swift tests and both staging builds. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The target query logical-authority implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; its Linux structural test/check gate runs before the existing dependent macOS job. Exact prior implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485 with all 316 Swift tests and both staging builds; immutable CI for the new control is pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

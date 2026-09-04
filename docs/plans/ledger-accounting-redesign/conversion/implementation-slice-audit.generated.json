@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T07:38:13.853Z",
+  "generatedFromManifestSync": "2026-09-04T08:18:16.064Z",
   "totals": {
     "slices": 66,
     "claimedTargetSurfaces": 157,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 140
+    "implementationAdvancedTargetSurfaces": 142
   },
   "statusCounts": {
     "draft": 0,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 1,
-    "implemented": 0,
+    "implemented": 1,
     "verified": 64,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -893,7 +893,7 @@
       "sliceId": "target-query-logical-authority-crosswalk-control",
       "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Target Query Logical-Authority Control",
       "surfaceIds": [
         "CONFIG-5422E6C6A047",

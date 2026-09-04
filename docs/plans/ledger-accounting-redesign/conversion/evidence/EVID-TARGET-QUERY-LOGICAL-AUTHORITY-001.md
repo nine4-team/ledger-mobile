@@ -1,16 +1,17 @@
 # EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001 — Target Query Logical-Authority Crosswalk
 
 - Timestamp: 2026-09-03
-- Class: READY gate / target query logical-authority conversion control
-- Target baseline: `ee06e2a8b86a2b5e7db80c3b8628deeb34f993f6` on
+- Class: implementation checkpoint / target query logical-authority conversion control
+- Target baseline: amended immutable READY commit
+  `fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a` on
   `codex/supabase-powersync-implementation`
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; the source worktree and shipped app remain unchanged
 - Claimed target surfaces: `CONFIG-5422E6C6A047`, `CONFIG-ED6818A70D4E`
 - Slice dossier:
   `conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json`
-- Verification state: READY; executable validator, generated JSON and package/CI
-  integration do not exist yet
+- Verification state: implemented and locally verified; immutable implementation
+  CI is pending
 
 ## Selection and Scope
 
@@ -183,7 +184,7 @@ a future approved target query, source-only migration/audit use, deliberate
 retirement or an explicit decision hold. That work must not transliterate
 Firestore syntax or indexes and is not part of this READY package.
 
-## READY Verification
+## READY and Implementation Verification
 
 The exact reviewed READY content hashes are:
 
@@ -223,5 +224,64 @@ candidates, 74 files with occurrences and exactly 386 occurrences. The bounded
 READY addendum changes exactly 16 paths, including synchronized generated
 conversion audits; it creates no extra FILE surface.
 
-No hosted service or production system was contacted, and no implementation or
-cutover authority is created by this evidence.
+No hosted service or production system was contacted at READY, and READY did
+not itself authorize implementation or cutover.
+
+Amended immutable READY commit `fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a`
+passed both jobs in Actions run `33849974363`. From that exact clean baseline,
+the implementation replaced only the two authorized scaffolds, added the one
+generated JSON artifact, added the three exact root commands and the Ubuntu
+conversion-control test/check gate, and synchronized the allowed control
+metadata. The existing macOS target job remains dependent on
+`conversion-control`.
+
+The locally reviewed implementation hashes are:
+
+- generator: `50eb4ba95cc01d8f7fdd76f0b868eded68063dcf2f84860c7e64859cf613dc5b`;
+- test suite: `0679f744957c3a7972a3f09a185310487e0f34f97286ef16bad5acceb74ad96c`;
+- generated JSON: `4b2876c7627afcea6282c53f3cd17615dba6036412efec1500bd48afb411f7b2`;
+- root package: `40eb2f5e5ab8242633b7e932bc3b75e02108e2bdbe94d3a88e20339a02a1153b`;
+- workflow: `efdbeb6df6503c5a17c0d37e42f6e6ca668623650d6cec6afd6ea9b6189e3dbe`;
+  and
+- implemented dossier before synchronized audit generation:
+  `58b396f7201d87b0fd0fae2e1ee266588c1b0ca11990aa7caf71e20ab4f6b9e4`.
+
+All 23 focused Node tests pass. Generate followed by check is byte-identical;
+check proves the upstream inventory digest
+`b84b2043e20b996fdbcaf9acc8b996e7575f16f3999f51a44aabe1d08fc9a0a2`
+and all 18 signature bindings. Human inspection confirms exactly 18 sorted
+generated rows, totals of 6 mapped / 11 mapped with unresolved axes / 1
+decision blocked, one collision-checked TACCESS per TQUERY, separate mapping
+hashes, and only the two globally deferred A-003/A-004 physical planes. The
+machine validator proves only closed-schema structural truth; this row-by-row
+inspection remains the semantic review surface.
+
+Hardening review is incorporated: the control now independently re-derives the
+upstream inventory's exact generator/source root, schemas, ordering, unique
+owners/protocols/methods, joins/counts, selector category, signature hash,
+TQUERY identity, digest and totals. Review-class consistency rejects count-
+preserving swaps. All nested row-derived objects canonicalize while array order
+remains meaningful. Repository inputs, authority references and generated
+artifact paths require realpath containment and regular non-symlink files;
+parent/final symlink escapes reject. Generate uses an unpredictable exclusive
+same-directory no-follow temporary and atomic rename without deleting a
+precreated attacker path. Check remains read-only, and CLI accepts exactly one
+mode argument.
+
+`TQUERYAUTH-TEST-001` through `-007` and `-009` through `-010` pass locally.
+`TQUERYAUTH-TEST-008` remains pending until the exact implementation commit
+passes immutable CI; its separate human-review portion is recorded above.
+The final implementation differs from amended READY commit `fcfaec8397` in
+exactly 19 allowlisted paths: the two executable control leaves, one generated
+JSON, package/workflow hooks, and synchronized implementation metadata. The
+committed discoverer and current-query extractor addendum bytes are unchanged.
+Conversion sync/report/check pass at 839 recorded / 824 discovered, zero errors
+and only the three established retired-path warnings. Capability, current-query,
+residual and M0 checks pass at 395 mapped / 184 residual / 46 blockers; all 20
+query-port tests/check, target-environment isolation, generated contracts and
+TypeScript checks pass. All 316 Swift tests in 65 suites pass with warnings as
+errors, project generation is byte-repeatable, and unsigned staging builds pass
+for macOS and iOS Simulator. Exact-path review finds no Swift, registry,
+discoverer, query-extractor, query artifact, schema, RLS, Sync, provider,
+Firebase, hosted or production change. No hosted service or production system
+is contacted by this implementation.

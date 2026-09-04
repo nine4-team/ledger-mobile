@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-QUERY-LOGICAL-AUTHORITY-CROSSWALK-READY
+- Checkpoint: TARGET-QUERY-LOGICAL-AUTHORITY-CROSSWALK-IMPLEMENTED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,7 +32,7 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Prepared the complete READY-only target query logical-authority crosswalk
+- Implemented the complete target query logical-authority crosswalk
   above the verified TQUERY inventory. One reviewed JSON registry binds the
   exact inventory digest and all 18 method signature hashes, then records only
   authority references, six logical axes, proposed architecture data-domain
@@ -48,23 +48,26 @@ modifying the running Firebase application before hard cutover.
   every domain label is `proposed_architecture_dependency`. Postgres and local physical planes are
   globally deferred under proposed A-003/A-004; there are no per-row physical
   IDs, names, indexes, SQL, RLS or Sync assignments. Exactly
-  `CONFIG-5422E6C6A047` and `CONFIG-ED6818A70D4E` are new `target_mapped`
-  comment-only scaffolds. The executable JSON validator, generated artifact,
-  package/CI hooks and immutable READY run remain future work. The deliberately
-  future validator is exact structural validation only, with no free-text
-  keyword or Markdown semantic/status parsing. A bounded READY addendum makes
-  `discoverTooling()` path-exclude both logical-authority control leaves from
-  generic Firebase audit/repair discovery; contiguous `firestoreQuery` and
-  `firestoreIndex` comment sentinels in the test scaffold prove the exclusion.
-  The current-query extractor also exact-path-excludes that test fixture, so its
-  existing candidate/source totals and all 386 QUERY occurrences remain
-  unchanged/current. The changed conversion discoverer and query extractor are
-  deliberately re-acknowledged at their exact reviewed hashes
-  without changing its verified status or ownership; package/workflow and all
-  16 query owners remain unadvanced. The 386 source `QUERY-*` occurrence
+  `CONFIG-5422E6C6A047` and `CONFIG-ED6818A70D4E` advance to `implemented`.
+  From amended immutable READY commit `fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a`,
+  whose Actions run `33849974363` passed, a dependency-free JSON generator/checker
+  and 23-test adversarial suite now enforce exact structural validation, fully
+  re-derive the upstream inventory, enforce review-class consistency and exact
+  CLI arity, canonicalize nested output, reject root/symlink escapes, use
+  exclusive no-follow atomic generation, and derive
+  collision-checked TACCESS identities and mapping hashes, and emit/check one
+  deterministic generated artifact. Exact root commands and an Ubuntu gate run
+  before the dependent macOS target job. The generated 18-row diff received
+  separate human semantic review. The validator performs no free-text keyword
+  or Markdown semantic/status parsing. The package and workflow are deliberately
+  re-acknowledged at exact reviewed hashes without changing status or ownership;
+  the committed discoverer/query-extractor path exclusions preserve contiguous
+  forbidden-key tests without changing the source surface or 386-query inventories,
+  and all 16 query owners remain unadvanced. Immutable
+  implementation CI remains pending. The 386 source `QUERY-*` occurrence
   reconciliation remains a separate downstream slice. Synchronized conversion
   controls record 839 surfaces / 824 currently discovered, 395 target-mapped-or-
-  later, 184 residuals, 46 blockers, and 66 slices / 157 claimed / 140
+  later, 184 residuals, 46 blockers, and 66 slices / 157 claimed / 142
   implementation-advanced, with only the three established retired-path
   warnings. No Swift, schema, RLS, Sync, provider, Firebase, hosted, production,
   migration, release or cutover behavior advances;
@@ -3486,22 +3489,13 @@ modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-First, commit only the exact READY allowlist for
-`target-query-logical-authority-crosswalk-control`, obtain immutable READY CI,
-and review that exact commit before replacing either comment-only scaffold.
-Implementation must consume the reviewed JSON registry and generated TQUERY
-inventory, validate exact 18/18 set/digest/signature binding and the closed
-discriminated-axis schema with the dossier's exact enum/ID/reference allowlists,
-derive collision-checked TACCESS identities by the frozen domain-separated hash
-and mapping hashes from the frozen mapping separator plus recursively key-sorted
-canonical minified registry-row JSON, and emit/check one deterministic JSON
-artifact. It must perform no free-text keyword or Markdown semantic/status
-parsing; human review owns meaning and blocker placement. It may
-add only the frozen package commands and Ubuntu conversion-control gate while
-preserving the existing macOS dependency. It must not parse Swift or Markdown
-semantics, create physical index identities/SQL/RLS/Sync assignments, advance
-any query owner, or reconcile the 386 source `QUERY-*` occurrences. Human
-row-by-row semantic review remains required after generation.
+Commit only the exact implementation allowlist for
+`target-query-logical-authority-crosswalk-control`, obtain immutable
+implementation CI, and review that exact commit before promotion. Promotion is
+documentation/control-only after CI satisfies `TQUERYAUTH-TEST-008`; it must
+preserve the existing structural-only validator boundary, globally deferred
+A-003/A-004 physical planes, all 16 query-owner states and the separate later
+reconciliation of 386 source `QUERY-*` occurrences.
 
 Continue without waiting on the two M1 evidence blockers:
 
