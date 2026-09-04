@@ -1,0 +1,100 @@
+{
+  "batchId": "M0-CLIENT-POWERSYNC-SPIKE-001",
+  "title": "Target Client creation MCP vertical-spike boundary",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-CLIENT-CREATION-001",
+    "EVID-CONTRACT-CATALOG-001"
+  ],
+  "surfaces": [
+    {
+      "id": "MCPMOD-68F7991697DD",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "6b4d8e305ef28ba025cf5119f09e5a386e53df501d9e892fdb3fc0c03ad5b04b",
+      "currentBehavior": "Defines the target-only create_client tool boundary, canonical cross-runtime Client command bytes/fingerprint, scoped-user Supabase RPC adapter, strict applied/rejected result-shape validation and gated tool metadata.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": [
+        "EVID-CLIENT-CREATION-001",
+        "EVID-CONTRACT-CATALOG-001"
+      ],
+      "notes": "The tool contract is gated and exercised only against fakes or isolated local Supabase; it is not registered in a deployed target MCP server and carries no service-role credential.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": [
+          "create_client target MCP tool handler",
+          "canonical CreateClient command encoder",
+          "scoped-user Supabase Client creation RPC adapter"
+        ],
+        "securityRequirements": [
+          "Account and Principal scope come from authenticated request context rather than tool-authored fields",
+          "The adapter forwards only the user access token and public publishable key",
+          "The tool validates exact Operation, Account, fingerprint and Client identity before reporting a result"
+        ],
+        "syncRequirements": [
+          "MCP and Swift encode byte-identical client-create-v1 envelopes and fingerprints",
+          "Applied and durable rejected results are terminal; transport failures remain retryable"
+        ]
+      },
+      "migration": {
+        "rule": "Activate only with the target Supabase MCP composition; do not alter or import the Firebase MCP implementation before cutover.",
+        "reconciliation": [
+          "App and MCP fixtures must produce the same canonical envelope bytes and SHA-256 fingerprint"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm --prefix LedgerTargetMCP run check",
+          "npm --prefix LedgerTargetMCP test",
+          "npm run target:supabase:test:rpc"
+        ],
+        "acceptance": [
+          "Malformed input never calls the backend; scoped requests use no privileged credential; mismatched results fail closed; local Supabase applies exact replay once"
+        ]
+      }
+    },
+    {
+      "id": "MCPMOD-EDF53EB768EB",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "9c4c2b26dcd2d2e57ac79b728b2fecc5efa89d6b8220d0cf615dec41e6e44202",
+      "currentBehavior": "Tests canonical app/MCP Client command parity, context-owned Account/Principal scope, malformed-input refusal, strict terminal-state refusal and absence of service-role credentials.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": ["A-003", "A-004"],
+      "evidence": [
+        "EVID-CLIENT-CREATION-001",
+        "EVID-CONTRACT-CATALOG-001"
+      ],
+      "notes": "Four target-only deterministic tests; hosted Auth, deployed MCP transport and production resources remain outside scope.",
+      "target": {
+        "owner": "Client Identity",
+        "surfaces": [
+          "target MCP Client creation contract tests",
+          "cross-runtime canonical fingerprint fixture",
+          "scoped HTTP boundary fixture"
+        ],
+        "securityRequirements": [
+          "Fixtures assert Account/Principal scope is context-derived and no service-role token is sent"
+        ],
+        "syncRequirements": [
+          "The canonical fixture must remain identical to the Swift fixture and trusted Postgres handler contract"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic target-only identities and never call Firebase or hosted target resources.",
+        "reconciliation": [
+          "Every MCP result field used to report completion is checked against the exact command"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm --prefix LedgerTargetMCP test"
+        ],
+        "acceptance": [
+          "All Client creation MCP boundary and canonical parity tests pass deterministically without network access"
+        ]
+      }
+    }
+  ]
+}

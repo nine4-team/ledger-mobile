@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "tsc --noEmit -p tsconfig.json"
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test tests/*.test.ts"
   },
   "devDependencies": {
+    "@types/node": "26.4.1",
+    "tsx": "4.23.13",
     "typescript": "5.9.3"
   }
 }

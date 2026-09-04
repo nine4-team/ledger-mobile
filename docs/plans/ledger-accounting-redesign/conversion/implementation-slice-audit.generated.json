@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T13:49:53.869Z",
+  "generatedFromManifestSync": "2026-09-04T15:08:30.263Z",
   "totals": {
-    "slices": 67,
-    "claimedTargetSurfaces": 159,
+    "slices": 68,
+    "claimedTargetSurfaces": 177,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 144
   },
   "statusCounts": {
     "draft": 0,
     "ready": 0,
-    "in_progress": 1,
+    "in_progress": 2,
     "implemented": 1,
     "verified": 65,
     "rehearsed": 0,
@@ -121,6 +121,37 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-creation-operation-contracts.json"
+    },
+    {
+      "sliceId": "client-creation-supabase-powersync-vertical-spike",
+      "title": "Create and read one Client offline through Supabase, PowerSync, the target app, and target MCP",
+      "kind": "product",
+      "status": "in_progress",
+      "owner": "Client Identity",
+      "surfaceIds": [
+        "CONFIG-0C8B77A5FB08",
+        "CONFIG-428FDE11BBE4",
+        "CONFIG-5C0C92D825F3",
+        "CONFIG-63468A3CE4F2",
+        "CONFIG-7AB0A2FE74E7",
+        "CONFIG-CC390AE55FE6",
+        "CONFIG-E8340EBE4EBA",
+        "MCPMOD-68F7991697DD",
+        "MCPMOD-EDF53EB768EB",
+        "SWIFT-19D4AA7B766B",
+        "SWIFT-2ADDF7B64EA0",
+        "SWIFT-2FAE0364C908",
+        "SWIFT-548A8A928FAE",
+        "SWIFT-A9434A1623BC",
+        "SWIFT-A9F7D22095F8",
+        "SWIFT-D9F0F491C95C",
+        "SWIFT-EBCBC4925D9D",
+        "TEST-E0636D89C442"
+      ],
+      "requirementCount": 6,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-creation-supabase-powersync-vertical-spike.json"
     },
     {
       "sliceId": "client-project-directory-read-contracts",

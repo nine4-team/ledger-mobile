@@ -20,7 +20,7 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "8b1cc1ea52cfd864bebbdf7f77888c108147b205a6814838e9a7f639a9702cdd",
+      "acknowledgeSourceHash": "1ba1022347ee0d813841c613ee80501ee14274d768971c535838090689bdfe2c",
       "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, and the draft source-query reconciliation control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "status": "verified",
@@ -207,8 +207,8 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "c5c7da78e5525a46ffd77ac96e85b5fbb5d8c1ae517586470b9faa978be34010",
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, lifecycle and exact Git diff authority, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation.",
+      "acknowledgeSourceHash": "07a6acb805099b1a01c6ecbf68c57134f5b5c34c05d5e7909da286c159227d32",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step while every verification step remains fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -244,12 +244,12 @@
       "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "Implemented locally from the exact immutable READY base and frozen 30-path allowlist; independent adversarial implementation review returned GO after every finding received regression coverage. Immutable implementation CI remains pending. No runtime, physical/provider, hosted, production, migration, retirement or cutover authority is created."
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check now validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. No runtime, physical/provider, hosted, production, migration, retirement or cutover authority is created."
     },
     {
       "id": "CONFIG-40F01696B8A6",
-      "acknowledgeSourceHash": "68f50cf91e8c74b1db965edb6609b17841a84606d882b41417f261c9673a4fee",
-      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, exact lifecycle/Git/package/workflow checks, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
+      "acknowledgeSourceHash": "efa5ffb48bf7240bedf79eb30e25d5decf6c16d98ab13119c254059c1909a169",
+      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, historical checkpoint-diff and fail-closed workflow checks, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -284,7 +284,7 @@
       "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "Implemented locally from the immutable READY base; the 23-test suite and independent adversarial implementation review pass after every finding received regression coverage. Immutable implementation CI remains pending. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority."
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. Regression cases prove that only the exact always-run cleanup step is conditional; verification steps still cannot skip or tolerate failures. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority."
     }
   ]
 }

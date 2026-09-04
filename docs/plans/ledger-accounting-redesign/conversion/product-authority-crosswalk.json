@@ -97,6 +97,39 @@
         { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
       ]
     },
+    "M0-CLIENT-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The isolated Client provider slice must preserve stable Client identity and shared operation semantics while proving Postgres authorization, encrypted offline durability, Sync upload and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/specs/authentication-offline-access.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
+    "M0-CLIENT-POWERSYNC-SPIKE-001": {
+      "scope": "product",
+      "rationale": "The isolated Client creation provider slice must preserve stable Client identity and shared operation semantics while proving Postgres authorization, offline durability, Sync upload and app/MCP parity without authorizing production.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/specs/financial-access-controls.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-CUTOVER-CONTROL-001": {
       "scope": "technical_control",
       "rationale": "The final source freeze, late-writer recovery, and hard cutover are migration controls; they must preserve approved target behavior without implementing it in Firebase.",

@@ -1,0 +1,188 @@
+{
+  "batchId": "M0-CLIENT-POWERSYNC-PROVIDER-001",
+  "title": "Target Client creation Supabase and PowerSync provider slice",
+  "reviewedAt": "2026-09-04",
+  "evidence": ["EVID-CLIENT-CREATION-001", "EVID-TARGET-ENVIRONMENT-001"],
+  "surfaces": [
+    {
+      "id": "CONFIG-0C8B77A5FB08",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "daeb08fbd4fb56b11cf93bfeff2ba3b6a7570318aa9e070e3a97fb589a99ad23",
+      "currentBehavior": "Locks the isolated Swift target to reviewed PowerSync 1.16.1, PowerSync SQLite core 0.5.3 and encrypted CSQLite 3.51.2 dependency revisions.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"],
+      "notes": "Target-only dependency lock; it does not alter the Firebase application package graph.",
+      "target": {"owner": "Target Provider Runtime", "surfaces": ["Exact PowerSync Swift dependency lock", "Encrypted SQLite dependency lock"], "securityRequirements": ["Provider versions are exact and CSQLite encryption support is enabled"], "syncRequirements": ["Any dependency change reruns offline durability, upload and both staging-build gates"]},
+      "migration": {"rule": "Use only in the isolated target package until explicit target release authorization.", "reconciliation": ["Package resolution matches the exact reviewed direct versions"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter LedgerPowerSync", "npm run target:staging:build:macos", "npm run target:staging:build:ios"], "acceptance": ["The provider target resolves reproducibly and both target destinations compile"]}
+    },
+    {
+      "id": "CONFIG-428FDE11BBE4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "8abbacbcc4f70addde30fbc87af70c561108a657be02117c6dc35745f1538fc2",
+      "currentBehavior": "Defines edition-3 target Sync Streams for the authenticated Principal, active memberships and Accounts, Account-scoped Clients, and immutable operation results.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"],
+      "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
+      "target": {"owner": "Client Identity", "surfaces": ["Client creation Sync Stream", "Account bootstrap Sync Stream", "Operation-result Sync Stream"], "securityRequirements": ["Every stream derives tenant scope from auth.user_id() through active membership"], "syncRequirements": ["Client identity and terminal operation evidence synchronize together without trusting client-authored scope"]},
+      "migration": {"rule": "Deploy only to an isolated target environment after the vertical-spike gate authorizes it.", "reconciliation": ["Cross-account fixtures yield no Client or operation-result rows"]},
+      "verification": {"tests": ["Supabase/PowerSync isolated integration rehearsal"], "acceptance": ["A real Sync Stream upload/readback and cross-tenant denial pass before this surface advances"]}
+    },
+    {
+      "id": "CONFIG-5C0C92D825F3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "dfabd79705399b18f7b2a3c68d339806443e963c2422e21c29381d7836345767",
+      "currentBehavior": "Creates the isolated spike Principal, Account, membership, Client and immutable operation-result schema; explicit grants/RLS; private membership helpers; and one idempotent trusted Client creation handler behind a public invoker RPC. Malformed or out-of-range envelope timestamps are durably rejected rather than escaping as cast failures.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"],
+      "notes": "All relations are spike_-prefixed and exist only in local isolated Supabase at this checkpoint.",
+      "target": {"owner": "Client Identity", "surfaces": ["Client identity Postgres schema", "Client creation command handler", "Client and operation-result RLS"], "securityRequirements": ["Direct writes are revoked; authenticated Principal and client-management membership are re-derived server-side; cross-account rows are hidden"], "syncRequirements": ["Handler returns one immutable applied or durable rejected result bound to the exact operation fingerprint"]},
+      "migration": {"rule": "This spike schema is not final migration DDL and imports no Firebase data.", "reconciliation": ["Exact replay creates one Client and one operation result; changed replay cannot rebind"]},
+      "verification": {"tests": ["supabase/tests/client_creation_vertical_slice.test.sql", "scripts/test-local-client-creation-rpc.mjs"], "acceptance": ["Local database and Data API tests prove authorization, isolation, immutability and replay"]}
+    },
+    {
+      "id": "CONFIG-63468A3CE4F2",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "30cd13726ed0709ad8827e721710524a3f2b681de9b068d49ccc893163af3b91",
+      "currentBehavior": "Configures one isolated local Supabase project identity for repeatable target schema and API testing.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-TARGET-ENVIRONMENT-001"],
+      "notes": "Contains no hosted project reference or production credential.",
+      "target": {"owner": "Target Provider Runtime", "surfaces": ["Local Supabase CLI environment"], "securityRequirements": ["Local environment is distinct from every source and hosted target environment"], "syncRequirements": ["Local reset reproducibly applies the complete spike migration and seed"]},
+      "migration": {"rule": "Use for local tests only; never link or deploy from this configuration implicitly.", "reconciliation": ["Local reset starts from empty disposable state"]},
+      "verification": {"tests": ["npx --yes supabase@2.116.0 db reset --local --yes"], "acceptance": ["The isolated local database resets without contacting hosted resources"]}
+    },
+    {
+      "id": "CONFIG-7AB0A2FE74E7",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "2d944b141a616779322ad771f782cf9e32981eaa8433561c948c2b45ddf3a342",
+      "currentBehavior": "Runs 19 pgTAP assertions covering Client creation, exact replay, changed replay, same-name identities, durable validation rejection including timestamp overflow, direct-write denial, capability denial, timestamp binding and cross-account isolation.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Synthetic local database test only.",
+      "target": {"owner": "Client Identity", "surfaces": ["Client creation Postgres test matrix"], "securityRequirements": ["Tests execute as authenticated synthetic users and assert RLS/non-enumerating denial"], "syncRequirements": ["Replay and terminal-result behavior match the upload connector contract"]},
+      "migration": {"rule": "Use no production-derived rows or credentials.", "reconciliation": ["Every accepted operation has exactly one Client and immutable result"]},
+      "verification": {"tests": ["npm run target:supabase:test:db"], "acceptance": ["All 18 pgTAP assertions pass from a clean reset"]}
+    },
+    {
+      "id": "CONFIG-CC390AE55FE6",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d4a19f5ae6aa9afe46aafd4c6b482c84e602c3b9e2cceadbda09c2a6f0fec537",
+      "currentBehavior": "Seeds three synthetic auth users, Principals, two Accounts, and owner/restricted/other-account memberships for local authorization tests.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Synthetic identities only.",
+      "target": {"owner": "Client Identity", "surfaces": ["Local authorization fixtures"], "securityRequirements": ["Fixtures separate owner, restricted member and other-account access"], "syncRequirements": ["Stable fixture IDs support repeatable local API and RLS verification"]},
+      "migration": {"rule": "Never deploy these synthetic identities or treat them as migration input.", "reconciliation": ["Seed rows satisfy every explicit FK and membership precondition"]},
+      "verification": {"tests": ["npm run target:supabase:test:db", "npm run target:supabase:test:rpc"], "acceptance": ["All positive and negative identities exercise the intended branch"]}
+    },
+    {
+      "id": "CONFIG-E8340EBE4EBA",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d0c7cb62fba48ec3c66d1a5cd79b6ead069868e940e8fcfaf05a99528ff50c5c",
+      "currentBehavior": "Calls the local Supabase Data API with short-lived synthetic user JWTs and verifies apply, exact replay, scoped readback, cross-account hiding, capability denial and direct-write denial.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Reads local CLI status without printing local keys and contacts no hosted endpoint.",
+      "target": {"owner": "Client Identity", "surfaces": ["Local Client creation Data API integration test"], "securityRequirements": ["Only local synthetic user tokens and the local publishable key are used; no service role is sent"], "syncRequirements": ["The REST representation matches the typed app/MCP server-result contract"]},
+      "migration": {"rule": "Run only while the isolated local Supabase stack is active.", "reconciliation": ["API readback observes exactly one Client after exact replay"]},
+      "verification": {"tests": ["npm run target:supabase:test:rpc"], "acceptance": ["Local REST apply/replay/RLS/direct-write checks all pass"]}
+    },
+    {
+      "id": "SWIFT-19D4AA7B766B",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "b257e7b261c0d9ef9e21fbd27dfa994f27e75e938573943a1a4a0781529f68a8",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, insert-only Client command, local-only operation evidence and immutable server results.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Target provider layer only.",
+      "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync schema"], "securityRequirements": ["Command payload is insert-only and local operation state is never synchronized as authority"], "syncRequirements": ["Local columns align with streamed server rows while pending_operation_id remains local optimism evidence"]},
+      "migration": {"rule": "Schema evolution remains isolated until compatibility testing closes A-004.", "reconciliation": ["Schema validates before database open"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["PowerSync schema validation succeeds and exact CRUD transaction shape is asserted"]}
+    },
+    {
+      "id": "SWIFT-2ADDF7B64EA0",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "848e66f904ee082f76a3d2bb199f98b058f942a2d59c215a52f657214334e810",
+      "currentBehavior": "Implements Client core-details observation from local PowerSync rows with explicit waiting, partial, stale and ready truth; pending optimistic rows can never be labeled authoritative.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "No direct network or backend SDK leaks through the core query port.",
+      "target": {"owner": "Client Identity", "surfaces": ["PowerSync Client core-details query adapter"], "securityRequirements": ["Queries bind exact Account and Client identifiers"], "syncRequirements": ["Pending local operation evidence overrides earlier has-synced state and keeps the view partial"]},
+      "migration": {"rule": "Use target local rows only; do not read Firebase cache through this adapter.", "reconciliation": ["Server-synchronized rows clear local optimism and may become ready"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.optimisticReadinessIsHonest", "LedgerPowerSyncVerticalSliceTests.pendingRowRemainsPartialAfterEarlierSync"], "acceptance": ["Optimistic rows render immediately but never as authoritative"]}
+    },
+    {
+      "id": "SWIFT-2FAE0364C908",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "ed87781c0a3d71f5edc4218867881852ffcdf15261c417e533f1d4116a4b7423",
+      "currentBehavior": "Accepts one CreateClient command offline in one local transaction that persists operation evidence, an optimistic Client row and an insert-only upload command; exact replay returns the same receipt and changed replay is refused.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Physical encrypted local persistence is tested; server authority remains separate.",
+      "target": {"owner": "Client Identity", "surfaces": ["Offline Client creation operation adapter"], "securityRequirements": ["Caller cannot omit Account, actor, contract or fingerprint binding from the typed command"], "syncRequirements": ["The Client projection and command enter one two-row PowerSync CRUD transaction"]},
+      "migration": {"rule": "Create no Firebase write adapter and no dual-write path.", "reconciliation": ["Restart restores exactly one Client and one operation for an accepted command"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload", "LedgerPowerSyncVerticalSliceTests.replayCannotChangePayload"], "acceptance": ["Offline acceptance is atomic, durable and idempotent"]}
+    },
+    {
+      "id": "SWIFT-548A8A928FAE",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "4dcd3c33910b6f5a948fa65c4a203b06e7eb04a9404b9e93031aec45493ee4ac",
+      "currentBehavior": "Composes the encrypted per-Principal/Account local Client runtime and exposes create, watch, pending-upload count, cipher inspection and explicit close/delete behavior.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "The local staging shell opens no hosted connection.",
+      "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
+      "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}
+    },
+    {
+      "id": "SWIFT-A9434A1623BC",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "81fe88a8c1c5608ef6dd8a6084f813cd9a83c247c71ad423b631876689528f68",
+      "currentBehavior": "Validates an absolute SQLite path and a 32-byte lowercase hexadecimal key before opening PowerSync with SQLCipher PRAGMA key configuration.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Encryption key bytes are never logged or stored in the database path.",
+      "target": {"owner": "Target Provider Runtime", "surfaces": ["Encrypted PowerSync database factory"], "securityRequirements": ["Relative/non-database paths and malformed key material fail before open"], "syncRequirements": ["Every local target database opens through the same encrypted factory"]},
+      "migration": {"rule": "Do not point this factory at Firebase caches or source application data.", "reconciliation": ["Raw database bytes do not contain the stored Client display name"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.schemaAndDatabaseInputValidation", "LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload"], "acceptance": ["Invalid inputs fail and persisted content is encrypted"]}
+    },
+    {
+      "id": "SWIFT-A9F7D22095F8",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0b08830d01d09a02d6db19d210d86528247ecc8d8ce6ac94f6eff7cd5b8c0907",
+      "currentBehavior": "Validates the exact optimistic Client plus insert-only command transaction, calls the trusted Client handler, drains applied or durably rejected operations, and updates local-only terminal state.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Credentials and command applier are injected; no production endpoint is embedded.",
+      "target": {"owner": "Client Identity", "surfaces": ["PowerSync upload connector", "Client command transaction validator"], "securityRequirements": ["Unexpected row count/table/op/data or optimistic-command mismatch fails closed"], "syncRequirements": ["Queue completion occurs only after a matching terminal server result; permanent rejection cannot poison later uploads"]},
+      "migration": {"rule": "Connect only inside an authorized isolated target environment.", "reconciliation": ["One accepted local transaction produces one handler call and one terminal local operation state"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload", "LedgerPowerSyncVerticalSliceTests.durableRejectionDoesNotPoisonQueue"], "acceptance": ["Applied and rejected terminal results drain once; malformed shape does not"]}
+    },
+    {
+      "id": "SWIFT-D9F0F491C95C",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "2bc574009ea52d64053c9cd58888395bab8de1bdfa67c9f002f65067f5b2bd80",
+      "currentBehavior": "Loads or creates a random 256-bit local database key in a this-device-only Keychain item scoped by service and Principal/Account namespace.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Logout disposition remains governed by the separate pending-work policy.",
+      "target": {"owner": "Target Provider Runtime", "surfaces": ["PowerSync database Keychain"], "securityRequirements": ["Keys use secure randomness and WhenUnlockedThisDeviceOnly accessibility"], "syncRequirements": ["Stable namespace reuses the key; different Principal/Account namespaces cannot share it"]},
+      "migration": {"rule": "Generate target keys locally; never import Firebase credentials or cache keys.", "reconciliation": ["The key is valid 32-byte lowercase hex when supplied to the database factory"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Database encryption is active and restart uses the same scoped key"]}
+    },
+    {
+      "id": "SWIFT-EBCBC4925D9D",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "1c8bb673a198a4f0b6cc53c1abe9a756c7c67353b57e0b742ae9ae3e35389851",
+      "currentBehavior": "Posts the typed Client creation command to the Supabase RPC using a nonempty injected user access token and publishable key, preserves millisecond timestamps, decodes the terminal result and validates exact Operation, Account, fingerprint and Client identity.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "No service-role or embedded hosted credential exists.",
+      "target": {"owner": "Client Identity", "surfaces": ["Swift Supabase Client creation RPC adapter"], "securityRequirements": ["Only an injected scoped user token and public key are sent"], "syncRequirements": ["Response identity/fingerprint mismatch fails before PowerSync queue completion"]},
+      "migration": {"rule": "Use only with a validated target environment and authenticated target session.", "reconciliation": ["Swift and MCP call the same RPC argument/result contract"]},
+      "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.swiftSupabaseRPCBoundary", "scripts/test-local-client-creation-rpc.mjs"], "acceptance": ["HTTP request and typed response boundaries match the trusted local handler"]}
+    },
+    {
+      "id": "TEST-E0636D89C442",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "c4cbfb290f38f8d37efca1ab700a9648ea9ba4f0b39a2e9dc842f146a88e2043",
+      "currentBehavior": "Runs eight target-only PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, permanent rejection, readiness honesty, OperationID rebinding refusal, cross-runtime fingerprint parity, millisecond timestamp preservation, credential refusal and Swift RPC boundaries.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
+      "evidence": ["EVID-CLIENT-CREATION-001"], "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; no hosted provider access.",
+      "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync vertical-slice test suite"], "securityRequirements": ["Tests assert encryption, scoped credentials and malformed/rebound refusal"], "syncRequirements": ["Tests assert exact CRUD transaction, terminal drain and non-authoritative optimism"]},
+      "migration": {"rule": "Use synthetic target-only commands and delete disposable databases after each test.", "reconciliation": ["Swift canonical bytes/hash match the target MCP fixture exactly"]},
+      "verification": {"tests": ["npm run target:powersync:test"], "acceptance": ["All eight isolated PowerSync tests pass"]}
+    }
+  ]
+}

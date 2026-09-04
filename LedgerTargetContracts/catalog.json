@@ -51,6 +51,10 @@
       "description": "Require a validated target build environment before opening any local infrastructure."
     },
     {
+      "id": "client_manager",
+      "description": "Derive the Principal from authentication and require active membership with Client-management capability in the requested Account."
+    },
+    {
       "id": "local_principal_account",
       "description": "Require the active local Principal and Account namespace; this is local scope, not fresh server authorization."
     },
@@ -75,6 +79,10 @@
     {
       "id": "platform_environment_validation",
       "description": "Record stable environment validation outcome codes without rejected resource values."
+    },
+    {
+      "id": "client_creation_write",
+      "description": "Record bounded Client creation outcomes and contract version without Client names, tokens, or command payloads."
     }
   ],
   "errors": [
@@ -107,6 +115,56 @@
       "code": "operation_transition_invalid",
       "category": "invariant",
       "retryDisposition": "never"
+    },
+    {
+      "code": "authentication_required",
+      "category": "authentication",
+      "retryDisposition": "afterReauthentication"
+    },
+    {
+      "code": "client_creation_operation_id_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_creation_client_id_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_directory_client_name_invalid",
+      "category": "validation",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "client_creation_created_at_invalid",
+      "category": "validation",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_creation_command_encoding_invalid",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_creation_identity_conflict",
+      "category": "conflict",
+      "retryDisposition": "afterUserCorrection"
+    },
+    {
+      "code": "client_creation_fingerprint_mismatch",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_creation_server_result_mismatch",
+      "category": "invariant",
+      "retryDisposition": "never"
+    },
+    {
+      "code": "client_creation_request_rejected",
+      "category": "transientInfrastructure",
+      "retryDisposition": "automatic"
     }
   ],
   "capabilities": [
@@ -149,6 +207,14 @@
       "authorizationPolicy": "local_principal_account",
       "telemetryClass": "local_sync_health_read",
       "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift"
+    },
+    {
+      "id": "client_management",
+      "version": "1",
+      "availability": "gated",
+      "authorizationPolicy": "client_manager",
+      "telemetryClass": "client_creation_write",
+      "testOwner": "LedgerTargetMCP/tests/clientCreation.test.ts"
     }
   ],
   "contracts": [
@@ -222,6 +288,32 @@
       "errorCodes": ["account_not_authorized", "client_update_required", "contract_unsupported"],
       "telemetryClass": "operation_status_read",
       "testOwner": "LedgeriOS/LedgerTargetCoreTests/OperationLifecycleContractTests.swift",
+      "deprecation": null
+    },
+    {
+      "id": "create_client",
+      "kind": "operation",
+      "version": "1",
+      "capability": "client_management",
+      "authorizationPolicy": "client_manager",
+      "resultContract": "ClientCreationRPCResult",
+      "errorCodes": [
+        "account_not_authorized",
+        "authentication_required",
+        "client_update_required",
+        "contract_unsupported",
+        "client_creation_operation_id_invalid",
+        "client_creation_client_id_invalid",
+        "client_directory_client_name_invalid",
+        "client_creation_created_at_invalid",
+        "client_creation_command_encoding_invalid",
+        "client_creation_identity_conflict",
+        "client_creation_fingerprint_mismatch",
+        "client_creation_server_result_mismatch",
+        "client_creation_request_rejected"
+      ],
+      "telemetryClass": "client_creation_write",
+      "testOwner": "LedgerTargetMCP/tests/clientCreation.test.ts",
       "deprecation": null
     }
   ],

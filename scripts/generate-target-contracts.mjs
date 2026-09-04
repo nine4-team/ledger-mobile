@@ -90,7 +90,7 @@ function requireTestOwner(value, label) {
   if (
     path.isAbsolute(value) ||
     value.includes("..") ||
-    !/^(LedgeriOS|scripts)\/[A-Za-z0-9_./-]+$/.test(value)
+    !/^(LedgeriOS|LedgerTargetMCP|scripts)\/[A-Za-z0-9_./-]+$/.test(value)
   ) {
     fail(`${label} must be a bounded repository test/script path`);
   }

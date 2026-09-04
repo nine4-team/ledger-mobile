@@ -16,8 +16,8 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5585b642c3e6c74c825a84c5ed1b0eb189ece8b6be9a7f2b19b14fd50e8bcc5a",
-      "currentBehavior": "Runs conversion traceability, target query-port inventory, target query logical-authority, and source-query reconciliation test/check controls on Linux from full Git history, then gates a macOS job on that success before validating the isolated target boundary, contracts, complete target package tests and macOS/iOS Simulator staging builds, with clean-diff enforcement in both jobs.",
+      "acknowledgeSourceHash": "786b2146c88addcfb3f95bf8c37aabb029e511023450194e276c173850647d78",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client schema/RLS/RPC on Ubuntu; and gates a macOS job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -29,18 +29,19 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. Source-query reconciliation re-acknowledges the exact workflow hash while preserving target_mapped status and ownership; its Linux adversarial test/read-only check runs after the existing target-query authority and conversion-ledger checks and before the dependent Swift job, with fetch-depth 0 for exact baseline-diff evidence. Immutable implementation CI remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client provider slice; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
           "conversion-control CI job",
-          "isolated target-environment CI job"
+          "isolated target-environment CI job",
+          "local Supabase Client-slice CI job"
         ],
         "securityRequirements": [
           "The target job uses no repository secret, production credential, signing identity, deployment step, or hosted environment"
         ],
         "syncRequirements": [
-          "CI compiles the unprovisioned descriptor only and opens no PowerSync client or local target database"
+          "CI may open only disposable local Supabase and encrypted local PowerSync databases; it opens no hosted or production service"
         ]
       },
       "migration": {
@@ -54,15 +55,15 @@
           "GitHub Actions Isolated target environment job"
         ],
         "acceptance": [
-          "Boundary check, generated contract parity/TypeScript compilation, target package tests, macOS build, iOS Simulator build, and clean-diff check all pass on the hosted runner"
+          "Boundary check, generated contract parity, target MCP/Swift tests, local Supabase pgTAP/Data API tests, macOS build, iOS Simulator build, and clean-diff checks all pass on hosted runners"
         ]
       }
     },
     {
       "id": "CONFIG-031396750B85",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e24ba371722c7c53ee63b9fa9dc7e4c6581c2eb6b53650d13c125cc4189abc80",
-      "currentBehavior": "Defines standalone LedgerTargetCore library/tests plus separately exported LedgerTargetMigrationCore, LedgerTargetTestSupport and LedgerTargetComposition library/test targets that each depend inward only on the provider-free core; the package has no external dependencies and the staging app still links only LedgerTargetCore.",
+      "acknowledgeSourceHash": "dade86ebb76053a86801818138c4b31e2a831d1abc22ca5037098b0cced18d13",
+      "currentBehavior": "Defines the provider-free target libraries plus an isolated LedgerTargetPowerSync provider product and focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -74,7 +75,7 @@
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
         "EVID-TARGET-COMPOSITION-001"
       ],
-      "notes": "Target package graph remains claimed by target-environment-isolation. Migration integrity, deterministic reference test support and validated composition compile/test as separate library products but are intentionally absent from both application Xcode projects.",
+      "notes": "Target package graph remains claimed by target-environment-isolation. The new provider target is an isolated local vertical spike and is absent from the Firebase application project; it is not production provisioning or migration authority.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
@@ -83,15 +84,16 @@
           "LedgerTargetMigrationCore separate tooling product and test target",
           "LedgerTargetTestSupport separate reference-adapter product and self-test target",
           "LedgerTargetComposition provider-free product and self-test target",
-          "future target application dependency boundary"
+          "isolated LedgerTargetPowerSync provider product and focused test target",
+          "target staging application provider boundary"
         ],
         "securityRequirements": [
-          "The foundation package has no vendor dependency and cannot acquire credentials or open infrastructure",
+          "Provider-free foundation, migration, test-support and composition products remain free of provider dependencies",
           "The current Firebase app project does not compile or link target-only foundation paths",
           "Neither application project compiles or links LedgerTargetMigrationCore, LedgerTargetTestSupport or LedgerTargetComposition"
         ],
         "syncRequirements": [
-          "PowerSync remains a descriptor behind validated target contracts until the separately gated adapter is introduced"
+          "PowerSync is confined to the isolated target provider target and uses an encrypted local database plus a typed upload connector"
         ]
       },
       "migration": {
@@ -106,15 +108,15 @@
           "npm run target:environment:test"
         ],
         "acceptance": [
-          "The target contracts compile and test without resolving or linking Firebase, Supabase, PowerSync, or Google Sign-In"
+          "Provider-free target contracts remain isolated while the dedicated provider target compiles and tests with exact reviewed dependencies"
         ]
       }
     },
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "ac16a48c10d96de468d70f0ca590a65a4393abe4f03eebc38900aa1cd8ac1050",
-      "currentBehavior": "Fails closed unless LedgerTargetCore remains dependency-free; LedgerTargetMigrationCore, LedgerTargetTestSupport and LedgerTargetComposition each depend only on that core; every test target has only its reviewed edges; all target/tooling files contain no provider SDK imports; neither application project links migration, test-support or composition tooling; and the source Firebase Xcode project references no target-only path.",
+      "acknowledgeSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
+      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -131,7 +133,7 @@
         "owner": "Environment and Composition Control",
         "surfaces": [
           "target environment build-graph guard",
-          "provider import guard",
+          "provider import and exact-version guard",
           "migration-tooling application-link guard",
           "test-support application-link guard",
           "premature composition application-link guard",
@@ -141,7 +143,7 @@
           "The check reports stable categories and repository paths only, never credentials or runtime secrets"
         ],
         "syncRequirements": [
-          "A PowerSync SDK dependency is forbidden from the pure target foundation and will be admitted only in the later environment-scoped adapter target"
+          "PowerSync is forbidden from pure target layers and admitted only in the environment-scoped LedgerTargetPowerSync target"
         ]
       },
       "migration": {
@@ -163,7 +165,7 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target and one local LedgerTargetCore package-product dependency.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -177,19 +179,20 @@
         "owner": "Environment and Composition Control",
         "surfaces": [
           "LedgerTargetStaging iOS/macOS application target",
-          "local LedgerTargetCore product edge"
+          "local LedgerTargetCore product edge",
+          "isolated LedgerTargetPowerSync product edge"
         ],
         "securityRequirements": [
-          "The project contains no Firebase, Google Sign-In, remote package, credential, or production target dependency"
+          "The project contains no Firebase, Google Sign-In, embedded credential, or production target dependency"
         ],
         "syncRequirements": [
-          "No Sync SDK is linked until the environment-scoped PowerSync adapter slice is separately ready"
+          "The staging shell links only the reviewed environment-scoped PowerSync provider target"
         ]
       },
       "migration": {
         "rule": "Generate and build the target app independently; import no source app target or source provider configuration.",
         "reconciliation": [
-          "Regeneration is byte-stable and macOS/iOS Simulator builds use only the local target core"
+          "Regeneration is byte-stable and macOS/iOS Simulator builds use only the reviewed target core and provider products"
         ]
       },
       "verification": {
@@ -247,7 +250,7 @@
     {
       "id": "CONFIG-77D38BB6819B",
       "acknowledgeCurrentSource": true,
-      "currentBehavior": "Declares a reproducible multi-destination LedgerTargetStaging application project with fixed staging identity, generated Info.plist, no signing authority, and a local LedgerTargetCore dependency.",
+      "currentBehavior": "Declares a reproducible multi-destination LedgerTargetStaging application project with fixed staging identity, generated Info.plist, no signing authority, and local LedgerTargetCore plus LedgerTargetPowerSync dependencies.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -268,7 +271,7 @@
           "Signing is disabled for this bootstrap shell and no secret or hosted endpoint appears in the project specification"
         ],
         "syncRequirements": [
-          "The only dependency is the provider-free local target core"
+          "The only provider dependency is the isolated LedgerTargetPowerSync product; the Firebase source project remains separate"
         ]
       },
       "migration": {
@@ -290,8 +293,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e9f20c5dae7c702ac8d5c85581b8e5c093b87e7134eff6129bebf35714041aff",
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging bootstrap shell, validates a fixed unprovisioned manifest before creating pure dependencies, and permanently displays a red STAGING / NO HOSTED SERVICES banner.",
+      "acknowledgeSourceHash": "6005aab3c912c94c30d20045fde931b66e391092338734a6c2a13438cc33324d",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, validates a fixed unprovisioned manifest, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client creation and local readback without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -300,7 +303,7 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001"
       ],
-      "notes": "This is an intentionally non-networked bootstrap shell, not Supabase/PowerSync provisioning or production migration authority.",
+      "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
@@ -313,7 +316,7 @@
           "The permanent banner and distinct bundle/display name cannot be changed by user defaults or process environment"
         ],
         "syncRequirements": [
-          "The shell constructs a descriptor only and cannot open PowerSync or local state"
+          "The shell may open only the isolated encrypted local PowerSync database and cannot connect to hosted services without later explicit provisioning"
         ]
       },
       "migration": {
@@ -335,8 +338,8 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "ac16a48c10d96de468d70f0ca590a65a4393abe4f03eebc38900aa1cd8ac1050",
-      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers and provider imports, enforces separate migration/test-support/composition dependency graphs, and refuses every tooling product in both application projects.",
+      "acknowledgeSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
+      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, confines provider imports to LedgerTargetPowerSync, enforces exact reviewed dependency versions, and refuses target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -2811,22 +2814,22 @@
     {
       "id": "CONFIG-1BF5CA7701CD",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "fe94cdaffa13aee28efd457505ae074789fa7019b9c2faca260e8fb459769ae1",
-      "currentBehavior": "Pins the isolated target MCP contract compiler to TypeScript 5.9.3 with no runtime dependency.",
+      "acknowledgeSourceHash": "d6ede6dd580789955a2315eea195e0476c2adf188ea267b22b3fa4b78899fac6",
+      "currentBehavior": "Pins TypeScript 5.9.3, tsx 4.23.13, and Node type declarations 26.4.1 for the isolated target MCP compiler and test runner; the package has no production dependency.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Target-only compiler lock; it is not imported by the current Firebase MCP package or target runtime.",
+      "notes": "Target-only compiler/test lock; it is not imported by the current Firebase MCP package or iOS/macOS runtime.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Target MCP contract compiler lock"],
-        "securityRequirements": ["The lock contains no runtime or provider dependency and install runs with lifecycle scripts disabled"],
+        "securityRequirements": ["The lock contains development-only compiler/test dependencies, no Supabase service-role package or secret, and install runs with lifecycle scripts disabled"],
         "syncRequirements": ["Compiler version changes require regenerated projection parity and clean-diff verification"]
       },
       "migration": {
         "rule": "Migrate no source package dependency; retain current MCP lock independently until source retirement.",
-        "reconciliation": ["The target lock resolves exactly the reviewed compiler version and zero runtime packages"]
+        "reconciliation": ["The target lock resolves exactly the reviewed development dependency versions and zero production packages"]
       },
       "verification": {
         "tests": ["npm --prefix LedgerTargetMCP ci --ignore-scripts", "npm --prefix LedgerTargetMCP run check"],
@@ -2836,47 +2839,47 @@
     {
       "id": "CONFIG-5209F00EB920",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "0cff14a23efaeb3c47e96d4cfecdd0a01f3902256fde9fc001ba446e1d7dcf47",
-      "currentBehavior": "Defines the private target MCP contracts package and its compile-only check.",
+      "acknowledgeSourceHash": "b9dc0c85ef87659c09765624a7d8e7b665ea53020c4c7f0ed451bd58c9505acb",
+      "currentBehavior": "Defines the private target MCP package, strict compile check, and Node test command for the gated Client-create boundary.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Separate target package; no current MCP server entrypoint, Firebase Admin dependency, transport, credential or deployment script is present.",
+      "notes": "Separate target package; it contains a gated Client-create handler boundary and tests but no active server entrypoint, Firebase Admin dependency, service credential, or deployment script.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
-        "surfaces": ["Target MCP contract package", "TypeScript projection compile command"],
-        "securityRequirements": ["Package is private, has no runtime dependencies and executes no install script"],
+        "surfaces": ["Target MCP contract package", "TypeScript projection compile command", "Gated target MCP unit-test command"],
+        "securityRequirements": ["Package is private, has no production dependencies, executes no install script, and its provider call requires a user token plus publishable key"],
         "syncRequirements": ["Generated projection version/hash must match the app and MCP resource projections"]
       },
       "migration": {
         "rule": "Create an isolated target package; do not alter or import the current Firebase MCP package.",
-        "reconciliation": ["Dependency audit shows only the pinned TypeScript development compiler"]
+        "reconciliation": ["Dependency audit shows only the pinned compiler, test runner and Node declarations as development dependencies"]
       },
       "verification": {
-        "tests": ["npm --prefix LedgerTargetMCP run check"],
-        "acceptance": ["Generated target contracts compile under strict TypeScript settings"]
+        "tests": ["npm --prefix LedgerTargetMCP run check", "npm --prefix LedgerTargetMCP test"],
+        "acceptance": ["Generated target contracts and the gated Client-create boundary compile and its focused tests pass"]
       }
     },
     {
       "id": "CONFIG-A02A8D8114A1",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "632da0d176ecc9ff929f402c34e6893dcf465110c8ae56245d1c2c49ddf07d4b",
-      "currentBehavior": "Applies strict no-emit ES2022 TypeScript compilation only to generated target contract projections.",
+      "acknowledgeSourceHash": "af4b3b7b5fadc3eb6e28cfbda0773abd7a0720ba273d992e7faa3dec668c94b7",
+      "currentBehavior": "Applies strict no-emit ES2022 TypeScript compilation to generated target contract projections plus reviewed target MCP source and tests.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Target-only compile configuration; it includes no source MCP runtime path.",
+      "notes": "Target-only compile configuration; it includes no Firebase MCP runtime path.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Strict target contract TypeScript compiler configuration"],
-        "securityRequirements": ["Only generated target contract paths are compiled and no emitted JavaScript is produced"],
+        "securityRequirements": ["Only generated target projections and explicit target MCP source/test paths are compiled; no emitted JavaScript is produced"],
         "syncRequirements": ["Projection syntax/parity failure blocks CI before app/MCP build or deployment"]
       },
       "migration": {
         "rule": "Migrate no current MCP compiler option; target contract compilation remains separate.",
-        "reconciliation": ["Compiler include set resolves only the generated target TypeScript file"]
+        "reconciliation": ["Compiler include set resolves only generated target projections and reviewed target MCP source/tests"]
       },
       "verification": {
         "tests": ["npm --prefix LedgerTargetMCP run check"],
@@ -2886,13 +2889,13 @@
     {
       "id": "CONFIG-B2A2BF619303",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "73007b4e1843bdf8775e66a42db169ff9b57aa0a224277b1542a54b1e0cae138",
+      "acknowledgeSourceHash": "534ee67ba1b0f4cc6f51db9fd097a06ec31ba08379081045ac1f3b414c521fa3",
       "currentBehavior": "Defines the canonical target-only version, enum, authorization-policy, telemetry, stable-error, capability, contract and deprecation registry.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Initial registry advertises only implemented platform contracts; no product command, provider or persistence schema is present.",
+      "notes": "The registry retains implemented platform contracts and now carries one gated Client-management capability/create command owned by the provider slice. Gated is not deployed or production-active.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Canonical target contract registry", "Capability manifest source", "Deprecation registry source"],
@@ -2911,13 +2914,13 @@
     {
       "id": "CONFIG-E8C1EA5B72F9",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "054077c708f89c34ffcc508b03eb0ce411474fb50582df2b459d31e50caf03ea",
+      "acknowledgeSourceHash": "28e70b84d60e64d672f549272cd8b46976ee8e27f714d3700464950abee29788",
       "currentBehavior": "Publishes the bounded generated MCP contract resource with the canonical catalog and hash.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Build artifact only; no target MCP endpoint is active in this slice.",
+      "notes": "Build artifact includes the gated Client-create contract, but no target MCP server endpoint or deployment is active.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Generated VersionedContractCatalog MCP resource payload", "Catalog hash projection"],
@@ -2936,7 +2939,7 @@
     {
       "id": "FILE-3920BDE7C604",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "db49708aba12991177a0540f6b762d75b6e08e3c2d43c43c6500048896c037b6",
+      "acknowledgeSourceHash": "85dad3358bf24e3f14d59430d03254f89546e700be84915585de85f397f314fd",
       "currentBehavior": "Validates the canonical target contract registry and deterministically generates/checks Swift, TypeScript and MCP resource projections with one SHA-256 hash.",
       "disposition": "redesign",
       "status": "verified",
@@ -2961,13 +2964,13 @@
     {
       "id": "MCPMOD-CE84DA4C8EA4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8438efae7c85e10d1f529a46e95ea98a326680e19906953a1bfd37d9e93aa8cb",
+      "acknowledgeSourceHash": "588a3943f770b67642fa9d36a6c469e03bbefe409f5cd26b20f7f8e8965b9986",
       "currentBehavior": "Provides the generated strict TypeScript target contract catalog and canonical hash.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Separate target projection; no current MCP runtime file imports it in this slice.",
+      "notes": "Separate target projection imported by the gated target Client-create handler; the current Firebase MCP runtime does not import it.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["Generated TypeScript contract catalog", "TargetContractCatalog type", "Canonical catalog hash"],
@@ -2986,8 +2989,8 @@
     {
       "id": "SWIFT-5FA3004D3855",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "aa036f2e2a263095798eca641c4c63db7390242939b5d5d993afa355639875f0",
-      "currentBehavior": "Embeds the generated canonical target contract bytes/hash and loads them through the typed Swift catalog validator.",
+      "acknowledgeSourceHash": "0735890397eefbb11d66e67867585fd0d4d87c958872ebcd0b4a3a3dc7236f08",
+      "currentBehavior": "Embeds the generated canonical target contract bytes/hash, including gated Client management/create metadata, and loads them through the typed Swift catalog validator.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
@@ -3036,17 +3039,17 @@
     {
       "id": "TEST-C8A63111BD2B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "cc8a5808d4fc51ac4a116174e89945222693176e319924c6a638cc8010d6c625",
-      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, platform-only advertised scope, provider/credential/persistence exclusion and noncanonical-hash refusal.",
+      "acknowledgeSourceHash": "2cf78e4f8ee9dd7f7760ae943a21adea779a27e50d505752c20747ea714bcd88",
+      "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, available-versus-gated capability separation, provider/credential/persistence exclusion and noncanonical-hash refusal.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
       "evidence": ["EVID-M2-PLATFORM-001", "EVID-CONTRACT-CATALOG-001"],
-      "notes": "Six deterministic target package tests with no network or provider test host.",
+      "notes": "Deterministic target package tests use no network or provider test host and prove the Client capability remains gated.",
       "target": {
         "owner": "MCP Platform and Contract Registry",
         "surfaces": ["GeneratedContractCatalogTests", "App/MCP enum and registration parity fixtures"],
-        "securityRequirements": ["Negative assertions exclude provider, credential and persistence schema terms from advertised metadata"],
+        "securityRequirements": ["Negative assertions exclude provider, credential and persistence schema terms from advertised metadata and prevent gated product capabilities from appearing available"],
         "syncRequirements": ["Exact runtime readiness/operation enums and version/hash values match the registry"]
       },
       "migration": {

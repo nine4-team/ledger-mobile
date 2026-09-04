@@ -25,6 +25,8 @@ const compositionTestRoot = path.join(
   packageRoot,
   "LedgerTargetCompositionTests",
 );
+const powerSyncRoot = path.join(packageRoot, "LedgerTargetPowerSync");
+const powerSyncTestRoot = path.join(packageRoot, "LedgerTargetPowerSyncTests");
 const targetAppRoot = path.join(packageRoot, "LedgerTargetApp");
 const targetProject = path.join(
   packageRoot,
@@ -85,11 +87,28 @@ if (failures.length === 0) {
 }
 
 if (description) {
-  if ((description.dependencies ?? []).length !== 0) {
+  const expectedExternalDependencies = new Map([
+    ["powersync-swift", ["1.16.1"]],
+    ["csqlite", ["3.51.2"]],
+  ]);
+  const externalDependencies = description.dependencies ?? [];
+  if (externalDependencies.length !== expectedExternalDependencies.size) {
     fail(
-      "target_core_external_dependency",
-      "The target foundation package must not resolve vendor dependencies.",
+      "target_provider_dependency_set",
+      "The target package must resolve only the reviewed PowerSync and encrypted CSQLite direct dependencies.",
     );
+  }
+  for (const dependency of externalDependencies) {
+    const expectedVersion = expectedExternalDependencies.get(dependency.identity);
+    if (
+      !expectedVersion ||
+      JSON.stringify(dependency.requirement?.exact) !== JSON.stringify(expectedVersion)
+    ) {
+      fail(
+        "target_provider_dependency_version",
+        `${dependency.identity}:${JSON.stringify(dependency.requirement)}`,
+      );
+    }
   }
 
   const targets = new Map(
@@ -103,6 +122,8 @@ if (description) {
   const testSupportTests = targets.get("LedgerTargetTestSupportTests");
   const composition = targets.get("LedgerTargetComposition");
   const compositionTests = targets.get("LedgerTargetCompositionTests");
+  const powerSync = targets.get("LedgerTargetPowerSync");
+  const powerSyncTests = targets.get("LedgerTargetPowerSyncTests");
   if (!core) {
     fail("target_core_missing", "LedgerTargetCore");
   } else if ((core.target_dependencies ?? []).length !== 0) {
@@ -204,6 +225,42 @@ if (description) {
       );
     }
   }
+  if (!powerSync) {
+    fail("target_powersync_missing", "LedgerTargetPowerSync");
+  } else {
+    const dependencies = new Set(powerSync.target_dependencies ?? []);
+    const products = new Set(powerSync.product_dependencies ?? []);
+    if (
+      dependencies.size !== 1 ||
+      !dependencies.has("LedgerTargetCore") ||
+      products.size !== 2 ||
+      !products.has("PowerSync") ||
+      !products.has("CSQLite")
+    ) {
+      fail(
+        "target_powersync_dependency_boundary",
+        "LedgerTargetPowerSync must depend only on LedgerTargetCore, PowerSync, and encrypted CSQLite.",
+      );
+    }
+  }
+  if (!powerSyncTests) {
+    fail("target_powersync_tests_missing", "LedgerTargetPowerSyncTests");
+  } else {
+    const dependencies = new Set(powerSyncTests.target_dependencies ?? []);
+    const products = new Set(powerSyncTests.product_dependencies ?? []);
+    if (
+      dependencies.size !== 2 ||
+      !dependencies.has("LedgerTargetCore") ||
+      !dependencies.has("LedgerTargetPowerSync") ||
+      products.size !== 1 ||
+      !products.has("PowerSync")
+    ) {
+      fail(
+        "target_powersync_test_dependency_boundary",
+        "LedgerTargetPowerSyncTests may depend only on LedgerTargetCore, LedgerTargetPowerSync, and PowerSync.",
+      );
+    }
+  }
 }
 
 const forbiddenImport =
@@ -223,6 +280,21 @@ for (const filePath of [
   if (match) {
     fail(
       "target_core_provider_import",
+      `${relative(filePath)} imports ${match[1]}`,
+    );
+  }
+}
+
+const forbiddenSourceProviderImport =
+  /^\s*(?:@preconcurrency\s+)?import\s+(Firebase\w*|GoogleSignIn)\b/m;
+for (const filePath of [
+  ...swiftFiles(powerSyncRoot),
+  ...swiftFiles(powerSyncTestRoot),
+]) {
+  const match = fs.readFileSync(filePath, "utf8").match(forbiddenSourceProviderImport);
+  if (match) {
+    fail(
+      "target_powersync_source_provider_import",
       `${relative(filePath)} imports ${match[1]}`,
     );
   }
@@ -265,6 +337,7 @@ if (
     "apps.nine4.ledger.staging",
     "Ledger STAGING",
     "LedgerTargetCore",
+    "LedgerTargetPowerSync",
   ]) {
     if (!project.includes(required)) {
       fail("target_generated_project_incomplete", required);
@@ -273,7 +346,7 @@ if (
   if (!scheme.includes('BlueprintName = "LedgerTargetStaging"')) {
     fail("target_staging_scheme_invalid", relative(targetScheme));
   }
-  if (!targetAppSource.includes("STAGING • NO HOSTED SERVICES")) {
+  if (!targetAppSource.includes("LOCAL SPIKE • NO HOSTED SERVICES")) {
     fail("target_staging_banner_missing", relative(targetAppRoot));
   }
   if (!targetAppSource.includes("unprovisioned-powersync-staging")) {
@@ -344,6 +417,8 @@ if (!fs.existsSync(sourceProject)) {
     "LedgerTargetTestSupportTests",
     "LedgerTargetComposition",
     "LedgerTargetCompositionTests",
+    "LedgerTargetPowerSync",
+    "LedgerTargetPowerSyncTests",
   ]) {
     if (project.includes(targetOnlyPath)) {
       fail(
@@ -362,5 +437,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  "target-environment: isolated LedgerTargetCore, separate migration-control/test-support/composition tooling, and staging app graphs validated; fixed staging identity, no vendor SDK dependency, runtime toggle, tooling app link, premature composition link, or source-project contamination detected\n",
+  "target-environment: isolated LedgerTargetCore, reviewed PowerSync/encrypted-SQLite provider lane, separate migration-control/test-support/composition tooling, and local-spike app graph validated; fixed staging identity and no runtime toggle, tooling app link, premature composition link, source-provider import, or Firebase-project contamination detected\n",
 );

@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 
 import PackageDescription
 
@@ -10,6 +10,10 @@ let package = Package(
     ],
     products: [
         .library(name: "LedgerTargetCore", targets: ["LedgerTargetCore"]),
+        .library(
+            name: "LedgerTargetPowerSync",
+            targets: ["LedgerTargetPowerSync"]
+        ),
         .library(
             name: "LedgerTargetMigrationCore",
             targets: ["LedgerTargetMigrationCore"]
@@ -23,6 +27,17 @@ let package = Package(
             targets: ["LedgerTargetComposition"]
         )
     ],
+    dependencies: [
+        .package(
+            url: "https://github.com/powersync-ja/powersync-swift.git",
+            exact: "1.16.1"
+        ),
+        .package(
+            url: "https://github.com/powersync-ja/CSQLite.git",
+            exact: "3.51.2",
+            traits: ["Encryption"]
+        )
+    ],
     targets: [
         .target(
             name: "LedgerTargetCore",
@@ -32,6 +47,24 @@ let package = Package(
             name: "LedgerTargetCoreTests",
             dependencies: ["LedgerTargetCore"],
             path: "LedgerTargetCoreTests"
+        ),
+        .target(
+            name: "LedgerTargetPowerSync",
+            dependencies: [
+                "LedgerTargetCore",
+                .product(name: "PowerSync", package: "powersync-swift"),
+                .product(name: "CSQLite", package: "CSQLite")
+            ],
+            path: "LedgerTargetPowerSync"
+        ),
+        .testTarget(
+            name: "LedgerTargetPowerSyncTests",
+            dependencies: [
+                "LedgerTargetCore",
+                "LedgerTargetPowerSync",
+                .product(name: "PowerSync", package: "powersync-swift")
+            ],
+            path: "LedgerTargetPowerSyncTests"
         ),
         .target(
             name: "LedgerTargetMigrationCore",

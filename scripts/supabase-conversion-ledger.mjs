@@ -1112,6 +1112,7 @@ function discoverSwiftApplication() {
     path.join(ROOT, "LedgeriOS/LedgerTargetCore"),
     path.join(ROOT, "LedgeriOS/LedgerTargetComposition"),
     path.join(ROOT, "LedgeriOS/LedgerTargetMigrationCore"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetPowerSync"),
     path.join(ROOT, "LedgeriOS/LedgerTargetTestSupport"),
   ];
   return directories.flatMap((directory) =>
@@ -1148,6 +1149,7 @@ function discoverSwiftTests() {
     path.join(ROOT, "LedgeriOS/LedgerTargetCoreTests"),
     path.join(ROOT, "LedgeriOS/LedgerTargetCompositionTests"),
     path.join(ROOT, "LedgeriOS/LedgerTargetMigrationCoreTests"),
+    path.join(ROOT, "LedgeriOS/LedgerTargetPowerSyncTests"),
     path.join(ROOT, "LedgeriOS/LedgerTargetTestSupportTests"),
   ];
   return directories.flatMap((directory) =>
@@ -1353,6 +1355,7 @@ function discoverConfiguration() {
     ".github/workflows/supabase-conversion-control.yml",
     "firebase.json",
     "LedgeriOS/Package.swift",
+    "LedgeriOS/Package.resolved",
     "LedgeriOS/LedgerTargetProject.yml",
     "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
     "LedgeriOS/LedgerTarget.xcodeproj/xcshareddata/xcschemes/LedgerTargetStaging.xcscheme",
@@ -1369,6 +1372,11 @@ function discoverConfiguration() {
     "LedgerTargetMCP/package-lock.json",
     "LedgerTargetMCP/tsconfig.json",
     "LedgerTargetMCP/resources/contract-catalog.json",
+    "powersync/sync-streams.yaml",
+    "supabase/config.toml",
+    "supabase/migrations/20260904135741_client_creation_vertical_slice.sql",
+    "supabase/seed.sql",
+    "supabase/tests/client_creation_vertical_slice.test.sql",
     "mcp-server/Dockerfile",
     "mcp-server/package.json",
     "mcp-server/tsconfig.json",
@@ -1384,6 +1392,7 @@ function discoverConfiguration() {
     "scripts/generate-source-query-reconciliation.mjs",
     "scripts/generate-target-query-logical-authority-crosswalk.mjs",
     "scripts/generate-target-query-port-inventory.mjs",
+    "scripts/test-local-client-creation-rpc.mjs",
     "scripts/release-testflight.sh",
     "scripts/tests/generate-source-query-reconciliation.test.mjs",
     "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",

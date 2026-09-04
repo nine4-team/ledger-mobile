@@ -301,6 +301,26 @@ test("package scripts and Linux-before-Swift workflow hooks are exact and fail c
     () => validateIntegrationHooks(
       packageJson,
       workflow.replace(
+        "      - name: Stop isolated local Supabase\n        if: always()",
+        "      - name: Stop isolated local Supabase\n        if: success()",
+      ),
+    ),
+    /must not conditionally skip/,
+  );
+  expectFailure(
+    () => validateIntegrationHooks(
+      packageJson,
+      workflow.replace(
+        "      - name: Confirm target checks did not rewrite tracked artifacts\n        run: git diff --exit-code",
+        "      - name: Confirm target checks did not rewrite tracked artifacts\n        if: always()\n        run: git diff --exit-code",
+      ),
+    ),
+    /must not conditionally skip/,
+  );
+  expectFailure(
+    () => validateIntegrationHooks(
+      packageJson,
+      workflow.replace(
         "      - name: Confirm checks did not rewrite tracked artifacts\n        run: git diff --exit-code",
         "      - name: No-op\n        run: echo ok",
       ),

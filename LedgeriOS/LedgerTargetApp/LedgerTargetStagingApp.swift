@@ -1,4 +1,6 @@
 import LedgerTargetCore
+import LedgerTargetPowerSync
+import Observation
 import SwiftUI
 
 @main
@@ -15,16 +17,19 @@ struct LedgerTargetStagingApp: App {
             }
             rootView = TargetStagingRootView(
                 diagnostics: dependencies.environment.diagnostics,
+                localDataNamespacePrefix: dependencies.environment.manifest.localDataNamespacePrefix,
                 failureCode: nil
             )
         } catch let failure as LedgerEnvironmentValidationFailure {
             rootView = TargetStagingRootView(
                 diagnostics: nil,
+                localDataNamespacePrefix: nil,
                 failureCode: failure.diagnosticCode
             )
         } catch {
             rootView = TargetStagingRootView(
                 diagnostics: nil,
+                localDataNamespacePrefix: nil,
                 failureCode: "target_startup_unknown_failure"
             )
         }
@@ -39,11 +44,12 @@ struct LedgerTargetStagingApp: App {
 
 private struct TargetStagingRootView: View {
     let diagnostics: LedgerEnvironmentDiagnostics?
+    let localDataNamespacePrefix: String?
     let failureCode: String?
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("STAGING • NO HOSTED SERVICES")
+            Text("LOCAL SPIKE • NO HOSTED SERVICES")
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -68,7 +74,13 @@ private struct TargetStagingRootView: View {
                         }
 
                         Section("Provisioning") {
-                            Text("This bootstrap shell validates isolation only. It cannot authenticate, sync, upload, migrate, or contact production.")
+                            Text("This build uses encrypted PowerSync storage and an isolated local Supabase schema. Hosted sync and production access are disabled.")
+                        }
+
+                        if let localDataNamespacePrefix {
+                            OfflineClientSpikeView(
+                                localDataNamespacePrefix: localDataNamespacePrefix
+                            )
                         }
                     }
                 } else {
@@ -79,6 +91,119 @@ private struct TargetStagingRootView: View {
                     )
                 }
             }
+        }
+    }
+}
+
+private struct OfflineClientSpikeView: View {
+    let localDataNamespacePrefix: String
+    @State private var model = OfflineClientSpikeModel()
+
+    var body: some View {
+        Section("Offline Client Creation") {
+            TextField("Client name", text: $model.displayName)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("target-client-name")
+
+            Button("Create while offline") {
+                Task { await model.createClient() }
+            }
+            .disabled(!model.canCreate)
+            .accessibilityIdentifier("target-create-client")
+
+            LabeledContent("Local database", value: model.databaseState)
+            LabeledContent("Pending uploads", value: model.pendingUploadCount)
+            if let lastCreatedName = model.lastCreatedName {
+                LabeledContent("Local result", value: lastCreatedName)
+            }
+            if let diagnostic = model.diagnostic {
+                Text(diagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-client-diagnostic")
+            }
+        }
+        .task {
+            await model.start(localDataNamespacePrefix: localDataNamespacePrefix)
+        }
+    }
+}
+
+@MainActor
+@Observable
+private final class OfflineClientSpikeModel {
+    var displayName = ""
+    private(set) var databaseState = "Opening…"
+    private(set) var pendingUploadCount = "—"
+    private(set) var lastCreatedName: String?
+    private(set) var diagnostic: String?
+
+    private var runtime: LedgerOfflineClientRuntime?
+    private let accountId = try! AccountID(validating: "account-primary")
+    private let principalId = try! PrincipalID(validating: "principal-owner")
+
+    var canCreate: Bool {
+        runtime != nil && !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    func start(localDataNamespacePrefix: String) async {
+        guard runtime == nil else { return }
+        do {
+            let runtime = try LedgerPowerSyncLocalBootstrap.open(
+                localDataNamespacePrefix: localDataNamespacePrefix,
+                principalId: principalId,
+                accountId: accountId
+            )
+            let cipher = try await runtime.encryptionCipher()
+            self.runtime = runtime
+            databaseState = "Encrypted (\(cipher))"
+            pendingUploadCount = String(try await runtime.pendingUploadCount())
+        } catch {
+            databaseState = "Unavailable"
+            diagnostic = "local_database_open_failed"
+        }
+    }
+
+    func createClient() async {
+        guard let runtime else { return }
+        diagnostic = nil
+        do {
+            let clientId = try ClientID(
+                validating: "client-\(UUID().uuidString.lowercased())"
+            )
+            let command = try CreateClientCommand(
+                operationId: OperationID(
+                    validating: "operation-\(UUID().uuidString.lowercased())"
+                ),
+                draft: ClientCreationDraft(
+                    accountId: accountId,
+                    actorPrincipalId: principalId,
+                    operationContractVersion: OperationContractVersion(
+                        validating: "client-create-v1"
+                    ),
+                    clientId: clientId,
+                    displayName: ClientDisplayName(validating: displayName),
+                    capturedAt: Date()
+                )
+            )
+            _ = try await runtime.createClient(command)
+            pendingUploadCount = String(try await runtime.pendingUploadCount())
+
+            let request = try ClientCoreDetailsRequest(
+                accountId: accountId,
+                clientId: clientId
+            )
+            for try await update in runtime.watchClient(request) {
+                if case .snapshot(let snapshot) = update.state,
+                   let client = snapshot.row?.client {
+                    lastCreatedName = "\(client.displayName.rawValue) — queued locally"
+                    break
+                }
+            }
+            displayName = ""
+        } catch let failure as ClientCreationFailure {
+            diagnostic = failure.diagnosticCode
+        } catch {
+            diagnostic = "client_creation_local_failed"
         }
     }
 }

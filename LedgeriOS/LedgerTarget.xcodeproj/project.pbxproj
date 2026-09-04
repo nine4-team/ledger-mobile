@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */ = {isa = PBXBuildFile; productRef = EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */; };
 		95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */; };
+		E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetPowerSync in Frameworks */ = {isa = PBXBuildFile; productRef = 60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */,
+				E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetPowerSync in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +81,7 @@
 			name = LedgerTargetStaging;
 			packageProductDependencies = (
 				EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */,
+				60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */,
 			);
 			productName = LedgerTargetStaging;
 			productReference = 616A04EF062ADB7070A7F345 /* LedgerTargetStaging.app */;
@@ -337,6 +340,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LedgerTargetPowerSync;
+		};
 		EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LedgerTargetCore;

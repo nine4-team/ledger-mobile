@@ -40,9 +40,9 @@ const EXPECTED_VERIFICATION_STABLE_SHA =
 const EXPECTED_CONTRACTS_SHA =
   "171e3464ca4d26ed9446d7da0b0cc892e433226fd59d4a14e0410c83d657bacd";
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
-  "9b189e352bd8a8fe29e4b4dc81cd5cbaa950f6a77ce6d090b32cda1fbfc9b321";
+  "4961cf2885698d768efeba4db7b46417c5751f65467d7f469f503d76c681d095";
 const EXPECTED_WORKFLOW_INTEGRATION_SHA =
-  "5585b642c3e6c74c825a84c5ed1b0eb189ece8b6be9a7f2b19b14fd50e8bcc5a";
+  "786b2146c88addcfb3f95bf8c37aabb029e511023450194e276c173850647d78";
 
 const EXPECTED_COUNTS = Object.freeze({ queries: 386, outcomes: 584, batches: 10 });
 const LIFECYCLES = Object.freeze(["draft", "ready", "implemented", "verified"]);
@@ -107,6 +107,7 @@ const HASH_PREFIX = Object.freeze({
   retirementAuthority: "source-query-retirement-authority-v1\0",
 });
 const IMPLEMENTATION_BASE = "4618c7e5b9fc3a24cd917239bf795aec6117ea5c";
+const IMPLEMENTATION_CHECKPOINT = "aefa7acd57957ebe4e136540b1f6034ae8131130";
 const IMPLEMENTATION_PATHS = Object.freeze([
   ".github/workflows/supabase-conversion-control.yml",
   "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
@@ -437,17 +438,30 @@ export function validateIntegrationHooks(packageJson, workflowText) {
     /^  target-environment:\s*$/,
     "target-environment job",
   );
+  const localSupabaseStart = uniqueLineIndex(
+    lines,
+    /^  local-supabase-client-slice:\s*$/,
+    "local Supabase Client job",
+  );
   if (conversionStart >= targetStart) fail("conversion-control job must precede target-environment job");
+  if (targetStart >= localSupabaseStart) {
+    fail("target-environment job must precede local Supabase Client job");
+  }
   const conversionLines = lines.slice(conversionStart, targetStart);
-  const targetLines = lines.slice(targetStart);
+  const targetLines = lines.slice(targetStart, localSupabaseStart);
   if (!conversionLines.some((line) => /^    runs-on: ubuntu-latest\s*$/.test(line))) {
     fail("conversion-control job must run on ubuntu-latest");
   }
   const conditionalKey = /^\s+(?:["']?if["']?|["']?continue-on-error["']?)\s*:/;
-  if (
-    [...conversionLines, ...targetLines].some((line) => conditionalKey.test(line))
-  ) {
-    fail("conversion workflow jobs must not conditionally skip or tolerate failures");
+  for (const [index, line] of lines.entries()) {
+    if (!conditionalKey.test(line)) continue;
+    const isUnconditionalCleanup =
+      line === "        if: always()" &&
+      lines[index - 1] === "      - name: Stop isolated local Supabase" &&
+      lines[index + 1] === "        run: npx --yes supabase@2.116.0 stop --no-backup";
+    if (!isUnconditionalCleanup) {
+      fail("conversion workflow jobs must not conditionally skip or tolerate failures");
+    }
   }
   const validationStep = uniqueLineIndex(
     conversionLines,
@@ -702,14 +716,38 @@ function validateLifecycleAllowlist(root, dossier, { enforceRepositoryDiff = tru
   }
 
   runGit(root, ["cat-file", "-e", `${selected.baseCommit}^{commit}`], "lifecycle base commit");
+  const endpoint = ["implemented", "verified"].includes(dossier.status)
+    ? IMPLEMENTATION_CHECKPOINT
+    : null;
+  if (endpoint !== null) {
+    runGit(root, ["cat-file", "-e", `${endpoint}^{commit}`], "lifecycle checkpoint commit");
+    runGit(
+      root,
+      ["merge-base", "--is-ancestor", endpoint, "HEAD"],
+      "lifecycle checkpoint ancestry",
+    );
+  }
   const tracked = parseNulPaths(
-    runGit(root, ["diff", "--name-only", "-z", selected.baseCommit, "--"], "tracked diff"),
+    runGit(
+      root,
+      [
+        "diff",
+        "--name-only",
+        "-z",
+        selected.baseCommit,
+        ...(endpoint === null ? [] : [endpoint]),
+        "--",
+      ],
+      "tracked diff",
+    ),
     "tracked diff",
   );
-  const untracked = parseNulPaths(
-    runGit(root, ["ls-files", "--others", "--exclude-standard", "-z"], "untracked diff"),
-    "untracked diff",
-  );
+  const untracked = endpoint === null
+    ? parseNulPaths(
+        runGit(root, ["ls-files", "--others", "--exclude-standard", "-z"], "untracked diff"),
+        "untracked diff",
+      )
+    : [];
   const actual = [...new Set([...tracked, ...untracked])].sort(compareText);
   if (!same(actual, selected.paths)) {
     const missing = selected.paths.filter((entry) => !actual.includes(entry));
@@ -720,6 +758,7 @@ function validateLifecycleAllowlist(root, dossier, { enforceRepositoryDiff = tru
         `${unexpected.length ? `; unexpected ${unexpected.join(", ")}` : ""}`,
     );
   }
+  if (endpoint !== null) return;
   for (const relativePath of actual) {
     const candidate = path.join(root, relativePath);
     let metadata;

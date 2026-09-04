@@ -37,7 +37,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
       "section": "Phase 1 — Backend-neutral target application foundation",
-      "invariant": "The target app constructs backend-neutral dependencies through one validated composition root, imports no Firestore data adapter, and does not require a change to the running Firebase application.",
+      "invariant": "The target app constructs backend-neutral feature dependencies through one validated target composition boundary, confines Supabase/PowerSync SDK types to the isolated provider/runtime layer, imports no Firestore data adapter, and does not require a change to the running Firebase application.",
       "decisionIds": ["D-026"],
       "verificationIds": ["TARGET-ENV-TEST-001", "TARGET-ENV-TEST-005"]
     },
@@ -75,30 +75,30 @@
         "LedgerEnvironmentID and LedgerEnvironmentKind are closed values for targetLocal, targetStaging, and targetProduction; Firebase production is source evidence, never a target runtime kind.",
         "LedgerEnvironmentManifest binds Auth, structured data, PowerSync, Storage, MCP, telemetry, external-route, update-feed, and local-data namespace identifiers plus compatible contract versions.",
         "ValidatedLedgerEnvironment is created only after completeness, same-environment, allowlist, and known-production-identifier checks succeed.",
-        "TargetAppDependencies can be constructed only from ValidatedLedgerEnvironment and backend-neutral feature ports; views cannot select or construct a backend.",
+        "Target app composition can be constructed only from a ValidatedLedgerEnvironment; feature/domain code remains backend-neutral and views cannot select between backends.",
         "EnvironmentValidationFailure is stable, non-secret, and identifies the mismatched component category without echoing credentials or sensitive endpoint material."
       ],
       "notApplicable": ""
     },
     "postgresSchema": {
       "items": [],
-      "notApplicable": "This slice validates client/runtime environment composition and introduces no target database relation."
+      "notApplicable": "This control slice validates client/runtime environment composition. Product-owned target relations are tracked by their own provider slices."
     },
     "serverHandlers": {
       "items": [],
-      "notApplicable": "This slice opens no command handler; authoritative server operations are owned by later product slices."
+      "notApplicable": "This control slice owns no command semantics; product-owned handlers are tracked by their own provider slices."
     },
     "dataApiGrants": {
       "items": [],
-      "notApplicable": "No Data API schema or table is exposed by this slice."
+      "notApplicable": "This control slice owns no Data API grants; product-owned grants are tracked by their own provider slices."
     },
     "rlsPolicies": {
       "items": [],
-      "notApplicable": "No database row is created or exposed by this slice."
+      "notApplicable": "This control slice owns no row policy; product-owned RLS is tracked by its provider slice."
     },
     "syncStreams": {
       "items": [
-        "PowerSyncEnvironmentDescriptor must match the validated target environment and compatible sync-contract version before a sync client or local database is opened.",
+        "PowerSyncEnvironmentDescriptor must match the validated target environment and compatible sync-contract version before an isolated provider runtime opens its local database or connects.",
         "Known Firebase production and Supabase production identifiers are denied by the staging allowlist, while target production identifiers are accepted only by a production archive profile."
       ],
       "notApplicable": ""
@@ -183,7 +183,7 @@
       "kind": "operational",
       "owner": "scripts/check-target-environment.mjs and future target application build-configuration tests",
       "covers": ["TARGET-ENV-REQ-001", "TARGET-ENV-REQ-002", "TARGET-ENV-REQ-003", "TARGET-ENV-REQ-005"],
-      "expected": "CI proves that staging identity is visually distinct, contains no production identifiers or production routes, has no runtime environment toggle, emits only safe diagnostics, links no migration-control tooling, and leaves the ordinary Firebase LedgeriOS scheme unchanged.",
+      "expected": "CI proves that staging identity is visually distinct, contains no production identifiers or production routes, has no runtime environment toggle, emits only safe diagnostics, confines provider dependencies to the isolated target provider boundary, links no migration-control tooling, and leaves the ordinary Firebase LedgeriOS scheme unchanged.",
       "status": "planned",
       "evidence": ["EVID-TARGET-ENVIRONMENT-001"]
     }
@@ -191,5 +191,5 @@
   "implementationEvidence": ["EVID-TARGET-ENVIRONMENT-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Decision-independent Phase 1 foundation. The public manifest/bootstrap/namespace contracts, dependency-free LedgerTargetCore package graph, package test suite, persisted-binding refusal, separate reproducible iOS/macOS staging project, fixed unprovisioned staging projection, permanent banner code, and graph/import/source-contamination guard are implemented with partial passing evidence. A target CI job and successful external run, actual hosted-resource projection after authorization, and visual/physical-target staging verification remain before the operational obligation can pass. This slice does not provision hosted Supabase/PowerSync resources, choose A-007 Auth, authorize the S0-S9 spike, or activate production target authority."
+  "notes": "The environment foundation now encloses an isolated local LedgerTargetPowerSync product and the Client provider slice while keeping LedgerTargetCore and the Firebase application free of target-provider dependencies. The public manifest/bootstrap/namespace contracts, package tests, persisted-binding refusal, separate reproducible iOS/macOS staging project, fixed local-spike projection, permanent banner, and graph/import/source-contamination guard have passing local evidence. Immutable CI, actual hosted-resource projection after authorization, and visual/physical-target staging verification remain before the operational obligation can pass. This slice does not provision hosted Supabase/PowerSync resources, choose production Auth, approve A-003/A-004, migrate data, or activate production target authority."
 }

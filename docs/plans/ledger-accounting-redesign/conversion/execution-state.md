@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 256
+State version: 257
 
 ## Objective
 
@@ -11,9 +11,9 @@ modifying the running Firebase application before hard cutover.
 
 ## Current Checkpoint
 
-- Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
-  decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: SOURCE-QUERY-RECONCILIATION-IMPLEMENTED-LOCAL
+- Phase: provider-backed target implementation is active after the completed
+  inventory, architecture, and provider-free foundation work
+- Checkpoint: CLIENT-CREATION-SUPABASE-POWERSYNC-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -25,12 +25,49 @@ modifying the running Firebase application before hard cutover.
   `firebase-export*` directories do not have sufficient recorded provenance to
   promote silently.
 - Production mutations authorized: no.
-- Supabase/PowerSync implementation authorized: decision-independent target
-  environment contracts, isolated build/test infrastructure, and unprovisioned
-  staging shell only; hosted resources, provider adapters, product/schema
-  decisions, migration, and production authority remain gated.
+- Supabase/PowerSync implementation authorized: isolated local provider slices,
+  target app/MCP integration, and test infrastructure on this branch. Hosted
+  resources, production data access, migration, cutover, and production
+  authority remain gated. A-003/A-004 remain proposed pending the complete
+  vertical-spike exit gate.
+
+## Program Progress Basis
+
+- Whole-program completion is currently estimated at **10–15%**. This measures
+  executable Supabase/PowerSync product behavior through rehearsal and cutover
+  readiness, not document volume or provider-free contract count.
+- The implementation tracker currently contains 258 status-bearing rows: 67
+  done, four verified, four in progress, 27 design, 61 blocked, and 95 not
+  started. Most completed rows are architecture, conversion controls, or
+  provider-free foundations; they are prerequisites, not migrated features.
+- One provider-backed product slice now works locally: offline Client creation
+  and readback through encrypted PowerSync SQLite, a trusted Supabase/Postgres
+  handler with RLS, the isolated target app, and the gated target MCP boundary.
+  It is not complete until immutable CI and a real isolated PowerSync/Auth
+  round-trip pass.
+- Future progress reports must separately state (1) planning/control coverage,
+  (2) locally executable provider-backed slices, (3) hosted rehearsal, and
+  (4) cutover readiness. A single percentage may be given only with that
+  denominator stated.
 
 ## Completed at This Checkpoint
+
+- Implemented the first provider-backed Client vertical slice locally without
+  changing the Firebase application. A spike-prefixed Postgres schema and
+  trusted RPC enforce stable Account-scoped Client identity, authenticated
+  membership/capability checks, RLS, least-privilege grants, exact OperationID
+  replay, payload-rebinding refusal, and immutable terminal results. The target
+  PowerSync adapter uses an encrypted per-Principal/Account SQLite database,
+  atomically records the operation plus optimistic Client row, preserves it
+  across restart, exposes partial readiness while pending, validates upload
+  transactions/results, and drains applied or durably rejected operations. The
+  isolated target app exercises offline creation/readback and the gated target
+  MCP tool uses the same canonical command/RPC boundary. Local pgTAP (19
+  assertions), Data API/RLS integration, MCP tests, eight focused PowerSync
+  tests, all 324 Swift tests, contract/environment checks, and the latest iOS
+  Simulator build pass. Immutable CI, real hosted Sync Streams/Auth, media,
+  evolution, scale, and fault rehearsal remain open; this is not migration or
+  cutover authority.
 
 - Implemented the separate 386-occurrence source-query reconciliation control
   from exact READY base `4618c7e5b9fc3a24cd917239bf795aec6117ea5c`
@@ -48,14 +85,15 @@ modifying the running Firebase application before hard cutover.
   missing diff guards or loss of the Linux-before-Swift dependency fail closed.
   All 23 focused tests, the complete CI-portable conversion-control command
   sequence run on macOS, all 316 Swift tests in 65 suites, and both isolated
-  staging builds pass locally. Exact Ubuntu-runner execution remains pending
-  immutable CI. Independent
+  staging builds pass locally. Exact implementation commit
+  `aefa7acd57957ebe4e136540b1f6034ae8131130` passed immutable Actions run
+  `33880331322`. Independent
   implementation review found real authority-path, physical-field, split-brain,
   symlink, output-path, CI and malformed-input bypasses; each is corrected with
   regression coverage, and final review returned GO with no remaining P0-P2
-  finding. `SQUERY-TEST-001` through `-009` pass. The exact implementation
-  commit, immutable CI and `SQUERY-TEST-010` remain pending before VERIFIED
-  promotion. The artifact deliberately preserves 115 authority-blocked and six
+  finding. `SQUERY-TEST-001` through `-010` pass; only the separate
+  administrative VERIFIED metadata promotion remains. The artifact deliberately
+  preserves 115 authority-blocked and six
   evidence-blocked outcomes, so no dependent target-domain work may treat this
   as product-decision, production-read, schema/RLS/Sync/provider, migration,
   retirement or cutover authority; `EVID-SOURCE-QUERY-RECONCILIATION-001`.

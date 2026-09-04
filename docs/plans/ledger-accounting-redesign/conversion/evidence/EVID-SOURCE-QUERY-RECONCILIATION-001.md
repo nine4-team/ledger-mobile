@@ -2,7 +2,7 @@
 
 - Timestamp: 2026-09-04
 - Class: implemented / source-to-target query classification control; immutable
-  implementation CI and VERIFIED promotion pending
+  implementation CI passed, administrative VERIFIED promotion pending
 - Draft baseline: `76b2ff45ba4fffe68097919c32ec7b4fec48047c` on
   `codex/supabase-powersync-implementation`
 - READY base: immutable complete-DRAFT commit
@@ -35,8 +35,9 @@
   allowlist and both scaffold hashes were frozen before executable edits. The
   bounded implementation now passes 23 focused tests, exact generation/check,
   root review and independent adversarial review with no remaining P0-P2
-  finding. The exact implementation commit and immutable Actions run remain
-  pending, so the slice is not yet VERIFIED.
+  finding. Exact implementation commit
+  `aefa7acd57957ebe4e136540b1f6034ae8131130` passed immutable Actions run
+  `33880331322`; only the separate metadata promotion remains.
 
 ## Classification Outcome and Implemented Control
 
@@ -391,7 +392,8 @@ structural job a prerequisite of Swift tests/builds. Local evidence is:
   macOS, including target query inventory, logical authority,
   capability/query/residual checks, read-only profiler audit and M0 gate — pass
   with the three established stale-discovery warnings only; exact Ubuntu-runner
-  execution remains pending immutable CI;
+  execution passed at implementation commit
+  `aefa7acd57957ebe4e136540b1f6034ae8131130` in Actions run `33880331322`;
 - `swift test --package-path LedgeriOS` — all 316 tests in 65 suites pass;
 - isolated `LedgerTargetStaging` macOS and generic iOS Simulator builds — pass;
 - generated artifact mode — 0644; and
