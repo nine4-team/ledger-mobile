@@ -28,7 +28,7 @@
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The target query logical-authority implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; its Linux structural test/check gate runs before the existing dependent macOS job. Exact prior implementation commit a359c8622069c2dc8b75ca09a8fd89b95713f1bb passed immutable Actions run 33842465485 with all 316 Swift tests and both staging builds; immutable CI for the new control is pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. The target query logical-authority implementation re-acknowledges the exact workflow hash while preserving target_mapped status and existing ownership; its Linux structural test/check gate runs before the existing dependent target job. Exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777, including all 316 Swift tests and both staging builds. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

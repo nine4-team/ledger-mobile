@@ -156,10 +156,10 @@
           "Implementation rejects stale or internally inconsistent inventory/registry bindings, unsafe roots/symlinks, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
-      "notes": "Implemented locally from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363. Physical access, provider, runtime and production behavior remain excluded; immutable implementation CI is pending."
+      "notes": "Verified from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363 after exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777. Independent final adversarial review returned GO. Physical access, provider, runtime and production behavior remain excluded."
     },
     {
       "id": "CONFIG-ED6818A70D4E",
@@ -200,10 +200,10 @@
           "Tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
-      "notes": "Implemented locally from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363. Contiguous firestoreQuery/firestoreIndex cases remain executable and the committed discovery exclusions prevent false source-surface/query inventory drift. Machine tests prove structure and freshness only; row semantics remain a required human review surface, and immutable implementation CI is pending."
+      "notes": "Verified from amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a / green run 33849974363 after exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777. Contiguous firestoreQuery/firestoreIndex cases remain executable and the committed discovery exclusions prevent false source-surface/query inventory drift. Machine tests prove structure and freshness only; row semantics remain a required human review surface, and independent final adversarial review returned GO."
     }
   ]
 }

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
-Last updated: 2026-09-03
-State version: 246
+Last updated: 2026-09-04
+State version: 247
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-QUERY-LOGICAL-AUTHORITY-CROSSWALK-IMPLEMENTED
+- Checkpoint: TARGET-QUERY-LOGICAL-AUTHORITY-CROSSWALK-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -32,7 +32,7 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
-- Implemented the complete target query logical-authority crosswalk
+- Verified the complete target query logical-authority crosswalk
   above the verified TQUERY inventory. One reviewed JSON registry binds the
   exact inventory digest and all 18 method signature hashes, then records only
   authority references, six logical axes, proposed architecture data-domain
@@ -48,7 +48,7 @@ modifying the running Firebase application before hard cutover.
   every domain label is `proposed_architecture_dependency`. Postgres and local physical planes are
   globally deferred under proposed A-003/A-004; there are no per-row physical
   IDs, names, indexes, SQL, RLS or Sync assignments. Exactly
-  `CONFIG-5422E6C6A047` and `CONFIG-ED6818A70D4E` advance to `implemented`.
+  `CONFIG-5422E6C6A047` and `CONFIG-ED6818A70D4E` advance to `verified`.
   From amended immutable READY commit `fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a`,
   whose Actions run `33849974363` passed, a dependency-free JSON generator/checker
   and 23-test adversarial suite now enforce exact structural validation, fully
@@ -63,8 +63,10 @@ modifying the running Firebase application before hard cutover.
   re-acknowledged at exact reviewed hashes without changing status or ownership;
   the committed discoverer/query-extractor path exclusions preserve contiguous
   forbidden-key tests without changing the source surface or 386-query inventories,
-  and all 16 query owners remain unadvanced. Immutable
-  implementation CI remains pending. The 386 source `QUERY-*` occurrence
+  and all 16 query owners remain unadvanced. Exact implementation commit
+  `66d56bf1ee8302e63b5622c879e62dbbe4b7e95e` passed immutable Actions run
+  `33853355777`; all ten verification requirements pass, and independent final
+  adversarial review returned GO with no P0-P3 finding. The 386 source `QUERY-*` occurrence
   reconciliation remains a separate downstream slice. Synchronized conversion
   controls record 839 surfaces / 824 currently discovered, 395 target-mapped-or-
   later, 184 residuals, 46 blockers, and 66 slices / 157 claimed / 142
@@ -3489,13 +3491,12 @@ modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit only the exact implementation allowlist for
-`target-query-logical-authority-crosswalk-control`, obtain immutable
-implementation CI, and review that exact commit before promotion. Promotion is
-documentation/control-only after CI satisfies `TQUERYAUTH-TEST-008`; it must
-preserve the existing structural-only validator boundary, globally deferred
-A-003/A-004 physical planes, all 16 query-owner states and the separate later
-reconciliation of 386 source `QUERY-*` occurrences.
+Prepare the next bounded slice that reconciles all 386 frozen source `QUERY-*`
+occurrences to an approved target query, a source-only migration/audit use, an
+explicit retirement, or a named decision hold. Preserve the verified
+logical-authority registry as the target side of that join; do not translate
+Firestore syntax or indexes, advance globally deferred A-003/A-004 physical
+planes, or silently resolve the registry's explicit product-decision blockers.
 
 Continue without waiting on the two M1 evidence blockers:
 

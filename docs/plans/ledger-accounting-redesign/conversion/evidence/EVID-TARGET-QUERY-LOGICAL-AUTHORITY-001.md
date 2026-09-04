@@ -1,7 +1,7 @@
 # EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001 — Target Query Logical-Authority Crosswalk
 
 - Timestamp: 2026-09-03
-- Class: implementation checkpoint / target query logical-authority conversion control
+- Class: verified / target query logical-authority conversion control
 - Target baseline: amended immutable READY commit
   `fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a` on
   `codex/supabase-powersync-implementation`
@@ -10,8 +10,12 @@
 - Claimed target surfaces: `CONFIG-5422E6C6A047`, `CONFIG-ED6818A70D4E`
 - Slice dossier:
   `conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json`
-- Verification state: implemented and locally verified; immutable implementation
-  CI is pending
+- Exact implementation checkpoint:
+  `66d56bf1ee8302e63b5622c879e62dbbe4b7e95e`; immutable GitHub Actions run
+  `33853355777` passed both jobs, including the Linux structural gate before the
+  dependent target test/build job
+- Verification state: verified; `TQUERYAUTH-TEST-001` through `-010` pass and
+  independent final adversarial review returned GO with no P0-P3 finding
 
 ## Selection and Scope
 
@@ -268,9 +272,12 @@ same-directory no-follow temporary and atomic rename without deleting a
 precreated attacker path. Check remains read-only, and CLI accepts exactly one
 mode argument.
 
-`TQUERYAUTH-TEST-001` through `-007` and `-009` through `-010` pass locally.
-`TQUERYAUTH-TEST-008` remains pending until the exact implementation commit
-passes immutable CI; its separate human-review portion is recorded above.
+`TQUERYAUTH-TEST-001` through `-010` pass. Exact implementation commit
+`66d56bf1ee8302e63b5622c879e62dbbe4b7e95e` passed immutable Actions run
+`33853355777`; its Linux structural gate completed before the dependent target
+job passed generated contracts, all 316 Swift tests and both staging builds.
+The separate human-review portion is recorded above, and independent final
+review returned GO after reproducing every prior fail-open attack.
 The final implementation differs from amended READY commit `fcfaec8397` in
 exactly 19 allowlisted paths: the two executable control leaves, one generated
 JSON, package/workflow hooks, and synchronized implementation metadata. The
@@ -284,4 +291,4 @@ errors, project generation is byte-repeatable, and unsigned staging builds pass
 for macOS and iOS Simulator. Exact-path review finds no Swift, registry,
 discoverer, query-extractor, query artifact, schema, RLS, Sync, provider,
 Firebase, hosted or production change. No hosted service or production system
-is contacted by this implementation.
+is contacted by this implementation or promotion.

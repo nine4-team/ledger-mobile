@@ -3,7 +3,7 @@
   "sliceId": "target-query-logical-authority-crosswalk-control",
   "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Target Query Logical-Authority Control",
   "surfaceIds": ["CONFIG-5422E6C6A047", "CONFIG-ED6818A70D4E"],
   "requirements": [
@@ -238,7 +238,7 @@
       "owner": "Ubuntu conversion-control CI and human registry/generated-diff review",
       "covers": ["TQUERYAUTH-REQ-001", "TQUERYAUTH-REQ-002", "TQUERYAUTH-REQ-005", "TQUERYAUTH-REQ-010", "TQUERYAUTH-REQ-011", "TQUERYAUTH-REQ-012"],
       "expected": "Immutable READY CI passes comment-only scaffolds and synchronized controls; later implementation CI structurally checks deterministic JSON before target Swift work while evidence separately records human semantic review.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"]
     },
     {
@@ -263,5 +263,5 @@
   "implementationEvidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented locally after amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a passed Actions run 33849974363. The dependency-free JSON-only generator/checker and 23-test adversarial suite bind all 18 current TQUERY methods to the reviewed registry, re-derive all upstream inventory relationships/hashes/totals, enforce review-class consistency, canonicalize nested output, enforce realpath/non-symlink inputs and safe exclusive atomic artifact generation, derive collision-checked TACCESS identities and mapping hashes, and emit one deterministic generated JSON artifact. The committed READY addendum preserves genuine path exclusions for generic Firebase-tool and current-query discovery while the implementation tests retain contiguous forbidden-key cases and the 386 QUERY inventory remains unchanged. TQUERYAUTH-TEST-001 through -007 and -009 through -010 pass locally; TEST-008 remains planned until immutable implementation CI, while human review of all 18 generated rows is recorded separately in evidence. The validator is structural only and cannot approve free-text meaning. A-003/A-004 and every existing query owner remain unadvanced."
+  "notes": "Verified after amended immutable READY commit fcfaec8397f08b17ef54e9cffc651dfa3fce2b6a passed Actions run 33849974363 and exact implementation commit 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e passed immutable Actions run 33853355777. The dependency-free JSON-only generator/checker and 23-test adversarial suite bind all 18 current TQUERY methods to the reviewed registry, re-derive all upstream inventory relationships/hashes/totals, enforce review-class consistency, canonicalize nested output, enforce realpath/non-symlink inputs and safe exclusive atomic artifact generation, derive collision-checked TACCESS identities and mapping hashes, and emit one deterministic generated JSON artifact. The committed READY addendum preserves genuine path exclusions for generic Firebase-tool and current-query discovery while the implementation tests retain contiguous forbidden-key cases and the 386 QUERY inventory remains unchanged. TQUERYAUTH-TEST-001 through -010 pass; human review of all 18 generated rows is recorded separately in evidence, and independent final adversarial review returned GO with no P0-P3 finding. The validator is structural only and cannot approve free-text meaning. A-003/A-004 and every existing query owner remain unadvanced."
 }
