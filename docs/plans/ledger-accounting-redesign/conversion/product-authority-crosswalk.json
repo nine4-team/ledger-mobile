@@ -112,6 +112,22 @@
         { "path": "docs/architecture/redesign/08-verification-observability-and-operations.md", "role": "architecture_authority" }
       ]
     },
+    "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001": {
+      "scope": "product",
+      "rationale": "The local-only Account discovery adapter must preserve canonical Principal-scoped visibility-safe Account discovery, honest local readiness and explicit non-authorizing selection without inferring Auth, lease, hosted Sync or workspace-activation policy.",
+      "authorities": [
+        { "path": "docs/specs/account-discovery-and-workspace-selection.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001": {
       "scope": "product",
       "rationale": "The isolated Client and Project directory provider must preserve canonical stable identity and Project-to-Client relationships while proving membership-scoped local visibility, honest independent readiness, offline pending-row usability, reconciliation and target-app navigation without authorizing hosted or production behavior.",

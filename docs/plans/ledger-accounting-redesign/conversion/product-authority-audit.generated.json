@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T21:00:10.465Z",
+  "generatedFromManifestSync": "2026-09-04T21:35:31.424Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 883,
-    "targetRelevantSurfaces": 623,
-    "batches": 24,
-    "productScopeSurfaces": 720,
+    "surfaces": 887,
+    "targetRelevantSurfaces": 627,
+    "batches": 25,
+    "productScopeSurfaces": 724,
     "technicalControlSurfaces": 163
   },
   "canonicalTargetCoverage": [
@@ -100,10 +100,11 @@
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
       "batchIds": [
+        "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001"
       ],
-      "surfaceCount": 15,
-      "targetRelevantSurfaceCount": 12
+      "surfaceCount": 19,
+      "targetRelevantSurfaceCount": 16
     },
     {
       "path": "docs/specs/session-ending-pending-work.md",
@@ -130,6 +131,62 @@
     }
   ],
   "batches": [
+    {
+      "batchId": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001",
+      "title": "Target Account discovery PowerSync provider and isolated selection exercise",
+      "scope": "product",
+      "rationale": "The local-only Account discovery adapter must preserve canonical Principal-scoped visibility-safe Account discovery, honest local readiness and explicit non-authorizing selection without inferring Auth, lease, hosted Sync or workspace-activation policy.",
+      "surfaceCount": 4,
+      "targetRelevantSurfaceCount": 4,
+      "authorities": [
+        {
+          "path": "docs/specs/account-discovery-and-workspace-selection.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/identity-account-session-and-operation-lifecycle.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-3BFEA9F12A91",
+        "SWIFT-8AA6BB698C64",
+        "SWIFT-A8B0B06147C3",
+        "TEST-D960EA615333"
+      ]
+    },
     {
       "batchId": "M0-APP-SHELL-PRESENTATION-001",
       "title": "App shell, shared presentation, and test support",

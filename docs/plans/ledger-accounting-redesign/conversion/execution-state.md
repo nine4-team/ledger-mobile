@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 269
+State version: 271
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-PROJECT-DIRECTORY-POWERSYNC-IMPLEMENTATION-CI
+- Checkpoint: ACCOUNT-DISCOVERY-POWERSYNC-READY-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,12 +36,14 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 264 status-bearing rows: 68
-  done, four verified, two implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 265 status-bearing rows: 68
+  done, four verified, two implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Two provider-backed product slices have working local identity, ordinary-name
+- Three provider-backed product slices have working local behavior: Client
+  creation, Project setup and the Client/Project directory. The two mutation
+  slices have local identity, ordinary-name
   command, encrypted-offline, RLS, replay and readback mechanics: Client
   creation and Project setup. O-043 now correctly gates final Client-name
   submission parity for Client creation and only the new-Client Project branch;
@@ -59,6 +61,35 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Prepared a four-leaf, comment-only READY candidate for the next local-only
+  Account discovery provider slice. The candidate implements no behavior yet;
+  it freezes the Principal/environment-bound `AccountQuerying` adapter, a
+  principal-scoped encrypted bootstrap runtime, false-empty/readiness/freshness/
+  bounded-failure/restart/cancellation coverage and a build-only isolated
+  explicit-selection component. Existing staging-root runtime wiring is
+  excluded. A
+  feature-specific authority audit confirmed that the canonical Account spec
+  settles this local outcome and that session-ending/pending-work can follow as
+  a separate slice because selection intent activates and tears down nothing.
+  Independent scouting also identified a hard boundary: the current
+  illustrative `sync-streams.yaml` selects broad Principal data and globally
+  auto-subscribes Account content, so this slice uses only disposable/injected
+  local rows plus injected typed query-specific completeness/freshness and
+  explicitly does not reuse or advance that config. Server schema/grants/RLS/
+  Data API, safe hosted bootstrap/authorization and actual workspace activation
+  remain gated by A-004/A-007/A-016. Project-note work was
+  deferred because O-039 blocks mutation and note history also needs this
+  shared scope/readiness foundation. The first independent review returned
+  NO-GO over accidental unclaimed pgTAP/root work and underspecified freshness,
+  failure and pre-query scope-refusal tests. A second review caught three stale
+  wording inconsistencies. All findings are corrected; final corrected-diff
+  review returned GO with no P0-P3 finding. Conversion controls, target
+  environment/contracts, all 11 MCP tests, all 358 Swift tests in 69 suites,
+  deterministic project generation, both staging builds and clean formatting
+  pass locally. Exact READY commit and immutable CI remain next. No Firebase,
+  hosted or production state changed;
+  `EVID-ACCOUNT-DISCOVERY-PROVIDER-001`.
 
 - Implemented the reviewed Client/Project directory and browse provider after
   exact READY commit `2417d20bd03540288575bb2a33b96130e7edd4c2`
@@ -3770,14 +3801,13 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Prepare the next decision-independent provider-backed slice from the verified
-Project-note read and creation contracts. Audit current note behavior and
-canonical redesign specs into one bounded dossier covering Postgres schema and
-handler, grants/RLS, PowerSync local durability/readiness, target app/MCP parity,
-migration exclusions and executable verification before advancing any source to
-READY. Keep hosted Auth/Sync proof and A-003/A-004 open; do not provision hosted
-resources, access production, modify Firebase, migrate data or authorize
-cutover.
+Obtain independent review of the exact comment-only Account-discovery READY
+candidate, correct every substantive finding, then commit and pass the complete
+  immutable workflow on that exact checkpoint. Only after it passes, implement
+  the four owned local leaves and synchronized evidence, without changing or
+  claiming the current Sync configuration. Keep hosted Auth/Sync, workspace
+activation, A-003/A-004/A-007/A-016, migration and cutover open; do not
+provision hosted resources, access production or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 

@@ -1,7 +1,7 @@
 {
   "batchId": "M0-PLATFORM-CONTROL-001",
   "title": "Platform, transport, release, and migration control",
-  "reviewedAt": "2026-08-31",
+  "reviewedAt": "2026-09-04",
   "evidence": [
     "EVID-CAPABILITY-PLATFORM-CONTROL-001",
     "EVID-MIGRATION-RUN-INTEGRITY-001",
@@ -10,7 +10,8 @@
     "EVID-TARGET-COMPOSITION-001",
     "EVID-DOMAIN-PRIMITIVES-001",
     "EVID-TARGET-QUERY-PORT-INVENTORY-001",
-    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+    "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
   ],
   "surfaces": [
     {
@@ -165,7 +166,7 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "41921d7f9da4f21fe636d5f35e8d9773b609ef6c8e54f4b2759c62bf7389f12c",
+      "acknowledgeSourceHash": "32d8f2f3de271894567930a0731eb1ca6d874168d34cd30c8420fc771bb64d8c",
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -173,9 +174,10 @@
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the comment-only AccountDiscoveryStagingExercise source is included for the READY package and the Firebase application Xcode project is unchanged.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

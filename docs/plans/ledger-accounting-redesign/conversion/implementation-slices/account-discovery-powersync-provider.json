@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "account-discovery-powersync-provider",
+  "title": "Read locally available Accounts and make one explicit workspace choice",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Identity, Membership, and Workspace Context",
+  "surfaceIds": ["SWIFT-A8B0B06147C3", "SWIFT-8AA6BB698C64", "TEST-D960EA615333", "SWIFT-3BFEA9F12A91"],
+  "requirements": [
+    {
+      "id": "ACCOUNTPROVIDER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Authorized Account Discovery",
+      "invariant": "One local discovery snapshot is bound to the compiled target environment and stable Principal, contains only distinct active-membership Account IDs plus visibility-safe display names, and preserves duplicate names as distinct Accounts.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-001", "ACCOUNTPROVIDER-TEST-003", "ACCOUNTPROVIDER-TEST-006", "ACCOUNTPROVIDER-TEST-008"]
+    },
+    {
+      "id": "ACCOUNTPROVIDER-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Authorized Account Discovery",
+      "invariant": "A typed, reactive, query-specific readiness input carries both relationship completeness and freshness; together with a content-bound local version it keeps authoritative empty distinct from loading, delayed rows, cached offline state and failure without claiming fresh server authorization.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-001", "ACCOUNTPROVIDER-TEST-002", "ACCOUNTPROVIDER-TEST-003", "ACCOUNTPROVIDER-TEST-004", "ACCOUNTPROVIDER-TEST-008"]
+    },
+    {
+      "id": "ACCOUNTPROVIDER-REQ-003",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Explicit Workspace Selection",
+      "invariant": "Zero, one and many results never auto-select; the isolated staging component may create one local selection intent only from the exact current visible snapshot, and does not activate protected Account data or confer authorization.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-001", "ACCOUNTPROVIDER-TEST-006", "ACCOUNTPROVIDER-TEST-008"]
+    },
+    {
+      "id": "ACCOUNTPROVIDER-REQ-004",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/account-discovery-and-workspace-selection.md",
+      "section": "Failure and Privacy Contract",
+      "invariant": "Malformed, missing, duplicate, inactive, other-Principal, cross-environment or changed-snapshot evidence fails closed or remains explicitly incomplete and exposes no role, financial, identity-provider, token, endpoint or Storage data.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-003", "ACCOUNTPROVIDER-TEST-004", "ACCOUNTPROVIDER-TEST-008"]
+    },
+    {
+      "id": "ACCOUNTPROVIDER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Identity bootstrap",
+      "invariant": "The local adapter accepts only self Principal, active membership and safe Account metadata from the eventual identity-bootstrap boundary; cached rows remain useful offline while independently supplied typed query-specific completeness and freshness govern readiness.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-001", "ACCOUNTPROVIDER-TEST-002", "ACCOUNTPROVIDER-TEST-004", "ACCOUNTPROVIDER-TEST-008"]
+    },
+    {
+      "id": "ACCOUNTPROVIDER-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Account discovery and membership",
+      "invariant": "The PowerSync adapter implements the existing narrow AccountQuerying port; selection stays an application-shell transition and no provider object, generic repository, first-membership fallback or server active-Account record enters feature code.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-001", "ACCOUNTPROVIDER-TEST-006", "ACCOUNTPROVIDER-TEST-007", "ACCOUNTPROVIDER-TEST-008"]
+    },
+    {
+      "id": "ACCOUNTPROVIDER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "Local Swift Integration",
+      "invariant": "One encrypted principal/environment bootstrap database and runtime own Account discovery locally; Account-specific runtime activation, authorization freshness, stream switching, pending-work disposition and teardown remain later coordinated boundaries.",
+      "decisionIds": [],
+      "verificationIds": ["ACCOUNTPROVIDER-TEST-002", "ACCOUNTPROVIDER-TEST-003", "ACCOUNTPROVIDER-TEST-007", "ACCOUNTPROVIDER-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {"items": ["Reuse AuthorizedAccountDiscoveryUpdate, AuthorizedAccountListSnapshot, AccountSummary, AccountSelectionPolicy, WorkspaceSelectionIntent and AccountQuerying unchanged.", "Stable technical ordering and remembered-first presentation reuse the verified domain contract and never create a default selection."], "notApplicable": ""},
+    "postgresSchema": {"items": [], "notApplicable": "This local-only slice makes no server-schema claim or change. Tests inject disposable rows matching the existing local PowerSync table shape; a later hosted identity-bootstrap slice owns canonical Postgres schema proof."},
+    "serverHandlers": {"items": [], "notApplicable": "Account discovery is read-only and selection is local intent; no RPC, Account writer, membership writer, Auth callback or active-workspace handler is added."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API call or grant is exercised or claimed. The later hosted identity-bootstrap slice owns least-privilege grant proof."},
+    "rlsPolicies": {"items": [], "notApplicable": "Local Principal/environment checks are adapter scope validation, not RLS. A later hosted identity-bootstrap slice owns direct positive/negative RLS tests and unauthorized-row-absence proof."},
+    "syncStreams": {"items": [], "notApplicable": "This is a local-only PowerSync read adapter over disposable/injected rows and injected typed query-specific completeness/freshness. The current illustrative sync-streams.yaml is intentionally untouched and is not reused or accepted as safe: it selects broad Principal data and auto-subscribes Account data beyond this slice. A separate A-004/A-007-gated hosted identity-bootstrap slice must define explicit safe columns, authorization, grant/removal, unauthorized local-row absence and subscription lifecycle before connection."},
+    "localOffline": {"items": ["Use an encrypted principal/environment bootstrap namespace whose query refuses environment or Principal rebinding before database access.", "Require the exact local Principal row as a bootstrap sentinel and count active same-Principal membership rows before joining Account metadata so delayed or malformed relationships remain partial rather than authoritative empty.", "Inject a typed query-specific readiness observation carrying relationship completeness and freshness; ready-to-stale-to-ready transitions emit without row changes, and a reopened cache initializes partial or stale until fresh current-process evidence arrives.", "Bind LocalDataVersion to exact scope, readiness, raw relationship count and canonical Account rows; cancellation terminates database and readiness observations.", "Cached rows survive close/reopen without network access; close preserves the database and key by default, but historical has-synced/last-synced metadata never restores current-ready authority.", "Bound local database/readiness failures before cache as failed-without-snapshot and after cache as failed-with-the-exact-last-snapshot, without raw provider errors or authoritative-empty fallback."], "notApplicable": ""},
+    "storageMedia": {"items": [], "notApplicable": "Account summaries contain no logo reference, attachment bytes, Storage object or deletion/retention behavior."},
+    "appMcp": {"items": ["A build-only isolated staging component defines waiting, partial, stale, authoritative-empty and ready Account rendering plus exact tapped-row selection intent, but this slice deliberately does not wire it into the existing staging app root.", "MCP account selection remains outside because no target MCP authenticated session/bootstrap transport exists; this slice does not recreate mutable root mcpUserState or fallback Account selection."], "notApplicable": ""},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase membership, remembered Account, Auth UID, cache or production row is read or transformed; source migration and correlation remain later gates."},
+    "observabilityRunbooks": {"items": ["The staging exercise exposes bounded state and stable non-secret diagnostics; no raw provider error, Auth subject or membership/financial payload is logged."], "notApplicable": ""},
+    "rolloutRollback": {"items": ["Implementation remains in the isolated target app and disposable local databases; Firebase remains unchanged and authoritative.", "Local proof grants no Auth-provider, offline-lease, workspace activation/switch, pending-work cleanup, hosted Sync, migration, production, release or cutover authority; A-003/A-004 remain proposed."], "notApplicable": ""}
+  },
+  "verification": [
+    {"id": "ACCOUNTPROVIDER-TEST-001", "kind": "domain", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift", "covers": ["ACCOUNTPROVIDER-REQ-001", "ACCOUNTPROVIDER-REQ-002", "ACCOUNTPROVIDER-REQ-003", "ACCOUNTPROVIDER-REQ-005", "ACCOUNTPROVIDER-REQ-006"], "expected": "Zero/one/many/equal-name active memberships produce exact ordered Account snapshots, no automatic selection and one exact explicit current-snapshot intent.", "status": "planned", "evidence": []},
+    {"id": "ACCOUNTPROVIDER-TEST-002", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift", "covers": ["ACCOUNTPROVIDER-REQ-002", "ACCOUNTPROVIDER-REQ-005", "ACCOUNTPROVIDER-REQ-007"], "expected": "Encrypted close/reopen reproduces cached rows and exact scope without network access or local deletion, but initializes partial/stale until fresh query-specific readiness arrives; ready-to-stale-to-ready emits without row changes and LocalDataVersion follows exact content/readiness.", "status": "planned", "evidence": []},
+    {"id": "ACCOUNTPROVIDER-TEST-003", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift", "covers": ["ACCOUNTPROVIDER-REQ-001", "ACCOUNTPROVIDER-REQ-002", "ACCOUNTPROVIDER-REQ-004", "ACCOUNTPROVIDER-REQ-007"], "expected": "Wrong environment/Principal rebinding performs zero database access; inactive/other-Principal membership, missing Principal/Account relationship, malformed name, duplicate identity and changed selection evidence refuse or remain non-authoritative without cross-scope rows.", "status": "planned", "evidence": []},
+    {"id": "ACCOUNTPROVIDER-TEST-004", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift", "covers": ["ACCOUNTPROVIDER-REQ-002", "ACCOUNTPROVIDER-REQ-004", "ACCOUNTPROVIDER-REQ-005"], "expected": "Database or readiness-source failure before cache emits the canonical bounded failed update with no snapshot; failure after a valid snapshot retains that exact cached scope/content, never upgrades it, never yields authoritative empty and exposes no raw provider error. Readiness-source termination is likewise bounded.", "status": "planned", "evidence": []},
+    {"id": "ACCOUNTPROVIDER-TEST-006", "kind": "app_mcp_contract", "owner": "AccountDiscoveryStagingExercise.swift build and AccountDiscoveryPowerSyncQueryTests.swift", "covers": ["ACCOUNTPROVIDER-REQ-001", "ACCOUNTPROVIDER-REQ-003", "ACCOUNTPROVIDER-REQ-006"], "expected": "The isolated build-only staging component uses AccountQuerying and AccountSelectionPolicy to represent explicit local truth and create no first/remembered default; it is not wired into the staging root and no unsupported target MCP selection state is invented.", "status": "planned", "evidence": []},
+    {"id": "ACCOUNTPROVIDER-TEST-007", "kind": "operational", "owner": ".github/workflows/supabase-conversion-control.yml", "covers": ["ACCOUNTPROVIDER-REQ-006", "ACCOUNTPROVIDER-REQ-007"], "expected": "The exact synchronized implementation commit passes conversion controls, target tests, local Supabase checks, generated contracts, both staging builds and clean artifacts.", "status": "planned", "evidence": []},
+    {"id": "ACCOUNTPROVIDER-TEST-008", "kind": "end_to_end", "owner": "AccountDiscoveryPowerSyncQueryTests.swift", "covers": ["ACCOUNTPROVIDER-REQ-001", "ACCOUNTPROVIDER-REQ-002", "ACCOUNTPROVIDER-REQ-003", "ACCOUNTPROVIDER-REQ-004", "ACCOUNTPROVIDER-REQ-005", "ACCOUNTPROVIDER-REQ-006", "ACCOUNTPROVIDER-REQ-007"], "expected": "A fresh principal-scoped local runtime moves from waiting through partial to ready Account discovery, becomes stale and ready without row changes, survives offline restart without false freshness, creates one exact explicit selection intent through the canonical policy and activates or deletes nothing; staging-root runtime wiring is explicitly unclaimed.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": ["EVID-ACCOUNT-DISCOVERY-PROVIDER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Comment-only READY design for a local-only PowerSync adapter. All four owned leaves contain comments only. The staging exercise is deliberately build-only; existing staging-root runtime wiring is not claimed and must be separately authorized after this provider boundary is verified. Account discovery and selection intent are already canonical and require no new product choice. Session-ending pending-work remains a separate next provider slice because this boundary does not activate, switch, close or delete an Account workspace. A-007/A-016, O-023, server schema/grants/RLS, safe hosted Sync configuration, workspace activation, migration and cutover remain excluded. This slice may advance only to implemented; hosted identity-bootstrap is a later slice."
+}

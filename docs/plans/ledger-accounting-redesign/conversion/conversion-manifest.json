@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T21:00:10.465Z",
+    "lastSynchronizedAt": "2026-09-04T21:35:31.424Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -424,8 +424,8 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "41921d7f9da4f21fe636d5f35e8d9773b609ef6c8e54f4b2759c62bf7389f12c",
-      "acknowledgedSourceHash": "41921d7f9da4f21fe636d5f35e8d9773b609ef6c8e54f4b2759c62bf7389f12c",
+      "observedSourceHash": "32d8f2f3de271894567930a0731eb1ca6d874168d34cd30c8420fc771bb64d8c",
+      "acknowledgedSourceHash": "32d8f2f3de271894567930a0731eb1ca6d874168d34cd30c8420fc771bb64d8c",
       "metadata": {},
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
@@ -464,9 +464,10 @@
       "evidence": [
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
-        "EVID-TARGET-ENVIRONMENT-001"
+        "EVID-TARGET-ENVIRONMENT-001",
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the comment-only AccountDiscoveryStagingExercise source is included for the READY package and the Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -21261,6 +21262,61 @@
       "classificationBatch": "M0-IDENTITY-LIFECYCLE-001"
     },
     {
+      "id": "SWIFT-3BFEA9F12A91",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/AccountDiscoveryStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/AccountDiscoveryStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "57be7c8038247f068cd5c9efa75f651b0ae95dc40102b9f5bdac0226f9c1ceac",
+      "acknowledgedSourceHash": "57be7c8038247f068cd5c9efa75f651b0ae95dc40102b9f5bdac0226f9c1ceac",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for isolated staging rendering and explicit Account-selection intent creation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "Isolated Account discovery staging exercise"
+        ],
+        "securityRequirements": [
+          "Render visibility-safe summaries and bounded diagnostics only"
+        ],
+        "syncRequirements": [
+          "Render waiting/partial/stale/ready states without false empty"
+        ]
+      },
+      "migration": {
+        "rule": "Exercise only target contracts.",
+        "reconciliation": [
+          "Selection remains local intent and activates nothing"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target staging builds",
+          "AccountDiscoveryPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "An explicit current-row action creates the exact selection intent without defaulting"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+      ],
+      "notes": "The staging component is build-only and existing staging-root runtime wiring is explicitly excluded. No automatic selection, workspace activation, hosted connection or production behavior.",
+      "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-3CEB22DD4642",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/PinnedImageLayout.swift",
@@ -27525,6 +27581,61 @@
       "classificationBatch": "M0-BACKEND-STORAGE-001"
     },
     {
+      "id": "SWIFT-8AA6BB698C64",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/LedgerPrincipalOfflineRuntime.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPrincipalOfflineRuntime.swift"
+        }
+      ],
+      "observedSourceHash": "8362c17ad913c299798c26ea5070adb7b0c04f9f6df0f948af8a17916cab5ebf",
+      "acknowledgedSourceHash": "8362c17ad913c299798c26ea5070adb7b0c04f9f6df0f948af8a17916cab5ebf",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for one encrypted environment/Principal bootstrap runtime that exposes AccountQuerying without activating an Account workspace.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "Principal bootstrap local runtime"
+        ],
+        "securityRequirements": [
+          "Principal/environment namespace is immutable",
+          "Close preserves local evidence"
+        ],
+        "syncRequirements": [
+          "Runtime supplies only Account discovery until later activation coordination"
+        ]
+      },
+      "migration": {
+        "rule": "Create no source-to-target transform.",
+        "reconciliation": [
+          "Later workspace activation owns current authorization and session transition"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountDiscoveryPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Runtime rejects rebinding and preserves encrypted cached discovery state"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+      ],
+      "notes": "No Auth, stream connector, workspace switch or deletion behavior exists.",
+      "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-8AB5414F20CE",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetTestSupport/DeterministicTargetTestSupport.swift",
@@ -29722,6 +29833,65 @@
       ],
       "notes": "M2 withheld: O-008/O-030/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "SWIFT-A8B0B06147C3",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/AccountDiscoveryPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/AccountDiscoveryPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "d28fae5d68443a23f80c4fe5544fbf5e2cdbb5c4625d517e1d67d3acb0024d47",
+      "acknowledgedSourceHash": "d28fae5d68443a23f80c4fe5544fbf5e2cdbb5c4625d517e1d67d3acb0024d47",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for an AccountQuerying adapter over exact Principal bootstrap rows and independently reactive query-specific completeness plus freshness.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "PowerSync AccountQuerying adapter"
+        ],
+        "securityRequirements": [
+          "Exact environment and Principal binding",
+          "Only active same-Principal membership relationships may expose Account rows"
+        ],
+        "syncRequirements": [
+          "Query completeness and freshness are independent, typed and reactive",
+          "Ready/stale transitions emit without row changes",
+          "Restart cannot infer fresh authority from historical sync metadata",
+          "Missing Account relationships cannot become authoritative empty"
+        ]
+      },
+      "migration": {
+        "rule": "Read only target local rows; no Firebase adapter or source cache.",
+        "reconciliation": [
+          "Membership-before-Account remains partial",
+          "Removal disappears when synchronized without making cached state fresh authority"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountDiscoveryPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Exact local scope/readiness/failure/restart/cancellation and selection-intent behavior passes"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+      ],
+      "notes": "No executable provider behavior before the exact READY checkpoint passes immutable CI.",
+      "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-A9422A32A60C",
@@ -42330,6 +42500,63 @@
       ],
       "notes": "Four provider-free focused tests and all 59 target package tests pass locally and in immutable Actions run 33576448917 on exact implementation commit 4fdb363f. Fixtures use synthetic time/count/code/evidence values, contact no file/network/provider/hosted service and cannot activate operational behavior or claim a production threshold.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-D960EA615333",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountDiscoveryPowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "c381c575ce9ab471348f989c7a48be686679b5cb7fdec4a0160d26b9e1fe0be6",
+      "acknowledgedSourceHash": "c381c575ce9ab471348f989c7a48be686679b5cb7fdec4a0160d26b9e1fe0be6",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY scaffold for local Account discovery, readiness/freshness, isolation, bounded failures, restart, cancellation and explicit-selection tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Identity, Membership, and Workspace Context",
+        "surfaces": [
+          "Account discovery provider test suite"
+        ],
+        "securityRequirements": [
+          "Negative Principal/environment/membership/malformed-row coverage is mandatory",
+          "Rejected rebinding must prove zero database access",
+          "Provider failures expose only bounded diagnostics"
+        ],
+        "syncRequirements": [
+          "False-empty, reactive completeness/freshness, row-independent ready/stale transitions, restart initialization, before/after-cache failure and cancellation coverage are mandatory"
+        ]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities and disposable encrypted databases.",
+        "reconciliation": [
+          "No source migration, server RLS or hosted claim"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:powersync:test",
+          "swift test --package-path LedgeriOS --filter AccountDiscoveryPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "All planned local obligations pass before implementation status"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+      ],
+      "notes": "Synthetic local tests prove adapter scoping only and must not be described as server RLS or hosted Sync authorization proof.",
+      "classificationBatch": "M0-ACCOUNT-DISCOVERY-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "TEST-DA0DC6CF7163",
