@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-MEDIA-LIFECYCLE-001",
+  "owner": "Media and Attachment Lifecycle",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-334B5E35D8A6",
+    "QUERY-5819775B1FFE",
+    "QUERY-FF1E88477925"
+  ],
+  "allowedBlockerIds": [
+    "A-015",
+    "A-016",
+    "O-019",
+    "O-023",
+    "O-027",
+    "O-036"
+  ],
+  "rows": [],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+}

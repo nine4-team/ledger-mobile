@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-REPLACE-CAPABILITY-001",
+  "owner": "Replace with one capability owner",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-000000000000"
+  ],
+  "allowedBlockerIds": [
+    "O-040"
+  ],
+  "rows": [
+    {
+      "queryId": "QUERY-000000000000",
+      "expectedOccurrenceHash": "replace-with-lowercase-sha256",
+      "sourceOwnerSurfaceId": "REPLACE-000000000000",
+      "sourceRef": {
+        "path": "replace/with/exact/source/path"
+      },
+      "expectedSourceOwnerHash": "replace-with-lowercase-sha256",
+      "outcomes": [
+        {
+          "category": "verified_target_query_port",
+          "tqueryId": "TQUERY-000000000000",
+          "taccessId": "TACCESS-000000000000",
+          "expectedMappingHash": "replace-with-lowercase-sha256"
+        },
+        {
+          "category": "approved_future_target_query",
+          "targetSurfaceId": "REPLACE-000000000000",
+          "targetSurface": "Replace with one exact target.surfaces member",
+          "expectedTargetMappingHash": "replace-with-lowercase-sha256"
+        },
+        {
+          "category": "approved_target_nonquery_surface",
+          "targetSurfaceId": "REPLACE-000000000000",
+          "targetSurface": "Replace with one exact target.surfaces member",
+          "expectedTargetMappingHash": "replace-with-lowercase-sha256"
+        },
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "REPLACE-000000000000",
+          "sourceRef": {
+            "path": "replace/with/exact/source/path"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_verified_cutover_reconciliation",
+          "authorityRef": {
+            "path": "docs/architecture/redesign/architecture-decisions.md",
+            "section": "A-017 — Firebase Is a Migration Source Only"
+          }
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "authorityRefs": [
+            {
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "role": "architecture_authority",
+              "section": "A-017 — Firebase Is a Migration Source Only"
+            }
+          ]
+        },
+        {
+          "category": "authority_blocked",
+          "blockedScope": "target_query_contract",
+          "tqueryId": "TQUERY-000000000000",
+          "taccessId": "TACCESS-000000000000",
+          "expectedMappingHash": "replace-with-lowercase-sha256",
+          "blockerIds": [
+            "O-040"
+          ],
+          "authorityRefs": [
+            {
+              "id": "O-040",
+              "kind": "product_decision",
+              "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+              "section": "Open Product Decisions"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Template only. Only the exact file _template.json is excluded from the future aggregate validator."
+}

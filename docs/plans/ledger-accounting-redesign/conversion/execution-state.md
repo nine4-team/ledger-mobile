@@ -32,6 +32,29 @@ modifying the running Firebase application before hard cutover.
 
 ## Completed at This Checkpoint
 
+- Drafted the separate 386-occurrence source-query reconciliation control at
+  clean baseline `76b2ff45ba4fffe68097919c32ec7b4fec48047c`. One aggregate
+  registry binds the full unchanged source and target-authority artifacts plus
+  stable selected manifest projections. Human semantic review assigned every
+  one of the 386 QUERY IDs exactly once across ten capability batches; their
+  reconciliation rows remain intentionally empty, and the two
+  future aggregate generator/test leaves are comment-only. The frozen row
+  model requires one QUERY ID, canonical full-occurrence hash, human-selected
+  exact manifest source owner/ref with a stable projection hash, and a nonempty
+  canonical set of only six outcome classes:
+  verified target query port, approved future target query, approved target
+  nonquery surface, source-only, retired or typed authority-blocked. Blocked
+  outcomes must bind the exact source owner, TQUERY row or target surface that
+  structurally carries every blocker; the M0 control crosswalk directly grants
+  the exact architecture-decisions authority used by A-003/A-004 boundaries.
+  No outcome
+  is inferred from subsystem/path/symbol/expression. A-003/A-004 remain global-
+  only physical deferrals. The stable control CONFIG owners are `target_mapped`
+  with empty blockers while zero of 386 rows have outcomes, so the dossier remains
+  `draft`; no package/workflow/generated reconciliation artifact, executable
+  control, runtime, provider, hosted, production, release or cutover behavior
+  advances; `EVID-SOURCE-QUERY-RECONCILIATION-001`.
+
 - Verified the complete target query logical-authority crosswalk
   above the verified TQUERY inventory. One reviewed JSON registry binds the
   exact inventory digest and all 18 method signature hashes, then records only
@@ -301,7 +324,7 @@ modifying the running Firebase application before hard cutover.
 - Published `current-backend-contract.md` and `EVID-SOURCE-BACKEND-001`,
   including current privilege defects, production/test rule drift, derived
   side effects, media durability, and explicit static-review limitations.
-- Added a deterministic query extractor and generated a catalog from 169
+- Added a deterministic query extractor and generated a catalog from 170
   Firestore-candidate files: 74 contain 386 recognized reads, filters, ordering,
   pagination, listeners, collection groups, projections, and aggregates.
 - Published `current-query-contract.md` and `EVID-QUERY-001`; static query and
@@ -3492,8 +3515,9 @@ modifying the running Firebase application before hard cutover.
 ## Next Action
 
 Prepare the next bounded slice that reconciles all 386 frozen source `QUERY-*`
-occurrences to an approved target query, a source-only migration/audit use, an
-explicit retirement, or a named decision hold. Preserve the verified
+occurrences through exactly the six frozen categories: verified target query
+port, approved future target query, approved target nonquery surface,
+source-only, retired, or authority-blocked. Preserve the verified
 logical-authority registry as the target side of that join; do not translate
 Firestore syntax or indexes, advance globally deferred A-003/A-004 physical
 planes, or silently resolve the registry's explicit product-decision blockers.
@@ -4007,7 +4031,7 @@ Query/profiler checkpoint verified later on 2026-08-31:
 - 595 unclassified surfaces remain;
 - 84 surfaces are characterized, two are blocked, and three control/tool
   surfaces are verified;
-- deterministic query generation/check passed with 169 candidates, 74 files
+- deterministic query generation/check passed with 170 candidates, 74 files
   containing recognized operations, and 386 occurrences;
 - profiler syntax, help, mutation guard, and intentional missing-credential
   refusal passed;

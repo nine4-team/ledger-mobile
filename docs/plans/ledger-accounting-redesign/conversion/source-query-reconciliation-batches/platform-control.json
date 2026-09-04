@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-PLATFORM-CONTROL-001",
+  "owner": "Platform, Backend, and Conversion Control",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-0DCB1F5BDFA1",
+    "QUERY-10D959B980AD",
+    "QUERY-1B08651B1030",
+    "QUERY-241AE9EE0E3F",
+    "QUERY-25EBAD3AA007",
+    "QUERY-342EBD223405",
+    "QUERY-36E15C520F32",
+    "QUERY-57FA49B52A1C",
+    "QUERY-5FE3B789764B",
+    "QUERY-C1FD5E69A992",
+    "QUERY-C2E9073C0422",
+    "QUERY-CED857902958",
+    "QUERY-D1168C3EEC3F",
+    "QUERY-E53E8AAEA8A9",
+    "QUERY-EA29EFC55CE5",
+    "QUERY-ED6D30C49E76",
+    "QUERY-EFE5D6B459E2",
+    "QUERY-F0DA5BB2272E"
+  ],
+  "allowedBlockerIds": [
+    "A-007",
+    "A-010",
+    "A-015",
+    "A-016",
+    "O-018",
+    "O-020",
+    "O-022",
+    "O-026",
+    "O-032"
+  ],
+  "rows": [],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-SPACES-REVIEW-001",
+  "owner": "Spaces, Checklists, and Review",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-2F3C6023ACB6",
+    "QUERY-55977FD9E98E",
+    "QUERY-5B30A5A1F20D",
+    "QUERY-6B0DE6D22A30",
+    "QUERY-AABD57525BA4",
+    "QUERY-DB3071FD462C",
+    "QUERY-EDA8CEB09FDE",
+    "QUERY-F2986DF7A932"
+  ],
+  "allowedBlockerIds": [
+    "A-015",
+    "A-016",
+    "O-012",
+    "O-023",
+    "O-026",
+    "O-037",
+    "O-038"
+  ],
+  "rows": [],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+}

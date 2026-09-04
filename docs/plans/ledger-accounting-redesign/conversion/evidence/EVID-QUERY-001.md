@@ -12,16 +12,21 @@
 
 - `current-query-contract.md` — reviewed query families, callers, offline
   expectations, index implications, target mapping rule, and limitations
-- `query-contract.generated.json` — 169 Firestore-candidate files inspected, 74
+- `query-contract.generated.json` — 170 Firestore-candidate files inspected, 74
   files with recognized operations, and 386 source occurrences at source digest
   `87a3c1deb568f3e5a5bd35dc316dff38eccaf4fb83e8ecc02c61c77887150da4`
 - `query-contract.generated.md` — compact generated coverage report
 - `scripts/extract-firestore-query-contract.mjs` — deterministic generator/checker
 
 The generated JSON SHA-256 is
-`5036c5b36615527e334acb505fb6b434fc979a62d915b39089cf7813cbb5661e`.
+`2a43de6e59844d081237c8d9731846662e0862190823ea854c2238256b0a6a14`.
 The generated Markdown SHA-256 is
-`3b240b83e4b78caf9343dee1072da3ce0724e82401b6b0d29cc957338a4cac2e`.
+`970b84d56837b78958d78003122ec86398e0ccd1928160b14c746fd6eb27ea41`.
+
+These totals and hashes are the values in the original committed artifact at
+`3e1d435b` and in the current artifact. Earlier text saying 169 candidates and
+recording different generated hashes was stale evidence prose, not a change to
+the artifact or its source digest.
 
 ## Commands and Result
 

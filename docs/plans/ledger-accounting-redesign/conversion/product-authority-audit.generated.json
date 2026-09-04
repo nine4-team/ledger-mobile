@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T08:33:54.144Z",
+  "generatedFromManifestSync": "2026-09-04T09:57:16.088Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 839,
-    "targetRelevantSurfaces": 579,
+    "surfaces": 841,
+    "targetRelevantSurfaces": 581,
     "batches": 18,
     "productScopeSurfaces": 681,
-    "technicalControlSurfaces": 158
+    "technicalControlSurfaces": 160
   },
   "canonicalTargetCoverage": [
     {
@@ -543,8 +543,8 @@
       "title": "Capability evolution guidance and deterministic conversion coverage controls",
       "scope": "technical_control",
       "rationale": "Coverage tooling governs how source and target obligations are tracked; it does not define product behavior.",
-      "surfaceCount": 6,
-      "targetRelevantSurfaceCount": 4,
+      "surfaceCount": 8,
+      "targetRelevantSurfaceCount": 6,
       "authorities": [
         {
           "path": "docs/plans/ledger-accounting-redesign/conversion/README.md",
@@ -571,6 +571,10 @@
           "role": "architecture_authority"
         },
         {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "architecture_authority"
+        },
+        {
           "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
           "role": "architecture_authority"
         },
@@ -580,8 +584,10 @@
         }
       ],
       "surfaceIds": [
+        "CONFIG-40F01696B8A6",
         "CONFIG-5422E6C6A047",
         "CONFIG-9B16CFCB67A4",
+        "CONFIG-A8BD153106B8",
         "CONFIG-C1C61B2D6569",
         "CONFIG-ED6818A70D4E",
         "FILE-208B7E9D7F47",

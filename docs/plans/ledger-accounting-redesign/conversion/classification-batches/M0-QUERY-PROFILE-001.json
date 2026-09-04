@@ -5,7 +5,8 @@
   "evidence": [
     "EVID-QUERY-001",
     "EVID-PROFILER-001",
-    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+    "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+    "EVID-SOURCE-QUERY-RECONCILIATION-001"
   ],
   "surfaces": [
     {
@@ -92,15 +93,16 @@
     },
     {
       "id": "FILE-49BE7A26CE03",
-      "acknowledgeSourceHash": "326a97771630e5426a9628e4f2926470867604fc43e4f6212880b617fc131a2a",
-      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only check/generation scripts including the exact logical-authority test fixture path, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
+      "acknowledgeSourceHash": "2eb8feed057ecdae250f51714dd38c4fee197726c36e30322d43d26853446efd",
+      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only query controls including the draft source-query reconciliation generator/test paths, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
       "disposition": "source_only",
       "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-QUERY-001",
         "EVID-CONTRACT-CATALOG-001",
-        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
       "verification": {
         "tests": [
@@ -113,7 +115,7 @@
           "A source change makes check mode fail until regeneration"
         ]
       },
-      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity. The bounded READY addendum excludes only the exact logical-authority test fixture path so its contiguous forbidden-key sentinels cannot change the reviewed 386-occurrence source inventory. Status and ownership remain unchanged."
+      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity. Exact target-control exclusions prevent draft or future synthetic fixtures from changing the reviewed 386-occurrence source inventory. This draft deliberately re-acknowledges only the extractor hash; status and ownership remain unchanged."
     },
     {
       "id": "FILE-7F72D64AB542",

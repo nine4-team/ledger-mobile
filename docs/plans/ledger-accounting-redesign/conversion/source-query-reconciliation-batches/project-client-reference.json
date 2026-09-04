@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-PROJECT-CLIENT-REFERENCE-001",
+  "owner": "Projects, Clients, and Shared Reference Data",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-0BE29F32C9A0",
+    "QUERY-2C1E9DEBF1F7",
+    "QUERY-929FA5F771D6",
+    "QUERY-9E9838748B90",
+    "QUERY-BF0573C89151",
+    "QUERY-C2911BD62303",
+    "QUERY-C59A1027F497",
+    "QUERY-CBD3D04089FF",
+    "QUERY-D8D82B20210E",
+    "QUERY-F1B5D6751738"
+  ],
+  "allowedBlockerIds": [
+    "A-010",
+    "A-016",
+    "O-024",
+    "O-025",
+    "O-026",
+    "O-039",
+    "O-040"
+  ],
+  "rows": [],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+}

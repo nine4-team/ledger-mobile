@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "source-query-reconciliation-control",
+  "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
+  "kind": "technical_control",
+  "status": "draft",
+  "owner": "Source Query Reconciliation Control",
+  "surfaceIds": [
+    "CONFIG-A8BD153106B8",
+    "CONFIG-40F01696B8A6"
+  ],
+  "requirements": [
+    {
+      "id": "SQUERY-REQ-001",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Reproducible Inventory",
+      "invariant": "The aggregate registry binds the complete source artifact by full SHA-256 and sourceDigest. Every row binds one exact QUERY ID, canonical full-occurrence hash, human-selected exact sourceRef and source owner through a stable projected owner hash; no volatile full-manifest hash is stored.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-001",
+        "SQUERY-TEST-002"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Target Mapping Rule",
+      "invariant": "Every QUERY row has a nonempty canonical set of independently authorized outcomes using only verified_target_query_port, approved_future_target_query, approved_target_nonquery_surface, source_only, retired, or authority_blocked.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-003",
+        "SQUERY-TEST-004",
+        "SQUERY-TEST-005"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/current-query-contract.md",
+      "section": "Completeness and Limitations",
+      "invariant": "At DRAFT, human review assigns every current QUERY ID to exactly one capability batch. Rows must remain a subset of that batch's assignedQueryIds during authoring and equal it at READY; no subsystem, path, symbol, operation, expression, or naming heuristic supplies assignment or outcome authority.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-001",
+        "SQUERY-TEST-006",
+        "SQUERY-TEST-009"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/01-system-context-and-principles.md",
+      "section": "5. Commands and queries are separate",
+      "invariant": "A verified target query outcome binds an exact non-decision-blocked TQUERY, TACCESS, and mappingHash. A future-query or nonquery outcome binds an exact manifest surface, exact target.surfaces member, and hash of {surfaceId,disposition,target}; status is validated separately as target_mapped, implemented, verified, rehearsed or cutover_ready and blocked/retired is rejected.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-003",
+        "SQUERY-TEST-004"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-005",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Authority and Precedence",
+      "invariant": "Source-only reuses the row's exact sourceOwnerSurfaceId/sourceRef and requires source_only disposition plus frozen purpose/gate enums. Retirement uses frozen scope/gate/coexistence rules and strict authority. Authority-blocked uses blockedScope and typed blocker authority present in both registry and batch allowlist; O-021 and A-003/A-004 are forbidden.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-005",
+        "SQUERY-TEST-006",
+        "SQUERY-TEST-009"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-003 — Supabase Postgres as Target Authority",
+      "invariant": "Postgres physical access remains globally deferred under the exact architecture-decisions.md heading A-003 — Supabase Postgres as Target Authority and is absent from every reconciliation row, outcome, registry batch, and generated artifact.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-007",
+        "SQUERY-TEST-010"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-004 — PowerSync as Target Local Data Plane",
+      "invariant": "Local physical access remains globally deferred under the exact architecture-decisions.md heading A-004 — PowerSync as Target Local Data Plane and is absent from every reconciliation row, outcome, registry batch, and generated artifact.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-007",
+        "SQUERY-TEST-010"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-008",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Required Work Sequence",
+      "invariant": "Human capability-owner review has assigned all 386 QUERY IDs at DRAFT. Human review must supply all 386 row outcomes before READY; structural validation cannot establish semantic equivalence, retirement wisdom, runtime use, or product authority.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-008",
+        "SQUERY-TEST-009"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-009",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+      "section": "CI/CD Gates",
+      "invariant": "The future dependency-free aggregate control fails closed on stale stable-projection bindings, malformed assignments or rows, invalid authority/coexistence/order, unexpected directory contents, unsafe paths, nondeterministic output and lifecycle-scope drift before target Swift work begins.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-001",
+        "SQUERY-TEST-002",
+        "SQUERY-TEST-006",
+        "SQUERY-TEST-007",
+        "SQUERY-TEST-010"
+      ]
+    },
+    {
+      "id": "SQUERY-REQ-010",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+      "section": "Pull Request and Checkpoint Evidence",
+      "invariant": "DRAFT, READY, implementation and promotion use exact path allowlists and synchronized evidence without changing source runtime, target query owners, target authority, schema, RLS, Sync, provider, hosted systems or production data.",
+      "decisionIds": [],
+      "verificationIds": [
+        "SQUERY-TEST-010"
+      ]
+    }
+  ],
+  "controlModel": {
+    "batchDirectory": "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches",
+    "exactBatchOrder": [
+      "identity-lifecycle.json",
+      "project-client-reference.json",
+      "inventory-transaction.json",
+      "invoicing-budget.json",
+      "item-creation-link.json",
+      "media-lifecycle.json",
+      "spaces-review.json",
+      "reporting-search.json",
+      "source-migration-audit.json",
+      "platform-control.json"
+    ],
+    "onlyExcludedDirectoryEntry": "_template.json",
+    "registryKeys": ["schemaVersion", "status", "sourceInventory", "targetAuthority", "conversionManifestPath", "batchDirectory", "excludedTemplate", "batches", "blockerAuthorities", "notes"],
+    "batchKeys": ["schemaVersion", "batchId", "owner", "status", "assignedQueryIds", "allowedBlockerIds", "rows", "notes"],
+    "rowKeys": ["queryId", "expectedOccurrenceHash", "sourceOwnerSurfaceId", "sourceRef", "expectedSourceOwnerHash", "outcomes"],
+    "queryIdPattern": "^QUERY-[0-9A-F]{12}$",
+    "queryIdDerivation": "'QUERY-' + uppercase first 12 hexadecimal characters of sha256(UTF8(`${sourcePath}:${line}:${operation}`))",
+    "authoringRule": "rows queryId set is a subset of assignedQueryIds at DRAFT and must equal assignedQueryIds at READY or later",
+    "queryIdOrder": "assignedQueryIds and rows use ascending QUERY ID byte order; batch order is exactBatchOrder",
+    "assignmentRule": "The ten assignedQueryIds sets are duplicate-free, pairwise disjoint and their union exactly equals the 386 source inventory QUERY IDs at DRAFT and every later lifecycle",
+    "occurrenceHash": "sha256(UTF8('source-query-occurrence-v1\\0' + recursively-canonicalized-minified complete occurrence JSON))",
+    "sourceOwnerRule": "A human selects one exact manifest surface and one exact sourceRefs member whose path equals the occurrence sourcePath; the machine binds that choice and does not infer it",
+    "sourceOwnerHash": "sha256(UTF8('source-query-owner-projection-v1\\0' + canonical({surfaceId,disposition,sourceRef})))",
+    "targetMappingHash": "sha256(UTF8('source-query-target-mapping-v1\\0' + canonical({surfaceId,disposition,target})))",
+    "allowedTargetStatuses": ["target_mapped", "implemented", "verified", "rehearsed", "cutover_ready"],
+    "forbiddenTargetStatuses": ["blocked", "retired"],
+    "allowedTargetDispositions": ["migrate", "preserve", "redesign", "replace"],
+    "outcomeCategoryOrder": ["verified_target_query_port", "approved_future_target_query", "approved_target_nonquery_surface", "source_only", "retired", "authority_blocked"],
+    "outcomeIdentity": {
+      "verified_target_query_port": ["category", "tqueryId", "taccessId"],
+      "approved_future_target_query": ["category", "targetSurfaceId", "targetSurface"],
+      "approved_target_nonquery_surface": ["category", "targetSurfaceId", "targetSurface"],
+      "source_only": ["category", "sourceOwnerSurfaceId", "sourceRef", "purpose", "retentionGate"],
+      "retired": ["category", "scope", "retirementGate"],
+      "authority_blocked_target_query_contract": ["category", "blockedScope", "tqueryId", "taccessId", "expectedMappingHash", "blockerIds"],
+      "authority_blocked_target_nonquery_contract": ["category", "blockedScope", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash", "blockerIds"],
+      "authority_blocked_source_disposition": ["category", "blockedScope", "blockerIds"],
+      "authority_blocked_retirement": ["category", "blockedScope", "blockerIds"]
+    },
+    "outcomeKeys": {
+      "verified_target_query_port": ["category", "tqueryId", "taccessId", "expectedMappingHash"],
+      "approved_future_target_query": ["category", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash"],
+      "approved_target_nonquery_surface": ["category", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash"],
+      "source_only": ["category", "sourceOwnerSurfaceId", "sourceRef", "purpose", "retentionGate", "authorityRef"],
+      "retired_source_query_mechanism_only": ["category", "scope", "retirementGate", "authorityRefs"],
+      "retired_source_behavior": ["category", "scope", "retirementGate", "retirementAuthority"],
+      "authority_blocked_target_query_contract": ["category", "blockedScope", "tqueryId", "taccessId", "expectedMappingHash", "blockerIds", "authorityRefs"],
+      "authority_blocked_target_nonquery_contract": ["category", "blockedScope", "targetSurfaceId", "targetSurface", "expectedTargetMappingHash", "blockerIds", "authorityRefs"],
+      "authority_blocked_source_disposition": ["category", "blockedScope", "blockerIds", "authorityRefs"],
+      "authority_blocked_retirement": ["category", "blockedScope", "blockerIds", "authorityRefs"]
+    },
+    "canonicalOutcomeRule": "Nonempty outcomes sort by outcomeCategoryOrder then recursively canonicalized minified JSON bytes; identities are unique and arrays retain declared semantic order unless explicitly defined as sorted sets",
+    "sourceOnlyPurposeEnums": ["migration", "audit", "repair", "profiling"],
+    "sourceOnlyRetentionGateEnums": ["through_migration_rehearsal", "through_verified_cutover_reconciliation", "through_post_cutover_audit_signoff"],
+    "retirementScopeEnums": ["source_query_mechanism_only", "source_behavior"],
+    "retirementGateEnums": ["after_verified_target_cutover", "at_verified_target_cutover"],
+    "blockedScopeEnums": ["target_query_contract", "target_nonquery_contract", "source_disposition", "retirement"],
+    "blockerAuthorityKeys": ["id", "kind", "path", "section"],
+    "blockerAuthorityRule": "blockerIds are byte-sorted unique IDs present in both the batch allowedBlockerIds and registry blockerAuthorities; authorityRefs exactly reproduce corresponding registry entries. O IDs must exist under decision-log.md heading Open Product Decisions; A IDs must exist under their exact architecture-decisions.md heading. O-021, A-003 and A-004 are forbidden.",
+    "authorityBlockedBindingRules": {
+      "target_query_contract": "The outcome binds exact tqueryId, taccessId and expectedMappingHash from one target-authority row. blockerIds must be a nonempty subset of the byte-sorted unique union of blockerIds found only in logicalAxes values whose state is decision_blocked and unresolvedAxes entries whose state is decision_blocked; missing/non-array nested blockerIds fail closed and prose is never inspected.",
+      "target_nonquery_contract": "The outcome binds exact targetSurfaceId, targetSurface and expectedTargetMappingHash under the normal target mapping rules. Every blockerId must exist in that exact manifest surface.blockers array.",
+      "source_disposition": "Every blockerId must exist in the exact row-selected source-owner manifest surface.blockers array.",
+      "retirement": "Every blockerId must exist in the exact row-selected source-owner manifest surface.blockers array."
+    },
+    "sourceOnlyAuthority": {"path": "docs/architecture/redesign/architecture-decisions.md", "section": "A-017 — Firebase Is a Migration Source Only"},
+    "mechanismRetirementAuthority": [{"path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority", "section": "A-017 — Firebase Is a Migration Source Only"}],
+    "behaviorRetirementAuthorityShapes": {
+      "canonical_target_heading": ["kind", "path", "section"],
+      "confirmed_decision": ["kind", "id", "path", "section"],
+      "owner_manifest_retire": ["kind", "surfaceId", "sourceRef", "expectedSourceOwnerHash"]
+    },
+    "confirmedProductRetirementAuthorityRule": "canonical_target_heading path must be an exact canonicalTargetSpecs member from product-authority-crosswalk.json and section an exact heading in that file. confirmed_decision must use one D-NNN id, exact path docs/plans/ledger-accounting-redesign/decision-log.md and exact section Confirmed Decisions, and the D ID must occur exactly once in that table section. Arbitrary repository paths/headings are rejected.",
+    "coexistenceRules": [
+      "source_query_mechanism_only requires after_verified_target_cutover and at least one same-row verified/future/nonquery replacement or source_only outcome",
+      "source_behavior requires at_verified_target_cutover plus either an allowed canonical target-spec exact heading or exact confirmed D decision, or an owner_manifest_retire authority whose surfaceId/sourceRef/hash equal the row owner and whose manifest disposition is retire",
+      "source_behavior cannot coexist with verified/future/nonquery/source_only preservation on the same row",
+      "authority_blocked may coexist only for a blockedScope not already claimed resolved by another same-row outcome and must bind the exact source/target surface carrying every blocker",
+      "source_only must repeat the row's exact sourceOwnerSurfaceId and sourceRef and that owner disposition must equal source_only"
+    ],
+    "physicalDecisionBoundaries": [
+      "docs/architecture/redesign/architecture-decisions.md#A-003 — Supabase Postgres as Target Authority",
+      "docs/architecture/redesign/architecture-decisions.md#A-004 — PowerSync as Target Local Data Plane"
+    ]
+  },
+  "contracts": {
+    "domain": {
+      "items": [],
+      "notApplicable": "This is repository conversion-control metadata, not a product domain contract."
+    },
+    "postgresSchema": {
+      "items": [],
+      "notApplicable": "A-003 remains globally proposed; this slice defines no Postgres structure or physical access."
+    },
+    "serverHandlers": {
+      "items": [],
+      "notApplicable": "The slice implements no server query, command, job or handler."
+    },
+    "dataApiGrants": {
+      "items": [],
+      "notApplicable": "The slice creates no Data API object or grant."
+    },
+    "rlsPolicies": {
+      "items": [],
+      "notApplicable": "Logical reconciliation evidence is not RLS authorization."
+    },
+    "syncStreams": {
+      "items": [],
+      "notApplicable": "A-004 remains globally proposed; no Sync Stream or local physical query is assigned."
+    },
+    "localOffline": {
+      "items": [],
+      "notApplicable": "The future checker is deterministic repository tooling and introduces no application-local state."
+    },
+    "storageMedia": {
+      "items": [],
+      "notApplicable": "No object, attachment, media reference or retention behavior changes."
+    },
+    "appMcp": {
+      "items": [],
+      "notApplicable": "No app or MCP runtime surface is changed or implemented."
+    },
+    "migrationReconciliation": {
+      "items": [
+        "One aggregate registry binds exact source-query and target-query-authority artifacts plus stable per-row conversion-manifest projections",
+        "Ten capability-sized batches assign all 386 QUERY IDs exactly once at DRAFT and contain exactly one row per assigned QUERY ID at READY",
+        "Each row binds its full source occurrence, human-selected exact source owner/reference and nonempty canonical outcome set",
+        "Generated output expands every reviewed row without translating source physical syntax"
+      ],
+      "notApplicable": ""
+    },
+    "observabilityRunbooks": {
+      "items": [
+        "Generated totals by batch, source subsystem and outcome category expose gaps and review drift",
+        "Machine structural results and human semantic review are reported separately"
+      ],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "DRAFT contains comment-only scaffolds, an exhaustive human-reviewed ownership partition, empty rows and no generated reconciliation artifact",
+        "READY, implementation and promotion each use their frozen exact allowlist and immutable CI checkpoint"
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {
+      "id": "SQUERY-TEST-001",
+      "kind": "reconciliation",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-001", "SQUERY-REQ-003", "SQUERY-REQ-009"],
+      "expected": "Exact source artifact validation proves the DRAFT assignedQueryIds sets are disjoint/exhaustive over all 386 IDs; row sets are subsets while authoring and exactly equal assignments at READY with no duplicate, missing or orphan row.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-002",
+      "kind": "migration",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-001", "SQUERY-REQ-009"],
+      "expected": "Full source artifact hash, sourceDigest, canonical full-occurrence hash, exact QUERY derivation from sourcePath/line/operation, selected source-owner ID/ref and canonical {surfaceId,disposition,sourceRef} projection hash mutations all fail closed without a volatile full-manifest hash.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-003",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
+      "expected": "Verified target query outcomes accept only an exact non-decision-blocked TQUERY/TACCESS/mappingHash triple from the bound target authority artifact.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-004",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-002", "SQUERY-REQ-004"],
+      "expected": "Future-query and nonquery outcomes accept only an exact manifest surface/member, allowed disposition/status and canonical {surfaceId,disposition,target} mapping hash; status drift is checked separately and does not alter the hash.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-005",
+      "kind": "domain",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-002", "SQUERY-REQ-005"],
+      "expected": "The six exact outcome schemas and authority-blocked scope discriminators reject unknown keys/types, invalid identities/order/enums/coexistence, unrelated-surface blocker laundering, missing strict authority, invalid lifecycle gates/status/disposition, unexpected directory entries and duplicate or noncanonical outcomes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-006",
+      "kind": "reconciliation",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-003", "SQUERY-REQ-005", "SQUERY-REQ-009"],
+      "expected": "Source-only reuses the row owner/ref/hash with source_only disposition and frozen purpose/gate. Authority-blocked binds exact typed authority in batch/registry and the discriminator-selected source owner, TQUERY row or target surface while excluding O-021/A-003/A-004. Mechanism/behavior retirement enforces frozen gates, coexistence, discriminated canonical-target/confirmed-D authority or an exact same-row retiring owner.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-007",
+      "kind": "operational",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "covers": ["SQUERY-REQ-006", "SQUERY-REQ-007", "SQUERY-REQ-009"],
+      "expected": "Closed schemas reject all per-row physical/index/SQL/RLS/Sync/provider fields, and A-003/A-004 cannot be used as row blockers or outcomes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-008",
+      "kind": "reconciliation",
+      "owner": "human capability-owner and independent generated-diff review",
+      "covers": ["SQUERY-REQ-008"],
+      "expected": "Two human reviews account for every generated QUERY row and confirm outcome semantics without auto-classification or physical translation.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-009",
+      "kind": "reconciliation",
+      "owner": "scripts/tests/generate-source-query-reconciliation.test.mjs and human review",
+      "covers": ["SQUERY-REQ-003", "SQUERY-REQ-005", "SQUERY-REQ-008"],
+      "expected": "Human-reviewed batch assignment and classification remain independent of subsystem/path/symbol/expression heuristics; only frozen assignedQueryIds, reviewed rows and exact authority determine ownership/outcomes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "SQUERY-TEST-010",
+      "kind": "operational",
+      "owner": "conversion control, exact diff review and future Ubuntu CI",
+      "covers": ["SQUERY-REQ-006", "SQUERY-REQ-007", "SQUERY-REQ-009", "SQUERY-REQ-010"],
+      "expected": "Exact lifecycle allowlists, deterministic JSON, read-only check, safe input/output paths, exact CLI arity, unchanged source/target authority artifacts and Linux-before-Swift gating all pass at their authorized lifecycle stage.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [
+    "All 386 QUERY IDs are human-reviewed and assigned exactly once, but their reconciliation rows remain intentionally unpopulated",
+    "Capability-owner outcome review and independent outcome review have not occurred",
+    "Canonical production profile evidence remains open for outcomes whose source usage or retirement safety cannot be established from repository authority",
+    "READY hashes and implementation allowlist have not been frozen"
+  ],
+  "notes": "DRAFT allowlist is exactly 33 paths: the prior 32-path scope plus product-authority-crosswalk.json, which grants M0-CAPABILITY-CONTROL-001 direct architecture-decisions authority; the aggregate registry; ten batch files with human-reviewed exhaustive assignedQueryIds and byte-sorted allowedBlockerIds plus one exactly excluded _template.json; two comment-only scaffolds; this dossier/evidence pair; EVID-QUERY-001 and execution-state count/next-action corrections; discoverer and current-query extractor exclusions; M0 capability/query classifications; evidence index, tracker and execution state; and the eight normal synchronized conversion manifest/coverage/implementation-audit/product-authority-audit/residual-register outputs. CONFIG-A8BD153106B8 and CONFIG-40F01696B8A6 are target_mapped with empty blockers because the stable control ownership is known; the slice remains DRAFT and executable implementation is not authorized. No generated reconciliation artifact, package/workflow hook, executable logic, QUERY outcome, Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access or production operation is authorized. READY may populate only assigned rows in these batches and synchronize the same metadata. Later implementation may replace only the two scaffolds, add one deterministic generated JSON artifact plus exact package/workflow commands/gate, and synchronize allowed metadata. Promotion remains a separate immutable-CI and human-review checkpoint."
+}

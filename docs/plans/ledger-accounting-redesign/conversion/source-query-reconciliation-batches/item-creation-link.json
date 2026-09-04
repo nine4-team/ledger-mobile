@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-ITEM-CREATION-LINK-001",
+  "owner": "Item Creation and Accounting Link",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-0A9CAB36FAF3",
+    "QUERY-130E0FE810B2",
+    "QUERY-130FD313A20C",
+    "QUERY-1355478CCE9B",
+    "QUERY-17D9E588B7F8",
+    "QUERY-1C6DCFEF5FB3",
+    "QUERY-49D5F187F95E",
+    "QUERY-716662CCB889",
+    "QUERY-7FE076971B68",
+    "QUERY-80E36025A223",
+    "QUERY-845C71B9E61F",
+    "QUERY-A69641396B0E",
+    "QUERY-AE6E6E08651B",
+    "QUERY-BEC77C486C58",
+    "QUERY-E2139FC42DF4",
+    "QUERY-E841907BAAD0",
+    "QUERY-E9AE08280D8B",
+    "QUERY-ECADB2A11D46"
+  ],
+  "allowedBlockerIds": [
+    "A-015",
+    "A-016",
+    "O-016",
+    "O-017",
+    "O-018",
+    "O-019",
+    "O-020",
+    "O-027",
+    "O-030",
+    "O-031",
+    "O-032"
+  ],
+  "rows": [],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+}

@@ -1302,8 +1302,10 @@ function discoverTooling() {
       predicate: (filePath) =>
         /\.(mjs|js|ts|sh)$/.test(filePath) &&
         !new Set([
+          "scripts/generate-source-query-reconciliation.mjs",
           "scripts/generate-target-query-logical-authority-crosswalk.mjs",
           "scripts/generate-target-query-port-inventory.mjs",
+          "scripts/tests/generate-source-query-reconciliation.test.mjs",
           "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
           "scripts/tests/generate-target-query-port-inventory.test.mjs",
         ]).has(relative(filePath)),
@@ -1379,9 +1381,11 @@ function discoverConfiguration() {
     "scripts/build-testflight.sh",
     "scripts/check-target-environment.mjs",
     "scripts/distribute-testflight-external.sh",
+    "scripts/generate-source-query-reconciliation.mjs",
     "scripts/generate-target-query-logical-authority-crosswalk.mjs",
     "scripts/generate-target-query-port-inventory.mjs",
     "scripts/release-testflight.sh",
+    "scripts/tests/generate-source-query-reconciliation.test.mjs",
     "scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
     "scripts/tests/generate-target-query-port-inventory.test.mjs",
   ];

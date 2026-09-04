@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T08:33:54.144Z",
+    "lastSynchronizedAt": "2026-09-04T09:57:16.088Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -583,6 +583,58 @@
       ],
       "notes": "Build a pinned non-root target MCP image with health/SBOM/environment verification. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-40F01696B8A6",
+      "kind": "release_or_build_tool",
+      "name": "scripts/tests/generate-source-query-reconciliation.test.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/tests/generate-source-query-reconciliation.test.mjs"
+        }
+      ],
+      "observedSourceHash": "f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758",
+      "acknowledgedSourceHash": "f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758",
+      "metadata": {},
+      "currentBehavior": "Comment-only draft scaffold describing future structural and adversarial tests for the aggregate source-query reconciliation control, including the frozen 386-ID ownership partition and later row equality. It contains no executable tests and proves no QUERY outcome mapping.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Source Query Reconciliation Control",
+        "surfaces": [
+          "future exact 386-assignment, row and binding tests",
+          "future outcome-authority and lifecycle-allowlist tests"
+        ],
+        "securityRequirements": [
+          "Use repository metadata and synthetic fixtures only; never access hosted or production systems"
+        ],
+        "syncRequirements": [
+          "Tests must reject physical/provider fields without defining target access"
+        ]
+      },
+      "migration": {
+        "rule": "Draft test obligations only; do not claim a passing suite before executable implementation.",
+        "reconciliation": [
+          "Human semantic review remains separate from future structural test success"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "comment-only scaffold inspection",
+          "npm run conversion:check"
+        ],
+        "acceptance": [
+          "No executable test or generated artifact is present in DRAFT"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+      ],
+      "notes": "The draft dossier maps this stable test owner while all executable verification remains planned; target_mapped does not claim executable tests, complete reconciliation rows or READY status.",
+      "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
       "id": "CONFIG-50FA673297B2",
@@ -1292,6 +1344,59 @@
       ],
       "notes": "Target-only compile configuration; it includes no source MCP runtime path.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-A8BD153106B8",
+      "kind": "release_or_build_tool",
+      "name": "scripts/generate-source-query-reconciliation.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/generate-source-query-reconciliation.mjs"
+        }
+      ],
+      "observedSourceHash": "66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690",
+      "acknowledgedSourceHash": "66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690",
+      "metadata": {},
+      "currentBehavior": "Comment-only draft scaffold for one future aggregate source-query reconciliation validator/generator. It contains no executable logic and makes no completeness, implementation, physical-access, provider, hosted, production, or cutover claim.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Source Query Reconciliation Control",
+        "surfaces": [
+          "future aggregate 386-occurrence reconciliation registry validator",
+          "future deterministic generated reconciliation artifact checker"
+        ],
+        "securityRequirements": [
+          "Consume repository-controlled source, target-authority, manifest, and registry evidence only",
+          "Treat logical scope mappings as evidence rather than authorization"
+        ],
+        "syncRequirements": [
+          "Reject per-row physical or provider mappings and preserve A-003/A-004 as global-only deferrals"
+        ]
+      },
+      "migration": {
+        "rule": "Draft the control contract without classifying any QUERY occurrence or implementing a generator.",
+        "reconciliation": [
+          "All 386 frozen QUERY IDs are human-reviewed into one exact capability batch at DRAFT; a later READY registry must contain one exact row for each assignment"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "comment-only scaffold inspection",
+          "npm run conversion:check"
+        ],
+        "acceptance": [
+          "No executable implementation or generated reconciliation artifact exists in DRAFT"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+      ],
+      "notes": "The draft dossier maps this stable control owner while implementation remains unauthorized; target_mapped does not claim executable logic, complete reconciliation rows or READY status.",
+      "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
       "id": "CONFIG-B2A2BF619303",
@@ -2367,10 +2472,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
-      "acknowledgedSourceHash": "d09791ac48388b937401e24424caf20164d3bf65ae79f35dabaaaaf0b7c796dd",
+      "observedSourceHash": "8b1cc1ea52cfd864bebbdf7f77888c108147b205a6814838e9a7f639a9702cdd",
+      "acknowledgedSourceHash": "8b1cc1ea52cfd864bebbdf7f77888c108147b205a6814838e9a7f639a9702cdd",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the two target query-port inventory control leaves, and the two target query logical-authority control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both target query controls are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain contiguous Firebase/source-query sentinel terms. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, and the draft source-query reconciliation control leaves; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -2417,9 +2522,10 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
-        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. The amended READY baseline adds exact CONFIG discovery and genuine path exclusions for the target query logical-authority controls; contiguous implementation test cases prove the exclusion. No status or ownership change is claimed.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. This draft adds exact CONFIG discovery and genuine path exclusions for the source-query reconciliation control leaves. Direct architecture-decisions authority is supplied by the reviewed product-authority crosswalk, not a validator exception. No status or ownership change is claimed for this existing control.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2964,10 +3070,10 @@
           "path": "scripts/extract-firestore-query-contract.mjs"
         }
       ],
-      "observedSourceHash": "326a97771630e5426a9628e4f2926470867604fc43e4f6212880b617fc131a2a",
-      "acknowledgedSourceHash": "326a97771630e5426a9628e4f2926470867604fc43e4f6212880b617fc131a2a",
+      "observedSourceHash": "2eb8feed057ecdae250f51714dd38c4fee197726c36e30322d43d26853446efd",
+      "acknowledgedSourceHash": "2eb8feed057ecdae250f51714dd38c4fee197726c36e30322d43d26853446efd",
       "metadata": {},
-      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only check/generation scripts including the exact logical-authority test fixture path, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
+      "currentBehavior": "Deterministically scans configured Firebase-source query roots, explicitly excludes target-only query controls including the draft source-query reconciliation generator/test paths, and emits a line/symbol-level query occurrence catalog plus a compact generated coverage report. It distinguishes inspected candidates from files containing recognized occurrences, and check mode fails when either generated artifact is stale.",
       "disposition": "source_only",
       "target": {
         "owner": "",
@@ -2995,9 +3101,10 @@
       "evidence": [
         "EVID-QUERY-001",
         "EVID-CONTRACT-CATALOG-001",
-        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
+        "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
+        "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity. The bounded READY addendum excludes only the exact logical-authority test fixture path so its contiguous forbidden-key sentinels cannot change the reviewed 386-occurrence source inventory. Status and ownership remain unchanged.",
+      "notes": "Lexical completeness does not claim runtime query frequency or deployed-index parity. Exact target-control exclusions prevent draft or future synthetic fixtures from changing the reviewed 386-occurrence source inventory. This draft deliberately re-acknowledges only the extractor hash; status and ownership remain unchanged.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
     },
     {

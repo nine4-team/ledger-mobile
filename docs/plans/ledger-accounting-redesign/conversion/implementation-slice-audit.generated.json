@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T08:33:54.144Z",
+  "generatedFromManifestSync": "2026-09-04T09:57:16.088Z",
   "totals": {
-    "slices": 66,
-    "claimedTargetSurfaces": 157,
+    "slices": 67,
+    "claimedTargetSurfaces": 159,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 142
   },
   "statusCounts": {
-    "draft": 0,
+    "draft": 1,
     "ready": 0,
     "in_progress": 1,
     "implemented": 0,
@@ -725,6 +725,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/shared-list-query-presentation.json"
+    },
+    {
+      "sliceId": "source-query-reconciliation-control",
+      "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
+      "kind": "technical_control",
+      "status": "draft",
+      "owner": "Source Query Reconciliation Control",
+      "surfaceIds": [
+        "CONFIG-40F01696B8A6",
+        "CONFIG-A8BD153106B8"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 10,
+      "blockerCount": 4,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
     },
     {
       "sliceId": "space-assignment-destination-read-contracts",

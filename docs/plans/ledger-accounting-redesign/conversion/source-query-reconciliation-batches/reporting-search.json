@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "batchId": "SQUERY-REPORTING-SEARCH-001",
+  "owner": "Reporting, Search, and Export",
+  "status": "draft",
+  "assignedQueryIds": [
+    "QUERY-12AAD362F616",
+    "QUERY-1B022B1C66B1",
+    "QUERY-5A535C37F553",
+    "QUERY-5F8D32DFCCA8",
+    "QUERY-6842139605FC",
+    "QUERY-9641C3AFA75B",
+    "QUERY-99D58841EB2F",
+    "QUERY-AD2810269F0F",
+    "QUERY-BBA86989361A",
+    "QUERY-C61F3D19EB32",
+    "QUERY-DE6C3BF93897",
+    "QUERY-E4B3119EDD17",
+    "QUERY-E6E2045785E6"
+  ],
+  "allowedBlockerIds": [
+    "A-016",
+    "O-035",
+    "O-036"
+  ],
+  "rows": [],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+}

@@ -1,0 +1,231 @@
+# EVID-SOURCE-QUERY-RECONCILIATION-001 — Source Query Reconciliation Control
+
+- Timestamp: 2026-09-04
+- Class: draft technical-control design
+- Draft baseline: `76b2ff45ba4fffe68097919c32ec7b4fec48047c` on
+  `codex/supabase-powersync-implementation`
+- Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
+  `firebase`; the source worktree and shipped app remain unchanged
+- Claimed target surfaces: `CONFIG-A8BD153106B8`,
+  `CONFIG-40F01696B8A6`
+- Slice dossier:
+  `conversion/implementation-slices/source-query-reconciliation-control.json`
+- Production reads or mutations: none
+- Verification state: draft; all 386 QUERY IDs are human-reviewed and assigned
+  exactly once, while zero reconciliation rows are populated
+
+## Draft Outcome
+
+The repository now contains a draft topology for reconciling every occurrence
+in the frozen current-source query catalog. One aggregate registry binds the
+full source-query artifact, its source digest and the full verified target
+logical-authority artifact. Conversion-manifest references are bound per row
+through stable selected projections rather than a volatile full-manifest hash.
+Ten capability-sized batches contain a human-reviewed, disjoint and exhaustive
+assignment of all 386 QUERY IDs; their reconciliation `rows` remain empty. The
+generator and test files are comment-only.
+
+This checkpoint establishes semantic batch ownership but does not choose any
+query outcome, prove reconciliation completeness, authorize implementation or
+create generated reconciliation output. I inspected each frozen occurrence's
+path, symbol, operation and complete expression and assigned the occurrence to
+the capability that must review its meaning. Mixed files, notably the Firebase
+function entry point, were split occurrence by occurrence rather than assigned
+as a file. No subsystem/path/symbol/expression rule produced the partition.
+
+The current draft hashes are:
+
+- generator scaffold:
+  `66142e3c8297ab7dd53df79ba0074acf53a9bd50dda949f3aa2b0ce2fc497690`;
+- test scaffold:
+  `f9708f9552cf271f2c0b2a46de73bbc62fe7040b9ae62adf815e863f8e530758`;
+- aggregate registry:
+  `219f7fc2b666fbcb836e550dd594a3647115d7422a23635a4f58d38a0d80a50e`;
+- draft dossier:
+  `69a590269a7d047d15d2d24847a243d59ec975448ae690cb66e6f3323753afae`;
+- product-authority crosswalk:
+  `71af1b9debb139febaa6d0912efd64361c81602ca68358731246e2f41e2a7f78`;
+- conversion discoverer:
+  `8b1cc1ea52cfd864bebbdf7f77888c108147b205a6814838e9a7f639a9702cdd`;
+  and
+- current-query extractor:
+  `2eb8feed057ecdae250f51714dd38c4fee197726c36e30322d43d26853446efd`.
+
+## Corrected Source Artifact Evidence
+
+The source-query artifact has contained 170 inspected candidate files, 74 files
+with recognized occurrences and 386 occurrences since its original committed
+checkpoint `3e1d435b`. `EVID-QUERY-001` and two historical summaries in
+`execution-state.md` incorrectly said 169 candidates. The generated artifacts
+were not changed; their committed and current hashes are:
+
+- JSON: `2a43de6e59844d081237c8d9731846662e0862190823ea854c2238256b0a6a14`;
+- Markdown: `970b84d56837b78958d78003122ec86398e0ccd1928160b14c746fd6eb27ea41`;
+- source digest:
+  `87a3c1deb568f3e5a5bd35dc316dff38eccaf4fb83e8ecc02c61c77887150da4`.
+
+This is an evidence-text correction, not query extraction or source drift.
+
+## Frozen Draft Row and Outcome Model
+
+Every eventual batch row owns exactly one `QUERY-*` ID and contains only:
+
+- `queryId`;
+- `expectedOccurrenceHash`, defined as lowercase SHA-256 over UTF-8
+  `source-query-occurrence-v1\0` followed by recursively canonicalized minified
+  JSON of the complete generated occurrence object;
+- `sourceOwnerSurfaceId`, which must identify exactly one conversion-manifest
+  surface selected by a human reviewer;
+- `sourceRef`, copied exactly from that surface's `sourceRefs` and required to
+  have a path equal to the occurrence `sourcePath`;
+- `expectedSourceOwnerHash`, lowercase SHA-256 over UTF-8
+  `source-query-owner-projection-v1\0` plus canonical minified JSON of
+  `{surfaceId,disposition,sourceRef}`; and
+- `outcomes`, a nonempty duplicate-free canonical set.
+
+The source artifact's QUERY identity is re-derived, not trusted: `QUERY-` plus
+the uppercase first 12 hexadecimal characters of SHA-256 over UTF-8
+`${sourcePath}:${line}:${operation}`. Any mismatch fails closed.
+
+The machine binds the selected source owner/reference; it never infers owner
+from path or source mechanics. Each batch also has exact `assignedQueryIds`.
+At DRAFT, their pairwise-disjoint union must equal all 386 frozen IDs. During
+authoring, `rows` must be a subset of the batch assignments; at READY and later,
+the row-ID set must exactly equal them. Both ID arrays sort by ascending bytes.
+
+Outcome objects sort by their recursively canonicalized minified JSON bytes.
+They may be one-to-many because one source read can support more than one
+independently authorized target or lifecycle outcome. The only categories are:
+
+1. `verified_target_query_port` — exact `tqueryId`, `taccessId` and
+   `expectedMappingHash` from a non-decision-blocked row in the bound verified
+   target logical-authority artifact;
+2. `approved_future_target_query` — exact manifest target surface, exact
+   `target.surfaces` member and exact canonical target mapping hash, with status
+   restricted to `target_mapped`, `implemented`, `verified`, `rehearsed` or
+   `cutover_ready`;
+3. `approved_target_nonquery_surface` — the same exact manifest binding for an
+   approved command, handler, migration or other nonquery owner;
+4. `source_only` — the row's same exact `sourceOwnerSurfaceId` and `sourceRef`,
+   a manifest `source_only` disposition, bounded purpose/retention gate and
+   exact authority;
+5. `retired` — explicit behavior/mechanism scope, timing gate and exact
+   retirement authority; and
+6. `authority_blocked` — one frozen `blockedScope`, nonempty unique named
+   blocker IDs, and exact typed `{id,kind,path,section}` entries present in both
+   the batch allowlist and registry authority table. Product O IDs point to
+   `decision-log.md` section `Open Product Decisions`; architecture A IDs point
+   to their exact `architecture-decisions.md` headings. O-021 and A-003/A-004
+   are forbidden.
+
+Authority-blocked cannot launder a blocker from unrelated authority. A
+`target_query_contract` outcome additionally binds the exact TQUERY/TACCESS/
+mappingHash row, and every blocker must occur in the byte-sorted unique union
+of `blockerIds` found only under `logicalAxes` entries and `unresolvedAxes`
+entries whose state is exactly `decision_blocked`. Missing or malformed nested
+arrays fail closed; prose is never scanned. A `target_nonquery_contract`
+outcome additionally binds the exact target manifest surface/member/mapping
+hash and every blocker must occur in that same surface's `blockers`. For
+`source_disposition` and `retirement`, every blocker must occur in the exact
+row-selected source-owner manifest surface's `blockers`.
+
+For future/nonquery outcomes, `expectedTargetMappingHash` is lowercase SHA-256
+over UTF-8 `source-query-target-mapping-v1\0` plus recursively canonicalized
+minified JSON of `{surfaceId,disposition,target}` from the conversion manifest.
+The selected `targetSurface` must equal one exact member of `target.surfaces`.
+Status is validated separately and is deliberately absent from this stable
+mapping hash. `blocked` and `retired` status and `retire`/`source_only` target
+dispositions are rejected for future/nonquery target outcomes.
+
+Outcome category order is exactly verified target query, future target query,
+target nonquery, source-only, retired, then authority-blocked. Within a category,
+recursively canonicalized minified JSON bytes determine order. The dossier
+freezes identity fields and rejects duplicate identities.
+
+Source-only purpose is exactly one of `migration`, `audit`, `repair`, or
+`profiling`; retention is one of `through_migration_rehearsal`,
+`through_verified_cutover_reconciliation`, or
+`through_post_cutover_audit_signoff`. Retirement scope is exactly
+`source_query_mechanism_only` or `source_behavior`. Mechanism retirement uses
+only `after_verified_target_cutover` and requires a same-row replacement or
+source-only outcome. Behavior retirement uses only `at_verified_target_cutover`
+and requires either `{kind:"canonical_target_heading",path,section}` with an
+exact canonical target-spec path/heading,
+`{kind:"confirmed_decision",id:"D-NNN",path:"docs/plans/ledger-accounting-redesign/decision-log.md",section:"Confirmed Decisions"}` with that ID exactly once in that table section, or an `owner_manifest_retire` projection whose surface,
+sourceRef and hash equal the row owner and whose manifest disposition is
+`retire`. Arbitrary paths/headings are rejected. Behavior retirement cannot
+coexist with a same-row outcome preserving behavior.
+Authority-blocked scope is exactly target-query contract, target-nonquery
+contract, source disposition, or retirement and cannot duplicate a scope that
+the same row claims resolved.
+
+The registry freezes typed authority for A-007 target authentication, A-010
+provider-independent principals, A-015 complex-command optimistic projection
+and A-016 offline-access lease, plus O-002 through O-040 except UI-only O-021.
+Each batch carries only the byte-sorted subset semantically relevant to its
+assigned capability. An authority-blocked row may use only the intersection of
+that batch allowlist and registry table.
+
+No outcome is inferred from subsystem, source path, symbol, operation,
+expression or naming. The aggregate checker will validate structure and exact
+bindings only. Human capability-owner review decides meaning.
+
+## Global Physical Boundary
+
+A-003 (`architecture-decisions.md`, `A-003 — Supabase Postgres as Target
+Authority`) and A-004 (`A-004 — PowerSync as Target Local Data Plane`) remain
+global proposed architecture decisions. They are not valid per-row outcomes or
+blockers. The registry, batches and future generated
+artifact contain no physical table, key, index, SQL, query plan, RLS, Sync
+Stream, SQLite, provider or hosted implementation field. Closed schemas must
+reject such additions.
+
+## Batch Topology
+
+The ten draft batches are identity/lifecycle (29 assigned IDs);
+Projects/Clients/reference data (10);
+Inventory/Transactions/provenance; Invoicing/collection/budget; Item creation
+and accounting Link; media lifecycle; Spaces/review; reporting/search/export;
+source migration/audit/repair/profile; and platform/backend/control. Their exact
+assignment counts are respectively 29, 10, 123, 35, 18, 3, 8, 13, 129 and 18.
+
+| Batch | Assigned | Human-reviewed ownership boundary |
+|---|---:|---|
+| Identity/lifecycle | 29 | Account membership, invite, OAuth/user-state, quota and account-discovery reads |
+| Projects/Clients/reference | 10 | Project directory/preferences/notes and vendor/default-reference reads |
+| Inventory/Transactions/provenance | 123 | Item, Transaction, inventory movement, purchase-intent, lineage, correction and deletion-dependency reads |
+| Invoicing/collection/budget | 35 | Invoice/settlement, project financial summary, fee, budget-category and budget-contribution reads |
+| Item creation/accounting Link | 18 | Proto/quick-draft capture and Link prerequisite reads |
+| Media lifecycle | 3 | Runtime upload-queue evidence and storage-emulator seed reads |
+| Spaces/review | 8 | Space detail/list and Space-scoped Item reads |
+| Reporting/search/export | 13 | MCP resource enumeration, analytics and composite-search reads |
+| Source migration/audit/repair/profile | 129 | Explicit source conversion, repair, audit, export and profiling reads retained for migration review |
+| Platform/backend/control | 18 | Generic repository/batch/query utilities, backend health and Firebase test-surface reads |
+
+The exact registry-order counts are 29, 10, 123, 35, 18, 3, 8, 13, 129 and 18.
+Batch assignment is itself reviewed semantic ownership. A file, subsystem or
+symbol may contribute rows to different capability batches. Exact directory
+contents are the ten ordered batch filenames recorded in the dossier plus
+`_template.json`; only that exact template filename is excluded by the future
+validator. No other underscore or JSON file receives implicit exclusion.
+
+## Lifecycle Boundary
+
+DRAFT changes only the exact 33-path allowlist recorded in the dossier, including
+the product-authority crosswalk addition that grants this technical-control
+batch the architecture-decisions authority directly. The two
+stable CONFIG owners are `target_mapped` with empty blockers while the slice
+remains DRAFT. READY requires all 386 rows, independent outcome review and
+synchronized hashes. Implementation may then replace only the two
+comment scaffolds, add one generated JSON artifact, add exact package commands
+and an Ubuntu conversion-control gate before target Swift work, and synchronize
+the same control metadata. Promotion records immutable CI and human review.
+
+The current source and target generated query artifacts, target registry, all
+Swift query owners, package/workflow, schema, RLS, Sync, provider, hosted and
+production systems remain unchanged by this draft.
+
+Canonical production-profile evidence remains a precise dossier blocker only
+for later rows whose source use or retirement safety cannot be established from
+repository authority. It is not a blocker on either CONFIG surface and does not
+create an evidence-blocked outcome category.
