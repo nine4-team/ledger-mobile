@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 247
+State version: 248
 
 ## Objective
 
@@ -13,7 +13,7 @@ modifying the running Firebase application before hard cutover.
 
 - Phase: M1 evidence-gated source closure and bounded M2 mapping continue;
   decision-independent Phase 1 target foundations are now in progress
-- Checkpoint: TARGET-QUERY-LOGICAL-AUTHORITY-CROSSWALK-VERIFIED
+- Checkpoint: SOURCE-QUERY-RECONCILIATION-DRAFT-ROW-POPULATION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,8 +36,12 @@ modifying the running Firebase application before hard cutover.
   clean baseline `76b2ff45ba4fffe68097919c32ec7b4fec48047c`. One aggregate
   registry binds the full unchanged source and target-authority artifacts plus
   stable selected manifest projections. Human semantic review assigned every
-  one of the 386 QUERY IDs exactly once across ten capability batches; their
-  reconciliation rows remain intentionally empty, and the two
+  one of the 386 QUERY IDs exactly once across ten capability batches. The first
+  two bounded pilots now contain 9 independently reviewed rows: all 8 Spaces/
+  review assignments and 1 of 3 media-lifecycle assignments. The two remaining
+  runtime media reads stay absent because current authority does not yet bind
+  their destination-existence and atomic attachment-reference semantics to an
+  exact target contract. The two
   future aggregate generator/test leaves are comment-only. The frozen row
   model requires one QUERY ID, canonical full-occurrence hash, human-selected
   exact manifest source owner/ref with a stable projection hash, and a nonempty
@@ -50,13 +54,18 @@ modifying the running Firebase application before hard cutover.
   No outcome
   is inferred from subsystem/path/symbol/expression. A-003/A-004 remain global-
   only physical deferrals. The stable control CONFIG owners are `target_mapped`
-  with empty blockers while zero of 386 rows have outcomes, so the dossier remains
-  `draft`; no package/workflow/generated reconciliation artifact, executable
+  with empty blockers while only 9 of 386 rows have reviewed outcomes, so the
+  dossier and both pilot batches remain `draft`; no package/workflow/generated
+  reconciliation artifact, executable
   control, runtime, provider, hosted, production, release or cutover behavior
   advances. Exact DRAFT commit
   `570f54a50405376ee4b642f1abc11ea04eb0a4bb` passed immutable GitHub Actions
   run `33861320397`, including conversion traceability, target contracts and
-  macOS/iOS Simulator builds; `EVID-SOURCE-QUERY-RECONCILIATION-001`.
+  macOS/iOS Simulator builds. Its evidence-sync commit
+  `b4d948e41f9ca6d5ea50da0ba9d8db6504ea06ae` passed immutable run
+  `33861762639`, including the same gates and both isolated builds. Root and an
+  independent reviewer returned GO with no P0-P2 finding on each pilot;
+  `EVID-SOURCE-QUERY-RECONCILIATION-001`.
 
 - Verified the complete target query logical-authority crosswalk
   above the verified TQUERY inventory. One reviewed JSON registry binds the

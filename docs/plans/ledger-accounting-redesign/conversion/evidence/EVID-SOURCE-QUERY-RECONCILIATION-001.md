@@ -12,8 +12,10 @@
   `conversion/implementation-slices/source-query-reconciliation-control.json`
 - Production reads or mutations: none
 - Verification state: immutable DRAFT checkpoint `570f54a50405376ee4b642f1abc11ea04eb0a4bb`
-  passed GitHub Actions run `33861320397`; all 386 QUERY IDs are human-reviewed
-  and assigned exactly once, while zero reconciliation rows are populated
+  passed GitHub Actions run `33861320397`, and evidence-sync commit
+  `b4d948e41f9ca6d5ea50da0ba9d8db6504ea06ae` passed run `33861762639`; all
+  386 QUERY IDs are human-reviewed and assigned exactly once, while 9 rows are
+  now populated and independently reviewed in two bounded pilots
 
 ## Draft Outcome
 
@@ -23,16 +25,46 @@ full source-query artifact, its source digest and the full verified target
 logical-authority artifact. Conversion-manifest references are bound per row
 through stable selected projections rather than a volatile full-manifest hash.
 Ten capability-sized batches contain a human-reviewed, disjoint and exhaustive
-assignment of all 386 QUERY IDs; their reconciliation `rows` remain empty. The
-generator and test files are comment-only.
+assignment of all 386 QUERY IDs. Row population is now underway: 9 of 386 rows
+have passed both root review and a separate independent review, while the
+generator and test files remain comment-only.
 
-This checkpoint establishes semantic batch ownership but does not choose any
-query outcome, prove reconciliation completeness, authorize implementation or
-create generated reconciliation output. I inspected each frozen occurrence's
+The original DRAFT checkpoint established semantic batch ownership without
+choosing query outcomes. The current pilot adds reviewed outcomes but does not
+prove reconciliation completeness, authorize implementation or create generated
+reconciliation output. I inspected each frozen occurrence's
 path, symbol, operation and complete expression and assigned the occurrence to
 the capability that must review its meaning. Mixed files, notably the Firebase
 function entry point, were split occurrence by occurrence rather than assigned
 as a file. No subsystem/path/symbol/expression rule produced the partition.
+
+## Reviewed Row-Population Pilots
+
+Two deliberately small pilots tested subagent authoring plus root and independent
+quality control before scaling:
+
+- `spaces-review.json`: all 8 assigned rows and 12 outcomes are populated. The
+  list/detail reads bind exact `ListSpacesQuery`/`GetSpaceQuery` target mappings;
+  the attachment transaction read binds the approved
+  `AttachmentOperations.attachToSpace` operation; and all four
+  `onSpaceArchived` reads remain exactly blocked on O-037 through their source
+  owner's `source_disposition`. Root and independent review returned GO with no
+  P0-P2 finding. Current file hash:
+  `47930d0459143508aebcab7439e93baa9587de77210b29024312bbe30eea9b3e`.
+- `media-lifecycle.json`: 1 of 3 assigned rows is populated. The Firebase Storage
+  emulator seed read is retained as source-only migration/rehearsal evidence and
+  its Firebase query mechanism retires only after verified target cutover under
+  A-017. `QUERY-FF1E88477925` and `QUERY-334B5E35D8A6` remain absent at DRAFT:
+  no exact current target authority binds their runtime destination-existence
+  and atomic attachment-reference read semantics, and inventing a mapping would
+  be unsound. Root and independent review returned GO with no P0-P2 finding.
+  Current file hash:
+  `ef19ee999a849de5e97253c0aa6120feddcc8b3cf14fda59c99d1436bbcfb3f2`.
+
+The pilot result is 9 reviewed rows out of 386. It validates the bounded
+subagent/reviewer process, not READY completeness. The remaining 377
+assignments—including the two specifically absent media rows—still require
+exact authority and review before promotion.
 
 The current draft hashes are:
 
@@ -239,3 +271,9 @@ traceability` and `Isolated target environment` completed successfully,
 including target contract tests plus macOS and generic iOS Simulator builds.
 This verifies the committed draft boundary only; it does not populate or
 approve any reconciliation outcome and does not advance the slice to READY.
+
+Follow-up evidence-sync commit
+`b4d948e41f9ca6d5ea50da0ba9d8db6504ea06ae` passed GitHub Actions run
+`33861762639`. Both jobs completed successfully again, including all target
+contract tests and the isolated macOS and generic iOS Simulator builds. The only
+annotations were the runner's Node.js action-runtime deprecation warnings.

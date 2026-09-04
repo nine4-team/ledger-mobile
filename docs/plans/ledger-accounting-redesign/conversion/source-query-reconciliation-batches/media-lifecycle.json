@@ -16,6 +16,43 @@
     "O-027",
     "O-036"
   ],
-  "rows": [],
-  "notes": "Human-reviewed capability assignment is frozen at DRAFT; no reconciliation outcome is claimed."
+  "rows": [
+    {
+      "queryId": "QUERY-5819775B1FFE",
+      "expectedOccurrenceHash": "42946d5937997a0bad50ba5cb013a779d655a50942566c69b5ee794c50c56b20",
+      "sourceOwnerSurfaceId": "FILE-673F68E2BE08",
+      "sourceRef": {
+        "path": "firebase/functions/scripts/seed-storage-emulator.mjs"
+      },
+      "expectedSourceOwnerHash": "833cd83bda34b4c5b101f726b33aec045cefaac60ba458931caad8c320ae5332",
+      "outcomes": [
+        {
+          "category": "source_only",
+          "sourceOwnerSurfaceId": "FILE-673F68E2BE08",
+          "sourceRef": {
+            "path": "firebase/functions/scripts/seed-storage-emulator.mjs"
+          },
+          "purpose": "migration",
+          "retentionGate": "through_migration_rehearsal",
+          "authorityRef": {
+            "path": "docs/architecture/redesign/architecture-decisions.md",
+            "section": "A-017 — Firebase Is a Migration Source Only"
+          }
+        },
+        {
+          "category": "retired",
+          "scope": "source_query_mechanism_only",
+          "retirementGate": "after_verified_target_cutover",
+          "authorityRefs": [
+            {
+              "path": "docs/architecture/redesign/architecture-decisions.md",
+              "role": "architecture_authority",
+              "section": "A-017 — Firebase Is a Migration Source Only"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Human-reviewed capability assignment is frozen at DRAFT. One source-only migration/rehearsal row is populated; the two runtime MediaUploadQueue reads remain absent pending exact target authority."
 }
