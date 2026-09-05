@@ -6,8 +6,10 @@
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`; the Firebase worktree and released app were not opened or changed
 - Target branch: `codex/supabase-powersync-implementation`
 - Slice dossier: `conversion/implementation-slices/space-assignment-destination-powersync-picker.json`
-- Verification state: final independent corrected-diff review returned GO with
-  no remaining finding; comment-only candidate awaits immutable READY-commit CI
+- Verification state: the corrected comment-only candidate passed exact-head
+  immutable CI at `5f3888b2` / run `33979632287`; a pre-implementation review
+  then found one missing public-facade touchpoint, whose exact correction passed
+  narrow independent review and awaits immutable CI before executable edits
 
 ## Outcome
 
@@ -139,8 +141,9 @@ The six automatically discovered comment-only leaves are:
 | `SWIFT-A1156933E12E` | `LedgeriOS/LedgerTargetApp/SpaceAssignmentDestinationStagingExerciseView.swift` | `a07520760bcf323c59def6167977f218c1dc006a587090fbcf112ef56f385745` |
 
 The dossier freezes exact permitted changes to the local PowerSync schema,
-Account-workspace runtime and tests, staging composition, environment checker,
-two scoped Sync Streams, conversion discoverer, package command and CI job. The
+Account-workspace runtime, public runtime facade and tests, staging composition,
+environment checker, two scoped Sync Streams, conversion discoverer, package
+command and CI job. The
 future Postgres migration, runnable pgTAP and Data API runner paths are absent at
 READY and must be machine-discovered, classified and claimed in the same
 synchronized implementation checkpoint that creates them. No silent or
@@ -195,6 +198,16 @@ implementation sentence did not name every already-frozen physical and shared
 touchpoint. The corrected contract now limits implementation to the six claimed
 target leaves, the three absent-at-READY physical leaves and every exact shared
 touchpoint in `implementationTouchpoints`. Final independent review returned GO.
+
+After exact-head READY CI passed, pre-implementation source inspection correctly
+refused an unsafe workaround: the Account-workspace actor is private behind
+`LedgerOfflineClientRuntime`, so the thin staging adapter cannot reach a new
+Space watch unless that public facade forwards it. The dossier now freezes
+`SWIFT-548A8A928FAE` at exact hash
+`6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d`
+and permits only one Account-bound typed-scope forwarding method through the
+existing tracked-stream lifecycle. No executable edit preceded this correction;
+independent narrow review returned GO with matching stable ID, hash and scope.
 
 ## Hard Boundary
 

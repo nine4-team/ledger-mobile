@@ -69,6 +69,12 @@
       "permittedChange": "Construct exactly one module-internal Space-assignment destination query whose live completeness producer owns the typed Project-or-Inventory Sync Stream subscription, expose only an Account-bound watch taking typed ItemPlacementScope, route it through the existing close-aware stream lease, and unsubscribe/cancel/join every provider observer before structured database close; preserve all existing runtime behavior and public lifecycle shape."
     },
     {
+      "surfaceIds": ["SWIFT-548A8A928FAE"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
+      "readySourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
+      "permittedChange": "Add exactly one public Account-bound Space-assignment destination watch taking only typed ItemPlacementScope and forwarding through the existing tracked-stream lifecycle to AccountWorkspacePendingWorkRuntime. Preserve every existing facade method, private ownership boundary, cancellation path and close behavior; expose no database, provider, SQL, subscription, completeness or authorization object."
+    },
+    {
       "surfaceIds": ["TEST-8D6A15063B2D"],
       "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "readySourceHash": "cfd89dc204f2dbba8f6467c9df02075d86e463bbb3e53ab2802dbf81a27977cf",

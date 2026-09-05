@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 312
+State version: 314
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-REVIEWED-AWAITING-READY-CI
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-FACADE-CORRECTION-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -101,8 +101,16 @@ without modifying the running Firebase application before hard cutover.
   The first independent review rejected eight authority, security, discovery,
   scope, migration and test-proof gaps. After correction, a narrow re-review
   found one remaining rollout-boundary omission; that was corrected, and final
-  independent review returned GO with no remaining finding. Immutable exact-head
-  READY CI is the only remaining gate before executable implementation.
+  independent review returned GO with no remaining finding.
+  Exact-head READY commit `5f3888b2` passed all three jobs in immutable run
+  `33979632287`. Pre-implementation source inspection then found that the public
+  `LedgerOfflineClientRuntime` facade, which privately owns the Account-workspace
+  lifecycle actor, was missing from the frozen touchpoints. No executable edit
+  or workaround was made. The correction freezes `SWIFT-548A8A928FAE` at its
+  exact READY hash and permits only one typed-scope forwarding watch through the
+  existing tracked-stream lifecycle. Narrow independent review recomputed the
+  stable ID/hash, confirmed necessity/minimality and returned GO; exact-head CI
+  is required before executable edits.
 
 - Implemented archiving one currently observed active Client through the isolated
   Client browser after exact READY commit `7187fa1e` passed immutable Actions
@@ -4151,9 +4159,11 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit the independently reviewed bounded Space-assignment destination picker
-READY candidate and require immutable exact-head READY CI before any executable
-implementation. The completed review confirmed the pinned-CLI-generated
+Commit the reviewed public-runtime-facade touchpoint correction and require
+immutable exact-head CI before any executable implementation. The
+original READY package already passed exact-head run `33979632287`; the delta
+adds no executable behavior and permits only one typed-scope forwarding watch.
+The completed broader review confirmed the pinned-CLI-generated
 Postgres migration, runnable pgTAP, disposable Data API runner, active-only RLS,
 separate parameterized Project/Inventory Sync Streams and exact-subscription
 first-sync completeness are owned obligations rather than optional synthetic
