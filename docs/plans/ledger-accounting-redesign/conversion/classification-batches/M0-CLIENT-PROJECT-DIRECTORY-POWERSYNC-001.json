@@ -9,18 +9,19 @@
     "EVID-PROJECT-EXISTING-CLIENT-SELECTION-001",
     "EVID-CLIENT-CREATION-PROVIDER-001",
     "EVID-PROJECT-SETUP-PROVIDER-001",
-    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
   ],
   "surfaces": [
     {
       "id": "SWIFT-B23F91245E50",
-      "acknowledgeSourceHash": "e974e63d8da66e74dead6a21359af89347aa32a146bee6512414bfd2a3db1282",
+      "acknowledgeSourceHash": "49af060c1b8c9a1fc499a5f6b6b2c8e7de5eed8a69e57d60f212d7431fb24944",
       "currentBehavior": "Implements the Account/Principal-bound PowerSync ClientProjectDirectoryQuerying adapter: it combines local rows with independently reactive Client/Project completeness, exposes only caller-owned pending creates before membership as partial, gates authoritative rows and reconciliation on active membership, preserves incomplete Project-to-Client joins, derives content-bound local versions, and cancels both observations with the consumer.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
-      "notes": "Implemented and locally verified with synthetic encrypted databases; real hosted Sync authorization remains required before verification/rehearsal.",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "The concrete adapter is module-internal and all four streams are lifecycle-owned and drained on close. Real hosted Sync authorization remains required before verification/rehearsal.",
       "target": {
         "owner": "Client and Project Directory",
         "surfaces": ["PowerSync ClientProjectDirectoryQuerying adapter", "Account/Principal-bound directory runtime"],
@@ -38,13 +39,13 @@
     },
     {
       "id": "TEST-5AAEE26660C8",
-      "acknowledgeSourceHash": "df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b",
+      "acknowledgeSourceHash": "581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
       "currentBehavior": "Runs 16 synthetic tests for pending/authoritative Client and Project rows, exact selection and membership-gated detail navigation, missing relationships, pre-membership visibility and hidden authority, same-Principal pending isolation, independent reactive completeness, local scope/membership isolation, exact overlay cleanup, allocation preservation, encrypted restart, malformed rows, runtime namespace guards and cancellation.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"],
-      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now use non-destructive close plus direct fixture-directory cleanup as verified by the Account workspace isolation slice.",
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now open through the async lifecycle composition with separate attachment/media resources and non-destructive close.",
       "target": {
         "owner": "Client and Project Directory",
         "surfaces": ["Client/Project PowerSync directory provider test suite"],

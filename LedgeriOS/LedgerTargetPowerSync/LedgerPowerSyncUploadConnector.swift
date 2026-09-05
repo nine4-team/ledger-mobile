@@ -78,7 +78,7 @@ public protocol ProjectCreationCommandApplying: Sendable {
     func apply(_ request: ProjectCreationUploadRequest) async throws -> ProjectCreationServerResult
 }
 
-public final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @unchecked Sendable {
+final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @unchecked Sendable {
     public typealias CredentialProvider = @Sendable () async throws -> PowerSyncCredentials?
 
     private let credentialProvider: CredentialProvider
@@ -86,7 +86,7 @@ public final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProt
     private let projectCreationApplier: (any ProjectCreationCommandApplying)?
     private let now: @Sendable () -> Date
 
-    public init(
+    init(
         credentialProvider: @escaping CredentialProvider,
         clientCreationApplier: any ClientCreationCommandApplying,
         projectCreationApplier: (any ProjectCreationCommandApplying)? = nil,

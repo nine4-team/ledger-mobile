@@ -2,7 +2,7 @@
   "batchId": "M0-CLIENT-POWERSYNC-PROVIDER-001",
   "title": "Target Client creation Supabase and PowerSync provider slice",
   "reviewedAt": "2026-09-04",
-  "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
+  "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
   "surfaces": [
     {
       "id": "CONFIG-0C8B77A5FB08",
@@ -99,10 +99,10 @@
     {
       "id": "SWIFT-2ADDF7B64EA0",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "680490b2ac5f11790f92f375f0e7bba827f8e44dc0d863a66ebcbe067eeb5437",
+      "acknowledgeSourceHash": "23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745",
       "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative plus exact caller-owned local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority is visible and may remove the linked pending overlay only while active membership is locally present.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"], "notes": "No direct network or backend SDK leaks through the core query port.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete adapter is module-internal and lifecycle-owned; no direct network or backend SDK leaks through the core query port.",
       "target": {"owner": "Client Identity", "surfaces": ["PowerSync Client core-details query adapter"], "securityRequirements": ["Queries bind exact Account and Client identifiers"], "syncRequirements": ["Pending local operation evidence overrides earlier has-synced state and keeps the view partial"]},
       "migration": {"rule": "Use target local rows only; do not read Firebase cache through this adapter.", "reconciliation": ["Server-synchronized rows clear local optimism and may become ready"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.optimisticReadinessIsHonest", "LedgerPowerSyncVerticalSliceTests.pendingRowRemainsPartialAfterEarlierSync"], "acceptance": ["Optimistic rows render immediately but never as authoritative"]}
@@ -110,10 +110,10 @@
     {
       "id": "SWIFT-2FAE0364C908",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "bb5ff3e637adf5e7e6f56e1becf3b0903f12c34c3acfce794dea8897c5bd12f1",
+      "acknowledgeSourceHash": "79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b",
       "currentBehavior": "Accepts one CreateClient command offline in one local transaction that persists operation evidence, an optimistic Client row and an insert-only upload command; exact replay returns the same receipt and changed replay is refused.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Physical encrypted local persistence is tested; server authority remains separate.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete store is module-internal and lifecycle-owned. Physical encrypted local persistence is tested; server authority remains separate.",
       "target": {"owner": "Client Identity", "surfaces": ["Offline Client creation operation adapter"], "securityRequirements": ["Caller cannot omit Account, actor, contract or fingerprint binding from the typed command"], "syncRequirements": ["Local operation evidence, the local-only Client overlay and one insert-only command are accepted atomically; only the command enters the PowerSync CRUD queue"]},
       "migration": {"rule": "Create no Firebase write adapter and no dual-write path.", "reconciliation": ["Restart restores exactly one Client and one operation for an accepted command"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload", "LedgerPowerSyncVerticalSliceTests.replayCannotChangePayload"], "acceptance": ["Offline acceptance is atomic, durable and idempotent"]}
@@ -121,10 +121,10 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
-      "currentBehavior": "Composes the encrypted validated-environment/Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, exposes Client/Project creation, detail and directory watches, pending-upload count and cipher inspection, and permits only non-destructive ordinary close.",
+      "acknowledgeSourceHash": "20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope operations and exposes Client/Project creation and watches, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close without exposing its concrete resources or initializer.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"], "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified. Pending-work and attachment lifecycle composition remains a later slice, so this runtime is unchanged by EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The local staging shell opens no hosted connection. The runtime now delegates every operation and stream to the single Account-workspace lifecycle owner; pending-work and attachment composition is implemented locally but session ending remains separate.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
       "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}
@@ -132,10 +132,10 @@
     {
       "id": "SWIFT-A9434A1623BC",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "81fe88a8c1c5608ef6dd8a6084f813cd9a83c247c71ad423b631876689528f68",
+      "acknowledgeSourceHash": "52b7af7d80d7991ec2bffa06b9a6850cdda30ce2cc4389a012e3fa500dd38d47",
       "currentBehavior": "Validates an absolute SQLite path and a 32-byte lowercase hexadecimal key before opening PowerSync with SQLCipher PRAGMA key configuration.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Encryption key bytes are never logged or stored in the database path.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete factory and key are module-internal lifecycle resources. Encryption key bytes are never logged or stored in the database path.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Encrypted PowerSync database factory"], "securityRequirements": ["Relative/non-database paths and malformed key material fail before open"], "syncRequirements": ["Every local target database opens through the same encrypted factory"]},
       "migration": {"rule": "Do not point this factory at Firebase caches or source application data.", "reconciliation": ["Raw database bytes do not contain the stored Client display name"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.schemaAndDatabaseInputValidation", "LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload"], "acceptance": ["Invalid inputs fail and persisted content is encrypted"]}
@@ -143,10 +143,10 @@
     {
       "id": "SWIFT-A9F7D22095F8",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "db88157684d67eece8c16bc9005d7f657d249dc76635bd298a07061c53ba2135",
+      "acknowledgeSourceHash": "2e136d56055a91dbbe6bba5a8c500657e2c2acc47dfa8ab2bd862739f545daee",
       "currentBehavior": "Dispatches one insert-only Client or Project command per PowerSync transaction, validates its exact local operation and optimistic aggregate linkage, calls the matching trusted handler, and drains only a matching applied or durable rejected terminal result.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Credentials and command applier are injected; no production endpoint is embedded.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete connector is module-internal and lifecycle-owned. Credentials and command applier are injected; no production endpoint is embedded.",
       "target": {"owner": "Client Identity", "surfaces": ["PowerSync upload connector", "Client command transaction validator"], "securityRequirements": ["Unexpected row count/table/op/data or optimistic-command mismatch fails closed"], "syncRequirements": ["Queue completion occurs only after a matching terminal server result; permanent rejection cannot poison later uploads"]},
       "migration": {"rule": "Connect only inside an authorized isolated target environment.", "reconciliation": ["One accepted local transaction produces one handler call and one terminal local operation state"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload", "LedgerPowerSyncVerticalSliceTests.durableRejectionDoesNotPoisonQueue"], "acceptance": ["Applied and rejected terminal results drain once; malformed shape does not"]}
@@ -154,10 +154,10 @@
     {
       "id": "SWIFT-D9F0F491C95C",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "2bc574009ea52d64053c9cd58888395bab8de1bdfa67c9f002f65067f5b2bd80",
-      "currentBehavior": "Loads or creates a random 256-bit local database key in a this-device-only Keychain item scoped by service and Principal/Account namespace.",
+      "acknowledgeSourceHash": "95d4c3f7f194302a5b8be469f80e0696259c00c47138c45a632512c819bae407",
+      "currentBehavior": "Loads or creates random 256-bit key bytes in a this-device-only Keychain item scoped by service and opaque Principal/Account namespace; the database path decodes them to SQLCipher hex while the distinct media identity consumes raw bytes.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Logout disposition remains governed by the separate pending-work policy.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete Keychain wrapper is module-internal; separate database/media identities are lifecycle-owned. Logout disposition remains governed by the separate pending-work policy.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["PowerSync database Keychain"], "securityRequirements": ["Keys use secure randomness and WhenUnlockedThisDeviceOnly accessibility"], "syncRequirements": ["Stable namespace reuses the key; different Principal/Account namespaces cannot share it"]},
       "migration": {"rule": "Generate target keys locally; never import Firebase credentials or cache keys.", "reconciliation": ["The key is valid 32-byte lowercase hex when supplied to the database factory"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Database encryption is active and restart uses the same scoped key"]}

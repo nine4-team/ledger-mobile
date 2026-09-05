@@ -40,12 +40,12 @@ public enum AttachmentCapturePowerSyncSchema {
     )
 }
 
-public enum AttachmentCapturePowerSyncDatabaseFailure: Error, Equatable, Sendable {
+enum AttachmentCapturePowerSyncDatabaseFailure: Error, Equatable, Sendable {
     case invalidDatabasePath
 }
 
-public enum AttachmentCapturePowerSyncDatabaseFactory {
-    public static func open(
+enum AttachmentCapturePowerSyncDatabaseFactory {
+    static func open(
         absolutePath: String,
         encryptionKey: LedgerPowerSyncEncryptionKey
     ) throws -> any PowerSyncDatabaseProtocol {
@@ -149,7 +149,7 @@ public enum AttachmentCapturePowerSyncStoreFailure: Error, Equatable, Sendable {
 
 /// Local-only acceptance adapter. There is intentionally no API here to mark an
 /// item uploaded, detach it, delete it, discard it, clean it up, or evict it.
-public actor AttachmentCapturePowerSyncStore:
+actor AttachmentCapturePowerSyncStore:
     AttachmentCaptureStoring,
     AttachmentPendingWorkObserving
 {
@@ -160,7 +160,7 @@ public actor AttachmentCapturePowerSyncStore:
     private let fault: @Sendable (AttachmentStoreCheckpoint) throws -> Void
     private var inFlight: [String: InFlightCapture] = [:]
 
-    public init(
+    init(
         database: any PowerSyncDatabaseProtocol,
         vault: AttachmentLocalByteVault,
         scope: AttachmentDurabilityNamespaceScope,

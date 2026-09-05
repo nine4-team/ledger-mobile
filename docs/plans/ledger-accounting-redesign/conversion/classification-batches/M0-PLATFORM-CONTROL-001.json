@@ -11,7 +11,8 @@
     "EVID-DOMAIN-PRIMITIVES-001",
     "EVID-TARGET-QUERY-PORT-INVENTORY-001",
     "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
-    "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+    "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
   ],
   "surfaces": [
     {
@@ -116,8 +117,8 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
-      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
+      "acknowledgeSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; lifecycle-owned provider types are not public; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -127,7 +128,8 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
-        "EVID-TARGET-COMPOSITION-001"
+        "EVID-TARGET-COMPOSITION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "target": {
@@ -296,8 +298,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed",
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through Account-workspace bootstrap, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
+      "acknowledgeSourceHash": "ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, serializes startup and cleans any post-open failure, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client/Project, attachment and pending-work behavior without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -306,7 +308,8 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "target": {
@@ -343,8 +346,8 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
-      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, confines provider imports to LedgerTargetPowerSync, enforces exact reviewed dependency versions, and refuses target-only paths in the Firebase application project.",
+      "acknowledgeSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, public lifecycle-owned provider declarations, provider imports outside LedgerTargetPowerSync, dependency-version drift, and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -352,7 +355,8 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
-        "EVID-TARGET-COMPOSITION-001"
+        "EVID-TARGET-COMPOSITION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "target": {

@@ -1,29 +1,820 @@
-// READY scaffold only — executable runtime composition begins only after the
-// synchronized READY checkpoint and immutable CI pass.
-//
-// This runtime-wide lifecycle owner will construct exactly one
-// PendingWorkPowerSyncQuery, AttachmentCapturePowerSyncStore, and
-// AttachmentLocalByteVault over the structured database and a separate local
-// attachment queue in the same validated environment, Principal, and Account
-// namespace. Both SQLite factories receive the same workspace SQLCipher key.
-// The AES-GCM media key has a distinct Keychain identity and value; equality is
-// rejected before any database or vault opens.
-//
-// One open/closing/closed lifecycle gate will cover every finite runtime call
-// and every Client/Project watch, not only capture and summary. Close rejects new
-// leases, cancels and drains watches, drains accepted finite work, attempts the
-// attachment-database close and then the structured-database close even if the
-// first fails, releases query/store/vault ownership, and stores one terminal
-// success or bounded combined failure returned by every repeated close. Every
-// post-close operation refuses.
-//
-// Bootstrap becomes async. It validates scope/locations/key separation before
-// storage opens and, after any later failure, attempts to close every opened
-// database in attachment-then-structured order, releases vault ownership, and
-// reports the primary stage plus bounded cleanup outcomes without deleting
-// either database, protected bytes, or either Keychain key.
-//
-// This is not AccountSessionEnding and will expose no endSession, synchronization,
-// result resolution, provider signout, workspace switch, queue/media/database/
-// key deletion, cache cleanup, destructive confirmation, Auth lease, hosted
-// endpoint, migration, Firebase compatibility, production, or cutover behavior.
+import Foundation
+import LedgerTargetCore
+import PowerSync
+
+public enum LedgerPowerSyncLocalBootstrapStage: String, Equatable, Sendable {
+    case applicationSupportResolution
+    case workspaceLocationResolution
+    case databaseKeyLoad
+    case mediaKeyLoad
+    case keyValidation
+    case directoryPreparation
+    case structuredDatabaseOpen
+    case structuredDatabaseValidation
+    case attachmentDatabaseOpen
+    case attachmentDatabaseValidation
+    case mediaVaultOpen
+    case attachmentStoreConstruction
+    case pendingWorkQueryConstruction
+    case runtimeConstruction
+}
+
+public enum LedgerPowerSyncLocalCleanupOutcome: String, Equatable, Sendable {
+    case notOpened
+    case succeeded
+    case failed
+}
+
+public struct LedgerPowerSyncLocalBootstrapFailure: Error, Equatable, Sendable {
+    public let stage: LedgerPowerSyncLocalBootstrapStage
+    public let attachmentDatabaseCleanup: LedgerPowerSyncLocalCleanupOutcome
+    public let structuredDatabaseCleanup: LedgerPowerSyncLocalCleanupOutcome
+
+    public var diagnosticCode: String {
+        "workspace_bootstrap_\(stage.rawValue)"
+    }
+
+    init(
+        stage: LedgerPowerSyncLocalBootstrapStage,
+        attachmentDatabaseCleanup: LedgerPowerSyncLocalCleanupOutcome = .notOpened,
+        structuredDatabaseCleanup: LedgerPowerSyncLocalCleanupOutcome = .notOpened
+    ) {
+        self.stage = stage
+        self.attachmentDatabaseCleanup = attachmentDatabaseCleanup
+        self.structuredDatabaseCleanup = structuredDatabaseCleanup
+    }
+}
+
+protocol AccountWorkspaceAttachmentStoring:
+    AttachmentCaptureStoring,
+    AttachmentPendingWorkObserving
+{}
+
+extension AttachmentCapturePowerSyncStore: AccountWorkspaceAttachmentStoring {}
+
+protocol AccountWorkspacePendingWorkSummarizing: Sendable {
+    func summary() async throws -> PendingLocalWorkSummary
+}
+
+extension PendingWorkPowerSyncQuery: AccountWorkspacePendingWorkSummarizing {}
+
+enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
+    case createClient
+    case createProject
+    case pendingUploadCount
+    case encryptionCipher
+    case captureAttachment
+    case pendingWorkSummary
+}
+
+enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
+    case clientDetails
+    case projectDetails
+    case clientDirectory
+    case projectDirectory
+}
+
+struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
+    let database: any PowerSyncDatabaseProtocol
+    let closePreservingData: @Sendable () async throws -> Void
+}
+
+struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
+    var loadDatabaseKey: @Sendable (String, String) throws -> LedgerPowerSyncEncryptionKey
+    var loadMediaKeyBytes: @Sendable (String, String) throws -> Data
+    var createDirectory: @Sendable (URL) throws -> Void
+    var openStructuredDatabase:
+        @Sendable (
+            String,
+            LedgerPowerSyncEncryptionKey
+        ) throws -> AccountWorkspaceOpenedDatabase
+    var openAttachmentDatabase:
+        @Sendable (
+            String,
+            LedgerPowerSyncEncryptionKey
+        ) throws -> AccountWorkspaceOpenedDatabase
+    var validateStructuredDatabase:
+        @Sendable (
+            any PowerSyncDatabaseProtocol
+        ) async throws -> Void
+    var validateAttachmentDatabase:
+        @Sendable (
+            any PowerSyncDatabaseProtocol
+        ) async throws -> Void
+    var makeVault:
+        @Sendable (
+            URL,
+            AttachmentDurabilityNamespaceScope,
+            AttachmentMediaEncryptionKey
+        ) throws -> AttachmentLocalByteVault
+    var makeAttachmentStore:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            AttachmentLocalByteVault,
+            AttachmentDurabilityNamespaceScope,
+            @Sendable @escaping () -> Date
+        ) throws -> any AccountWorkspaceAttachmentStoring
+    var makePendingWorkQuery:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            any AttachmentPendingWorkObserving,
+            LedgerEnvironmentKind,
+            PrincipalID,
+            AccountID,
+            @Sendable @escaping () -> Date
+        ) throws -> any AccountWorkspacePendingWorkSummarizing
+    var makeLifecycleOwner:
+        @Sendable (
+            AccountWorkspaceRuntimeResources
+        ) throws -> AccountWorkspacePendingWorkRuntime
+    var finiteOperationCheckpoint:
+        @Sendable (
+            AccountWorkspaceRuntimeFiniteOperation
+        ) async throws -> Void
+    var streamOperationCheckpoint:
+        @Sendable (
+            AccountWorkspaceRuntimeStreamOperation
+        ) async throws -> Void
+    var lifecycleEvent: @Sendable (AccountWorkspaceRuntimeLifecycleEvent) -> Void
+    var now: @Sendable () -> Date
+
+    static let live = LedgerPowerSyncLocalBootstrapDependencies(
+        loadDatabaseKey: { service, account in
+            let keychain = try LedgerPowerSyncKeychain(service: service)
+            return try keychain.loadOrCreateKey(principalNamespace: account)
+        },
+        loadMediaKeyBytes: { service, account in
+            let keychain = try LedgerPowerSyncKeychain(service: service)
+            return try keychain.loadOrCreateKeyBytes(principalNamespace: account)
+        },
+        createDirectory: { directory in
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.complete]
+            )
+        },
+        openStructuredDatabase: { path, key in
+            let database = try LedgerPowerSyncDatabaseFactory.open(
+                absolutePath: path,
+                encryptionKey: key
+            )
+            return AccountWorkspaceOpenedDatabase(
+                database: database,
+                closePreservingData: {
+                    try await database.close(deleteDatabase: false)
+                }
+            )
+        },
+        openAttachmentDatabase: { path, key in
+            let database = try AttachmentCapturePowerSyncDatabaseFactory.open(
+                absolutePath: path,
+                encryptionKey: key
+            )
+            return AccountWorkspaceOpenedDatabase(
+                database: database,
+                closePreservingData: {
+                    try await database.close(deleteDatabase: false)
+                }
+            )
+        },
+        validateStructuredDatabase: { database in
+            _ = try await database.get("SELECT count(*) FROM sqlite_master") { cursor in
+                try cursor.getInt64(index: 0)
+            }
+        },
+        validateAttachmentDatabase: { database in
+            _ = try await database.get("SELECT count(*) FROM sqlite_master") { cursor in
+                try cursor.getInt64(index: 0)
+            }
+        },
+        makeVault: { root, scope, key in
+            try AttachmentLocalByteVault(
+                trustedRoot: root,
+                scope: scope,
+                mediaKey: key
+            )
+        },
+        makeAttachmentStore: { database, vault, scope, now in
+            AttachmentCapturePowerSyncStore(
+                database: database,
+                vault: vault,
+                scope: scope,
+                now: now
+            )
+        },
+        makePendingWorkQuery: {
+            database, attachmentObserver, environment, principalId, accountId, now in
+            PendingWorkPowerSyncQuery(
+                database: database,
+                attachmentObserver: attachmentObserver,
+                environment: environment,
+                principalId: principalId,
+                accountId: accountId,
+                now: now
+            )
+        },
+        makeLifecycleOwner: { AccountWorkspacePendingWorkRuntime(resources: $0) },
+        finiteOperationCheckpoint: { _ in },
+        streamOperationCheckpoint: { _ in },
+        lifecycleEvent: { _ in },
+        now: Date.init
+    )
+}
+
+enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
+    case structuredDatabaseOpened
+    case attachmentDatabaseOpened
+    case vaultConstructed
+    case attachmentStoreConstructed
+    case pendingWorkQueryConstructed
+    case lifecycleOwnerConstructed
+    case derivedResourcesReleased
+    case vaultReleased
+    case attachmentDatabaseCloseAttempted
+    case structuredDatabaseCloseAttempted
+}
+
+final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
+    let structuredDatabase: any PowerSyncDatabaseProtocol
+    let attachmentDatabase: any PowerSyncDatabaseProtocol
+    let creationStore: ClientCreationPowerSyncStore
+    let detailsQuery: ClientCoreDetailsPowerSyncQuery
+    let projectSetupStore: ProjectSetupPowerSyncStore
+    let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
+    let directoryQuery: ClientProjectDirectoryPowerSyncQuery
+    let attachmentStore: any AccountWorkspaceAttachmentStoring
+    let pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing
+    let vault: AttachmentLocalByteVault
+    let closeAttachmentDatabase: @Sendable () async throws -> Void
+    let closeStructuredDatabase: @Sendable () async throws -> Void
+    let finiteOperationCheckpoint:
+        @Sendable (
+            AccountWorkspaceRuntimeFiniteOperation
+        ) async throws -> Void
+    let streamOperationCheckpoint:
+        @Sendable (
+            AccountWorkspaceRuntimeStreamOperation
+        ) async throws -> Void
+    let lifecycleEvent: @Sendable (AccountWorkspaceRuntimeLifecycleEvent) -> Void
+    let environment: LedgerEnvironmentKind
+    let principalId: PrincipalID
+    let accountId: AccountID
+
+    init(
+        structuredDatabase: any PowerSyncDatabaseProtocol,
+        attachmentDatabase: any PowerSyncDatabaseProtocol,
+        attachmentStore: any AccountWorkspaceAttachmentStoring,
+        pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing,
+        vault: AttachmentLocalByteVault,
+        closeAttachmentDatabase: @Sendable @escaping () async throws -> Void,
+        closeStructuredDatabase: @Sendable @escaping () async throws -> Void,
+        finiteOperationCheckpoint:
+            @Sendable @escaping (
+                AccountWorkspaceRuntimeFiniteOperation
+            ) async throws -> Void,
+        streamOperationCheckpoint:
+            @Sendable @escaping (
+                AccountWorkspaceRuntimeStreamOperation
+            ) async throws -> Void,
+        lifecycleEvent: @Sendable @escaping (AccountWorkspaceRuntimeLifecycleEvent) -> Void,
+        environment: LedgerEnvironmentKind,
+        principalId: PrincipalID,
+        accountId: AccountID,
+        now: @Sendable @escaping () -> Date
+    ) {
+        self.structuredDatabase = structuredDatabase
+        self.attachmentDatabase = attachmentDatabase
+        creationStore = ClientCreationPowerSyncStore(database: structuredDatabase, now: now)
+        detailsQuery = ClientCoreDetailsPowerSyncQuery(
+            database: structuredDatabase,
+            principalId: principalId,
+            accountId: accountId,
+            now: now
+        )
+        projectSetupStore = ProjectSetupPowerSyncStore(database: structuredDatabase, now: now)
+        projectDetailsQuery = ProjectCoreDetailsPowerSyncQuery(
+            database: structuredDatabase,
+            principalId: principalId,
+            accountId: accountId,
+            now: now
+        )
+        directoryQuery = ClientProjectDirectoryPowerSyncQuery(
+            database: structuredDatabase,
+            principalId: principalId,
+            accountId: accountId,
+            now: now
+        )
+        self.attachmentStore = attachmentStore
+        self.pendingWorkQuery = pendingWorkQuery
+        self.vault = vault
+        self.closeAttachmentDatabase = closeAttachmentDatabase
+        self.closeStructuredDatabase = closeStructuredDatabase
+        self.finiteOperationCheckpoint = finiteOperationCheckpoint
+        self.streamOperationCheckpoint = streamOperationCheckpoint
+        self.lifecycleEvent = lifecycleEvent
+        self.environment = environment
+        self.principalId = principalId
+        self.accountId = accountId
+    }
+}
+
+actor AccountWorkspacePendingWorkRuntime {
+    private enum State {
+        case open
+        case closing(Task<Result<Void, LedgerOfflineClientRuntimeFailure>, Never>)
+        case closed(Result<Void, LedgerOfflineClientRuntimeFailure>)
+    }
+
+    private var state: State = .open
+    private var resources: AccountWorkspaceRuntimeResources?
+    private var finiteLeaseCount = 0
+    private var streamTasks: [UUID: Task<Void, Never>] = [:]
+    private var cancelledBeforeStart: Set<UUID> = []
+    private var drainWaiters: [CheckedContinuation<Void, Never>] = []
+
+    init(resources: AccountWorkspaceRuntimeResources) {
+        self.resources = resources
+    }
+
+    func createClient(_ command: CreateClientCommand) async throws -> OperationReceipt {
+        try await withFiniteLease(.createClient) { resources in
+            guard command.envelope.accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            guard command.envelope.actorPrincipalId == resources.principalId else {
+                throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+            }
+            return try await resources.creationStore.create(command)
+        }
+    }
+
+    func createProject(_ command: CreateProjectCommand) async throws -> OperationReceipt {
+        try await withFiniteLease(.createProject) { resources in
+            guard command.envelope.accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            guard command.envelope.actorPrincipalId == resources.principalId else {
+                throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+            }
+            return try await resources.projectSetupStore.create(command)
+        }
+    }
+
+    func pendingUploadCount() async throws -> Int64 {
+        try await withFiniteLease(.pendingUploadCount) { resources in
+            try await resources.structuredDatabase.get("SELECT count(*) FROM ps_crud") { cursor in
+                try cursor.getInt64(index: 0)
+            }
+        }
+    }
+
+    func encryptionCipher() async throws -> String {
+        try await withFiniteLease(.encryptionCipher) { resources in
+            try await resources.structuredDatabase.get("PRAGMA cipher") { cursor in
+                try cursor.getString(index: 0)
+            }
+        }
+    }
+
+    func captureAttachment(
+        _ capture: LocalAttachmentCapture
+    ) async throws -> AttachmentLocalDurabilityReceipt {
+        try await withFiniteLease(.captureAttachment) { resources in
+            try await resources.attachmentStore.enqueue(capture)
+        }
+    }
+
+    func pendingWorkSummary() async throws -> PendingLocalWorkSummary {
+        try await withFiniteLease(.pendingWorkSummary) { resources in
+            try await resources.pendingWorkQuery.summary()
+        }
+    }
+
+    func startClientWatch(
+        id: UUID,
+        request: ClientCoreDetailsRequest,
+        continuation: AsyncThrowingStream<ClientCoreDetailsUpdate, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .clientDetails,
+            continuation: continuation,
+            validate: { resources in
+                guard request.accountId == resources.accountId else {
+                    throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+                }
+            },
+            makeStream: { $0.detailsQuery.watchClientCoreDetails(request) }
+        )
+    }
+
+    func startProjectWatch(
+        id: UUID,
+        request: ProjectCoreDetailsRequest,
+        continuation: AsyncThrowingStream<ProjectCoreDetailsUpdate, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .projectDetails,
+            continuation: continuation,
+            validate: { resources in
+                guard request.accountId == resources.accountId else {
+                    throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+                }
+            },
+            makeStream: { $0.projectDetailsQuery.watchProjectCoreDetails(request) }
+        )
+    }
+
+    func startClientDirectoryWatch(
+        id: UUID,
+        continuation: AsyncThrowingStream<ClientListSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .clientDirectory,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.directoryQuery.watchClients(accountId: resources.accountId)
+            }
+        )
+    }
+
+    func startProjectDirectoryWatch(
+        id: UUID,
+        continuation: AsyncThrowingStream<ProjectListSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .projectDirectory,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.directoryQuery.watchProjects(accountId: resources.accountId)
+            }
+        )
+    }
+
+    func cancelStream(id: UUID) {
+        if let task = streamTasks[id] {
+            task.cancel()
+        } else if case .open = state {
+            cancelledBeforeStart.insert(id)
+        }
+    }
+
+    func close() async throws {
+        let task: Task<Result<Void, LedgerOfflineClientRuntimeFailure>, Never>
+        switch state {
+        case .open:
+            task = Task { await self.performClose() }
+            state = .closing(task)
+        case .closing(let existing):
+            task = existing
+        case .closed(let result):
+            return try result.get()
+        }
+        return try await task.value.get()
+    }
+
+    private func withFiniteLease<Value: Sendable>(
+        _ operation: AccountWorkspaceRuntimeFiniteOperation,
+        body: @Sendable (AccountWorkspaceRuntimeResources) async throws -> Value
+    ) async throws -> Value {
+        guard case .open = state, let resources else {
+            throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+        }
+        finiteLeaseCount += 1
+        do {
+            try await resources.finiteOperationCheckpoint(operation)
+            let value = try await body(resources)
+            releaseFiniteLease()
+            return value
+        } catch {
+            releaseFiniteLease()
+            throw error
+        }
+    }
+
+    private func startStream<Value: Sendable>(
+        id: UUID,
+        operation: AccountWorkspaceRuntimeStreamOperation,
+        continuation: AsyncThrowingStream<Value, Error>.Continuation,
+        validate: @Sendable (AccountWorkspaceRuntimeResources) throws -> Void,
+        makeStream:
+            @Sendable @escaping (
+                AccountWorkspaceRuntimeResources
+            ) -> AsyncThrowingStream<Value, Error>
+    ) {
+        guard case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed)
+            return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError())
+            return
+        }
+        do {
+            try validate(resources)
+        } catch {
+            continuation.finish(throwing: error)
+            return
+        }
+
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(operation)
+                try Task.checkCancellation()
+                let stream = makeStream(resources)
+                for try await value in stream {
+                    try Task.checkCancellation()
+                    if case .terminated = continuation.yield(value) { break }
+                }
+                continuation.finish()
+            } catch is CancellationError {
+                continuation.finish(throwing: CancellationError())
+            } catch {
+                continuation.finish(throwing: error)
+            }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    private func streamFinished(id: UUID) {
+        guard streamTasks.removeValue(forKey: id) != nil else { return }
+        resumeDrainWaitersIfDrained()
+    }
+
+    private func releaseFiniteLease() {
+        precondition(finiteLeaseCount > 0)
+        finiteLeaseCount -= 1
+        resumeDrainWaitersIfDrained()
+    }
+
+    private func performClose() async -> Result<Void, LedgerOfflineClientRuntimeFailure> {
+        for task in streamTasks.values { task.cancel() }
+        await waitUntilDrained()
+
+        guard let resources else {
+            let result: Result<Void, LedgerOfflineClientRuntimeFailure> = .success(())
+            state = .closed(result)
+            return result
+        }
+
+        var attachmentFailed = false
+        var structuredFailed = false
+        resources.lifecycleEvent(.attachmentDatabaseCloseAttempted)
+        do {
+            try await resources.closeAttachmentDatabase()
+        } catch {
+            attachmentFailed = true
+        }
+        resources.lifecycleEvent(.structuredDatabaseCloseAttempted)
+        do {
+            try await resources.closeStructuredDatabase()
+        } catch {
+            structuredFailed = true
+        }
+
+        let lifecycleEvent = resources.lifecycleEvent
+        self.resources = nil
+        cancelledBeforeStart.removeAll(keepingCapacity: false)
+        lifecycleEvent(.derivedResourcesReleased)
+        lifecycleEvent(.vaultReleased)
+
+        let result: Result<Void, LedgerOfflineClientRuntimeFailure>
+        if attachmentFailed || structuredFailed {
+            result = .failure(
+                .databaseCloseFailed(
+                    attachmentDatabase: attachmentFailed,
+                    structuredDatabase: structuredFailed
+                )
+            )
+        } else {
+            result = .success(())
+        }
+        state = .closed(result)
+        return result
+    }
+
+    private func waitUntilDrained() async {
+        guard finiteLeaseCount != 0 || !streamTasks.isEmpty else { return }
+        await withCheckedContinuation { continuation in
+            drainWaiters.append(continuation)
+        }
+    }
+
+    private func resumeDrainWaitersIfDrained() {
+        guard finiteLeaseCount == 0, streamTasks.isEmpty else { return }
+        let waiters = drainWaiters
+        drainWaiters.removeAll(keepingCapacity: false)
+        for waiter in waiters { waiter.resume() }
+    }
+}
+
+public enum LedgerPowerSyncLocalBootstrap {
+    public static func open(
+        validatedEnvironment: ValidatedLedgerEnvironment,
+        principalId: PrincipalID,
+        accountId: AccountID
+    ) async throws -> LedgerOfflineClientRuntime {
+        guard
+            let applicationSupport = FileManager.default.urls(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask
+            ).first
+        else {
+            throw LedgerPowerSyncLocalBootstrapFailure(
+                stage: .applicationSupportResolution
+            )
+        }
+        return try await open(
+            validatedEnvironment: validatedEnvironment,
+            principalId: principalId,
+            accountId: accountId,
+            applicationSupportDirectory: applicationSupport,
+            dependencies: .live
+        )
+    }
+
+    static func open(
+        validatedEnvironment: ValidatedLedgerEnvironment,
+        principalId: PrincipalID,
+        accountId: AccountID,
+        applicationSupportDirectory: URL,
+        dependencies: LedgerPowerSyncLocalBootstrapDependencies
+    ) async throws -> LedgerOfflineClientRuntime {
+        var stage: LedgerPowerSyncLocalBootstrapStage = .workspaceLocationResolution
+        var structured: AccountWorkspaceOpenedDatabase?
+        var attachment: AccountWorkspaceOpenedDatabase?
+        var vault: AttachmentLocalByteVault?
+        var attachmentStore: (any AccountWorkspaceAttachmentStoring)?
+        var pendingWorkQuery: (any AccountWorkspacePendingWorkSummarizing)?
+        var runtimeResources: AccountWorkspaceRuntimeResources?
+
+        do {
+            let location = try LedgerWorkspaceRuntimeIsolation.resolve(
+                validatedEnvironment: validatedEnvironment,
+                principalId: principalId,
+                accountId: accountId,
+                applicationSupportDirectory: applicationSupportDirectory
+            )
+            let scope = try AttachmentDurabilityNamespaceScope(
+                validatedEnvironment: validatedEnvironment,
+                principalId: principalId,
+                accountId: accountId
+            )
+
+            stage = .databaseKeyLoad
+            let databaseKey = try dependencies.loadDatabaseKey(
+                location.databaseKeychainService,
+                location.databaseKeychainAccount
+            )
+            stage = .mediaKeyLoad
+            let mediaKeyBytes = try dependencies.loadMediaKeyBytes(
+                location.mediaKeychainService,
+                location.mediaKeychainAccount
+            )
+            stage = .keyValidation
+            let mediaKey = try AttachmentMediaEncryptionKey(bytes: mediaKeyBytes)
+            let mediaKeyHex = mediaKeyBytes.map { String(format: "%02x", $0) }.joined()
+            guard mediaKeyHex != databaseKey.hexadecimal,
+                location.databaseKeychainService != location.mediaKeychainService
+                    || location.databaseKeychainAccount != location.mediaKeychainAccount
+            else {
+                throw LedgerPowerSyncDatabaseFailure.invalidEncryptionKey
+            }
+
+            stage = .directoryPreparation
+            try dependencies.createDirectory(
+                location.structuredDatabaseURL.deletingLastPathComponent()
+            )
+            try dependencies.createDirectory(location.mediaVaultRootURL)
+
+            stage = .structuredDatabaseOpen
+            let openedStructured = try dependencies.openStructuredDatabase(
+                location.structuredDatabaseURL.path,
+                databaseKey
+            )
+            structured = openedStructured
+            dependencies.lifecycleEvent(.structuredDatabaseOpened)
+            stage = .structuredDatabaseValidation
+            try await dependencies.validateStructuredDatabase(openedStructured.database)
+
+            stage = .attachmentDatabaseOpen
+            let openedAttachment = try dependencies.openAttachmentDatabase(
+                location.attachmentDatabaseURL.path,
+                databaseKey
+            )
+            attachment = openedAttachment
+            dependencies.lifecycleEvent(.attachmentDatabaseOpened)
+            stage = .attachmentDatabaseValidation
+            try await dependencies.validateAttachmentDatabase(openedAttachment.database)
+
+            stage = .mediaVaultOpen
+            let openedVault = try dependencies.makeVault(
+                location.mediaVaultRootURL,
+                scope,
+                mediaKey
+            )
+            vault = openedVault
+            dependencies.lifecycleEvent(.vaultConstructed)
+
+            stage = .attachmentStoreConstruction
+            let madeAttachmentStore = try dependencies.makeAttachmentStore(
+                openedAttachment.database,
+                openedVault,
+                scope,
+                dependencies.now
+            )
+            attachmentStore = madeAttachmentStore
+            dependencies.lifecycleEvent(.attachmentStoreConstructed)
+
+            stage = .pendingWorkQueryConstruction
+            let madePendingWorkQuery = try dependencies.makePendingWorkQuery(
+                openedStructured.database,
+                madeAttachmentStore,
+                validatedEnvironment.manifest.environment,
+                principalId,
+                accountId,
+                dependencies.now
+            )
+            pendingWorkQuery = madePendingWorkQuery
+            dependencies.lifecycleEvent(.pendingWorkQueryConstructed)
+
+            let madeRuntimeResources = AccountWorkspaceRuntimeResources(
+                structuredDatabase: openedStructured.database,
+                attachmentDatabase: openedAttachment.database,
+                attachmentStore: madeAttachmentStore,
+                pendingWorkQuery: madePendingWorkQuery,
+                vault: openedVault,
+                closeAttachmentDatabase: openedAttachment.closePreservingData,
+                closeStructuredDatabase: openedStructured.closePreservingData,
+                finiteOperationCheckpoint: dependencies.finiteOperationCheckpoint,
+                streamOperationCheckpoint: dependencies.streamOperationCheckpoint,
+                lifecycleEvent: dependencies.lifecycleEvent,
+                environment: validatedEnvironment.manifest.environment,
+                principalId: principalId,
+                accountId: accountId,
+                now: dependencies.now
+            )
+            runtimeResources = madeRuntimeResources
+
+            stage = .runtimeConstruction
+            let owner = try dependencies.makeLifecycleOwner(madeRuntimeResources)
+            dependencies.lifecycleEvent(.lifecycleOwnerConstructed)
+            return LedgerOfflineClientRuntime(lifecycleOwner: owner)
+        } catch {
+            let hadDerivedResources =
+                runtimeResources != nil
+                || pendingWorkQuery != nil
+                || attachmentStore != nil
+            runtimeResources = nil
+            pendingWorkQuery = nil
+            attachmentStore = nil
+            if vault != nil {
+                vault = nil
+                dependencies.lifecycleEvent(.vaultReleased)
+            }
+            if hadDerivedResources {
+                dependencies.lifecycleEvent(.derivedResourcesReleased)
+            }
+
+            let attachmentCleanup = await cleanup(
+                attachment,
+                event: .attachmentDatabaseCloseAttempted,
+                dependencies: dependencies
+            )
+            attachment = nil
+            let structuredCleanup = await cleanup(
+                structured,
+                event: .structuredDatabaseCloseAttempted,
+                dependencies: dependencies
+            )
+            structured = nil
+            throw LedgerPowerSyncLocalBootstrapFailure(
+                stage: stage,
+                attachmentDatabaseCleanup: attachmentCleanup,
+                structuredDatabaseCleanup: structuredCleanup
+            )
+        }
+    }
+
+    private static func cleanup(
+        _ opened: AccountWorkspaceOpenedDatabase?,
+        event: AccountWorkspaceRuntimeLifecycleEvent,
+        dependencies: LedgerPowerSyncLocalBootstrapDependencies
+    ) async -> LedgerPowerSyncLocalCleanupOutcome {
+        guard let opened else { return .notOpened }
+        dependencies.lifecycleEvent(event)
+        do {
+            try await opened.closePreservingData()
+            return .succeeded
+        } catch {
+            return .failed
+        }
+    }
+}

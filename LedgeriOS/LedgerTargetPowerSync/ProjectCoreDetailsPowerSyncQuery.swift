@@ -2,13 +2,13 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
-public final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying, @unchecked Sendable {
+final class ProjectCoreDetailsPowerSyncQuery: ProjectCoreDetailsQuerying, @unchecked Sendable {
     private let database: any PowerSyncDatabaseProtocol
     private let principalId: PrincipalID
     private let boundAccountId: AccountID
     private let now: @Sendable () -> Date
 
-    public init(
+    init(
         database: any PowerSyncDatabaseProtocol,
         principalId: PrincipalID,
         accountId: AccountID,

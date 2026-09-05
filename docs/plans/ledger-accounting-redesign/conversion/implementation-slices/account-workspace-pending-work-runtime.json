@@ -3,7 +3,7 @@
   "sliceId": "account-workspace-pending-work-runtime",
   "title": "Compose one Account-workspace pending-work and attachment durability runtime",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Account Workspace Pending-Work Runtime",
   "surfaceIds": ["SWIFT-75CFE285AF37", "TEST-8D6A15063B2D"],
   "requirements": [
@@ -187,7 +187,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010"],
       "expected": "Injected factory counters prove exactly one lifecycle owner, structured-database factory, attachment-database factory, query, store and vault construction and no raw database/query/store/vault/key/path escape; the normally bootstrapped runtime accepts an attachment and returns exact clean, queued, applying, unresolved-rejected and unverified-attachment summary counts.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -196,7 +196,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-011"],
       "expected": "Invalid/rebound environment, Principal or Account evidence refuses before storage side effects; cross-scope capture and malformed evidence refuse without a false clean summary or unbounded diagnostic.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -205,7 +205,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-003", "WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-010", "WORKRUNTIME-REQ-011"],
       "expected": "Structured database, attachment database, vault and Keychain identities are opaque, contained and isolated for each binding dimension; each database factory is called exactly once and captures identical SQLCipher bytes, media receives different bytes, equal injected values refuse before open, and main-database-wrong, attachment-database-wrong and media-key-wrong cases fail independently without leakage.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -214,7 +214,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-003", "WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-008"],
       "expected": "Ordinary close/reopen preserves structured rows, attachment queue, byte-identical protected media and identical summary revision/time/fingerprint; equal-count evidence replacement advances the summary revision.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -223,7 +223,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-001", "WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010", "WORKRUNTIME-REQ-011"],
       "expected": "Each async bootstrap stage is faulted in turn. Every already-open database receives one attachment-then-structured close attempt, any vault is released, no state/key is deleted, and the bounded failure preserves the primary stage plus both cleanup outcomes; later valid reopen recovers accepted evidence or explicitly refuses corrupt/unavailable evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -232,7 +232,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-003", "WORKRUNTIME-REQ-007", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-011"],
       "expected": "Missing, corrupt and orphaned media plus database, vault and observation failures remain explicit across restart and never become a clean summary; ordinary close deletes no database, byte or key.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -241,16 +241,16 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["WORKRUNTIME-REQ-002", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-008", "WORKRUNTIME-REQ-011"],
       "expected": "Concurrent Client/Project mutations, list/detail watches, diagnostic reads, capture, summary and close use one lease gate. Close rejects new work, cancels and drains watches, drains finite calls, attempts attachment then structured close even under dual failure, releases ownership and stores one terminal outcome returned by every repeated close; every non-close call after closing begins refuses.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
       "id": "WORKRUNTIME-TEST-008",
       "kind": "app_mcp_contract",
-      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift compile-time surface assertions plus scripts/check-target-environment.mjs forbidden-symbol inspection",
+      "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift compile-time surface assertions, Swift compiler public symbol graph, plus scripts/check-target-environment.mjs forbidden-symbol inspection",
       "covers": ["WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010"],
       "expected": "Compile-time consumers can reach only lifecycle-gated existing feature APIs, attachment capture, pendingWorkSummary and ordinary close; deterministic source inspection rejects AccountSessionEnding conformance, raw database/query/store/vault/key/path exposure and synchronization, result-resolution, provider-signout, workspace-switch, deletion, cleanup, retention or backend-selection symbols.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },
     {
@@ -266,5 +266,5 @@
   "implementationEvidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY is comment-only in the two primary leaves. Expected affected/shared implementation surfaces are LedgerOfflineClientRuntime.swift, LedgerWorkspaceRuntimeIsolation.swift, LedgerPowerSyncKeychain.swift, LedgerTargetStagingApp.swift, LedgerWorkspaceRuntimeIsolationTests.swift, ClientProjectDirectoryPowerSyncQueryTests.swift and scripts/check-target-environment.mjs. Normal and injected bootstrap become async; one runtime-wide lease gate covers every existing mutation, read/watch, diagnostic, attachment and summary call before deterministic terminal close, and the environment guard enforces forbidden public lifecycle/dependency escape. The already-verified pending-work query, attachment store, byte vault and their regression tests remain byte-identical dependencies unless implementation proves an explicit dependency change is required; primary ownership stays unchanged. This bounded local composition does not implement physical Account session ending and cannot advance A-003/A-004/A-007/A-016 or O-023. Executable work begins only after independent corrected-diff review and immutable CI pass on the exact synchronized READY commit."
+  "notes": "Exact corrected READY commit 15218cbbc44b7e7c28ef718c1770c7b6294a03c4 passed all three immutable jobs in run 33935937733 before executable work. The target-local implementation composes the structured and attachment databases, authenticated media-key vault, existing Client/Project stores and four read streams behind one async lifecycle owner and narrow facade. The first executable review returned NO-GO over wrong-media-key acceptance, publicly constructible lifecycle resources, reentrant staging startup/leaked post-open failures, and insufficient real-watch/deallocation/recovery proof. The corrected implementation authenticates a scope-bound media-key sentinel during vault construction, makes lifecycle-owned concrete providers compiler-internal, serializes staging startup and cleans local opened runtimes, and directly proves real PowerSync watch drainage, weak-vault release, and valid reopen after every injected bootstrap fault. Final independent corrected-diff review returned GO with no P0-P3 finding. All twelve focused runtime tests, thirteen attachment tests, four workspace-isolation tests, and all 403 Swift tests in 73 suites pass locally; both staging builds, compiler public-symbol proof, environment, contracts, MCP and diff checks also pass. Exact implementation CI remains required for WORKRUNTIME-TEST-009. Shared provider surfaces retain their existing primary owners. This slice implements no physical Account session ending and advances none of A-003/A-004/A-007/A-016/O-023; no hosted access, Firebase work, migration, cleanup, signout or cutover exists."
 }

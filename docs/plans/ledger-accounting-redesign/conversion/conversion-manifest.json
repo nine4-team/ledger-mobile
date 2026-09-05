@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T01:18:26.728Z",
+    "lastSynchronizedAt": "2026-09-05T02:44:18.856Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1466,10 +1466,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
-      "acknowledgedSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
+      "observedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "acknowledgedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
       "metadata": {},
-      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
+      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; lifecycle-owned provider types are not public; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -1511,7 +1511,8 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
-        "EVID-TARGET-COMPOSITION-001"
+        "EVID-TARGET-COMPOSITION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -5390,10 +5391,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
-      "acknowledgedSourceHash": "299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd",
+      "observedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "acknowledgedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
       "metadata": {},
-      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, confines provider imports to LedgerTargetPowerSync, enforces exact reviewed dependency versions, and refuses target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, public lifecycle-owned provider declarations, provider imports outside LedgerTargetPowerSync, dependency-version drift, and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -5430,7 +5431,8 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-MIGRATION-RUN-INTEGRITY-001",
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
-        "EVID-TARGET-COMPOSITION-001"
+        "EVID-TARGET-COMPOSITION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -17549,12 +17551,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed",
-      "acknowledgedSourceHash": "8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed",
+      "observedSourceHash": "ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839",
+      "acknowledgedSourceHash": "ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through Account-workspace bootstrap, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, exercises encrypted offline Client and Project creation, and renders local Client selection plus active/archived Project browsing and exact selected-Project details without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, serializes startup and cleans any post-open failure, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client/Project, attachment and pending-work behavior without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -17593,7 +17595,8 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -20128,8 +20131,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "680490b2ac5f11790f92f375f0e7bba827f8e44dc0d863a66ebcbe067eeb5437",
-      "acknowledgedSourceHash": "680490b2ac5f11790f92f375f0e7bba827f8e44dc0d863a66ebcbe067eeb5437",
+      "observedSourceHash": "23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745",
+      "acknowledgedSourceHash": "23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -20168,9 +20171,10 @@
       ],
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
-        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "No direct network or backend SDK leaks through the core query port.",
+      "notes": "The concrete adapter is module-internal and lifecycle-owned; no direct network or backend SDK leaks through the core query port.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -20460,8 +20464,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCreationPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "bb5ff3e637adf5e7e6f56e1becf3b0903f12c34c3acfce794dea8897c5bd12f1",
-      "acknowledgedSourceHash": "bb5ff3e637adf5e7e6f56e1becf3b0903f12c34c3acfce794dea8897c5bd12f1",
+      "observedSourceHash": "79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b",
+      "acknowledgedSourceHash": "79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -20499,9 +20503,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Physical encrypted local persistence is tested; server authority remains separate.",
+      "notes": "The concrete store is module-internal and lifecycle-owned. Physical encrypted local persistence is tested; server authority remains separate.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -22967,12 +22972,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerWorkspaceRuntimeIsolation.swift"
         }
       ],
-      "observedSourceHash": "bf6add0067554cea32f839a5a4e6b5ba25dad79462a491a85d37704cd6d61846",
-      "acknowledgedSourceHash": "bf6add0067554cea32f839a5a4e6b5ba25dad79462a491a85d37704cd6d61846",
+      "observedSourceHash": "924538cf13c8e3e6e50c815065b178f95512492c0b26622693943cb9376ffb59",
+      "acknowledgedSourceHash": "924538cf13c8e3e6e50c815065b178f95512492c0b26622693943cb9376ffb59",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Derives one deterministic opaque, path-contained Account-workspace database URL and composite Keychain identity from the validated environment persistence binding plus canonical Principal and Account scope, rejecting invalid namespace/root evidence before side effects.",
+      "currentBehavior": "Derives deterministic opaque, path-contained structured-database, attachment-database and media-vault locations plus distinct database/media Keychain identities from validated environment, Principal and Account scope, rejecting invalid namespace/root evidence before side effects.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -23004,7 +23009,8 @@
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "Local deterministic implementation only; it opens no hosted service and owns no workspace activation or deletion.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
@@ -23411,12 +23417,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
-      "acknowledgedSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
+      "observedSourceHash": "20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61",
+      "acknowledgedSourceHash": "20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Composes the encrypted validated-environment/Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, exposes Client/Project creation, detail and directory watches, pending-upload count and cipher inspection, and permits only non-destructive ordinary close.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope operations and exposes Client/Project creation and watches, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close without exposing its concrete resources or initializer.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -23453,9 +23459,10 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified. Pending-work and attachment lifecycle composition remains a later slice, so this runtime is unchanged by EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.",
+      "notes": "The local staging shell opens no hosted connection. The runtime now delegates every operation and stream to the single Account-workspace lifecycle owner; pending-work and attachment composition is implemented locally but session ending remains separate.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -23524,8 +23531,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "e247e9377d9379dd039afe417ed79ac42f59400f6653cfc86da7f94aa375d6a4",
-      "acknowledgedSourceHash": "e247e9377d9379dd039afe417ed79ac42f59400f6653cfc86da7f94aa375d6a4",
+      "observedSourceHash": "983e5d79a903893f509e3ac2caf4add5b90c15be794faa200f232325d8a08b09",
+      "acknowledgedSourceHash": "983e5d79a903893f509e3ac2caf4add5b90c15be794faa200f232325d8a08b09",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -23564,9 +23571,10 @@
       ],
       "evidence": [
         "EVID-PROJECT-SETUP-PROVIDER-001",
-        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "The query currently owns Project core details only; budget-segment and history queries remain separate slices.",
+      "notes": "The concrete query is module-internal and lifecycle-owned. It currently owns Project core details only; budget-segment and history queries remain separate slices.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -24360,8 +24368,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "3c585a69fc8c75ca5727a33abcb2b252819851845f2ba54f1c0fcb0a28a46c71",
-      "acknowledgedSourceHash": "3c585a69fc8c75ca5727a33abcb2b252819851845f2ba54f1c0fcb0a28a46c71",
+      "observedSourceHash": "d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598",
+      "acknowledgedSourceHash": "d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -24398,9 +24406,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-PROJECT-SETUP-PROVIDER-001"
+        "EVID-PROJECT-SETUP-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
+      "notes": "The concrete store is module-internal and lifecycle-owned. All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -25066,12 +25075,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentLocalByteVault.swift"
         }
       ],
-      "observedSourceHash": "9581e01d5087e2fa39f12906c8022bf5e5db21e076a16db454bf4340c4829dcb",
-      "acknowledgedSourceHash": "9581e01d5087e2fa39f12906c8022bf5e5db21e076a16db454bf4340c4829dcb",
+      "observedSourceHash": "ce6e07ba93e35c45c85adc587a691ff9730809b6eb9c8112cb0f118b6f7bd210",
+      "acknowledgedSourceHash": "ce6e07ba93e35c45c85adc587a691ff9730809b6eb9c8112cb0f118b6f7bd210",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, explicit orphan evidence and a bounded unavailable-inventory failure checkpoint.",
+      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, an authenticated scope-bound media-key sentinel at construction, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, explicit orphan evidence and a bounded unavailable-enumeration failure checkpoint.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -25107,9 +25116,10 @@
       "evidence": [
         "EVID-ATTACHMENT-CAPTURE-001",
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
-        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Local disposable provider only. Pending-work tests can deterministically prove unavailable orphan enumeration refuses; this does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
+      "notes": "Local disposable provider only. Runtime review added fail-closed wrong-key construction and atomic sentinel validation; this does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -25775,12 +25785,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba",
-      "acknowledgedSourceHash": "82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba",
+      "observedSourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
+      "acknowledgedSourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for one async-bootstrapped runtime-wide lifecycle owner that will compose the verified pending-work query with the separate encrypted attachment queue and protected byte vault without implementing session ending.",
+      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and all four read streams behind one close-aware lease gate without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -25811,12 +25821,12 @@
           "Real-store counts, scope/key isolation, restart, concurrency, close and fail-closed boundaries pass without session-ending behavior"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "No executable type, storage open, Keychain read, capture, summary, close, cleanup or provider action exists at READY.",
+      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations and streams and preserves all local work. Exact implementation CI is pending, and no hosted, cleanup, signout or session-ending action exists.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
     },
     {
@@ -30110,8 +30120,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncDatabase.swift"
         }
       ],
-      "observedSourceHash": "81fe88a8c1c5608ef6dd8a6084f813cd9a83c247c71ad423b631876689528f68",
-      "acknowledgedSourceHash": "81fe88a8c1c5608ef6dd8a6084f813cd9a83c247c71ad423b631876689528f68",
+      "observedSourceHash": "52b7af7d80d7991ec2bffa06b9a6850cdda30ce2cc4389a012e3fa500dd38d47",
+      "acknowledgedSourceHash": "52b7af7d80d7991ec2bffa06b9a6850cdda30ce2cc4389a012e3fa500dd38d47",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -30149,9 +30159,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Encryption key bytes are never logged or stored in the database path.",
+      "notes": "The concrete factory and key are module-internal lifecycle resources. Encryption key bytes are never logged or stored in the database path.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -30281,8 +30292,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncUploadConnector.swift"
         }
       ],
-      "observedSourceHash": "db88157684d67eece8c16bc9005d7f657d249dc76635bd298a07061c53ba2135",
-      "acknowledgedSourceHash": "db88157684d67eece8c16bc9005d7f657d249dc76635bd298a07061c53ba2135",
+      "observedSourceHash": "2e136d56055a91dbbe6bba5a8c500657e2c2acc47dfa8ab2bd862739f545daee",
+      "acknowledgedSourceHash": "2e136d56055a91dbbe6bba5a8c500657e2c2acc47dfa8ab2bd862739f545daee",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -30322,9 +30333,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Credentials and command applier are injected; no production endpoint is embedded.",
+      "notes": "The concrete connector is module-internal and lifecycle-owned. Credentials and command applier are injected; no production endpoint is embedded.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -30935,8 +30947,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "e974e63d8da66e74dead6a21359af89347aa32a146bee6512414bfd2a3db1282",
-      "acknowledgedSourceHash": "e974e63d8da66e74dead6a21359af89347aa32a146bee6512414bfd2a3db1282",
+      "observedSourceHash": "49af060c1b8c9a1fc499a5f6b6b2c8e7de5eed8a69e57d60f212d7431fb24944",
+      "acknowledgedSourceHash": "49af060c1b8c9a1fc499a5f6b6b2c8e7de5eed8a69e57d60f212d7431fb24944",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -30980,9 +30992,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Implemented and locally verified with synthetic encrypted databases; real hosted Sync authorization remains required before verification/rehearsal.",
+      "notes": "The concrete adapter is module-internal and all four streams are lifecycle-owned and drained on close. Real hosted Sync authorization remains required before verification/rehearsal.",
       "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
     },
     {
@@ -34103,12 +34116,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncKeychain.swift"
         }
       ],
-      "observedSourceHash": "2bc574009ea52d64053c9cd58888395bab8de1bdfa67c9f002f65067f5b2bd80",
-      "acknowledgedSourceHash": "2bc574009ea52d64053c9cd58888395bab8de1bdfa67c9f002f65067f5b2bd80",
+      "observedSourceHash": "95d4c3f7f194302a5b8be469f80e0696259c00c47138c45a632512c819bae407",
+      "acknowledgedSourceHash": "95d4c3f7f194302a5b8be469f80e0696259c00c47138c45a632512c819bae407",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Loads or creates a random 256-bit local database key in a this-device-only Keychain item scoped by service and Principal/Account namespace.",
+      "currentBehavior": "Loads or creates random 256-bit key bytes in a this-device-only Keychain item scoped by service and opaque Principal/Account namespace; the database path decodes them to SQLCipher hex while the distinct media identity consumes raw bytes.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -34141,9 +34154,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Logout disposition remains governed by the separate pending-work policy.",
+      "notes": "The concrete Keychain wrapper is module-internal; separate database/media identities are lifecycle-owned. Logout disposition remains governed by the separate pending-work policy.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -36673,8 +36687,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentCapturePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "349110050cd2ed4b8b8fbca8393ab8e13599e79ce5d523f9e200725e20458850",
-      "acknowledgedSourceHash": "349110050cd2ed4b8b8fbca8393ab8e13599e79ce5d523f9e200725e20458850",
+      "observedSourceHash": "38906911a9166a80aa28627d038795e6218d9447768fadbcc1a635cacde7b61a",
+      "acknowledgedSourceHash": "38906911a9166a80aa28627d038795e6218d9447768fadbcc1a635cacde7b61a",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
@@ -36714,9 +36728,10 @@
       "evidence": [
         "EVID-ATTACHMENT-CAPTURE-001",
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
-        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized. The pending-work implementation distinguishes blocking missing/corrupt evidence from unavailable/interrupted observation; primary ownership remains here.",
+      "notes": "The concrete store and factory are now module-internal and lifecycle-owned by the Account-workspace runtime. No network uploader, remote completion, reference mutation, discard, eviction, cleanup or session-ending action is authorized; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -38975,12 +38990,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerWorkspaceRuntimeIsolationTests.swift"
         }
       ],
-      "observedSourceHash": "765099c482cdce38e9bedd4e15e193c0142988d32c82cbdde855e0612b800d8c",
-      "acknowledgedSourceHash": "765099c482cdce38e9bedd4e15e193c0142988d32c82cbdde855e0612b800d8c",
+      "observedSourceHash": "7604f6bcfcc6b85131b9595ca066cdc1bf18a1fc56a8c113ab8b5cd414ad79aa",
+      "acknowledgedSourceHash": "7604f6bcfcc6b85131b9595ca066cdc1bf18a1fc56a8c113ab8b5cd414ad79aa",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs four deterministic tests for stable opaque containment, every individual persistence-relevant environment/scope dimension, dotted-ID collision resistance, pre-side-effect invalid-namespace refusal and encrypted queued-evidence survival across non-destructive close/reopen.",
+      "currentBehavior": "Runs four deterministic tests for three-location containment, distinct database/media Keychain identities, every persistence-relevant environment/scope dimension, dotted-ID collision resistance, pre-side-effect refusal and encrypted queued-evidence survival across non-destructive close/reopen.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -39012,7 +39027,8 @@
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
       "notes": "Local synthetic evidence only; no hosted, Auth, Sync or Firebase claim.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
@@ -39421,8 +39437,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientProjectDirectoryPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b",
-      "acknowledgedSourceHash": "df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b",
+      "observedSourceHash": "581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
+      "acknowledgedSourceHash": "581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -39461,9 +39477,10 @@
       ],
       "evidence": [
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now use non-destructive close plus direct fixture-directory cleanup as verified by the Account workspace isolation slice.",
+      "notes": "Uses only disposable encrypted local databases and synthetic identities; no hosted endpoint or production data is accessed. Runtime cases now open through the async lifecycle composition with separate attachment/media resources and non-destructive close.",
       "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
     },
     {
@@ -41075,12 +41092,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133",
-      "acknowledgedSourceHash": "c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133",
+      "observedSourceHash": "f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137",
+      "acknowledgedSourceHash": "f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold freezing real encrypted async runtime composition, constructor counts, key-value separation, attachment, pending-summary, restart, partial-open cleanup, runtime-wide leases, deterministic terminal close and negative-API obligations.",
+      "currentBehavior": "Twelve executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream drainage, deterministic terminal close and negative API boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -41111,12 +41128,12 @@
           "Every frozen composition obligation passes while existing pending-work, attachment and workspace-isolation suites remain green"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "No executable test or claimed passing result exists at READY.",
+      "notes": "All twelve focused tests and the complete 403-test/73-suite Swift package pass locally; exact implementation CI remains pending.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
     },
     {
@@ -42668,8 +42685,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift"
         }
       ],
-      "observedSourceHash": "c4964bc23dd67aebf6e9eb6425f668ebfb3aa7f103db6237759405aae27185d1",
-      "acknowledgedSourceHash": "c4964bc23dd67aebf6e9eb6425f668ebfb3aa7f103db6237759405aae27185d1",
+      "observedSourceHash": "859a45c76914eaa3a468beecf1c6f83cdf1af21ad2f73597077d31a05f12c041",
+      "acknowledgedSourceHash": "859a45c76914eaa3a468beecf1c6f83cdf1af21ad2f73597077d31a05f12c041",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -42710,9 +42727,10 @@
         "EVID-ATTACHMENT-CAPTURE-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
-        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. Pending-work queue-plus-orphan and failure-distinction regressions now pass; primary ownership remains here.",
+      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. Wrong media key now refuses at vault construction while original queued evidence remains recoverable; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {

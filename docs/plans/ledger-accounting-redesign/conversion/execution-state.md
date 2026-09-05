@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 283
+State version: 284
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-READY-REVIEWED
+- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-IMPLEMENTED-LOCAL-GO-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -37,7 +37,7 @@ without modifying the running Firebase application before hard cutover.
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
 - The implementation tracker currently contains 268 status-bearing rows: 68
-  done, four verified, five implemented, one ready, zero awaiting verification,
+  done, four verified, six implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -65,30 +65,28 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
-- Prepared the comment-only READY candidate for normal Account-workspace
-  pending-work and attachment runtime composition. Exactly two new primary
-  leaves freeze one lifecycle owner over the verified pending-work query,
-  separate encrypted attachment queue, protected byte vault and capture store.
-  The synchronized dossier requires contained scope-bound storage, distinct
-  SQLCipher/media-key identities, real encrypted restart and failure evidence,
-  serialized capture/summary/ordinary close, non-destructive partial-open
-  cleanup and post-close refusal. Shared runtime/isolation/Keychain and verified
-  pending-work/attachment dependencies remain byte-identical at this candidate.
-  The runtime explicitly is not `AccountSessionEnding` and exposes no sync,
-  result resolution, upload verification, cleanup, deletion, provider signout,
-  workspace switch or backend selection. A-003/A-004/A-007/A-016/O-023 remain
-  unadvanced. The initial independent READY review returned NO-GO because the
-  first draft did not gate existing Client/Project operations and watches,
-  could not implement synchronous partial-open cleanup over async database
-  close, conflated product and technical authority, underspecified close
-  failure state, omitted key-value/construction-count proof and left stale
-  durable resume instructions. The corrected candidate freezes async bootstrap,
-  one runtime-wide finite-call/stream lease gate, exact key-value separation,
-  fixed partial-open/terminal-close outcomes, non-escape checks and the complete
-  known caller/test surface set. Final corrected-diff review returned GO with
-  no P0-P3 finding, confirmed all fourteen recorded hashes and independently
-  reran conversion and diff checks. Exact READY commit and immutable CI remain
-  required before executable work;
+- Implemented the normal Account-workspace pending-work and attachment runtime
+  after corrected READY commit `15218cbbc44b7e7c28ef718c1770c7b6294a03c4`
+  passed all three immutable jobs in run `33935937733`. One async lifecycle
+  owner now contains the structured and attachment databases, authenticated
+  media-key vault, verified pending-work provider, Client/Project stores and all
+  four read streams behind a narrow runtime facade. The first executable review
+  returned NO-GO because a wrong media key survived bootstrap, lifecycle-owned
+  concrete providers were publicly constructible, staging startup could reenter
+  and retain a failed runtime, and tests did not prove real-watch drainage or
+  vault release/recovery across every staged fault. The corrected implementation
+  authenticates a scope-bound encrypted key sentinel during vault construction,
+  makes every owned provider compiler-internal, serializes and cleans failed
+  staging startup, and adds direct real-watch, weak-vault and fault/reopen proof.
+  Final corrected-diff review returned GO with no P0-P3 finding. Twelve focused
+  runtime, 13 attachment and four isolation tests pass; all 403 Swift tests in
+  73 suites, the compiler public-symbol boundary, target environment/contracts,
+  11 MCP tests, both staging builds and diff checks pass locally. The synchronized
+  implementation commit and immutable CI remain the next action. The runtime is
+  explicitly not `AccountSessionEnding`; no sync, result resolution, upload
+  verification, deletion, cleanup, signout, workspace switch, hosted access,
+  Firebase work, migration, production or cutover behavior exists, and
+  A-003/A-004/A-007/A-016/O-023 remain unadvanced;
   `EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001`.
 
 - Audited the next provider boundary after Account discovery. The proposed

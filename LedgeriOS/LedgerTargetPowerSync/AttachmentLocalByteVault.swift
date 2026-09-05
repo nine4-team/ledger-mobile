@@ -3,10 +3,10 @@ import Darwin
 import Foundation
 import LedgerTargetCore
 
-public struct AttachmentMediaEncryptionKey: Sendable {
+struct AttachmentMediaEncryptionKey: Sendable {
     fileprivate let value: SymmetricKey
 
-    public init(bytes: Data) throws {
+    init(bytes: Data) throws {
         guard bytes.count == 32 else {
             throw AttachmentLocalByteVaultFailure.invalidMediaKey
         }
@@ -14,13 +14,13 @@ public struct AttachmentMediaEncryptionKey: Sendable {
     }
 }
 
-public struct AttachmentDurabilityNamespaceScope: Equatable, Sendable {
+struct AttachmentDurabilityNamespaceScope: Equatable, Sendable {
     public let environment: LedgerEnvironmentKind
     public let principalId: PrincipalID
     public let accountId: AccountID
     fileprivate let namespace: LocalDataNamespace
 
-    public init(
+    init(
         validatedEnvironment: ValidatedLedgerEnvironment,
         principalId: PrincipalID,
         accountId: AccountID
@@ -101,9 +101,13 @@ public struct AttachmentVaultOrphan: Equatable, Sendable {
 
 /// An app-managed encrypted byte store. It deliberately has no discard, delete,
 /// eviction, remote-upload, or remote-success operation.
-public actor AttachmentLocalByteVault {
+actor AttachmentLocalByteVault {
     private static let contract = "attachment_local_byte_vault_v1"
     private static let aesGCMCombinedOverhead = 28
+    private static let mediaKeySentinelName = ".media-key-sentinel-v1"
+    private static let mediaKeySentinelPlaintext = Data(
+        "ledger-attachment-media-key-sentinel-v1".utf8
+    )
     private static let reservedObjectNames: Set<String> = [
         ".", "..", "con", "prn", "aux", "nul",
         "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
@@ -123,7 +127,7 @@ public actor AttachmentLocalByteVault {
     private let stagingDescriptor: Int32
     private let fault: @Sendable (AttachmentVaultCheckpoint) throws -> Void
 
-    public init(
+    init(
         trustedRoot: URL,
         scope: AttachmentDurabilityNamespaceScope,
         mediaKey: AttachmentMediaEncryptionKey,
@@ -190,6 +194,15 @@ public actor AttachmentLocalByteVault {
                 try Self.applyProtectionAndBackupExclusion(namespaceDirectory)
                 try Self.applyProtectionAndBackupExclusion(objectsDirectory)
                 try Self.applyProtectionAndBackupExclusion(stagingDirectory)
+                try Self.validateOrCreateMediaKeySentinel(
+                    namespace: scope.namespace,
+                    scope: scope,
+                    mediaKey: mediaKey,
+                    namespaceDirectory: namespaceDirectory,
+                    namespaceDescriptor: namespaceDescriptor,
+                    objectsDescriptor: objectsDescriptor,
+                    stagingDescriptor: stagingDescriptor
+                )
                 try Self.synchronizeDirectory(namespaceDescriptor)
                 try Self.synchronizeDirectory(objectsDescriptor)
                 try Self.synchronizeDirectory(stagingDescriptor)
@@ -512,6 +525,184 @@ public actor AttachmentLocalByteVault {
 
     private static func sha256Hex(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func validateOrCreateMediaKeySentinel(
+        namespace: LocalDataNamespace,
+        scope: AttachmentDurabilityNamespaceScope,
+        mediaKey: AttachmentMediaEncryptionKey,
+        namespaceDirectory: URL,
+        namespaceDescriptor: Int32,
+        objectsDescriptor: Int32,
+        stagingDescriptor: Int32
+    ) throws {
+        let associatedData = Data(
+            [
+                contract,
+                "media-key-sentinel-v1",
+                namespace.root,
+                scope.environment.rawValue,
+                scope.principalId.rawValue,
+                scope.accountId.rawValue
+            ].joined(separator: "\u{1f}").utf8
+        )
+        if try mediaKeySentinelExists(beneath: namespaceDescriptor) {
+            try validateMediaKeySentinel(
+                beneath: namespaceDescriptor,
+                mediaKey: mediaKey,
+                associatedData: associatedData
+            )
+            return
+        }
+
+        guard try directoryEntryNames(objectsDescriptor).isEmpty,
+              try directoryEntryNames(stagingDescriptor).isEmpty else {
+            throw AttachmentLocalByteVaultFailure.invalidMediaKey
+        }
+
+        let encryptedBytes: Data
+        do {
+            let sealed = try AES.GCM.seal(
+                mediaKeySentinelPlaintext,
+                using: mediaKey.value,
+                authenticating: associatedData
+            )
+            guard let combined = sealed.combined else {
+                throw AttachmentLocalByteVaultFailure.storageFailure
+            }
+            encryptedBytes = combined
+        } catch let failure as AttachmentLocalByteVaultFailure {
+            throw failure
+        } catch {
+            throw AttachmentLocalByteVaultFailure.storageFailure
+        }
+
+        let stagingName = ".media-key-sentinel-stage-\(UUID().uuidString.lowercased())"
+        let stagingURL = namespaceDirectory.appendingPathComponent(stagingName, isDirectory: false)
+        let descriptor = Darwin.openat(
+            namespaceDescriptor,
+            stagingName,
+            O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+            S_IRUSR | S_IWUSR
+        )
+        guard descriptor >= 0 else {
+            throw AttachmentLocalByteVaultFailure.storageFailure
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+        do {
+            if !protectionAttributes.isEmpty {
+                try FileManager.default.setAttributes(
+                    protectionAttributes,
+                    ofItemAtPath: stagingURL.path
+                )
+            }
+            try excludeFromBackup(stagingURL)
+            try handle.write(contentsOf: encryptedBytes)
+            try handle.synchronize()
+            try handle.close()
+
+            if Darwin.renameatx_np(
+                namespaceDescriptor,
+                stagingName,
+                namespaceDescriptor,
+                mediaKeySentinelName,
+                UInt32(RENAME_EXCL)
+            ) != 0 {
+                let renameError = errno
+                _ = Darwin.unlinkat(namespaceDescriptor, stagingName, 0)
+                guard renameError == EEXIST else {
+                    throw AttachmentLocalByteVaultFailure.storageFailure
+                }
+            }
+            try synchronizeDirectory(namespaceDescriptor)
+            try validateMediaKeySentinel(
+                beneath: namespaceDescriptor,
+                mediaKey: mediaKey,
+                associatedData: associatedData
+            )
+        } catch let failure as AttachmentLocalByteVaultFailure {
+            try? handle.close()
+            _ = Darwin.unlinkat(namespaceDescriptor, stagingName, 0)
+            throw failure
+        } catch {
+            try? handle.close()
+            _ = Darwin.unlinkat(namespaceDescriptor, stagingName, 0)
+            throw AttachmentLocalByteVaultFailure.storageFailure
+        }
+    }
+
+    private static func mediaKeySentinelExists(beneath namespaceDescriptor: Int32) throws -> Bool {
+        var metadata = stat()
+        if Darwin.fstatat(
+            namespaceDescriptor,
+            mediaKeySentinelName,
+            &metadata,
+            AT_SYMLINK_NOFOLLOW
+        ) == 0 {
+            return true
+        }
+        if errno == ENOENT { return false }
+        throw AttachmentLocalByteVaultFailure.storageFailure
+    }
+
+    private static func validateMediaKeySentinel(
+        beneath namespaceDescriptor: Int32,
+        mediaKey: AttachmentMediaEncryptionKey,
+        associatedData: Data
+    ) throws {
+        let expectedByteCount = mediaKeySentinelPlaintext.count + aesGCMCombinedOverhead
+        let descriptor = Darwin.openat(
+            namespaceDescriptor,
+            mediaKeySentinelName,
+            O_RDONLY | O_NOFOLLOW | O_CLOEXEC
+        )
+        guard descriptor >= 0 else {
+            if errno == ENOENT {
+                throw AttachmentLocalByteVaultFailure.storageFailure
+            }
+            throw AttachmentLocalByteVaultFailure.linkSubstitution
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+        var metadata = stat()
+        guard Darwin.fstat(descriptor, &metadata) == 0 else {
+            try? handle.close()
+            throw AttachmentLocalByteVaultFailure.storageFailure
+        }
+        guard metadata.st_mode & S_IFMT == S_IFREG,
+              metadata.st_nlink == 1 else {
+            try? handle.close()
+            throw AttachmentLocalByteVaultFailure.linkSubstitution
+        }
+        guard metadata.st_size == expectedByteCount else {
+            try? handle.close()
+            throw AttachmentLocalByteVaultFailure.invalidMediaKey
+        }
+        let encryptedBytes: Data
+        do {
+            encryptedBytes = try handle.read(upToCount: expectedByteCount) ?? Data()
+            try handle.close()
+        } catch {
+            try? handle.close()
+            throw AttachmentLocalByteVaultFailure.storageFailure
+        }
+        guard encryptedBytes.count == expectedByteCount else {
+            throw AttachmentLocalByteVaultFailure.invalidMediaKey
+        }
+        do {
+            let sealed = try AES.GCM.SealedBox(combined: encryptedBytes)
+            let clear = try AES.GCM.open(
+                sealed,
+                using: mediaKey.value,
+                authenticating: associatedData
+            )
+            guard clear == mediaKeySentinelPlaintext else {
+                throw AttachmentLocalByteVaultFailure.invalidMediaKey
+            }
+        } catch let failure as AttachmentLocalByteVaultFailure {
+            throw failure
+        } catch {
+            throw AttachmentLocalByteVaultFailure.invalidMediaKey
+        }
     }
 
     private static func isDirectChild(_ child: URL, of parent: URL) -> Bool {

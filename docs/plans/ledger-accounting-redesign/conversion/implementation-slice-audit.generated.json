@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T01:18:26.728Z",
+  "generatedFromManifestSync": "2026-09-05T02:44:18.856Z",
   "totals": {
     "slices": 76,
     "claimedTargetSurfaces": 211,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 157
+    "implementationAdvancedTargetSurfaces": 159
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 5,
+    "implemented": 6,
     "verified": 66,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -53,7 +53,7 @@
       "sliceId": "account-workspace-pending-work-runtime",
       "title": "Compose one Account-workspace pending-work and attachment durability runtime",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Account Workspace Pending-Work Runtime",
       "surfaceIds": [
         "SWIFT-75CFE285AF37",

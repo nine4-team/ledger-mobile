@@ -178,14 +178,15 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         let wrongKey = try await store.enqueue(fixture.capture(id: "attachment-004-wrong-key"))
         let wrongKeyURL = try await vault.objectFileURLForTesting(wrongKey.localObjectId)
         #expect(try Data(contentsOf: wrongKeyURL).count == Fixture.bytes.count + 28)
-        let wrongKeyVault = try fixture.makeVault(keyByte: 0x99)
-        let wrongKeyStore = fixture.makeStore(database: database, vault: wrongKeyVault)
-        #expect(try await wrongKeyStore.nextVerifiedCandidate() == nil)
+        #expect(throws: AttachmentLocalByteVaultFailure.invalidMediaKey) {
+            try fixture.makeVault(keyByte: 0x99)
+        }
         let wrongKeyState = try await database.get(
             sql: "SELECT state FROM \(AttachmentCapturePowerSyncTable.queue) WHERE id = ?",
             parameters: [wrongKey.attachmentId.rawValue]
         ) { try $0.getString(index: 0) }
-        #expect(wrongKeyState == AttachmentPendingState.corrupt.rawValue)
+        #expect(wrongKeyState == AttachmentPendingState.pending.rawValue)
+        #expect(try await store.nextVerifiedCandidate()?.receipt.attachmentId == wrongKey.attachmentId)
 
         let countMismatch = try await store.enqueue(fixture.capture(id: "attachment-004-count"))
         _ = try await database.execute(

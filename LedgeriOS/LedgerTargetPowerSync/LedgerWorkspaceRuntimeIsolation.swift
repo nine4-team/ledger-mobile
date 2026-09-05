@@ -7,24 +7,36 @@ public enum LedgerWorkspaceRuntimeIsolationFailure: Error, Equatable, Sendable {
     case invalidApplicationSupportDirectory
 }
 
-public struct LedgerWorkspaceRuntimeLocation: Equatable, Sendable {
-    public let databaseURL: URL
-    public let keychainService: String
-    public let keychainAccount: String
+struct LedgerWorkspaceRuntimeLocation: Equatable, Sendable {
+    let structuredDatabaseURL: URL
+    let attachmentDatabaseURL: URL
+    let mediaVaultRootURL: URL
+    let databaseKeychainService: String
+    let databaseKeychainAccount: String
+    let mediaKeychainService: String
+    let mediaKeychainAccount: String
 
     fileprivate init(
-        databaseURL: URL,
-        keychainService: String,
-        keychainAccount: String
+        structuredDatabaseURL: URL,
+        attachmentDatabaseURL: URL,
+        mediaVaultRootURL: URL,
+        databaseKeychainService: String,
+        databaseKeychainAccount: String,
+        mediaKeychainService: String,
+        mediaKeychainAccount: String
     ) {
-        self.databaseURL = databaseURL
-        self.keychainService = keychainService
-        self.keychainAccount = keychainAccount
+        self.structuredDatabaseURL = structuredDatabaseURL
+        self.attachmentDatabaseURL = attachmentDatabaseURL
+        self.mediaVaultRootURL = mediaVaultRootURL
+        self.databaseKeychainService = databaseKeychainService
+        self.databaseKeychainAccount = databaseKeychainAccount
+        self.mediaKeychainService = mediaKeychainService
+        self.mediaKeychainAccount = mediaKeychainAccount
     }
 }
 
-public enum LedgerWorkspaceRuntimeIsolation {
-    public static func resolve(
+enum LedgerWorkspaceRuntimeIsolation {
+    static func resolve(
         validatedEnvironment: ValidatedLedgerEnvironment,
         principalId: PrincipalID,
         accountId: AccountID,
@@ -64,10 +76,29 @@ public enum LedgerWorkspaceRuntimeIsolation {
             throw LedgerWorkspaceRuntimeIsolationFailure.invalidApplicationSupportDirectory
         }
 
+        let structuredDatabaseURL = directory
+            .appendingPathComponent("ledger.sqlite", isDirectory: false)
+            .standardizedFileURL
+        let attachmentDatabaseURL = directory
+            .appendingPathComponent("attachments.sqlite", isDirectory: false)
+            .standardizedFileURL
+        let mediaVaultRootURL = directory
+            .appendingPathComponent("media", isDirectory: true)
+            .standardizedFileURL
+        guard structuredDatabaseURL.deletingLastPathComponent() == directory,
+              attachmentDatabaseURL.deletingLastPathComponent() == directory,
+              mediaVaultRootURL.deletingLastPathComponent() == directory else {
+            throw LedgerWorkspaceRuntimeIsolationFailure.invalidApplicationSupportDirectory
+        }
+
         return LedgerWorkspaceRuntimeLocation(
-            databaseURL: directory.appendingPathComponent("ledger.sqlite"),
-            keychainService: "ledger.target.powersync.workspace-key.v1",
-            keychainAccount: opaqueComponent
+            structuredDatabaseURL: structuredDatabaseURL,
+            attachmentDatabaseURL: attachmentDatabaseURL,
+            mediaVaultRootURL: mediaVaultRootURL,
+            databaseKeychainService: "ledger.target.powersync.workspace-key.v1",
+            databaseKeychainAccount: opaqueComponent,
+            mediaKeychainService: "ledger.target.media.workspace-key.v1",
+            mediaKeychainAccount: opaqueComponent
         )
     }
 

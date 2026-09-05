@@ -229,6 +229,7 @@ private final class OfflineClientSpikeModel {
     private(set) var projectDirectoryStatus = "loading"
 
     private var runtime: LedgerOfflineClientRuntime?
+    private var startInProgress = false
     private var existingClientSelection: ProjectExistingClientSelectionSnapshot?
     private var activeProjectDirectory: ProjectDirectoryPresentationSnapshot?
     private var archivedProjectDirectory: ProjectDirectoryPresentationSnapshot?
@@ -254,17 +255,22 @@ private final class OfflineClientSpikeModel {
     }
 
     func start(validatedEnvironment: ValidatedLedgerEnvironment) async {
-        guard runtime == nil else { return }
+        guard runtime == nil, !startInProgress else { return }
+        startInProgress = true
+        defer { startInProgress = false }
+        var openedRuntime: LedgerOfflineClientRuntime?
         do {
-            let runtime = try LedgerPowerSyncLocalBootstrap.open(
+            let runtime = try await LedgerPowerSyncLocalBootstrap.open(
                 validatedEnvironment: validatedEnvironment,
                 principalId: principalId,
                 accountId: accountId
             )
+            openedRuntime = runtime
             let cipher = try await runtime.encryptionCipher()
+            let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
             databaseState = "Encrypted (\(cipher))"
-            pendingUploadCount = String(try await runtime.pendingUploadCount())
+            pendingUploadCount = String(pendingCount)
             await withTaskGroup(of: Void.self) { group in
                 group.addTask { [weak self] in
                     await self?.watchClientDirectory(runtime)
@@ -276,19 +282,25 @@ private final class OfflineClientSpikeModel {
             }
             projectDetailsTask?.cancel()
             try await runtime.close()
+            openedRuntime = nil
             self.runtime = nil
             databaseState = "Closed"
         } catch is CancellationError {
-            projectDetailsTask?.cancel()
-            if let runtime {
-                try? await runtime.close()
-                self.runtime = nil
-            }
+            await closeAfterFailedStart(openedRuntime)
             databaseState = "Closed"
         } catch {
+            await closeAfterFailedStart(openedRuntime)
             databaseState = "Unavailable"
-            diagnostic = "local_database_open_failed"
+            diagnostic = "local_runtime_failed"
         }
+    }
+
+    private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
+        projectDetailsTask?.cancel()
+        if let openedRuntime {
+            try? await openedRuntime.close()
+        }
+        runtime = nil
     }
 
     func createClient() async {

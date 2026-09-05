@@ -268,7 +268,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
         )
         try await database.close(deleteDatabase: false)
 
-        let runtime = try fixture.openRuntime()
+        let runtime = try await fixture.openRuntime()
         var clientDirectoryIterator = runtime.watchClients().makeAsyncIterator()
         let clients = try #require(try await clientDirectoryIterator.next())
         let pendingClient = try #require(clients.local.rows.first)
@@ -360,7 +360,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
     @Test("Fresh runtime creates, selects, browses, and opens local detail without membership")
     func freshRuntimeOfflineBrowseFlow() async throws {
         let fixture = try DirectoryDatabaseFixture()
-        let runtime = try fixture.openRuntime()
+        let runtime = try await fixture.openRuntime()
         _ = try await runtime.createClient(
             Self.clientCommand(accountId: Self.accountId, actor: Self.principalId)
         )
@@ -626,7 +626,7 @@ struct ClientProjectDirectoryPowerSyncQueryTests {
     @Test("Runtime rejects every cross-namespace mutation and detail read before persistence")
     func runtimeRejectsCrossNamespaceCalls() async throws {
         let fixture = try DirectoryDatabaseFixture()
-        let runtime = try fixture.openRuntime()
+        let runtime = try await fixture.openRuntime()
         let otherAccount = try AccountID(validating: "account-other")
         let otherPrincipal = try PrincipalID(validating: "principal-other")
 
@@ -921,18 +921,28 @@ private final class DirectoryDatabaseFixture: @unchecked Sendable {
     let directoryURL: URL
     let databaseURL: URL
     private let key: LedgerPowerSyncEncryptionKey
+    private let environment: ValidatedLedgerEnvironment
+    private let applicationSupportDirectory: URL
 
     init() throws {
-        directoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(
+        applicationSupportDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(
             "ledger-directory-powersync-\(UUID().uuidString)",
             isDirectory: true
         )
-        databaseURL = directoryURL.appendingPathComponent("ledger.sqlite")
+        environment = try Self.makeEnvironment()
+        let location = try LedgerWorkspaceRuntimeIsolation.resolve(
+            validatedEnvironment: environment,
+            principalId: PrincipalID(validating: "principal-owner"),
+            accountId: AccountID(validating: "account-primary"),
+            applicationSupportDirectory: applicationSupportDirectory
+        )
+        directoryURL = applicationSupportDirectory
+        databaseURL = location.structuredDatabaseURL
         key = try LedgerPowerSyncEncryptionKey(
             hexadecimal: String(repeating: "4d", count: 32)
         )
         try FileManager.default.createDirectory(
-            at: directoryURL,
+            at: databaseURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
     }
@@ -944,17 +954,67 @@ private final class DirectoryDatabaseFixture: @unchecked Sendable {
         )
     }
 
-    func openRuntime() throws -> LedgerOfflineClientRuntime {
-        try LedgerOfflineClientRuntime(
-            absoluteDatabasePath: databaseURL.path,
-            encryptionKey: key,
+    func openRuntime() async throws -> LedgerOfflineClientRuntime {
+        var dependencies = LedgerPowerSyncLocalBootstrapDependencies.live
+        dependencies.loadDatabaseKey = { [key] _, _ in key }
+        dependencies.loadMediaKeyBytes = { _, _ in Data(repeating: 0x5e, count: 32) }
+        dependencies.createDirectory = { directory in
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        return try await LedgerPowerSyncLocalBootstrap.open(
+            validatedEnvironment: environment,
             principalId: try PrincipalID(validating: "principal-owner"),
             accountId: try AccountID(validating: "account-primary"),
-            now: { Date(timeIntervalSince1970: 1_788_600_000) }
+            applicationSupportDirectory: applicationSupportDirectory,
+            dependencies: dependencies
         )
     }
 
     func removeDirectory() {
         try? FileManager.default.removeItem(at: directoryURL)
+    }
+
+    private static func makeEnvironment() throws -> ValidatedLedgerEnvironment {
+        let versions = LedgerContractVersions(
+            schema: "schema-v1",
+            query: "query-v1",
+            operation: "operation-v1",
+            sync: "sync-v1"
+        )
+        let resources = Dictionary(
+            uniqueKeysWithValues: LedgerTargetComponent.allCases.map {
+                ($0, "\($0.rawValue)-directory-fixture")
+            }
+        )
+        let manifest = LedgerEnvironmentManifest(
+            environment: .targetLocal,
+            buildProfile: .targetLocalDevelopment,
+            bundleIdentifier: "apps.nine4.ledger.target.local",
+            displayName: "Ledger Target Local",
+            localDataNamespacePrefix: "apps.nine4.ledger.target",
+            contractVersions: versions,
+            resources: LedgerTargetComponent.allCases.map { component in
+                LedgerEnvironmentResource(
+                    component: component,
+                    environment: .targetLocal,
+                    publicIdentifier: resources[component]!
+                )
+            }
+        )
+        return try LedgerEnvironmentValidator.validate(
+            manifest,
+            policy: LedgerEnvironmentPolicy(
+                expectedEnvironment: .targetLocal,
+                expectedBuildProfile: .targetLocalDevelopment,
+                expectedBundleIdentifier: "apps.nine4.ledger.target.local",
+                expectedContractVersions: versions,
+                allowedResourceIdentifiers: resources.mapValues { [$0] },
+                forbiddenResourceIdentifiers: [],
+                forbiddenBundleIdentifiers: []
+            )
+        )
     }
 }

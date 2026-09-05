@@ -1,170 +1,171 @@
 # EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001 — Account Workspace Pending-Work Runtime
 
-- Status: independently reviewed READY; comments only; executable work prohibited until exact READY CI passes
+- Status: implemented and independently reviewed; exact implementation CI pending
 - Date: 2026-09-04
-- Environment: isolated target worktree and disposable local fixtures only
+- Environment: isolated target worktree and disposable encrypted local fixtures only
 - Production/Firebase impact: none
 - Slice: `account-workspace-pending-work-runtime`
 
 ## Outcome
 
-This package freezes one bounded technical-control slice: normal Account-workspace
-bootstrap will own exactly one verified pending-work query plus one separate
-encrypted attachment queue, one protected byte vault and one attachment-capture
-store. The composed runtime will expose attachment capture and a fresh pending
-summary while ordinary close preserves all databases, bytes and keys.
+This package implements one bounded Account-workspace lifecycle owner over the
+structured PowerSync database, separate encrypted attachment-queue database,
+authenticated protected-byte vault, existing Client/Project stores and queries,
+and the verified pending-work provider. Product callers receive one narrow
+`LedgerOfflineClientRuntime`; they cannot construct or retain the concrete
+database, key, store, query, vault, connector, or lifecycle resources.
 
-The package contains no executable runtime composition yet. Only the two new
-primary leaves contain comments. Shared implementation surfaces remain
-byte-identical until the exact synchronized READY checkpoint passes independent
-review and immutable CI.
+The exact corrected READY commit
+`15218cbbc44b7e7c28ef718c1770c7b6294a03c4` passed all three jobs in immutable
+Actions run `33935937733` before executable work began.
 
-## Why This Slice Is Next
+The exact synchronized implementation commit and Actions run remain pending.
+Until they pass, operational verification `WORKRUNTIME-TEST-009` remains
+planned and this evidence does not claim immutable implementation CI.
 
-The pending-work provider is already implemented and verified, but it is not
-owned by the runtime users actually open. Its attachment evidence currently has
-to be assembled manually in tests. That gap means a future session-ending
-coordinator cannot yet obtain one trustworthy summary from the exact stores
-accepting the user's offline work.
+## Implemented Boundary
 
-This slice closes only that composition and lifecycle gap. It does not implement
-logout or Account removal. Those later behaviors remain separately gated and
-must consume this runtime's evidence without receiving deletion or signout
-authority from it.
+- Async bootstrap validates environment, Principal, Account, contained local
+  locations, and separate Keychain identities before opening storage.
+- The structured and attachment databases receive the same 32-byte SQLCipher
+  key. The media vault receives a separate 32-byte key whose value must differ.
+- The vault authenticates a scope-bound encrypted media-key sentinel during
+  construction. A wrong media key therefore fails before a usable vault or
+  runtime can escape, including when no attachment is currently read.
+- Sentinel creation uses exclusive creation and rename, directory-relative
+  validation, authenticated associated data, durable file/directory sync, and
+  validation of a concurrent winner. Existing non-empty media directories
+  without the sentinel fail closed instead of silently adopting a new key.
+- Bootstrap opens the structured database, attachment database, then vault. A
+  later failure releases any vault and attempts attachment-then-structured
+  database close without deleting local data or keys.
+- One actor owns every finite operation and all four Client/Project list/detail
+  streams. Once close begins, new leases refuse; active streams are cancelled
+  and drained, finite calls drain, both databases receive a close attempt, and
+  one terminal outcome is retained for repeated close calls.
+- Staging startup is reentrancy guarded, publishes a runtime only after its
+  local diagnostics succeed, and closes a locally opened runtime after
+  cancellation or any post-open failure.
+- Ordinary close preserves both encrypted databases, protected media, queue
+  evidence, and Keychain items. Reopening the identical scope recovers the
+  same accepted local work.
 
-## Frozen Contract
+## Compiler-Enforced Public Boundary
 
-- Derive distinct opaque contained structured-database, attachment-database and
-  media-vault locations from the same validated environment, Principal and
-  Account scope before any storage opens.
-- Keep the attachment queue in a separate local-only encrypted SQLite database.
-  Both SQLite factories receive the exact same workspace SQLCipher key.
-- Load or create a separate 32-byte media-encryption key under a distinct
-  Keychain identity; its bytes must differ from the SQLCipher key or bootstrap
-  refuses before opening storage.
-- Construct exactly one `AttachmentLocalByteVault`, one
-  `AttachmentCapturePowerSyncStore` and one `PendingWorkPowerSyncQuery` for the
-  runtime. Injected factory counters prove one construction each and raw
-  database/query/store/vault references cannot escape.
-- Make normal and test bootstrap asynchronous. After validated derivation and
-  key checks, open structured database, attachment database, then vault. A later
-  failure releases any vault and attempts attachment-then-structured database
-  close, reporting the primary stage and both bounded cleanup outcomes without
-  deleting a database, protected byte or key.
-- One `open`/`closing`/terminal-`closed` lease gate covers every existing
-  Client/Project mutation, list/detail watch, diagnostic read, capture and fresh
-  summary. Close rejects new work, cancels and drains tracked streams, then
-  drains finite calls.
-- After drainage, close attempts attachment database then structured database
-  even if the first fails, releases query/store/vault/database ownership and
-  stores one terminal success or bounded two-database failure. Repeated close
-  returns exactly that stored outcome and never retries resource access; every
-  other post-close call refuses.
-- Ordinary close preserves all local evidence. A newly opened runtime for the
-  identical scope recovers the same pending evidence.
-- Failures remain typed and bounded and never turn unavailable, corrupt,
-  orphaned or mismatched evidence into an all-zero summary.
+Swift access control makes the lifecycle owner and concrete factories, keys,
+stores, queries, vault, and connector module-internal. The source guard is a
+deterministic regression check, not the sole enforcement mechanism.
 
-## Frozen Verification
+`swift package dump-symbol-graph --minimum-access-level public` independently
+confirmed that none of the lifecycle-owned implementation types appear in the
+`LedgerTargetPowerSync` public symbol graph. The public
+`LedgerOfflineClientRuntime` surface is exactly:
 
-The executable suite must use real encrypted stores to prove:
+- `createClient`, `watchClient`, `createProject`, and `watchProject`;
+- `watchClients` and `watchProjects`;
+- `pendingUploadCount` and `encryptionCipher` diagnostics;
+- `captureAttachment` and `pendingWorkSummary`; and
+- non-destructive `close`.
 
-- clean and all four pending-work classes;
-- exactly one lifecycle owner, structured-database factory,
-  attachment-database factory, query, store and vault construction with no raw
-  database/query/store/vault/key/path escape, plus attachment acceptance through
-  the gated runtime port;
-- unchanged summary evidence and protected bytes across ordinary close/reopen;
-- equal-count evidence replacement advances summary revision;
-- every environment, persistence binding, Principal and Account dimension
-  isolates database, vault and Keychain identities;
-- both database factories receive identical SQLCipher bytes, media receives
-  different bytes, equal injected values refuse before open, and independently
-  wrong structured-database, attachment-database and media keys refuse;
-- invalid scope refuses before storage opens;
-- missing, corrupt, orphaned and unavailable attachment evidence fails closed;
-- every async bootstrap-stage failure preserves recoverable state, releases the
-  vault and attempts both database closes in fixed order;
-- Client/Project mutation, list/detail watch, diagnostic-read, capture, summary
-  and close interleavings never use a released resource or lose accepted work;
-- dual close failure still attempts both closes, releases ownership, stores one
-  terminal result and makes repeated close deterministic; and
-- the public surface contains no destructive cleanup, synchronization,
-  provider signout, workspace switch, backend selection or
-  `AccountSessionEnding` conformance.
+It exposes no public initializer, raw resource, session-ending choice,
+synchronization, cleanup, signout, workspace switch, or backend selector.
 
-## Exact READY Hashes
+## Independent Executable Review
 
-Primary comment-only leaves:
+The first executable review returned NO-GO on four concrete issues:
 
-- `LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift` —
-  `82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba`
-- `LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift` —
-  `c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133`
+1. A wrong media key could survive bootstrap until a later byte read, allowing
+   newly captured data to mix with media encrypted under another key.
+2. Public concrete constructors allowed product code to bypass the lifecycle
+   facade and retain databases/stores/queries independently.
+3. Staging startup could reenter, and a failure after open could retain or leak
+   the new runtime.
+4. Tests did not drive real PowerSync watches and did not prove vault release
+   plus valid recovery after every bootstrap-stage fault.
 
-Expected affected/shared implementation surfaces, frozen at READY:
+The corrected implementation added the authenticated media-key sentinel,
+internalized every lifecycle-owned concrete provider, serialized and cleaned up
+staging startup, and added real-watch, weak-vault, and full fault/reopen proof.
 
-- `LedgerOfflineClientRuntime.swift` —
-  `ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565`
-- `LedgerWorkspaceRuntimeIsolation.swift` —
-  `bf6add0067554cea32f839a5a4e6b5ba25dad79462a491a85d37704cd6d61846`
-- `LedgerPowerSyncKeychain.swift` —
-  `2bc574009ea52d64053c9cd58888395bab8de1bdfa67c9f002f65067f5b2bd80`
-- `LedgerWorkspaceRuntimeIsolationTests.swift` —
-  `765099c482cdce38e9bedd4e15e193c0142988d32c82cbdde855e0612b800d8c`
-- `LedgerTargetStagingApp.swift` —
-  `8252ab4867633b994ab6d89b2aaca68111256bb486188abe673ad1c10edddfed`
-- `ClientProjectDirectoryPowerSyncQueryTests.swift` —
-  `df7189029ceefcf3fa0a630bf2ffd0de5fc1f4d1d7c50a66690495c5c0c2927b`
-- `scripts/check-target-environment.mjs` —
-  `299220043f59cdaee6c4c3022631cf009a258eae0e6feeb6bb5f594eb626f5fd`
+The final corrected-diff re-review returned GO with no P0-P3 finding. It found
+no new security, durability, cleanup-order, or concurrency race in the
+sentinel or runtime lifecycle.
 
-Verified dependencies whose primary ownership remains unchanged:
+## Local Verification
 
-- `PendingWorkPowerSyncQuery.swift` —
-  `036ea69b475795f04ce5820f4884969cd02461948a9ac40e9ac13f86d3d11bf1`
-- `AttachmentCapturePowerSyncStore.swift` —
-  `349110050cd2ed4b8b8fbca8393ab8e13599e79ce5d523f9e200725e20458850`
-- `AttachmentLocalByteVault.swift` —
-  `9581e01d5087e2fa39f12906c8022bf5e5db21e076a16db454bf4340c4829dcb`
-- `PendingWorkPowerSyncQueryTests.swift` —
-  `31edc5a70e6711b69ae36746ab9409815c8af547351a689f64cf5da6b01b801f`
-- `AttachmentDurabilityProviderTests.swift` —
-  `c4964bc23dd67aebf6e9eb6425f668ebfb3aa7f103db6237759405aae27185d1`
+- 12 focused Account-workspace runtime tests pass.
+- 13 attachment durability provider tests pass.
+- 4 workspace-isolation tests pass.
+- All 403 Swift tests in 73 suites pass.
+- The target environment guard, generated target contracts, 11 MCP tests, and
+  `git diff --check` pass.
+- The compiler public-symbol graph contains the narrow facade and excludes all
+  lifecycle-owned implementation types.
+- `LedgerTargetStaging` builds successfully for macOS and the generic iOS
+  Simulator destination.
+- Local Supabase database verification was not rerun in this shell because no
+  disposable local Supabase database is listening on `127.0.0.1:54322`; the
+  immutable workflow starts its own isolated local Supabase stack and remains
+  the required evidence for `WORKRUNTIME-TEST-009`.
 
-Any executable change before the synchronized READY commit and immutable CI
-pass invalidates this checkpoint.
+## Frozen Affected Surfaces
 
-## Independent READY Review
+Primary implementation leaves:
 
-The initial review returned NO-GO. The corrected candidate now:
+- `SWIFT-75CFE285AF37` — `AccountWorkspacePendingWorkRuntime.swift` —
+  `608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987`;
+- `TEST-8D6A15063B2D` — `AccountWorkspacePendingWorkRuntimeTests.swift` —
+  `f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137`.
 
-- replaces the stale durable next action that would have repeated completed
-  workspace-isolation and pending-provider work;
-- freezes asynchronous construction and every partial-open cleanup outcome;
-- gates all existing finite runtime calls and list/detail streams, not only
-  attachment capture and pending summary;
-- separates canonical pending-summary outcomes from technical composition and
-  key-design authority;
-- defines exact open/closing/terminal-closed behavior, close order, dual-failure
-  handling, ownership release and repeated-close results;
-- requires value-level SQLCipher/media-key separation and independent wrong-key
-  cases; and
-- adds executable construction-count for both database factories and every
-  composed dependency, complete non-escape/forbidden-API checks, plus
-  exact hashes for every currently known constructor/call-site surface.
+Affected/shared implementation surfaces retaining their existing primary
+owners:
 
-The final corrected-diff review returned GO with no P0-P3 finding. It confirmed
-all fourteen recorded primary/shared/dependency hashes, both comment-only
-leaves, reciprocal verification, complete known call sites and the hard
-boundary. Conversion checking and `git diff --check` also passed independently.
+- `SWIFT-548A8A928FAE` — `LedgerOfflineClientRuntime.swift` —
+  `20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61`;
+- `SWIFT-4E250D0D302E` — `LedgerWorkspaceRuntimeIsolation.swift` —
+  `924538cf13c8e3e6e50c815065b178f95512492c0b26622693943cb9376ffb59`;
+- `SWIFT-D9F0F491C95C` — `LedgerPowerSyncKeychain.swift` —
+  `95d4c3f7f194302a5b8be469f80e0696259c00c47138c45a632512c819bae407`;
+- `SWIFT-A9434A1623BC` — `LedgerPowerSyncDatabase.swift` —
+  `52b7af7d80d7991ec2bffa06b9a6850cdda30ce2cc4389a012e3fa500dd38d47`;
+- `SWIFT-F850F907B87F` — `AttachmentCapturePowerSyncStore.swift` —
+  `38906911a9166a80aa28627d038795e6218d9447768fadbcc1a635cacde7b61a`;
+- `SWIFT-68F4E18977D4` — `AttachmentLocalByteVault.swift` —
+  `ce6e07ba93e35c45c85adc587a691ff9730809b6eb9c8112cb0f118b6f7bd210`;
+- `SWIFT-2FAE0364C908` — `ClientCreationPowerSyncStore.swift` —
+  `79fb9a8fe191c190101b600c312912562911c13126340ea58249c57752ce791b`;
+- `SWIFT-5D88C2B47970` — `ProjectSetupPowerSyncStore.swift` —
+  `d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598`;
+- `SWIFT-2ADDF7B64EA0` — `ClientCoreDetailsPowerSyncQuery.swift` —
+  `23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745`;
+- `SWIFT-56CB8BCDD85C` — `ProjectCoreDetailsPowerSyncQuery.swift` —
+  `983e5d79a903893f509e3ac2caf4add5b90c15be794faa200f232325d8a08b09`;
+- `SWIFT-B23F91245E50` — `ClientProjectDirectoryPowerSyncQuery.swift` —
+  `49af060c1b8c9a1fc499a5f6b6b2c8e7de5eed8a69e57d60f212d7431fb24944`;
+- `SWIFT-A9F7D22095F8` — `LedgerPowerSyncUploadConnector.swift` —
+  `2e136d56055a91dbbe6bba5a8c500657e2c2acc47dfa8ab2bd862739f545daee`;
+- `SWIFT-061553E63650` — `LedgerTargetStagingApp.swift` —
+  `ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839`;
+- `TEST-CE5D3D0516D1` — `AttachmentDurabilityProviderTests.swift` —
+  `859a45c76914eaa3a468beecf1c6f83cdf1af21ad2f73597077d31a05f12c041`;
+- `TEST-5AAEE26660C8` — `ClientProjectDirectoryPowerSyncQueryTests.swift` —
+  `581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237`;
+- `TEST-3FCFFC5C8AD8` — `LedgerWorkspaceRuntimeIsolationTests.swift` —
+  `7604f6bcfcc6b85131b9595ca066cdc1bf18a1fc56a8c113ab8b5cd414ad79aa`;
+- `CONFIG-81235587F306` and `FILE-A6E49E3815F4` —
+  `scripts/check-target-environment.mjs` —
+  `af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd`.
+
+`PendingWorkPowerSyncQuery.swift` remains byte-identical and retains its
+verified primary ownership.
 
 ## Hard Boundary
 
 This runtime is not `AccountSessionEnding`. It cannot synchronize or resolve an
-operation, verify an upload, sign out a provider, switch an Account, delete or
-clean a queue/database/key/file, choose retention, access hosted services,
-migrate Firebase state or authorize production cutover.
+operation, verify an upload, choose clean/sync-first/destructive disposition,
+sign out a provider, switch an Account, delete or clean a queue/database/key/
+file, choose retention, access hosted services, read or modify Firebase state,
+migrate production data, release the app, or authorize cutover.
 
 A-003 and A-004 remain proposed. A-007, A-016 and O-023 remain unadvanced. The
 Supabase architecture remains a target implementation direction, not production

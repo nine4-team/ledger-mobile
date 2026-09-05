@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-public enum LedgerPowerSyncKeychainFailure: Error, Equatable, Sendable {
+enum LedgerPowerSyncKeychainFailure: Error, Equatable, Sendable {
     case invalidNamespace
     case invalidStoredKey
     case randomGenerationFailed(OSStatus)
@@ -9,22 +9,29 @@ public enum LedgerPowerSyncKeychainFailure: Error, Equatable, Sendable {
     case keychainWriteFailed(OSStatus)
 }
 
-public struct LedgerPowerSyncKeychain: Sendable {
+struct LedgerPowerSyncKeychain: Sendable {
     private let service: String
 
-    public init(service: String) throws {
+    init(service: String) throws {
         guard !service.isEmpty, service.utf8.count <= 200 else {
             throw LedgerPowerSyncKeychainFailure.invalidNamespace
         }
         self.service = service
     }
 
-    public func loadOrCreateKey(principalNamespace: String) throws -> LedgerPowerSyncEncryptionKey {
+    func loadOrCreateKey(principalNamespace: String) throws -> LedgerPowerSyncEncryptionKey {
+        try decode(loadOrCreateKeyBytes(principalNamespace: principalNamespace))
+    }
+
+    func loadOrCreateKeyBytes(principalNamespace: String) throws -> Data {
         guard !principalNamespace.isEmpty, principalNamespace.utf8.count <= 256 else {
             throw LedgerPowerSyncKeychainFailure.invalidNamespace
         }
         if let existing = try read(principalNamespace: principalNamespace) {
-            return try decode(existing)
+            guard existing.count == 32 else {
+                throw LedgerPowerSyncKeychainFailure.invalidStoredKey
+            }
+            return existing
         }
 
         var bytes = [UInt8](repeating: 0, count: 32)
@@ -41,12 +48,15 @@ public struct LedgerPowerSyncKeychain: Sendable {
 
         if addStatus == errSecDuplicateItem,
            let racedValue = try read(principalNamespace: principalNamespace) {
-            return try decode(racedValue)
+            guard racedValue.count == 32 else {
+                throw LedgerPowerSyncKeychainFailure.invalidStoredKey
+            }
+            return racedValue
         }
         guard addStatus == errSecSuccess else {
             throw LedgerPowerSyncKeychainFailure.keychainWriteFailed(addStatus)
         }
-        return try decode(data)
+        return data
     }
 
     private func read(principalNamespace: String) throws -> Data? {

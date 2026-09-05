@@ -8,7 +8,8 @@
     "EVID-PROJECT-SETUP-USE-CASE-001",
     "EVID-CLIENT-CREATION-001",
     "EVID-CONTRACT-CATALOG-001",
-    "EVID-TARGET-ENVIRONMENT-001"
+    "EVID-TARGET-ENVIRONMENT-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
   ],
   "surfaces": [
     {
@@ -85,13 +86,13 @@
     },
     {
       "id": "SWIFT-5D88C2B47970",
-      "acknowledgeSourceHash": "3c585a69fc8c75ca5727a33abcb2b252819851845f2ba54f1c0fcb0a28a46c71",
+      "acknowledgeSourceHash": "d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598",
       "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, an optional new-Client overlay, a Project overlay, the complete allocation overlays and one insert-only upload command; exact replay is stable and changed replay is refused.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-004"],
-      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001"],
-      "notes": "All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "The concrete store is module-internal and lifecycle-owned. All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
       "target": {
         "owner": "Project Setup",
         "surfaces": ["Offline Project setup operation adapter"],
@@ -109,13 +110,13 @@
     },
     {
       "id": "SWIFT-56CB8BCDD85C",
-      "acknowledgeSourceHash": "e247e9377d9379dd039afe417ed79ac42f59400f6653cfc86da7f94aa375d6a4",
+      "acknowledgeSourceHash": "983e5d79a903893f509e3ac2caf4add5b90c15be794faa200f232325d8a08b09",
       "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-004"],
-      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"],
-      "notes": "The query currently owns Project core details only; budget-segment and history queries remain separate slices.",
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "The concrete query is module-internal and lifecycle-owned. It currently owns Project core details only; budget-segment and history queries remain separate slices.",
       "target": {
         "owner": "Project Setup",
         "surfaces": ["PowerSync Project core-details query adapter", "Optimistic Project aggregate reconciliation"],

@@ -2,11 +2,11 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
-public actor ClientCreationPowerSyncStore: ClientCreationOperating {
+actor ClientCreationPowerSyncStore: ClientCreationOperating {
     private let database: any PowerSyncDatabaseProtocol
     private let now: @Sendable () -> Date
 
-    public init(
+    init(
         database: any PowerSyncDatabaseProtocol,
         now: @Sendable @escaping () -> Date = Date.init
     ) {

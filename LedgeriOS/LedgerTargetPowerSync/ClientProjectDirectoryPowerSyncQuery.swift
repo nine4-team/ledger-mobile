@@ -17,7 +17,7 @@ public enum ClientProjectDirectoryStream: Sendable {
 /// Client/Project directory port. The target runtime deliberately supplies no
 /// authoritative-completeness proof until a real isolated Sync Stream rehearsal
 /// establishes one; local rows remain useful while their quality stays honest.
-public final class ClientProjectDirectoryPowerSyncQuery:
+final class ClientProjectDirectoryPowerSyncQuery:
     ClientProjectDirectoryQuerying, @unchecked Sendable
 {
     public typealias CompletenessObservation = @Sendable (
@@ -31,7 +31,7 @@ public final class ClientProjectDirectoryPowerSyncQuery:
     private let completenessObservation: CompletenessObservation
     private let now: @Sendable () -> Date
 
-    public init(
+    init(
         database: any PowerSyncDatabaseProtocol,
         principalId: PrincipalID,
         accountId: AccountID,

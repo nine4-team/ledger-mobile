@@ -12,15 +12,15 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba",
-      "currentBehavior": "Comment-only READY scaffold for one async-bootstrapped runtime-wide lifecycle owner that will compose the verified pending-work query with the separate encrypted attachment queue and protected byte vault without implementing session ending.",
+      "acknowledgeSourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
+      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and all four read streams behind one close-aware lease gate without implementing session ending.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "No executable type, storage open, Keychain read, capture, summary, close, cleanup or provider action exists at READY.",
+      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations and streams and preserves all local work. Exact implementation CI is pending, and no hosted, cleanup, signout or session-ending action exists.",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
         "surfaces": [
@@ -53,15 +53,15 @@
     },
     {
       "id": "TEST-8D6A15063B2D",
-      "acknowledgeSourceHash": "c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133",
-      "currentBehavior": "Comment-only READY scaffold freezing real encrypted async runtime composition, constructor counts, key-value separation, attachment, pending-summary, restart, partial-open cleanup, runtime-wide leases, deterministic terminal close and negative-API obligations.",
+      "acknowledgeSourceHash": "f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137",
+      "currentBehavior": "Twelve executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream drainage, deterministic terminal close and negative API boundaries.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "No executable test or claimed passing result exists at READY.",
+      "notes": "All twelve focused tests and the complete 403-test/73-suite Swift package pass locally; exact implementation CI remains pending.",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
         "surfaces": [

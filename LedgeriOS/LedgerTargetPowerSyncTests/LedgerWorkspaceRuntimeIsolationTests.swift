@@ -27,15 +27,34 @@ struct LedgerWorkspaceRuntimeIsolationTests {
         )
 
         #expect(first == second)
-        #expect(first.databaseURL.standardizedFileURL.path.hasPrefix(
+        #expect(first.structuredDatabaseURL.standardizedFileURL.path.hasPrefix(
             root.standardizedFileURL.path + "/"
         ))
-        #expect(first.databaseURL.lastPathComponent == "ledger.sqlite")
-        #expect(first.databaseURL.deletingLastPathComponent().lastPathComponent.hasPrefix("workspace-"))
-        #expect(!first.databaseURL.path.contains(principal.rawValue))
-        #expect(!first.databaseURL.path.contains(account.rawValue))
-        #expect(!first.keychainAccount.contains(principal.rawValue))
-        #expect(!first.keychainAccount.contains(account.rawValue))
+        #expect(first.structuredDatabaseURL.lastPathComponent == "ledger.sqlite")
+        #expect(first.attachmentDatabaseURL.lastPathComponent == "attachments.sqlite")
+        #expect(first.mediaVaultRootURL.lastPathComponent == "media")
+        #expect(
+            first.structuredDatabaseURL.deletingLastPathComponent().lastPathComponent
+                .hasPrefix("workspace-")
+        )
+        #expect(
+            first.structuredDatabaseURL.deletingLastPathComponent()
+                == first.attachmentDatabaseURL.deletingLastPathComponent()
+        )
+        #expect(
+            first.mediaVaultRootURL.deletingLastPathComponent()
+                == first.structuredDatabaseURL.deletingLastPathComponent()
+        )
+        #expect(!first.structuredDatabaseURL.path.contains(principal.rawValue))
+        #expect(!first.structuredDatabaseURL.path.contains(account.rawValue))
+        #expect(!first.databaseKeychainAccount.contains(principal.rawValue))
+        #expect(!first.databaseKeychainAccount.contains(account.rawValue))
+        #expect(!first.mediaKeychainAccount.contains(principal.rawValue))
+        #expect(!first.mediaKeychainAccount.contains(account.rawValue))
+        #expect(
+            first.databaseKeychainService != first.mediaKeychainService
+                || first.databaseKeychainAccount != first.mediaKeychainAccount
+        )
     }
 
     @Test("Every persistence-relevant binding and scope change is isolated")
@@ -103,15 +122,27 @@ struct LedgerWorkspaceRuntimeIsolationTests {
             account: AccountID(validating: "account-two"),
             root: root
         )
-        #expect(otherPrincipal.databaseURL != baseline.databaseURL)
-        #expect(otherAccount.databaseURL != baseline.databaseURL)
+        #expect(otherPrincipal.structuredDatabaseURL != baseline.structuredDatabaseURL)
+        #expect(otherAccount.structuredDatabaseURL != baseline.structuredDatabaseURL)
+        #expect(otherPrincipal.attachmentDatabaseURL != baseline.attachmentDatabaseURL)
+        #expect(otherAccount.attachmentDatabaseURL != baseline.attachmentDatabaseURL)
+        #expect(otherPrincipal.mediaVaultRootURL != baseline.mediaVaultRootURL)
+        #expect(otherAccount.mediaVaultRootURL != baseline.mediaVaultRootURL)
         #expect(
-            otherPrincipal.keychainService != baseline.keychainService
-                || otherPrincipal.keychainAccount != baseline.keychainAccount
+            otherPrincipal.databaseKeychainService != baseline.databaseKeychainService
+                || otherPrincipal.databaseKeychainAccount != baseline.databaseKeychainAccount
         )
         #expect(
-            otherAccount.keychainService != baseline.keychainService
-                || otherAccount.keychainAccount != baseline.keychainAccount
+            otherAccount.databaseKeychainService != baseline.databaseKeychainService
+                || otherAccount.databaseKeychainAccount != baseline.databaseKeychainAccount
+        )
+        #expect(
+            otherPrincipal.mediaKeychainService != baseline.mediaKeychainService
+                || otherPrincipal.mediaKeychainAccount != baseline.mediaKeychainAccount
+        )
+        #expect(
+            otherAccount.mediaKeychainService != baseline.mediaKeychainService
+                || otherAccount.mediaKeychainAccount != baseline.mediaKeychainAccount
         )
 
         let dottedFirst = try Self.location(
@@ -126,8 +157,9 @@ struct LedgerWorkspaceRuntimeIsolationTests {
             account: AccountID(validating: "b.c"),
             root: root
         )
-        #expect(dottedFirst.databaseURL != dottedSecond.databaseURL)
-        #expect(dottedFirst.keychainAccount != dottedSecond.keychainAccount)
+        #expect(dottedFirst.structuredDatabaseURL != dottedSecond.structuredDatabaseURL)
+        #expect(dottedFirst.databaseKeychainAccount != dottedSecond.databaseKeychainAccount)
+        #expect(dottedFirst.mediaKeychainAccount != dottedSecond.mediaKeychainAccount)
 
         let displayOnly = try Self.location(
             Self.environment(displayName: "Cosmetic rename only"),
@@ -139,26 +171,37 @@ struct LedgerWorkspaceRuntimeIsolationTests {
     }
 
     @Test("Invalid namespace fails before key or filesystem side effects")
-    func invalidNamespaceFailsBeforeSideEffects() throws {
+    func invalidNamespaceFailsBeforeSideEffects() async throws {
         let environment = try Self.environment(namespacePrefix: "../escaped")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(
             "workspace-invalid-\(UUID().uuidString)",
             isDirectory: true
         )
         let recorder = SideEffectRecorder()
+        var dependencies = LedgerPowerSyncLocalBootstrapDependencies.live
+        dependencies.loadDatabaseKey = { _, _ in
+            recorder.keyLoads += 1
+            return try Self.key()
+        }
+        dependencies.loadMediaKeyBytes = { _, _ in
+            recorder.keyLoads += 1
+            return Data(repeating: 0x6b, count: 32)
+        }
+        dependencies.createDirectory = { _ in recorder.directoryCreates += 1 }
 
-        #expect(throws: LedgerWorkspaceRuntimeIsolationFailure.invalidLocalDataNamespace) {
-            try LedgerPowerSyncLocalBootstrap.open(
+        do {
+            _ = try await LedgerPowerSyncLocalBootstrap.open(
                 validatedEnvironment: environment,
                 principalId: Self.principalId,
                 accountId: Self.accountId,
                 applicationSupportDirectory: root,
-                loadOrCreateKey: { _, _ in
-                    recorder.keyLoads += 1
-                    return try Self.key()
-                },
-                createDirectory: { _ in recorder.directoryCreates += 1 }
+                dependencies: dependencies
             )
+            Issue.record("Expected invalid namespace to refuse bootstrap")
+        } catch let failure as LedgerPowerSyncLocalBootstrapFailure {
+            #expect(failure.stage == .workspaceLocationResolution)
+            #expect(failure.attachmentDatabaseCleanup == .notOpened)
+            #expect(failure.structuredDatabaseCleanup == .notOpened)
         }
         #expect(recorder.keyLoads == 0)
         #expect(recorder.directoryCreates == 0)
@@ -172,23 +215,26 @@ struct LedgerWorkspaceRuntimeIsolationTests {
             "workspace-restart-\(UUID().uuidString)",
             isDirectory: true
         )
-        let openRuntime = {
-            try LedgerPowerSyncLocalBootstrap.open(
+        var dependencies = LedgerPowerSyncLocalBootstrapDependencies.live
+        dependencies.loadDatabaseKey = { _, _ in try Self.key() }
+        dependencies.loadMediaKeyBytes = { _, _ in Data(repeating: 0x6b, count: 32) }
+        dependencies.createDirectory = { directory in
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        let openRuntime: () async throws -> LedgerOfflineClientRuntime = {
+            try await LedgerPowerSyncLocalBootstrap.open(
                 validatedEnvironment: environment,
                 principalId: Self.principalId,
                 accountId: Self.accountId,
                 applicationSupportDirectory: root,
-                loadOrCreateKey: { _, _ in try Self.key() },
-                createDirectory: { directory in
-                    try FileManager.default.createDirectory(
-                        at: directory,
-                        withIntermediateDirectories: true
-                    )
-                }
+                dependencies: dependencies
             )
         }
 
-        let runtime = try openRuntime()
+        let runtime = try await openRuntime()
         _ = try await runtime.createClient(Self.clientCommand())
         #expect(try await runtime.pendingUploadCount() == 1)
         try await runtime.close()
@@ -199,9 +245,10 @@ struct LedgerWorkspaceRuntimeIsolationTests {
             account: Self.accountId,
             root: root
         )
-        #expect(FileManager.default.fileExists(atPath: location.databaseURL.path))
+        #expect(FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path))
+        #expect(FileManager.default.fileExists(atPath: location.attachmentDatabaseURL.path))
 
-        let reopened = try openRuntime()
+        let reopened = try await openRuntime()
         #expect(try await reopened.pendingUploadCount() == 1)
         #expect(!(try await reopened.encryptionCipher()).isEmpty)
         try await reopened.close()
@@ -237,10 +284,16 @@ struct LedgerWorkspaceRuntimeIsolationTests {
         let changed = try location(
             changedEnvironment, principal: principal, account: account, root: root
         )
-        #expect(changed.databaseURL != baseline.databaseURL)
+        #expect(changed.structuredDatabaseURL != baseline.structuredDatabaseURL)
+        #expect(changed.attachmentDatabaseURL != baseline.attachmentDatabaseURL)
+        #expect(changed.mediaVaultRootURL != baseline.mediaVaultRootURL)
         #expect(
-            changed.keychainService != baseline.keychainService
-                || changed.keychainAccount != baseline.keychainAccount
+            changed.databaseKeychainService != baseline.databaseKeychainService
+                || changed.databaseKeychainAccount != baseline.databaseKeychainAccount
+        )
+        #expect(
+            changed.mediaKeychainService != baseline.mediaKeychainService
+                || changed.mediaKeychainAccount != baseline.mediaKeychainAccount
         )
     }
 

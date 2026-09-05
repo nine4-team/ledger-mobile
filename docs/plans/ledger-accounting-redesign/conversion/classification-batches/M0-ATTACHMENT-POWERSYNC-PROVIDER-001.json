@@ -6,18 +6,19 @@
     "EVID-ATTACHMENT-CAPTURE-001",
     "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
     "EVID-TARGET-ENVIRONMENT-001",
-    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
   ],
   "surfaces": [
     {
       "id": "SWIFT-68F4E18977D4",
-      "acknowledgeSourceHash": "9581e01d5087e2fa39f12906c8022bf5e5db21e076a16db454bf4340c4829dcb",
-      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, explicit orphan evidence and a bounded unavailable-inventory failure checkpoint.",
+      "acknowledgeSourceHash": "ce6e07ba93e35c45c85adc587a691ff9730809b6eb9c8112cb0f118b6f7bd210",
+      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, an authenticated scope-bound media-key sentinel at construction, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, explicit orphan evidence and a bounded unavailable-enumeration failure checkpoint.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": ["A-004"],
-      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
-      "notes": "Local disposable provider only. Pending-work tests can deterministically prove unavailable orphan enumeration refuses; this does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "Local disposable provider only. Runtime review added fail-closed wrong-key construction and atomic sentinel validation; this does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
       "target": {
         "owner": "Attachment Local Durability Provider",
         "surfaces": ["Protected encrypted local attachment-byte vault"],
@@ -35,13 +36,13 @@
     },
     {
       "id": "SWIFT-F850F907B87F",
-      "acknowledgeSourceHash": "349110050cd2ed4b8b8fbca8393ab8e13599e79ce5d523f9e200725e20458850",
+      "acknowledgeSourceHash": "38906911a9166a80aa28627d038795e6218d9447768fadbcc1a635cacde7b61a",
       "currentBehavior": "Implemented backend-neutral attachment-capture adapter with an encrypted, scope-bound isolated PowerSync database, localOnly queue/binding tables, exact replay protection, non-consuming verified upload candidates and strict path-free pending-work queue-plus-orphan observation.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": ["A-004"],
-      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
-      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized. The pending-work implementation distinguishes blocking missing/corrupt evidence from unavailable/interrupted observation; primary ownership remains here.",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "The concrete store and factory are now module-internal and lifecycle-owned by the Account-workspace runtime. No network uploader, remote completion, reference mutation, discard, eviction, cleanup or session-ending action is authorized; primary ownership remains here.",
       "target": {
         "owner": "Attachment Local Durability Provider",
         "surfaces": ["PowerSync local-only attachment durability queue", "AttachmentCaptureStoring provider adapter"],
@@ -59,13 +60,13 @@
     },
     {
       "id": "TEST-CE5D3D0516D1",
-      "acknowledgeSourceHash": "c4964bc23dd67aebf6e9eb6425f668ebfb3aa7f103db6237759405aae27185d1",
+      "acknowledgeSourceHash": "859a45c76914eaa3a468beecf1c6f83cdf1af21ad2f73597077d31a05f12c041",
       "currentBehavior": "Implemented deterministic local attachment durability tests for encryption, restart, interruption, wrong-key/corruption, concurrent replay, scope/database binding, SQLCipher leakage, localOnly isolation, path/link defense, non-consuming reads, queue-plus-orphan restart evidence and unavailable inventory/state-write refusal.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": ["A-004"],
-      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
-      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. Pending-work queue-plus-orphan and failure-distinction regressions now pass; primary ownership remains here.",
+      "evidence": ["EVID-ATTACHMENT-CAPTURE-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-ATTACHMENT-DURABILITY-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. Wrong media key now refuses at vault construction while original queued evidence remains recoverable; primary ownership remains here.",
       "target": {
         "owner": "Attachment Local Durability Provider",
         "surfaces": ["Attachment local durability provider test suite"],

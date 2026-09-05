@@ -300,6 +300,151 @@ for (const filePath of [
   }
 }
 
+const accountWorkspaceRuntimePath = path.join(
+  powerSyncRoot,
+  "LedgerOfflineClientRuntime.swift",
+);
+const accountWorkspaceCoordinatorPath = path.join(
+  powerSyncRoot,
+  "AccountWorkspacePendingWorkRuntime.swift",
+);
+const accountWorkspaceIsolationPath = path.join(
+  powerSyncRoot,
+  "LedgerWorkspaceRuntimeIsolation.swift",
+);
+for (const requiredPath of [
+  accountWorkspaceRuntimePath,
+  accountWorkspaceCoordinatorPath,
+  accountWorkspaceIsolationPath,
+]) {
+  if (!fs.existsSync(requiredPath)) {
+    fail("target_account_workspace_runtime_missing", relative(requiredPath));
+  }
+}
+if (
+  fs.existsSync(accountWorkspaceRuntimePath) &&
+  fs.existsSync(accountWorkspaceCoordinatorPath) &&
+  fs.existsSync(accountWorkspaceIsolationPath)
+) {
+  const runtimeSource = fs.readFileSync(accountWorkspaceRuntimePath, "utf8");
+  const coordinatorSource = fs.readFileSync(
+    accountWorkspaceCoordinatorPath,
+    "utf8",
+  );
+  const isolationSource = fs.readFileSync(accountWorkspaceIsolationPath, "utf8");
+  const powerSyncSources = swiftFiles(powerSyncRoot)
+    .map((filePath) => fs.readFileSync(filePath, "utf8"))
+    .join("\n");
+  const publicRuntimeFunctions = [
+    ...runtimeSource.matchAll(/public\s+func\s+(\w+)/g),
+  ].map((match) => match[1]);
+  const expectedPublicRuntimeFunctions = [
+    "captureAttachment",
+    "close",
+    "createClient",
+    "createProject",
+    "encryptionCipher",
+    "pendingUploadCount",
+    "pendingWorkSummary",
+    "watchClient",
+    "watchClients",
+    "watchProject",
+    "watchProjects",
+  ];
+  if (
+    JSON.stringify([...publicRuntimeFunctions].sort()) !==
+    JSON.stringify(expectedPublicRuntimeFunctions)
+  ) {
+    fail(
+      "target_account_workspace_public_surface",
+      publicRuntimeFunctions.join(","),
+    );
+  }
+
+  const publicRuntimeSignatures = [
+    ...runtimeSource.matchAll(/public\s+func\s+\w+[\s\S]*?\{/g),
+    ...coordinatorSource.matchAll(/public\s+static\s+func\s+\w+[\s\S]*?\{/g),
+  ]
+    .map((match) => match[0])
+    .join("\n");
+  for (const forbiddenType of [
+    "PowerSyncDatabaseProtocol",
+    "PendingWorkPowerSyncQuery",
+    "AttachmentCapturePowerSyncStore",
+    "AttachmentLocalByteVault",
+    "LedgerPowerSyncEncryptionKey",
+    "LedgerWorkspaceRuntimeLocation",
+    "URL",
+  ]) {
+    if (publicRuntimeSignatures.includes(forbiddenType)) {
+      fail(
+        "target_account_workspace_resource_escape",
+        forbiddenType,
+      );
+    }
+  }
+
+  if (/public\s+init\s*\(/.test(runtimeSource)) {
+    fail(
+      "target_account_workspace_constructor_escape",
+      "LedgerOfflineClientRuntime must be constructed only by its scoped bootstrap.",
+    );
+  }
+  if (
+    /public\s+(?:struct|enum)\s+LedgerWorkspaceRuntimeLocation\b/.test(
+      isolationSource,
+    ) ||
+    /public\s+enum\s+LedgerWorkspaceRuntimeIsolation\b/.test(isolationSource)
+  ) {
+    fail(
+      "target_account_workspace_path_escape",
+      "Resolved database, vault, and Keychain locations must remain provider-internal.",
+    );
+  }
+
+  const lifecycleOwnedTypes = [
+    "AccountWorkspacePendingWorkRuntime",
+    "AttachmentCapturePowerSyncDatabaseFactory",
+    "AttachmentCapturePowerSyncStore",
+    "AttachmentDurabilityNamespaceScope",
+    "AttachmentLocalByteVault",
+    "AttachmentMediaEncryptionKey",
+    "ClientCoreDetailsPowerSyncQuery",
+    "ClientCreationPowerSyncStore",
+    "ClientProjectDirectoryPowerSyncQuery",
+    "LedgerPowerSyncDatabaseFactory",
+    "LedgerPowerSyncEncryptionKey",
+    "LedgerPowerSyncKeychain",
+    "LedgerPowerSyncUploadConnector",
+    "PendingWorkPowerSyncQuery",
+    "ProjectCoreDetailsPowerSyncQuery",
+    "ProjectSetupPowerSyncStore",
+  ];
+  for (const typeName of lifecycleOwnedTypes) {
+    const publicDeclaration = new RegExp(
+      `\\bpublic\\s+(?:final\\s+)?(?:actor|class|enum|struct)\\s+${typeName}\\b`,
+    );
+    if (publicDeclaration.test(powerSyncSources)) {
+      fail(
+        "target_account_workspace_lifecycle_bypass",
+        `${typeName} must remain compiler-internal to the scoped lifecycle owner.`,
+      );
+    }
+  }
+
+  const accountWorkspaceSources = `${runtimeSource}\n${coordinatorSource}`;
+  for (const forbiddenBehavior of [
+    ["target_account_workspace_destructive_close", /deleteDatabase:\s*true/],
+    ["target_account_workspace_clear_escape", /disconnectAndClear/],
+    ["target_account_workspace_session_policy_escape", /AccountSessionEnding/],
+    ["target_account_workspace_provider_signout", /\bsignOut\b|\bsignout\b/i],
+  ]) {
+    if (forbiddenBehavior[1].test(accountWorkspaceSources)) {
+      fail(forbiddenBehavior[0], relative(accountWorkspaceCoordinatorPath));
+    }
+  }
+}
+
 for (const [code, requiredPath] of [
   ["target_project_spec_missing", targetProjectSpec],
   ["target_project_missing", targetProject],

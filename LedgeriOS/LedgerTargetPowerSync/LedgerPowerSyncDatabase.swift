@@ -1,15 +1,15 @@
 import Foundation
 import PowerSync
 
-public enum LedgerPowerSyncDatabaseFailure: Error, Equatable, Sendable {
+enum LedgerPowerSyncDatabaseFailure: Error, Equatable, Sendable {
     case invalidDatabasePath
     case invalidEncryptionKey
 }
 
-public struct LedgerPowerSyncEncryptionKey: Equatable, Sendable {
-    public let hexadecimal: String
+struct LedgerPowerSyncEncryptionKey: Equatable, Sendable {
+    let hexadecimal: String
 
-    public init(hexadecimal: String) throws {
+    init(hexadecimal: String) throws {
         let allowed = CharacterSet(charactersIn: "0123456789abcdef")
         guard hexadecimal.utf8.count == 64,
               hexadecimal.unicodeScalars.allSatisfy(allowed.contains) else {
@@ -23,8 +23,8 @@ public struct LedgerPowerSyncEncryptionKey: Equatable, Sendable {
     }
 }
 
-public enum LedgerPowerSyncDatabaseFactory {
-    public static func open(
+enum LedgerPowerSyncDatabaseFactory {
+    static func open(
         absolutePath: String,
         encryptionKey: LedgerPowerSyncEncryptionKey
     ) throws -> any PowerSyncDatabaseProtocol {
