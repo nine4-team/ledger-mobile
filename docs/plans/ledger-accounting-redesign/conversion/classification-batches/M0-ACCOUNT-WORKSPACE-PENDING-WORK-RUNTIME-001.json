@@ -1,0 +1,96 @@
+{
+  "batchId": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+  "title": "Target Account-workspace pending-work and attachment runtime composition",
+  "reviewedAt": "2026-09-04",
+  "evidence": [
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+    "EVID-SESSION-ENDING-POLICY-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-75CFE285AF37",
+      "acknowledgeSourceHash": "82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba",
+      "currentBehavior": "Comment-only READY scaffold for one async-bootstrapped runtime-wide lifecycle owner that will compose the verified pending-work query with the separate encrypted attachment queue and protected byte vault without implementing session ending.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+      ],
+      "notes": "No executable type, storage open, Keychain read, capture, summary, close, cleanup or provider action exists at READY.",
+      "target": {
+        "owner": "Account Workspace Pending-Work Runtime",
+        "surfaces": [
+          "Account-workspace attachment and pending-work lifecycle owner"
+        ],
+        "securityRequirements": [
+          "Bind all storage to one validated environment, Principal and Account before opening it",
+          "Use a media key distinct from the workspace SQLCipher key and expose no key/path/identity material in diagnostics",
+          "No cleanup, deletion, signout or AccountSessionEnding capability exists"
+        ],
+        "syncRequirements": [
+          "Own exactly one pending-work provider observing the runtime's real structured and attachment evidence",
+          "Gate all existing finite operations and list/detail streams before deterministic terminal close and preserve all local evidence across restart"
+        ]
+      },
+      "migration": {
+        "rule": "Compose only isolated target-local stores; read no Firebase cache, pending write, attachment or identity state.",
+        "reconciliation": [
+          "A runtime summary must reconcile exactly to its owned structured-operation and attachment evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountWorkspacePendingWorkRuntimeTests"
+        ],
+        "acceptance": [
+          "Real-store counts, scope/key isolation, restart, concurrency, close and fail-closed boundaries pass without session-ending behavior"
+        ]
+      }
+    },
+    {
+      "id": "TEST-8D6A15063B2D",
+      "acknowledgeSourceHash": "c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133",
+      "currentBehavior": "Comment-only READY scaffold freezing real encrypted async runtime composition, constructor counts, key-value separation, attachment, pending-summary, restart, partial-open cleanup, runtime-wide leases, deterministic terminal close and negative-API obligations.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+      ],
+      "notes": "No executable test or claimed passing result exists at READY.",
+      "target": {
+        "owner": "Account Workspace Pending-Work Runtime",
+        "surfaces": [
+          "Account-workspace pending-work runtime composition test suite"
+        ],
+        "securityRequirements": [
+          "Negative environment, Principal, Account, key, path and lifecycle cases are mandatory",
+          "Tests must prove the public runtime exposes no destructive or provider-signout operation"
+        ],
+        "syncRequirements": [
+          "Real encrypted structured and attachment stores, not mocks alone, prove restart and exact summary behavior",
+          "All mutations, watches, reads, capture and summary calls share one close-aware lease gate and cannot manufacture clean or lose accepted evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable synthetic target-local directories and keys only.",
+        "reconciliation": [
+          "Tests distinguish local runtime evidence from hosted synchronization or physical session-ending proof"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+          "npm run target:powersync:test"
+        ],
+        "acceptance": [
+          "Every frozen composition obligation passes while existing pending-work, attachment and workspace-isolation suites remain green"
+        ]
+      }
+    }
+  ]
+}

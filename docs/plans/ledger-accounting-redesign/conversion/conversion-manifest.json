@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T00:34:47.996Z",
+    "lastSynchronizedAt": "2026-09-05T01:18:26.728Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -25765,6 +25765,61 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-75CFE285AF37",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
+        }
+      ],
+      "observedSourceHash": "82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba",
+      "acknowledgedSourceHash": "82dfbbfc0c06fbebfa79772f743df9251c7e5b6a4f4d95c4036c34549d5779ba",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for one async-bootstrapped runtime-wide lifecycle owner that will compose the verified pending-work query with the separate encrypted attachment queue and protected byte vault without implementing session ending.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Account Workspace Pending-Work Runtime",
+        "surfaces": [
+          "Account-workspace attachment and pending-work lifecycle owner"
+        ],
+        "securityRequirements": [
+          "Bind all storage to one validated environment, Principal and Account before opening it",
+          "Use a media key distinct from the workspace SQLCipher key and expose no key/path/identity material in diagnostics",
+          "No cleanup, deletion, signout or AccountSessionEnding capability exists"
+        ],
+        "syncRequirements": [
+          "Own exactly one pending-work provider observing the runtime's real structured and attachment evidence",
+          "Gate all existing finite operations and list/detail streams before deterministic terminal close and preserve all local evidence across restart"
+        ]
+      },
+      "migration": {
+        "rule": "Compose only isolated target-local stores; read no Firebase cache, pending write, attachment or identity state.",
+        "reconciliation": [
+          "A runtime summary must reconcile exactly to its owned structured-operation and attachment evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountWorkspacePendingWorkRuntimeTests"
+        ],
+        "acceptance": [
+          "Real-store counts, scope/key isolation, restart, concurrency, close and fail-closed boundaries pass without session-ending behavior"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+      ],
+      "notes": "No executable type, storage open, Keychain read, capture, summary, close, cleanup or provider action exists at READY.",
+      "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+    },
+    {
       "id": "SWIFT-7792F727AA52",
       "kind": "swift_logic",
       "name": "LedgeriOS/LedgeriOS/Logic/BulkSaleResolutionCalculations.swift",
@@ -41008,6 +41063,61 @@
       ],
       "notes": "Verified at exact integration checkpoint 717a0eb89099676bd4c09d6b0665dd83ab9739d8 and immutable Actions run 33723154735. Four focused tests in reviewed candidate 73f94525 include direct regression coverage proving an encoded selection cannot be rebound from one represented Project to a valid sibling row in the same snapshot.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-8D6A15063B2D",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
+        }
+      ],
+      "observedSourceHash": "c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133",
+      "acknowledgedSourceHash": "c0329cbe6612853c777405b553a8526b9e5be690af4e8f1c80c9a1b7f41d7133",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY scaffold freezing real encrypted async runtime composition, constructor counts, key-value separation, attachment, pending-summary, restart, partial-open cleanup, runtime-wide leases, deterministic terminal close and negative-API obligations.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Account Workspace Pending-Work Runtime",
+        "surfaces": [
+          "Account-workspace pending-work runtime composition test suite"
+        ],
+        "securityRequirements": [
+          "Negative environment, Principal, Account, key, path and lifecycle cases are mandatory",
+          "Tests must prove the public runtime exposes no destructive or provider-signout operation"
+        ],
+        "syncRequirements": [
+          "Real encrypted structured and attachment stores, not mocks alone, prove restart and exact summary behavior",
+          "All mutations, watches, reads, capture and summary calls share one close-aware lease gate and cannot manufacture clean or lose accepted evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable synthetic target-local directories and keys only.",
+        "reconciliation": [
+          "Tests distinguish local runtime evidence from hosted synchronization or physical session-ending proof"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests",
+          "npm run target:powersync:test"
+        ],
+        "acceptance": [
+          "Every frozen composition obligation passes while existing pending-work, attachment and workspace-isolation suites remain green"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+      ],
+      "notes": "No executable test or claimed passing result exists at READY.",
+      "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
     },
     {
       "id": "TEST-915EC8E0BFC9",

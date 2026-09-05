@@ -5,7 +5,7 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 441 of 625 target-relevant
+Status: M0 backend-surface classification complete; 449 of 633 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -37,6 +37,18 @@ GO with no P0-P3 finding; all 391 target tests in 72 suites and both staging
 builds pass locally. Exact implementation `3ac05bd0` passed all three jobs in
 immutable run `33932915626`, including isolated Supabase provider checks. It does not
 synchronize, delete, sign out, touch hosted services, or implement session end.
+The next bounded slice is frozen as a comment-only READY candidate: normal
+Account-workspace bootstrap will own exactly one pending-work query plus its
+separate encrypted attachment queue, protected byte vault and capture store.
+Async bootstrap will close every opened resource on later failure. One
+runtime-wide lease gate will cover existing mutations, watches, reads, capture
+and summary before a deterministic non-destructive terminal close while
+preserving all accepted evidence. It expressly adds no session ending,
+synchronization, cleanup, signout, hosted access, Firebase work or cutover behavior;
+`EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001`.
+The initial independent review rejected underspecified lifecycle, cleanup,
+authority and verification behavior; the corrected-diff review is GO with no
+P0-P3 finding. Exact READY commit and immutable CI remain pending.
 The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

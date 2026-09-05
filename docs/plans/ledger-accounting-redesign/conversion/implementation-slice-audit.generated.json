@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T00:34:47.996Z",
+  "generatedFromManifestSync": "2026-09-05T01:18:26.728Z",
   "totals": {
-    "slices": 75,
-    "claimedTargetSurfaces": 209,
+    "slices": 76,
+    "claimedTargetSurfaces": 211,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 157
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 5,
     "verified": 66,
@@ -48,6 +48,21 @@
       "verificationCount": 7,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-discovery-powersync-provider.json"
+    },
+    {
+      "sliceId": "account-workspace-pending-work-runtime",
+      "title": "Compose one Account-workspace pending-work and attachment durability runtime",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Account Workspace Pending-Work Runtime",
+      "surfaceIds": [
+        "SWIFT-75CFE285AF37",
+        "TEST-8D6A15063B2D"
+      ],
+      "requirementCount": 11,
+      "verificationCount": 9,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json"
     },
     {
       "sliceId": "account-workspace-runtime-isolation",

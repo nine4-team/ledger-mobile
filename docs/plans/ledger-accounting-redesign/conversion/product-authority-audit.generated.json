@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T00:34:47.996Z",
+  "generatedFromManifestSync": "2026-09-05T01:18:26.728Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 891,
-    "targetRelevantSurfaces": 631,
-    "batches": 27,
+    "surfaces": 893,
+    "targetRelevantSurfaces": 633,
+    "batches": 28,
     "productScopeSurfaces": 724,
-    "technicalControlSurfaces": 167
+    "technicalControlSurfaces": 169
   },
   "canonicalTargetCoverage": [
     {
@@ -109,13 +109,14 @@
     {
       "path": "docs/specs/session-ending-pending-work.md",
       "batchIds": [
+        "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 22,
-      "targetRelevantSurfaceCount": 19
+      "surfaceCount": 24,
+      "targetRelevantSurfaceCount": 21
     },
     {
       "path": "docs/plans/non-item-receipt-lines/design.md",
@@ -187,6 +188,72 @@
         "SWIFT-8AA6BB698C64",
         "SWIFT-A8B0B06147C3",
         "TEST-D960EA615333"
+      ]
+    },
+    {
+      "batchId": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+      "title": "Target Account-workspace pending-work and attachment runtime composition",
+      "scope": "technical_control",
+      "rationale": "The Account-workspace lifecycle owner composes the already-verified structured pending-work query and separately encrypted attachment durability components into one scope-bound runtime while preserving accepted local evidence across ordinary close; it does not implement session ending, synchronization, deletion or signout.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-local-byte-durability-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ATTACHMENT-DURABILITY-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-75CFE285AF37",
+        "TEST-8D6A15063B2D"
       ]
     },
     {

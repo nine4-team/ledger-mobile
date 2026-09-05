@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 281
+State version: 283
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PENDING-WORK-POWERSYNC-PROVIDER-IMPLEMENTED-CI-PASSED
+- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-READY-REVIEWED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,8 +36,8 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 266 status-bearing rows: 68
-  done, four verified, four implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 268 status-bearing rows: 68
+  done, four verified, five implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -64,6 +64,32 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Prepared the comment-only READY candidate for normal Account-workspace
+  pending-work and attachment runtime composition. Exactly two new primary
+  leaves freeze one lifecycle owner over the verified pending-work query,
+  separate encrypted attachment queue, protected byte vault and capture store.
+  The synchronized dossier requires contained scope-bound storage, distinct
+  SQLCipher/media-key identities, real encrypted restart and failure evidence,
+  serialized capture/summary/ordinary close, non-destructive partial-open
+  cleanup and post-close refusal. Shared runtime/isolation/Keychain and verified
+  pending-work/attachment dependencies remain byte-identical at this candidate.
+  The runtime explicitly is not `AccountSessionEnding` and exposes no sync,
+  result resolution, upload verification, cleanup, deletion, provider signout,
+  workspace switch or backend selection. A-003/A-004/A-007/A-016/O-023 remain
+  unadvanced. The initial independent READY review returned NO-GO because the
+  first draft did not gate existing Client/Project operations and watches,
+  could not implement synchronous partial-open cleanup over async database
+  close, conflated product and technical authority, underspecified close
+  failure state, omitted key-value/construction-count proof and left stale
+  durable resume instructions. The corrected candidate freezes async bootstrap,
+  one runtime-wide finite-call/stream lease gate, exact key-value separation,
+  fixed partial-open/terminal-close outcomes, non-escape checks and the complete
+  known caller/test surface set. Final corrected-diff review returned GO with
+  no P0-P3 finding, confirmed all fourteen recorded hashes and independently
+  reran conversion and diff checks. Exact READY commit and immutable CI remain
+  required before executable work;
+  `EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001`.
 
 - Audited the next provider boundary after Account discovery. The proposed
   pending-work summary is not yet trustworthy because the existing Account
@@ -3884,18 +3910,22 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Obtain independent review of the exact comment-only Account-workspace runtime
-isolation READY candidate, correct every substantive finding, then commit and
-pass the complete immutable workflow on that exact checkpoint. Only afterward
-replace free namespace input and raw Principal/Account filesystem paths with
-validated compiled-environment evidence and an opaque contained namespace,
-include environment in Keychain scope, reject invalid/rebound evidence before
-filesystem/Keychain/database access, reopen the identical encrypted namespace
-and preserve it on ordinary close.
-Keep Auth, hosted Sync, workspace switching, destructive deletion, A-003/A-004/
-A-007/A-016, migration and cutover open; do not provision hosted resources,
-access production or modify Firebase. After that prerequisite passes, implement
-the local pending-work summary provider without claiming physical session end.
+Complete the corrected independent review of the exact comment-only
+`account-workspace-pending-work-runtime` READY candidate. Correct every
+substantive finding, synchronize generated controls, commit and push that exact
+READY package, and require all three immutable workflow jobs to pass before any
+executable change. Then implement only the frozen async bootstrap, runtime-wide
+finite-call/stream lease gate, exact one-query/store/vault composition, shared
+SQLCipher versus distinct media-key enforcement, partial-open cleanup and
+deterministic terminal close state machine. Run focused and complete local
+verification, obtain independent executable review, correct findings,
+synchronize the implemented dossier/evidence, commit and push, and require all
+three immutable jobs on the exact implementation checkpoint before promotion.
+
+Keep physical Account session ending, Auth, hosted Sync, workspace switching,
+destructive deletion, retention selection, A-003/A-004/A-007/A-016/O-023,
+migration and cutover open. Do not provision hosted resources, access production
+or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 
