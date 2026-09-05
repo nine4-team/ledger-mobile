@@ -20,7 +20,7 @@
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations and streams and preserves all local work. Exact implementation CI is pending, and no hosted, cleanup, signout or session-ending action exists.",
+      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations and streams and preserves all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; no hosted, cleanup, signout or session-ending action exists.",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
         "surfaces": [
@@ -61,7 +61,7 @@
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "All twelve focused tests and the complete 403-test/73-suite Swift package pass locally; exact implementation CI remains pending.",
+      "notes": "All twelve focused tests and the complete 403-test/73-suite Swift package pass locally and in corrected exact-head Actions run 33941609019.",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
         "surfaces": [
