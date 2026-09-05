@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 314
+State version: 317
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-FACADE-CORRECTION-REVIEWED
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-IMPLEMENTED-LOCAL-REVIEW-GO
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,23 +33,33 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Whole-program completion remains approximately **14%** (a reasonable uncertainty
-  range is 13–15%). Separately, 194 of 674 target-relevant surfaces (28.8%) are
-  implemented or verified. The
-  broader percentage measures executable Supabase/PowerSync product behavior
-  through rehearsal and cutover readiness, not document volume or provider-free
-  contract count. The broad range is a readiness forecast, not an incremental
-  progress counter; every checkpoint must report the exact surface numerator
-  and completed user workflow instead of repeating the range alone.
+- Planning/control coverage is **493 of 677 target-relevant surfaces mapped or
+  later (72.8%)** after the current slice is synchronized. Local surface-
+  implementation coverage is **203 of 677 implemented or verified (30.0%)**.
+  These are repository-surface measures, not percentages of shipped app
+  behavior or elapsed implementation time; the implemented/verified numerator
+  includes provider-free contracts and technical controls.
+- Seven provider-backed product workflows have working local behavior after the
+  current slice: four mutations and three reads. Forty-seven additional product
+  slices are verified provider-free contracts, not shipped workflows. Hosted
+  authenticated Supabase/PowerSync rehearsal remains zero, and both rehearsed
+  and cutover-ready surface counts remain zero.
+- A rough end-to-end readiness range is **15–20% complete / 80–85% remaining**.
+  This range is explicitly an estimate, not mechanically derived. The remaining
+  work is weighted toward hosted Auth/Sync proof, the core financial domains,
+  migration/reconciliation, operational rollout/rollback, and cutover. Progress
+  reports must lead with the exact four lanes above rather than repeat a broad
+  estimate without its basis.
 - The implementation tracker currently contains 275 status-bearing rows: 68
-  done, eight verified, eight implemented, one ready, zero awaiting verification,
+  done, eight verified, nine implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Six provider-backed product slices have working local behavior: Client
+- Seven provider-backed product slices have working local behavior: Client
   creation, Project setup, Project archive and Client archive through their
-  browsers, the Client/Project directory and Principal-scoped Account discovery. Four of
-  those are mutation workflows. Client creation and Project setup have local
+  browsers, the Client/Project directory, Principal-scoped Account discovery,
+  and the exact Project-or-Business-Inventory Space destination picker. Four of
+  those are mutation workflows and three are reads. Client creation and Project setup have local
   identity, ordinary-name command, encrypted-offline, RLS, replay and readback
   mechanics; Project archive has the corresponding lifecycle/revision command,
   optimistic overlay and reconciliation mechanics; Client archive adds the
@@ -71,6 +81,23 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Implemented the provider-backed offline Space assignment-destination picker
+  from exact green READY commit `5f3888b2` plus public-facade correction
+  `9afda220`. Nine claimed target surfaces now provide additive SELECT-only
+  Postgres/RLS, exact Project/Inventory on-demand Sync Streams, encrypted local
+  PowerSync observation, Core-only presentation, a thin runtime adapter and an
+  isolated staging picker. Independent review repeatedly returned NO-GO until
+  retained PowerSync epochs, delayed-row causality, ready/completeness
+  coherence, raw-name preservation and subscription lifetime were corrected.
+  The final database and Swift reviews return GO with no remaining P0-P3.
+  Fourteen focused provider tests, all 512 Swift tests in 84 suites, all 210
+  pgTAP assertions including 34 Space assertions, local Data API denial/read
+  proof, zero database-lint errors, target controls, deterministic project
+  generation and both staging builds pass locally. TEST-012 real authenticated
+  PowerSync remains planned; A-003/A-004 remain proposed; no hosted, Firebase,
+  source-data migration, production, release or cutover action exists;
+  `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001`.
 
 - Prepared the comment-only READY candidate for the provider-backed offline
   Space assignment-destination picker. Six automatically discovered target
@@ -110,7 +137,20 @@ without modifying the running Firebase application before hard cutover.
   exact READY hash and permits only one typed-scope forwarding watch through the
   existing tracked-stream lifecycle. Narrow independent review recomputed the
   stable ID/hash, confirmed necessity/minimality and returned GO; exact-head CI
-  is required before executable edits.
+  run `33980882831` then passed conversion, local Supabase, complete target
+  tests and both staging builds at correction commit `9afda220`. During the
+  subsequent executable implementation, the first staging build correctly
+  found that the two claimed target-app leaves were not members of the committed
+  generated target Xcode project. The implementer stopped before regenerating
+  it or duplicating types into an already-compiled file. The dossier now freezes
+  shared generated surface `CONFIG-2EBA890AF767` at its exact pre-regeneration
+  hash and permits only deterministic regeneration from the unchanged target
+  project specification to add those claimed leaves. Claimed-leaf executable
+  work was already in progress, but no generated-project or workaround edit
+  preceded this correction. Independent narrow review recomputed the stable ID
+  and hash, verified that the unchanged project spec recursively includes the
+  App directory and found exactly the two claimed picker leaves absent; it
+  returned GO for project-only deterministic regeneration.
 
 - Implemented archiving one currently observed active Client through the isolated
   Client browser after exact READY commit `7187fa1e` passed immutable Actions

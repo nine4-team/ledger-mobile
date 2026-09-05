@@ -5,13 +5,27 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 490 of 674 target-relevant
+Status: M0 backend-surface classification complete; 493 of 677 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
-to decisions/spikes/production evidence. Of those target surfaces, 194 are now
-implemented or verified. Decision-independent target
+to decisions/spikes/production evidence. Of those target surfaces, 203 are now
+implemented or verified. This 30.0% is local surface-implementation coverage,
+not shipped-app or cutover readiness. Seven provider-backed product workflows
+work locally; hosted authenticated rehearsal and cutover-ready counts remain
+zero. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
-by this directory. The Project archive browser slice is implemented locally
+by this directory. The Space assignment-destination picker is implemented
+locally from exact green READY `5f3888b2` plus facade correction `9afda220`:
+nine target surfaces provide SELECT-only Postgres/RLS, exact Project/Inventory
+on-demand streams, encrypted retained-epoch-safe local reads, honest presenter
+states and represented-ID staging selection. Independent database and Swift
+reviews returned GO after correcting temporal tests, stale-row causality,
+readiness, raw-name preservation and subscription drainage. All 512 Swift tests
+in 84 suites, 210 pgTAP assertions, local Data API checks, target controls and
+both builds pass locally; immutable implementation CI and TEST-012 hosted
+authenticated Sync remain pending. A-003/A-004 remain proposed and no
+Space/Item mutation, migration, Firebase, production or cutover authority is
+granted; `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001`. The Project archive browser slice is implemented locally
 from exact green READY commit `089dc562` / immutable run `33961281661`: nine
 claimed leaves provide confirmation-bound offline archive, encrypted PowerSync
 optimism/reconciliation, auth-first Postgres/RLS/RPC, runnable pgTAP and scoped

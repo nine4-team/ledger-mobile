@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T17:24:29.608Z",
+    "lastSynchronizedAt": "2026-09-05T18:55:44.606Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -142,6 +142,64 @@
       ],
       "notes": "Target package graph remains claimed by target-environment-isolation. The new provider target is an isolated local vertical spike and is absent from the Firebase application project; it is not production provisioning or migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-048B775BE4E4",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260905164622_space_assignment_destination_picker.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260905164622_space_assignment_destination_picker.sql"
+        }
+      ],
+      "observedSourceHash": "7b6aba84a97dc513504479677112ab79f842ac1886e53ab47e2bec1b97cc166d",
+      "acknowledgedSourceHash": "7b6aba84a97dc513504479677112ab79f842ac1886e53ab47e2bec1b97cc166d",
+      "metadata": {},
+      "currentBehavior": "Adds the minimal spike_spaces target relation with exact Project-or-Business-Inventory scope shape, same-Account Project foreign key, canonical lifecycle/revision/name constraints, query-aligned indexes, SELECT-only authenticated grant, and active-membership/active-row RLS.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query",
+        "surfaces": [
+          "spike_spaces destination read schema",
+          "exact scope and same-Account constraints",
+          "SELECT-only active-member RLS",
+          "query-aligned indexes"
+        ],
+        "securityRequirements": [
+          "Authenticated callers receive SELECT only and can enumerate only active rows in Accounts where signed identity has active membership"
+        ],
+        "syncRequirements": [
+          "Columns align exactly with the minimal active Space destination Sync Stream projection"
+        ]
+      },
+      "migration": {
+        "rule": "Create the target relation additively with synthetic local fixtures only; perform no Firebase export/import or source-data transform.",
+        "reconciliation": [
+          "Runnable pgTAP and Data API tests reconcile constraints, RLS visibility, and write denial"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "supabase/tests/space_assignment_destination_picker.test.sql",
+          "scripts/test-local-space-assignment-destination-read.mjs"
+        ],
+        "acceptance": [
+          "All 34 Space assertions, local Data API security cases, and zero-error database lint pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+      ],
+      "notes": "Additive isolated local schema only. It defines no Space or Item mutation, imports no source data, and grants no hosted schema or migration authority.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "CONFIG-062839A9903C",
@@ -363,10 +421,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
-      "acknowledgedSourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
+      "observedSourceHash": "908fa8281ff9a688c7bdf0d0a387062c160f3e768ab609f464155c57bceb241b",
+      "acknowledgedSourceHash": "908fa8281ff9a688c7bdf0d0a387062c160f3e768ab609f464155c57bceb241b",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -404,9 +462,10 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
-        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+        "EVID-SOURCE-QUERY-RECONCILIATION-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. Run 33939963766 proved conversion and disposable-local-Supabase jobs but its macOS job timed out after four independent serialized PowerSync/SQLCipher suites advanced concurrently and stopped emitting completions. Twenty repeated local parallel suites and one explicit nonparallel 403-test suite passed. The target job now uses Swift Testing's process-wide --no-parallel mode for cross-suite native database isolation while focused runtime tests retain the required internal concurrency coverage. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Corrected immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. Run 33939963766 proved conversion and disposable-local-Supabase jobs but its macOS job timed out after four independent serialized PowerSync/SQLCipher suites advanced concurrently and stopped emitting completions. Twenty repeated local parallel suites and one explicit nonparallel 403-test suite passed. The target job now uses Swift Testing's process-wide --no-parallel mode for cross-suite native database isolation while focused runtime tests retain the required internal concurrency coverage. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; the Space destination slice adds only its localhost Data API read/denial runner to that existing job. No hosted resource, credential, export, deployment or cutover step exists. Corrected immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -580,10 +639,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "51404d6282d659bb452e8ca4d356159554459bd9f3d6b398ff490fb4acf14f8e",
-      "acknowledgedSourceHash": "51404d6282d659bb452e8ca4d356159554459bd9f3d6b398ff490fb4acf14f8e",
+      "observedSourceHash": "3e74f0b64bb3042db6035bcb13f518ce1dabe2dcb34781ac03af25a118f13aba",
+      "acknowledgedSourceHash": "3e74f0b64bb3042db6035bcb13f518ce1dabe2dcb34781ac03af25a118f13aba",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, isolated LedgerTargetPowerSync package-product dependencies, implemented Project archive and comment-only Client-archive READY Swift leaves.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -974,10 +1033,10 @@
           "path": "powersync/sync-streams.yaml"
         }
       ],
-      "observedSourceHash": "bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528",
-      "acknowledgedSourceHash": "bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528",
+      "observedSourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8",
+      "acknowledgedSourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8",
       "metadata": {},
-      "currentBehavior": "Defines edition-3 target Sync Streams for the authenticated Principal, active memberships and Accounts, Account-scoped Clients and Projects, visibility-filtered budget categories/allocations, and immutable operation results.",
+      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -1013,7 +1072,8 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-CLIENT-CREATION-PROVIDER-001"
+        "EVID-CLIENT-CREATION-PROVIDER-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
       "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
@@ -1264,6 +1324,57 @@
       ],
       "notes": "Never reuse as the forward production migration package.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-5F4C2A8274C3",
+      "kind": "release_or_build_tool",
+      "name": "scripts/test-local-space-assignment-destination-read.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/test-local-space-assignment-destination-read.mjs"
+        }
+      ],
+      "observedSourceHash": "0bcecd88a17e181e454333dcadfd3b1de74877d465fd1574f8342afa0eec9f13",
+      "acknowledgedSourceHash": "0bcecd88a17e181e454333dcadfd3b1de74877d465fd1574f8342afa0eec9f13",
+      "metadata": {},
+      "currentBehavior": "Runs a localhost-only disposable Supabase Data API matrix proving active same-Account Project/Inventory Space reads plus anonymous, revoked, cross-Account, archived, and direct-write denial.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": [
+          "local Space destination Data API authorization matrix"
+        ],
+        "securityRequirements": [
+          "Fail closed unless the Supabase URL is loopback and prove both row non-enumeration and direct write denial"
+        ],
+        "syncRequirements": [
+          "Exercise the same minimal server projection later consumed by exact on-demand Sync Streams"
+        ]
+      },
+      "migration": {
+        "rule": "Seed and remove only synthetic local target rows; perform no hosted or source migration action.",
+        "reconciliation": [
+          "Data API results match the pgTAP RLS expectations for each signed role/state"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:space-destinations"
+        ],
+        "acceptance": [
+          "The local positive/negative matrix passes and non-loopback configuration is refused"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+      ],
+      "notes": "The runner rejects non-local HTTP endpoints and uses synthetic identities only; it creates no hosted resource and performs no production access.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "CONFIG-634171BE50F3",
@@ -1633,10 +1744,10 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89",
-      "acknowledgedSourceHash": "640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89",
+      "observedSourceHash": "d8e52ecdebc3d1862bc07b5c46907416b78a0151edd5a1f19d1b0aecac006b79",
+      "acknowledgedSourceHash": "d8e52ecdebc3d1862bc07b5c46907416b78a0151edd5a1f19d1b0aecac006b79",
       "metadata": {},
-      "currentBehavior": "Defines root repository commands for conversion-ledger synchronization, checks, reports and milestone gates; deterministic Firestore query, service/MCP capability, residual queue, target contract, target query-port inventory, target query logical-authority and source-query reconciliation generation/checking/testing; fail-closed Firebase source profiler entry points; and isolated target environment/build plus local Supabase Client/Project database/API test commands. Vitest remains the root development test dependency.",
+      "currentBehavior": "Defines root repository commands for conversion controls, target tests/builds, and isolated local Supabase Client/Project/Space database and Data API verification. Vitest remains the root development test dependency.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -1662,7 +1773,8 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
-        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+        "EVID-SOURCE-QUERY-RECONCILIATION-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
       "notes": "These are operator commands, not product runtime dependencies. Source-query reconciliation adds three exact dependency-free generator/check/test commands and re-acknowledges the package hash while preserving characterized status and existing ownership.",
       "classificationBatch": "M0-QUERY-PROFILE-001"
@@ -1678,8 +1790,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
-      "acknowledgedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "observedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
+      "acknowledgedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -2118,10 +2230,10 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
-      "acknowledgedSourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
+      "observedSourceHash": "5dcc19a95ecccd1b72a9be18e7e9d5353e3eaeadb98a204876d9aca1ae2b77a3",
+      "acknowledgedSourceHash": "5dcc19a95ecccd1b72a9be18e7e9d5353e3eaeadb98a204876d9aca1ae2b77a3",
       "metadata": {},
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map and byte-exact workflow including the isolated Space Data API read gate, permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -2157,9 +2269,10 @@
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+        "EVID-SOURCE-QUERY-RECONCILIATION-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention; this changes test scheduling only and grants no runtime, physical/provider, hosted, production, migration, retirement or cutover authority.",
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. The Space destination implementation later re-acknowledged only the exact package command and workflow fingerprints needed to run its isolated local Data API read check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2766,6 +2879,57 @@
       ],
       "notes": "Modify only through the isolated target build plan with reproducible review. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-DC77B9F609A7",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/space_assignment_destination_picker.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/space_assignment_destination_picker.test.sql"
+        }
+      ],
+      "observedSourceHash": "7b3667e1f173344218f3bba16de9ebc242f704aff678f07804107767749938bb",
+      "acknowledgedSourceHash": "7b3667e1f173344218f3bba16de9ebc242f704aff678f07804107767749938bb",
+      "metadata": {},
+      "currentBehavior": "Runs 34 pgTAP assertions for the Space destination schema, conditional Project scope, same-Account identity, indexes, grants, positive active-member visibility, negative anonymous/revoked/cross-Account/archived visibility, and direct-write denial.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": [
+          "Space destination schema and RLS pgTAP matrix"
+        ],
+        "securityRequirements": [
+          "Positive and negative cases execute under synthetic signed identities and prove SELECT-only least privilege"
+        ],
+        "syncRequirements": [
+          "Schema and lookup assertions match the exact Project/Inventory read projection"
+        ]
+      },
+      "migration": {
+        "rule": "Use transaction-scoped synthetic target rows and roll them back; load no source export.",
+        "reconciliation": [
+          "Every schema/security requirement owns at least one direct assertion"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test"
+        ],
+        "acceptance": [
+          "All 34 assertions pass in a clean isolated local Supabase reset"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+      ],
+      "notes": "Future-tolerant assertions require the frozen columns/invariants without forbidding later authorized schema evolution or mutation objects globally.",
+      "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
       "id": "CONFIG-E1332AB9A867",
@@ -3609,10 +3773,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6",
-      "acknowledgedSourceHash": "cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6",
+      "observedSourceHash": "2f7cf19eb6133a14961ad233d5620efab575a9d179ea512fec10dbcb8cbb049d",
+      "acknowledgedSourceHash": "2f7cf19eb6133a14961ad233d5620efab575a9d179ea512fec10dbcb8cbb049d",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, applies bounded classification batches, detects disappearance and live source drift, validates evidence requirements, product authority and vertical-slice dossiers, emits generated audits and enforces cumulative M0-M5 gates. It explicitly retains both inert archive READY markers and separately discovers the runnable Project-archive and Client-archive pgTAP replacements; the root run-all database command remains unchanged.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination migration, pgTAP leaf and local Data API runner; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3662,7 +3826,8 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
       "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment retains exact discovery for Project replacement CONFIG-CAB6A5DAD1C0 and marker CONFIG-062839A9903C, adds runnable Client replacement CONFIG-86F1E734BC70 while retaining marker CONFIG-2DBC5A626444 byte-identically, and changes no validator semantics, package command, product authority or existing primary ownership.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
@@ -5822,8 +5987,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
-      "acknowledgedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "observedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
+      "acknowledgedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -17986,12 +18151,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
-      "acknowledgedSourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
+      "observedSourceHash": "5b0c969c8b83f93b89fef82446c7245420297ec88f0ce308b7f266cd417f4ccb",
+      "acknowledgedSourceHash": "5b0c969c8b83f93b89fef82446c7245420297ec88f0ce308b7f266cd417f4ccb",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its fixed unprovisioned environment, permanently displays the local-only banner, hosts Project Setup plus Project/Client browsing and both Core-only archive flows, and drains archive and browsing lifecycles before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client flows, and the local Space destination picker; it drains all owned observations before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -18529,12 +18694,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/SpaceAssignmentDestinationPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "d6230e3b529e2488b8c7193af42a64167d48f76380c8d8d923eacabfdd174faf",
-      "acknowledgedSourceHash": "d6230e3b529e2488b8c7193af42a64167d48f76380c8d8d923eacabfdd174faf",
+      "observedSourceHash": "efb63c076e2a41322eaa42f1fc2e6239a10b0106a8e608e8917a85deef911425",
+      "acknowledgedSourceHash": "efb63c076e2a41322eaa42f1fc2e6239a10b0106a8e608e8917a85deef911425",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the comment-frozen READY boundary for a module-internal PowerSync implementation of the verified Space assignment-destination query; it has no executable declaration or behavior.",
+      "currentBehavior": "Implements the encrypted local Space destination query, exact Project/Inventory on-demand subscription ownership, retained/public epoch freshness baseline, fail-closed row decoding, fresh-read causality, membership retraction, canonical projection, and deterministic cancellation/drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Assignment Destination PowerSync Query",
@@ -18565,15 +18730,16 @@
           "The provider emits only verified active exact-scope directory snapshots and never manufactures completeness or authorization"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation. Future implementation consumes SWIFT-164554FA1456/TQUERY-A95F4BE0B9D8 unchanged, reads only synchronized active same-scope Space rows behind active local membership, establishes completeness only from its exact Project-or-Inventory Sync Stream subscription, fails closed, unsubscribes and drains every observer. No executable provider, schema, RLS, Sync, Item/Space mutation, hosted or production behavior exists at READY.",
+      "notes": "Local target-only implementation consumes SWIFT-164554FA1456/TQUERY-A95F4BE0B9D8 unchanged. PowerSync 1.16.1 retained subscription epochs are inspected before subscribe so cached metadata cannot manufacture readiness; row/status observers and the sole subscription owner drain before database close. Hosted authenticated Sync proof remains TEST-012.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -19800,12 +19966,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
-      "acknowledgedSourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
+      "observedSourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed",
+      "acknowledgedSourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project/Project-archive/Client-archive commands, local-only optimistic aggregates and lifecycle overlays, immutable server results and pending-work observation journal.",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget categories/allocations, Space destination rows, existing command/optimistic state, immutable results, and pending-work observation journal.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -19841,9 +20007,10 @@
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Target provider layer only. Pending-work and Project/Client archive overlays remain local-only; primary ownership and hosted schema authority are unchanged.",
+      "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -24459,12 +24626,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
-      "acknowledgedSourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
+      "observedSourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
+      "acknowledgedSourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes Client/Project creation and watches, Project and Client archive plus exact operation observation, Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior plus one typed Account-bound Space destination watch and non-destructive close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -24504,9 +24671,10 @@
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families, to the single Account-workspace lifecycle owner; session ending remains separate.",
+      "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -25937,12 +26105,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/SpaceAssignmentDestinationStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "10423903b300be66fab630cb5fbf9879e50216a4a13f0669073dc6710f6e5169",
-      "acknowledgedSourceHash": "10423903b300be66fab630cb5fbf9879e50216a4a13f0669073dc6710f6e5169",
+      "observedSourceHash": "cb125f85caea55d7c352dfe31bc169a8985c2d1def196fab19ce8027483c1698",
+      "acknowledgedSourceHash": "cb125f85caea55d7c352dfe31bc169a8985c2d1def196fab19ce8027483c1698",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the comment-frozen READY boundary for a Core-only destination-picker AppModel with honest local states and stable-ID selection; it has no executable declaration or behavior.",
+      "currentBehavior": "Implements the Core-only destination-picker presenter/AppModel with waiting, partial, stale, ready, authoritative-empty and bounded-failure states plus represented stable-Space-ID selection and generation-safe request replacement.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Assignment Destination Picker AppModel",
@@ -25972,15 +26140,16 @@
           "The model presents the full honest local state machine and cannot dispatch Assign/Clear or Space mutation"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation. Future user selection may target only a represented stable SpaceID and never creates an Item assignment intent. The slice does not freeze unspecified production selection-retention or clearing policy.",
+      "notes": "Ready presentation additionally requires isCompleteForQuery, so an incoherent ready-but-incomplete snapshot fails closed. Selection remains presentation-only and defines no Item assignment or retention policy.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -26328,12 +26497,12 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceAssignmentDestinationStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "506117fed436a09ac1fbd6278f4b6f8ab84232f93122d27e3bf741e721cf6e73",
-      "acknowledgedSourceHash": "506117fed436a09ac1fbd6278f4b6f8ab84232f93122d27e3bf741e721cf6e73",
+      "observedSourceHash": "a56c00d0420d50d1831c1bfc919ee888628fa78f619f8ab7f7f43bb1dc5d2f53",
+      "acknowledgedSourceHash": "a56c00d0420d50d1831c1bfc919ee888628fa78f619f8ab7f7f43bb1dc5d2f53",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the comment-frozen READY boundary for a thin target-app runtime adapter from typed placement scope to the Account-bound destination watch; it has no executable declaration or behavior.",
+      "currentBehavior": "Implements the thin target-app adapter from typed ItemPlacementScope to the Account-bound runtime destination stream without caching, filtering, or reinterpreting completeness.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Assignment Destination Staging Runtime Adapter",
@@ -26363,15 +26532,16 @@
           "The adapter can only open the exact typed-scope read stream and preserves cancellation"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation for one thin composition adapter. It exposes no database, SQL, provider, Account rebinding, completeness injection, mutation or MCP boundary.",
+      "notes": "Executable thin composition adapter exposes no database, SQL, provider, Account rebinding, completeness injection, mutation or MCP boundary.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -27049,12 +27219,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "6b56658bdf353eb19cfae79c2d9b94c6b41806bf69f13ee0c2746982ae2afff6",
-      "acknowledgedSourceHash": "6b56658bdf353eb19cfae79c2d9b94c6b41806bf69f13ee0c2746982ae2afff6",
+      "observedSourceHash": "be763bf866f37a80499e868a55805bd926f859401680ddaf382f94834b150f80",
+      "acknowledgedSourceHash": "be763bf866f37a80499e868a55805bd926f859401680ddaf382f94834b150f80",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores, Project and Client archive stores and their read/operation streams behind one close-aware lease gate without implementing session ending.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; provider observations and subscriptions drain before database close without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -27090,7 +27260,8 @@
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
       "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
@@ -30715,12 +30886,12 @@
           "path": "LedgeriOS/LedgerTargetApp/SpaceAssignmentDestinationStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "a07520760bcf323c59def6167977f218c1dc006a587090fbcf112ef56f385745",
-      "acknowledgedSourceHash": "a07520760bcf323c59def6167977f218c1dc006a587090fbcf112ef56f385745",
+      "observedSourceHash": "748a9f1970fb41edc2046a532fb9fae6940b3589fad915c0a6b6c0799556246b",
+      "acknowledgedSourceHash": "748a9f1970fb41edc2046a532fb9fae6940b3589fad915c0a6b6c0799556246b",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the comment-frozen READY boundary for an isolated staging destination picker showing honest local state and stable-ID selection; it has no executable declaration or behavior.",
+      "currentBehavior": "Renders the isolated staging Space destination picker entirely from presenter state and forwards only represented stable-Space-ID selection.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Assignment Destination Staging Picker",
@@ -30750,15 +30921,16 @@
           "The view renders only tested state and forwards represented stable-ID selection without independent filtering, state semantics or mutation affordance; builds are not behavioral rendering proof"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation. The future staging view is a thin renderer over executable presenter/AppModel state: browse canonical active same-scope destinations and select only a represented stable SpaceID. It defines no final production selection-retention policy and has no Item picker, Save/Assign/Clear, Space editor/archive, production route or MCP.",
+      "notes": "The thin staging renderer has no Item picker, Save/Assign/Clear, Space editor/archive, production route or MCP, and does not define final production selection-retention policy.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -38906,12 +39078,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceAssignmentDestinationStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "295b1ef902e008b12bd81d16795cd490a56792d239c60285081035e6179c50af",
-      "acknowledgedSourceHash": "295b1ef902e008b12bd81d16795cd490a56792d239c60285081035e6179c50af",
+      "observedSourceHash": "19a47b978be8e7c5b8ccf96fa1e9f9abfcb4677b9dee022be637bc5d7ae5ea75",
+      "acknowledgedSourceHash": "19a47b978be8e7c5b8ccf96fa1e9f9abfcb4677b9dee022be637bc5d7ae5ea75",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the comment-frozen READY test boundary for destination-picker AppModel state and selection; it has no executable test declaration or evidence.",
+      "currentBehavior": "Exercises every destination-picker presentation state, ready/completeness coherence, represented-ID selection, request replacement, cancellation, late prior-request rejection, and bounded failures.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Assignment Destination Picker AppModel Tests",
@@ -38941,15 +39113,16 @@
           "Future tests must prove honest presenter states and represented stable-ID selection with zero mutation surface without freezing unspecified production retention policy"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation. No future AppModel behavior is marked passed; tests must be ordinary imports and prove literal reciprocal state/selection ownership plus permanent mutation/MCP exclusions.",
+      "notes": "Executable Core-only tests prove literal reciprocal state/selection behavior and mutation/MCP exclusions without claiming final production selection retention.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -40333,12 +40506,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceAssignmentDestinationPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "83dfb2b2de07653f2f083587715b886eea7c82b08d67f2e82b78e50963104b37",
-      "acknowledgedSourceHash": "83dfb2b2de07653f2f083587715b886eea7c82b08d67f2e82b78e50963104b37",
+      "observedSourceHash": "4f794045a52b084d65f872e2bbd82f024481b18171052da0ebd4dc3988e3ba03",
+      "acknowledgedSourceHash": "4f794045a52b084d65f872e2bbd82f024481b18171052da0ebd4dc3988e3ba03",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the comment-frozen READY test boundary for the Space assignment-destination PowerSync query; it has no executable test declaration or evidence.",
+      "currentBehavior": "Exercises exact Project/Inventory identities, encrypted production SQL, retained/public freshness baselines, delayed-row invalidation, membership loss/regain, malformed evidence, canonical ordering, restart, subscription release, cancellation, and runtime drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Assignment Destination PowerSync Query Tests",
@@ -40368,15 +40541,16 @@
           "Future tests must prove the frozen provider contract over real encrypted local storage without hosted or source claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation for reciprocal encrypted local-provider proof. It does not pass a future verification, create a schema row, contact Supabase/PowerSync, or reinterpret the existing read-contract evidence.",
+      "notes": "Fourteen focused provider tests include a real encrypted retained-epoch regression and production-shaped SQL/subscription lifecycle proof. Real hosted authenticated PowerSync remains intentionally unclaimed.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -43224,12 +43398,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "cfd89dc204f2dbba8f6467c9df02075d86e463bbb3e53ab2802dbf81a27977cf",
-      "acknowledgedSourceHash": "cfd89dc204f2dbba8f6467c9df02075d86e463bbb3e53ab2802dbf81a27977cf",
+      "observedSourceHash": "04723d610b546e97ea8473d870c3ca119f3062c32716d357eac9c9742bc7b2de",
+      "acknowledgedSourceHash": "04723d610b546e97ea8473d870c3ca119f3062c32716d357eac9c9742bc7b2de",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, Project archive operation drainage, restart, every partial-open fault, real PowerSync stream/provider drainage, deterministic terminal close and negative API boundaries.",
+      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachments, pending summary, archive operations, exact Project/Inventory Space destination facade identities, subscription/provider drainage, restart, partial-open faults, deterministic close, and negative API boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -43264,7 +43438,8 @@
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
       "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"

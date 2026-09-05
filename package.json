@@ -22,6 +22,7 @@
     "target:query-authority:test": "node --test scripts/tests/generate-target-query-logical-authority-crosswalk.test.mjs",
     "target:supabase:test:db": "npx --yes supabase@2.116.0 test db --local",
     "target:supabase:test:rpc": "node scripts/test-local-client-creation-rpc.mjs && node scripts/test-local-project-creation-rpc.mjs",
+    "target:supabase:test:space-assignment-destination-read": "node scripts/test-local-space-assignment-destination-read.mjs",
     "target:powersync:test": "swift test --package-path LedgeriOS --filter LedgerPowerSync",
     "target:mcp:test": "npm --prefix LedgerTargetMCP test",
     "source:query-reconciliation:generate": "node scripts/generate-source-query-reconciliation.mjs generate",

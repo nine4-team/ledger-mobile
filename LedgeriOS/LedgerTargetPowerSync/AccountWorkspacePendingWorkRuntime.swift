@@ -17,6 +17,7 @@ public enum LedgerPowerSyncLocalBootstrapStage: String, Equatable, Sendable {
     case attachmentStoreConstruction
     case pendingWorkQueryConstruction
     case budgetCategoryQueryConstruction
+    case spaceAssignmentDestinationQueryConstruction
     case runtimeConstruction
 }
 
@@ -65,6 +66,16 @@ protocol AccountWorkspaceBudgetCategoryQuerying: BudgetCategoryReferenceQuerying
 
 extension BudgetCategoryReferencePowerSyncQuery: AccountWorkspaceBudgetCategoryQuerying {}
 
+protocol AccountWorkspaceSpaceAssignmentDestinationQuerying:
+    SpaceAssignmentDestinationQuerying
+{
+    func cancelAndDrainWatches() async
+}
+
+extension SpaceAssignmentDestinationPowerSyncQuery:
+    AccountWorkspaceSpaceAssignmentDestinationQuerying
+{}
+
 enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
@@ -82,6 +93,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case clientDirectory
     case projectDirectory
     case budgetCategories
+    case spaceAssignmentDestinations
     case projectArchiveOperation
     case clientArchiveOperation
 }
@@ -142,6 +154,13 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             AccountID,
             @Sendable @escaping () -> Date
         ) throws -> any AccountWorkspaceBudgetCategoryQuerying
+    var makeSpaceAssignmentDestinationQuery:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            PrincipalID,
+            AccountID,
+            @Sendable @escaping () -> Date
+        ) throws -> any AccountWorkspaceSpaceAssignmentDestinationQuerying
     var makeLifecycleOwner:
         @Sendable (
             AccountWorkspaceRuntimeResources
@@ -241,6 +260,14 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
                 now: now
             )
         },
+        makeSpaceAssignmentDestinationQuery: { database, principalId, accountId, now in
+            SpaceAssignmentDestinationPowerSyncQuery(
+                database: database,
+                principalId: principalId,
+                accountId: accountId,
+                now: now
+            )
+        },
         makeLifecycleOwner: { AccountWorkspacePendingWorkRuntime(resources: $0) },
         finiteOperationCheckpoint: { _ in },
         streamOperationCheckpoint: { _ in },
@@ -256,6 +283,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
     case attachmentStoreConstructed
     case pendingWorkQueryConstructed
     case budgetCategoryQueryConstructed
+    case spaceAssignmentDestinationQueryConstructed
     case lifecycleOwnerConstructed
     case derivedResourcesReleased
     case vaultReleased
@@ -276,6 +304,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let attachmentStore: any AccountWorkspaceAttachmentStoring
     let pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing
     let budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying
+    let spaceAssignmentDestinationQuery:
+        any AccountWorkspaceSpaceAssignmentDestinationQuerying
     let vault: AttachmentLocalByteVault
     let closeAttachmentDatabase: @Sendable () async throws -> Void
     let closeStructuredDatabase: @Sendable () async throws -> Void
@@ -298,6 +328,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         attachmentStore: any AccountWorkspaceAttachmentStoring,
         pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing,
         budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying,
+        spaceAssignmentDestinationQuery:
+            any AccountWorkspaceSpaceAssignmentDestinationQuerying,
         vault: AttachmentLocalByteVault,
         closeAttachmentDatabase: @Sendable @escaping () async throws -> Void,
         closeStructuredDatabase: @Sendable @escaping () async throws -> Void,
@@ -352,6 +384,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         self.attachmentStore = attachmentStore
         self.pendingWorkQuery = pendingWorkQuery
         self.budgetCategoryQuery = budgetCategoryQuery
+        self.spaceAssignmentDestinationQuery = spaceAssignmentDestinationQuery
         self.vault = vault
         self.closeAttachmentDatabase = closeAttachmentDatabase
         self.closeStructuredDatabase = closeStructuredDatabase
@@ -543,6 +576,32 @@ actor AccountWorkspacePendingWorkRuntime {
         )
     }
 
+    func startSpaceAssignmentDestinationWatch(
+        id: UUID,
+        scope: ItemPlacementScope,
+        continuation:
+            AsyncThrowingStream<SpaceAssignmentDestinationDirectorySnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .spaceAssignmentDestinations,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                do {
+                    return resources.spaceAssignmentDestinationQuery.watchEligibleDestinations(
+                        try SpaceAssignmentDestinationRequest(
+                            accountId: resources.accountId,
+                            scope: scope
+                        )
+                    )
+                } catch {
+                    return AsyncThrowingStream { $0.finish(throwing: error) }
+                }
+            }
+        )
+    }
+
     func startProjectArchiveOperationWatch(
         id: UUID,
         operationId: OperationID,
@@ -683,6 +742,7 @@ actor AccountWorkspacePendingWorkRuntime {
         }
 
         await resources.budgetCategoryQuery.cancelAndDrainWatches()
+        await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
 
         var attachmentFailed = false
         var structuredFailed = false
@@ -774,6 +834,8 @@ public enum LedgerPowerSyncLocalBootstrap {
         var attachmentStore: (any AccountWorkspaceAttachmentStoring)?
         var pendingWorkQuery: (any AccountWorkspacePendingWorkSummarizing)?
         var budgetCategoryQuery: (any AccountWorkspaceBudgetCategoryQuerying)?
+        var spaceAssignmentDestinationQuery:
+            (any AccountWorkspaceSpaceAssignmentDestinationQuerying)?
         var runtimeResources: AccountWorkspaceRuntimeResources?
 
         do {
@@ -876,12 +938,24 @@ public enum LedgerPowerSyncLocalBootstrap {
             budgetCategoryQuery = madeBudgetCategoryQuery
             dependencies.lifecycleEvent(.budgetCategoryQueryConstructed)
 
+            stage = .spaceAssignmentDestinationQueryConstruction
+            let madeSpaceAssignmentDestinationQuery =
+                try dependencies.makeSpaceAssignmentDestinationQuery(
+                    openedStructured.database,
+                    principalId,
+                    accountId,
+                    dependencies.now
+                )
+            spaceAssignmentDestinationQuery = madeSpaceAssignmentDestinationQuery
+            dependencies.lifecycleEvent(.spaceAssignmentDestinationQueryConstructed)
+
             let madeRuntimeResources = AccountWorkspaceRuntimeResources(
                 structuredDatabase: openedStructured.database,
                 attachmentDatabase: openedAttachment.database,
                 attachmentStore: madeAttachmentStore,
                 pendingWorkQuery: madePendingWorkQuery,
                 budgetCategoryQuery: madeBudgetCategoryQuery,
+                spaceAssignmentDestinationQuery: madeSpaceAssignmentDestinationQuery,
                 vault: openedVault,
                 closeAttachmentDatabase: openedAttachment.closePreservingData,
                 closeStructuredDatabase: openedStructured.closePreservingData,
@@ -902,10 +976,12 @@ public enum LedgerPowerSyncLocalBootstrap {
         } catch {
             let hadDerivedResources =
                 runtimeResources != nil
+                || spaceAssignmentDestinationQuery != nil
                 || budgetCategoryQuery != nil
                 || pendingWorkQuery != nil
                 || attachmentStore != nil
             runtimeResources = nil
+            spaceAssignmentDestinationQuery = nil
             budgetCategoryQuery = nil
             pendingWorkQuery = nil
             attachmentStore = nil

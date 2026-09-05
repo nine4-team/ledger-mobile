@@ -105,3 +105,46 @@ streams:
         WHERE principal.auth_user_id = auth.user_id()
         AND membership.state = 'active'
       )
+
+  space_assignment_project_destinations:
+    query: |
+      SELECT
+        space.id,
+        space.account_id,
+        space.scope_kind,
+        space.project_id,
+        space.display_name,
+        space.lifecycle,
+        space.revision
+      FROM spike_spaces AS space
+      JOIN spike_account_memberships AS membership
+        ON membership.account_id = space.account_id
+      JOIN spike_principals AS principal
+        ON principal.id = membership.principal_id
+      WHERE space.scope_kind = 'project'
+      AND space.project_id = subscription.parameter('project_id')
+      AND space.lifecycle = 'active'
+      AND principal.auth_user_id = auth.user_id()
+      AND membership.state = 'active'
+
+  space_assignment_business_inventory_destinations:
+    query: |
+      SELECT
+        space.id,
+        space.account_id,
+        space.scope_kind,
+        space.project_id,
+        space.display_name,
+        space.lifecycle,
+        space.revision
+      FROM spike_spaces AS space
+      JOIN spike_account_memberships AS membership
+        ON membership.account_id = space.account_id
+      JOIN spike_principals AS principal
+        ON principal.id = membership.principal_id
+      WHERE space.scope_kind = 'business_inventory'
+      AND space.account_id = subscription.parameter('account_id')
+      AND space.project_id IS NULL
+      AND space.lifecycle = 'active'
+      AND principal.auth_user_id = auth.user_id()
+      AND membership.state = 'active'

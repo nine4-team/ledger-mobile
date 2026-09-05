@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T17:24:29.608Z",
+  "generatedFromManifestSync": "2026-09-05T18:55:44.606Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 936,
-    "targetRelevantSurfaces": 674,
+    "surfaces": 939,
+    "targetRelevantSurfaces": 677,
     "batches": 34,
-    "productScopeSurfaces": 765,
+    "productScopeSurfaces": 768,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -37,8 +37,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 494,
-      "targetRelevantSurfaceCount": 340
+      "surfaceCount": 497,
+      "targetRelevantSurfaceCount": 343
     },
     {
       "path": "docs/specs/proto-item-capture.md",
@@ -55,8 +55,8 @@
         "M0-REPORTING-SEARCH-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 553,
-      "targetRelevantSurfaceCount": 370
+      "surfaceCount": 556,
+      "targetRelevantSurfaceCount": 373
     },
     {
       "path": "docs/specs/client-identity-and-project-transfers.md",
@@ -103,8 +103,8 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 175,
-      "targetRelevantSurfaceCount": 169
+      "surfaceCount": 178,
+      "targetRelevantSurfaceCount": 172
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -2823,8 +2823,8 @@
       "title": "Spaces, review, and work queues",
       "scope": "product",
       "rationale": "Space, assignment, review, and work-queue behavior is governed by the Space/Item specs and must remain compatible with the new one-Item provenance and accounting lifecycle.",
-      "surfaceCount": 65,
-      "targetRelevantSurfaceCount": 61,
+      "surfaceCount": 68,
+      "targetRelevantSurfaceCount": 64,
       "authorities": [
         {
           "path": "docs/specs/inventory-item-invoicing-lifecycle.md",
@@ -2888,6 +2888,9 @@
         }
       ],
       "surfaceIds": [
+        "CONFIG-048B775BE4E4",
+        "CONFIG-5F4C2A8274C3",
+        "CONFIG-DC77B9F609A7",
         "FILE-42005FEF8FD8",
         "MCPMOD-155A4AB80AC9",
         "MCPMOD-D391DC704D1F",

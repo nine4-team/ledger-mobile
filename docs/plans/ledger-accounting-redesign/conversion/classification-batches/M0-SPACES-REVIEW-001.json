@@ -4,7 +4,8 @@
   "reviewedAt": "2026-08-31",
   "evidence": [
     "EVID-CAPABILITY-SPACES-REVIEW-001",
-    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
   ],
   "surfaces": [
     {
@@ -2180,18 +2181,19 @@
     {
       "id": "SWIFT-0A528DE84879",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "d6230e3b529e2488b8c7193af42a64167d48f76380c8d8d923eacabfdd174faf",
-      "currentBehavior": "Contains only the comment-frozen READY boundary for a module-internal PowerSync implementation of the verified Space assignment-destination query; it has no executable declaration or behavior.",
+      "acknowledgeSourceHash": "efb63c076e2a41322eaa42f1fc2e6239a10b0106a8e608e8917a85deef911425",
+      "currentBehavior": "Implements the encrypted local Space destination query, exact Project/Inventory on-demand subscription ownership, retained/public epoch freshness baseline, fail-closed row decoding, fresh-read causality, membership retraction, canonical projection, and deterministic cancellation/drainage.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY reservation. Future implementation consumes SWIFT-164554FA1456/TQUERY-A95F4BE0B9D8 unchanged, reads only synchronized active same-scope Space rows behind active local membership, establishes completeness only from its exact Project-or-Inventory Sync Stream subscription, fails closed, unsubscribes and drains every observer. No executable provider, schema, RLS, Sync, Item/Space mutation, hosted or production behavior exists at READY.",
+      "notes": "Local target-only implementation consumes SWIFT-164554FA1456/TQUERY-A95F4BE0B9D8 unchanged. PowerSync 1.16.1 retained subscription epochs are inspected before subscribe so cached metadata cannot manufacture readiness; row/status observers and the sole subscription owner drain before database close. Hosted authenticated Sync proof remains TEST-012.",
       "target": {
         "owner": "Space Assignment Destination PowerSync Query",
         "surfaces": ["SpaceAssignmentDestinationPowerSyncQuery", "exact Account/scope row observation", "typed Project/Inventory subscription and first-sync completeness", "provider unsubscribe, cancellation and drain"],
@@ -2210,13 +2212,13 @@
     {
       "id": "TEST-33BFA84BCBB2",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "83dfb2b2de07653f2f083587715b886eea7c82b08d67f2e82b78e50963104b37",
-      "currentBehavior": "Contains only the comment-frozen READY test boundary for the Space assignment-destination PowerSync query; it has no executable test declaration or evidence.",
+      "acknowledgeSourceHash": "4f794045a52b084d65f872e2bbd82f024481b18171052da0ebd4dc3988e3ba03",
+      "currentBehavior": "Exercises exact Project/Inventory identities, encrypted production SQL, retained/public freshness baselines, delayed-row invalidation, membership loss/regain, malformed evidence, canonical ordering, restart, subscription release, cancellation, and runtime drainage.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
-      "notes": "Comment-only READY reservation for reciprocal encrypted local-provider proof. It does not pass a future verification, create a schema row, contact Supabase/PowerSync, or reinterpret the existing read-contract evidence.",
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Fourteen focused provider tests include a real encrypted retained-epoch regression and production-shaped SQL/subscription lifecycle proof. Real hosted authenticated PowerSync remains intentionally unclaimed.",
       "target": {
         "owner": "Space Assignment Destination PowerSync Query Tests",
         "surfaces": ["real encrypted local database fixtures", "six-axis reciprocal row/readiness matrix", "restart, rejection, cancellation and drain fixtures"],
@@ -2235,13 +2237,13 @@
     {
       "id": "SWIFT-62E2D7E9B40E",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "10423903b300be66fab630cb5fbf9879e50216a4a13f0669073dc6710f6e5169",
-      "currentBehavior": "Contains only the comment-frozen READY boundary for a Core-only destination-picker AppModel with honest local states and stable-ID selection; it has no executable declaration or behavior.",
+      "acknowledgeSourceHash": "cb125f85caea55d7c352dfe31bc169a8985c2d1def196fab19ce8027483c1698",
+      "currentBehavior": "Implements the Core-only destination-picker presenter/AppModel with waiting, partial, stale, ready, authoritative-empty and bounded-failure states plus represented stable-Space-ID selection and generation-safe request replacement.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
-      "notes": "Comment-only READY reservation. Future user selection may target only a represented stable SpaceID and never creates an Item assignment intent. The slice does not freeze unspecified production selection-retention or clearing policy.",
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Ready presentation additionally requires isCompleteForQuery, so an incoherent ready-but-incomplete snapshot fails closed. Selection remains presentation-only and defines no Item assignment or retention policy.",
       "target": {
         "owner": "Space Assignment Destination Picker AppModel",
         "surfaces": ["SpaceAssignmentDestinationStagingExercise", "executable waiting/partial/stale/ready/authoritative-empty/failure presenter state", "represented stable SpaceID selection"],
@@ -2260,13 +2262,13 @@
     {
       "id": "TEST-0126A06E52D0",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "295b1ef902e008b12bd81d16795cd490a56792d239c60285081035e6179c50af",
-      "currentBehavior": "Contains only the comment-frozen READY test boundary for destination-picker AppModel state and selection; it has no executable test declaration or evidence.",
+      "acknowledgeSourceHash": "19a47b978be8e7c5b8ccf96fa1e9f9abfcb4677b9dee022be637bc5d7ae5ea75",
+      "currentBehavior": "Exercises every destination-picker presentation state, ready/completeness coherence, represented-ID selection, request replacement, cancellation, late prior-request rejection, and bounded failures.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
-      "notes": "Comment-only READY reservation. No future AppModel behavior is marked passed; tests must be ordinary imports and prove literal reciprocal state/selection ownership plus permanent mutation/MCP exclusions.",
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Executable Core-only tests prove literal reciprocal state/selection behavior and mutation/MCP exclusions without claiming final production selection retention.",
       "target": {
         "owner": "Space Assignment Destination Picker AppModel Tests",
         "surfaces": ["six-state executable presentation fixtures", "represented stable-ID selection fixtures", "request replacement and cancellation fixtures"],
@@ -2285,13 +2287,13 @@
     {
       "id": "SWIFT-698CCC538675",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "506117fed436a09ac1fbd6278f4b6f8ab84232f93122d27e3bf741e721cf6e73",
-      "currentBehavior": "Contains only the comment-frozen READY boundary for a thin target-app runtime adapter from typed placement scope to the Account-bound destination watch; it has no executable declaration or behavior.",
+      "acknowledgeSourceHash": "a56c00d0420d50d1831c1bfc919ee888628fa78f619f8ab7f7f43bb1dc5d2f53",
+      "currentBehavior": "Implements the thin target-app adapter from typed ItemPlacementScope to the Account-bound runtime destination stream without caching, filtering, or reinterpreting completeness.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
-      "notes": "Comment-only READY reservation for one thin composition adapter. It exposes no database, SQL, provider, Account rebinding, completeness injection, mutation or MCP boundary.",
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Executable thin composition adapter exposes no database, SQL, provider, Account rebinding, completeness injection, mutation or MCP boundary.",
       "target": {
         "owner": "Space Assignment Destination Staging Runtime Adapter",
         "surfaces": ["typed ItemPlacementScope forwarding", "Account-bound destination stream", "cancellation-preserving adapter"],
@@ -2310,13 +2312,13 @@
     {
       "id": "SWIFT-A1156933E12E",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "a07520760bcf323c59def6167977f218c1dc006a587090fbcf112ef56f385745",
-      "currentBehavior": "Contains only the comment-frozen READY boundary for an isolated staging destination picker showing honest local state and stable-ID selection; it has no executable declaration or behavior.",
+      "acknowledgeSourceHash": "748a9f1970fb41edc2046a532fb9fae6940b3589fad915c0a6b6c0799556246b",
+      "currentBehavior": "Renders the isolated staging Space destination picker entirely from presenter state and forwards only represented stable-Space-ID selection.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
-      "notes": "Comment-only READY reservation. The future staging view is a thin renderer over executable presenter/AppModel state: browse canonical active same-scope destinations and select only a represented stable SpaceID. It defines no final production selection-retention policy and has no Item picker, Save/Assign/Clear, Space editor/archive, production route or MCP.",
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "The thin staging renderer has no Item picker, Save/Assign/Clear, Space editor/archive, production route or MCP, and does not define final production selection-retention policy.",
       "target": {
         "owner": "Space Assignment Destination Staging Picker",
         "surfaces": ["presenter-driven destination presentation", "canonical destination rows", "represented stable SpaceID picker action"],
@@ -2330,6 +2332,81 @@
       "verification": {
         "tests": ["Executable presenter/AppModel tests, exact source-boundary checks and both target staging builds"],
         "acceptance": ["The view renders only tested state and forwards represented stable-ID selection without independent filtering, state semantics or mutation affordance; builds are not behavioral rendering proof"]
+      }
+    },
+    {
+      "id": "CONFIG-048B775BE4E4",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7b6aba84a97dc513504479677112ab79f842ac1886e53ab47e2bec1b97cc166d",
+      "currentBehavior": "Adds the minimal spike_spaces target relation with exact Project-or-Business-Inventory scope shape, same-Account Project foreign key, canonical lifecycle/revision/name constraints, query-aligned indexes, SELECT-only authenticated grant, and active-membership/active-row RLS.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-004"],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Additive isolated local schema only. It defines no Space or Item mutation, imports no source data, and grants no hosted schema or migration authority.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query",
+        "surfaces": ["spike_spaces destination read schema", "exact scope and same-Account constraints", "SELECT-only active-member RLS", "query-aligned indexes"],
+        "securityRequirements": ["Authenticated callers receive SELECT only and can enumerate only active rows in Accounts where signed identity has active membership"],
+        "syncRequirements": ["Columns align exactly with the minimal active Space destination Sync Stream projection"]
+      },
+      "migration": {
+        "rule": "Create the target relation additively with synthetic local fixtures only; perform no Firebase export/import or source-data transform.",
+        "reconciliation": ["Runnable pgTAP and Data API tests reconcile constraints, RLS visibility, and write denial"]
+      },
+      "verification": {
+        "tests": ["supabase/tests/space_assignment_destination_picker.test.sql", "scripts/test-local-space-assignment-destination-read.mjs"],
+        "acceptance": ["All 34 Space assertions, local Data API security cases, and zero-error database lint pass"]
+      }
+    },
+    {
+      "id": "CONFIG-DC77B9F609A7",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "7b3667e1f173344218f3bba16de9ebc242f704aff678f07804107767749938bb",
+      "currentBehavior": "Runs 34 pgTAP assertions for the Space destination schema, conditional Project scope, same-Account identity, indexes, grants, positive active-member visibility, negative anonymous/revoked/cross-Account/archived visibility, and direct-write denial.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Future-tolerant assertions require the frozen columns/invariants without forbidding later authorized schema evolution or mutation objects globally.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": ["Space destination schema and RLS pgTAP matrix"],
+        "securityRequirements": ["Positive and negative cases execute under synthetic signed identities and prove SELECT-only least privilege"],
+        "syncRequirements": ["Schema and lookup assertions match the exact Project/Inventory read projection"]
+      },
+      "migration": {
+        "rule": "Use transaction-scoped synthetic target rows and roll them back; load no source export.",
+        "reconciliation": ["Every schema/security requirement owns at least one direct assertion"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test"],
+        "acceptance": ["All 34 assertions pass in a clean isolated local Supabase reset"]
+      }
+    },
+    {
+      "id": "CONFIG-5F4C2A8274C3",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "0bcecd88a17e181e454333dcadfd3b1de74877d465fd1574f8342afa0eec9f13",
+      "currentBehavior": "Runs a localhost-only disposable Supabase Data API matrix proving active same-Account Project/Inventory Space reads plus anonymous, revoked, cross-Account, archived, and direct-write denial.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "The runner rejects non-local HTTP endpoints and uses synthetic identities only; it creates no hosted resource and performs no production access.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": ["local Space destination Data API authorization matrix"],
+        "securityRequirements": ["Fail closed unless the Supabase URL is loopback and prove both row non-enumeration and direct write denial"],
+        "syncRequirements": ["Exercise the same minimal server projection later consumed by exact on-demand Sync Streams"]
+      },
+      "migration": {
+        "rule": "Seed and remove only synthetic local target rows; perform no hosted or source migration action.",
+        "reconciliation": ["Data API results match the pgTAP RLS expectations for each signed role/state"]
+      },
+      "verification": {
+        "tests": ["npm run target:supabase:test:space-destinations"],
+        "acceptance": ["The local positive/negative matrix passes and non-loopback configuration is refused"]
       }
     }
   ]

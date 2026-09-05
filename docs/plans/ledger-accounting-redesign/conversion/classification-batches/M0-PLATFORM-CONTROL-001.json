@@ -12,14 +12,15 @@
     "EVID-TARGET-QUERY-PORT-INVENTORY-001",
     "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
     "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
-    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
   ],
   "surfaces": [
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
+      "acknowledgeSourceHash": "908fa8281ff9a688c7bdf0d0a387062c160f3e768ab609f464155c57bceb241b",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -29,9 +30,10 @@
         "EVID-CONTRACT-CATALOG-001",
         "EVID-TARGET-QUERY-PORT-INVENTORY-001",
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
-        "EVID-SOURCE-QUERY-RECONCILIATION-001"
+        "EVID-SOURCE-QUERY-RECONCILIATION-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
       ],
-  "notes": "CI definition remains claimed by target-environment-isolation. Run 33939963766 proved conversion and disposable-local-Supabase jobs but its macOS job timed out after four independent serialized PowerSync/SQLCipher suites advanced concurrently and stopped emitting completions. Twenty repeated local parallel suites and one explicit nonparallel 403-test suite passed. The target job now uses Swift Testing's process-wide --no-parallel mode for cross-suite native database isolation while focused runtime tests retain the required internal concurrency coverage. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Corrected immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. Run 33939963766 proved conversion and disposable-local-Supabase jobs but its macOS job timed out after four independent serialized PowerSync/SQLCipher suites advanced concurrently and stopped emitting completions. Twenty repeated local parallel suites and one explicit nonparallel 403-test suite passed. The target job now uses Swift Testing's process-wide --no-parallel mode for cross-suite native database isolation while focused runtime tests retain the required internal concurrency coverage. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; the Space destination slice adds only its localhost Data API read/denial runner to that existing job. No hosted resource, credential, export, deployment or cutover step exists. Corrected immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
@@ -117,7 +119,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "acknowledgeSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -172,8 +174,8 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "51404d6282d659bb452e8ca4d356159554459bd9f3d6b398ff490fb4acf14f8e",
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, isolated LedgerTargetPowerSync package-product dependencies, implemented Project archive and comment-only Client-archive READY Swift leaves.",
+      "acknowledgeSourceHash": "3e74f0b64bb3042db6035bcb13f518ce1dabe2dcb34781ac03af25a118f13aba",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -306,8 +308,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its fixed unprovisioned environment, permanently displays the local-only banner, hosts Project Setup plus Project/Client browsing and both Core-only archive flows, and drains archive and browsing lifecycles before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "5b0c969c8b83f93b89fef82446c7245420297ec88f0ce308b7f266cd417f4ccb",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client flows, and the local Space destination picker; it drains all owned observations before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -358,7 +360,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "acknowledgeSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",

@@ -117,6 +117,7 @@ private struct OfflineProviderSpikeView: View {
             }
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
+        SpaceAssignmentDestinationStagingExerciseView(model: model.spaceDestinations)
         ClientBrowsingStagingExerciseView(
             model: model.clientBrowser,
             archive: model.clientArchive
@@ -149,6 +150,8 @@ private final class OfflineClientSpikeModel {
     let projectBrowser: ProjectBrowsingStagingExercise
     let projectArchive: ProjectArchiveBrowserStagingExercise
     let projectSetup: ProjectSetupStagingExercise
+    let spaceDestinations: SpaceAssignmentDestinationStagingExercise
+    private let syntheticSpaceScope: ItemPlacementScope
 
     init() {
         let accountId = try! AccountID(validating: "account-primary")
@@ -212,6 +215,8 @@ private final class OfflineClientSpikeModel {
             },
             now: Date.init
         )
+        spaceDestinations = SpaceAssignmentDestinationStagingExercise(accountId: accountId)
+        syntheticSpaceScope = .project(try! ProjectID(validating: "project-primary"))
     }
 
     var canCreate: Bool {
@@ -234,6 +239,10 @@ private final class OfflineClientSpikeModel {
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
             projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
+            await spaceDestinations.open(
+                scope: syntheticSpaceScope,
+                runtime: SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)
+            )
             await clientBrowser.start(
                 runtime: ClientBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
@@ -254,6 +263,7 @@ private final class OfflineClientSpikeModel {
             await clientBrowser.stop()
             await projectBrowser.stop()
             projectSetup.stop()
+            await spaceDestinations.stop()
             openedRuntime = nil
             try await runtime.close()
             self.runtime = nil
@@ -274,6 +284,7 @@ private final class OfflineClientSpikeModel {
         await clientBrowser.stop()
         await projectBrowser.stop()
         projectSetup.stop()
+        await spaceDestinations.stop()
         if let openedRuntime {
             try? await openedRuntime.close()
         }

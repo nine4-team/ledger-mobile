@@ -277,6 +277,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 (.attachmentStoreConstruction, .succeeded, .succeeded),
                 (.pendingWorkQueryConstruction, .succeeded, .succeeded),
                 (.budgetCategoryQueryConstruction, .succeeded, .succeeded),
+                (.spaceAssignmentDestinationQueryConstruction, .succeeded, .succeeded),
                 (.runtimeConstruction, .succeeded, .succeeded),
             ]
 
@@ -486,7 +487,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all six streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all seven streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -520,16 +521,20 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             accountId: context.accountId,
             projectId: ProjectID(validating: "project-lifecycle")
         )
+        let spaceScope = ItemPlacementScope.project(
+            try ProjectID(validating: "project-lifecycle")
+        )
         let streams: [Any] = [
             runtime.watchClient(clientRequest),
             runtime.watchProject(projectRequest),
             runtime.watchClients(),
             runtime.watchProjects(),
             runtime.watchBudgetCategories(),
+            runtime.watchSpaceAssignmentDestinations(scope: spaceScope),
             runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(6)
+        await streamCounter.waitUntilEntered(7)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -537,6 +542,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .clientDirectory,
             .projectDirectory,
             .budgetCategories,
+            .spaceAssignmentDestinations,
             .projectArchiveOperation,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
@@ -575,6 +581,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchClient(clientRequest))
         try await Self.expectClosed(runtime.watchProject(projectRequest))
         try await Self.expectClosed(runtime.watchBudgetCategories())
+        try await Self.expectClosed(runtime.watchSpaceAssignmentDestinations(scope: spaceScope))
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         await finiteGate.release()
         _ = try await finite.value
@@ -623,6 +630,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchClient(clientRequest))
         try await Self.expectClosed(runtime.watchProject(projectRequest))
         try await Self.expectClosed(runtime.watchBudgetCategories())
+        try await Self.expectClosed(runtime.watchSpaceAssignmentDestinations(scope: spaceScope))
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         context.remove()
     }
@@ -846,10 +854,46 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         _ = runtime.watchClients()
         _ = runtime.watchProjects()
         _ = runtime.watchBudgetCategories()
+        _ = runtime.watchSpaceAssignmentDestinations(
+            scope: .project(try ProjectID(validating: "project-runtime"))
+        )
         _ = try await runtime.pendingUploadCount()
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.pendingWorkSummary()
         try await runtime.close()
+        context.remove()
+    }
+
+    @Test("Space destination facade binds Account and close cancels and drains its provider")
+    func spaceDestinationFacadeAndDrain() async throws {
+        let context = try RuntimeTestContext(suffix: "space-destination-facade")
+        let query = RuntimeSpaceDestinationQuery()
+        var dependencies = context.dependencies()
+        dependencies.makeSpaceAssignmentDestinationQuery = { _, _, _, _ in query }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let scope = ItemPlacementScope.project(
+            try ProjectID(validating: "project-runtime-space")
+        )
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchSpaceAssignmentDestinations(scope: scope) {}
+            } catch { }
+        }
+        for _ in 0..<2_000 {
+            if query.requests.count == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        let request = try #require(query.requests.first)
+        #expect(request.accountId == context.accountId)
+        #expect(request.scope == scope)
+
+        try await runtime.close()
+        await consumer.value
+        #expect(query.cancelAndDrainCount == 1)
+        #expect(query.terminationCount == 1)
+        try await Self.expectClosed(
+            runtime.watchSpaceAssignmentDestinations(scope: .businessInventory)
+        )
         context.remove()
     }
 
@@ -863,6 +907,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .attachmentStoreConstructed,
             .pendingWorkQueryConstructed,
             .budgetCategoryQueryConstructed,
+            .spaceAssignmentDestinationQueryConstructed,
             .lifecycleOwnerConstructed,
         ] {
             #expect(events.filter { $0 == event }.count == 1)
@@ -925,6 +970,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let makeStore = dependencies.makeAttachmentStore
         let makeQuery = dependencies.makePendingWorkQuery
         let makeBudgetCategoryQuery = dependencies.makeBudgetCategoryQuery
+        let makeSpaceAssignmentDestinationQuery =
+            dependencies.makeSpaceAssignmentDestinationQuery
 
         if stage == .databaseKeyLoad {
             dependencies.loadDatabaseKey = { _, _ in throw RuntimeInjectedFailure() }
@@ -980,6 +1027,14 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         } else {
             dependencies.makeBudgetCategoryQuery = makeBudgetCategoryQuery
         }
+        if stage == .spaceAssignmentDestinationQueryConstruction {
+            dependencies.makeSpaceAssignmentDestinationQuery = { _, _, _, _ in
+                throw RuntimeInjectedFailure()
+            }
+        } else {
+            dependencies.makeSpaceAssignmentDestinationQuery =
+                makeSpaceAssignmentDestinationQuery
+        }
         if stage == .runtimeConstruction {
             dependencies.makeLifecycleOwner = { _ in throw RuntimeInjectedFailure() }
         }
@@ -1022,6 +1077,35 @@ struct AccountWorkspacePendingWorkRuntimeTests {
 }
 
 private struct RuntimeInjectedFailure: Error {}
+
+private final class RuntimeSpaceDestinationQuery:
+    AccountWorkspaceSpaceAssignmentDestinationQuerying, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var recordedRequests: [SpaceAssignmentDestinationRequest] = []
+    private var drains = 0
+    private var terminations = 0
+    var requests: [SpaceAssignmentDestinationRequest] {
+        lock.withLock { recordedRequests }
+    }
+    var cancelAndDrainCount: Int { lock.withLock { drains } }
+    var terminationCount: Int { lock.withLock { terminations } }
+
+    func watchEligibleDestinations(
+        _ request: SpaceAssignmentDestinationRequest
+    ) -> AsyncThrowingStream<SpaceAssignmentDestinationDirectorySnapshot, Error> {
+        lock.withLock { recordedRequests.append(request) }
+        return AsyncThrowingStream { continuation in
+            continuation.onTermination = { [weak self] _ in
+                self?.lock.withLock { self?.terminations += 1 }
+            }
+        }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
+    }
+}
 
 private final class BlockingDrainBudgetCategoryQuery:
     AccountWorkspaceBudgetCategoryQuerying, @unchecked Sendable

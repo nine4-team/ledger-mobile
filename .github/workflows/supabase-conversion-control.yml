@@ -112,6 +112,7 @@ jobs:
         run: |
           npx --yes supabase@2.116.0 db lint --local --schema public,ledger_private --level warning --fail-on warning
           npm run target:supabase:test:db
+          npm run target:supabase:test:space-assignment-destination-read
           npm run target:supabase:test:rpc
 
       - name: Stop isolated local Supabase

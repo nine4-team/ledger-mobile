@@ -387,6 +387,7 @@ if (
     "watchOperation",
     "watchProject",
     "watchProjects",
+    "watchSpaceAssignmentDestinations",
   ];
   if (
     JSON.stringify([...publicRuntimeFunctions].sort()) !==
@@ -407,6 +408,18 @@ if (
     fail(
       "target_budget_category_watch_signature",
       "The public runtime must expose exactly one zero-argument, Account-bound budget-category watch.",
+    );
+  }
+
+  const spaceDestinationWatchSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+watchSpaceAssignmentDestinations\s*\(\s*scope:\s*ItemPlacementScope\s*\)\s*->\s*AsyncThrowingStream\s*<\s*SpaceAssignmentDestinationDirectorySnapshot\s*,\s*Error\s*>\s*\{/g,
+    ),
+  ];
+  if (spaceDestinationWatchSignatures.length !== 1) {
+    fail(
+      "target_space_destination_watch_signature",
+      "The public runtime must expose exactly one Account-bound typed placement-scope destination watch.",
     );
   }
 
@@ -570,6 +583,101 @@ if (
       "target_app_model_provider_contamination",
       "LedgerTargetAppModel contains a provider, SQL, credential, or endpoint token.",
     );
+  }
+
+  const spaceDestinationFiles = {
+    provider: path.join(powerSyncRoot, "SpaceAssignmentDestinationPowerSyncQuery.swift"),
+    providerTests: path.join(powerSyncTestRoot, "SpaceAssignmentDestinationPowerSyncQueryTests.swift"),
+    model: path.join(appModelRoot, "SpaceAssignmentDestinationStagingExercise.swift"),
+    modelTests: path.join(appModelTestRoot, "SpaceAssignmentDestinationStagingExerciseTests.swift"),
+    adapter: path.join(targetAppRoot, "SpaceAssignmentDestinationStagingRuntimeAdapter.swift"),
+    view: path.join(targetAppRoot, "SpaceAssignmentDestinationStagingExerciseView.swift"),
+  };
+  for (const filePath of Object.values(spaceDestinationFiles)) {
+    if (!fs.existsSync(filePath)) {
+      fail("target_space_destination_leaf_missing", relative(filePath));
+    }
+  }
+  if (Object.values(spaceDestinationFiles).every(fs.existsSync)) {
+    const provider = fs.readFileSync(spaceDestinationFiles.provider, "utf8");
+    const providerTests = fs.readFileSync(spaceDestinationFiles.providerTests, "utf8");
+    const model = fs.readFileSync(spaceDestinationFiles.model, "utf8");
+    const adapter = fs.readFileSync(spaceDestinationFiles.adapter, "utf8");
+    const view = fs.readFileSync(spaceDestinationFiles.view, "utf8");
+    for (const required of [
+      '"space_assignment_project_destinations"',
+      '"project_id": .string(projectId.rawValue)',
+      '"space_assignment_business_inventory_destinations"',
+      '"account_id": .string(accountId.rawValue)',
+      ".subscribe()",
+      "currentStatus.asFlow()",
+      "status.syncStreams != nil",
+      "status.forStream(stream: identity)",
+      "Self.map(status, stream: base)",
+      "status.forStream(stream: stream)",
+      "status.connected",
+      "baselineLastSyncedAt",
+      "SELECT local_params, last_synced_at",
+      "FROM ps_stream_subscriptions",
+      "JsonValue.self",
+      "TimeInterval(epoch) / 1_000_000",
+      "let baseline = [publicBaseline, retainedBaseline]",
+      "if subscription.baselineLastSyncedAt == nil",
+      "subscription.waitForFirstSync()",
+      "subscription.currentStatus()",
+      "subscription.observeStatus",
+      "epoch > $0",
+      "localReader.readRows(",
+      ".unsubscribe()",
+    ]) {
+      if (!provider.includes(required)) {
+        fail("target_space_destination_subscription_incomplete", required);
+      }
+    }
+    if (provider.includes("31_536_000") || provider.includes("Task { await owner.unsubscribe()")) {
+      fail(
+        "target_space_destination_persisted_sync_authority",
+        "Picker completeness must use current-process evidence and structurally drained subscription ownership.",
+      );
+    }
+    for (const required of [
+      "Retained internal exact-stream epoch cannot complete when public baseline is absent",
+      "INSERT INTO ps_stream_subscriptions",
+      "database.currentStatus.forStream(stream: identity) == nil",
+      "retained.baselineLastSyncedAt == 41",
+      "controlled.waitForFirstSyncCallCount == 0",
+    ]) {
+      if (!providerTests.includes(required)) {
+        fail("target_space_destination_retained_epoch_regression_missing", required);
+      }
+    }
+    if (/public\s+(?:final\s+)?class\s+SpaceAssignmentDestinationPowerSyncQuery/.test(provider)) {
+      fail("target_space_destination_provider_public", relative(spaceDestinationFiles.provider));
+    }
+    for (const state of ["waiting", "partial", "stale", "ready", "authoritativeEmpty", "failure"]) {
+      if (!model.includes(`case ${state}`)) {
+        fail("target_space_destination_presenter_state_missing", state);
+      }
+    }
+    for (const required of [
+      "runtime.watchSpaceAssignmentDestinations(scope: scope)",
+      "model.select(spaceId: row.id)",
+      "ForEach(model.rows, id: \\.id)",
+    ]) {
+      if (!`${adapter}\n${view}`.includes(required)) {
+        fail("target_space_destination_thin_ui_incomplete", required);
+      }
+    }
+    if (/\b(?:assign|clear|create|update|archive)(?:Space|Item)?\s*\(/i.test(`${model}\n${adapter}\n${view}`)) {
+      fail("target_space_destination_mutation_escape", "Picker leaves contain a mutation-like call.");
+    }
+    if (/MCP|Firebase|Firestore|Supabase|https?:\/\//i.test(`${model}\n${adapter}\n${view}`)) {
+      fail("target_space_destination_boundary_escape", "Picker presentation leaves cross a forbidden provider boundary.");
+    }
+    if (!stagingAppSource.includes("SpaceAssignmentDestinationStagingExerciseView") ||
+        !stagingAppSource.includes('ProjectID(validating: "project-primary")')) {
+      fail("target_space_destination_staging_missing", relative(stagingAppPath));
+    }
   }
   const runtimeAdapterPath = path.join(
     targetAppRoot,

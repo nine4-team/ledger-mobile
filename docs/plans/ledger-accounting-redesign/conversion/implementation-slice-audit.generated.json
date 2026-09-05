@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T17:24:29.608Z",
+  "generatedFromManifestSync": "2026-09-05T18:55:44.606Z",
   "totals": {
     "slices": 83,
-    "claimedTargetSurfaces": 252,
+    "claimedTargetSurfaces": 255,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 194
+    "implementationAdvancedTargetSurfaces": 203
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 8,
+    "implemented": 9,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -1027,9 +1027,12 @@
       "sliceId": "space-assignment-destination-powersync-picker",
       "title": "Browse and select active same-scope Space assignment destinations from one encrypted local workspace",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Space Assignment Destination Picker",
       "surfaceIds": [
+        "CONFIG-048B775BE4E4",
+        "CONFIG-5F4C2A8274C3",
+        "CONFIG-DC77B9F609A7",
         "SWIFT-0A528DE84879",
         "SWIFT-62E2D7E9B40E",
         "SWIFT-698CCC538675",

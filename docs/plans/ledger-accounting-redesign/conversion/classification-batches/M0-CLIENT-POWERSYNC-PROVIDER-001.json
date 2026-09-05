@@ -2,7 +2,7 @@
   "batchId": "M0-CLIENT-POWERSYNC-PROVIDER-001",
   "title": "Target Client creation Supabase and PowerSync provider slice",
   "reviewedAt": "2026-09-04",
-  "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+  "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-TARGET-ENVIRONMENT-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
   "surfaces": [
     {
       "id": "CONFIG-0C8B77A5FB08",
@@ -19,10 +19,10 @@
     {
       "id": "CONFIG-428FDE11BBE4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528",
-      "currentBehavior": "Defines edition-3 target Sync Streams for the authenticated Principal, active memberships and Accounts, Account-scoped Clients and Projects, visibility-filtered budget categories/allocations, and immutable operation results.",
+      "acknowledgeSourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8",
+      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"],
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
       "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation Sync Stream", "Account bootstrap Sync Stream", "Operation-result Sync Stream"], "securityRequirements": ["Every stream derives tenant scope from auth.user_id() through active membership"], "syncRequirements": ["Client identity and terminal operation evidence synchronize together without trusting client-authored scope"]},
       "migration": {"rule": "Deploy only to an isolated target environment after the vertical-spike gate authorizes it.", "reconciliation": ["Cross-account fixtures yield no Client or operation-result rows"]},
@@ -88,10 +88,10 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project/Project-archive/Client-archive commands, local-only optimistic aggregates and lifecycle overlays, immutable server results and pending-work observation journal.",
+      "acknowledgeSourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget categories/allocations, Space destination rows, existing command/optimistic state, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "Target provider layer only. Pending-work and Project/Client archive overlays remain local-only; primary ownership and hosted schema authority are unchanged.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync schema"], "securityRequirements": ["Command payload is insert-only and local operation state is never synchronized as authority"], "syncRequirements": ["Local columns align with streamed server rows while pending_operation_id remains local optimism evidence"]},
       "migration": {"rule": "Schema evolution remains isolated until compatibility testing closes A-004.", "reconciliation": ["Schema validates before database open"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["PowerSync schema validation succeeds and exact CRUD transaction shape is asserted"]}
@@ -121,10 +121,10 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes Client/Project creation and watches, Project and Client archive plus exact operation observation, Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close.",
+      "acknowledgeSourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior plus one typed Account-bound Space destination watch and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families, to the single Account-workspace lifecycle owner; session ending remains separate.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
       "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}

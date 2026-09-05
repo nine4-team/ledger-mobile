@@ -208,6 +208,40 @@ Space watch unless that public facade forwards it. The dossier now freezes
 and permits only one Account-bound typed-scope forwarding method through the
 existing tracked-stream lifecycle. No executable edit preceded this correction;
 independent narrow review returned GO with matching stable ID, hash and scope.
+Exact-head correction commit `9afda220` then passed conversion, local Supabase,
+complete target tests and both staging builds in immutable run `33980882831`.
+
+During executable implementation, the first staging build correctly failed
+because the two already-claimed `LedgerTargetApp` leaves were not yet members of
+the committed generated `LedgerTarget.xcodeproj`. The implementer stopped before
+regenerating that project or duplicating the types into an already-compiled
+file. The corrected boundary freezes shared generated surface
+`CONFIG-2EBA890AF767` at SHA-256
+`51404d6282d659bb452e8ca4d356159554459bd9f3d6b398ff490fb4acf14f8e`
+and permits only deterministic regeneration from the unchanged
+`LedgerTargetProject.yml` to compile those two claimed leaves. The target
+identity, platforms, dependencies, build settings and scheme must remain
+unchanged, `target-environment-isolation` retains primary ownership, and the
+Firebase source project remains excluded. Claimed-leaf implementation was
+already in progress when this generated-build dependency was discovered, but
+no generated-project or workaround edit preceded the correction. Independent
+narrow review recomputed the stable ID and hash, confirmed that the unchanged
+project specification recursively includes `LedgerTargetApp`, found exactly the
+two claimed picker leaves absent from the generated project, and returned GO:
+only deterministic `project.pbxproj` source-membership regeneration is needed.
+
+The complete conversion-control sequence then correctly refused the new
+package/workflow integration because the source-query reconciliation checker
+freezes both artifacts. The Space package had already authorized exactly one
+new local Data API command and exactly one invocation in the existing isolated
+Supabase CI job; neither change alters the 386-source-query authority. Before
+changing the checker, this correction therefore adds shared control surface
+`CONFIG-A8BD153106B8` at SHA-256
+`4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e`
+and permits only re-acknowledging those two exact integration fingerprints.
+Every query count, reviewed mapping, closed schema, lifecycle rule, historical
+checkpoint and fail-closed guard remains frozen. This is conversion-control
+bookkeeping, not a product query or an Inventory-domain feature.
 
 ## Hard Boundary
 

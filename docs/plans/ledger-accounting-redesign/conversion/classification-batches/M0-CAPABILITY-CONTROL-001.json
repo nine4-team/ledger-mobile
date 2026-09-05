@@ -20,12 +20,12 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, applies bounded classification batches, detects disappearance and live source drift, validates evidence requirements, product authority and vertical-slice dossiers, emits generated audits and enforces cumulative M0-M5 gates. It explicitly retains both inert archive READY markers and separately discovers the runnable Project-archive and Client-archive pgTAP replacements; the root run-all database command remains unchanged.",
+      "acknowledgeSourceHash": "2f7cf19eb6133a14961ad233d5620efab575a9d179ea512fec10dbcb8cbb049d",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination migration, pgTAP leaf and local Data API runner; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
       "verification": {
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
@@ -207,8 +207,8 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
+      "acknowledgeSourceHash": "5dcc19a95ecccd1b72a9be18e7e9d5353e3eaeadb98a204876d9aca1ae2b77a3",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map and byte-exact workflow including the isolated Space Data API read gate, permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -243,8 +243,8 @@
       },
       "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention; this changes test scheduling only and grants no runtime, physical/provider, hosted, production, migration, retirement or cutover authority."
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. The Space destination implementation later re-acknowledged only the exact package command and workflow fingerprints needed to run its isolated local Data API read check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority."
     },
     {
       "id": "CONFIG-40F01696B8A6",
