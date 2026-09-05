@@ -1,6 +1,6 @@
 # EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001 — Project Browsing Staging Application Flow
 
-- Status: implemented candidate; exact synchronized implementation CI pending
+- Status: verified
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -175,9 +175,12 @@ with no P0-P3 findings.
   `npm run target:staging:build:ios` — passed; and
 - `git diff --check` — passed.
 
-The slice is an implemented candidate only. Exact synchronized implementation
-commit CI is still required for `PBROWSEAPP-TEST-010`; verified promotion is not
-yet authorized.
+Exact synchronized implementation commit
+`547af4d70f007c5bafabc1548084fd0e441a7270` passed all three immutable jobs in
+GitHub Actions run `33954955566`: conversion control in 41 seconds, disposable
+local Supabase in 1 minute 36 seconds, and the isolated target environment in
+5 minutes 56 seconds. `PBROWSEAPP-TEST-010` passes and this evidence-only
+promotion may mark the slice verified.
 
 ## Explicit Exclusions
 
