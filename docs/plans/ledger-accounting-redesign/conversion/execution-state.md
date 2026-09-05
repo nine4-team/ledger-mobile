@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 300
+State version: 302
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-BROWSING-STAGING-APPLICATION-FLOW-VERIFIED-PROMOTION-CANDIDATE
+- Checkpoint: CLIENT-BROWSING-STAGING-APPLICATION-FLOW-REVIEWED-READY-AWAITING-EXACT-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,14 +34,14 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Whole-program completion remains approximately **12–16%**. Separately, 169
-  of 643 target-relevant surfaces (26.3%) are implemented or verified. The
+  of 649 target-relevant surfaces (26.0%) are implemented or verified. The
   broader percentage measures executable Supabase/PowerSync product behavior
   through rehearsal and cutover readiness, not document volume or provider-free
   contract count. The broad range is a readiness forecast, not an incremental
   progress counter; every checkpoint must report the exact surface numerator
   and completed user workflow instead of repeating the range alone.
-- The implementation tracker currently contains 271 status-bearing rows: 68
-  done, seven verified, six implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 272 status-bearing rows: 68
+  done, seven verified, six implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -69,6 +69,27 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
+- Registered six comment-only Client-browsing staging leaves, increasing the
+  exact target-relevant denominator from 643 to 649 without claiming executable
+  behavior. Current measures are 169/649 implemented-or-later (26.0%) and
+  465/649 mapped-or-later; the tracker now contains 272 status-bearing rows.
+  Read-only preflight returned GO only for a standalone local Client directory
+  and exact-detail staging browser over the existing two runtime watches. The
+  prepared boundary freezes a pure Core presenter/tests, Core-only AppModel/
+  tests, thin adapter, typed view, generated membership and exact shared
+  dependencies. It preserves provider order because canonical Client sorting is
+  unresolved, renders unknown rather than false zero before represented
+  evidence, and leaves Client creation's post-create confirmation unchanged.
+  Independent actual-diff review first caught two P2 control defects: stale
+  tracker denominators and a missing Client-directory semantic-evidence entry
+  in the product-authority crosswalk. Both were corrected, generated audits were
+  refreshed, and final re-review returned GO with no remaining P0-P3. Exact
+  immutable READY CI remains required before executable work. Related Projects,
+  sort/search/cards/routes, raw-name
+  input, mutation, provider/schema/RLS/Sync/MCP/Auth/hosted/Firebase/migration/
+  production/cutover remain excluded;
+  `EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001`.
+
 - Implemented the Project-browsing staging application candidate after exact
   comment-only READY commit `90874031` passed all three immutable jobs in run
   `33953298649`. Four claimed leaves now advance the exact implementation count
@@ -85,8 +106,9 @@ without modifying the running Firebase application before hard cutover.
   P0-P3. Exact synchronized implementation commit `547af4d7` then passed all
   three immutable jobs in run `33954955566`: conversion control in 41 seconds,
   disposable local Supabase in 1 minute 36 seconds, and the isolated target
-  environment in 5 minutes 56 seconds. This docs-only promotion candidate marks
-  the slice verified without changing executable behavior. Full Project shell,
+  environment in 5 minutes 56 seconds. Exact docs-only promotion `4b9aecae`
+  then passed all three immutable jobs in run `33955342320`, marking the slice
+  verified without changing executable behavior. Full Project shell,
   schema/RLS/Sync/MCP changes, hosted resources, Firebase, migration, production
   and cutover remain unadvanced;
   `EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001`.
@@ -4028,15 +4050,15 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit this exact docs-only verified promotion and require all three immutable
-jobs to pass on that commit. Then select the next useful unblocked vertical
-slice from canonical product authority and the surface map, perform a read-only
-preflight, freeze exact writable/dependency boundaries, and obtain independent
-READY-diff review before executable work. Do not choose physical Account
-session ending or workspace activation/switching while A-007/A-016/O-023 and
-hosted authorization remain open. Keep sorting/search, cards, budgets, media,
-mutation, Auth, hosted Sync, A-003/A-004/A-007/A-015/A-016, O-023/O-024/O-025/
-O-040/O-042/O-043, migration and cutover open. Do not provision hosted
+Independently inspect the exact comment-only
+`client-browsing-staging-application-flow` diff against its canonical authority,
+six hashes, reciprocal dependency freeze and 12-test matrix. Correct every
+P0-P3 finding before committing. Then commit the exact reviewed READY package
+and require all three immutable jobs to pass before writing executable Client-
+browsing code. Preserve upstream Client order and the existing post-create
+confirmation. Keep related Projects, sorting/search/cards/routes, raw-name
+input, mutation, Auth, hosted Sync, A-003/A-004/A-007/A-015/A-016, O-023/O-024/
+O-025/O-040/O-042/O-043, migration and cutover open. Do not provision hosted
 resources, access production or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:

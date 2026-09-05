@@ -169,7 +169,7 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5310d0517d236df6361c4229254c7ff96ec1c0b82c9014930a40e9288dda0dac",
+      "acknowledgeSourceHash": "af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8",
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -178,9 +178,10 @@
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
-        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the comment-only Project browsing app scaffolds are included for READY preparation and the Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project browsing and comment-only Client browsing app files are included, with the latter awaiting READY review and exact immutable CI. The Firebase application Xcode project is unchanged.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T08:27:51.814Z",
+    "lastSynchronizedAt": "2026-09-05T09:00:49.011Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -424,8 +424,8 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "5310d0517d236df6361c4229254c7ff96ec1c0b82c9014930a40e9288dda0dac",
-      "acknowledgedSourceHash": "5310d0517d236df6361c4229254c7ff96ec1c0b82c9014930a40e9288dda0dac",
+      "observedSourceHash": "af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8",
+      "acknowledgedSourceHash": "af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8",
       "metadata": {},
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
@@ -465,9 +465,10 @@
         "EVID-CAPABILITY-PLATFORM-CONTROL-001",
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
-        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001"
+        "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; the comment-only Project browsing app scaffolds are included for READY preparation and the Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project browsing and comment-only Client browsing app files are included, with the latter awaiting READY review and exact immutable CI. The Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -22081,6 +22082,58 @@
       "classificationBatch": "M0-REPORTING-SEARCH-001"
     },
     {
+      "id": "SWIFT-438CDD8B6992",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "3170f9ec899eca9df5d328c6142d9eadd3c0f45cd09965ea14777427a68d3b13",
+      "acknowledgedSourceHash": "3170f9ec899eca9df5d328c6142d9eadd3c0f45cd09965ea14777427a68d3b13",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only scaffold reserved for standalone Client directory and exact Client detail staging presentation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": [
+          "active/archived Client rows and exact local Client detail-state staging view"
+        ],
+        "securityRequirements": [
+          "Display bounded diagnostics and typed readiness only; never expose private payloads or provider details"
+        ],
+        "syncRequirements": [
+          "Show unknown before represented evidence and preserve honest loading, partial, stale, ready, incomplete, authoritative-empty, cached-failure, unavailable, and required-update truth"
+        ]
+      },
+      "migration": {
+        "rule": "Render isolated target-local state only.",
+        "reconciliation": [
+          "Do not imply hosted synchronization, authorization, or production readiness"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Core/AppModel tests, exact source checks, and iOS/macOS staging builds"
+        ],
+        "acceptance": [
+          "Stable segment-plus-Client accessibility identities and exact directory/detail status surfaces are present"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "The future view renders typed model state only and introduces no related Projects, sorting, search, cards, routes, mutation, or raw-name-input policy.",
+      "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+    },
+    {
       "id": "SWIFT-43DBE441C46B",
       "kind": "swift_logic",
       "name": "LedgeriOS/LedgeriOS/Logic/ActionMenuCalculations.swift",
@@ -25932,6 +25985,58 @@
       ],
       "notes": "Target-only technical-control surface. It validates already-authorized immutable snapshot identity, opaque visibility scope, protected short-lived local lease evidence and destination handoff/cleanup state; it cannot choose report fields, client delivery eligibility, attachment retention, filesystem behavior or an adapter. O-023 and O-036 remain untouched; exact implementation commit 10d94f1f passed Actions run 33569882379.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "SWIFT-74AB5DDB20DB",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "cead16690a9906f41669ee6d8f69596b29720f98fe81f6b531947d8591235248",
+      "acknowledgedSourceHash": "cead16690a9906f41669ee6d8f69596b29720f98fe81f6b531947d8591235248",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only scaffold reserved for a thin Account-bound runtime-to-Client-browser adapter.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": [
+          "thin PowerSync runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose no raw Account rebinding, database, query, SQL, visibility policy, endpoint, or credential"
+        ],
+        "syncRequirements": [
+          "Forward runtime snapshots and cancellation without rewriting readiness, order, or revision evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Adapt target runtime only.",
+        "reconciliation": [
+          "Do not access source Firebase code or data"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "target environment source/build-boundary checks and complete staging builds"
+        ],
+        "acceptance": [
+          "The app adapter remains the only PowerSync-aware Client browsing application-flow leaf"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "The future adapter may forward only Client directory and exact Client detail watches; policy remains in verified Core contracts.",
+      "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
       "id": "SWIFT-7500FDB4FDB6",
@@ -34365,6 +34470,58 @@
       "classificationBatch": "M0-IDENTITY-LIFECYCLE-001"
     },
     {
+      "id": "SWIFT-D8A992D1F8C1",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/ClientBrowsingPresentation.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/ClientBrowsingPresentation.swift"
+        }
+      ],
+      "observedSourceHash": "7636b2bc46a342acd0f64a064ac8ecdab2bfd58c374200399166a3dd78104213",
+      "acknowledgedSourceHash": "7636b2bc46a342acd0f64a064ac8ecdab2bfd58c374200399166a3dd78104213",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only scaffold reserved for pure Core Client directory, stable selection, and exact Client detail presentation contracts.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": [
+          "Client directory segmentation, current-snapshot selection, and exact Client detail presentation"
+        ],
+        "securityRequirements": [
+          "Consume only validated Account-bound typed evidence and never treat a display name as identity or authority"
+        ],
+        "syncRequirements": [
+          "Preserve upstream order and every represented readiness, completeness, absence, cached-failure, lifecycle, and revision state without inventing authority"
+        ]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": [
+          "Use stable Client identity rather than display text"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift"
+        ],
+        "acceptance": [
+          "Pure presentation tests pass the frozen directory, selection, detail-state, and false-empty matrix"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "Executable presentation work is prohibited until the exact reviewed comment-only READY checkpoint passes immutable CI.",
+      "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+    },
+    {
       "id": "SWIFT-D8ADF0266301",
       "kind": "swift_state",
       "name": "LedgeriOS/LedgeriOS/State/InventoryContext.swift",
@@ -36043,6 +36200,58 @@
       ],
       "notes": "Verified after primary review rejected an exhaustive field-binding test gap, the worker added reciprocal mutation coverage, final primary/independent review returned GO and exact integration checkpoint 147d22de passed immutable Actions run 33729967356.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-EDBCE3C0BC96",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/ClientBrowsingStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/ClientBrowsingStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "7b491c5e4ebaa46d53778a23287853494e42b9fe22ea7d6271ed20ecf4e5fd2b",
+      "acknowledgedSourceHash": "7b491c5e4ebaa46d53778a23287853494e42b9fe22ea7d6271ed20ecf4e5fd2b",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only scaffold reserved for a Core-only reactive Client directory, current-evidence selection, and detail application model.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": [
+          "reactive Client directory, current-snapshot selection, and exact Client detail application state"
+        ],
+        "securityRequirements": [
+          "Depend only on LedgerTargetCore and expose no provider, database, SQL, credential, or authorization policy"
+        ],
+        "syncRequirements": [
+          "Own bounded cancellation, join, termination, reselection, and restart-generation behavior without rewriting source truth"
+        ]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": [
+          "Accept only exact Account/Client request and update evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift"
+        ],
+        "acceptance": [
+          "The application model passes failure, termination, cancellation, rapid-reselection, restart, and shutdown tests"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "Executable application logic is prohibited until the exact reviewed comment-only READY checkpoint passes immutable CI.",
+      "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
       "id": "SWIFT-EDFA6A1EF8C3",
@@ -40022,6 +40231,58 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "TEST-5F23C8849E45",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "89afb864ed0fcaf6ad9c1dcca27a58ad2511109277f690dc1297f296bb8d1ddc",
+      "acknowledgedSourceHash": "89afb864ed0fcaf6ad9c1dcca27a58ad2511109277f690dc1297f296bb8d1ddc",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only scaffold reserved for deterministic Client browsing application-model tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": [
+          "deterministic Client browsing application-model lifecycle test matrix"
+        ],
+        "securityRequirements": [
+          "Use synthetic typed evidence and bounded non-secret diagnostics only"
+        ],
+        "syncRequirements": [
+          "Exercise continuous updates, active-detail drainage, rapid reselection, termination, cancellation, restart isolation, and post-stop silence"
+        ]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": [
+          "Assert exact source-termination and current-generation behavior"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientBrowsingStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Every frozen Client browsing application case passes deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "Controlled directory/detail streams must exercise every frozen termination and lifecycle case and complete without unbounded waits.",
+      "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+    },
+    {
       "id": "TEST-5F24EA7C310A",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetCoreTests/ProjectCoreDetailsDataTests.swift",
@@ -42539,6 +42800,58 @@
       ],
       "notes": "Retain for source compatibility tests only.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-B6AF2BB84195",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift"
+        }
+      ],
+      "observedSourceHash": "e161939cb3bbcc67a55adc8a63c5eb8cdd198ad3d27d4dd758d3725cbe0ead49",
+      "acknowledgedSourceHash": "e161939cb3bbcc67a55adc8a63c5eb8cdd198ad3d27d4dd758d3725cbe0ead49",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only scaffold reserved for deterministic Client browsing Core-presentation tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Browsing Staging Application Flow",
+        "surfaces": [
+          "deterministic pure Client browsing presentation test matrix"
+        ],
+        "securityRequirements": [
+          "Use synthetic Account, Client, lifecycle, readiness, completeness, revision, and failure evidence only"
+        ],
+        "syncRequirements": [
+          "Exercise both segments and every exact detail state without defining a new directory sort"
+        ]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": [
+          "Assert exact typed presentation and request evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ClientBrowsingPresentationTests"
+        ],
+        "acceptance": [
+          "Every frozen pure-presentation case passes deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "The future suite must prove atomic segmentation, reciprocal false-empty truth, stable identity and exact request/detail projection without unbounded waits.",
+      "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
       "id": "TEST-B9672080328D",

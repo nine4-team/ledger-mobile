@@ -180,7 +180,10 @@ Exact synchronized implementation commit
 GitHub Actions run `33954955566`: conversion control in 41 seconds, disposable
 local Supabase in 1 minute 36 seconds, and the isolated target environment in
 5 minutes 56 seconds. `PBROWSEAPP-TEST-010` passes and this evidence-only
-promotion may mark the slice verified.
+promotion may mark the slice verified. The exact docs-only promotion commit
+`4b9aecae13a7ba9d1d6615c55d6f467b7280b2fb` then passed all three immutable
+jobs in run `33955342320`, confirming the verified ledger itself is clean and
+reproducible.
 
 ## Explicit Exclusions
 

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T08:27:51.814Z",
+  "generatedFromManifestSync": "2026-09-05T09:00:49.011Z",
   "totals": {
-    "slices": 79,
-    "claimedTargetSurfaces": 221,
+    "slices": 80,
+    "claimedTargetSurfaces": 227,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 169
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 6,
     "verified": 69,
@@ -169,6 +169,25 @@
       "verificationCount": 8,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-use-case-contracts.json"
+    },
+    {
+      "sliceId": "client-browsing-staging-application-flow",
+      "title": "Browse locally represented Clients and preserve exact Client detail truth",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Client Browsing Staging Application Flow",
+      "surfaceIds": [
+        "SWIFT-438CDD8B6992",
+        "SWIFT-74AB5DDB20DB",
+        "SWIFT-D8A992D1F8C1",
+        "SWIFT-EDBCE3C0BC96",
+        "TEST-5F23C8849E45",
+        "TEST-B6AF2BB84195"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-browsing-staging-application-flow.json"
     },
     {
       "sliceId": "client-core-details-read-contracts",

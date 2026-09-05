@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T08:27:51.814Z",
+  "generatedFromManifestSync": "2026-09-05T09:00:49.011Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 903,
-    "targetRelevantSurfaces": 643,
-    "batches": 31,
-    "productScopeSurfaces": 732,
+    "surfaces": 909,
+    "targetRelevantSurfaces": 649,
+    "batches": 32,
+    "productScopeSurfaces": 738,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -65,6 +65,7 @@
         "M0-BACKEND-AUTH-001",
         "M0-BACKEND-FUNCTIONS-001",
         "M0-BACKEND-RULES-001",
+        "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "M0-CLIENT-POWERSYNC-PROVIDER-001",
         "M0-CLIENT-POWERSYNC-SPIKE-001",
         "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
@@ -77,8 +78,8 @@
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 491,
-      "targetRelevantSurfaceCount": 375
+      "surfaceCount": 497,
+      "targetRelevantSurfaceCount": 381
     },
     {
       "path": "docs/specs/projects.md",
@@ -885,6 +886,84 @@
         "CONFIG-ED6818A70D4E",
         "FILE-208B7E9D7F47",
         "FILE-7FD1F9FEF537"
+      ]
+    },
+    {
+      "batchId": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+      "title": "Client browsing target staging application flow",
+      "scope": "product",
+      "rationale": "This bounded target application flow composes the existing Account-scoped Client directory and exact Client-detail local streams into an honest offline staging browser without deciding directory sorting, related-Project aggregation, cards, routes, raw-name submission, mutation, hosted authorization or production behavior.",
+      "surfaceCount": 6,
+      "targetRelevantSurfaceCount": 6,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-438CDD8B6992",
+        "SWIFT-74AB5DDB20DB",
+        "SWIFT-D8A992D1F8C1",
+        "SWIFT-EDBCE3C0BC96",
+        "TEST-5F23C8849E45",
+        "TEST-B6AF2BB84195"
       ]
     },
     {

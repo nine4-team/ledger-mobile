@@ -212,6 +212,27 @@
         { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
       ]
     },
+    "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001": {
+      "scope": "product",
+      "rationale": "This bounded target application flow composes the existing Account-scoped Client directory and exact Client-detail local streams into an honest offline staging browser without deciding directory sorting, related-Project aggregation, cards, routes, raw-name submission, mutation, hosted authorization or production behavior.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/specs/offline-first.md", "role": "current_product" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/architecture-decisions.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001": {
       "scope": "product",
       "rationale": "This bounded target application flow turns the already-verified Project directory-selection/detail-header presentation and Account-bound local provider streams into one honest offline staging browser without deciding sorting, search, cards, budgets, media, routes, workspace activation, mutation, hosted authorization or production behavior.",
