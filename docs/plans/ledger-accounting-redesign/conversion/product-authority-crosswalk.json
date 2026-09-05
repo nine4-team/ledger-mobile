@@ -602,6 +602,26 @@
         { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
       ]
     },
+    "M0-PROJECT-ARCHIVAL-REVIEW-001": {
+      "scope": "product",
+      "rationale": "The isolated Project archival-review workflow adds a complete exact-Project local note replica with bounded keyset pages, honest offline completeness, active-membership authorization and gated MCP transport, then reuses the existing archive command to prove history preservation across active-to-archived lifecycle change.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-note-read-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-NOTE-READ-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001": {
       "scope": "product",
       "rationale": "The isolated direct Space-create provider slice must preserve stable Account/scope identity and zero accounting effects while proving encrypted offline acceptance, non-enumerating trusted authorization, exact local readback and app/MCP parity. O-044/O-045/O-046 remain explicit product blockers rather than inferred implementation policy.",

@@ -1,0 +1,4 @@
+-- READY scaffold for the Project archival-review delivery batch.
+-- Implementation will add the read-only spike_project_notes relation, exact
+-- Project-history index, explicit authenticated SELECT grant, membership RLS,
+-- and no client write grant or note mutation handler.

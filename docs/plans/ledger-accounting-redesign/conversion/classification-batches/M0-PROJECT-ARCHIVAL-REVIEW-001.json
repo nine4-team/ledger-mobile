@@ -1,0 +1,147 @@
+{
+  "batchId": "M0-PROJECT-ARCHIVAL-REVIEW-001",
+  "title": "Review bounded Project-note history before and after offline Project archival",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+    "EVID-PROJECT-NOTE-READ-001",
+    "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "CONFIG-DBE8715A260A",
+      "acknowledgeSourceHash": "ceb66680eac3d37370d5bc26caf4ad328db4ba048a37244c8865086bca4a10c3",
+      "currentBehavior": "Comment-only READY migration scaffold reserves the read-only Project-note relation, exact history index, authenticated SELECT grant and membership RLS boundary.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": ["Project-note read schema, RLS and scoped transport RPC"],
+        "securityRequirements": ["Explicit authenticated read grant plus active Account-membership RLS", "No client note mutation grant or policy"],
+        "syncRequirements": ["Exact Account/Project history with deterministic keyset order"]
+      },
+      "migration": {"rule": "Create only synthetic spike-prefixed target schema; import no Firebase rows.", "reconciliation": ["Archive must preserve every Project-note row byte-for-byte"]},
+      "verification": {"tests": ["project_note_archival_review.test.sql"], "acceptance": ["Least-privilege schema and preservation assertions pass on a disposable database"]},
+      "notes": "O-039 note mutations and source-data migration are excluded."
+    },
+    {
+      "id": "CONFIG-EADCA9A7026D",
+      "acknowledgeSourceHash": "dbba3318b8e53b688cc6cf6987e48cf42fe145401dd8e7b236a2d67d7ab479f8",
+      "currentBehavior": "Assertion-free READY pgTAP scaffold reserves schema, RLS, authorization, pagination and archive-preservation proof.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Project-note Postgres and RLS test suite"], "securityRequirements": ["Positive and negative tenant tests"], "syncRequirements": ["Prove deterministic history order and archive preservation"]},
+      "migration": {"rule": "Use synthetic identities inside a rolled-back pgTAP transaction.", "reconciliation": ["Compare complete note-row evidence before and after archive"]},
+      "verification": {"tests": ["npm run supabase:test:db"], "acceptance": ["All Project-note assertions pass from a clean reset"]},
+      "notes": "The scaffold contains no executable product assertion until implementation begins."
+    },
+    {
+      "id": "CONFIG-00C8635E9EF9",
+      "acknowledgeSourceHash": "159797cc8e910a7d2b612825ebc5d83fe39f4e521c321f6a3fe012b418e9833e",
+      "currentBehavior": "Comment-only READY runner scaffold reserves disposable localhost Data API proof for authorized and denied Project-note reads.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Local scoped-user Project-note Data API verification"], "securityRequirements": ["Use publishable key and per-user bearer only; refuse service-role credentials"], "syncRequirements": ["Validate exact ordered transport response without manufacturing local readiness"]},
+      "migration": {"rule": "Exercise only disposable local Supabase state.", "reconciliation": ["Read the same notes after archive and compare canonical transport evidence"]},
+      "verification": {"tests": ["node scripts/test-local-project-note-read.mjs"], "acceptance": ["Authorized active/archived reads pass and unauthorized scope remains non-enumerating"]},
+      "notes": "No hosted endpoint or production credential is allowed."
+    },
+    {
+      "id": "SWIFT-283C354B7848",
+      "acknowledgeSourceHash": "7bcad309499f562158899226dd68f91d9ecfa3e618425e5ac707fe20047717f8",
+      "currentBehavior": "Comment-only READY provider scaffold reserves one Account-bound encrypted local Project-note query with exact on-demand completeness.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["PowerSync ProjectNoteQuerying adapter"], "securityRequirements": ["Require exact active membership and locally represented Project scope"], "syncRequirements": ["Keyset page size plus one; exact current-process stream completeness; cancellation drainage"]},
+      "migration": {"rule": "Decode only synthetic target-local rows.", "reconciliation": ["Lifecycle-only Project changes cannot alter note-page identity or rows"]},
+      "verification": {"tests": ["ProjectNotePowerSyncQueryTests"], "acceptance": ["Partial, stale, complete and restart states remain honest"]},
+      "notes": "No note write or provider type crosses LedgerTargetCore."
+    },
+    {
+      "id": "TEST-A920874A5571",
+      "acknowledgeSourceHash": "3838568cf911587778e1df1ef3568c0b402967a9c2e1941f4f703dbbb506df71",
+      "currentBehavior": "Comment-only READY test scaffold reserves encrypted local pagination, completeness, restart, archive-preservation and observer-lifecycle proof.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["PowerSync note-history provider test suite"], "securityRequirements": ["Cross-Account/Project and malformed evidence fail closed"], "syncRequirements": ["Prove exact cursor, freshness, restart and cancellation behavior"]},
+      "migration": {"rule": "Use disposable encrypted local databases only.", "reconciliation": ["Compare raw and canonical note snapshots around archival"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter ProjectNotePowerSyncQueryTests"], "acceptance": ["Every frozen provider obligation is executable"]},
+      "notes": "No hosted synchronization claim is made."
+    },
+    {
+      "id": "SWIFT-754648D5F97F",
+      "acknowledgeSourceHash": "860ffc62ccc5cedadbc6ce6f333bc148e5bfb2f23a3ff37f7fa8575cacd5db1e",
+      "currentBehavior": "Comment-only READY AppModel scaffold reserves one bounded note-history controller owned by the existing Project browser.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Project-note history staging model"], "securityRequirements": ["Render only typed already-authorized local evidence"], "syncRequirements": ["Clear/drain on selection change; preserve observation across active-to-archived transition"]},
+      "migration": {"rule": "Compose target Core values only.", "reconciliation": ["Late prior-selection emissions cannot mutate current presentation"]},
+      "verification": {"tests": ["ProjectNoteHistoryStagingExerciseTests"], "acceptance": ["Waiting/partial/stale/ready/incomplete/tombstone/pagination states remain distinct"]},
+      "notes": "The Project browser owns lifecycle coordination; SwiftUI callbacks are not correctness authority."
+    },
+    {
+      "id": "TEST-3CB458C292B0",
+      "acknowledgeSourceHash": "ad4f207501bd6c50be52ebeeb1837a5e2c5cef4f98c89d581f653a0cabd48a08",
+      "currentBehavior": "Comment-only READY test scaffold reserves selection-generation, paging, lifecycle transition and cancellation proof for note-history presentation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Project-note staging-model tests"], "securityRequirements": ["Do not display hidden actor identity in tombstones or diagnostics"], "syncRequirements": ["Reject late values after page, selection, runtime or stop changes"]},
+      "migration": {"rule": "Use deterministic in-memory ports.", "reconciliation": ["Archival preserves represented notes and selection"]},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter ProjectNoteHistoryStagingExerciseTests"], "acceptance": ["The browser owns every observer transition deterministically"]},
+      "notes": "No production UI claim."
+    },
+    {
+      "id": "SWIFT-07516815EBBD",
+      "acknowledgeSourceHash": "e088d866744bb447c7270d84d7078e3bc4eaa4dbd0ca43a4d0f2257bfd126abd",
+      "currentBehavior": "Comment-only READY app scaffold reserves the thin runtime forwarding and isolated note-history SwiftUI presentation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Thin note runtime adapter and staging view"], "securityRequirements": ["Expose no provider detail, credentials or hidden identity"], "syncRequirements": ["Present incomplete history honestly and keep paging bounded"]},
+      "migration": {"rule": "Wire only the isolated LedgerTarget staging app.", "reconciliation": ["Archived Project selection continues to show identical note history"]},
+      "verification": {"tests": ["Target staging iOS and macOS builds"], "acceptance": ["No production route or note mutation appears"]},
+      "notes": "One file intentionally owns both the tiny adapter and view."
+    },
+    {
+      "id": "MCPMOD-84FF0804E57E",
+      "acknowledgeSourceHash": "29931460605393f195300485f4facf5336f9b558bab387c560c46ae7bbfd2d12",
+      "currentBehavior": "Comment-only READY MCP scaffold reserves gated bounded note-list transport and exact reuse of the Project archive command/RPC contract.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Gated list_project_notes and archive_project target contracts"], "securityRequirements": ["Derive Account/Principal from request context; scoped bearer plus publishable key only"], "syncRequirements": ["Online MCP result shares scope/order/cursor/completeness semantics but never fabricates local readiness"]},
+      "migration": {"rule": "Invoke only synthetic local target endpoints in tests.", "reconciliation": ["Archive request bytes and response validation match Swift/Postgres"]},
+      "verification": {"tests": ["LedgerTargetMCP/tests/projectArchivalReview.test.ts"], "acceptance": ["Cross-runtime fixtures, numeric boundaries and response validation pass"]},
+      "notes": "No live server composition or registration is authorized."
+    },
+    {
+      "id": "MCPMOD-4CB1EBAC253A",
+      "acknowledgeSourceHash": "41c157e67468c3ffc9f8eb7a3ced76f919484d2ce2952470f8179edefa9fc0fa",
+      "currentBehavior": "Comment-only READY MCP test scaffold reserves contract-byte, cursor, authorization, preservation and gated-registration negative proof.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"],
+      "target": {"owner": "Project Archival Review", "surfaces": ["Gated Project archival-review MCP tests"], "securityRequirements": ["Reject cursor rebinding, malformed results and privileged credentials before disclosure"], "syncRequirements": ["Keep online transport truth distinct from PowerSync local readiness"]},
+      "migration": {"rule": "Use injected fake/local transports only.", "reconciliation": ["Same Project notes compare identical before and after archive"]},
+      "verification": {"tests": ["npm --prefix LedgerTargetMCP test"], "acceptance": ["No note write/search/restore/general update or live registration export exists"]},
+      "notes": "Diagnostics must exclude note text, identity, cursor, envelope, token and key."
+    }
+  ]
+}

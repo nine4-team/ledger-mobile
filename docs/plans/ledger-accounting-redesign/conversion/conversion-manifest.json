@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T21:09:23.030Z",
+    "lastSynchronizedAt": "2026-09-05T21:46:52.974Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -79,6 +79,56 @@
     }
   ],
   "surfaces": [
+    {
+      "id": "CONFIG-00C8635E9EF9",
+      "kind": "release_or_build_tool",
+      "name": "scripts/test-local-project-note-read.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/test-local-project-note-read.mjs"
+        }
+      ],
+      "observedSourceHash": "159797cc8e910a7d2b612825ebc5d83fe39f4e521c321f6a3fe012b418e9833e",
+      "acknowledgedSourceHash": "159797cc8e910a7d2b612825ebc5d83fe39f4e521c321f6a3fe012b418e9833e",
+      "metadata": {},
+      "currentBehavior": "Comment-only READY runner scaffold reserves disposable localhost Data API proof for authorized and denied Project-note reads.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Local scoped-user Project-note Data API verification"
+        ],
+        "securityRequirements": [
+          "Use publishable key and per-user bearer only; refuse service-role credentials"
+        ],
+        "syncRequirements": [
+          "Validate exact ordered transport response without manufacturing local readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Exercise only disposable local Supabase state.",
+        "reconciliation": [
+          "Read the same notes after archive and compare canonical transport evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node scripts/test-local-project-note-read.mjs"
+        ],
+        "acceptance": [
+          "Authorized active/archived reads pass and unauthorized scope remains non-enumerating"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "No hosted endpoint or production credential is allowed.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
+    },
     {
       "id": "CONFIG-031396750B85",
       "kind": "application_or_backend_configuration",
@@ -3031,6 +3081,57 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-DBE8715A260A",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260905213332_project_note_archival_review.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260905213332_project_note_archival_review.sql"
+        }
+      ],
+      "observedSourceHash": "ceb66680eac3d37370d5bc26caf4ad328db4ba048a37244c8865086bca4a10c3",
+      "acknowledgedSourceHash": "ceb66680eac3d37370d5bc26caf4ad328db4ba048a37244c8865086bca4a10c3",
+      "metadata": {},
+      "currentBehavior": "Comment-only READY migration scaffold reserves the read-only Project-note relation, exact history index, authenticated SELECT grant and membership RLS boundary.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Project-note read schema, RLS and scoped transport RPC"
+        ],
+        "securityRequirements": [
+          "Explicit authenticated read grant plus active Account-membership RLS",
+          "No client note mutation grant or policy"
+        ],
+        "syncRequirements": [
+          "Exact Account/Project history with deterministic keyset order"
+        ]
+      },
+      "migration": {
+        "rule": "Create only synthetic spike-prefixed target schema; import no Firebase rows.",
+        "reconciliation": [
+          "Archive must preserve every Project-note row byte-for-byte"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "project_note_archival_review.test.sql"
+        ],
+        "acceptance": [
+          "Least-privilege schema and preservation assertions pass on a disposable database"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "O-039 note mutations and source-data migration are excluded.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
+    },
+    {
       "id": "CONFIG-DC77B9F609A7",
       "kind": "application_or_backend_configuration",
       "name": "supabase/tests/space_assignment_destination_picker.test.sql",
@@ -3286,6 +3387,56 @@
       ],
       "notes": "Preserve packaging with notarization/hash/reproducibility evidence. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-EADCA9A7026D",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/project_note_archival_review.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/project_note_archival_review.test.sql"
+        }
+      ],
+      "observedSourceHash": "dbba3318b8e53b688cc6cf6987e48cf42fe145401dd8e7b236a2d67d7ab479f8",
+      "acknowledgedSourceHash": "dbba3318b8e53b688cc6cf6987e48cf42fe145401dd8e7b236a2d67d7ab479f8",
+      "metadata": {},
+      "currentBehavior": "Assertion-free READY pgTAP scaffold reserves schema, RLS, authorization, pagination and archive-preservation proof.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Project-note Postgres and RLS test suite"
+        ],
+        "securityRequirements": [
+          "Positive and negative tenant tests"
+        ],
+        "syncRequirements": [
+          "Prove deterministic history order and archive preservation"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic identities inside a rolled-back pgTAP transaction.",
+        "reconciliation": [
+          "Compare complete note-row evidence before and after archive"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run supabase:test:db"
+        ],
+        "acceptance": [
+          "All Project-note assertions pass from a clean reset"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "The scaffold contains no executable product assertion until implementation begins.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
     },
     {
       "id": "CONFIG-EC93D3BAC0C4",
@@ -3923,10 +4074,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "c89e553ebec36911d8e2e546626b096ab19c6ea75d64ac61718841f7edebf2c6",
-      "acknowledgedSourceHash": "c89e553ebec36911d8e2e546626b096ab19c6ea75d64ac61718841f7edebf2c6",
+      "observedSourceHash": "97f781d6b6e4b6921d86a6f2c6d51e213e4a518a9c271fea9c8bdce737f37673",
+      "acknowledgedSourceHash": "97f781d6b6e4b6921d86a6f2c6d51e213e4a518a9c271fea9c8bdce737f37673",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination and direct-creation migration, pgTAP and local Data API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space and Project archival-review migration, pgTAP and local Data API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3980,7 +4131,7 @@
         "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
         "EVID-SPACE-CREATION-PROVIDER-READY-001"
       ],
-      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated direct Space-create migration, planned pgTAP leaf and planned local Data API runner; it changes no validator semantics, product authority, status rule or existing primary ownership.",
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated Project archival-review migration, planned pgTAP leaf and planned local Data API runner; it changes no validator semantics, product authority, status rule or existing primary ownership.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -9838,6 +9989,58 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "MCPMOD-4CB1EBAC253A",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/tests/projectArchivalReview.test.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/tests/projectArchivalReview.test.ts"
+        }
+      ],
+      "observedSourceHash": "41c157e67468c3ffc9f8eb7a3ced76f919484d2ce2952470f8179edefa9fc0fa",
+      "acknowledgedSourceHash": "41c157e67468c3ffc9f8eb7a3ced76f919484d2ce2952470f8179edefa9fc0fa",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY MCP test scaffold reserves contract-byte, cursor, authorization, preservation and gated-registration negative proof.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Gated Project archival-review MCP tests"
+        ],
+        "securityRequirements": [
+          "Reject cursor rebinding, malformed results and privileged credentials before disclosure"
+        ],
+        "syncRequirements": [
+          "Keep online transport truth distinct from PowerSync local readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Use injected fake/local transports only.",
+        "reconciliation": [
+          "Same Project notes compare identical before and after archive"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm --prefix LedgerTargetMCP test"
+        ],
+        "acceptance": [
+          "No note write/search/restore/general update or live registration export exists"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "Diagnostics must exclude note text, identity, cursor, envelope, token and key.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
+    },
+    {
       "id": "MCPMOD-5E757BAB490F",
       "kind": "mcp_module",
       "name": "mcp-server/src/util/telemetry.ts",
@@ -10269,6 +10472,58 @@
       ],
       "notes": "M2 withheld: O-015/O-023/O-027 changes the target Item schema, validation, Link/reconciliation, optimistic projection or dependency/retention command for this responsibility. O-021 is UI-only and is not treated as an architecture blocker.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "MCPMOD-84FF0804E57E",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/src/projectArchivalReview.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/src/projectArchivalReview.ts"
+        }
+      ],
+      "observedSourceHash": "29931460605393f195300485f4facf5336f9b558bab387c560c46ae7bbfd2d12",
+      "acknowledgedSourceHash": "29931460605393f195300485f4facf5336f9b558bab387c560c46ae7bbfd2d12",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY MCP scaffold reserves gated bounded note-list transport and exact reuse of the Project archive command/RPC contract.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Gated list_project_notes and archive_project target contracts"
+        ],
+        "securityRequirements": [
+          "Derive Account/Principal from request context; scoped bearer plus publishable key only"
+        ],
+        "syncRequirements": [
+          "Online MCP result shares scope/order/cursor/completeness semantics but never fabricates local readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Invoke only synthetic local target endpoints in tests.",
+        "reconciliation": [
+          "Archive request bytes and response validation match Swift/Postgres"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "LedgerTargetMCP/tests/projectArchivalReview.test.ts"
+        ],
+        "acceptance": [
+          "Cross-runtime fixtures, numeric boundaries and response validation pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "No live server composition or registration is authorized.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
     },
     {
       "id": "MCPMOD-868A3F35EBC3",
@@ -18659,6 +18914,58 @@
       "classificationBatch": "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
+      "id": "SWIFT-07516815EBBD",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ProjectNoteHistoryStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ProjectNoteHistoryStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "e088d866744bb447c7270d84d7078e3bc4eaa4dbd0ca43a4d0f2257bfd126abd",
+      "acknowledgedSourceHash": "e088d866744bb447c7270d84d7078e3bc4eaa4dbd0ca43a4d0f2257bfd126abd",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY app scaffold reserves the thin runtime forwarding and isolated note-history SwiftUI presentation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Thin note runtime adapter and staging view"
+        ],
+        "securityRequirements": [
+          "Expose no provider detail, credentials or hidden identity"
+        ],
+        "syncRequirements": [
+          "Present incomplete history honestly and keep paging bounded"
+        ]
+      },
+      "migration": {
+        "rule": "Wire only the isolated LedgerTarget staging app.",
+        "reconciliation": [
+          "Archived Project selection continues to show identical note history"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target staging iOS and macOS builds"
+        ],
+        "acceptance": [
+          "No production route or note mutation appears"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "One file intentionally owns both the tiny adapter and view.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
+    },
+    {
       "id": "SWIFT-0753297CA29A",
       "kind": "swift_application_file",
       "name": "LedgeriOS/LedgerTargetPowerSync/SupabaseProjectArchiveRPC.swift",
@@ -21219,6 +21526,58 @@
       ],
       "notes": "M2 withheld: O-024/O-025 changes Project lifecycle/correction responsibility, and O-040 changes the Project preference/default/fallback operations that a target seam may expose. The Firebase-shaped generic protocol is not provisional target authority.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-283C354B7848",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ProjectNotePowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ProjectNotePowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "7bcad309499f562158899226dd68f91d9ecfa3e618425e5ac707fe20047717f8",
+      "acknowledgedSourceHash": "7bcad309499f562158899226dd68f91d9ecfa3e618425e5ac707fe20047717f8",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY provider scaffold reserves one Account-bound encrypted local Project-note query with exact on-demand completeness.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "PowerSync ProjectNoteQuerying adapter"
+        ],
+        "securityRequirements": [
+          "Require exact active membership and locally represented Project scope"
+        ],
+        "syncRequirements": [
+          "Keyset page size plus one; exact current-process stream completeness; cancellation drainage"
+        ]
+      },
+      "migration": {
+        "rule": "Decode only synthetic target-local rows.",
+        "reconciliation": [
+          "Lifecycle-only Project changes cannot alter note-page identity or rows"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectNotePowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Partial, stale, complete and restart states remain honest"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "No note write or provider type crosses LedgerTargetCore.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
     },
     {
       "id": "SWIFT-2919B4B009D8",
@@ -27514,6 +27873,58 @@
       ],
       "notes": "Target requires ClientID, stable attachment identity and explicit audit/revision fields; imported budgetSummary is not accounting authority. M2 map reviewed under target-mapping-method.md; copied Client names, generic writes and cached budget mechanics are excluded from target authority.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-754648D5F97F",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/ProjectNoteHistoryStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/ProjectNoteHistoryStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "860ffc62ccc5cedadbc6ce6f333bc148e5bfb2f23a3ff37f7fa8575cacd5db1e",
+      "acknowledgedSourceHash": "860ffc62ccc5cedadbc6ce6f333bc148e5bfb2f23a3ff37f7fa8575cacd5db1e",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY AppModel scaffold reserves one bounded note-history controller owned by the existing Project browser.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Project-note history staging model"
+        ],
+        "securityRequirements": [
+          "Render only typed already-authorized local evidence"
+        ],
+        "syncRequirements": [
+          "Clear/drain on selection change; preserve observation across active-to-archived transition"
+        ]
+      },
+      "migration": {
+        "rule": "Compose target Core values only.",
+        "reconciliation": [
+          "Late prior-selection emissions cannot mutate current presentation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectNoteHistoryStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Waiting/partial/stale/ready/incomplete/tombstone/pagination states remain distinct"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "The Project browser owns lifecycle coordination; SwiftUI callbacks are not correctness authority.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
     },
     {
       "id": "SWIFT-75CFE285AF37",
@@ -41619,6 +42030,58 @@
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
+      "id": "TEST-3CB458C292B0",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/ProjectNoteHistoryStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectNoteHistoryStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "ad4f207501bd6c50be52ebeeb1837a5e2c5cef4f98c89d581f653a0cabd48a08",
+      "acknowledgedSourceHash": "ad4f207501bd6c50be52ebeeb1837a5e2c5cef4f98c89d581f653a0cabd48a08",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY test scaffold reserves selection-generation, paging, lifecycle transition and cancellation proof for note-history presentation.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "Project-note staging-model tests"
+        ],
+        "securityRequirements": [
+          "Do not display hidden actor identity in tombstones or diagnostics"
+        ],
+        "syncRequirements": [
+          "Reject late values after page, selection, runtime or stop changes"
+        ]
+      },
+      "migration": {
+        "rule": "Use deterministic in-memory ports.",
+        "reconciliation": [
+          "Archival preserves represented notes and selection"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectNoteHistoryStagingExerciseTests"
+        ],
+        "acceptance": [
+          "The browser owns every observer transition deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "No production UI claim.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
+    },
+    {
       "id": "TEST-3CE7B387E9B7",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgerTargetCoreTests/ProjectRenameOperationTests.swift",
@@ -44917,6 +45380,58 @@
       ],
       "notes": "Verified target-only deterministic tests at exact implementation commit 519b4338c7cbe8cc63a01820116bef5283a8625a and immutable Actions run 33632364285. Four focused/all 140 tests, graph/contracts, both staging builds and clean tracked artifacts pass. They cannot prove authentication, O-026 mutation policy, physical durability, schema/RLS/Sync/provider behavior, app/MCP wiring, migration, hosted resources or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-A920874A5571",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectNotePowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectNotePowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "3838568cf911587778e1df1ef3568c0b402967a9c2e1941f4f703dbbb506df71",
+      "acknowledgedSourceHash": "3838568cf911587778e1df1ef3568c0b402967a9c2e1941f4f703dbbb506df71",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY test scaffold reserves encrypted local pagination, completeness, restart, archive-preservation and observer-lifecycle proof.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archival Review",
+        "surfaces": [
+          "PowerSync note-history provider test suite"
+        ],
+        "securityRequirements": [
+          "Cross-Account/Project and malformed evidence fail closed"
+        ],
+        "syncRequirements": [
+          "Prove exact cursor, freshness, restart and cancellation behavior"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable encrypted local databases only.",
+        "reconciliation": [
+          "Compare raw and canonical note snapshots around archival"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectNotePowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Every frozen provider obligation is executable"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+      ],
+      "notes": "No hosted synchronization claim is made.",
+      "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
     },
     {
       "id": "TEST-AB7FBFCBDFD4",

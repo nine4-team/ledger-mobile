@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T21:09:23.030Z",
+  "generatedFromManifestSync": "2026-09-05T21:46:52.974Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 957,
-    "targetRelevantSurfaces": 695,
-    "batches": 36,
-    "productScopeSurfaces": 786,
+    "surfaces": 967,
+    "targetRelevantSurfaces": 705,
+    "batches": 37,
+    "productScopeSurfaces": 796,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -89,6 +89,7 @@
       "batchIds": [
         "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
+        "M0-PROJECT-ARCHIVAL-REVIEW-001",
         "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
@@ -96,8 +97,8 @@
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 163,
-      "targetRelevantSurfaceCount": 159
+      "surfaceCount": 173,
+      "targetRelevantSurfaceCount": 169
     },
     {
       "path": "docs/specs/spaces.md",
@@ -2158,6 +2159,84 @@
         "TEST-DE986CFD8624",
         "TEST-E323BA653B17",
         "TEST-ECE08B24ADCE"
+      ]
+    },
+    {
+      "batchId": "M0-PROJECT-ARCHIVAL-REVIEW-001",
+      "title": "Review bounded Project-note history before and after offline Project archival",
+      "scope": "product",
+      "rationale": "The isolated Project archival-review workflow adds a complete exact-Project local note replica with bounded keyset pages, honest offline completeness, active-membership authorization and gated MCP transport, then reuses the existing archive command to prove history preservation across active-to-archived lifecycle change.",
+      "surfaceCount": 10,
+      "targetRelevantSurfaceCount": 10,
+      "authorities": [
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-note-read-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-NOTE-READ-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-00C8635E9EF9",
+        "CONFIG-DBE8715A260A",
+        "CONFIG-EADCA9A7026D",
+        "MCPMOD-4CB1EBAC253A",
+        "MCPMOD-84FF0804E57E",
+        "SWIFT-07516815EBBD",
+        "SWIFT-283C354B7848",
+        "SWIFT-754648D5F97F",
+        "TEST-3CB458C292B0",
+        "TEST-A920874A5571"
       ]
     },
     {

@@ -1,6 +1,6 @@
 # EVID-TRANSFER-DESTINATION-PICKER-PROVIDER-001 — Local Transfer Destination Picker
 
-- Status: implemented and independently reviewed; exact implementation CI pending
+- Status: implemented and independently reviewed; exact implementation CI passed
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -73,6 +73,7 @@ treats builds as composition proof rather than interactive UI proof.
 - frozen Core, Project-directory, Space DRAFT, package, and target-project
   source files remain byte-exact where required.
 
-Exact implementation-commit CI is still required for
-`TRANSFERDESTPICKER-TEST-007`. Hosted authenticated Supabase/PowerSync
-rehearsal and cutover readiness remain zero.
+Exact implementation commit
+`1e893c6c02dc22a52cb1332e3a98a26c714d5fba` passed all three immutable jobs in
+Actions run `33992331027`, satisfying `TRANSFERDESTPICKER-TEST-007`. Hosted
+authenticated Supabase/PowerSync rehearsal and cutover readiness remain zero.

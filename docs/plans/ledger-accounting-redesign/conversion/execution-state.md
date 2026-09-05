@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 322
+State version: 323
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: TRANSFER-DESTINATION-PICKER-IMPLEMENTED-AWAITING-EXACT-CI
+- Checkpoint: PROJECT-ARCHIVAL-REVIEW-READY
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,10 +33,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **511 of 695 target-relevant surfaces mapped or
-  later (73.5%)**. Local surface-implementation coverage is **209 of 695
-  implemented or verified (30.1%)** after the Transfer-destination
-  implementation is synchronized.
+- Planning/control coverage is **521 of 705 target-relevant surfaces mapped or
+  later (73.9%)**. Local surface-implementation coverage is **209 of 705
+  implemented or verified (29.6%)**. The denominator increased by ten because
+  the complete Project archival-review implementation boundary is now
+  discovered, classified, and claimed at READY; no executable surface was
+  credited early.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -84,6 +86,18 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
+- Froze one larger Project archival-review delivery batch across ten newly
+  discovered target leaves and bounded shared touchpoints. Independent reviews
+  returned GO for a complete exact-Project note replica, 1...200 local keyset
+  pages, new-current-process completeness, active-membership RLS/Sync,
+  active/archived parity, preservation through the existing archive command,
+  and a gated MCP read/archive boundary. They explicitly rejected a capped or
+  evicting note window, UI-owned observer coordination, service-role client
+  access, note mutation/search, live MCP registration, hosted claims, Firebase,
+  migration, production, and cutover. The conversion ledger passes with zero
+  errors and only the three established retired-surface warnings;
+  `EVID-PROJECT-ARCHIVAL-REVIEW-READY-001`.
+
 - Corrected the blocked Space-create DRAFT's repository-wide pgTAP integration.
   Initial commit `2cf4bdb2` passed conversion and target jobs but immutable run
   `33988334645` failed the local Supabase job because the entirely comment-only
@@ -104,7 +118,9 @@ without modifying the running Firebase application before hard cutover.
   selection resurrection. Corrected re-review returns GO with no P0/P1.
   Automated provider/runtime and AppModel behavior, target boundaries and both
   builds pass; compilation is not claimed as interactive UI rendering proof.
-  Exact implementation CI remains pending. Source-action eligibility, Items,
+  Exact implementation `1e893c6c02dc22a52cb1332e3a98a26c714d5fba`
+  passed all three immutable jobs in run `33992331027`, including 522 Swift
+  tests and both builds. Source-action eligibility, Items,
   amount, confirmation, Transfer execution/accounting and
   O-002/O-011–O-015/O-025/D-017 remain outside;
   `EVID-TRANSFER-DESTINATION-PICKER-PROVIDER-001`.
@@ -4246,24 +4262,23 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and push the independently reviewed Transfer destination implementation,
-then require immutable exact-head CI before promoting `TRANSFERDESTPICKER-TEST-007`.
-After that checkpoint, select a larger end-to-end feature batch rather than
-another tiny presentation-only leaf. The batch must group closely coupled
-schema, trusted command/read handling, RLS, PowerSync offline behavior, app/MCP
-integration and reconciliation proof under one review and one exact-commit CI
-cycle. Product-authority and security/offline/cutover gates remain mandatory,
-but per-leaf READY dossiers and repeated CI checkpoints are no longer the unit
-of throughput.
+Commit and push the independently reviewed Project archival-review READY
+checkpoint and require immutable exact-head CI. Then implement the whole batch:
+Project-note Postgres schema/read surface and RLS, exact on-demand PowerSync
+history, encrypted local keyset provider, browser-owned note presentation,
+gated MCP list/archive parity, and archive-preservation tests. Run independent
+security and offline-concurrency review on the executable diff, correct every
+finding, then run complete local gates and immutable exact-commit CI before
+promoting any claimed surface beyond `target_mapped`.
 
-Source-Project selection is isolated-harness plumbing only. Do not infer
-production Items-action eligibility, archived-source availability, confirmation,
-Item selection, Transfer pair/command, amount, Invoice effect, destination Space,
-accounting, correction or any O-002/O-011–O-015/D-017 behavior. Do not weaken the
-blocked direct Space-create dossier or implement O-044/O-045/O-046. Do not infer
-real PowerSync/Auth authorization from local proof, advance A-003/A-004,
-provision hosted resources, access production, migrate source data or modify
-Firebase.
+For this batch, bounded means a 1...200 page over the complete exact-Project
+replica; do not invent physical history caps, eviction, refill or tombstone
+retention. Do not implement note creation/edit/delete/search under O-039, broad
+Project MCP behavior under O-040, restore/delete/reassignment/media choices, or
+change the verified archive command/store/RPC. Do not weaken the blocked direct
+Space-create dossier or implement O-044/O-045/O-046. Do not infer real
+PowerSync/Auth authorization from local proof, advance A-003/A-004, provision
+hosted resources, access production, migrate source data or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 

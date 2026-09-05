@@ -78,6 +78,28 @@ Progress is reported primarily by complete locally working workflows, hosted
 rehearsals, and cutover-ready workflows. Surface counts and planning coverage
 remain audit controls; they are not substitutes for product completion.
 
+Before executable work, the active batch must be durably recorded in a
+machine-checked implementation-slice dossier (one umbrella user-workflow slice
+is preferred when practical) with its exact base commit, dependent verified
+slices, union change boundary, risk domains, requirement-to-test map, reviewers,
+rollback boundary, and unresolved blockers. Normal batches contain one coherent
+workflow and no more than four independently understandable sub-slices.
+
+Do not combine two distinct high-risk authorities merely to save a CI cycle.
+Auth/identity, financial accounting, destructive migration, Sync authorization,
+and retention/deletion each require an explicit boundary and specialist review.
+Every batch includes cross-slice tests for shared identity, authorization,
+revision, readiness, operation ordering, and rollback behavior. Financial
+batches additionally prove conservation, reconciliation, and concurrent
+interleavings.
+
+Parallel agents receive disjoint executable/test ownership. The integrating
+agent alone edits ordered migrations, shared runtime composition, generated
+projects, manifests, and status/evidence records. If a constituent slice fails
+review or CI, the exact batch cannot be promoted; remove or correct it in a new
+synchronized checkpoint and rerun the batch gate. Never reuse a failed exact
+commit's evidence to promote neighboring work.
+
 ## Required Slice Dossier
 
 Copy `_template.json` to a stable lower-kebab-case slice filename. Delete the

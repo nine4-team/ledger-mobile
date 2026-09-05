@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "project-archival-review-workflow",
+  "title": "Review complete Project-note history offline before and after Project archival",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Project Archival Review",
+  "surfaceIds": [
+    "CONFIG-00C8635E9EF9",
+    "CONFIG-DBE8715A260A",
+    "CONFIG-EADCA9A7026D",
+    "MCPMOD-4CB1EBAC253A",
+    "MCPMOD-84FF0804E57E",
+    "SWIFT-07516815EBBD",
+    "SWIFT-283C354B7848",
+    "SWIFT-754648D5F97F",
+    "TEST-3CB458C292B0",
+    "TEST-A920874A5571"
+  ],
+  "deliveryContract": {
+    "baseCommit": "1e893c6c02dc22a52cb1332e3a98a26c714d5fba",
+    "dependencies": [
+      "project-note-read-contracts",
+      "project-browsing-staging-application-flow",
+      "project-archive-browser-supabase-powersync-vertical-slice"
+    ],
+    "riskDomains": ["RLS and Sync authorization", "offline observer concurrency", "UInt64 cross-runtime precision", "archive history preservation"],
+    "rollbackBoundary": "Revert this isolated target batch and discard synthetic local target databases; Firebase, hosted resources and production remain untouched.",
+    "reviewers": ["independent Postgres/RLS/PowerSync reviewer", "independent offline/app reviewer", "independent MCP/control-plane reviewer", "root integrator"]
+  },
+  "implementationTouchpoints": [
+    {"path": "LedgeriOS/LedgerTargetCore/ProjectNoteData.swift", "readySourceHash": "f9ac710c", "permittedChange": "None; reuse the verified typed read contracts byte-for-byte."},
+    {"path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift", "readySourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed", "permittedChange": "Add only the synchronized Project-note table and exact history index."},
+    {"path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift", "readySourceHash": "ee4ad3588bbf6c188f3cd66940b1bde59515be06c6b755fb6376ca8c59eae02c", "permittedChange": "Own one Account-bound note query and drain it through the existing runtime close lifecycle."},
+    {"path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift", "readySourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18", "permittedChange": "Expose one typed note watch with no database, SQL, credential or subscription detail."},
+    {"path": "LedgeriOS/LedgerTargetAppModel/ProjectBrowsingStagingExercise.swift", "readySourceHash": "da3874dfb1f911da0bc2d9b202f2a22f3f49a020f6e5bd389451857b82e2617c", "permittedChange": "Own note selection/page generations and preserve the note observation across a same-ID active-to-archived segment move."},
+    {"path": "LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingRuntimeAdapter.swift", "readySourceHash": "f8b3ba21024d29ec5aa8da47a8f6e0db0f51817bca0ab42a6d33169d19de922f", "permittedChange": "Forward one typed note watch only."},
+    {"path": "LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingExerciseView.swift", "readySourceHash": "2bc3cf4d58889b1ec3b5c27595db6116bf236bebd280cc779e114e4caae13363", "permittedChange": "Compose bounded note-history presentation beside the existing archive control."},
+    {"path": "powersync/sync-streams.yaml", "readySourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8", "permittedChange": "Add one exact Account/Project on-demand history stream with signed membership authorization and no lifecycle filter, ordering, limit or write path."},
+    {"path": "LedgerTargetContracts/catalog.json", "readySourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa", "permittedChange": "Add gated Project-note read and archive contracts, policies, bounded errors and privacy-safe telemetry, then regenerate projections."},
+    {"path": "supabase/migrations/20260905095803_project_archive_vertical_slice.sql", "readySourceHash": "e45ef69c82363a384a559d1991cf5a1080ec3dc6f9901defaf0e52345c8f5269", "permittedChange": "None; reuse the existing archive RPC unchanged."}
+  ],
+  "requirements": [
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Target Redesign Requirements",
+      "invariant": "An authorized user can select an active or archived Project by stable Account/Project identity and review its notes without copied names, row position, lifecycle state or caller-supplied Account/Principal becoming relationship or authorization authority.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-001", "PROJECTARCHIVALREVIEW-TEST-002", "PROJECTARCHIVALREVIEW-TEST-004", "PROJECTARCHIVALREVIEW-TEST-006", "PROJECTARCHIVALREVIEW-TEST-009"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-002",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/projects.md",
+      "section": "Archiving",
+      "invariant": "Archiving changes only Project lifecycle/revision/server update evidence and immutable operation result; every Project note identity, visible text or tombstone, source, creator, audit time, revision and deterministic order remains unchanged and readable through the same authorized Project scope.",
+      "decisionIds": ["O-023", "O-024", "O-025"],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-001", "PROJECTARCHIVALREVIEW-TEST-005", "PROJECTARCHIVALREVIEW-TEST-007", "PROJECTARCHIVALREVIEW-TEST-008", "PROJECTARCHIVALREVIEW-TEST-010"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+      "section": "Target Observable Contract — Backend Neutral",
+      "invariant": "Each note has stable identity, structural visible-or-tombstone content, immutable creation provenance, paired edit/deletion audit and exact UInt64 revision. A page contains at most 200 notes ordered by (createdAt,id) descending with a scope-bound keyset cursor and explicit complete-history truth.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-001", "PROJECTARCHIVALREVIEW-TEST-003", "PROJECTARCHIVALREVIEW-TEST-004", "PROJECTARCHIVALREVIEW-TEST-006"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Project workspace",
+      "invariant": "One exact-Project on-demand stream synchronizes the complete authorized Project-note history, including archived Projects. Local reads paginate the complete replica; no undefined cap, eviction, tombstone retention, search or server-side ordering/limit policy is invented.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-003", "PROJECTARCHIVALREVIEW-TEST-004", "PROJECTARCHIVALREVIEW-TEST-006", "PROJECTARCHIVALREVIEW-TEST-011"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Stream Authorization Rule",
+      "invariant": "Subscription Account/Project parameters narrow scope but never authorize it. Signed auth identity plus active Account membership governs both Project anchor and notes; revocation removes represented rows/completeness and reactivation requires a new exact-stream completion.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-002", "PROJECTARCHIVALREVIEW-TEST-003", "PROJECTARCHIVALREVIEW-TEST-004", "PROJECTARCHIVALREVIEW-TEST-011"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Clients, Projects, notes, preferences, and reference data",
+      "invariant": "The app consumes the existing ProjectNoteQuerying port through one Account-bound provider/runtime. Selection, page, runtime and stop generations cancel and drain prior observers; same stable Project active-to-archived transition does not clear or restart its note history.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-004", "PROJECTARCHIVALREVIEW-TEST-005", "PROJECTARCHIVALREVIEW-TEST-006", "PROJECTARCHIVALREVIEW-TEST-010"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "RLS Policy Standards",
+      "invariant": "The exposed note read surface has explicit authenticated SELECT privilege plus row authorization; PUBLIC and anon have none, note INSERT/UPDATE/DELETE have no client grant or policy, and no service-role credential appears in app or MCP code.",
+      "decisionIds": [],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-001", "PROJECTARCHIVALREVIEW-TEST-002", "PROJECTARCHIVALREVIEW-TEST-009", "PROJECTARCHIVALREVIEW-TEST-011"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-008",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+      "section": "MCP and Administrative Tooling",
+      "invariant": "The gated MCP derives Account and Principal from authenticated request context, lists bounded notes with precision-safe decimal revision text, and archives through byte-identical project-archive-v1 semantics. It never fabricates local readiness or exposes note writes/search/restore/general Project update/live registration.",
+      "decisionIds": ["O-039", "O-040"],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-007", "PROJECTARCHIVALREVIEW-TEST-008", "PROJECTARCHIVALREVIEW-TEST-009", "PROJECTARCHIVALREVIEW-TEST-010"]
+    },
+    {
+      "id": "PROJECTARCHIVALREVIEW-REQ-009",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "All work remains spike-prefixed, synthetic and isolated. Firebase/source data, hosted resources, production, release and cutover remain untouched; A-003/A-004 stay proposed and real authenticated Sync authorization remains a later rehearsal gate.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["PROJECTARCHIVALREVIEW-TEST-010", "PROJECTARCHIVALREVIEW-TEST-011"]
+    }
+  ],
+  "contracts": {
+    "domain": {"items": ["Reuse ProjectNoteData and Project archive Core contracts unchanged; all provider and transport rows reconstruct through those validators.", "A note page binds exact Account/Project/page/cursor fingerprint and refuses cross-scope, duplicate, unsorted, malformed or false-complete evidence atomically."], "notApplicable": ""},
+    "postgresSchema": {"items": ["Create one spike_project_notes table with exact parent/actor references, visible/tombstone and paired-audit constraints, finite millisecond-consistent timestamps, integral 0...UInt64.max numeric revision and exact descending keyset index.", "Create only a precision-safe security-invoker read surface projecting revision as text; no second physical authority, search structure or cascade is allowed."], "notApplicable": ""},
+    "serverHandlers": {"items": ["The note read transport binds authenticated exact Project scope, reads pageSize+1 through RLS and emits bounded non-enumerating outcomes with canonical decimal revision.", "Reuse spike_archive_project byte-for-byte; add no note writer or alternative archive policy."], "notApplicable": ""},
+    "dataApiGrants": {"items": ["Revoke all note relation/read-surface/function privileges from PUBLIC, anon and authenticated before granting only the exact authenticated SELECT/EXECUTE privileges required for reads.", "No direct note INSERT, UPDATE or DELETE privilege exists."], "notApplicable": ""},
+    "rlsPolicies": {"items": ["Enable and force active-membership Account-scoped SELECT RLS on Project notes; views/functions remain security-invoker and cannot bypass the table policy.", "Owner/admin/employee active members may read; anonymous, revoked, nonmember and cross-Account callers receive no note or existence disclosure."], "notApplicable": ""},
+    "syncStreams": {"items": ["One on-demand stream contains exact Project anchor plus complete exact-Project notes for signed active members and never filters archived Projects.", "Stream SQL has no ORDER BY, LIMIT, search or note write; local SQLite owns keyset order and page bounds."], "notApplicable": ""},
+    "localOffline": {"items": ["The encrypted local schema stores exact note/audit/revision fields and index. The provider reads pageSize+1, emits <=pageSize and establishes complete history only from a new exact current-process stream completion.", "Retained restart rows are partial/stale; membership or selection loss hides rows immediately; all row/status observers unsubscribe once and drain before database close."], "notApplicable": ""},
+    "storageMedia": {"items": [], "notApplicable": "Project-note history in this slice contains no attachment identity, bytes, upload, URL, retention or deletion behavior."},
+    "appMcp": {"items": ["The Project browser owns one bounded note-history model and presents waiting, partial, stale, ready, incomplete, authoritative-empty, tombstone, Older and Newest states beside the existing archive flow.", "The combined target MCP module exposes only gated list_project_notes and archive_project contracts using scoped-user credentials and privacy-safe bounded failures."], "notApplicable": ""},
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase note is decoded, transformed, deduplicated, imported, quarantined or reconciled in this implementation batch."},
+    "observabilityRunbooks": {"items": ["Diagnostics and telemetry may contain outcome, page size, completeness, phase, bounded error and contract version only; never note text, identity, cursor, command bytes, endpoint, token or key."], "notApplicable": ""},
+    "rolloutRollback": {"items": ["Implementation remains local-only in the dedicated target worktree and disposable Supabase/PowerSync stores. Rollback is source reversion and disposal of synthetic data.", "No live MCP registration, hosted resource, Firebase change, migration, release or cutover authority is introduced."], "notApplicable": ""}
+  },
+  "verification": [
+    {"id": "PROJECTARCHIVALREVIEW-TEST-012", "kind": "domain", "owner": "Existing ProjectNoteData and Project archive Core test suites", "covers": ["PROJECTARCHIVALREVIEW-REQ-001", "PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-003", "PROJECTARCHIVALREVIEW-REQ-006", "PROJECTARCHIVALREVIEW-REQ-008"], "expected": "Frozen note identity/content/audit/page and archive command/use-case validators remain byte-unchanged and every existing domain test passes.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-013", "kind": "advisor", "owner": "Independent Supabase Postgres/RLS/PowerSync security and performance review", "covers": ["PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-003", "PROJECTARCHIVALREVIEW-REQ-004", "PROJECTARCHIVALREVIEW-REQ-005", "PROJECTARCHIVALREVIEW-REQ-007", "PROJECTARCHIVALREVIEW-REQ-009"], "expected": "Review confirms least privilege, RLS/index pushdown, precision-safe revision, complete-history stream scope, no archive child mutation and no hosted/production authority.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-001", "kind": "database_invariant", "owner": "supabase/tests/project_note_archival_review.test.sql", "covers": ["PROJECTARCHIVALREVIEW-REQ-001", "PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-003", "PROJECTARCHIVALREVIEW-REQ-007"], "expected": "Clean reset proves exact schema, constraints, indexes, UInt64 boundaries, visible/edit/tombstone rows and byte-identical note preservation around archive.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-002", "kind": "rls_positive", "owner": "pgTAP and local Data API Project-note suites", "covers": ["PROJECTARCHIVALREVIEW-REQ-001", "PROJECTARCHIVALREVIEW-REQ-005", "PROJECTARCHIVALREVIEW-REQ-007"], "expected": "Every active Account member role reads only exact active and archived Project notes through authenticated scoped-user access.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-003", "kind": "rls_negative", "owner": "pgTAP, Data API and Sync configuration tests", "covers": ["PROJECTARCHIVALREVIEW-REQ-003", "PROJECTARCHIVALREVIEW-REQ-004", "PROJECTARCHIVALREVIEW-REQ-005", "PROJECTARCHIVALREVIEW-REQ-007"], "expected": "Anonymous, revoked, nonmember, cross-Account, cursor-rebound and every direct note mutation path fail without row/count/existence disclosure.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-004", "kind": "offline_restart", "owner": "ProjectNotePowerSyncQueryTests", "covers": ["PROJECTARCHIVALREVIEW-REQ-001", "PROJECTARCHIVALREVIEW-REQ-003", "PROJECTARCHIVALREVIEW-REQ-004", "PROJECTARCHIVALREVIEW-REQ-005", "PROJECTARCHIVALREVIEW-REQ-006"], "expected": "Exact 1/200/+1 pages, keyset ties, partial/stale/ready states, retained encrypted restart and fresh exact completeness pass without false empty/history claims.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-005", "kind": "offline_rejection", "owner": "Project-note provider and existing archive provider tests", "covers": ["PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-006"], "expected": "Archive rejection/apply/readback changes only archive optimism; raw and canonical note rows, page request, order and revision remain unchanged.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-006", "kind": "end_to_end", "owner": "ProjectNoteHistoryStagingExerciseTests and Project browsing tests", "covers": ["PROJECTARCHIVALREVIEW-REQ-001", "PROJECTARCHIVALREVIEW-REQ-003", "PROJECTARCHIVALREVIEW-REQ-004", "PROJECTARCHIVALREVIEW-REQ-006"], "expected": "Selection/page/runtime/stop changes clear and drain old evidence; active-to-archived same-ID transition preserves note history; incomplete and tombstone states render correctly.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-007", "kind": "app_mcp_contract", "owner": "LedgerTargetMCP/tests/projectArchivalReview.test.ts plus Swift fixtures", "covers": ["PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-008"], "expected": "TypeScript and Swift agree on note query fingerprint/cursor and exact archive envelope/fingerprint/request hashes across full UInt64 boundaries.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-008", "kind": "handler_idempotency", "owner": "Existing Project archive suites plus Project archival-review transport tests", "covers": ["PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-008"], "expected": "Exact archive replay remains idempotent and result validation remains byte-exact while note history stays unchanged.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-009", "kind": "app_mcp_contract", "owner": "Target catalog and MCP tests", "covers": ["PROJECTARCHIVALREVIEW-REQ-001", "PROJECTARCHIVALREVIEW-REQ-007", "PROJECTARCHIVALREVIEW-REQ-008"], "expected": "Both tools remain gated, use scoped-user credentials, validate every response and expose no note write/search/restore/general-update or live registration surface.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-010", "kind": "operational", "owner": "Target checks, complete local suites and immutable exact-commit CI", "covers": ["PROJECTARCHIVALREVIEW-REQ-002", "PROJECTARCHIVALREVIEW-REQ-006", "PROJECTARCHIVALREVIEW-REQ-008", "PROJECTARCHIVALREVIEW-REQ-009"], "expected": "Conversion control, generated artifacts, complete Swift/MCP tests, local database verification and both target builds pass with clean artifacts and unchanged Firebase/production boundaries.", "status": "planned", "evidence": []},
+    {"id": "PROJECTARCHIVALREVIEW-TEST-011", "kind": "sync_authorization", "owner": "Future isolated authenticated PowerSync Project-note rehearsal", "covers": ["PROJECTARCHIVALREVIEW-REQ-004", "PROJECTARCHIVALREVIEW-REQ-005", "PROJECTARCHIVALREVIEW-REQ-007", "PROJECTARCHIVALREVIEW-REQ-009"], "expected": "A real scoped session receives only exact authorized active/archived Project history and membership revocation evicts entitlement/local evidence before A-004 advances.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "READY after independent Postgres/RLS/PowerSync, offline/app and MCP/control-plane reviews. Bounded means a 1...200 local page over a complete exact-Project on-demand replica; it does not authorize a capped or evicting history window. O-039 note writes, O-040 broad Project MCP behavior, O-023/O-024/O-025 destructive or media choices and all hosted/Firebase/migration/production/cutover work remain excluded. A-003/A-004 remain proposed."
+}
