@@ -28,8 +28,8 @@
     },
     {
       "id": "CONFIG-D810BACE7514",
-      "acknowledgeSourceHash": "0939ed35fd91680f6297d20b56601d4bddadc12e230aa23fcec85ffcc3135f0d",
-      "currentBehavior": "Comment-only pgTAP scaffold; executes no assertion.",
+      "acknowledgeSourceHash": "cea5404b6baae5a8367fcb581c4dacb4aa6888eda46c59dd5d650c3ef647da52",
+      "currentBehavior": "DRAFT pgTAP scaffold with one passing runner placeholder and no Space-creation assertion.",
       "disposition": "redesign", "status": "target_mapped", "blockers": [],
       "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
       "notes": "Reserved for runnable database invariants and RLS/handler tests.",

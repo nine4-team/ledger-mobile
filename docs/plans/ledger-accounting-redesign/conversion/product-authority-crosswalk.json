@@ -584,6 +584,24 @@
         { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
       ]
     },
+    "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001": {
+      "scope": "product",
+      "rationale": "The target-local Transfer destination picker derives exact same-Client other-active-Project candidates from the existing authorized local Project directory while preserving readiness and stable identity. It creates no separate backend authority and performs no Transfer mutation.",
+      "authorities": [
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-selection-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TRANSFER-DESTINATION-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001": {
       "scope": "product",
       "rationale": "The isolated direct Space-create provider slice must preserve stable Account/scope identity and zero accounting effects while proving encrypted offline acceptance, non-enumerating trusted authorization, exact local readback and app/MCP parity. O-044/O-045/O-046 remain explicit product blockers rather than inferred implementation policy.",

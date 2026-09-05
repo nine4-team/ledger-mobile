@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "transfer-destination-powersync-picker",
+  "title": "Browse and select same-Client Transfer destination Projects from the existing local directory",
+  "kind": "product",
+  "status": "ready",
+  "owner": "Transfer Destination Picker",
+  "surfaceIds": [
+    "SWIFT-A266AA431CC2",
+    "SWIFT-A89D47BD8E9E",
+    "SWIFT-B51F1CEFB750",
+    "SWIFT-B75E621E13BB",
+    "TEST-AE71DAB919F1",
+    "TEST-DE003BB60B7F"
+  ],
+  "implementationTouchpoints": [
+    {
+      "surfaceIds": ["SWIFT-1A05F36246B4", "TEST-C01243D7B782"],
+      "path": "LedgeriOS/LedgerTargetCore/TransferDestinationSelection.swift and LedgeriOS/LedgerTargetCoreTests/TransferDestinationSelectionTests.swift",
+      "readySourceHash": "eb79e780e2391ad1fadd2eb6ce04ae3240af341d433cdabcdde4dc188c82744b / 8b3c09fd7db046e9a28ac561a3d453fc56eb2210bc72057bf7573de0fe458e04",
+      "permittedChange": "None. Reuse the verified candidate, snapshot, availability, fingerprint, failure and query-port contracts byte-for-byte; create no second eligibility or readiness model."
+    },
+    {
+      "surfaceIds": ["SWIFT-B23F91245E50", "TEST-5AAEE26660C8"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift and its provider tests",
+      "readySourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b / 581aa186a186005cee27690712b77d020027ccac5b2282c9344fa6c625c6e237",
+      "permittedChange": "None. Consume the existing Account-bound watchProjects output; do not add SQL, tables, readiness sources, ordering, filters, indexes, subscriptions or authority."
+    },
+    {
+      "surfaceIds": ["SWIFT-75CFE285AF37"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
+      "readySourceHash": "be763bf866f37a80499e868a55805bd926f859401680ddaf382f94834b150f80",
+      "permittedChange": "Construct one module-internal derived Transfer destination query from the existing Project-directory provider, expose one Account-bound watch taking a typed ProjectSummary, route it through the existing close-aware stream lease, and preserve every existing lifecycle and persistence behavior."
+    },
+    {
+      "surfaceIds": ["SWIFT-548A8A928FAE"],
+      "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
+      "readySourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
+      "permittedChange": "Add one public typed Transfer-destination watch that forwards through the Account workspace and tracked-stream lifecycle. Expose no database, SQL, provider, subscription, authorization object or write capability."
+    },
+    {
+      "surfaceIds": ["TEST-8D6A15063B2D"],
+      "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
+      "readySourceHash": "04723d610b546e97ea8473d870c3ca119f3062c32716d357eac9c9742bc7b2de",
+      "permittedChange": "Add only exact Account/source forwarding, concurrent/post-close refusal, cancellation and observer-drainage tests for the new read path. Preserve existing fixture and runtime ownership."
+    },
+    {
+      "surfaceIds": ["SWIFT-061553E63650"],
+      "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift",
+      "readySourceHash": "5b0c969c8b83f93b89fef82446c7245420297ec88f0ce308b7f266cd417f4ccb",
+      "permittedChange": "Compose only one synthetic read-only Transfer destination exercise using a fixed typed source Project. Add no production route, source-action eligibility, Item/amount choice, confirmation or command."
+    },
+    {
+      "surfaceIds": ["SWIFT-81770E563598", "SWIFT-D0265A748544"],
+      "path": "LedgeriOS/LedgerTargetApp/SpaceCreationStagingRuntimeAdapter.swift and LedgeriOS/LedgerTargetApp/SpaceCreationStagingExerciseView.swift",
+      "readySourceHash": "307479684cbe35ee70afd42e6b5399c4729991c5d79d0800690b2ed5c3f3ffa7 / 24797398e09de38d1b9310035e641d90df9d39267e980154ae698f70a33086fb",
+      "permittedChange": "None. The unchanged recursive target-project specification will add these already-tracked Space DRAFT comment-only leaves when it adds the two Transfer app leaves. They must remain byte-exact and declaration-free; build membership grants no Space implementation or READY authority."
+    },
+    {
+      "surfaceIds": ["CONFIG-2EBA890AF767"],
+      "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj",
+      "readySourceHash": "3e74f0b64bb3042db6035bcb13f518ce1dabe2dcb34781ac03af25a118f13aba",
+      "permittedChange": "Regenerate only the standalone target project from unchanged LedgerTargetProject.yml. Accept exactly the deterministic source-membership changes for the two claimed Transfer app leaves and the two already-tracked, byte-frozen, declaration-free Space DRAFT app leaves that recursive source discovery necessarily includes. Preserve identity, destinations, dependencies, settings and scheme; no Space executable work is authorized."
+    },
+    {
+      "surfaceIds": ["CONFIG-81235587F306", "FILE-A6E49E3815F4"],
+      "path": "scripts/check-target-environment.mjs",
+      "readySourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
+      "permittedChange": "Add only exact source/build-boundary checks for the six claimed leaves, reuse of the verified contracts and directory, a typed Account-bound facade, represented stable-ID selection, and absence of SQL/schema/RLS/Sync/MCP/write/production wiring. Preserve all existing checks."
+    },
+    {
+      "surfaceIds": ["CONFIG-031396750B85", "CONFIG-77D38BB6819B"],
+      "path": "LedgeriOS/Package.swift and LedgeriOS/LedgerTargetProject.yml",
+      "readySourceHash": "fb9b93c681860bab95a6fc18fc2f1962aff9f99da2367d188082fc5569736c9c / e74a2659e366d98f41181318a8e5ea1d259888b0e1f8555af797b0cdf02196c9",
+      "permittedChange": "None expected. Existing directory-based source inclusion must compile the new leaves without dependency, target, platform, identity or build-setting changes."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "TRANSFERDESTPICKER-REQ-001",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Destination picker",
+      "invariant": "The caller identifies one source by typed AccountID and stable ProjectID only. Every upstream update re-resolves that identity to the current Project-directory row before filtering; candidates are only other active Projects with that current row's exact same non-null ClientID. Caller-stale Client/name/lifecycle, the source, archived destinations, different or missing Client identity, Business Inventory, name matches and row position are never eligibility authority.",
+      "decisionIds": ["D-003", "D-005", "D-006"],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-001", "TRANSFERDESTPICKER-TEST-002", "TRANSFERDESTPICKER-TEST-003", "TRANSFERDESTPICKER-TEST-005", "TRANSFERDESTPICKER-TEST-006"]
+    },
+    {
+      "id": "TRANSFERDESTPICKER-REQ-002",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TRANSFER-DESTINATION-001.md",
+      "section": "Implemented Contract",
+      "invariant": "Reuse the verified TransferDestinationSelectionQuerying port and source-bound selection snapshot unchanged. Every candidate carries its validated ProjectTransferRoute, stable identity and upstream Project summary; duplicate names remain valid and deterministic upstream order is preserved.",
+      "decisionIds": [],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-001", "TRANSFERDESTPICKER-TEST-002", "TRANSFERDESTPICKER-TEST-003", "TRANSFERDESTPICKER-TEST-005", "TRANSFERDESTPICKER-TEST-006"]
+    },
+    {
+      "id": "TRANSFERDESTPICKER-REQ-003",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
+      "section": "Reviewed 18-Row Logical Crosswalk",
+      "invariant": "The picker is a pure projection of the existing Project-directory snapshot: no separate canonical table, SQL query, index, RLS policy, Sync Stream, completeness signal or pagination exists. TQUERY-2D53E545A090 retains unresolvedAxes empty and preserves the upstream directory fingerprint, quality, completeness, local data version and as-of time.",
+      "decisionIds": [],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-001", "TRANSFERDESTPICKER-TEST-002", "TRANSFERDESTPICKER-TEST-003", "TRANSFERDESTPICKER-TEST-004", "TRANSFERDESTPICKER-TEST-006"]
+    },
+    {
+      "id": "TRANSFERDESTPICKER-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Offline Contract",
+      "invariant": "Waiting, partial/stale/ready candidates, incomplete empty, authoritative empty and bounded failure remain distinct. If the source ID is absent from partial/stale/incomplete upstream evidence, emit zero candidates as directory-incomplete while preserving upstream fingerprint/quality/completeness/version/time; if complete-ready evidence proves absence, emit a bounded non-enumerating source-unavailable failure. Cached candidates may be presented offline as local evidence, but neither a typed source nor local directory membership grants current server authorization.",
+      "decisionIds": [],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-001", "TRANSFERDESTPICKER-TEST-002", "TRANSFERDESTPICKER-TEST-003", "TRANSFERDESTPICKER-TEST-004", "TRANSFERDESTPICKER-TEST-005"]
+    },
+    {
+      "id": "TRANSFERDESTPICKER-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Port Design Rules",
+      "invariant": "One module-internal adapter composes the existing Account-bound Project directory into the backend-neutral Transfer destination port. It treats caller fields beyond AccountID/ProjectID as non-authoritative request material, uses the current matching directory row when represented, clears prior candidates on disappearance and never carries an old ClientID across updates. Public runtime and AppModel boundaries expose only typed Core values and structured concurrency; provider, persistence and authorization implementation details do not cross them.",
+      "decisionIds": [],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-001", "TRANSFERDESTPICKER-TEST-003", "TRANSFERDESTPICKER-TEST-004", "TRANSFERDESTPICKER-TEST-005", "TRANSFERDESTPICKER-TEST-006"]
+    },
+    {
+      "id": "TRANSFERDESTPICKER-REQ-006",
+      "authorityRole": "canonical_target",
+      "authorityPath": "docs/specs/client-identity-and-project-transfers.md",
+      "section": "Confirmed Product Direction",
+      "invariant": "This picker creates no Transfer, paired Transaction, Item move, amount, Invoice effect, payment, refund, credit, correction, Space/tag choice or accounting entry. A currently represented archived source may remain read-only source evidence and yield current same-Client active destinations; this does not expose or decide production Transfer-action eligibility for archived sources. O-002/O-011 through O-015, O-025 and D-017 are not reinterpreted.",
+      "decisionIds": ["O-002", "O-011", "O-012", "O-013", "O-014", "O-015", "O-025", "D-017"],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-001", "TRANSFERDESTPICKER-TEST-005", "TRANSFERDESTPICKER-TEST-006", "TRANSFERDESTPICKER-TEST-007"]
+    },
+    {
+      "id": "TRANSFERDESTPICKER-REQ-007",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+      "section": "Phase 1 — Backend-neutral target application foundation",
+      "invariant": "The slice remains inside the isolated target worktree and synthetic local app. It reads no Firebase snapshot, changes no Firebase app, provisions no hosted resource and authorizes no migration, release, production operation or cutover; A-003/A-004 remain proposed.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["TRANSFERDESTPICKER-TEST-004", "TRANSFERDESTPICKER-TEST-006", "TRANSFERDESTPICKER-TEST-007"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Reuse TransferDestinationCandidate, TransferDestinationSelectionSnapshot, TransferDestinationAvailability, TransferDestinationSelectionFailure and TransferDestinationSelectionQuerying unchanged.",
+        "Selection stores only a currently represented destination ProjectID in transient presentation state; it is not a Transfer draft, command, authorization fact or durable user preference."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No table, column, relationship, constraint, view, index or migration is needed; the picker derives from the existing Project directory."},
+    "serverHandlers": {"items": [], "notApplicable": "No command, trusted handler, replay result, lock, authorization or Transaction pair is created."},
+    "dataApiGrants": {"items": [], "notApplicable": "No relation, view or function is newly exposed through the Data API."},
+    "rlsPolicies": {"items": [], "notApplicable": "No RLS policy changes. Local eligibility is presentation evidence and never server authorization."},
+    "syncStreams": {"items": [], "notApplicable": "No new Sync Stream or subscription. The adapter consumes only the Project-directory working set and its existing readiness evidence."},
+    "localOffline": {
+      "items": [
+        "Treat the caller ProjectSummary as a request carrying only bound AccountID and stable ProjectID. For each validated ProjectListSnapshot, resolve that ID to the current directory row and pass the current row—not caller-stale Client/name/lifecycle—to the unchanged TransferDestinationSelectionSnapshot initializer.",
+        "Preserve upstream ordering, completeness, quality, LocalDataVersion, as-of time and fingerprint binding exactly; complete-ready empty is authoritative no destination while partial/stale empty remains incomplete.",
+        "When the source ID is absent from partial/stale/incomplete evidence, emit an empty directory-incomplete projection preserving upstream fingerprint/quality/completeness/version/time and clear prior candidates. Complete-ready absence emits one bounded non-enumerating source-unavailable failure. Reappearance resumes from its current row; same-ID Client change immediately derives candidates for the current Client only.",
+        "A currently represented archived source may remain a read-only source in this isolated picker; that is current relationship evidence only, not production action eligibility. Cross-Account input fails before observation. Invalid upstream relationship data fails atomically; cancellation and workspace close drain derived and upstream observations before database close."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {"items": [], "notApplicable": "No Item or Project attachment identity, byte, locator, upload, cache, retention or deletion behavior exists."},
+    "appMcp": {
+      "items": [
+        "A Core-only AppModel owns source-generation replacement; distinct waiting, partial-nonempty, stale-nonempty, ready-nonempty, partial-empty, stale-empty, authoritative-empty and failure presentation; and represented stable-ID selection. Retained rows after restart cannot become authoritative before new upstream completeness evidence.",
+        "A thin target runtime adapter and isolated staging view expose only the read-only picker. No MCP tool or production app route is added. Deterministic project regeneration also compiles the two already-tracked declaration-free Space DRAFT app files without advancing that blocked slice."
+      ],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {"items": [], "notApplicable": "No Firebase Client-name correlation, source Project decoding, import, transformation, quarantine or reconciliation behavior is touched."},
+    "observabilityRunbooks": {"items": [], "notApplicable": "Existing bounded local failure projection is sufficient; no metric, telemetry, alert or runbook action is added."},
+    "rolloutRollback": {
+      "items": [
+        "Implementation is limited to the six claimed leaves and the explicitly frozen shared touchpoints in this isolated target worktree.",
+        "Rollback is removal of the isolated staging projection. No hosted state, source data or production authority changes."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {"id": "TRANSFERDESTPICKER-TEST-001", "kind": "domain", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift", "covers": ["TRANSFERDESTPICKER-REQ-001", "TRANSFERDESTPICKER-REQ-002", "TRANSFERDESTPICKER-REQ-003", "TRANSFERDESTPICKER-REQ-004", "TRANSFERDESTPICKER-REQ-005", "TRANSFERDESTPICKER-REQ-006"], "expected": "A real encrypted local Project directory re-resolves the stable source ID and yields only other active Projects with the current source row's exact ClientID through the unchanged selection contract, preserving upstream order and routes despite duplicate names; caller-stale Client/name/lifecycle is ignored.", "status": "planned", "evidence": []},
+    {"id": "TRANSFERDESTPICKER-TEST-002", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift", "covers": ["TRANSFERDESTPICKER-REQ-001", "TRANSFERDESTPICKER-REQ-002", "TRANSFERDESTPICKER-REQ-003", "TRANSFERDESTPICKER-REQ-004"], "expected": "Ready, partial, stale, available and empty upstream evidence projects exactly. After encrypted reopen, retained rows first emit partial/stale with isCompleteForSelection false and never ready or authoritative-empty; only new current-process upstream completeness may promote them. No second cache or completeness source exists.", "status": "planned", "evidence": []},
+    {"id": "TRANSFERDESTPICKER-TEST-003", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift", "covers": ["TRANSFERDESTPICKER-REQ-001", "TRANSFERDESTPICKER-REQ-002", "TRANSFERDESTPICKER-REQ-003", "TRANSFERDESTPICKER-REQ-004", "TRANSFERDESTPICKER-REQ-005"], "expected": "Initial absent source under partial/stale evidence emits incomplete zero candidates; disappearance clears prior candidates; reappearance resumes; same-ID Client change uses only the current relationship; complete-ready absence, cross-Account source, malformed relationships, duplicate identities, fingerprint tamper, upstream failure and cancellation fail closed without hidden counts.", "status": "planned", "evidence": []},
+    {"id": "TRANSFERDESTPICKER-TEST-004", "kind": "operational", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift and target controls", "covers": ["TRANSFERDESTPICKER-REQ-003", "TRANSFERDESTPICKER-REQ-004", "TRANSFERDESTPICKER-REQ-005", "TRANSFERDESTPICKER-REQ-007"], "expected": "Concurrent and post-close calls refuse; cancellation drains the derived/upstream watch; package dependencies, local schema, SQL, Sync Streams and source Firebase remain unchanged.", "status": "planned", "evidence": []},
+    {"id": "TRANSFERDESTPICKER-TEST-005", "kind": "app_mcp_contract", "owner": "LedgeriOS/LedgerTargetAppModelTests/TransferDestinationSelectionStagingExerciseTests.swift", "covers": ["TRANSFERDESTPICKER-REQ-001", "TRANSFERDESTPICKER-REQ-002", "TRANSFERDESTPICKER-REQ-004", "TRANSFERDESTPICKER-REQ-005", "TRANSFERDESTPICKER-REQ-006"], "expected": "Source replacement is generation-safe; partial/stale/ready candidates and partial/stale/authoritative empty remain distinct; source disappearance or current-row relationship change clears stale choices; only represented stable destination IDs select; cancellation and late evidence cannot mutate current state; archived source remains read-only evidence; no write is callable.", "status": "planned", "evidence": []},
+    {"id": "TRANSFERDESTPICKER-TEST-006", "kind": "end_to_end", "owner": "Isolated Ledger target staging application", "covers": ["TRANSFERDESTPICKER-REQ-001", "TRANSFERDESTPICKER-REQ-002", "TRANSFERDESTPICKER-REQ-003", "TRANSFERDESTPICKER-REQ-005", "TRANSFERDESTPICKER-REQ-006", "TRANSFERDESTPICKER-REQ-007"], "expected": "Synthetic source and directory evidence flows through encrypted local provider, runtime, AppModel and view on macOS/iOS with represented stable-ID selection and no Transfer action or backend change.", "status": "planned", "evidence": []},
+    {"id": "TRANSFERDESTPICKER-TEST-007", "kind": "operational", "owner": "Immutable conversion workflow on exact READY and implementation commits", "covers": ["TRANSFERDESTPICKER-REQ-006", "TRANSFERDESTPICKER-REQ-007"], "expected": "Exact commits pass conversion control, all target tests, deterministic project generation and both builds without database, hosted, Firebase, migration, release or cutover activity.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": [],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Independent READY review returned GO after correcting caller-stale source filtering, absent/disappearing/reappearing/current-relationship acceptance, exact four-file recursive project regeneration, stale presentation, and incomplete-first restart proof. This is a derived local read/presentation slice only. Caller fields beyond stable Account/Project identity are never filter authority; current directory evidence drives the relationship and absent evidence cannot enumerate stale-Client candidates. It does not establish source-action eligibility, current server authorization, Item/amount/confirmation behavior, Transfer execution or any O-002/O-011–O-015/O-025/D-017 policy. Exact-head CI remains required before executable work."
+}

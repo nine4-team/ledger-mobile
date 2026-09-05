@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T19:49:02.187Z",
+    "lastSynchronizedAt": "2026-09-05T20:18:37.438Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2936,10 +2936,10 @@
           "path": "supabase/tests/space_creation_vertical_slice.test.sql"
         }
       ],
-      "observedSourceHash": "0939ed35fd91680f6297d20b56601d4bddadc12e230aa23fcec85ffcc3135f0d",
-      "acknowledgedSourceHash": "0939ed35fd91680f6297d20b56601d4bddadc12e230aa23fcec85ffcc3135f0d",
+      "observedSourceHash": "cea5404b6baae5a8367fcb581c4dacb4aa6888eda46c59dd5d650c3ef647da52",
+      "acknowledgedSourceHash": "cea5404b6baae5a8367fcb581c4dacb4aa6888eda46c59dd5d650c3ef647da52",
       "metadata": {},
-      "currentBehavior": "Comment-only pgTAP scaffold; executes no assertion.",
+      "currentBehavior": "DRAFT pgTAP scaffold with one passing runner placeholder and no Space-creation assertion.",
       "disposition": "redesign",
       "target": {
         "owner": "Space Creation Provider",
@@ -31390,6 +31390,58 @@
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {
+      "id": "SWIFT-A266AA431CC2",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/TransferDestinationSelectionStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/TransferDestinationSelectionStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "149f1798cebd6f8e894caada40939a9026e75fed4549b7ac0d5f97782e08ddbc",
+      "acknowledgedSourceHash": "149f1798cebd6f8e894caada40939a9026e75fed4549b7ac0d5f97782e08ddbc",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only provider-free staging AppModel scaffold; exposes no state or action.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": [
+          "provider-free Transfer destination staging model"
+        ],
+        "securityRequirements": [
+          "Consume typed local evidence without interpreting authorization"
+        ],
+        "syncRequirements": [
+          "Preserve waiting, partial, stale, ready, authoritative-empty and bounded-failure truth"
+        ]
+      },
+      "migration": {
+        "rule": "No source view model or Firebase listener is read or copied.",
+        "reconciliation": [
+          "Late evidence from a replaced source cannot mutate current presentation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "TransferDestinationSelectionStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Only currently represented stable destination identity is selectable"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Reserved only for current-directory source resolution, exact observation states, and represented destination selection with stale choices cleared.",
+      "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
+    },
+    {
       "id": "SWIFT-A2FCAF3E6103",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/ProjectItemLinkPresentation.swift",
@@ -31967,6 +32019,58 @@
       ],
       "notes": "M2 withheld: O-008/O-030/O-031/O-032 changes the target money/movement/occurrence/lifecycle/evidence contract for this responsibility. Confirmed D-decisions remain authoritative, but source Transaction/lineage mechanics are not provisional target schema.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "SWIFT-A89D47BD8E9E",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/TransferDestinationSelectionStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/TransferDestinationSelectionStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "5fc624298d754399b599fa5b52131084cbfd922ad4769e83f6f004db0bd823d7",
+      "acknowledgedSourceHash": "5fc624298d754399b599fa5b52131084cbfd922ad4769e83f6f004db0bd823d7",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target-app runtime-adapter scaffold; exposes no method.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": [
+          "target staging Transfer destination runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose only typed source and snapshot values"
+        ],
+        "syncRequirements": [
+          "Own no second cache, subscription, eligibility rule or write path"
+        ]
+      },
+      "migration": {
+        "rule": "No source adapter or production route is modified.",
+        "reconciliation": [
+          "Cancellation and replacement drain the forwarded observation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target environment and staging build checks"
+        ],
+        "acceptance": [
+          "Adapter remains thin and target-only"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Reserved for thin forwarding through the existing Account-bound runtime.",
+      "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
       "id": "SWIFT-A8B0B06147C3",
@@ -33197,6 +33301,58 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-B51F1CEFB750",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/TransferDestinationSelectionStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/TransferDestinationSelectionStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "74c45ecb702da005bec27d97125210e89d169e89f7aca0202c8c3cc9b988ccb0",
+      "acknowledgedSourceHash": "74c45ecb702da005bec27d97125210e89d169e89f7aca0202c8c3cc9b988ccb0",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only isolated SwiftUI scaffold; renders no view.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": [
+          "isolated Transfer destination staging view"
+        ],
+        "securityRequirements": [
+          "Render only AppModel-projected rows and stable identity"
+        ],
+        "syncRequirements": [
+          "Do not present incomplete evidence as authoritative empty"
+        ]
+      },
+      "migration": {
+        "rule": "No source picker behavior or production screen is modified.",
+        "reconciliation": [
+          "Selection is cleared when its stable ID is no longer represented"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target staging macOS and iOS builds"
+        ],
+        "acceptance": [
+          "No Item, amount, confirmation, command or accounting action exists"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Reserved for a synthetic read-only picker, not a production Transfer route.",
+      "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
+    },
+    {
       "id": "SWIFT-B5661A312D65",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/EditChecklistModal.swift",
@@ -33370,6 +33526,60 @@
       ],
       "notes": "M2 withheld: O-040 must decide whether the personal-pin feature and Overall sentinel survive, plus missing versus explicit empty, no-pin/default/card fallback, ordering and stale/archive policy. This Firestore DTO is migration/source evidence, not target schema authority; verified provider-free primitives remain provisional representational support only.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-B75E621E13BB",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/TransferDestinationSelectionPowerSyncQuery.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/TransferDestinationSelectionPowerSyncQuery.swift"
+        }
+      ],
+      "observedSourceHash": "1e5bddc1f05ec54f9af5144d19b4fe84eeb6717488d0d0a60932cc28c4f14df7",
+      "acknowledgedSourceHash": "1e5bddc1f05ec54f9af5144d19b4fe84eeb6717488d0d0a60932cc28c4f14df7",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only local provider scaffold; performs no query.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": [
+          "Account-bound TransferDestinationSelectionQuerying adapter"
+        ],
+        "securityRequirements": [
+          "Exact Account/source binding and fail-closed relationship validation"
+        ],
+        "syncRequirements": [
+          "Reuse upstream Project-directory order, readiness, local version and lifecycle",
+          "Absent incomplete source evidence emits no candidates; complete-ready absence fails boundedly",
+          "Same-ID relationship changes use the current row and never caller-stale Client identity"
+        ]
+      },
+      "migration": {
+        "rule": "Read only the existing synthetic target-local Project directory; decode no Firebase data.",
+        "reconciliation": [
+          "No separate Transfer-destination table or authority is created"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "TransferDestinationSelectionPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Only other active same-Client Projects are emitted with honest readiness"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Reserved for re-resolving stable source identity from every Project-directory update before deriving the verified destination snapshot.",
+      "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
       "id": "SWIFT-B95AD78B8CEC",
@@ -44852,6 +45062,58 @@
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
+      "id": "TEST-AE71DAB919F1",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift"
+        }
+      ],
+      "observedSourceHash": "a787a9487756bee9fd0ee9e62fc7892f87c889eccf394e8ccc7fb532d05c0d04",
+      "acknowledgedSourceHash": "a787a9487756bee9fd0ee9e62fc7892f87c889eccf394e8ccc7fb532d05c0d04",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only local provider-test scaffold; executes no assertion.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": [
+          "Transfer destination local-provider test suite"
+        ],
+        "securityRequirements": [
+          "Prove cross-Account and malformed source evidence cannot enumerate candidates"
+        ],
+        "syncRequirements": [
+          "Prove restart, upstream updates, cancellation and close preserve exact truth"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable encrypted local databases and synthetic identities only.",
+        "reconciliation": [
+          "Tests create no production, migration or hosted evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransferDestinationSelectionPowerSyncQueryTests"
+        ],
+        "acceptance": [
+          "Every frozen provider obligation passes before implementation promotion"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Reserved for encrypted local composition, current-source re-resolution, absence/reappearance, readiness, refusal and lifecycle tests.",
+      "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
+    },
+    {
       "id": "TEST-B14A5E3340E7",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgeriOSTests/BudgetCalculationTests.swift",
@@ -46178,6 +46440,58 @@
       ],
       "notes": "Implemented target tests prove exact Account/Project/category scope, no-row/null/zero/positive distinctions, incomplete-local truth, canonical restart and atomic malformed/scope/duplicate/count/contradictory refusal without claiming physical local durability, authorization, spend calculation, schema/RLS/Sync/provider behavior, app/MCP parity, migration or production behavior.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-DE003BB60B7F",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/TransferDestinationSelectionStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/TransferDestinationSelectionStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "ec9c53fbfb7e03041951b47ef1a63f19b087b90c6611fc51c385b96701ae26e5",
+      "acknowledgedSourceHash": "ec9c53fbfb7e03041951b47ef1a63f19b087b90c6611fc51c385b96701ae26e5",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only AppModel-test scaffold; executes no assertion.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Transfer Destination Picker",
+        "surfaces": [
+          "Transfer destination staging-model test suite"
+        ],
+        "securityRequirements": [
+          "Do not infer hidden candidates, authorization or write permission"
+        ],
+        "syncRequirements": [
+          "Reject late prior-source evidence and distinguish partial/stale/ready candidates plus partial/stale/authoritative empty"
+        ]
+      },
+      "migration": {
+        "rule": "Use deterministic in-memory ports only.",
+        "reconciliation": [
+          "No persistent selection or source-data transformation is introduced"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter TransferDestinationSelectionStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Read-only presentation is deterministic and cancellation-safe"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Reserved for source-switch, selection, failure and observation-lifecycle tests.",
+      "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
       "id": "TEST-DE986CFD8624",

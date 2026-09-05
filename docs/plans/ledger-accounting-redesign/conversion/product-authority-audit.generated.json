@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T19:49:02.187Z",
+  "generatedFromManifestSync": "2026-09-05T20:18:37.438Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 951,
-    "targetRelevantSurfaces": 689,
-    "batches": 35,
-    "productScopeSurfaces": 780,
+    "surfaces": 957,
+    "targetRelevantSurfaces": 695,
+    "batches": 36,
+    "productScopeSurfaces": 786,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -78,10 +78,11 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
-        "M0-REPORTING-SEARCH-001"
+        "M0-REPORTING-SEARCH-001",
+        "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
       ],
-      "surfaceCount": 518,
-      "targetRelevantSurfaceCount": 400
+      "surfaceCount": 524,
+      "targetRelevantSurfaceCount": 406
     },
     {
       "path": "docs/specs/projects.md",
@@ -3046,6 +3047,72 @@
         "TEST-E97A8051035C",
         "TEST-EBA9C48BC4EE",
         "TEST-F46861BCC21A"
+      ]
+    },
+    {
+      "batchId": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001",
+      "title": "Target-local Transfer destination picker derived from Project directory evidence",
+      "scope": "product",
+      "rationale": "The target-local Transfer destination picker derives exact same-Client other-active-Project candidates from the existing authorized local Project directory while preserving readiness and stable identity. It creates no separate backend authority and performs no Transfer mutation.",
+      "surfaceCount": 6,
+      "targetRelevantSurfaceCount": 6,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-selection-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TRANSFER-DESTINATION-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-A266AA431CC2",
+        "SWIFT-A89D47BD8E9E",
+        "SWIFT-B51F1CEFB750",
+        "SWIFT-B75E621E13BB",
+        "TEST-AE71DAB919F1",
+        "TEST-DE003BB60B7F"
       ]
     }
   ]

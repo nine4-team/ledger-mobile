@@ -11,10 +11,11 @@
 The next proposed provider-backed slice was traced from canonical Space behavior
 through the already-verified `CreateSpace` operation and direct-creation use case,
 the existing Space destination provider, Postgres/RLS/Sync, encrypted local
-optimism, isolated app presentation and target MCP parity. Twelve comment-only
-target leaves reserve that boundary. They contain no executable Swift,
-TypeScript, SQL, Data API request, test, hosted call, migration, release or
-production behavior.
+optimism, isolated app presentation and target MCP parity. Twelve non-
+implementation target scaffolds reserve that boundary: eleven are comment-only,
+and the pgTAP leaf contains only the one passing placeholder required by the
+repository-wide test runner. They contain no executable Space-creation behavior,
+Data API request, hosted call, migration, release or production behavior.
 
 Independent review found three user-visible rules that current authority does
 not settle. O-044 now owns exact cross-runtime Space-name and notes validation;
@@ -80,3 +81,15 @@ them a second primary slice.
 A-003/A-004 remain proposed. Hosted authenticated PowerSync, A-016 offline lease,
 production profiling, Firebase, source import, deployment, release and cutover
 remain separately gated. This DRAFT is not Supabase migration authorization.
+
+## Immutable Checkpoint Correction
+
+The initial DRAFT commit `2cf4bdb2` passed conversion control and the complete
+target test/build job, but immutable run `33988334645` failed the local Supabase
+job because the comment-only `.test.sql` file emitted no TAP plan. That is a
+test-runner integration defect, not a Space implementation failure. The
+corrected scaffold now follows the repository's established blocked-slice
+pattern: one passing placeholder and zero Space assertions. Local database lint,
+all 211 pgTAP assertions/placeholders, the Space destination Data API matrix and
+both existing RPC runners pass. Exact-head CI for the correction remains pending
+and must not be inferred from these local results.

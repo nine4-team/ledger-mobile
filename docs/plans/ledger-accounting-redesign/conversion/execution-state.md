@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 319
+State version: 321
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-CREATION-PROVIDER-DRAFT-BLOCKED-TRANSFER-DESTINATION-NEXT
+- Checkpoint: TRANSFER-DESTINATION-PICKER-READY-AWAITING-EXACT-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,10 +33,10 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **505 of 689 target-relevant surfaces mapped or
-  later (73.3%)** after the blocked Space-create DRAFT is synchronized. Local
-  surface-implementation coverage is **203 of 689 implemented or verified
-  (29.5%)**.
+- Planning/control coverage is **511 of 695 target-relevant surfaces mapped or
+  later (73.5%)** after the Transfer-destination READY candidate is synchronized.
+  Local surface-implementation coverage is **203 of 695 implemented or verified
+  (29.2%)**.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -51,8 +51,8 @@ without modifying the running Firebase application before hard cutover.
   migration/reconciliation, operational rollout/rollback, and cutover. Progress
   reports must lead with the exact four lanes above rather than repeat a broad
   estimate without its basis.
-- The implementation tracker currently contains 276 status-bearing rows: 68
-  done, eight verified, nine implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 277 status-bearing rows: 68
+  done, eight verified, nine implemented, one ready, zero awaiting verification,
   12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -83,12 +83,40 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
+- Corrected the blocked Space-create DRAFT's repository-wide pgTAP integration.
+  Initial commit `2cf4bdb2` passed conversion and target jobs but immutable run
+  `33988334645` failed the local Supabase job because the entirely comment-only
+  `.test.sql` leaf emitted no TAP plan. The leaf now contains one passing runner
+  placeholder and zero Space assertions; its classification/evidence no longer
+  calls it comment-only. Database lint, all 211 local pgTAP checks, the Space
+  destination Data API matrix and both existing RPC runners pass. Exact-head
+  correction CI remains pending.
+
+- Prepared and independently reviewed a bounded six-leaf comment-only READY
+  package for the target-local Transfer destination picker. It reuses the verified
+  `TQUERY-2D53E545A090` / `TACCESS-626ED0857269` contract and existing encrypted
+  Project-directory provider without creating SQL, schema, RLS, Sync Streams,
+  completeness sources, storage, upload, MCP or write behavior. Exact shared
+  source hashes permit only Account-runtime forwarding/lifecycle tests, Core-only
+  AppModel and staging composition, boundary checks and deterministic standalone
+  target-project membership. Source-action eligibility,
+  Items, amount, confirmation, Transfer execution/accounting and
+  O-002/O-011–O-015/O-025/D-017 remain outside. Review initially returned NO-GO
+  and forced current-row source re-resolution, absent/disappearing/reappearing
+  and same-ID Client-change cases, explicit stale/incomplete-first restart truth,
+  and the exact four-file recursive project-regeneration boundary. A currently
+  represented archived source remains read-only evidence and grants no production
+  action eligibility. Final review returns GO. Immutable exact-head CI is still
+  required before executable implementation;
+  `EVID-TRANSFER-DESTINATION-PICKER-READY-001`.
+
 - Audited provider-backed direct Space creation before implementation and
   stopped it at DRAFT after independent review found three missing product
   authorities: exact cross-runtime Space name/notes acceptance, command-specific
   writer authorization, and archived-Project parent eligibility. O-044/O-045/
-  O-046 and one combined decision packet now own those choices. Twelve
-  machine-discovered comment-only target leaves, a full verification matrix and
+  O-046 and one combined decision packet now own those choices. Eleven
+  machine-discovered comment-only target leaves, one pgTAP runner placeholder
+  with no Space assertion, a full verification matrix and
   every shared implementation touchpoint are recorded; none executes Swift,
   TypeScript, SQL, a Data API request or a test. Immediate destination-picker
   readback is explicitly partial, exact Principal/Account/scope-bound and causal:
@@ -4219,16 +4247,18 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Prepare the provider-backed Transfer destination picker as one comment-only
-DRAFT/READY candidate, then require independent review and immutable exact-head
-CI before executable work. Reuse `TQUERY-2D53E545A090`,
+Commit and push the independently reviewed provider-backed Transfer destination
+picker READY package, require immutable exact-head CI, then implement exactly
+the frozen six leaves and shared touchpoints. Reuse `TQUERY-2D53E545A090`,
 `TACCESS-626ED0857269`, `EVID-TRANSFER-DESTINATION-001` and the existing local
 Client/Project directory provider rather than creating SQL, schema, RLS, Sync,
 handler, upload, MCP or another Project authority. The derived projection may
 show only other active Projects with the exact same non-null ClientID in the
-same Account, preserve upstream order, distinguish complete authoritative empty
-from incomplete/partial/stale evidence, and bind selection to a currently
-represented stable ProjectID. Add only the PowerSync composition leaf/tests,
+same Account after re-resolving the stable source ID from every current directory
+snapshot, preserve upstream order, distinguish complete authoritative empty
+from incomplete/partial/stale evidence, clear candidates when the source
+disappears, and bind selection to a currently represented stable ProjectID. Add
+only the PowerSync composition leaf/tests,
 Core-only AppModel/tests, thin target runtime adapter/view and exact shared
 runtime/staging/checker/project-generation touchpoints.
 

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T19:49:02.187Z",
+  "generatedFromManifestSync": "2026-09-05T20:18:37.438Z",
   "totals": {
-    "slices": 84,
-    "claimedTargetSurfaces": 267,
+    "slices": 85,
+    "claimedTargetSurfaces": 273,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 203
   },
   "statusCounts": {
     "draft": 2,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 9,
     "verified": 70,
@@ -1292,6 +1292,25 @@
       "verificationCount": 7,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transaction-type-choice-presentation-contracts.json"
+    },
+    {
+      "sliceId": "transfer-destination-powersync-picker",
+      "title": "Browse and select same-Client Transfer destination Projects from the existing local directory",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Transfer Destination Picker",
+      "surfaceIds": [
+        "SWIFT-A266AA431CC2",
+        "SWIFT-A89D47BD8E9E",
+        "SWIFT-B51F1CEFB750",
+        "SWIFT-B75E621E13BB",
+        "TEST-AE71DAB919F1",
+        "TEST-DE003BB60B7F"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 7,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/transfer-destination-powersync-picker.json"
     },
     {
       "sliceId": "transfer-destination-selection-contracts",
