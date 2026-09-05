@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 284
+State version: 285
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-IMPLEMENTED-LOCAL-GO-CI-PENDING
+- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-CI-HARNESS-CORRECTED-RERUN-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -81,8 +81,19 @@ without modifying the running Firebase application before hard cutover.
   Final corrected-diff review returned GO with no P0-P3 finding. Twelve focused
   runtime, 13 attachment and four isolation tests pass; all 403 Swift tests in
   73 suites, the compiler public-symbol boundary, target environment/contracts,
-  11 MCP tests, both staging builds and diff checks pass locally. The synchronized
-  implementation commit and immutable CI remain the next action. The runtime is
+  11 MCP tests, both staging builds and diff checks pass locally. Implementation
+  commit `462b757606841a49d8b2812b98c13c273a0b7ca6` passed the conversion-control
+  and disposable-local-Supabase jobs in run `33939963766`, but its macOS job
+  timed out after four independent `.serialized` PowerSync/SQLCipher suites
+  advanced concurrently and then stopped completing. The log contained no
+  assertion failure. Twenty consecutive local parallel full-suite runs passed,
+  and an explicit process-wide nonparallel run passed all 403 tests in 6.8
+  seconds. Swift Testing serializes only within one suite, so the workflow and
+  its fail-closed integration control now require `--no-parallel`; focused
+  runtime tests retain simultaneous databases, operations, four watches and
+  close concurrency. Independent diagnosis agreed this is the smallest robust
+  containment and found no shared fixture path. The corrected synchronized
+  commit and immutable rerun remain the next action. The runtime is
   explicitly not `AccountSessionEnding`; no sync, result resolution, upload
   verification, deletion, cleanup, signout, workspace switch, hosted access,
   Firebase work, migration, production or cutover behavior exists, and

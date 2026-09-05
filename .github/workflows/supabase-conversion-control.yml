@@ -73,7 +73,11 @@ jobs:
           npm run target:mcp:test
 
       - name: Test isolated target contracts
-        run: swift test --package-path LedgeriOS
+        # Swift Testing's `.serialized` trait is suite-local, so independent
+        # PowerSync/SQLCipher integration suites can otherwise open and close
+        # native database runtimes concurrently on the shared CI process.
+        # Runtime-level concurrency remains exercised inside the focused tests.
+        run: swift test --package-path LedgeriOS --no-parallel
 
       - name: Build target staging for macOS
         run: npm run target:staging:build:macos

@@ -293,6 +293,16 @@ test("package scripts and Linux-before-Swift workflow hooks are exact and fail c
   expectFailure(
     () => validateIntegrationHooks(
       packageJson,
+      workflow.replace(
+        "swift test --package-path LedgeriOS --no-parallel",
+        "swift test --package-path LedgeriOS",
+      ),
+    ),
+    /nonparallel Swift test gate/,
+  );
+  expectFailure(
+    () => validateIntegrationHooks(
+      packageJson,
       workflow.replace("    runs-on: ubuntu-latest\n", "    if : ${{ false }}\n    runs-on: ubuntu-latest\n"),
     ),
     /must not conditionally skip/,

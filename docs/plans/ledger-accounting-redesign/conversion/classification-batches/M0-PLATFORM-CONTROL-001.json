@@ -18,8 +18,8 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e",
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
+      "acknowledgeSourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -31,7 +31,7 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-  "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+  "notes": "CI definition remains claimed by target-environment-isolation. Run 33939963766 proved conversion and disposable-local-Supabase jobs but its macOS job timed out after four independent serialized PowerSync/SQLCipher suites advanced concurrently and stopped emitting completions. Twenty repeated local parallel suites and one explicit nonparallel 403-test suite passed. The target job now uses Swift Testing's process-wide --no-parallel mode for cross-suite native database isolation while focused runtime tests retain the required internal concurrency coverage. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Corrected immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

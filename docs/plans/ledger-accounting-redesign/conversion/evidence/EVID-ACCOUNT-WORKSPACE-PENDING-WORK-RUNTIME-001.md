@@ -19,9 +19,22 @@ The exact corrected READY commit
 `15218cbbc44b7e7c28ef718c1770c7b6294a03c4` passed all three jobs in immutable
 Actions run `33935937733` before executable work began.
 
-The exact synchronized implementation commit and Actions run remain pending.
-Until they pass, operational verification `WORKRUNTIME-TEST-009` remains
-planned and this evidence does not claim immutable implementation CI.
+Implementation commit `462b757606841a49d8b2812b98c13c273a0b7ca6` passed
+the conversion-control and disposable-local-Supabase jobs in Actions run
+`33939963766`. Its macOS job timed out in the complete Swift package gate after
+four independent `.serialized` PowerSync/SQLCipher suites advanced together;
+the log reported no assertion failure and killed the still-running
+`swiftpm-testing` process at the 20-minute job boundary. Swift Testing
+serializes within a suite, not across independent suites. Twenty consecutive
+local parallel full-suite runs passed, an explicit process-wide nonparallel run
+passed all 403 tests in 6.8 seconds, and independent diagnosis found no shared
+fixture path or deterministic test failure. The workflow and its fail-closed
+integration control now require `--no-parallel`; the focused tests still drive
+simultaneous databases, operations, four watches, ABA callers and close callers
+inside the production-relevant boundaries. The corrected synchronized commit
+and Actions run remain pending. Until they pass, operational verification
+`WORKRUNTIME-TEST-009` remains planned and this evidence does not claim
+immutable implementation CI.
 
 ## Implemented Boundary
 
@@ -97,6 +110,8 @@ sentinel or runtime lifecycle.
 - 13 attachment durability provider tests pass.
 - 4 workspace-isolation tests pass.
 - All 403 Swift tests in 73 suites pass.
+- Twenty consecutive local parallel full-suite runs pass; one explicit
+  process-wide nonparallel run passes all 403 tests in 6.8 seconds.
 - The target environment guard, generated target contracts, 11 MCP tests, and
   `git diff --check` pass.
 - The compiler public-symbol graph contains the narrow facade and excludes all
@@ -107,6 +122,9 @@ sentinel or runtime lifecycle.
   disposable local Supabase database is listening on `127.0.0.1:54322`; the
   immutable workflow starts its own isolated local Supabase stack and remains
   the required evidence for `WORKRUNTIME-TEST-009`.
+- Actions run `33939963766` proves its conversion-control and disposable-local-
+  Supabase jobs. Its macOS test-process timeout is recorded as failed evidence,
+  not promoted or silently retried.
 
 ## Frozen Affected Surfaces
 

@@ -42,7 +42,7 @@ const EXPECTED_CONTRACTS_SHA =
 const EXPECTED_PACKAGE_INTEGRATION_SHA =
   "dce10f968ed39ea2a0078fd8c270ee476080ea19a6eaaf06c27b37a32c5b8731";
 const EXPECTED_WORKFLOW_INTEGRATION_SHA =
-  "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e";
+  "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430";
 
 const EXPECTED_COUNTS = Object.freeze({ queries: 386, outcomes: 584, batches: 10 });
 const LIFECYCLES = Object.freeze(["draft", "ready", "implemented", "verified"]);
@@ -499,8 +499,12 @@ export function validateIntegrationHooks(packageJson, workflowText) {
   if (!targetLines.some((line) => /^    runs-on: macos-26\s*$/.test(line))) {
     fail("target-environment job must run on macos-26");
   }
-  if (!targetLines.some((line) => /^        run: swift test --package-path LedgeriOS\s*$/.test(line))) {
-    fail("target-environment job must retain the Swift test gate");
+  if (
+    !targetLines.some((line) =>
+      /^        run: swift test --package-path LedgeriOS --no-parallel\s*$/.test(line),
+    )
+  ) {
+    fail("target-environment job must retain the nonparallel Swift test gate");
   }
   const targetDiffStep = uniqueLineIndex(
     targetLines,

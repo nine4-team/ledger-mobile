@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T02:44:18.856Z",
+    "lastSynchronizedAt": "2026-09-05T03:20:15.133Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -312,10 +312,10 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e",
-      "acknowledgedSourceHash": "fad750cb1dc92824e23f246e5197e90f558f56425000993dae3d5f8b790b6f2e",
+      "observedSourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
+      "acknowledgedSourceHash": "a9807bb146103c2085ec977de61ae2f23b361c52d41a19906e827f5c4571b430",
       "metadata": {},
-      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement.",
+      "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client and Project schema/RLS/RPC on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -355,7 +355,7 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "CI definition remains claimed by target-environment-isolation. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
+      "notes": "CI definition remains claimed by target-environment-isolation. Run 33939963766 proved conversion and disposable-local-Supabase jobs but its macOS job timed out after four independent serialized PowerSync/SQLCipher suites advanced concurrently and stopped emitting completions. Twenty repeated local parallel suites and one explicit nonparallel 403-test suite passed. The target job now uses Swift Testing's process-wide --no-parallel mode for cross-suite native database isolation while focused runtime tests retain the required internal concurrency coverage. The local Supabase job and MCP test step are non-production verification for the Client and Project provider slices; no hosted resource, credential, export, deployment or cutover step exists. Corrected immutable CI for the current slice remains pending. Signed/visual/physical and hosted-resource portions of TARGET-ENV-TEST-005 remain open.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -761,10 +761,10 @@
           "path": "scripts/tests/generate-source-query-reconciliation.test.mjs"
         }
       ],
-      "observedSourceHash": "efa5ffb48bf7240bedf79eb30e25d5decf6c16d98ab13119c254059c1909a169",
-      "acknowledgedSourceHash": "efa5ffb48bf7240bedf79eb30e25d5decf6c16d98ab13119c254059c1909a169",
+      "observedSourceHash": "bb093fb3e58f8c6f9ff217e96a300300762966f6f3ae853abe86daf658c55693",
+      "acknowledgedSourceHash": "bb093fb3e58f8c6f9ff217e96a300300762966f6f3ae853abe86daf658c55693",
       "metadata": {},
-      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, historical checkpoint-diff and fail-closed workflow checks, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
+      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, historical checkpoint-diff and fail-closed workflow checks including the required nonparallel complete-Swift-package gate, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -801,7 +801,7 @@
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. Regression cases prove that only the exact always-run cleanup step is conditional; verification steps still cannot skip or tolerate failures. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority.",
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. Regression cases prove that only the exact always-run cleanup step is conditional, verification steps cannot skip or tolerate failures, and removal of --no-parallel from the complete Swift package gate fails closed. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -1742,10 +1742,10 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "fe003598df334cde7350c47ef35668c9c5fa322560a20a46315d5627570e2cda",
-      "acknowledgedSourceHash": "fe003598df334cde7350c47ef35668c9c5fa322560a20a46315d5627570e2cda",
+      "observedSourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
+      "acknowledgedSourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
       "metadata": {},
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step while every verification step remains fail-closed.",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -1783,7 +1783,7 @@
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check now validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. No runtime, physical/provider, hosted, production, migration, retirement or cutover authority is created.",
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention; this changes test scheduling only and grants no runtime, physical/provider, hosted, production, migration, retirement or cutover authority.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {

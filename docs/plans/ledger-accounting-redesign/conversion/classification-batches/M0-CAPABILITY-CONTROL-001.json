@@ -207,8 +207,8 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "fe003598df334cde7350c47ef35668c9c5fa322560a20a46315d5627570e2cda",
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step while every verification step remains fail-closed.",
+      "acknowledgeSourceHash": "4da9696b3c72f47bac70855a63365b4973b014c543c5e4df766f21ad29aa657e",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Workflow validation permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -244,12 +244,12 @@
       "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check now validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. No runtime, physical/provider, hosted, production, migration, retirement or cutover authority is created."
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention; this changes test scheduling only and grants no runtime, physical/provider, hosted, production, migration, retirement or cutover authority."
     },
     {
       "id": "CONFIG-40F01696B8A6",
-      "acknowledgeSourceHash": "efa5ffb48bf7240bedf79eb30e25d5decf6c16d98ab13119c254059c1909a169",
-      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, historical checkpoint-diff and fail-closed workflow checks, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
+      "acknowledgeSourceHash": "bb093fb3e58f8c6f9ff217e96a300300762966f6f3ae853abe86daf658c55693",
+      "currentBehavior": "Executable 23-test adversarial Node suite covering the exact reviewed baseline, closed schemas and prefixed malformed-input refusal, source identity and ownership hashes, target mappings, blocker/evidence anti-laundering, retirement authority and gate order, canonical/conflict behavior, deterministic output, historical checkpoint-diff and fail-closed workflow checks including the required nonparallel complete-Swift-package gate, filesystem containment, exclusive atomic writes, read-only checking, exact output destination, and exact CLI arity.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -284,7 +284,7 @@
       "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. Regression cases prove that only the exact always-run cleanup step is conditional; verification steps still cannot skip or tolerate failures. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority."
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. Regression cases prove that only the exact always-run cleanup step is conditional, verification steps cannot skip or tolerate failures, and removal of --no-parallel from the complete Swift package gate fails closed. Machine tests prove structure/freshness only and preserve human-reviewed outcome semantics as separate authority."
     }
   ]
 }
