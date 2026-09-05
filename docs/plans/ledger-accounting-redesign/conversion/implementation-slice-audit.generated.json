@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T07:15:39.837Z",
+  "generatedFromManifestSync": "2026-09-05T07:42:11.125Z",
   "totals": {
-    "slices": 78,
-    "claimedTargetSurfaces": 217,
+    "slices": 79,
+    "claimedTargetSurfaces": 221,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 165
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 6,
     "verified": 68,
@@ -556,6 +556,23 @@
       "verificationCount": 7,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-browsing-presentation-contracts.json"
+    },
+    {
+      "sliceId": "project-browsing-staging-application-flow",
+      "title": "Browse locally represented Projects and preserve exact Project detail truth",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Browsing Staging Application Flow",
+      "surfaceIds": [
+        "SWIFT-07427FF0DA84",
+        "SWIFT-AA91CE0C3FAB",
+        "SWIFT-CAB085E24751",
+        "TEST-5C7E5E715EAE"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 12,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-browsing-staging-application-flow.json"
     },
     {
       "sliceId": "project-budget-segment-read-contracts",

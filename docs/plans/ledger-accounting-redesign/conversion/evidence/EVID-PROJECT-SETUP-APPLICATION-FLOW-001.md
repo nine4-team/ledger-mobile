@@ -2,7 +2,9 @@
 
 - Status: verified at exact implementation commit
   `2dc519e64d5cde4e716cbff68f6443fe8f1989b4`; independently reviewed and
-  immutable CI passed
+  immutable CI passed; exact promotion commit
+  `1428f53350e0b4ecdf5f19897e969d8faf643073` passed all three jobs in run
+  `33952081491`
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none

@@ -1,0 +1,110 @@
+{
+  "batchId": "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
+  "title": "Project browsing target staging application flow",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
+    "EVID-PROJECT-BROWSING-PRESENTATION-001",
+    "EVID-PROJECT-CORE-DETAILS-001",
+    "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-CAB085E24751",
+      "acknowledgeSourceHash": "9c7b2afc8dafd69e7031624723db71494126b0f1abd628183cc65407664327c9",
+      "currentBehavior": "Comment-only scaffold reserved for a Core-only Project directory, selection, and detail application model.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "Executable work is prohibited until the slice reaches READY and its exact comment-only checkpoint passes immutable CI.",
+      "target": {
+        "owner": "Project Browsing Staging Application Flow",
+        "surfaces": ["reactive Project directory, evidence-bound selection, and Project detail application state"],
+        "securityRequirements": ["Consume only Account-bound typed snapshots and expose no provider, database, SQL, credential, or authorization policy"],
+        "syncRequirements": ["Preserve every represented local readiness, completeness, absence, failure, and cached-detail state without inventing authority"]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": ["Use stable Project and Client identities rather than display text"]
+      },
+      "verification": {
+        "tests": ["LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift"],
+        "acceptance": ["The application model passes directory, selection, detail, cancellation, failure, termination, and shutdown tests"]
+      }
+    },
+    {
+      "id": "TEST-5C7E5E715EAE",
+      "acknowledgeSourceHash": "86c0cb74b71bda036a6f1a954462f95d74426c97c1608b004225ee11b807a239",
+      "currentBehavior": "Comment-only scaffold reserved for deterministic Project browsing application-model tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "Controlled directory/detail streams must exercise every frozen state and complete without unbounded waits.",
+      "target": {
+        "owner": "Project Browsing Staging Application Flow",
+        "surfaces": ["deterministic Project browsing application-model test matrix"],
+        "securityRequirements": ["Use synthetic Account, Client, Project, lifecycle, readiness, and failure evidence only"],
+        "syncRequirements": ["Exercise continuous updates, rapid reselection, termination, cancellation, drainage, and post-stop silence"]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": ["Assert exact typed presentation and detail request evidence"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectBrowsingStagingExerciseTests"],
+        "acceptance": ["Every frozen Project browsing application case passes deterministically"]
+      }
+    },
+    {
+      "id": "SWIFT-AA91CE0C3FAB",
+      "acknowledgeSourceHash": "db5527878ea8c48fd3c8fa105a34a0dc1d6683168f6ace6f7b8ff086d87945a0",
+      "currentBehavior": "Comment-only scaffold reserved for a thin Account-bound runtime-to-application-model adapter.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "The future adapter may forward only Project directory and exact Project detail streams; policy remains in verified Core contracts.",
+      "target": {
+        "owner": "Project Browsing Staging Application Flow",
+        "surfaces": ["thin PowerSync runtime adapter"],
+        "securityRequirements": ["Expose no raw Account rebinding, database, query, SQL, visibility policy, endpoint, or credential"],
+        "syncRequirements": ["Forward runtime snapshots and cancellation without rewriting readiness evidence"]
+      },
+      "migration": {
+        "rule": "Adapt target runtime only.",
+        "reconciliation": ["Do not access source Firebase code or data"]
+      },
+      "verification": {
+        "tests": ["target environment source/build-boundary checks and complete staging builds"],
+        "acceptance": ["The app adapter remains the only PowerSync-aware Project browsing application-flow leaf"]
+      }
+    },
+    {
+      "id": "SWIFT-07427FF0DA84",
+      "acknowledgeSourceHash": "579270f6918dd24f62f7a1fe5c7ec561d399abfa286381d1ae761e863d98efb0",
+      "currentBehavior": "Comment-only scaffold reserved for Project directory and detail staging presentation.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "notes": "The future view renders typed model state only and introduces no sorting, search, card, route, budget, media, or mutation policy.",
+      "target": {
+        "owner": "Project Browsing Staging Application Flow",
+        "surfaces": ["active/archived Project rows and exact local detail-state staging view"],
+        "securityRequirements": ["Display bounded diagnostics and typed readiness only; never expose private payloads or provider details"],
+        "syncRequirements": ["Show honest loading, partial, stale, ready, incomplete, authoritative-empty, cached-failure, unavailable, and required-update truth"]
+      },
+      "migration": {
+        "rule": "Render isolated target-local state only.",
+        "reconciliation": ["Do not imply hosted synchronization, authorization, or production readiness"]
+      },
+      "verification": {
+        "tests": ["application-model tests, exact source checks, and iOS/macOS staging builds"],
+        "acceptance": ["Stable segment-plus-Project accessibility identities and exact directory/detail status surfaces are present"]
+      }
+    }
+  ]
+}
