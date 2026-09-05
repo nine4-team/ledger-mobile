@@ -3,7 +3,7 @@
   "sliceId": "client-browsing-staging-application-flow",
   "title": "Browse locally represented Clients and preserve exact Client detail truth",
   "kind": "product",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Client Browsing Staging Application Flow",
   "surfaceIds": [
     "SWIFT-D8A992D1F8C1",
@@ -252,8 +252,8 @@
       "owner": ".github/workflows/supabase-conversion-control.yml",
       "covers": ["CBROWSEAPP-REQ-008", "CBROWSEAPP-REQ-010"],
       "expected": "The later exact synchronized implementation checkpoint passes conversion and query controls, focused Core/AppModel and complete nonparallel Swift tests, isolated local Supabase regressions, repeatable target generation, both staging builds, clean artifacts, and independent executable review before verified promotion.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["commit 872e7fc990dba23a5ebaaa3ab7662ba5e5806886", "GitHub Actions run 33958657934: conversion 37s, disposable local Supabase 1m44s, isolated target 5m33s; all passed"]
     }
   ],
   "implementationEvidence": [
@@ -261,11 +261,12 @@
     "Fourteen focused ClientBrowsing presentation and AppModel tests pass locally, including both six-case termination matrices, current-snapshot refusal, full observation drainage, delayed noncooperative reselection, and old-generation directory/detail rejection.",
     "Target environment, target contracts, target MCP/query controls, repeatable project generation, all 455 nonparallel Swift tests in 78 suites, and both macOS and iOS Simulator staging builds pass locally.",
     "Disposable local Supabase verification passes 42 pgTAP checks plus Client and Project RPC checks, and the local stack stopped cleanly.",
+    "Exact implementation commit 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 passed every immutable job in GitHub Actions run 33958657934: conversion 37 seconds, disposable local Supabase 1 minute 44 seconds, and isolated target 5 minutes 33 seconds.",
     "Root review hardened adapter/view containment, exact staging ownership and wiring, both drain-before-close paths, all accessibility identities, and preservation of Client creation's one-shot watchClient confirmation in scripts/check-target-environment.mjs.",
     "The initial test candidate was strengthened so rapid A-to-B reselection proves B cannot start before a noncooperative A joins and a dedicated test proves stop waits for both active directory and detail observations. Independent executable review then returned GO with no P0-P3 finding.",
     "Implementation hashes: Core 89c7ce7ebadab4d15ea2870c54a286408acf6795229a8ef83673d537280df366; Core tests a83ee126bf318154e8766284cdd3668880bf5f739221e9219fa55cb19d5f8259; AppModel 5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67; AppModel tests 1348abb5b309a410fcdf0af63748e3fc899ce1ef0419c4769d1be1a56740a114; adapter f6303fe7299475655fae9fd9dbb246a9d5c3b5ff5957f94e2a76b23bafa3aa04; view f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03; shell 0efbb8fec335ce5ae6789bed11e3d6bdeaeecc9807cf3073295d99c7041aefb8; environment guard 13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18; generated project af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8."
   ],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented candidate after exact READY db89ef36339f48bff249b2973ea3bc9c5607bb61 / immutable run 33956835407 passed all three jobs. Six leaves now provide the pure atomic Core presenter/tests, Core-only observable AppModel/tests, thin adapter and typed staging view. Root review hardened the shared environment checks and strengthened noncooperative reselection plus full stop/join proof; independent executable review returned GO with no P0-P3. Fourteen focused tests, all 455 tests in 78 suites, 42 local pgTAP checks plus Client/Project RPC checks, a clean local-stack stop, and both staging builds pass. The exact synchronized implementation commit and immutable implementation CI are still pending, so the slice remains implemented rather than verified. Existing Client contracts/providers/runtime and the post-create one-shot watchClient confirmation retain their owners. No A-/O- gate or excluded product, hosted, authorization, mutation, migration, Firebase, production or cutover behavior advanced."
+  "notes": "Verified after exact READY db89ef36339f48bff249b2973ea3bc9c5607bb61 / immutable run 33956835407 and exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 / immutable run 33958657934 passed all three jobs. Six leaves provide the pure atomic Core presenter/tests, Core-only observable AppModel/tests, thin adapter and typed staging view. Root review hardened the shared environment checks and strengthened noncooperative reselection plus full stop/join proof; independent executable review returned GO with no P0-P3. Fourteen focused tests, all 455 tests in 78 suites, 42 local pgTAP checks plus Client/Project RPC checks, a clean local-stack stop, and both staging builds pass. Existing Client contracts/providers/runtime and the post-create one-shot watchClient confirmation retain their owners. No A-/O- gate or excluded product, hosted, authorization, mutation, migration, Firebase, production or cutover behavior advanced."
 }

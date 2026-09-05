@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T09:40:38.839Z",
+  "generatedFromManifestSync": "2026-09-05T09:51:07.487Z",
   "totals": {
     "slices": 80,
     "claimedTargetSurfaces": 227,
@@ -11,8 +11,8 @@
     "draft": 1,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 7,
-    "verified": 69,
+    "implemented": 6,
+    "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -174,7 +174,7 @@
       "sliceId": "client-browsing-staging-application-flow",
       "title": "Browse locally represented Clients and preserve exact Client detail truth",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Client Browsing Staging Application Flow",
       "surfaceIds": [
         "SWIFT-438CDD8B6992",

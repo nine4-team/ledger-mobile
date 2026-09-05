@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 303
+State version: 304
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-BROWSING-STAGING-APPLICATION-FLOW-IMPLEMENTED-AWAITING-EXACT-COMMIT-CI
+- Checkpoint: CLIENT-BROWSING-STAGING-APPLICATION-FLOW-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -41,7 +41,7 @@ without modifying the running Firebase application before hard cutover.
   progress counter; every checkpoint must report the exact surface numerator
   and completed user workflow instead of repeating the range alone.
 - The implementation tracker currently contains 272 status-bearing rows: 68
-  done, seven verified, seven implemented, zero ready, zero awaiting verification,
+  done, eight verified, six implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -69,7 +69,7 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
-- Implemented the Client-browsing staging application candidate after exact
+- Verified the Client-browsing staging application flow after exact
   comment-only READY commit `db89ef36339f48bff249b2973ea3bc9c5607bb61`
   passed all three immutable jobs in run `33956835407`: conversion in 38
   seconds, disposable local Supabase in 1 minute 41 seconds and isolated target
@@ -88,8 +88,11 @@ without modifying the running Firebase application before hard cutover.
   returned GO with no P0-P3. Fourteen focused and all 455 nonparallel Swift
   tests in 78 suites, 42 local pgTAP checks plus Client/Project RPC checks, a
   clean local-stack stop, exact controls, repeatable generation and both staging
-  builds pass. The slice and six leaves are implemented, not verified, until an
-  exact synchronized implementation commit passes immutable CI. Related
+  builds pass. Exact implementation commit
+  `872e7fc990dba23a5ebaaa3ab7662ba5e5806886` passed all three immutable jobs
+  in run `33958657934`: conversion in 37 seconds, disposable local Supabase in
+  1 minute 44 seconds and isolated target in 5 minutes 33 seconds. The slice
+  and six leaves are verified. Related
   Projects, sort/search/cards/routes, raw-name input, mutation, provider/schema/
   RLS/Sync/MCP/Auth/hosted/Firebase/migration/production/cutover remain excluded;
   `EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001`.
@@ -4054,15 +4057,16 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Synchronize and review the exact implemented Client-browsing checkpoint, commit
-it without unrelated work, and require all three immutable jobs to pass before
-verified promotion. Preserve the six implementation hashes, exact upstream
-Client order, Core/AppModel/PowerSync containment, both drain-before-close
-paths and the existing post-create confirmation. Keep related Projects,
-sorting/search/cards/routes, raw-name input, mutation, Auth, hosted Sync,
-A-003/A-004/A-007/A-015/A-016, O-023/O-024/O-025/O-040/O-042/O-043, migration
-and cutover open. Do not provision hosted resources, access production or
-modify Firebase.
+Preserve verified `client-browsing-staging-application-flow` and
+`EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001` as the standalone local
+Client directory/detail staging boundary, then select the next coherent
+decision-independent slice through feature-specific product-authority
+preflight. Preserve the six implementation hashes, exact upstream Client
+order, Core/AppModel/PowerSync containment, both drain-before-close paths and
+the existing post-create confirmation. Keep related Projects, sorting/search/
+cards/routes, raw-name input, mutation, Auth, hosted Sync, A-003/A-004/A-007/
+A-015/A-016, O-023/O-024/O-025/O-040/O-042/O-043, migration and cutover open.
+Do not provision hosted resources, access production or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 

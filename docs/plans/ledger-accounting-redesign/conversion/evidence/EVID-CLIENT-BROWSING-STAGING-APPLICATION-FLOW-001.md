@@ -1,6 +1,6 @@
 # EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001 — Client Browsing Staging Application Flow
 
-- Status: independently reviewed IMPLEMENTED candidate; exact synchronized implementation commit and immutable CI pending
+- Status: verified — exact implementation commit and immutable CI pass
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -99,9 +99,10 @@ termination matrices. All 455 nonparallel Swift tests in 78 suites, target
 environment, contract, MCP/query controls, repeatable generation and both
 staging builds are green. Disposable local Supabase verification passes 42
 pgTAP checks plus Client and Project RPC checks, and the stack stopped cleanly.
-The exact synchronized implementation commit and immutable implementation CI
-remain pending. This dossier and its six leaves are therefore `implemented`,
-not `verified`.
+Exact implementation commit `872e7fc990dba23a5ebaaa3ab7662ba5e5806886`
+then passed all three immutable jobs in run `33958657934`: conversion in 37
+seconds, disposable local Supabase in 1 minute 44 seconds, and isolated target
+in 5 minutes 33 seconds. This dossier and its six leaves are verified.
 
 ## Frozen Shared Touchpoints and Dependencies
 
@@ -204,11 +205,11 @@ immutable jobs in run `33956835407`. Executable work then remained within the
 six leaves and three frozen shared touchpoints.
 
 Root review and independent executable review cover the implementation and every
-frozen proof obligation; final review returned GO with no P0-P3. The exact
-synchronized implementation commit must still pass conversion/query controls,
-focused and complete nonparallel Swift tests, disposable local Supabase
-regressions, repeatable XcodeGen, both staging builds, clean artifacts and all
-immutable CI jobs before the slice may advance to verified.
+frozen proof obligation; final review returned GO with no P0-P3. Exact
+implementation commit `872e7fc990dba23a5ebaaa3ab7662ba5e5806886`
+passed conversion/query controls, focused and complete nonparallel Swift tests,
+disposable local Supabase regressions, repeatable XcodeGen, both staging builds,
+clean artifacts and all immutable CI jobs in run `33958657934`.
 
 ## Explicit Exclusions
 
@@ -220,5 +221,5 @@ hosted access, Firebase, production, release and cutover are excluded. The
 existing post-create one-shot `watchClient` confirmation remains unchanged.
 
 O-023/O-024/O-025/O-040/O-042/O-043 and A-003/A-004/A-007/A-015/A-016 remain
-open and unadvanced. The implemented candidate is not migration, production,
-release, cutover, or verified-hosted authority.
+open and unadvanced. The verified local staging slice is not migration,
+production, release, cutover, or verified-hosted authority.
