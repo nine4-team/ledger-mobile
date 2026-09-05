@@ -110,6 +110,18 @@ public final class LedgerOfflineClientRuntime: Sendable {
         }
     }
 
+    public func watchProjectNotes(
+        _ request: ProjectNotePageRequest
+    ) -> AsyncThrowingStream<ProjectNotePage, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startProjectNoteWatch(
+                id: id,
+                request: request,
+                continuation: continuation
+            )
+        }
+    }
+
     public func watchBudgetCategories()
         -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>
     {

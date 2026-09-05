@@ -108,12 +108,19 @@ struct GeneratedContractCatalogTests {
             "operation_status",
             "sync_health"
         ])
-        #expect(gatedCapabilityIDs == ["client_management", "project_setup"])
+        #expect(gatedCapabilityIDs == [
+            "client_management",
+            "project_archive",
+            "project_note_history",
+            "project_setup"
+        ])
         #expect(contractIDs == [
+            "archive_project",
             "create_client",
             "create_project",
             "get_capabilities",
             "get_contract_catalog",
+            "list_project_notes",
             "observe_sync_health",
             "validate_environment_manifest",
             "watch_operation",
@@ -123,6 +130,10 @@ struct GeneratedContractCatalogTests {
             == "client_management")
         #expect(catalog.contracts.first { $0.id.rawValue == "create_project" }?.capability.rawValue
             == "project_setup")
+        #expect(catalog.contracts.first { $0.id.rawValue == "list_project_notes" }?.capability.rawValue
+            == "project_note_history")
+        #expect(catalog.contracts.first { $0.id.rawValue == "archive_project" }?.capability.rawValue
+            == "project_archive")
         #expect(catalog.deprecations.isEmpty)
     }
 

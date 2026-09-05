@@ -7,16 +7,25 @@ public struct ProjectBrowsingStagingRuntime: Sendable {
         -> AsyncThrowingStream<ProjectListSnapshot, Error>
     public typealias ProjectDetailWatch = @Sendable (ProjectCoreDetailsRequest)
         -> AsyncThrowingStream<ProjectCoreDetailsUpdate, Error>
+    public typealias ProjectNoteWatch = @Sendable (ProjectNotePageRequest)
+        -> AsyncThrowingStream<ProjectNotePage, Error>
 
     private let directoryWatch: ProjectDirectoryWatch
     private let detailWatch: ProjectDetailWatch
+    private let noteWatch: ProjectNoteWatch
 
     public init(
         watchProjects: @escaping ProjectDirectoryWatch,
-        watchProject: @escaping ProjectDetailWatch
+        watchProject: @escaping ProjectDetailWatch,
+        watchNotes: @escaping ProjectNoteWatch = { _ in
+            AsyncThrowingStream {
+                $0.finish(throwing: ProjectNoteDataFailure.localReadFailed)
+            }
+        }
     ) {
         directoryWatch = watchProjects
         detailWatch = watchProject
+        noteWatch = watchNotes
     }
 
     public func watchProjects() -> AsyncThrowingStream<ProjectListSnapshot, Error> {
@@ -27,6 +36,12 @@ public struct ProjectBrowsingStagingRuntime: Sendable {
         _ request: ProjectCoreDetailsRequest
     ) -> AsyncThrowingStream<ProjectCoreDetailsUpdate, Error> {
         detailWatch(request)
+    }
+
+    public func watchNotes(
+        _ request: ProjectNotePageRequest
+    ) -> AsyncThrowingStream<ProjectNotePage, Error> {
+        noteWatch(request)
     }
 }
 
@@ -51,6 +66,7 @@ public struct ProjectBrowsingDirectoryPresentation: Equatable, Sendable {
 @MainActor
 @Observable
 public final class ProjectBrowsingStagingExercise {
+    public let noteHistory: ProjectNoteHistoryStagingExercise
     public var activeProjects: [ProjectDirectoryCoreRow] {
         directoryViewState.presentation?.active.rows ?? []
     }
@@ -136,6 +152,7 @@ public final class ProjectBrowsingStagingExercise {
 
     public init(accountId: AccountID) {
         self.accountId = accountId
+        noteHistory = ProjectNoteHistoryStagingExercise(accountId: accountId)
     }
 
     public func start(runtime: ProjectBrowsingStagingRuntime) async {
@@ -153,6 +170,7 @@ public final class ProjectBrowsingStagingExercise {
         selectedProjectRevision = nil
         oldDirectoryTask?.cancel()
         oldDetailTask?.cancel()
+        await noteHistory.stop()
         await oldDetailTask?.value
         await oldDirectoryTask?.value
 
@@ -178,6 +196,7 @@ public final class ProjectBrowsingStagingExercise {
         selectedProjectRevision = nil
         oldDirectoryTask?.cancel()
         oldDetailTask?.cancel()
+        await noteHistory.stop()
         await oldDetailTask?.value
         await oldDirectoryTask?.value
 
@@ -203,6 +222,7 @@ public final class ProjectBrowsingStagingExercise {
         detailViewState = .notSelected
         selectedProjectRevision = nil
         oldDetailTask?.cancel()
+        await noteHistory.clear()
         await oldDetailTask?.value
 
         guard lifecycleGeneration == lifecycle,
@@ -227,11 +247,13 @@ public final class ProjectBrowsingStagingExercise {
                     detailGeneration: selectionGeneration
                 )
             }
+            await noteHistory.select(projectId: selection.row.projectId, runtime: runtime)
         } catch {
             detailViewState = .blocked(
                 selection: nil,
                 diagnostic: .selectionInvalid
             )
+            await noteHistory.clear()
         }
     }
 
@@ -256,6 +278,7 @@ public final class ProjectBrowsingStagingExercise {
                     }
                     guard lifecycleGeneration == generation else { return }
                     directoryViewState = .represented(presentation)
+                    await reconcileSelection(with: presentation, generation: generation)
                 } catch {
                     directoryTask?.cancel()
                     _ = try? await iterator.next()
@@ -290,12 +313,15 @@ public final class ProjectBrowsingStagingExercise {
                         validating: request
                     )
                     guard self.lifecycleGeneration == lifecycleGeneration,
-                          self.detailGeneration == detailGeneration else {
+                          self.detailGeneration == detailGeneration,
+                          let currentSelection = detailViewState.selection,
+                          currentSelection.projectId == selection.projectId,
+                          currentSelection.clientId == selection.clientId else {
                         return
                     }
                     selectedProjectRevision = Self.locallyObservedRevision(from: update)
                     detailViewState = .represented(
-                        selection: selection,
+                        selection: currentSelection,
                         presentation: presentation
                     )
                 } catch {
@@ -349,6 +375,7 @@ public final class ProjectBrowsingStagingExercise {
         detailViewState = .notSelected
         selectedProjectRevision = nil
         oldDetailTask?.cancel()
+        await noteHistory.clear()
         await oldDetailTask?.value
 
         guard lifecycleGeneration == generation,
@@ -369,6 +396,40 @@ public final class ProjectBrowsingStagingExercise {
         }
         selectedProjectRevision = nil
         detailViewState = .blocked(selection: selection, diagnostic: diagnostic)
+    }
+
+    private func reconcileSelection(
+        with presentation: ProjectBrowsingDirectoryPresentation,
+        generation: UInt64
+    ) async {
+        guard lifecycleGeneration == generation,
+              let selected = detailViewState.selection else { return }
+        let matches = (presentation.active.rows + presentation.archived.rows).filter {
+            $0.projectId == selected.projectId
+        }
+        guard matches.count == 1,
+              let represented = matches.first,
+              represented.clientId == selected.clientId else {
+            detailGeneration &+= 1
+            let invalidationGeneration = detailGeneration
+            let oldDetailTask = detailTask
+            detailTask = nil
+            detailViewState = .notSelected
+            selectedProjectRevision = nil
+            oldDetailTask?.cancel()
+            await noteHistory.clear()
+            await oldDetailTask?.value
+            guard lifecycleGeneration == generation,
+                  detailGeneration == invalidationGeneration else { return }
+            return
+        }
+
+        guard represented.projectLifecycle != selected.projectLifecycle else { return }
+
+        // A lifecycle-only active→archived move keeps the stable Project
+        // selection and its exact note subscription. The detail stream remains
+        // authoritative for the corresponding lifecycle/revision transition.
+        detailViewState = detailViewState.replacingSelection(with: represented)
     }
 
     private static func locallyObservedRevision(
@@ -520,6 +581,19 @@ private extension ProjectBrowsingStagingExercise {
                 case .retryable(cached: .none), .requiredUpdate(cached: .none):
                     ListReadiness.blocked.rawValue
                 }
+            }
+        }
+
+        func replacingSelection(with selection: ProjectDirectoryCoreRow) -> Self {
+            switch self {
+            case .awaiting:
+                .awaiting(selection)
+            case .represented(_, let presentation):
+                .represented(selection: selection, presentation: presentation)
+            case .blocked(.some, let diagnostic):
+                .blocked(selection: selection, diagnostic: diagnostic)
+            case .notSelected, .blocked(.none, _), .stopped:
+                self
             }
         }
     }

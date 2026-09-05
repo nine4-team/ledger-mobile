@@ -10,6 +10,7 @@ public enum LedgerPowerSyncTable {
     public static let budgetCategories = "spike_budget_categories"
     public static let spaces = "spike_spaces"
     public static let projects = "spike_projects"
+    public static let projectNotes = "spike_project_notes"
     public static let pendingProjects = "spike_pending_projects"
     public static let projectCategoryAllocations = "spike_project_category_allocations"
     public static let pendingProjectCategoryAllocations = "spike_pending_project_category_allocations"
@@ -129,6 +130,24 @@ public enum LedgerPowerSyncSchema {
                 .ascending(
                     name: "project_account_client",
                     columns: ["account_id", "client_id"]
+                )
+            ]
+        ),
+        Table(
+            name: LedgerPowerSyncTable.projectNotes,
+            columns: [
+                .text("account_id"), .text("project_id"), .text("keyset_id"),
+                .text("content_kind"),
+                .text("note_text"), .text("source"),
+                .text("created_by_principal_id"), .text("creator_display_name"),
+                .integer("created_at_ms"), .text("revision"),
+                .text("last_edited_by_principal_id"), .integer("last_edited_at_ms"),
+                .text("deleted_by_principal_id"), .integer("deleted_at_ms")
+            ],
+            indexes: [
+                .ascending(
+                    name: "project_note_history_page",
+                    columns: ["account_id", "project_id", "created_at_ms", "keyset_id"]
                 )
             ]
         ),

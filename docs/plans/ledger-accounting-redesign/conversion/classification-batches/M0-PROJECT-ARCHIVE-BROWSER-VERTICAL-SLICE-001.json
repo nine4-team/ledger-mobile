@@ -13,7 +13,7 @@
   "surfaces": [
     {
       "id": "SWIFT-53B8C9C37D3F",
-      "acknowledgeSourceHash": "139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd",
+      "acknowledgeSourceHash": "e5706f67517dc378cba2fd86e2e96c436a636fa81f6275268e1613cd0d3854a1",
       "currentBehavior": "Implements encrypted atomic Project-archive acceptance, exact Account-bound operation identity, local lifecycle overlay, replay, FIFO upload state and authoritative/rejected reconciliation without mutating synchronized rows.",
       "disposition": "redesign",
       "status": "implemented",
@@ -49,7 +49,7 @@
     },
     {
       "id": "TEST-475355568D74",
-      "acknowledgeSourceHash": "bb45930f943dcdbf2494064ed40453598b71da692a31fb5d3334cecae70041ad",
+      "acknowledgeSourceHash": "f1d08016ec5ce351b866c82e32130f031dc368d659df0c55b29bc288439578d5",
       "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope and malformed-evidence refusal.",
       "disposition": "redesign",
       "status": "implemented",
@@ -67,7 +67,7 @@
     },
     {
       "id": "SWIFT-D58BDD1F45EE",
-      "acknowledgeSourceHash": "d4522a1f3f7d14ad87ce97e2aa48a1234223df1078354bbf8e9ee01289670451",
+      "acknowledgeSourceHash": "4935d7756aa699983c1eff8702cdcaa81b4386bda7ab9b6a82c0545b7a21b39f",
       "currentBehavior": "Implements Core-only Project archive confirmation, exact current-evidence revalidation, stable submission/retry identity, operation observation and bounded six-state presentation over the existing Project browser.",
       "disposition": "redesign",
       "status": "implemented",
@@ -85,7 +85,7 @@
     },
     {
       "id": "TEST-EAAB5CD74000",
-      "acknowledgeSourceHash": "a792b675301c16ef6807088e7d230f907be3e08aa94573ac3ee288a25468decb",
+      "acknowledgeSourceHash": "43785b7ec7d29a79eb651298d139998a8b5e3998da771636613d6ee4e129b952",
       "currentBehavior": "Runs deterministic Project archive AppModel tests for confirmation/admission, stale-evidence refusal, stable identity, six operation states, selection changes, recovery, cancellation and restart drainage.",
       "disposition": "redesign",
       "status": "implemented",

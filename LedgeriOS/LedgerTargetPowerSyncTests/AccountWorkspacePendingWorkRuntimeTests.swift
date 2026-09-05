@@ -278,6 +278,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 (.pendingWorkQueryConstruction, .succeeded, .succeeded),
                 (.budgetCategoryQueryConstruction, .succeeded, .succeeded),
                 (.spaceAssignmentDestinationQueryConstruction, .succeeded, .succeeded),
+                (.projectNoteQueryConstruction, .succeeded, .succeeded),
                 (.runtimeConstruction, .succeeded, .succeeded),
             ]
 
@@ -487,7 +488,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all eight streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all nine streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -529,6 +530,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             id: "project-lifecycle",
             clientId: "client-lifecycle"
         )
+        let noteRequest = try ProjectNotePageRequest(
+            accountId: context.accountId,
+            projectId: projectRequest.projectId,
+            pageSize: 20
+        )
         let streams: [Any] = [
             runtime.watchClient(clientRequest),
             runtime.watchProject(projectRequest),
@@ -537,10 +543,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchBudgetCategories(),
             runtime.watchSpaceAssignmentDestinations(scope: spaceScope),
             runtime.watchTransferDestinations(source: transferSource),
+            runtime.watchProjectNotes(noteRequest),
             runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(8)
+        await streamCounter.waitUntilEntered(9)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -550,6 +557,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .budgetCategories,
             .spaceAssignmentDestinations,
             .transferDestinations,
+            .projectNotes,
             .projectArchiveOperation,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
@@ -592,6 +600,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(
             runtime.watchTransferDestinations(source: transferSource)
         )
+        try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         await finiteGate.release()
         _ = try await finite.value
@@ -644,6 +653,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(
             runtime.watchTransferDestinations(source: transferSource)
         )
+        try await Self.expectClosed(runtime.watchProjectNotes(noteRequest))
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         context.remove()
     }
@@ -801,6 +811,46 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Project archive provider drainage completes before database close")
+    func projectArchiveProviderDrainPrecedesDatabaseClose() async throws {
+        let context = try RuntimeTestContext(suffix: "project-archive-drain-order")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let drainGate = ManualGate()
+        let store = BlockingDrainProjectArchiveStore(drainGate: drainGate)
+        var dependencies = context.dependencies(events: events)
+        dependencies.makeProjectArchiveStore = { _, _, _, _ in store }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let operationId = try context.archiveCommand(id: "drain-order").envelope.operationId
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchOperation(operationId) {}
+            } catch {
+                // Runtime close cancels the public stream.
+            }
+        }
+        for _ in 0..<2_000 {
+            if store.watchCount == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(store.watchCount == 1)
+
+        let close = Task { try await runtime.close() }
+        await drainGate.waitUntilEntered()
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+
+        await drainGate.release()
+        try await close.value
+        await consumer.value
+        #expect(store.drainCount == 1)
+        #expect(
+            events.values.filter {
+                $0 == .attachmentDatabaseCloseAttempted || $0 == .structuredDatabaseCloseAttempted
+            }.suffix(2) == [.attachmentDatabaseCloseAttempted, .structuredDatabaseCloseAttempted]
+        )
+        context.remove()
+    }
+
     @Test("WORKRUNTIME-TEST-007 close failure is terminal, combined, and never retried")
     func terminalDualCloseFailureIsIdempotent() async throws {
         let context = try RuntimeTestContext(suffix: "terminal-close")
@@ -877,6 +927,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 clientId: "client-runtime"
             )
         )
+        _ = runtime.watchProjectNotes(try ProjectNotePageRequest(
+            accountId: context.accountId,
+            projectId: ProjectID(validating: "project-runtime"),
+            pageSize: 20
+        ))
         _ = try await runtime.pendingUploadCount()
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.pendingWorkSummary()
@@ -1005,6 +1060,37 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Project-note facade binds Account and close cancels and drains its provider")
+    func projectNoteFacadeAndDrain() async throws {
+        let context = try RuntimeTestContext(suffix: "project-note-facade")
+        let query = RuntimeProjectNoteQuery()
+        var dependencies = context.dependencies()
+        dependencies.makeProjectNoteQuery = { _, _, _, _ in query }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let request = try ProjectNotePageRequest(
+            accountId: context.accountId,
+            projectId: ProjectID(validating: "project-runtime-note"),
+            pageSize: 20
+        )
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchProjectNotes(request) {}
+            } catch { }
+        }
+        for _ in 0..<2_000 {
+            if query.requests.count == 1 { break }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        #expect(query.requests == [request])
+
+        try await runtime.close()
+        await consumer.value
+        #expect(query.cancelAndDrainCount == 1)
+        #expect(query.terminationCount == 1)
+        try await Self.expectClosed(runtime.watchProjectNotes(request))
+        context.remove()
+    }
+
     private static func expectExactConstructionCounts(
         _ events: [AccountWorkspaceRuntimeLifecycleEvent]
     ) {
@@ -1016,6 +1102,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .pendingWorkQueryConstructed,
             .budgetCategoryQueryConstructed,
             .spaceAssignmentDestinationQueryConstructed,
+            .projectNoteQueryConstructed,
             .lifecycleOwnerConstructed,
         ] {
             #expect(events.filter { $0 == event }.count == 1)
@@ -1080,6 +1167,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let makeBudgetCategoryQuery = dependencies.makeBudgetCategoryQuery
         let makeSpaceAssignmentDestinationQuery =
             dependencies.makeSpaceAssignmentDestinationQuery
+        let makeProjectNoteQuery = dependencies.makeProjectNoteQuery
 
         if stage == .databaseKeyLoad {
             dependencies.loadDatabaseKey = { _, _ in throw RuntimeInjectedFailure() }
@@ -1142,6 +1230,13 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         } else {
             dependencies.makeSpaceAssignmentDestinationQuery =
                 makeSpaceAssignmentDestinationQuery
+        }
+        if stage == .projectNoteQueryConstruction {
+            dependencies.makeProjectNoteQuery = { _, _, _, _ in
+                throw RuntimeInjectedFailure()
+            }
+        } else {
+            dependencies.makeProjectNoteQuery = makeProjectNoteQuery
         }
         if stage == .runtimeConstruction {
             dependencies.makeLifecycleOwner = { _ in throw RuntimeInjectedFailure() }
@@ -1241,6 +1336,33 @@ private final class RuntimeSpaceDestinationQuery:
     }
 }
 
+private final class RuntimeProjectNoteQuery:
+    AccountWorkspaceProjectNoteQuerying, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var recordedRequests: [ProjectNotePageRequest] = []
+    private var drains = 0
+    private var terminations = 0
+    var requests: [ProjectNotePageRequest] { lock.withLock { recordedRequests } }
+    var cancelAndDrainCount: Int { lock.withLock { drains } }
+    var terminationCount: Int { lock.withLock { terminations } }
+
+    func watchNotes(
+        _ request: ProjectNotePageRequest
+    ) -> AsyncThrowingStream<ProjectNotePage, Error> {
+        lock.withLock { recordedRequests.append(request) }
+        return AsyncThrowingStream { continuation in
+            continuation.onTermination = { [weak self] _ in
+                self?.lock.withLock { self?.terminations += 1 }
+            }
+        }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
+    }
+}
+
 private final class BlockingDrainBudgetCategoryQuery:
     AccountWorkspaceBudgetCategoryQuerying, @unchecked Sendable
 {
@@ -1257,6 +1379,38 @@ private final class BlockingDrainBudgetCategoryQuery:
     }
 
     func cancelAndDrainWatches() async {
+        await drainGate.wait()
+    }
+}
+
+private final class BlockingDrainProjectArchiveStore:
+    AccountWorkspaceProjectArchiveStoring, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private let drainGate: ManualGate
+    private var watches = 0
+    private var drains = 0
+
+    init(drainGate: ManualGate) {
+        self.drainGate = drainGate
+    }
+
+    var watchCount: Int { lock.withLock { watches } }
+    var drainCount: Int { lock.withLock { drains } }
+
+    func archive(_ command: ArchiveProjectCommand) async throws -> OperationReceipt {
+        throw RuntimeInjectedFailure()
+    }
+
+    func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error> {
+        lock.withLock { watches += 1 }
+        return AsyncThrowingStream { _ in }
+    }
+
+    func cancelAndDrainWatches() async {
+        lock.withLock { drains += 1 }
         await drainGate.wait()
     }
 }
@@ -1385,7 +1539,8 @@ private final class RuntimeTestContext: @unchecked Sendable {
         let uuids: [String: String] = [
             "gate": "00000000-0000-4000-8000-000000000101",
             "while-closing": "00000000-0000-4000-8000-000000000102",
-            "after-close": "00000000-0000-4000-8000-000000000103"
+            "after-close": "00000000-0000-4000-8000-000000000103",
+            "drain-order": "00000000-0000-4000-8000-000000000104"
         ]
         guard let uuidText = uuids[id], let uuid = UUID(uuidString: uuidText) else {
             throw RuntimeInjectedFailure()

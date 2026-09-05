@@ -19,7 +19,7 @@
     {
       "id": "CONFIG-1FC6F8A5DFA5",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "908fa8281ff9a688c7bdf0d0a387062c160f3e768ab609f464155c57bceb241b",
+      "acknowledgeSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
       "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -119,7 +119,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
+      "acknowledgeSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -174,7 +174,7 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "dfbc5b990d544c3b2d6d5b8ab690838b101e0a97ebf53be45f997275f182ed5a",
+      "acknowledgeSourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -360,7 +360,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
+      "acknowledgeSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -2916,7 +2916,7 @@
     {
       "id": "CONFIG-B2A2BF619303",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa",
+      "acknowledgeSourceHash": "428152760e31033934396ed6d9838b95c24b286ceddc93ac154e47cf71f2b904",
       "currentBehavior": "Defines the canonical target-only version, enum, authorization-policy, telemetry, stable-error, capability, contract and deprecation registry.",
       "disposition": "redesign",
       "status": "verified",
@@ -2941,7 +2941,7 @@
     {
       "id": "CONFIG-E8C1EA5B72F9",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "3559b2cef0fd3cbd8acb1aef8b03ee4a7d61728c38678a170a06dcf4cd806c72",
+      "acknowledgeSourceHash": "4a242ecc1237e8cafc4e715d99a58020c551a14336e5895f73646bf13bf435c2",
       "currentBehavior": "Publishes the bounded generated MCP contract resource with the canonical catalog and hash.",
       "disposition": "redesign",
       "status": "verified",
@@ -2991,7 +2991,7 @@
     {
       "id": "MCPMOD-CE84DA4C8EA4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "cffa8e977c26e511634cd2d376e47f32ae61a467d7f3b2d0b824a413771208ca",
+      "acknowledgeSourceHash": "27a656bcf6f720dd098b10d05bce0e48f60bc2f13ae5be4afb3d6c6f810c0f5d",
       "currentBehavior": "Provides the generated strict TypeScript target contract catalog and canonical hash.",
       "disposition": "redesign",
       "status": "verified",
@@ -3016,7 +3016,7 @@
     {
       "id": "SWIFT-5FA3004D3855",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b506bee5068c7f807ca807dd441d1c93c3e3949555f3efbf2aae4d165fcb404a",
+      "acknowledgeSourceHash": "e2d36bc8be4d852937717369f7bb4a6d4e6268108a6e84fb5dd639ceeb1b6b8a",
       "currentBehavior": "Embeds the generated canonical target contract bytes/hash, including gated Client/Project management, financial-visibility and create-command metadata, and loads them through the typed Swift catalog validator.",
       "disposition": "redesign",
       "status": "verified",
@@ -3066,7 +3066,7 @@
     {
       "id": "TEST-C8A63111BD2B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8380fdf8ca24cdd01bc065c288754f3a9a1d521e4852ef5685a0f6f056219b7a",
+      "acknowledgeSourceHash": "2e286ab60f0d6f507df58975b71a69ddfdf1642d92677136250a94cbbf3e4991",
       "currentBehavior": "Verifies generated catalog load/hash, exact runtime enum parity, registration ownership, available platform versus gated Client/Project capability separation, provider/credential/persistence exclusion and noncanonical-hash refusal.",
       "disposition": "redesign",
       "status": "verified",

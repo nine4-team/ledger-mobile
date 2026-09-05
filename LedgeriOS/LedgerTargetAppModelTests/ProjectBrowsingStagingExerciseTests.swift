@@ -594,6 +594,58 @@ struct ProjectBrowsingStagingExerciseTests {
         await model.stop()
     }
 
+    @Test("Active to archived lifecycle movement preserves the exact note watch")
+    func archiveLifecycleMovementPreservesNotes() async throws {
+        let directory = ControlledStream<ProjectListSnapshot>()
+        let detail = ControlledStream<ProjectCoreDetailsUpdate>()
+        let notes = ControlledStream<ProjectNotePage>()
+        let noteRequests = NoteRequestRecorder()
+        let project = try Self.project("project-a")
+        let runtime = ProjectBrowsingStagingRuntime(
+            watchProjects: { directory.stream },
+            watchProject: { _ in detail.stream },
+            watchNotes: { request in
+                noteRequests.record(request)
+                return notes.stream
+            }
+        )
+        let model = Self.model()
+        await model.start(runtime: runtime)
+        directory.yield(try Self.directory([project]))
+        await Self.waitUntil { model.activeProjects.count == 1 }
+        await model.select(projectId: project.id, segment: .active)
+        await Self.waitUntil { noteRequests.requests.count == 1 }
+
+        let request = try #require(noteRequests.requests.first)
+        notes.yield(try Self.notePage(
+            request: request,
+            body: "Preserved",
+            version: "before-archive"
+        ))
+        await Self.waitUntil { model.noteHistory.rows.first?.body == "Preserved" }
+
+        let archived = try Self.project("project-a", lifecycle: .archived)
+        directory.yield(try Self.directory([archived], version: "archived"))
+        await Self.waitUntil {
+            model.selectedProject?.projectLifecycle == .archived
+        }
+        notes.yield(try Self.notePage(
+            request: request,
+            body: "Preserved after archive",
+            version: "after-archive"
+        ))
+        await Self.waitUntil {
+            model.noteHistory.rows.first?.body == "Preserved after archive"
+        }
+
+        #expect(noteRequests.requests.count == 1)
+        #expect(notes.terminationCount == 0)
+        #expect(model.noteHistory.rows.first?.body == "Preserved after archive")
+        #expect(model.selectedProjectId == project.id)
+        await model.stop()
+        #expect(notes.terminationCount == 1)
+    }
+
     private static let accountId = try! AccountID(validating: "project-account")
     private static let t0 = Date(timeIntervalSince1970: 1_804_000_000)
     private static let t1 = Date(timeIntervalSince1970: 1_804_000_001)
@@ -672,6 +724,38 @@ struct ProjectBrowsingStagingExerciseTests {
         try ProjectCoreDetailsSnapshot(
             project: project,
             locallyObservedRevision: ExpectedProjectRevision(7)
+        )
+    }
+
+    private static func notePage(
+        request: ProjectNotePageRequest,
+        body: String,
+        version: String
+    ) throws -> ProjectNotePage {
+        let note = try ProjectNoteSnapshot(
+            id: ProjectNoteID(validating: "note-a"),
+            accountId: request.accountId,
+            projectId: request.projectId,
+            content: .visible(ProjectNoteText(validating: body)),
+            source: ProjectNoteSource(validating: "text"),
+            createdByPrincipalId: PrincipalID(validating: "principal-a"),
+            creatorDisplayName: nil,
+            createdAt: t1,
+            revision: 1
+        )
+        return try ProjectNotePage(
+            request: request,
+            local: ListLocalSnapshot(
+                queryFingerprint: request.queryFingerprint,
+                rows: [note],
+                visibleRowCountBeforeFiltering: 1,
+                isCompleteForQuery: true,
+                quality: .ready,
+                localDataVersion: LocalDataVersion(validating: version),
+                asOf: t1
+            ),
+            isCompleteForProjectHistory: true,
+            nextCursor: nil
         )
     }
 
@@ -870,6 +954,17 @@ private final class TerminationProbe: @unchecked Sendable {
 
     func record() {
         lock.withLock { recordedCount += 1 }
+    }
+}
+
+private final class NoteRequestRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [ProjectNotePageRequest] = []
+
+    var requests: [ProjectNotePageRequest] { lock.withLock { values } }
+
+    func record(_ request: ProjectNotePageRequest) {
+        lock.withLock { values.append(request) }
     }
 }
 

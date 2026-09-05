@@ -315,6 +315,11 @@ public final class ProjectArchiveBrowserStagingExercise {
         isSubmitting = true
         activeSubmission = submission
         diagnostic = nil
+        defer {
+            if lifecycleGeneration == activeLifecycle {
+                isSubmitting = false
+            }
+        }
         do {
             let receipt = try await ProjectArchiveUseCase(archiver: runtime).execute(
                 intent: submission.intent,
@@ -323,7 +328,8 @@ public final class ProjectArchiveBrowserStagingExercise {
                 operationContractVersion: operationContractVersion,
                 capturedAt: submission.capturedAt
             )
-            guard lifecycleGeneration == activeLifecycle else { return }
+            guard lifecycleGeneration == activeLifecycle,
+                  observationGeneration == activeObservation else { return }
             let command = try submission.command(
                 actorPrincipalId: actorPrincipalId,
                 operationContractVersion: operationContractVersion
@@ -344,24 +350,25 @@ public final class ProjectArchiveBrowserStagingExercise {
                 observationGeneration: activeObservation
             )
         } catch is CancellationError {
-            guard lifecycleGeneration == activeLifecycle else { return }
+            guard lifecycleGeneration == activeLifecycle,
+                  observationGeneration == activeObservation else { return }
             ambiguousSubmission = submission
             diagnostic = "project_archive_cancelled"
         } catch let failure as ProjectArchiveFailure {
-            guard lifecycleGeneration == activeLifecycle else { return }
+            guard lifecycleGeneration == activeLifecycle,
+                  observationGeneration == activeObservation else { return }
             if mayRetainAmbiguous {
                 ambiguousSubmission = submission
             }
             diagnostic = failure.diagnosticCode
         } catch {
-            guard lifecycleGeneration == activeLifecycle else { return }
+            guard lifecycleGeneration == activeLifecycle,
+                  observationGeneration == activeObservation else { return }
             if mayRetainAmbiguous {
                 ambiguousSubmission = submission
             }
             diagnostic = "project_archive_local_failed"
         }
-        guard lifecycleGeneration == activeLifecycle else { return }
-        isSubmitting = false
     }
 
     private func beginObservation(

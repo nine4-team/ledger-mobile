@@ -32,7 +32,7 @@
     },
     {
       "id": "SWIFT-E431F314B326",
-      "acknowledgeSourceHash": "a4f3077f9a310fc7e062da11d54d9d5bef1c9fe912282604121e908edb256df7",
+      "acknowledgeSourceHash": "efc86325f540e618ffc2ff7175ae088124577c00fbeb7ee8667037e0919f9bbe",
       "currentBehavior": "Implements encrypted atomic Client-archive acceptance, exact Account-bound identity and replay, dependency-aware FIFO state, local lifecycle overlay and strict terminal/readback reconciliation without mutating synchronized rows.",
       "disposition": "redesign",
       "status": "implemented",
@@ -68,7 +68,7 @@
     },
     {
       "id": "TEST-3B1F3E444423",
-      "acknowledgeSourceHash": "2ce1e381c0f0181560ecddd661feda3cf6828d7a499fc12c6e85184428a5d917",
+      "acknowledgeSourceHash": "a0ec09dd8d9a64b36178ef30c7586ee60982c64022b118c2c141e007503d455d",
       "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and runtime drainage.",
       "disposition": "redesign",
       "status": "implemented",

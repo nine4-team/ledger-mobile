@@ -831,6 +831,31 @@ struct ClientArchivePowerSyncVerticalSliceTests {
         }
     }
 
+    @Test("Client archive store shutdown drains active operation watches")
+    func storeShutdownDrainsOperationWatches() async throws {
+        let fixture = try ClientArchiveDatabaseFixture()
+        let database = try fixture.open()
+        try await Self.seed(database)
+        let command = try Self.command(id: "store-drain", revision: 7)
+        let store = Self.store(database)
+        _ = try await store.archive(command)
+
+        var iterator = store.watchOperation(command.envelope.operationId).makeAsyncIterator()
+        #expect(try await iterator.next()?.operationId == command.envelope.operationId)
+        await store.cancelAndDrainWatches()
+        do {
+            let value = try await iterator.next()
+            #expect(value == nil)
+        } catch is CancellationError {
+            // Cancellation is also a valid terminal signal for an admitted watch.
+        }
+        var refused = store.watchOperation(command.envelope.operationId).makeAsyncIterator()
+        #expect(try await refused.next() == nil)
+
+        try await database.close(deleteDatabase: true)
+        fixture.remove()
+    }
+
     private static let accountId = try! AccountID(validating: "account-primary")
     private static let principalId = try! PrincipalID(validating: "principal-owner")
     private static let clientId = try! ClientID(validating: "client-main")
@@ -854,7 +879,8 @@ struct ClientArchivePowerSyncVerticalSliceTests {
             "rpc": "00000000-0000-4000-8000-00000000000c",
             "runtime-close": "00000000-0000-4000-8000-00000000000d",
             "setup-readback": "00000000-0000-4000-8000-00000000000e",
-            "restart-corruption": "00000000-0000-4000-8000-00000000000f"
+            "restart-corruption": "00000000-0000-4000-8000-00000000000f",
+            "store-drain": "00000000-0000-4000-8000-000000000010"
         ]
         return try ArchiveClientCommand(
             operationId: ClientArchiveOperationIdentity.make(

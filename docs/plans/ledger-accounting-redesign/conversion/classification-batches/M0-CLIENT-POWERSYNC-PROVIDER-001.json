@@ -19,7 +19,7 @@
     {
       "id": "CONFIG-428FDE11BBE4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8",
+      "acknowledgeSourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
       "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
@@ -88,7 +88,7 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed",
+      "acknowledgeSourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
       "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget categories/allocations, Space destination rows, existing command/optimistic state, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
@@ -121,7 +121,7 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18",
+      "acknowledgeSourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
       "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior plus one typed Account-bound Space destination watch and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
@@ -176,7 +176,7 @@
     {
       "id": "TEST-E0636D89C442",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "a6d9a90ae3435e605fbae996446d389fe5d96fb4678ade94169639072c3bc160",
+      "acknowledgeSourceHash": "e5fbf5868e584206dbcac4bfb3dee24d20ee053a52ffc5bfae8de0027deb36c2",
       "currentBehavior": "Runs nine target-only Client PowerSync tests for schema/input validation, encryption/restart, atomic offline acceptance, upload, durable rejection, readiness honesty, membership-authorized overlay reconciliation, OperationID rebinding refusal, cross-runtime fingerprint parity, timestamp preservation, credential refusal and Swift RPC boundaries.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001"], "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries; no hosted provider access.",

@@ -28,6 +28,44 @@ struct LedgerPowerSyncVerticalSliceTests {
         }
     }
 
+    @Test("Project-note keyset query uses the declared composite index")
+    func projectNoteKeysetQueryPlan() async throws {
+        let fixture = try DatabaseFixture()
+        let database = try fixture.open()
+        let indexSQL = try await database.get(
+            sql: "SELECT sql FROM sqlite_master WHERE name = ?",
+            parameters: ["ps_data__spike_project_notes__project_note_history_page"]
+        ) { cursor in
+            try cursor.getString(name: "sql")
+        }
+        #expect(indexSQL.contains("$.account_id"))
+        #expect(indexSQL.contains("$.project_id"))
+        #expect(indexSQL.contains("$.created_at_ms"))
+        #expect(indexSQL.contains("$.keyset_id"))
+
+        let plan = try await database.getAll(
+            sql: """
+            EXPLAIN QUERY PLAN
+            SELECT id
+            FROM spike_project_notes
+            WHERE account_id = ? AND project_id = ?
+              AND (
+                created_at_ms < ?
+                OR (created_at_ms = ? AND keyset_id < ?)
+              )
+            ORDER BY created_at_ms DESC, keyset_id DESC
+            LIMIT ?
+            """,
+            parameters: ["account-primary", "project-primary", 20, 20, "note-z", 201]
+        ) { cursor in
+            try cursor.getString(name: "detail")
+        }
+        #expect(plan.contains { $0.contains("project_note_history_page") })
+        #expect(!plan.contains { $0.contains("USE TEMP B-TREE") })
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
     @Test("Offline acceptance is encrypted, atomic, restart durable, and uploaded once")
     func encryptedRestartDurabilityAndUpload() async throws {
         let fixture = try DatabaseFixture()

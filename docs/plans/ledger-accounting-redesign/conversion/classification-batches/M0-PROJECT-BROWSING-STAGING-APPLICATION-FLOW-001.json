@@ -12,7 +12,7 @@
   "surfaces": [
     {
       "id": "SWIFT-CAB085E24751",
-      "acknowledgeSourceHash": "da3874dfb1f911da0bc2d9b202f2a22f3f49a020f6e5bd389451857b82e2617c",
+      "acknowledgeSourceHash": "85fbdf3c1debe2f6b8d2d9b53752cf7712b4cdc7725ada775301a156e7e0a90e",
       "currentBehavior": "Implements the Core-only reactive Project directory, evidence-bound selection, exact detail-presentation and archive-intent derivation, false-empty truth, bounded diagnostics, cancellation, restart generation and lifecycle drainage.",
       "disposition": "redesign",
       "status": "verified",
@@ -36,7 +36,7 @@
     },
     {
       "id": "TEST-5C7E5E715EAE",
-      "acknowledgeSourceHash": "ccf2b062c6e6c96f3c45aef2a3bfb2a873ca783c8f0a47f1c71c3c9519a7eb41",
+      "acknowledgeSourceHash": "3e3050557fe8573412ed7bd399d9f9fe12fa8cfac9eecf4626ed8a633d227926",
       "currentBehavior": "Provides deterministic tests for atomic directory presentation, reciprocal false-empty truth, stable selection, every detail state, failures, termination, active drainage, rapid reselection, stop/restart, and noncooperative late-detail generation isolation.",
       "disposition": "redesign",
       "status": "verified",
@@ -60,7 +60,7 @@
     },
     {
       "id": "SWIFT-AA91CE0C3FAB",
-      "acknowledgeSourceHash": "f8b3ba21024d29ec5aa8da47a8f6e0db0f51817bca0ab42a6d33169d19de922f",
+      "acknowledgeSourceHash": "122c1ce8b1356a1571551145f119603b7b5d1d586db87611a563d4fb654b181c",
       "currentBehavior": "Implements the thin Account-bound runtime adapter that forwards only the typed Project directory and exact Project-detail watches into the Core-only application model.",
       "disposition": "redesign",
       "status": "verified",
@@ -84,7 +84,7 @@
     },
     {
       "id": "SWIFT-07427FF0DA84",
-      "acknowledgeSourceHash": "2bc3cf4d58889b1ec3b5c27595db6116bf236bebd280cc779e114e4caae13363",
+      "acknowledgeSourceHash": "db426f1e427b1ee1ffd9170b9a2599b4dd24a7f20ed3b73a4adb5630c891a50e",
       "currentBehavior": "Renders typed active/archived Project rows, exact detail state and explicit Project archive confirmation/retry/operation truth in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
       "disposition": "redesign",
       "status": "verified",

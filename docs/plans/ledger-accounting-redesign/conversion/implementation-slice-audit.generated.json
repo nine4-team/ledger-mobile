@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T21:46:52.974Z",
+  "generatedFromManifestSync": "2026-09-05T23:02:04.359Z",
   "totals": {
     "slices": 86,
     "claimedTargetSurfaces": 283,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 209
+    "implementationAdvancedTargetSurfaces": 219
   },
   "statusCounts": {
     "draft": 2,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 10,
+    "implemented": 11,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -556,7 +556,7 @@
       "sliceId": "project-archival-review-workflow",
       "title": "Review complete Project-note history offline before and after Project archival",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Archival Review",
       "surfaceIds": [
         "CONFIG-00C8635E9EF9",

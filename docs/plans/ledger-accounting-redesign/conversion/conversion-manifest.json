@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T21:46:52.974Z",
+    "lastSynchronizedAt": "2026-09-05T23:02:04.359Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -90,10 +90,10 @@
           "path": "scripts/test-local-project-note-read.mjs"
         }
       ],
-      "observedSourceHash": "159797cc8e910a7d2b612825ebc5d83fe39f4e521c321f6a3fe012b418e9833e",
-      "acknowledgedSourceHash": "159797cc8e910a7d2b612825ebc5d83fe39f4e521c321f6a3fe012b418e9833e",
+      "observedSourceHash": "6d39d2ba3033682c1dcd17f5018c11d635971546ebb865143d27e075aed1c9f6",
+      "acknowledgedSourceHash": "6d39d2ba3033682c1dcd17f5018c11d635971546ebb865143d27e075aed1c9f6",
       "metadata": {},
-      "currentBehavior": "Comment-only READY runner scaffold reserves disposable localhost Data API proof for authorized and denied Project-note reads.",
+      "currentBehavior": "Executable disposable localhost Data API runner proves authorized and denied Project-note reads plus byte-identical history before and after archival.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -121,10 +121,11 @@
           "Authorized active/archived reads pass and unauthorized scope remains non-enumerating"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "No hosted endpoint or production credential is allowed.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -471,8 +472,8 @@
           "path": ".github/workflows/supabase-conversion-control.yml"
         }
       ],
-      "observedSourceHash": "908fa8281ff9a688c7bdf0d0a387062c160f3e768ab609f464155c57bceb241b",
-      "acknowledgedSourceHash": "908fa8281ff9a688c7bdf0d0a387062c160f3e768ab609f464155c57bceb241b",
+      "observedSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
+      "acknowledgedSourceHash": "28fe5052cdbbe198f1f773442ca39c601122fee8e904c4f5f9d9856a7552a000",
       "metadata": {},
       "currentBehavior": "Runs conversion traceability, target-query and source-query controls on Linux from full Git history; verifies the local spike-prefixed Supabase Client, Project and Space-destination schema/RLS/RPC-or-Data-API behavior on Ubuntu; and gates an explicit macOS 26 / Swift 6.2 job that validates target isolation, contracts, MCP tests, the complete Swift package, and macOS/iOS Simulator staging builds, with clean-diff enforcement. The complete Swift package runs nonparallel because Swift Testing serializes only within an individual suite and the independent PowerSync/SQLCipher integration suites share native process resources; explicit runtime tests still exercise the required database, finite-operation and stream concurrency inside their own test boundaries.",
       "disposition": "redesign",
@@ -689,8 +690,8 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "dfbc5b990d544c3b2d6d5b8ab690838b101e0a97ebf53be45f997275f182ed5a",
-      "acknowledgedSourceHash": "dfbc5b990d544c3b2d6d5b8ab690838b101e0a97ebf53be45f997275f182ed5a",
+      "observedSourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
+      "acknowledgedSourceHash": "f9edaa9f35f6206a6314ad01e56dea0dd4ae8a90d6167361aa630a3654e0b8a8",
       "metadata": {},
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
@@ -1083,8 +1084,8 @@
           "path": "powersync/sync-streams.yaml"
         }
       ],
-      "observedSourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8",
-      "acknowledgedSourceHash": "3fae69506c62c445b088d6b193f9074c9d899227b7f9658749d3226b6d3cd6b8",
+      "observedSourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
+      "acknowledgedSourceHash": "7e22986275099850caed3a51468b53a27b2b7ebeec4ef1d97215f75f090a5af1",
       "metadata": {},
       "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
       "disposition": "redesign",
@@ -1844,8 +1845,8 @@
           "path": "package.json"
         }
       ],
-      "observedSourceHash": "d8e52ecdebc3d1862bc07b5c46907416b78a0151edd5a1f19d1b0aecac006b79",
-      "acknowledgedSourceHash": "d8e52ecdebc3d1862bc07b5c46907416b78a0151edd5a1f19d1b0aecac006b79",
+      "observedSourceHash": "9705e06b1115765ccf52cde15b106244d61095fabbddb7690d43a0ef584fafd2",
+      "acknowledgedSourceHash": "9705e06b1115765ccf52cde15b106244d61095fabbddb7690d43a0ef584fafd2",
       "metadata": {},
       "currentBehavior": "Defines root repository commands for conversion controls, target tests/builds, and isolated local Supabase Client/Project/Space database and Data API verification. Vitest remains the root development test dependency.",
       "disposition": "preserve",
@@ -1890,8 +1891,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
-      "acknowledgedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
+      "observedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "acknowledgedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -2330,10 +2331,10 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "5dcc19a95ecccd1b72a9be18e7e9d5353e3eaeadb98a204876d9aca1ae2b77a3",
-      "acknowledgedSourceHash": "5dcc19a95ecccd1b72a9be18e7e9d5353e3eaeadb98a204876d9aca1ae2b77a3",
+      "observedSourceHash": "e4cca9bb887750bf64d80aa5d9b01f55f29429e2cec7b03760945dd6c17e0434",
+      "acknowledgedSourceHash": "e4cca9bb887750bf64d80aa5d9b01f55f29429e2cec7b03760945dd6c17e0434",
       "metadata": {},
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map and byte-exact workflow including the isolated Space Data API read gate, permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map and byte-exact workflow including the isolated Space and Project-note Data API read gates, permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -2370,9 +2371,10 @@
       "blockers": [],
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. The Space destination implementation later re-acknowledged only the exact package command and workflow fingerprints needed to run its isolated local Data API read check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority.",
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. Later provider slices re-acknowledged only the exact package command and workflow fingerprints needed to run their isolated local Data API read checks, most recently the Project-note before/after-archive continuity check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2386,8 +2388,8 @@
           "path": "LedgerTargetContracts/catalog.json"
         }
       ],
-      "observedSourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa",
-      "acknowledgedSourceHash": "b984517bd0376a88b7e436d31042799e34dc8df4c79dc3bf0828e506ca47f7fa",
+      "observedSourceHash": "428152760e31033934396ed6d9838b95c24b286ceddc93ac154e47cf71f2b904",
+      "acknowledgedSourceHash": "428152760e31033934396ed6d9838b95c24b286ceddc93ac154e47cf71f2b904",
       "metadata": {},
       "currentBehavior": "Defines the canonical target-only version, enum, authorization-policy, telemetry, stable-error, capability, contract and deprecation registry.",
       "disposition": "redesign",
@@ -3091,10 +3093,10 @@
           "path": "supabase/migrations/20260905213332_project_note_archival_review.sql"
         }
       ],
-      "observedSourceHash": "ceb66680eac3d37370d5bc26caf4ad328db4ba048a37244c8865086bca4a10c3",
-      "acknowledgedSourceHash": "ceb66680eac3d37370d5bc26caf4ad328db4ba048a37244c8865086bca4a10c3",
+      "observedSourceHash": "256ed361aee0f2c17eb44a2df9a1fa43d85423faea18470d0ff2a970d28474a7",
+      "acknowledgedSourceHash": "256ed361aee0f2c17eb44a2df9a1fa43d85423faea18470d0ff2a970d28474a7",
       "metadata": {},
-      "currentBehavior": "Comment-only READY migration scaffold reserves the read-only Project-note relation, exact history index, authenticated SELECT grant and membership RLS boundary.",
+      "currentBehavior": "Executable migration creates the read-only Project-note relation, exact history index, forced membership RLS boundary and precision-safe scoped read RPC.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -3123,10 +3125,11 @@
           "Least-privilege schema and preservation assertions pass on a disposable database"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "O-039 note mutations and source-data migration are excluded.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -3293,8 +3296,8 @@
           "path": "LedgerTargetMCP/resources/contract-catalog.json"
         }
       ],
-      "observedSourceHash": "3559b2cef0fd3cbd8acb1aef8b03ee4a7d61728c38678a170a06dcf4cd806c72",
-      "acknowledgedSourceHash": "3559b2cef0fd3cbd8acb1aef8b03ee4a7d61728c38678a170a06dcf4cd806c72",
+      "observedSourceHash": "4a242ecc1237e8cafc4e715d99a58020c551a14336e5895f73646bf13bf435c2",
+      "acknowledgedSourceHash": "4a242ecc1237e8cafc4e715d99a58020c551a14336e5895f73646bf13bf435c2",
       "metadata": {},
       "currentBehavior": "Publishes the bounded generated MCP contract resource with the canonical catalog and hash.",
       "disposition": "redesign",
@@ -3399,10 +3402,10 @@
           "path": "supabase/tests/project_note_archival_review.test.sql"
         }
       ],
-      "observedSourceHash": "dbba3318b8e53b688cc6cf6987e48cf42fe145401dd8e7b236a2d67d7ab479f8",
-      "acknowledgedSourceHash": "dbba3318b8e53b688cc6cf6987e48cf42fe145401dd8e7b236a2d67d7ab479f8",
+      "observedSourceHash": "8d65e90b1aca38a4a8da1e22d5a4ec33580f2c10fd710fa42fed8f4b14cbdb7d",
+      "acknowledgedSourceHash": "8d65e90b1aca38a4a8da1e22d5a4ec33580f2c10fd710fa42fed8f4b14cbdb7d",
       "metadata": {},
-      "currentBehavior": "Assertion-free READY pgTAP scaffold reserves schema, RLS, authorization, pagination and archive-preservation proof.",
+      "currentBehavior": "Executable 45-assertion pgTAP suite proves schema, forced RLS, authorization, pagination, Unicode validation and archive preservation.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -3430,10 +3433,11 @@
           "All Project-note assertions pass from a clean reset"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "The scaffold contains no executable product assertion until implementation begins.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -6289,8 +6293,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
-      "acknowledgedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
+      "observedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
+      "acknowledgedSourceHash": "92c6a9ed328d2f20b0c3b41600e5291add7c47b39c8e9cc9d06995dbc695ff09",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -9999,12 +10003,12 @@
           "path": "LedgerTargetMCP/tests/projectArchivalReview.test.ts"
         }
       ],
-      "observedSourceHash": "41c157e67468c3ffc9f8eb7a3ced76f919484d2ce2952470f8179edefa9fc0fa",
-      "acknowledgedSourceHash": "41c157e67468c3ffc9f8eb7a3ced76f919484d2ce2952470f8179edefa9fc0fa",
+      "observedSourceHash": "4f4bf0b761c442f581c57f1d1d4a25768a2fd4a5a3e37b1f2d46e2827ca66222",
+      "acknowledgedSourceHash": "4f4bf0b761c442f581c57f1d1d4a25768a2fd4a5a3e37b1f2d46e2827ca66222",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY MCP test scaffold reserves contract-byte, cursor, authorization, preservation and gated-registration negative proof.",
+      "currentBehavior": "Executable MCP suite proves contract bytes, cursor binding, UInt64 precision, Unicode parity, transport failure classes and gated registration.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -10032,10 +10036,11 @@
           "No note write/search/restore/general update or live registration export exists"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "Diagnostics must exclude note text, identity, cursor, envelope, token and key.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -10484,12 +10489,12 @@
           "path": "LedgerTargetMCP/src/projectArchivalReview.ts"
         }
       ],
-      "observedSourceHash": "29931460605393f195300485f4facf5336f9b558bab387c560c46ae7bbfd2d12",
-      "acknowledgedSourceHash": "29931460605393f195300485f4facf5336f9b558bab387c560c46ae7bbfd2d12",
+      "observedSourceHash": "13ca1c054ce40e4be8b6b345aee2417a57c3cae314c47de8eb75114da5168539",
+      "acknowledgedSourceHash": "13ca1c054ce40e4be8b6b345aee2417a57c3cae314c47de8eb75114da5168539",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY MCP scaffold reserves gated bounded note-list transport and exact reuse of the Project archive command/RPC contract.",
+      "currentBehavior": "Executable but unregistered MCP module implements bounded note-list transport and exact Project archive transport with scoped public credentials.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -10517,10 +10522,11 @@
           "Cross-runtime fixtures, numeric boundaries and response validation pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "No live server composition or registration is authorized.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -11550,8 +11556,8 @@
           "path": "LedgerTargetMCP/generated/contracts.ts"
         }
       ],
-      "observedSourceHash": "cffa8e977c26e511634cd2d376e47f32ae61a467d7f3b2d0b824a413771208ca",
-      "acknowledgedSourceHash": "cffa8e977c26e511634cd2d376e47f32ae61a467d7f3b2d0b824a413771208ca",
+      "observedSourceHash": "27a656bcf6f720dd098b10d05bce0e48f60bc2f13ae5be4afb3d6c6f810c0f5d",
+      "acknowledgedSourceHash": "27a656bcf6f720dd098b10d05bce0e48f60bc2f13ae5be4afb3d6c6f810c0f5d",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -18871,8 +18877,8 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "2bc3cf4d58889b1ec3b5c27595db6116bf236bebd280cc779e114e4caae13363",
-      "acknowledgedSourceHash": "2bc3cf4d58889b1ec3b5c27595db6116bf236bebd280cc779e114e4caae13363",
+      "observedSourceHash": "db426f1e427b1ee1ffd9170b9a2599b4dd24a7f20ed3b73a4adb5630c891a50e",
+      "acknowledgedSourceHash": "db426f1e427b1ee1ffd9170b9a2599b4dd24a7f20ed3b73a4adb5630c891a50e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -18924,12 +18930,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectNoteHistoryStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "e088d866744bb447c7270d84d7078e3bc4eaa4dbd0ca43a4d0f2257bfd126abd",
-      "acknowledgedSourceHash": "e088d866744bb447c7270d84d7078e3bc4eaa4dbd0ca43a4d0f2257bfd126abd",
+      "observedSourceHash": "decf93666528e474423ad17a5f1c815d6f5267100f0300584a2ab50aa56a438c",
+      "acknowledgedSourceHash": "decf93666528e474423ad17a5f1c815d6f5267100f0300584a2ab50aa56a438c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY app scaffold reserves the thin runtime forwarding and isolated note-history SwiftUI presentation.",
+      "currentBehavior": "Executable isolated SwiftUI note-history view renders bounded states, tombstones and authoritative empty without leaking stable note identifiers.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -18957,10 +18963,11 @@
           "No production route or note mutation appears"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "One file intentionally owns both the tiny adapter and view.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -20528,8 +20535,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed",
-      "acknowledgedSourceHash": "13e84e79f78c903158a3f8d0f6528c4608437f06e5a46d6333214128e50d00ed",
+      "observedSourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
+      "acknowledgedSourceHash": "c053da5bd4119301c817eced4d99668143dc8c4742801ff0264ef029234fc852",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -21538,12 +21545,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectNotePowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "7bcad309499f562158899226dd68f91d9ecfa3e618425e5ac707fe20047717f8",
-      "acknowledgedSourceHash": "7bcad309499f562158899226dd68f91d9ecfa3e618425e5ac707fe20047717f8",
+      "observedSourceHash": "29ae72e7f1d3c69a41e033bd25429185a56c970de911ba58eada54f48304cff9",
+      "acknowledgedSourceHash": "29ae72e7f1d3c69a41e033bd25429185a56c970de911ba58eada54f48304cff9",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY provider scaffold reserves one Account-bound encrypted local Project-note query with exact on-demand completeness.",
+      "currentBehavior": "Executable Account-bound encrypted local Project-note query provides indexed keyset pages and causal exact-stream completeness.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -21571,10 +21578,11 @@
           "Partial, stale, complete and restart states remain honest"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "No note write or provider type crosses LedgerTargetCore.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -25194,8 +25202,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd",
-      "acknowledgedSourceHash": "139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd",
+      "observedSourceHash": "e5706f67517dc378cba2fd86e2e96c436a636fa81f6275268e1613cd0d3854a1",
+      "acknowledgedSourceHash": "e5706f67517dc378cba2fd86e2e96c436a636fa81f6275268e1613cd0d3854a1",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -25292,8 +25300,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18",
-      "acknowledgedSourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18",
+      "observedSourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
+      "acknowledgedSourceHash": "6bb678c0f96d98a782b3a12918bd01e69bea198472578f3426f0ebd5166bdbc0",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -26494,8 +26502,8 @@
           "path": "LedgeriOS/LedgerTargetCore/GeneratedContractCatalog.swift"
         }
       ],
-      "observedSourceHash": "b506bee5068c7f807ca807dd441d1c93c3e3949555f3efbf2aae4d165fcb404a",
-      "acknowledgedSourceHash": "b506bee5068c7f807ca807dd441d1c93c3e3949555f3efbf2aae4d165fcb404a",
+      "observedSourceHash": "e2d36bc8be4d852937717369f7bb4a6d4e6268108a6e84fb5dd639ceeb1b6b8a",
+      "acknowledgedSourceHash": "e2d36bc8be4d852937717369f7bb4a6d4e6268108a6e84fb5dd639ceeb1b6b8a",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -27885,12 +27893,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ProjectNoteHistoryStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "860ffc62ccc5cedadbc6ce6f333bc148e5bfb2f23a3ff37f7fa8575cacd5db1e",
-      "acknowledgedSourceHash": "860ffc62ccc5cedadbc6ce6f333bc148e5bfb2f23a3ff37f7fa8575cacd5db1e",
+      "observedSourceHash": "9cf5319e307d20b3b4ad948075d9c93ff0b1aac86f9089083c122d8aabc90722",
+      "acknowledgedSourceHash": "9cf5319e307d20b3b4ad948075d9c93ff0b1aac86f9089083c122d8aabc90722",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY AppModel scaffold reserves one bounded note-history controller owned by the existing Project browser.",
+      "currentBehavior": "Executable bounded note-history controller owns selection/page generations, authoritative-empty truth and fail-closed cancellation behavior.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -27918,10 +27926,11 @@
           "Waiting/partial/stale/ready/incomplete/tombstone/pagination states remain distinct"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "The Project browser owns lifecycle coordination; SwiftUI callbacks are not correctness authority.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -27937,8 +27946,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "ee4ad3588bbf6c188f3cd66940b1bde59515be06c6b755fb6376ca8c59eae02c",
-      "acknowledgedSourceHash": "ee4ad3588bbf6c188f3cd66940b1bde59515be06c6b755fb6376ca8c59eae02c",
+      "observedSourceHash": "5773af880b1aa80031b561e369dd41e4ac37aea50cc2e2a392b9655f66a62c3e",
+      "acknowledgedSourceHash": "5773af880b1aa80031b561e369dd41e4ac37aea50cc2e2a392b9655f66a62c3e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -32920,8 +32929,8 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "f8b3ba21024d29ec5aa8da47a8f6e0db0f51817bca0ab42a6d33169d19de922f",
-      "acknowledgedSourceHash": "f8b3ba21024d29ec5aa8da47a8f6e0db0f51817bca0ab42a6d33169d19de922f",
+      "observedSourceHash": "122c1ce8b1356a1571551145f119603b7b5d1d586db87611a563d4fb654b181c",
+      "acknowledgedSourceHash": "122c1ce8b1356a1571551145f119603b7b5d1d586db87611a563d4fb654b181c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -35382,8 +35391,8 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ProjectBrowsingStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "da3874dfb1f911da0bc2d9b202f2a22f3f49a020f6e5bd389451857b82e2617c",
-      "acknowledgedSourceHash": "da3874dfb1f911da0bc2d9b202f2a22f3f49a020f6e5bd389451857b82e2617c",
+      "observedSourceHash": "85fbdf3c1debe2f6b8d2d9b53752cf7712b4cdc7725ada775301a156e7e0a90e",
+      "acknowledgedSourceHash": "85fbdf3c1debe2f6b8d2d9b53752cf7712b4cdc7725ada775301a156e7e0a90e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -36330,8 +36339,8 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ProjectArchiveBrowserStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "d4522a1f3f7d14ad87ce97e2aa48a1234223df1078354bbf8e9ee01289670451",
-      "acknowledgedSourceHash": "d4522a1f3f7d14ad87ce97e2aa48a1234223df1078354bbf8e9ee01289670451",
+      "observedSourceHash": "4935d7756aa699983c1eff8702cdcaa81b4386bda7ab9b6a82c0545b7a21b39f",
+      "acknowledgedSourceHash": "4935d7756aa699983c1eff8702cdcaa81b4386bda7ab9b6a82c0545b7a21b39f",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -37778,8 +37787,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "a4f3077f9a310fc7e062da11d54d9d5bef1c9fe912282604121e908edb256df7",
-      "acknowledgedSourceHash": "a4f3077f9a310fc7e062da11d54d9d5bef1c9fe912282604121e908edb256df7",
+      "observedSourceHash": "efc86325f540e618ffc2ff7175ae088124577c00fbeb7ee8667037e0919f9bbe",
+      "acknowledgedSourceHash": "efc86325f540e618ffc2ff7175ae088124577c00fbeb7ee8667037e0919f9bbe",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -41985,8 +41994,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "2ce1e381c0f0181560ecddd661feda3cf6828d7a499fc12c6e85184428a5d917",
-      "acknowledgedSourceHash": "2ce1e381c0f0181560ecddd661feda3cf6828d7a499fc12c6e85184428a5d917",
+      "observedSourceHash": "a0ec09dd8d9a64b36178ef30c7586ee60982c64022b118c2c141e007503d455d",
+      "acknowledgedSourceHash": "a0ec09dd8d9a64b36178ef30c7586ee60982c64022b118c2c141e007503d455d",
       "metadata": {
         "firebaseCoupled": true
       },
@@ -42040,12 +42049,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectNoteHistoryStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "ad4f207501bd6c50be52ebeeb1837a5e2c5cef4f98c89d581f653a0cabd48a08",
-      "acknowledgedSourceHash": "ad4f207501bd6c50be52ebeeb1837a5e2c5cef4f98c89d581f653a0cabd48a08",
+      "observedSourceHash": "cd45b06bd9b2a3ab51b26a1e172bef7e6618dc925b2b341b4df6a0b643f58fbf",
+      "acknowledgedSourceHash": "cd45b06bd9b2a3ab51b26a1e172bef7e6618dc925b2b341b4df6a0b643f58fbf",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY test scaffold reserves selection-generation, paging, lifecycle transition and cancellation proof for note-history presentation.",
+      "currentBehavior": "Executable note-history presentation suite proves selection/paging generations, authoritative emptiness, lifecycle transitions and cancellation clearing.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -42073,10 +42082,11 @@
           "The browser owns every observer transition deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "No production UI claim.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -42470,8 +42480,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "bb45930f943dcdbf2494064ed40453598b71da692a31fb5d3334cecae70041ad",
-      "acknowledgedSourceHash": "bb45930f943dcdbf2494064ed40453598b71da692a31fb5d3334cecae70041ad",
+      "observedSourceHash": "f1d08016ec5ce351b866c82e32130f031dc368d659df0c55b29bc288439578d5",
+      "acknowledgedSourceHash": "f1d08016ec5ce351b866c82e32130f031dc368d659df0c55b29bc288439578d5",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -42936,8 +42946,8 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "ccf2b062c6e6c96f3c45aef2a3bfb2a873ca783c8f0a47f1c71c3c9519a7eb41",
-      "acknowledgedSourceHash": "ccf2b062c6e6c96f3c45aef2a3bfb2a873ca783c8f0a47f1c71c3c9519a7eb41",
+      "observedSourceHash": "3e3050557fe8573412ed7bd399d9f9fe12fa8cfac9eecf4626ed8a633d227926",
+      "acknowledgedSourceHash": "3e3050557fe8573412ed7bd399d9f9fe12fa8cfac9eecf4626ed8a633d227926",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -44638,8 +44648,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "de52df70d4afcb918fc5b254982777eada19b5585f7e9359c2bc38dbb04ac4fe",
-      "acknowledgedSourceHash": "de52df70d4afcb918fc5b254982777eada19b5585f7e9359c2bc38dbb04ac4fe",
+      "observedSourceHash": "72bba5ab048a90f03558d66db92f9814c3f050d479f97042eec5fb96a2821e13",
+      "acknowledgedSourceHash": "72bba5ab048a90f03558d66db92f9814c3f050d479f97042eec5fb96a2821e13",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -45392,12 +45402,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectNotePowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "3838568cf911587778e1df1ef3568c0b402967a9c2e1941f4f703dbbb506df71",
-      "acknowledgedSourceHash": "3838568cf911587778e1df1ef3568c0b402967a9c2e1941f4f703dbbb506df71",
+      "observedSourceHash": "f93f65ef22814566843d53f80777a967ae4e37c39f287ce7be8f8df062e1020a",
+      "acknowledgedSourceHash": "f93f65ef22814566843d53f80777a967ae4e37c39f287ce7be8f8df062e1020a",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY test scaffold reserves encrypted local pagination, completeness, restart, archive-preservation and observer-lifecycle proof.",
+      "currentBehavior": "Executable encrypted local suite proves pagination, causal completeness, restart, membership loss/reactivation and observer drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -45425,10 +45435,11 @@
           "Every frozen provider obligation is executable"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001"
+        "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
+        "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
       "notes": "No hosted synchronization claim is made.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
@@ -46268,8 +46279,8 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/GeneratedContractCatalogTests.swift"
         }
       ],
-      "observedSourceHash": "8380fdf8ca24cdd01bc065c288754f3a9a1d521e4852ef5685a0f6f056219b7a",
-      "acknowledgedSourceHash": "8380fdf8ca24cdd01bc065c288754f3a9a1d521e4852ef5685a0f6f056219b7a",
+      "observedSourceHash": "2e286ab60f0d6f507df58975b71a69ddfdf1642d92677136250a94cbbf3e4991",
+      "acknowledgedSourceHash": "2e286ab60f0d6f507df58975b71a69ddfdf1642d92677136250a94cbbf3e4991",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -47059,8 +47070,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LedgerPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "a6d9a90ae3435e605fbae996446d389fe5d96fb4678ade94169639072c3bc160",
-      "acknowledgedSourceHash": "a6d9a90ae3435e605fbae996446d389fe5d96fb4678ade94169639072c3bc160",
+      "observedSourceHash": "e5fbf5868e584206dbcac4bfb3dee24d20ee053a52ffc5bfae8de0027deb36c2",
+      "acknowledgedSourceHash": "e5fbf5868e584206dbcac4bfb3dee24d20ee053a52ffc5bfae8de0027deb36c2",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -47833,8 +47844,8 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "a792b675301c16ef6807088e7d230f907be3e08aa94573ac3ee288a25468decb",
-      "acknowledgedSourceHash": "a792b675301c16ef6807088e7d230f907be3e08aa94573ac3ee288a25468decb",
+      "observedSourceHash": "43785b7ec7d29a79eb651298d139998a8b5e3998da771636613d6ee4e129b952",
+      "acknowledgedSourceHash": "43785b7ec7d29a79eb651298d139998a8b5e3998da771636613d6ee4e129b952",
       "metadata": {
         "firebaseCoupled": false
       },

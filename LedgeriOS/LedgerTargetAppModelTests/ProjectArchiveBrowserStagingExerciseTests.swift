@@ -64,6 +64,84 @@ struct ProjectArchiveBrowserStagingExerciseTests {
         await browser.stop()
     }
 
+    @Test("Archive action preserves the same note history watch through archived readback")
+    func archiveActionPreservesNoteHistoryContinuity() async throws {
+        let browser = try await BrowserFixture.ready(revision: 7)
+        await Self.waitUntil { browser.noteRequestCount == 1 }
+        try browser.yieldNote(body: "Before archive", version: "note-before-archive")
+        await Self.waitUntil {
+            browser.model.noteHistory.rows.first?.body == "Before archive"
+        }
+
+        let archive = ArchiveProbe(behaviors: [.success(.queued)])
+        let operations = OperationWatchProbe()
+        let model = Self.model(browser: browser.model)
+        await model.start(runtime: Self.runtime(archive: archive, operations: operations))
+        model.requestArchiveConfirmation()
+        await model.confirmArchive()
+        let command = try #require((await archive.recordedCommands()).only)
+        await Self.waitUntil { operations.ids == [command.envelope.operationId.rawValue] }
+
+        operations.source(for: command.envelope.operationId).yield(Self.snapshot(
+            command: command,
+            state: .applied(Self.appliedResult(revision: 8)),
+            updatedAt: Self.capturedAt.addingTimeInterval(2)
+        ))
+        await Self.waitUntil { model.operationStateLabel == "applied" }
+
+        try browser.yieldArchivedReadback(revision: 8)
+        await Self.waitUntil {
+            browser.model.selectedProject?.projectLifecycle == .archived
+                && browser.model.detailPresentation?.state.content?.projectLifecycle == .archived
+        }
+        await model.selectionDidSettle()
+        try browser.yieldNote(body: "After archive", version: "note-after-archive")
+        await Self.waitUntil {
+            browser.model.noteHistory.rows.first?.body == "After archive"
+        }
+
+        #expect(browser.noteRequestCount == 1)
+        #expect(browser.noteTerminationCount == 0)
+        #expect(browser.model.selectedProjectId == Self.projectId)
+        #expect(model.operationStateLabel == "applied")
+
+        await model.stop()
+        await browser.stop()
+        #expect(browser.noteTerminationCount == 1)
+    }
+
+    @Test("A receipt accepted after reselection cannot overwrite the current Project presentation")
+    func delayedAcceptanceCannotRebindSelection() async throws {
+        let browser = try await BrowserFixture.ready(revision: 7)
+        let acceptance = ArchiveAcceptanceGate()
+        let operations = OperationWatchProbe()
+        let model = Self.model(browser: browser.model)
+        await model.start(runtime: ProjectArchiveBrowserStagingRuntime(
+            archive: { await acceptance.archive($0) },
+            watchOperation: { operations.watch($0) }
+        ))
+        model.requestArchiveConfirmation()
+        let submission = Task { await model.confirmArchive() }
+        await acceptance.waitUntilEntered()
+
+        await model.selectionDidChange()
+        try await browser.selectAdditionalProject(revision: 3)
+        await model.selectionDidSettle()
+        await acceptance.release()
+        await submission.value
+
+        #expect(!model.isSubmitting)
+        #expect(model.operationIdLabel == nil)
+        #expect(model.operationStateLabel == "not submitted")
+        #expect(model.diagnostic == nil)
+        #expect(operations.ids.isEmpty)
+        #expect(model.canRequestArchive)
+        #expect((await acceptance.recordedCommands()).count == 1)
+
+        await model.stop()
+        await browser.stop()
+    }
+
     @Test("Live fractional capture time is normalized before command fingerprinting")
     func fractionalCaptureTimeIsMillisecondCanonical() async throws {
         let browser = try await BrowserFixture.ready(revision: 7)
@@ -613,6 +691,35 @@ private actor ArchiveProbe {
     }
 }
 
+private actor ArchiveAcceptanceGate {
+    private var commands: [ArchiveProjectCommand] = []
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    func archive(_ command: ArchiveProjectCommand) async -> OperationReceipt {
+        commands.append(command)
+        await withCheckedContinuation { continuation = $0 }
+        return OperationReceipt(
+            operationId: command.envelope.operationId,
+            localState: .queued
+        )
+    }
+
+    func waitUntilEntered() async {
+        for _ in 0..<2_000 {
+            if !commands.isEmpty { return }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        Issue.record("Timed out waiting for archive acceptance")
+    }
+
+    func release() {
+        continuation?.resume()
+        continuation = nil
+    }
+
+    func recordedCommands() -> [ArchiveProjectCommand] { commands }
+}
+
 private final class OperationWatchProbe: @unchecked Sendable {
     private let lock = NSLock()
     private var watchedIds: [String] = []
@@ -687,13 +794,17 @@ private final class BrowserFixture {
     let project: ProjectSummary
     private let directory = ArchiveControlledStream<ProjectListSnapshot>()
     private let detailProbe: ArchiveDetailProbe
+    private let noteProbe: ArchiveNoteProbe
 
     var request: ProjectCoreDetailsRequest? { detailProbe.requests.last }
+    var noteRequestCount: Int { noteProbe.requests.count }
+    var noteTerminationCount: Int { noteProbe.terminationCount }
 
     private init(model: ProjectBrowsingStagingExercise, project: ProjectSummary) {
         self.model = model
         self.project = project
         detailProbe = ArchiveDetailProbe()
+        noteProbe = ArchiveNoteProbe()
     }
 
     static func ready(revision: UInt64) async throws -> BrowserFixture {
@@ -705,7 +816,8 @@ private final class BrowserFixture {
         )
         await fixture.model.start(runtime: ProjectBrowsingStagingRuntime(
             watchProjects: { fixture.directory.stream },
-            watchProject: { fixture.detailProbe.watch($0) }
+            watchProject: { fixture.detailProbe.watch($0) },
+            watchNotes: { fixture.noteProbe.watch($0) }
         ))
         fixture.directory.yield(try directory([fixture.project], version: "initial-directory"))
         await ProjectArchiveBrowserStagingExerciseTests.waitUntil {
@@ -720,6 +832,51 @@ private final class BrowserFixture {
             fixture.model.selectedProjectArchiveEvidence?.expectedRevision.rawValue == revision
         }
         return fixture
+    }
+
+    func yieldNote(body: String, version: String) throws {
+        let request = try #require(noteProbe.requests.last)
+        let note = try ProjectNoteSnapshot(
+            id: ProjectNoteID(validating: "archive-note"),
+            accountId: request.accountId,
+            projectId: request.projectId,
+            content: .visible(ProjectNoteText(validating: body)),
+            source: ProjectNoteSource(validating: "text"),
+            createdByPrincipalId: ProjectArchiveBrowserStagingExerciseTests.principalId,
+            creatorDisplayName: nil,
+            createdAt: ProjectArchiveBrowserStagingExerciseTests.capturedAt,
+            revision: 1
+        )
+        noteProbe.yield(try ProjectNotePage(
+            request: request,
+            local: ListLocalSnapshot(
+                queryFingerprint: request.queryFingerprint,
+                rows: [note],
+                visibleRowCountBeforeFiltering: 1,
+                isCompleteForQuery: true,
+                quality: .ready,
+                localDataVersion: LocalDataVersion(validating: version),
+                asOf: ProjectArchiveBrowserStagingExerciseTests.capturedAt
+            ),
+            isCompleteForProjectHistory: true,
+            nextCursor: nil
+        ))
+    }
+
+    func yieldArchivedReadback(revision: UInt64) throws {
+        let archived = try Self.makeProject(lifecycle: .archived)
+        directory.yield(try Self.directory([archived], version: "archived-directory"))
+        let request = try #require(request)
+        yield(try ProjectCoreDetailsUpdate(
+            request: request,
+            state: .snapshot(try local(
+                request: request,
+                rows: [try row(project: archived, revision: revision)],
+                quality: .ready,
+                complete: true,
+                version: "archived-detail"
+            ))
+        ))
     }
 
     func yieldDetail(
@@ -928,6 +1085,30 @@ private final class ArchiveDetailProbe: @unchecked Sendable {
 
     func yield(_ update: ProjectCoreDetailsUpdate) {
         lock.withLock { source }?.yield(update)
+    }
+}
+
+private final class ArchiveNoteProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var recordedRequests: [ProjectNotePageRequest] = []
+    private var source: ArchiveControlledStream<ProjectNotePage>?
+
+    var requests: [ProjectNotePageRequest] { lock.withLock { recordedRequests } }
+    var terminationCount: Int { lock.withLock { source?.terminationCount ?? 0 } }
+
+    func watch(
+        _ request: ProjectNotePageRequest
+    ) -> AsyncThrowingStream<ProjectNotePage, Error> {
+        lock.withLock {
+            recordedRequests.append(request)
+            let next = ArchiveControlledStream<ProjectNotePage>()
+            source = next
+            return next.stream
+        }
+    }
+
+    func yield(_ page: ProjectNotePage) {
+        lock.withLock { source }?.yield(page)
     }
 }
 

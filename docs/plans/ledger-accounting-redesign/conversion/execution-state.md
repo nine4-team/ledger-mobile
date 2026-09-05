@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 323
+State version: 324
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-ARCHIVAL-REVIEW-READY
+- Checkpoint: PROJECT-ARCHIVAL-REVIEW-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,36 +34,35 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Planning/control coverage is **521 of 705 target-relevant surfaces mapped or
-  later (73.9%)**. Local surface-implementation coverage is **209 of 705
-  implemented or verified (29.6%)**. The denominator increased by ten because
-  the complete Project archival-review implementation boundary is now
-  discovered, classified, and claimed at READY; no executable surface was
-  credited early.
+  later (73.9%)**. Local surface-implementation coverage is **219 of 705
+  implemented or verified (31.1%)**. The ten Project archival-review leaves
+  moved from READY to implemented only after executable code, local provider
+  proof, independent review, and correction; no hosted or cutover credit was
+  added.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
-- Eight provider-backed product workflows have working local behavior after the
-  current slice: four mutations and four reads. Forty-seven additional product
+- Nine provider-backed product workflows have working local behavior after the
+  current slice: four mutations and five reads. Forty-seven additional product
   slices are verified provider-free contracts, not shipped workflows. Hosted
   authenticated Supabase/PowerSync rehearsal remains zero, and both rehearsed
   and cutover-ready surface counts remain zero.
-- A rough end-to-end readiness range is **15–20% complete / 80–85% remaining**.
-  This range is explicitly an estimate, not mechanically derived. The remaining
-  work is weighted toward hosted Auth/Sync proof, the core financial domains,
-  migration/reconciliation, operational rollout/rollback, and cutover. Progress
-  reports must lead with the exact four lanes above rather than repeat a broad
-  estimate without its basis.
-- The implementation tracker currently contains 277 status-bearing rows: 68
-  done, eight verified, ten implemented, zero ready or awaiting verification,
+- The previous rough 15–20% end-to-end estimate is retired because repository
+  surfaces do not weight product complexity and repeating it obscured real
+  movement. Progress reports must use the exact four lanes above; a new overall
+  percentage may be introduced only with a checked-in weighted scope model.
+- The implementation tracker currently contains 278 status-bearing rows: 68
+  done, eight verified, 11 implemented, zero ready or awaiting verification,
   12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Eight provider-backed product slices have working local behavior: Client
+- Nine provider-backed product slices have working local behavior: Client
   creation, Project setup, Project archive and Client archive through their
   browsers, the Client/Project directory, Principal-scoped Account discovery,
   the exact Project-or-Business-Inventory Space destination picker, and the
-  derived same-Client Transfer destination picker. Four are mutation workflows
-  and four are reads. Client creation and Project setup have local
+  derived same-Client Transfer destination picker, and Project note-history
+  continuity across Project archival. Four are mutation workflows and five are
+  reads. Client creation and Project setup have local
   identity, ordinary-name command, encrypted-offline, RLS, replay and readback
   mechanics; Project archive has the corresponding lifecycle/revision command,
   optimistic overlay and reconciliation mechanics; Client archive adds the
@@ -86,21 +85,22 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
-- Froze one larger Project archival-review delivery batch across ten newly
-  discovered target leaves and bounded shared touchpoints. Independent reviews
-  returned GO for a complete exact-Project note replica, 1...200 local keyset
-  pages, new-current-process completeness, active-membership RLS/Sync,
-  active/archived parity, preservation through the existing archive command,
-  and a gated MCP read/archive boundary. They explicitly rejected a capped or
-  evicting note window, UI-owned observer coordination, service-role client
-  access, note mutation/search, live MCP registration, hosted claims, Firebase,
-  migration, production, and cutover. The conversion ledger passes with zero
-  errors and only the three established retired-surface warnings;
-  `EVID-PROJECT-ARCHIVAL-REVIEW-READY-001`.
-  Initial exact commit `8acf5310` failed immutable run `33994108306` only
-  because the generated M2 residual register had not been refreshed after the
-  ten surfaces were admitted. The corrected checkpoint regenerates that
-  artifact and changes no executable or product contract.
+- Implemented the ten-leaf Project archival-review delivery batch from frozen
+  READY `1e893c6c02dc22a52cb1332e3a98a26c714d5fba`. It now provides forced-RLS
+  Project-note reads, complete exact-Project on-demand Sync, causally fresh
+  encrypted keyset pages, active/archived browser continuity, byte-identical
+  preservation through the existing archive command, and gated unregistered
+  MCP read/archive parity. Three independent reviews found and drove fixes for
+  causal freshness, cancellation disclosure, archive-watch drainage, stale
+  selection, authoritative empty, Unicode validation parity, HTTP failure
+  classification, local keyset indexing, MCP non-registration and combined
+  archive continuity. All 546 Swift tests in 88 suites, 256 pgTAP assertions,
+  26 MCP tests, eight local Data API/RPC runners, database lint, target controls
+  and both staging builds pass locally. Exact-commit CI remains pending and the
+  real authenticated PowerSync authorization/revocation rehearsal remains
+  planned, so A-003/A-004 stay proposed and no hosted, Firebase, migration,
+  production or cutover authority advances;
+  `EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001`.
 
 - Corrected the blocked Space-create DRAFT's repository-wide pgTAP integration.
   Initial commit `2cf4bdb2` passed conversion and target jobs but immutable run

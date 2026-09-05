@@ -207,8 +207,8 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "5dcc19a95ecccd1b72a9be18e7e9d5353e3eaeadb98a204876d9aca1ae2b77a3",
-      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map and byte-exact workflow including the isolated Space Data API read gate, permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
+      "acknowledgeSourceHash": "e4cca9bb887750bf64d80aa5d9b01f55f29429e2cec7b03760945dd6c17e0434",
+      "currentBehavior": "Dependency-free source-query reconciliation generator/checker that validates the exact frozen source and target artifacts, all 386 reviewed source occurrences and 584 outcomes, stable manifest-owner/target projections, closed nested schemas, the exact historical implementation checkpoint diff, content-hashed retirement authority, scope-selected blockers/evidence, compatibility retention, canonical ordering, conflict rules, deterministic output, and safe atomic generation. Integration validation freezes the canonical package command map and byte-exact workflow including the isolated Space and Project-note Data API read gates, permits only the exact unconditional local-Supabase cleanup step, requires the complete Swift package gate to use process-wide nonparallel execution for independent native database integration suites, and keeps every verification step fail-closed.",
       "disposition": "redesign",
       "target": {
         "owner": "Source Query Reconciliation Control",
@@ -243,8 +243,8 @@
       },
       "status": "implemented",
       "blockers": [],
-      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
-      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. The Space destination implementation later re-acknowledged only the exact package command and workflow fingerprints needed to run its isolated local Data API read check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority."
+      "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"],
+      "notes": "Exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed immutable Actions run 33880331322. The lifecycle check validates that exact historical 30-path checkpoint instead of incorrectly treating unrelated future branch work as part of the old slice. The workflow integration hook additionally freezes --no-parallel on the complete Swift package gate after run 33939963766 exposed cross-suite PowerSync/SQLCipher test-process contention. Later provider slices re-acknowledged only the exact package command and workflow fingerprints needed to run their isolated local Data API read checks, most recently the Project-note before/after-archive continuity check; the 386-query/584-outcome authority and every other fail-closed rule remain unchanged. These changes grant no runtime, physical/provider, hosted, production, migration, retirement or cutover authority."
     },
     {
       "id": "CONFIG-40F01696B8A6",

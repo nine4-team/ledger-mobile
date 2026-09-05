@@ -32,6 +32,7 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
     private let accountId: AccountID
     private let principalId: PrincipalID
     private let now: @Sendable () -> Date
+    private let watchRegistry = ProjectArchiveOperationWatchRegistry()
 
     init(
         database: any PowerSyncDatabaseProtocol,
@@ -295,7 +296,18 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
             return Self.failedStream(ProjectArchivePowerSyncFailure.invalidOperationIdentity)
         }
         return AsyncThrowingStream { continuation in
+            let watchId = UUID()
+            let handle = ProjectArchiveOperationWatchTaskHandle()
+            let registration = Task {
+                await watchRegistry.register(id: watchId, handle: handle)
+            }
             let task = Task {
+                let admitted = await registration.value
+                guard admitted, !Task.isCancelled else {
+                    continuation.finish()
+                    if admitted { await watchRegistry.finished(id: watchId) }
+                    return
+                }
                 do {
                     let updates = try database.watch(
                         sql: Self.operationSQL,
@@ -324,9 +336,15 @@ actor ProjectArchivePowerSyncStore: ProjectArchiving {
                 } catch {
                     continuation.finish(throwing: error)
                 }
+                await watchRegistry.finished(id: watchId)
             }
-            continuation.onTermination = { _ in task.cancel() }
+            handle.install(task)
+            continuation.onTermination = { _ in handle.cancel() }
         }
+    }
+
+    func cancelAndDrainWatches() async {
+        await watchRegistry.cancelAndDrain()
     }
 
     private nonisolated static func failedStream<Value: Sendable>(
@@ -986,6 +1004,61 @@ private struct ProjectArchiveOperationRow: Sendable {
     private static func retryDisposition(_ code: String) -> RetryDisposition {
         if code == "contract_unsupported" { return .afterClientUpdate }
         return isConflict(code) ? .afterUserCorrection : .never
+    }
+}
+
+private final class ProjectArchiveOperationWatchTaskHandle: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: Task<Void, Never>?
+    private var cancellationRequested = false
+
+    func install(_ task: Task<Void, Never>) {
+        let shouldCancel = lock.withLock {
+            self.task = task
+            return cancellationRequested
+        }
+        if shouldCancel { task.cancel() }
+    }
+
+    func cancel() {
+        let installedTask = lock.withLock {
+            cancellationRequested = true
+            return task
+        }
+        installedTask?.cancel()
+    }
+}
+
+private actor ProjectArchiveOperationWatchRegistry {
+    private var handles: [UUID: ProjectArchiveOperationWatchTaskHandle] = [:]
+    private var isClosing = false
+    private var drainWaiters: [CheckedContinuation<Void, Never>] = []
+
+    func register(
+        id: UUID,
+        handle: ProjectArchiveOperationWatchTaskHandle
+    ) -> Bool {
+        guard !isClosing else {
+            handle.cancel()
+            return false
+        }
+        handles[id] = handle
+        return true
+    }
+
+    func finished(id: UUID) {
+        handles.removeValue(forKey: id)
+        guard handles.isEmpty else { return }
+        let waiters = drainWaiters
+        drainWaiters.removeAll(keepingCapacity: false)
+        for waiter in waiters { waiter.resume() }
+    }
+
+    func cancelAndDrain() async {
+        isClosing = true
+        for handle in handles.values { handle.cancel() }
+        guard !handles.isEmpty else { return }
+        await withCheckedContinuation { drainWaiters.append($0) }
     }
 }
 

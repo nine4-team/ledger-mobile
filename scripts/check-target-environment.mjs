@@ -64,6 +64,15 @@ function swiftFiles(directory) {
   });
 }
 
+function filesWithExtension(directory, extension) {
+  if (!fs.existsSync(directory)) return [];
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) return filesWithExtension(absolute, extension);
+    return entry.isFile() && entry.name.endsWith(extension) ? [absolute] : [];
+  });
+}
+
 function relative(filePath) {
   return path.relative(repositoryRoot, filePath).split(path.sep).join("/");
 }
@@ -386,6 +395,7 @@ if (
     "watchClients",
     "watchOperation",
     "watchProject",
+    "watchProjectNotes",
     "watchProjects",
     "watchSpaceAssignmentDestinations",
     "watchTransferDestinations",
@@ -433,6 +443,18 @@ if (
     fail(
       "target_transfer_destination_watch_signature",
       "The public runtime must expose exactly one Account-bound typed source-Project destination watch.",
+    );
+  }
+
+  const projectNoteWatchSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+watchProjectNotes\s*\(\s*_\s+request:\s*ProjectNotePageRequest\s*\)\s*->\s*AsyncThrowingStream\s*<\s*ProjectNotePage\s*,\s*Error\s*>\s*\{/g,
+    ),
+  ];
+  if (projectNoteWatchSignatures.length !== 1) {
+    fail(
+      "target_project_note_watch_signature",
+      "The public runtime must expose exactly one Account-bound typed Project-note page watch.",
     );
   }
 
@@ -496,6 +518,7 @@ if (
     "LedgerPowerSyncUploadConnector",
     "PendingWorkPowerSyncQuery",
     "ProjectCoreDetailsPowerSyncQuery",
+    "ProjectNotePowerSyncQuery",
     "ProjectArchivePowerSyncStore",
     "ProjectSetupPowerSyncStore",
     "TransferDestinationSelectionPowerSyncQuery",
@@ -848,6 +871,116 @@ if (
     }
   }
 
+  const projectNoteFiles = {
+    provider: path.join(powerSyncRoot, "ProjectNotePowerSyncQuery.swift"),
+    providerTests: path.join(powerSyncTestRoot, "ProjectNotePowerSyncQueryTests.swift"),
+    model: path.join(appModelRoot, "ProjectNoteHistoryStagingExercise.swift"),
+    modelTests: path.join(appModelTestRoot, "ProjectNoteHistoryStagingExerciseTests.swift"),
+    view: path.join(targetAppRoot, "ProjectNoteHistoryStagingExerciseView.swift"),
+    mcp: path.join(repositoryRoot, "LedgerTargetMCP/src/projectArchivalReview.ts"),
+    mcpTests: path.join(repositoryRoot, "LedgerTargetMCP/tests/projectArchivalReview.test.ts"),
+  };
+  for (const filePath of Object.values(projectNoteFiles)) {
+    if (!fs.existsSync(filePath)) {
+      fail("target_project_note_leaf_missing", relative(filePath));
+    }
+  }
+  if (Object.values(projectNoteFiles).every(fs.existsSync)) {
+    const provider = fs.readFileSync(projectNoteFiles.provider, "utf8");
+    const model = fs.readFileSync(projectNoteFiles.model, "utf8");
+    const view = fs.readFileSync(projectNoteFiles.view, "utf8");
+    const mcp = fs.readFileSync(projectNoteFiles.mcp, "utf8");
+    const mcpSourceRoot = path.join(repositoryRoot, "LedgerTargetMCP/src");
+    for (const candidate of filesWithExtension(mcpSourceRoot, ".ts")) {
+      if (candidate === projectNoteFiles.mcp) continue;
+      const source = fs.readFileSync(candidate, "utf8");
+      if (
+        /projectArchivalReview(?:\.js)?/.test(source)
+        || /\b(?:listProjectNotesTool|archiveProjectTool)(?:Definition)?\b/.test(source)
+      ) {
+        fail(
+          "target_project_archival_review_mcp_registered_while_gated",
+          relative(candidate),
+        );
+      }
+    }
+    const syncPath = path.join(repositoryRoot, "powersync/sync-streams.yaml");
+    const sync = fs.existsSync(syncPath) ? fs.readFileSync(syncPath, "utf8") : "";
+    const syncSection = sync.match(
+      /^  project_note_history:\n([\s\S]*?)(?=^  [a-z][a-z0-9_]*:\n|(?![\s\S]))/m,
+    )?.[0] ?? "";
+    for (const required of [
+      "spike_project_notes",
+      "ORDER BY note.created_at_ms DESC, note.keyset_id DESC",
+      "Int(request.pageSize) + 1",
+      "cancelAndDrainWatches()",
+      '"project_note_history"',
+    ]) {
+      if (!provider.includes(required)) {
+        fail("target_project_note_provider_incomplete", required);
+      }
+    }
+    if (!syncSection.includes("note.id AS keyset_id")) {
+      fail("target_project_note_sync_keyset_missing", relative(syncPath));
+    }
+    if (/public\s+(?:final\s+)?class\s+ProjectNotePowerSyncQuery/.test(provider)) {
+      fail("target_project_note_provider_public", relative(projectNoteFiles.provider));
+    }
+    for (const required of [
+      "ProjectNotePageRequest.maximumPageSize",
+      "oldTask?.cancel()",
+      "await oldTask?.value",
+      "page.request == request",
+    ]) {
+      if (!model.includes(required)) {
+        fail("target_project_note_presenter_incomplete", required);
+      }
+    }
+    if (view.includes("PrincipalID") || view.includes("deletedByPrincipalId")) {
+      fail(
+        "target_project_note_private_audit_escape",
+        "The staging view must not render Principal identifiers or deletion audit identity.",
+      );
+    }
+    if (!project.includes("ProjectNoteHistoryStagingExerciseView.swift")) {
+      fail(
+        "target_project_note_project_membership_missing",
+        "ProjectNoteHistoryStagingExerciseView.swift",
+      );
+    }
+    for (const forbidden of [
+      "add_project_note",
+      "edit_project_note",
+      "delete_project_note",
+      "search_project_notes",
+    ]) {
+      if (`${provider}\n${model}\n${view}\n${mcp}`.includes(forbidden)) {
+        fail("target_project_note_mutation_escape", forbidden);
+      }
+    }
+    if (/Firebase|Firestore/.test(`${provider}\n${model}\n${view}\n${mcp}`)) {
+      fail("target_project_note_source_backend_escape", "Project-note target leaves reference Firebase.");
+    }
+    for (const required of [
+      "project_note_history:",
+      "subscription.parameter('account_id')",
+      "subscription.parameter('project_id')",
+      "principal.auth_user_id = auth.user_id()",
+      "membership.state = 'active'",
+      "FROM spike_project_notes AS note",
+    ]) {
+      if (!syncSection.includes(required)) {
+        fail("target_project_note_sync_scope_incomplete", required);
+      }
+    }
+    if (/\b(?:ORDER\s+BY|LIMIT)\b/i.test(syncSection)) {
+      fail(
+        "target_project_note_sync_query_unbounded_directive",
+        "The exact Project-note stream must sync full scope; paging belongs to local reads.",
+      );
+    }
+  }
+
   const runtimeAdapterPath = path.join(
     targetAppRoot,
     "ProjectSetupStagingRuntimeAdapter.swift",
@@ -884,6 +1017,7 @@ if (
       "import LedgerTargetPowerSync",
       "runtime.watchProjects()",
       "runtime.watchProject(request)",
+      "runtime.watchProjectNotes(request)",
     ]) {
       if (!adapter.includes(required)) {
         fail("target_project_browsing_adapter_incomplete", required);

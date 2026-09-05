@@ -18,6 +18,7 @@ public enum LedgerPowerSyncLocalBootstrapStage: String, Equatable, Sendable {
     case pendingWorkQueryConstruction
     case budgetCategoryQueryConstruction
     case spaceAssignmentDestinationQueryConstruction
+    case projectNoteQueryConstruction
     case runtimeConstruction
 }
 
@@ -76,6 +77,21 @@ extension SpaceAssignmentDestinationPowerSyncQuery:
     AccountWorkspaceSpaceAssignmentDestinationQuerying
 {}
 
+protocol AccountWorkspaceProjectNoteQuerying: ProjectNoteQuerying {
+    func cancelAndDrainWatches() async
+}
+
+extension ProjectNotePowerSyncQuery: AccountWorkspaceProjectNoteQuerying {}
+
+protocol AccountWorkspaceProjectArchiveStoring: ProjectArchiving, Sendable {
+    func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error>
+    func cancelAndDrainWatches() async
+}
+
+extension ProjectArchivePowerSyncStore: AccountWorkspaceProjectArchiveStoring {}
+
 enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
@@ -92,6 +108,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case projectDetails
     case clientDirectory
     case projectDirectory
+    case projectNotes
     case budgetCategories
     case spaceAssignmentDestinations
     case transferDestinations
@@ -162,6 +179,20 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             AccountID,
             @Sendable @escaping () -> Date
         ) throws -> any AccountWorkspaceSpaceAssignmentDestinationQuerying
+    var makeProjectNoteQuery:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            PrincipalID,
+            AccountID,
+            @Sendable @escaping () -> Date
+        ) throws -> any AccountWorkspaceProjectNoteQuerying
+    var makeProjectArchiveStore:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            AccountID,
+            PrincipalID,
+            @Sendable @escaping () -> Date
+        ) -> any AccountWorkspaceProjectArchiveStoring
     var makeLifecycleOwner:
         @Sendable (
             AccountWorkspaceRuntimeResources
@@ -269,6 +300,22 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
                 now: now
             )
         },
+        makeProjectNoteQuery: { database, principalId, accountId, now in
+            ProjectNotePowerSyncQuery(
+                database: database,
+                principalId: principalId,
+                accountId: accountId,
+                now: now
+            )
+        },
+        makeProjectArchiveStore: { database, accountId, principalId, now in
+            ProjectArchivePowerSyncStore(
+                database: database,
+                accountId: accountId,
+                principalId: principalId,
+                now: now
+            )
+        },
         makeLifecycleOwner: { AccountWorkspacePendingWorkRuntime(resources: $0) },
         finiteOperationCheckpoint: { _ in },
         streamOperationCheckpoint: { _ in },
@@ -285,6 +332,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
     case pendingWorkQueryConstructed
     case budgetCategoryQueryConstructed
     case spaceAssignmentDestinationQueryConstructed
+    case projectNoteQueryConstructed
     case lifecycleOwnerConstructed
     case derivedResourcesReleased
     case vaultReleased
@@ -298,7 +346,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let creationStore: ClientCreationPowerSyncStore
     let detailsQuery: ClientCoreDetailsPowerSyncQuery
     let projectSetupStore: ProjectSetupPowerSyncStore
-    let projectArchiveStore: ProjectArchivePowerSyncStore
+    let projectArchiveStore: any AccountWorkspaceProjectArchiveStoring
     let clientArchiveStore: ClientArchivePowerSyncStore
     let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
     let directoryQuery: ClientProjectDirectoryPowerSyncQuery
@@ -309,6 +357,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying
     let spaceAssignmentDestinationQuery:
         any AccountWorkspaceSpaceAssignmentDestinationQuerying
+    let projectNoteQuery: any AccountWorkspaceProjectNoteQuerying
     let vault: AttachmentLocalByteVault
     let closeAttachmentDatabase: @Sendable () async throws -> Void
     let closeStructuredDatabase: @Sendable () async throws -> Void
@@ -333,6 +382,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying,
         spaceAssignmentDestinationQuery:
             any AccountWorkspaceSpaceAssignmentDestinationQuerying,
+        projectNoteQuery: any AccountWorkspaceProjectNoteQuerying,
+        projectArchiveStore: any AccountWorkspaceProjectArchiveStoring,
         vault: AttachmentLocalByteVault,
         closeAttachmentDatabase: @Sendable @escaping () async throws -> Void,
         closeStructuredDatabase: @Sendable @escaping () async throws -> Void,
@@ -360,12 +411,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             now: now
         )
         projectSetupStore = ProjectSetupPowerSyncStore(database: structuredDatabase, now: now)
-        projectArchiveStore = ProjectArchivePowerSyncStore(
-            database: structuredDatabase,
-            accountId: accountId,
-            principalId: principalId,
-            now: now
-        )
+        self.projectArchiveStore = projectArchiveStore
         clientArchiveStore = ClientArchivePowerSyncStore(
             database: structuredDatabase,
             accountId: accountId,
@@ -392,6 +438,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         self.pendingWorkQuery = pendingWorkQuery
         self.budgetCategoryQuery = budgetCategoryQuery
         self.spaceAssignmentDestinationQuery = spaceAssignmentDestinationQuery
+        self.projectNoteQuery = projectNoteQuery
         self.vault = vault
         self.closeAttachmentDatabase = closeAttachmentDatabase
         self.closeStructuredDatabase = closeStructuredDatabase
@@ -562,6 +609,26 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in },
             makeStream: { resources in
                 resources.directoryQuery.watchProjects(accountId: resources.accountId)
+            }
+        )
+    }
+
+    func startProjectNoteWatch(
+        id: UUID,
+        request: ProjectNotePageRequest,
+        continuation: AsyncThrowingStream<ProjectNotePage, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .projectNotes,
+            continuation: continuation,
+            validate: { resources in
+                guard request.accountId == resources.accountId else {
+                    throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+                }
+            },
+            makeStream: { resources in
+                resources.projectNoteQuery.watchNotes(request)
             }
         )
     }
@@ -773,7 +840,10 @@ actor AccountWorkspacePendingWorkRuntime {
 
         await resources.budgetCategoryQuery.cancelAndDrainWatches()
         await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
+        await resources.projectNoteQuery.cancelAndDrainWatches()
         await resources.transferDestinationQuery.cancelAndDrainWatches()
+        await resources.projectArchiveStore.cancelAndDrainWatches()
+        await resources.clientArchiveStore.cancelAndDrainWatches()
 
         var attachmentFailed = false
         var structuredFailed = false
@@ -867,6 +937,7 @@ public enum LedgerPowerSyncLocalBootstrap {
         var budgetCategoryQuery: (any AccountWorkspaceBudgetCategoryQuerying)?
         var spaceAssignmentDestinationQuery:
             (any AccountWorkspaceSpaceAssignmentDestinationQuerying)?
+        var projectNoteQuery: (any AccountWorkspaceProjectNoteQuerying)?
         var runtimeResources: AccountWorkspaceRuntimeResources?
 
         do {
@@ -980,6 +1051,23 @@ public enum LedgerPowerSyncLocalBootstrap {
             spaceAssignmentDestinationQuery = madeSpaceAssignmentDestinationQuery
             dependencies.lifecycleEvent(.spaceAssignmentDestinationQueryConstructed)
 
+            stage = .projectNoteQueryConstruction
+            let madeProjectNoteQuery = try dependencies.makeProjectNoteQuery(
+                openedStructured.database,
+                principalId,
+                accountId,
+                dependencies.now
+            )
+            projectNoteQuery = madeProjectNoteQuery
+            dependencies.lifecycleEvent(.projectNoteQueryConstructed)
+
+            let madeProjectArchiveStore = dependencies.makeProjectArchiveStore(
+                openedStructured.database,
+                accountId,
+                principalId,
+                dependencies.now
+            )
+
             let madeRuntimeResources = AccountWorkspaceRuntimeResources(
                 structuredDatabase: openedStructured.database,
                 attachmentDatabase: openedAttachment.database,
@@ -987,6 +1075,8 @@ public enum LedgerPowerSyncLocalBootstrap {
                 pendingWorkQuery: madePendingWorkQuery,
                 budgetCategoryQuery: madeBudgetCategoryQuery,
                 spaceAssignmentDestinationQuery: madeSpaceAssignmentDestinationQuery,
+                projectNoteQuery: madeProjectNoteQuery,
+                projectArchiveStore: madeProjectArchiveStore,
                 vault: openedVault,
                 closeAttachmentDatabase: openedAttachment.closePreservingData,
                 closeStructuredDatabase: openedStructured.closePreservingData,
@@ -1008,11 +1098,13 @@ public enum LedgerPowerSyncLocalBootstrap {
             let hadDerivedResources =
                 runtimeResources != nil
                 || spaceAssignmentDestinationQuery != nil
+                || projectNoteQuery != nil
                 || budgetCategoryQuery != nil
                 || pendingWorkQuery != nil
                 || attachmentStore != nil
             runtimeResources = nil
             spaceAssignmentDestinationQuery = nil
+            projectNoteQuery = nil
             budgetCategoryQuery = nil
             pendingWorkQuery = nil
             attachmentStore = nil

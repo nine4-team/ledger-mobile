@@ -7,9 +7,9 @@ Neither term refers to Ledger's Business Inventory product area.
 
 Status: M0 backend-surface classification complete; 521 of 705 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
-to decisions/spikes/production evidence. Of those target surfaces, 209 are now
-implemented or verified. This 29.6% is local surface-implementation coverage,
-not shipped-app or cutover readiness. Eight provider-backed product workflows
+to decisions/spikes/production evidence. Of those target surfaces, 219 are now
+implemented or verified. This 31.1% is local surface-implementation coverage,
+not shipped-app or cutover readiness. Nine provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
 zero. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -38,14 +38,18 @@ local database job because a comment-only `.test.sql` file had no TAP plan; the
 corrected one-placeholder/no-Space-assertion scaffold now passes database lint,
 all 211 local pgTAP checks and the existing Data API/RPC runners. Exact-head
 correction CI remains pending.
-The Project archival-review batch is frozen at READY across ten claimed target
-leaves. Independent Postgres/RLS/PowerSync, offline/app, and MCP reviews agree
-on a complete exact-Project note replica with bounded local pages, honest
-current-process completeness, active-membership authorization, archival
-preservation, and gated MCP transport. Note writes/search, a capped/evicting
+The Project archival-review batch is implemented locally across ten claimed
+target leaves. Forced-RLS Project-note reads, complete exact-Project on-demand
+Sync, causally fresh encrypted keyset pages, active/archived browser continuity,
+byte-identical archive preservation and gated unregistered MCP transport pass
+three independent review rounds after substantive corrections. All 546 Swift
+tests in 88 suites, 256 pgTAP assertions, 26 MCP tests, eight local Data API/RPC
+runners, database lint, controls and both builds pass. Exact-commit CI and a
+real authenticated PowerSync authorization/revocation rehearsal remain
+pending; A-003/A-004 stay proposed. Note writes/search, a capped/evicting
 history window, live registration, hosted resources, Firebase, migration,
 production, and cutover remain excluded;
-`EVID-PROJECT-ARCHIVAL-REVIEW-READY-001`. The derived Transfer destination picker is implemented locally in six target
+`EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001`. The derived Transfer destination picker is implemented locally in six target
 leaves over the existing encrypted Project directory. It adds no
 SQL/schema/RLS/Sync/MCP/write path and performs no Transfer or accounting
 mutation. Exact READY `2f87445c` passed immutable run `33989797244`.
