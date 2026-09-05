@@ -94,6 +94,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case projectDirectory
     case budgetCategories
     case spaceAssignmentDestinations
+    case transferDestinations
     case projectArchiveOperation
     case clientArchiveOperation
 }
@@ -301,6 +302,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let clientArchiveStore: ClientArchivePowerSyncStore
     let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
     let directoryQuery: ClientProjectDirectoryPowerSyncQuery
+    let transferDestinationQuery:
+        any AccountWorkspaceTransferDestinationSelectionQuerying
     let attachmentStore: any AccountWorkspaceAttachmentStoring
     let pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing
     let budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying
@@ -380,6 +383,10 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             principalId: principalId,
             accountId: accountId,
             now: now
+        )
+        transferDestinationQuery = TransferDestinationSelectionPowerSyncQuery(
+            directoryQuery: directoryQuery,
+            accountId: accountId
         )
         self.attachmentStore = attachmentStore
         self.pendingWorkQuery = pendingWorkQuery
@@ -602,6 +609,29 @@ actor AccountWorkspacePendingWorkRuntime {
         )
     }
 
+    func startTransferDestinationWatch(
+        id: UUID,
+        source: ProjectSummary,
+        continuation:
+            AsyncThrowingStream<TransferDestinationSelectionSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .transferDestinations,
+            continuation: continuation,
+            validate: { resources in
+                guard source.accountId == resources.accountId else {
+                    throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+                }
+            },
+            makeStream: { resources in
+                resources.transferDestinationQuery.watchTransferDestinations(
+                    source: source
+                )
+            }
+        )
+    }
+
     func startProjectArchiveOperationWatch(
         id: UUID,
         operationId: OperationID,
@@ -743,6 +773,7 @@ actor AccountWorkspacePendingWorkRuntime {
 
         await resources.budgetCategoryQuery.cancelAndDrainWatches()
         await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
+        await resources.transferDestinationQuery.cancelAndDrainWatches()
 
         var attachmentFailed = false
         var structuredFailed = false

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 321
+State version: 322
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: TRANSFER-DESTINATION-PICKER-READY-AWAITING-EXACT-CI
+- Checkpoint: TRANSFER-DESTINATION-PICKER-IMPLEMENTED-AWAITING-EXACT-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,14 +34,14 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Planning/control coverage is **511 of 695 target-relevant surfaces mapped or
-  later (73.5%)** after the Transfer-destination READY candidate is synchronized.
-  Local surface-implementation coverage is **203 of 695 implemented or verified
-  (29.2%)**.
+  later (73.5%)**. Local surface-implementation coverage is **209 of 695
+  implemented or verified (30.1%)** after the Transfer-destination
+  implementation is synchronized.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
-- Seven provider-backed product workflows have working local behavior after the
-  current slice: four mutations and three reads. Forty-seven additional product
+- Eight provider-backed product workflows have working local behavior after the
+  current slice: four mutations and four reads. Forty-seven additional product
   slices are verified provider-free contracts, not shipped workflows. Hosted
   authenticated Supabase/PowerSync rehearsal remains zero, and both rehearsed
   and cutover-ready surface counts remain zero.
@@ -52,15 +52,16 @@ without modifying the running Firebase application before hard cutover.
   reports must lead with the exact four lanes above rather than repeat a broad
   estimate without its basis.
 - The implementation tracker currently contains 277 status-bearing rows: 68
-  done, eight verified, nine implemented, one ready, zero awaiting verification,
+  done, eight verified, ten implemented, zero ready or awaiting verification,
   12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Seven provider-backed product slices have working local behavior: Client
+- Eight provider-backed product slices have working local behavior: Client
   creation, Project setup, Project archive and Client archive through their
   browsers, the Client/Project directory, Principal-scoped Account discovery,
-  and the exact Project-or-Business-Inventory Space destination picker. Four of
-  those are mutation workflows and three are reads. Client creation and Project setup have local
+  the exact Project-or-Business-Inventory Space destination picker, and the
+  derived same-Client Transfer destination picker. Four are mutation workflows
+  and four are reads. Client creation and Project setup have local
   identity, ordinary-name command, encrypted-offline, RLS, replay and readback
   mechanics; Project archive has the corresponding lifecycle/revision command,
   optimistic overlay and reconciliation mechanics; Client archive adds the
@@ -92,23 +93,21 @@ without modifying the running Firebase application before hard cutover.
   destination Data API matrix and both existing RPC runners pass. Exact-head
   correction CI remains pending.
 
-- Prepared and independently reviewed a bounded six-leaf comment-only READY
-  package for the target-local Transfer destination picker. It reuses the verified
-  `TQUERY-2D53E545A090` / `TACCESS-626ED0857269` contract and existing encrypted
-  Project-directory provider without creating SQL, schema, RLS, Sync Streams,
-  completeness sources, storage, upload, MCP or write behavior. Exact shared
-  source hashes permit only Account-runtime forwarding/lifecycle tests, Core-only
-  AppModel and staging composition, boundary checks and deterministic standalone
-  target-project membership. Source-action eligibility,
-  Items, amount, confirmation, Transfer execution/accounting and
-  O-002/O-011–O-015/O-025/D-017 remain outside. Review initially returned NO-GO
-  and forced current-row source re-resolution, absent/disappearing/reappearing
-  and same-ID Client-change cases, explicit stale/incomplete-first restart truth,
-  and the exact four-file recursive project-regeneration boundary. A currently
-  represented archived source remains read-only evidence and grants no production
-  action eligibility. Final review returns GO. Immutable exact-head CI is still
-  required before executable implementation;
-  `EVID-TRANSFER-DESTINATION-PICKER-READY-001`.
+- Implemented the six-leaf target-local Transfer destination picker from exact
+  green READY `2f87445cd51d6911a0655ad611fdedf035246665` / immutable run
+  `33989797244`. It reuses `TQUERY-2D53E545A090`,
+  `TACCESS-626ED0857269` and the existing encrypted Project-directory provider
+  without SQL, schema, RLS, Sync Streams, completeness sources, storage, upload,
+  MCP or write behavior. Independent executable review first returned NO-GO and
+  forced literal encrypted retained-row and retained-empty restart proof,
+  consumer-cancellation drainage, and destination removal/reappearance without
+  selection resurrection. Corrected re-review returns GO with no P0/P1.
+  Automated provider/runtime and AppModel behavior, target boundaries and both
+  builds pass; compilation is not claimed as interactive UI rendering proof.
+  Exact implementation CI remains pending. Source-action eligibility, Items,
+  amount, confirmation, Transfer execution/accounting and
+  O-002/O-011–O-015/O-025/D-017 remain outside;
+  `EVID-TRANSFER-DESTINATION-PICKER-PROVIDER-001`.
 
 - Audited provider-backed direct Space creation before implementation and
   stopped it at DRAFT after independent review found three missing product
@@ -4247,20 +4246,15 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and push the independently reviewed provider-backed Transfer destination
-picker READY package, require immutable exact-head CI, then implement exactly
-the frozen six leaves and shared touchpoints. Reuse `TQUERY-2D53E545A090`,
-`TACCESS-626ED0857269`, `EVID-TRANSFER-DESTINATION-001` and the existing local
-Client/Project directory provider rather than creating SQL, schema, RLS, Sync,
-handler, upload, MCP or another Project authority. The derived projection may
-show only other active Projects with the exact same non-null ClientID in the
-same Account after re-resolving the stable source ID from every current directory
-snapshot, preserve upstream order, distinguish complete authoritative empty
-from incomplete/partial/stale evidence, clear candidates when the source
-disappears, and bind selection to a currently represented stable ProjectID. Add
-only the PowerSync composition leaf/tests,
-Core-only AppModel/tests, thin target runtime adapter/view and exact shared
-runtime/staging/checker/project-generation touchpoints.
+Commit and push the independently reviewed Transfer destination implementation,
+then require immutable exact-head CI before promoting `TRANSFERDESTPICKER-TEST-007`.
+After that checkpoint, select a larger end-to-end feature batch rather than
+another tiny presentation-only leaf. The batch must group closely coupled
+schema, trusted command/read handling, RLS, PowerSync offline behavior, app/MCP
+integration and reconciliation proof under one review and one exact-commit CI
+cycle. Product-authority and security/offline/cutover gates remain mandatory,
+but per-leaf READY dossiers and repeated CI checkpoints are no longer the unit
+of throughput.
 
 Source-Project selection is isolated-harness plumbing only. Do not infer
 production Items-action eligibility, archived-source availability, confirmation,

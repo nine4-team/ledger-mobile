@@ -133,6 +133,18 @@ public final class LedgerOfflineClientRuntime: Sendable {
         }
     }
 
+    public func watchTransferDestinations(
+        source: ProjectSummary
+    ) -> AsyncThrowingStream<TransferDestinationSelectionSnapshot, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startTransferDestinationWatch(
+                id: id,
+                source: source,
+                continuation: continuation
+            )
+        }
+    }
+
     public func pendingUploadCount() async throws -> Int64 {
         try await lifecycleOwner.pendingUploadCount()
     }

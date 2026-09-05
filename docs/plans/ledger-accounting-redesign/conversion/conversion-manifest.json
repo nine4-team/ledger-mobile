@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T20:18:37.438Z",
+    "lastSynchronizedAt": "2026-09-05T21:09:23.030Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -639,8 +639,8 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "3e74f0b64bb3042db6035bcb13f518ce1dabe2dcb34781ac03af25a118f13aba",
-      "acknowledgedSourceHash": "3e74f0b64bb3042db6035bcb13f518ce1dabe2dcb34781ac03af25a118f13aba",
+      "observedSourceHash": "dfbc5b990d544c3b2d6d5b8ab690838b101e0a97ebf53be45f997275f182ed5a",
+      "acknowledgedSourceHash": "dfbc5b990d544c3b2d6d5b8ab690838b101e0a97ebf53be45f997275f182ed5a",
       "metadata": {},
       "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application and the two implemented Space destination picker App source memberships in addition to existing target slices.",
       "disposition": "redesign",
@@ -1840,8 +1840,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
-      "acknowledgedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
+      "observedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
+      "acknowledgedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -6138,8 +6138,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
-      "acknowledgedSourceHash": "cbc4e33825f13b1c8403d5a5a1e29d90e2010b85114d5c13e6820f3ffe74ceb3",
+      "observedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
+      "acknowledgedSourceHash": "af929bb66838873c24c340a273acab22a4d6fb1f616fdfab39994a61844d17db",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -18406,8 +18406,8 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "5b0c969c8b83f93b89fef82446c7245420297ec88f0ce308b7f266cd417f4ccb",
-      "acknowledgedSourceHash": "5b0c969c8b83f93b89fef82446c7245420297ec88f0ce308b7f266cd417f4ccb",
+      "observedSourceHash": "135e8076bae332818efa589e5e951e79e88a31aa6c98c4f534ac25668f9c388e",
+      "acknowledgedSourceHash": "135e8076bae332818efa589e5e951e79e88a31aa6c98c4f534ac25668f9c388e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -24933,8 +24933,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
-      "acknowledgedSourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
+      "observedSourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18",
+      "acknowledgedSourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -27526,8 +27526,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "be763bf866f37a80499e868a55805bd926f859401680ddaf382f94834b150f80",
-      "acknowledgedSourceHash": "be763bf866f37a80499e868a55805bd926f859401680ddaf382f94834b150f80",
+      "observedSourceHash": "ee4ad3588bbf6c188f3cd66940b1bde59515be06c6b755fb6376ca8c59eae02c",
+      "acknowledgedSourceHash": "ee4ad3588bbf6c188f3cd66940b1bde59515be06c6b755fb6376ca8c59eae02c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -31400,12 +31400,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/TransferDestinationSelectionStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "149f1798cebd6f8e894caada40939a9026e75fed4549b7ac0d5f97782e08ddbc",
-      "acknowledgedSourceHash": "149f1798cebd6f8e894caada40939a9026e75fed4549b7ac0d5f97782e08ddbc",
+      "observedSourceHash": "0af1c456738af25b5d99055aca4379edbb6e66f4e9921c8e5fa36324a82c8dce",
+      "acknowledgedSourceHash": "0af1c456738af25b5d99055aca4379edbb6e66f4e9921c8e5fa36324a82c8dce",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only provider-free staging AppModel scaffold; exposes no state or action.",
+      "currentBehavior": "Core-only staging AppModel presents waiting, partial/stale/ready, incomplete-empty, authoritative-empty and bounded-failure states and keeps only transient represented ProjectID selection.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",
@@ -31433,12 +31433,12 @@
           "Only currently represented stable destination identity is selectable"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
       ],
-      "notes": "Reserved only for current-directory source resolution, exact observation states, and represented destination selection with stale choices cleared.",
+      "notes": "Implemented current-directory source resolution, exact observation states, generation-safe replacement, and represented destination selection with removed or relationship-stale choices cleared.",
       "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
@@ -32031,12 +32031,12 @@
           "path": "LedgeriOS/LedgerTargetApp/TransferDestinationSelectionStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "5fc624298d754399b599fa5b52131084cbfd922ad4769e83f6f004db0bd823d7",
-      "acknowledgedSourceHash": "5fc624298d754399b599fa5b52131084cbfd922ad4769e83f6f004db0bd823d7",
+      "observedSourceHash": "1f21cc6b3c478675e32c57ce76bf3178512e192697103464b31e4010ed981967",
+      "acknowledgedSourceHash": "1f21cc6b3c478675e32c57ce76bf3178512e192697103464b31e4010ed981967",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only target-app runtime-adapter scaffold; exposes no method.",
+      "currentBehavior": "Thin target-app adapter forwards the typed source Project to the Account-bound offline runtime and exposes no write or provider detail.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",
@@ -32064,12 +32064,12 @@
           "Adapter remains thin and target-only"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
       ],
-      "notes": "Reserved for thin forwarding through the existing Account-bound runtime.",
+      "notes": "Implemented thin forwarding through the existing Account-bound runtime.",
       "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
@@ -33311,12 +33311,12 @@
           "path": "LedgeriOS/LedgerTargetApp/TransferDestinationSelectionStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "74c45ecb702da005bec27d97125210e89d169e89f7aca0202c8c3cc9b988ccb0",
-      "acknowledgedSourceHash": "74c45ecb702da005bec27d97125210e89d169e89f7aca0202c8c3cc9b988ccb0",
+      "observedSourceHash": "ea0a5ff2dd1afa0858b20c7915db14c0459c4e5d044f2f2694426e3f4c0e6909",
+      "acknowledgedSourceHash": "ea0a5ff2dd1afa0858b20c7915db14c0459c4e5d044f2f2694426e3f4c0e6909",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only isolated SwiftUI scaffold; renders no view.",
+      "currentBehavior": "Isolated read-only SwiftUI view renders the AppModel status, candidates, stable selected ProjectID and bounded diagnostic without a Transfer action.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",
@@ -33344,12 +33344,12 @@
           "No Item, amount, confirmation, command or accounting action exists"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
       ],
-      "notes": "Reserved for a synthetic read-only picker, not a production Transfer route.",
+      "notes": "Implemented as a synthetic read-only picker, not a production Transfer route; interactive UI smoke remains unclaimed.",
       "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
@@ -33538,12 +33538,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/TransferDestinationSelectionPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "1e5bddc1f05ec54f9af5144d19b4fe84eeb6717488d0d0a60932cc28c4f14df7",
-      "acknowledgedSourceHash": "1e5bddc1f05ec54f9af5144d19b4fe84eeb6717488d0d0a60932cc28c4f14df7",
+      "observedSourceHash": "f411284e1db44e705b1b77ea4225148c550838bb119d17836913e021380ac8bf",
+      "acknowledgedSourceHash": "f411284e1db44e705b1b77ea4225148c550838bb119d17836913e021380ac8bf",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only local provider scaffold; performs no query.",
+      "currentBehavior": "Account-bound derived query reuses the existing encrypted Project-directory watch, re-resolves current source evidence, projects same-Client destinations and drains observations.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",
@@ -33573,12 +33573,12 @@
           "Only other active same-Client Projects are emitted with honest readiness"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
       ],
-      "notes": "Reserved for re-resolving stable source identity from every Project-directory update before deriving the verified destination snapshot.",
+      "notes": "Implements stable-source re-resolution for every Project-directory update before deriving the verified destination snapshot, without SQL, schema, Sync Stream or second cache.",
       "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
@@ -44175,8 +44175,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "04723d610b546e97ea8473d870c3ca119f3062c32716d357eac9c9742bc7b2de",
-      "acknowledgedSourceHash": "04723d610b546e97ea8473d870c3ca119f3062c32716d357eac9c9742bc7b2de",
+      "observedSourceHash": "de52df70d4afcb918fc5b254982777eada19b5585f7e9359c2bc38dbb04ac4fe",
+      "acknowledgedSourceHash": "de52df70d4afcb918fc5b254982777eada19b5585f7e9359c2bc38dbb04ac4fe",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -45072,12 +45072,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/TransferDestinationSelectionPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "a787a9487756bee9fd0ee9e62fc7892f87c889eccf394e8ccc7fb532d05c0d04",
-      "acknowledgedSourceHash": "a787a9487756bee9fd0ee9e62fc7892f87c889eccf394e8ccc7fb532d05c0d04",
+      "observedSourceHash": "78402fac1422a909b067df32837decb7569f503fe31411cf4c2d02da0769e7d2",
+      "acknowledgedSourceHash": "78402fac1422a909b067df32837decb7569f503fe31411cf4c2d02da0769e7d2",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only local provider-test scaffold; executes no assertion.",
+      "currentBehavior": "Executable provider tests cover encrypted directory integration, encrypted restart readiness, source/relationship transitions, bounded failures and cancellation drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",
@@ -45105,12 +45105,12 @@
           "Every frozen provider obligation passes before implementation promotion"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
       ],
-      "notes": "Reserved for encrypted local composition, current-source re-resolution, absence/reappearance, readiness, refusal and lifecycle tests.",
+      "notes": "Executable encrypted-local tests cover current-source re-resolution, absence/reappearance, readiness, restart, refusal and lifecycle behavior; frozen lower-level tests remain composite evidence for malformed/duplicate/fingerprint guards.",
       "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {
@@ -46452,12 +46452,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/TransferDestinationSelectionStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "ec9c53fbfb7e03041951b47ef1a63f19b087b90c6611fc51c385b96701ae26e5",
-      "acknowledgedSourceHash": "ec9c53fbfb7e03041951b47ef1a63f19b087b90c6611fc51c385b96701ae26e5",
+      "observedSourceHash": "1b96cf53afa2cf7f2cc966ab5c4e33f6886203caabdbd9ed335a06a9b02d0250",
+      "acknowledgedSourceHash": "1b96cf53afa2cf7f2cc966ab5c4e33f6886203caabdbd9ed335a06a9b02d0250",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only AppModel-test scaffold; executes no assertion.",
+      "currentBehavior": "Executable AppModel tests cover every presentation state, represented identity, destination disappearance/reappearance, relationship changes, replacement, late evidence, failures and cancellation.",
       "disposition": "redesign",
       "target": {
         "owner": "Transfer Destination Picker",
@@ -46485,12 +46485,12 @@
           "Read-only presentation is deterministic and cancellation-safe"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-TRANSFER-DESTINATION-PICKER-READY-001"
       ],
-      "notes": "Reserved for source-switch, selection, failure and observation-lifecycle tests.",
+      "notes": "Implements source-switch, no-resurrection selection, failure and observation-lifecycle proof with deterministic in-memory ports.",
       "classificationBatch": "M0-TRANSFER-DESTINATION-PICKER-POWERSYNC-001"
     },
     {

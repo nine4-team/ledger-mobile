@@ -4,7 +4,9 @@
 - Class: comment-only READY candidate; no executable implementation
 - Target branch: `codex/supabase-powersync-implementation`
 - Slice dossier: `transfer-destination-powersync-picker.json`
-- Verification state: independently reviewed READY; exact-head CI pending
+- Verification state: independently reviewed READY; exact commit
+  `2f87445cd51d6911a0655ad611fdedf035246665` passed all three immutable jobs in
+  Actions run `33989797244`
 
 ## Outcome
 
@@ -110,5 +112,6 @@ Independent review returned GO after the candidate was corrected to:
   regeneration while keeping the two Space DRAFT leaves byte-exact and
   declaration-free.
 
-The dossier is therefore READY. Only the exact corrected comment-only commit
-that passes immutable CI may become the executable implementation baseline.
+The dossier is therefore READY. Exact corrected comment-only commit
+`2f87445cd51d6911a0655ad611fdedf035246665` passed immutable Actions run
+`33989797244` and became the executable implementation baseline.

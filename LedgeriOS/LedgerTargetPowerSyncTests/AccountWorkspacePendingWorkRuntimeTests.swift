@@ -487,7 +487,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all seven streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all eight streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -524,6 +524,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let spaceScope = ItemPlacementScope.project(
             try ProjectID(validating: "project-lifecycle")
         )
+        let transferSource = try Self.transferSource(
+            accountId: context.accountId,
+            id: "project-lifecycle",
+            clientId: "client-lifecycle"
+        )
         let streams: [Any] = [
             runtime.watchClient(clientRequest),
             runtime.watchProject(projectRequest),
@@ -531,10 +536,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchProjects(),
             runtime.watchBudgetCategories(),
             runtime.watchSpaceAssignmentDestinations(scope: spaceScope),
+            runtime.watchTransferDestinations(source: transferSource),
             runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(7)
+        await streamCounter.waitUntilEntered(8)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -543,6 +549,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .projectDirectory,
             .budgetCategories,
             .spaceAssignmentDestinations,
+            .transferDestinations,
             .projectArchiveOperation,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
@@ -582,6 +589,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchProject(projectRequest))
         try await Self.expectClosed(runtime.watchBudgetCategories())
         try await Self.expectClosed(runtime.watchSpaceAssignmentDestinations(scope: spaceScope))
+        try await Self.expectClosed(
+            runtime.watchTransferDestinations(source: transferSource)
+        )
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         await finiteGate.release()
         _ = try await finite.value
@@ -631,6 +641,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchProject(projectRequest))
         try await Self.expectClosed(runtime.watchBudgetCategories())
         try await Self.expectClosed(runtime.watchSpaceAssignmentDestinations(scope: spaceScope))
+        try await Self.expectClosed(
+            runtime.watchTransferDestinations(source: transferSource)
+        )
         try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         context.remove()
     }
@@ -857,6 +870,13 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         _ = runtime.watchSpaceAssignmentDestinations(
             scope: .project(try ProjectID(validating: "project-runtime"))
         )
+        _ = runtime.watchTransferDestinations(
+            source: try Self.transferSource(
+                accountId: context.accountId,
+                id: "project-runtime",
+                clientId: "client-runtime"
+            )
+        )
         _ = try await runtime.pendingUploadCount()
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.pendingWorkSummary()
@@ -893,6 +913,94 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(query.terminationCount == 1)
         try await Self.expectClosed(
             runtime.watchSpaceAssignmentDestinations(scope: .businessInventory)
+        )
+        context.remove()
+    }
+
+    @Test("Transfer destination facade uses the current encrypted directory and drains on close")
+    func transferDestinationFacadeAndDrain() async throws {
+        let context = try RuntimeTestContext(suffix: "transfer-destination-facade")
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(
+                sql: """
+                INSERT INTO spike_account_memberships (
+                  id, account_id, principal_id, role, state,
+                  can_manage_clients, can_manage_projects,
+                  can_manage_project_budgets, financial_access
+                ) VALUES (?, ?, ?, 'owner', 'active', 1, 1, 1, 'full')
+                """,
+                parameters: [
+                    "membership-transfer-runtime",
+                    context.accountId.rawValue,
+                    context.principalId.rawValue,
+                ]
+            )
+            for (id, name) in [
+                ("client-current", "Current Client"),
+                ("client-stale", "Stale Client"),
+            ] {
+                _ = try await database.execute(
+                    sql: """
+                    INSERT INTO spike_clients (
+                      id, account_id, display_name, lifecycle, revision,
+                      created_at_ms, updated_at_ms, created_by_principal_id
+                    ) VALUES (?, ?, ?, 'active', 1,
+                              1788500000000, 1788500001000, ?)
+                    """,
+                    parameters: [
+                        id, context.accountId.rawValue, name,
+                        context.principalId.rawValue,
+                    ]
+                )
+            }
+            for (id, clientId, name) in [
+                ("project-source", "client-current", "Current Source"),
+                ("project-destination", "client-current", "Destination"),
+                ("project-stale-match", "client-stale", "Stale Match"),
+            ] {
+                _ = try await database.execute(
+                    sql: """
+                    INSERT INTO spike_projects (
+                      id, account_id, client_id, display_name, description,
+                      lifecycle, revision, created_at_ms, updated_at_ms,
+                      created_by_principal_id
+                    ) VALUES (?, ?, ?, ?, NULL, 'active', 1,
+                              1788500000000, 1788500001000, ?)
+                    """,
+                    parameters: [
+                        id, context.accountId.rawValue, clientId, name,
+                        context.principalId.rawValue,
+                    ]
+                )
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let staleCaller = try Self.transferSource(
+            accountId: context.accountId,
+            id: "project-source",
+            clientId: "client-stale",
+            name: "Caller Stale"
+        )
+        var iterator = runtime.watchTransferDestinations(
+            source: staleCaller
+        ).makeAsyncIterator()
+        let snapshot = try #require(try await iterator.next())
+        #expect(snapshot.source.clientId.rawValue == "client-current")
+        #expect(snapshot.source.displayName.rawValue == "Current Source")
+        #expect(snapshot.candidates.map(\.destination.id.rawValue) == [
+            "project-destination"
+        ])
+        #expect(snapshot.quality == .partial)
+        #expect(!snapshot.isCompleteForSelection)
+
+        let blocked = Task { try await iterator.next() }
+        try await runtime.close()
+        _ = await blocked.result
+        try await Self.expectClosed(
+            runtime.watchTransferDestinations(source: staleCaller)
         )
         context.remove()
     }
@@ -1051,6 +1159,32 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         } catch let failure as LedgerOfflineClientRuntimeFailure {
             #expect(failure == .runtimeClosed)
         }
+    }
+
+    private static func transferSource(
+        accountId: AccountID,
+        id: String,
+        clientId: String,
+        name: String = "Source"
+    ) throws -> ProjectSummary {
+        let clientID = try ClientID(validating: clientId)
+        let observedAt = Date(timeIntervalSince1970: 1_788_600_000)
+        return try ProjectSummary(
+            id: ProjectID(validating: id),
+            accountId: accountId,
+            clientId: clientID,
+            client: ClientSummary(
+                id: clientID,
+                accountId: accountId,
+                displayName: ClientDisplayName(validating: "Client \(clientId)"),
+                lifecycle: .active,
+                createdAt: observedAt,
+                updatedAt: observedAt
+            ),
+            displayName: ProjectDisplayName(validating: name),
+            description: nil,
+            lifecycle: .active
+        )
     }
 
     private static func consumeUntilTermination<Value: Sendable>(

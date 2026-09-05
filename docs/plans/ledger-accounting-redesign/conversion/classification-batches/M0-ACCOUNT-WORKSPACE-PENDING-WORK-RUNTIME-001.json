@@ -12,7 +12,7 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "be763bf866f37a80499e868a55805bd926f859401680ddaf382f94834b150f80",
+      "acknowledgeSourceHash": "ee4ad3588bbf6c188f3cd66940b1bde59515be06c6b755fb6376ca8c59eae02c",
       "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; provider observations and subscriptions drain before database close without implementing session ending.",
       "disposition": "redesign",
       "status": "implemented",
@@ -56,7 +56,7 @@
     },
     {
       "id": "TEST-8D6A15063B2D",
-      "acknowledgeSourceHash": "04723d610b546e97ea8473d870c3ca119f3062c32716d357eac9c9742bc7b2de",
+      "acknowledgeSourceHash": "de52df70d4afcb918fc5b254982777eada19b5585f7e9359c2bc38dbb04ac4fe",
       "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachments, pending summary, archive operations, exact Project/Inventory Space destination facade identities, subscription/provider drainage, restart, partial-open faults, deterministic close, and negative API boundaries.",
       "disposition": "redesign",
       "status": "implemented",

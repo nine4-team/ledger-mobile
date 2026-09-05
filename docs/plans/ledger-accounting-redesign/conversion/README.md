@@ -7,9 +7,9 @@ Neither term refers to Ledger's Business Inventory product area.
 
 Status: M0 backend-surface classification complete; 511 of 695 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
-to decisions/spikes/production evidence. Of those target surfaces, 203 are now
-implemented or verified. This 29.2% is local surface-implementation coverage,
-not shipped-app or cutover readiness. Seven provider-backed product workflows
+to decisions/spikes/production evidence. Of those target surfaces, 209 are now
+implemented or verified. This 30.1% is local surface-implementation coverage,
+not shipped-app or cutover readiness. Eight provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
 zero. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
@@ -38,13 +38,15 @@ local database job because a comment-only `.test.sql` file had no TAP plan; the
 corrected one-placeholder/no-Space-assertion scaffold now passes database lint,
 all 211 local pgTAP checks and the existing Data API/RPC runners. Exact-head
 correction CI remains pending.
-The next locally safe candidate is now READY as six comment-only Transfer
-destination picker leaves derived from the existing Project directory. It adds
-no SQL/schema/RLS/Sync/MCP/write path and performs no Transfer or accounting
-mutation. Independent review returned GO after correcting caller-stale source
-filtering, source transitions, stale/restart truth and exact recursive project
-membership; exact-head CI still precedes executable work;
-`EVID-TRANSFER-DESTINATION-PICKER-READY-001`. The Project archive browser slice is implemented locally
+The derived Transfer destination picker is implemented locally in six target
+leaves over the existing encrypted Project directory. It adds no
+SQL/schema/RLS/Sync/MCP/write path and performs no Transfer or accounting
+mutation. Exact READY `2f87445c` passed immutable run `33989797244`.
+Independent executable review first returned NO-GO and drove literal encrypted-
+restart, consumer-cancellation and destination-removal/no-resurrection proof;
+corrected re-review returned GO with no P0/P1. Full target tests, target MCP
+contracts, boundary checks and both builds pass locally; exact implementation
+CI remains pending; `EVID-TRANSFER-DESTINATION-PICKER-PROVIDER-001`. The Project archive browser slice is implemented locally
 from exact green READY commit `089dc562` / immutable run `33961281661`: nine
 claimed leaves provide confirmation-bound offline archive, encrypted PowerSync
 optimism/reconciliation, auth-first Postgres/RLS/RPC, runnable pgTAP and scoped

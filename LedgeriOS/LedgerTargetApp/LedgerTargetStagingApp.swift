@@ -118,6 +118,9 @@ private struct OfflineProviderSpikeView: View {
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
         SpaceAssignmentDestinationStagingExerciseView(model: model.spaceDestinations)
+        TransferDestinationSelectionStagingExerciseView(
+            model: model.transferDestinations
+        )
         ClientBrowsingStagingExerciseView(
             model: model.clientBrowser,
             archive: model.clientArchive
@@ -151,7 +154,9 @@ private final class OfflineClientSpikeModel {
     let projectArchive: ProjectArchiveBrowserStagingExercise
     let projectSetup: ProjectSetupStagingExercise
     let spaceDestinations: SpaceAssignmentDestinationStagingExercise
+    let transferDestinations: TransferDestinationSelectionStagingExercise
     private let syntheticSpaceScope: ItemPlacementScope
+    private let syntheticTransferSource: ProjectSummary
 
     init() {
         let accountId = try! AccountID(validating: "account-primary")
@@ -216,7 +221,28 @@ private final class OfflineClientSpikeModel {
             now: Date.init
         )
         spaceDestinations = SpaceAssignmentDestinationStagingExercise(accountId: accountId)
+        transferDestinations = TransferDestinationSelectionStagingExercise(
+            accountId: accountId
+        )
         syntheticSpaceScope = .project(try! ProjectID(validating: "project-primary"))
+        let syntheticClientId = try! ClientID(validating: "client-primary")
+        let syntheticClient = try! ClientSummary(
+            id: syntheticClientId,
+            accountId: accountId,
+            displayName: ClientDisplayName(validating: "Synthetic Client"),
+            lifecycle: .active,
+            createdAt: Date(timeIntervalSince1970: 1_788_600_000),
+            updatedAt: Date(timeIntervalSince1970: 1_788_600_000)
+        )
+        syntheticTransferSource = try! ProjectSummary(
+            id: ProjectID(validating: "project-primary"),
+            accountId: accountId,
+            clientId: syntheticClientId,
+            client: syntheticClient,
+            displayName: ProjectDisplayName(validating: "Synthetic Source Project"),
+            description: nil,
+            lifecycle: .active
+        )
     }
 
     var canCreate: Bool {
@@ -243,6 +269,10 @@ private final class OfflineClientSpikeModel {
                 scope: syntheticSpaceScope,
                 runtime: SpaceAssignmentDestinationStagingRuntimeAdapter.adapt(runtime)
             )
+            await transferDestinations.open(
+                source: syntheticTransferSource,
+                runtime: TransferDestinationSelectionStagingRuntimeAdapter.adapt(runtime)
+            )
             await clientBrowser.start(
                 runtime: ClientBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
@@ -264,6 +294,7 @@ private final class OfflineClientSpikeModel {
             await projectBrowser.stop()
             projectSetup.stop()
             await spaceDestinations.stop()
+            await transferDestinations.stop()
             openedRuntime = nil
             try await runtime.close()
             self.runtime = nil
@@ -285,6 +316,7 @@ private final class OfflineClientSpikeModel {
         await projectBrowser.stop()
         projectSetup.stop()
         await spaceDestinations.stop()
+        await transferDestinations.stop()
         if let openedRuntime {
             try? await openedRuntime.close()
         }

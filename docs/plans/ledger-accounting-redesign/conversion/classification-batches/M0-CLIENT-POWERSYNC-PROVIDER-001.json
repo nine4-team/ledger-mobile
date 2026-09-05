@@ -121,7 +121,7 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "ee54c28d1ff2be6560b1152df5fdc775237b158351c8652fbf60f54fc6b2805e",
+      "acknowledgeSourceHash": "e3ca34e3c2a8409416c2e960d637b9af7c02b7726d623cb70aa1c9d65ee2fa18",
       "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior plus one typed Account-bound Space destination watch and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",

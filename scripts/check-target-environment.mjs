@@ -388,6 +388,7 @@ if (
     "watchProject",
     "watchProjects",
     "watchSpaceAssignmentDestinations",
+    "watchTransferDestinations",
   ];
   if (
     JSON.stringify([...publicRuntimeFunctions].sort()) !==
@@ -420,6 +421,18 @@ if (
     fail(
       "target_space_destination_watch_signature",
       "The public runtime must expose exactly one Account-bound typed placement-scope destination watch.",
+    );
+  }
+
+  const transferDestinationWatchSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+watchTransferDestinations\s*\(\s*source:\s*ProjectSummary\s*\)\s*->\s*AsyncThrowingStream\s*<\s*TransferDestinationSelectionSnapshot\s*,\s*Error\s*>\s*\{/g,
+    ),
+  ];
+  if (transferDestinationWatchSignatures.length !== 1) {
+    fail(
+      "target_transfer_destination_watch_signature",
+      "The public runtime must expose exactly one Account-bound typed source-Project destination watch.",
     );
   }
 
@@ -485,6 +498,7 @@ if (
     "ProjectCoreDetailsPowerSyncQuery",
     "ProjectArchivePowerSyncStore",
     "ProjectSetupPowerSyncStore",
+    "TransferDestinationSelectionPowerSyncQuery",
   ];
   for (const typeName of lifecycleOwnedTypes) {
     const publicDeclaration = new RegExp(
@@ -679,6 +693,161 @@ if (
       fail("target_space_destination_staging_missing", relative(stagingAppPath));
     }
   }
+  const transferDestinationFiles = {
+    provider: path.join(
+      powerSyncRoot,
+      "TransferDestinationSelectionPowerSyncQuery.swift",
+    ),
+    providerTests: path.join(
+      powerSyncTestRoot,
+      "TransferDestinationSelectionPowerSyncQueryTests.swift",
+    ),
+    model: path.join(
+      appModelRoot,
+      "TransferDestinationSelectionStagingExercise.swift",
+    ),
+    modelTests: path.join(
+      appModelTestRoot,
+      "TransferDestinationSelectionStagingExerciseTests.swift",
+    ),
+    adapter: path.join(
+      targetAppRoot,
+      "TransferDestinationSelectionStagingRuntimeAdapter.swift",
+    ),
+    view: path.join(
+      targetAppRoot,
+      "TransferDestinationSelectionStagingExerciseView.swift",
+    ),
+  };
+  for (const filePath of Object.values(transferDestinationFiles)) {
+    if (!fs.existsSync(filePath)) {
+      fail("target_transfer_destination_leaf_missing", relative(filePath));
+    }
+  }
+  if (Object.values(transferDestinationFiles).every(fs.existsSync)) {
+    const provider = fs.readFileSync(transferDestinationFiles.provider, "utf8");
+    const providerTests = fs.readFileSync(
+      transferDestinationFiles.providerTests,
+      "utf8",
+    );
+    const model = fs.readFileSync(transferDestinationFiles.model, "utf8");
+    const modelTests = fs.readFileSync(
+      transferDestinationFiles.modelTests,
+      "utf8",
+    );
+    const adapter = fs.readFileSync(transferDestinationFiles.adapter, "utf8");
+    const view = fs.readFileSync(transferDestinationFiles.view, "utf8");
+
+    for (const required of [
+      "directoryQuery.watchProjects(accountId: boundAccountId)",
+      "$0.id == sourceRequest.id",
+      "source: currentSource",
+      "rows: []",
+      "isCompleteForQuery: false",
+      "sourceUnavailable",
+      "cancelAndDrainWatches()",
+    ]) {
+      if (!provider.includes(required)) {
+        fail("target_transfer_destination_projection_incomplete", required);
+      }
+    }
+    if (
+      /import\s+PowerSync|PowerSyncDatabaseProtocol|\bdatabase\s*\.|\bsyncStream\s*\(|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b/.test(
+        provider,
+      )
+    ) {
+      fail(
+        "target_transfer_destination_second_data_source",
+        "The derived picker provider must use only the existing Project-directory port.",
+      );
+    }
+    if (
+      /public\s+(?:final\s+)?class\s+TransferDestinationSelectionPowerSyncQuery/.test(
+        provider,
+      )
+    ) {
+      fail(
+        "target_transfer_destination_provider_public",
+        relative(transferDestinationFiles.provider),
+      );
+    }
+    for (const required of [
+      "Encrypted local Project directory drives the derived query without a second read",
+      "Current directory source controls filtering",
+      "Incomplete absence never filters by stale caller",
+      "complete absence, upstream failure, cancellation, and close fail boundedly",
+    ]) {
+      if (!providerTests.includes(required)) {
+        fail("target_transfer_destination_provider_test_missing", required);
+      }
+    }
+    for (const state of [
+      "waiting",
+      "partial",
+      "stale",
+      "ready",
+      "partialEmpty",
+      "staleEmpty",
+      "authoritativeEmpty",
+      "failure",
+    ]) {
+      if (!model.includes(`case ${state}`)) {
+        fail("target_transfer_destination_presenter_state_missing", state);
+      }
+    }
+    for (const required of [
+      "previous != snapshot.source.clientId",
+      "!snapshot.candidates.contains(where:",
+      "old?.cancel()",
+      "await old?.value",
+      "runtime.watchTransferDestinations(source: source)",
+      "model.select(projectId: candidate.destination.id)",
+      "ForEach(model.rows, id: \\.destination.id)",
+    ]) {
+      if (!`${model}\n${adapter}\n${view}`.includes(required)) {
+        fail("target_transfer_destination_thin_ui_incomplete", required);
+      }
+    }
+    for (const required of [
+      "All presentation states stay distinct",
+      "Source replacement drains the old watch and ignores late evidence",
+      "stream completion, scope mismatch, and failures are bounded",
+    ]) {
+      if (!modelTests.includes(required)) {
+        fail("target_transfer_destination_presenter_test_missing", required);
+      }
+    }
+    if (
+      /MCP|Firebase|Firestore|Supabase|URLSession|https?:\/\//i.test(
+        `${model}\n${adapter}\n${view}`,
+      )
+    ) {
+      fail(
+        "target_transfer_destination_boundary_escape",
+        "Transfer picker presentation leaves cross a forbidden provider boundary.",
+      );
+    }
+    for (const required of [
+      "TransferDestinationSelectionStagingExerciseView",
+      "syntheticTransferSource",
+      "TransferDestinationSelectionStagingRuntimeAdapter.adapt(runtime)",
+    ]) {
+      if (!stagingAppSource.includes(required)) {
+        fail("target_transfer_destination_staging_missing", required);
+      }
+    }
+    for (const required of [
+      "SpaceCreationStagingExerciseView.swift",
+      "SpaceCreationStagingRuntimeAdapter.swift",
+      "TransferDestinationSelectionStagingExerciseView.swift",
+      "TransferDestinationSelectionStagingRuntimeAdapter.swift",
+    ]) {
+      if (!project.includes(required)) {
+        fail("target_transfer_destination_project_membership_missing", required);
+      }
+    }
+  }
+
   const runtimeAdapterPath = path.join(
     targetAppRoot,
     "ProjectSetupStagingRuntimeAdapter.swift",

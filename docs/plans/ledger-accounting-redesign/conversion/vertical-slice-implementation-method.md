@@ -60,6 +60,24 @@ surfaces may converge on the same slice. One slice may span several source
 surfaces when they collectively deliver one outcome. Shared infrastructure is a
 separate technical-control slice with explicit downstream contracts.
 
+### Delivery batches
+
+The traceability unit remains a slice, but the normal execution unit is a
+delivery batch containing several tightly related slices that together produce
+an end-user workflow. A batch should normally include the required schema,
+trusted reads/commands, grants/RLS, PowerSync behavior, app/MCP entry points,
+offline/restart proof, and reconciliation support for that workflow.
+
+Do not create a separate implementation cycle for every two-file contract,
+adapter, presenter, or read projection when those pieces can be reviewed and
+verified safely as one feature batch. A smaller slice remains appropriate when
+it resolves a reusable high-risk invariant, blocks several downstream paths, or
+must be isolated to answer an architectural spike question.
+
+Progress is reported primarily by complete locally working workflows, hosted
+rehearsals, and cutover-ready workflows. Surface counts and planning coverage
+remain audit controls; they are not substitutes for product completion.
+
 ## Required Slice Dossier
 
 Copy `_template.json` to a stable lower-kebab-case slice filename. Delete the
@@ -176,18 +194,27 @@ has reached the corresponding status.
 ### Immutable-CI checkpoint sequencing
 
 The conversion manifest records content hashes, so an executable-only commit
-above a synchronized READY checkpoint is knowingly traceability-red. Use this
-sequence for every future slice:
+above synchronized classifications is knowingly traceability-red. Use this
+sequence for each delivery batch:
 
-1. commit the reviewed comment-only READY package with synchronized scaffold
-   hashes and pass the complete immutable workflow;
-2. in one bounded implementation checkpoint, replace only the authorized
-   executable leaves **and** synchronize their new hashes, dossier, manifest,
-   evidence, tracker and generated controls at `implemented` status;
-3. pass the complete immutable workflow on that exact implemented commit; and
-4. only then create a separate docs/control-only checkpoint that advances the
-   dossier and claimed surfaces to `verified`, records the exact green
-   implementation run, regenerates controls and itself passes immutable CI.
+1. prepare and review the authority, contract, verification and change-boundary
+   records for every slice in the batch before implementing its behavior;
+2. in one bounded implementation checkpoint, change only the reviewed batch
+   surfaces and synchronize their hashes, dossiers, manifest, evidence,
+   tracker and generated controls at honest `implemented` status;
+3. run focused checks while developing, then pass the complete immutable
+   workflow once on that exact implemented batch commit; and
+4. record the green run and advance eligible surfaces to `verified` in the next
+   natural control checkpoint. A dedicated promotion commit is optional unless
+   release tooling, a reviewer, or a higher lifecycle gate requires it.
+
+A separate comment-only READY commit and full CI run is reserved for high-risk
+or independently deployable boundaries—especially new financial authority,
+security/RLS, destructive migration, identity/Auth, Sync authorization, or a
+spike whose result controls architecture. It is not required for every small
+target-local adapter or presentation leaf. One independent review may cover the
+whole batch; additional specialist review is required only for materially
+different risk domains such as SQL/RLS and offline concurrency.
 
 Do not push a known-red executable-only checkpoint merely to preserve a
 two-leaf implementation diff. Prove that allowlist relative to the READY commit

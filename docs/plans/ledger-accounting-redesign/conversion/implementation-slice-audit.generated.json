@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T20:18:37.438Z",
+  "generatedFromManifestSync": "2026-09-05T21:09:23.030Z",
   "totals": {
     "slices": 85,
     "claimedTargetSurfaces": 273,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 203
+    "implementationAdvancedTargetSurfaces": 209
   },
   "statusCounts": {
     "draft": 2,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 9,
+    "implemented": 10,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -1297,7 +1297,7 @@
       "sliceId": "transfer-destination-powersync-picker",
       "title": "Browse and select same-Client Transfer destination Projects from the existing local directory",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Transfer Destination Picker",
       "surfaceIds": [
         "SWIFT-A266AA431CC2",
