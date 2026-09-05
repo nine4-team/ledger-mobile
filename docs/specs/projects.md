@@ -33,6 +33,12 @@ Projects are the primary organizational unit in Ledger. Each project represents 
   history.
 - Project archive preserves all history. No normal delete may orphan Items,
   Transactions, Spaces, notes, Invoices, preferences, or accounting evidence.
+- Archiving requires an explicit confirmation bound to the currently selected
+  active Project and its observed revision. Confirming while offline accepts one
+  durable archive operation immediately, moves the Project from Active to
+  Archived as pending local evidence, and never doubles as restore/unarchive.
+  If the selected Project or revision changes before confirmation, the stale
+  confirmation is discarded rather than applied to different evidence.
 - Current lists/details remain usable from synchronized local data and expose
   readiness when a Project's required history is not fully available offline.
 

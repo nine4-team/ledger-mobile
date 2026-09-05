@@ -170,8 +170,8 @@
     {
       "id": "CONFIG-2EBA890AF767",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8",
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, and isolated LedgerTargetPowerSync package-product dependencies.",
+      "acknowledgeSourceHash": "63e896b09c19330a0b22e8b5707b21816dfc2246dbc803a2b237b0d959c8ca9d",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, isolated LedgerTargetPowerSync package-product dependencies, and the comment-only Project-archive READY Swift leaves.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -180,9 +180,10 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
-        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project browsing and comment-only Client browsing app files are included, with the latter awaiting READY review and exact immutable CI. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project and Client browsing plus comment-only Project-archive READY Swift files are included. The Firebase application Xcode project is unchanged.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [

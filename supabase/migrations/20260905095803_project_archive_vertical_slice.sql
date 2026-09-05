@@ -1,0 +1,19 @@
+-- READY scaffold only — this migration creates or mutates no schema object.
+--
+-- The executable slice may extend the existing spike operation-result contract
+-- for archive_project and add one auth-first, search-path-pinned Project archive
+-- handler plus its authenticated public RPC. The handler must bind the exact
+-- project-archive-v1 command/fingerprint, authenticate the actor, verify active
+-- Account membership and Project-management capability before disclosure, lock
+-- one exact Account/Project row, require lifecycle active and the exact UInt64
+-- expected revision without signed-bigint wrap, and update only lifecycle,
+-- revision and server-maintained update time in the Project row. Exact replay
+-- returns the immutable result; changed/cross-command reuse cannot rebind; two
+-- concurrent same-revision commands yield one apply and one durable conflict.
+--
+-- Client identity/row, Project identity/client/display/description/creation
+-- audit, category definitions and allocations, notes, attachments/media, Items,
+-- Spaces, Transactions, Invoices and every accounting/history record remain
+-- untouched. Restore/unarchive, delete, rename, reassignment and media mutation
+-- are absent. Missing child tables in the current spike are not claimed as
+-- physical proof; the mutation-set invariant must remain true as they arrive.

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T09:51:07.487Z",
+  "generatedFromManifestSync": "2026-09-05T10:39:52.108Z",
   "totals": {
-    "slices": 80,
-    "claimedTargetSurfaces": 227,
+    "slices": 81,
+    "claimedTargetSurfaces": 236,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 175
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 6,
     "verified": 70,
@@ -528,6 +528,28 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/privacy-safe-telemetry-and-correlation.json"
+    },
+    {
+      "sliceId": "project-archive-browser-supabase-powersync-vertical-slice",
+      "title": "Archive one active Project offline through the isolated Project browser",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Archive Browser Vertical Slice",
+      "surfaceIds": [
+        "CONFIG-062839A9903C",
+        "CONFIG-20D251EF21F6",
+        "CONFIG-78696A3C79AA",
+        "SWIFT-0753297CA29A",
+        "SWIFT-4F36B1F525D0",
+        "SWIFT-53B8C9C37D3F",
+        "SWIFT-D58BDD1F45EE",
+        "TEST-475355568D74",
+        "TEST-EAAB5CD74000"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-browser-supabase-powersync-vertical-slice.json"
     },
     {
       "sliceId": "project-archive-operation-contracts",

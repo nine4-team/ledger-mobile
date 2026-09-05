@@ -455,6 +455,30 @@
         { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" }
       ]
     },
+    "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001": {
+      "scope": "product",
+      "rationale": "This isolated archive-through-browser slice composes the verified Project archive command/use case and Project browsing evidence into one exact revision-safe offline lifecycle mutation while preserving every relationship and historical record and leaving restore, delete, rename, reassignment and media mutation outside.",
+      "authorities": [
+        { "path": "docs/specs/projects.md", "role": "canonical_target" },
+        { "path": "docs/specs/client-identity-and-project-transfers.md", "role": "canonical_target" },
+        { "path": "docs/plans/ledger-accounting-redesign/decision-log.md", "role": "decision_authority" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-use-case-contracts.json", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-USE-CASE-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md", "role": "conversion_control" },
+        { "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md", "role": "conversion_control" },
+        { "path": "docs/architecture/redesign/02-domain-and-application-architecture.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/03-data-sync-and-offline.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/05-supabase-powersync-reference.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/06-security-and-access-control.md", "role": "architecture_authority" },
+        { "path": "docs/architecture/redesign/07-migration-release-and-cutover.md", "role": "architecture_authority" }
+      ]
+    },
     "M0-PROJECT-CLIENT-REFERENCE-001": {
       "scope": "product",
       "rationale": "Project, Client, category, note, preference, and shared-reference surfaces are reconciled with authoritative Client identity and the redesigned accounting/budget boundary.",

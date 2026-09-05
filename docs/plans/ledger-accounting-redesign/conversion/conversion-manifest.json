@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T09:51:07.487Z",
+    "lastSynchronizedAt": "2026-09-05T10:39:52.108Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -142,6 +142,59 @@
       ],
       "notes": "Target package graph remains claimed by target-environment-isolation. The new provider target is an isolated local vertical spike and is absent from the Firebase application project; it is not production provisioning or migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-062839A9903C",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/project_archive_vertical_slice.test.sql.ready",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/project_archive_vertical_slice.test.sql.ready"
+        }
+      ],
+      "observedSourceHash": "964cc5e8caa6a377393e51d063b7e03ad1d3c6fcc66530926f91ce93c37129c6",
+      "acknowledgedSourceHash": "964cc5e8caa6a377393e51d063b7e03ad1d3c6fcc66530926f91ce93c37129c6",
+      "metadata": {},
+      "currentBehavior": "Contains only the reviewed READY inventory for Project archive Postgres tests; it executes and asserts nothing.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "Project archive database invariant, preservation, replay, concurrency and RLS tests"
+        ],
+        "securityRequirements": [
+          "Prove positive manager access and restricted/revoked/anonymous/cross-Account denial",
+          "Prove direct-write denial and auth-first non-enumeration"
+        ],
+        "syncRequirements": [
+          "Validate exact terminal result/revision evidence consumed by local reconciliation"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic local fixtures only; retain this reservation as an inert marker and transition its identity through explicit retirement/replacement evidence, never disappearance.",
+        "reconciliation": [
+          "No statement or archive behavior executes at READY"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:db"
+        ],
+        "acceptance": [
+          "Every planned database/security case becomes executable before implementation status, with retained CONFIG-062839A9903C retired and CONFIG-CAB6A5DAD1C0 registered/classified/claimed without a new missing-surface warning"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only `.sql.ready` reservation outside normal run-all pgTAP discovery. At implementation, retain it byte-for-byte as an inert marker and retire path-derived CONFIG-062839A9903C with replacement evidence in the same synchronized checkpoint that creates, registers, discovers, classifies and claims runnable `.sql` CONFIG-CAB6A5DAD1C0; move every test-owner path, retain exactly one runnable pgTAP leaf plus the inert marker and leave package.json unchanged.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
       "id": "CONFIG-09CEA78268BF",
@@ -359,6 +412,60 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "CONFIG-20D251EF21F6",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260905095803_project_archive_vertical_slice.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260905095803_project_archive_vertical_slice.sql"
+        }
+      ],
+      "observedSourceHash": "f6ee6c04b8c91ecf49cd35896b4e52b30eab3bf7d513207913a79850edc19c0f",
+      "acknowledgedSourceHash": "f6ee6c04b8c91ecf49cd35896b4e52b30eab3bf7d513207913a79850edc19c0f",
+      "metadata": {},
+      "currentBehavior": "Contains only the reviewed READY contract for a local Project-archive Postgres migration; it creates or mutates no schema object.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "trusted Project archive handler and authenticated scoped RPC"
+        ],
+        "securityRequirements": [
+          "Auth-first membership/capability validation, exact row lock and no direct Project update grant",
+          "Mutation is restricted to lifecycle, revision, server update time and immutable result"
+        ],
+        "syncRequirements": [
+          "One immutable operation result and authoritative Project row drive reconciliation"
+        ]
+      },
+      "migration": {
+        "rule": "Apply only to a disposable isolated target database; read no Firebase data.",
+        "reconciliation": [
+          "All existing and future Project-related rows remain untouched by archive"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "supabase/tests/project_archive_vertical_slice.test.sql.ready",
+          "scripts/test-local-project-archive-rpc.mjs"
+        ],
+        "acceptance": [
+          "Implementation retains the non-runnable `.sql.ready` marker and adds a separately discovered runnable `.sql` suite; later DDL passes reset, lint, pgTAP, Data API, concurrency and security review"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "The filename was generated by the pinned Supabase CLI; executable DDL is absent.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
+    },
+    {
       "id": "CONFIG-2439DF7AA062",
       "kind": "application_or_backend_configuration",
       "name": "LedgeriOS/LedgeriOS/Info.plist",
@@ -424,10 +531,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8",
-      "acknowledgedSourceHash": "af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8",
+      "observedSourceHash": "63e896b09c19330a0b22e8b5707b21816dfc2246dbc803a2b237b0d959c8ca9d",
+      "acknowledgedSourceHash": "63e896b09c19330a0b22e8b5707b21816dfc2246dbc803a2b237b0d959c8ca9d",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, and isolated LedgerTargetPowerSync package-product dependencies.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, isolated LedgerTargetPowerSync package-product dependencies, and the comment-only Project-archive READY Swift leaves.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -466,9 +573,10 @@
         "EVID-M2-PLATFORM-001",
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
-        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project browsing and comment-only Client browsing app files are included, with the latter awaiting READY review and exact immutable CI. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project and Client browsing plus comment-only Project-archive READY Swift files are included. The Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -1360,6 +1468,59 @@
       ],
       "notes": "The committed generated project is byte-stable across repeated XcodeGen generation on this host.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-78696A3C79AA",
+      "kind": "release_or_build_tool",
+      "name": "scripts/test-local-project-archive-rpc.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/test-local-project-archive-rpc.mjs"
+        }
+      ],
+      "observedSourceHash": "5e209e3987f8cd355295b68631d5ad3880d0892cd1b64db7f2bd6d5e5dd40a9e",
+      "acknowledgedSourceHash": "5e209e3987f8cd355295b68631d5ad3880d0892cd1b64db7f2bd6d5e5dd40a9e",
+      "metadata": {},
+      "currentBehavior": "Contains only a comment-only reviewed READY boundary for a disposable local Project-archive Data API test; it makes no request.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "scoped-user local Data API Project archive verification"
+        ],
+        "securityRequirements": [
+          "Use only synthetic user tokens and local publishable credentials",
+          "Prove actor/scope/capability enforcement without private-payload logging"
+        ],
+        "syncRequirements": [
+          "Exercise exact canonical command text, replay, conflict and terminal result binding"
+        ]
+      },
+      "migration": {
+        "rule": "Call only the disposable local Supabase stack.",
+        "reconciliation": [
+          "No network behavior exists at READY"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "node scripts/test-local-project-archive-rpc.mjs"
+        ],
+        "acceptance": [
+          "Later executable runner proves apply, replay, concurrency and scoped access"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only runner scaffold; hosted endpoints and service-role credentials are prohibited.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
       "id": "CONFIG-7AB0A2FE74E7",
@@ -3183,10 +3344,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "a0fd62a93119370cc0c2e5fb83fa946aad690b5248971b43e18e62fc9bd4b2b4",
-      "acknowledgedSourceHash": "a0fd62a93119370cc0c2e5fb83fa946aad690b5248971b43e18e62fc9bd4b2b4",
+      "observedSourceHash": "eff99a0d15c8601192105bb74e132d6fc3d6e9e563ab0666d3f0409c7123f2c5",
+      "acknowledgedSourceHash": "eff99a0d15c8601192105bb74e132d6fc3d6e9e563ab0666d3f0409c7123f2c5",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target application-model, composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, the draft source-query reconciliation control leaves, and each explicitly reviewed local Supabase migration/pgTAP/Data API runner; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target application-model, composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, the draft source-query reconciliation control leaves, and each explicitly reviewed local Supabase migration/pgTAP/Data API runner including the Project-archive READY scaffolds; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. The reserved Project-archive pgTAP surface is discovered at a non-runnable `.sql.ready` path while the root run-all database test command remains unchanged. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3236,7 +3397,7 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate application-model, composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. This deliberate re-acknowledgment adds the application-model source/test roots needed for executable app orchestration tests; it changes no product lifecycle status or existing ownership. Direct architecture-decisions authority is supplied by the reviewed product-authority crosswalk, not a validator exception.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate application-model, composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. This deliberate re-acknowledgment adds exact discovery only for the comment-only Project-archive migration, non-runnable pgTAP reservation and local Data API runner scaffolds; it changes no product behavior, lifecycle status or existing ownership. Direct architecture-decisions authority is supplied by the reviewed product-authority crosswalk, not a validator exception.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -17806,6 +17967,62 @@
       "classificationBatch": "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
+      "id": "SWIFT-0753297CA29A",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SupabaseProjectArchiveRPC.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SupabaseProjectArchiveRPC.swift"
+        }
+      ],
+      "observedSourceHash": "f8d2a610c3405229a65de9f61761e23265a1d0279943b042e2873f8ce1e755e5",
+      "acknowledgedSourceHash": "f8d2a610c3405229a65de9f61761e23265a1d0279943b042e2873f8ce1e755e5",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed READY contract for a scoped-user Supabase Project-archive RPC adapter; it makes no network request.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "Swift scoped-user Project archive RPC adapter"
+        ],
+        "securityRequirements": [
+          "Use injected publishable-key and user-token authority only",
+          "Validate exact terminal identity/fingerprint before local completion"
+        ],
+        "syncRequirements": [
+          "Preserve full UInt64 expected-revision command evidence without floating-point coercion"
+        ]
+      },
+      "migration": {
+        "rule": "Use only a validated isolated target environment.",
+        "reconciliation": [
+          "Canonical command bytes bind app, upload and trusted handler"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectArchivePowerSyncVerticalSliceTests",
+          "scripts/test-local-project-archive-rpc.mjs"
+        ],
+        "acceptance": [
+          "Malformed credentials and mismatched or unknown results fail closed"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only READY scaffold with no endpoint or credential.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
+    },
+    {
       "id": "SWIFT-07FE72314E4C",
       "kind": "swift_service",
       "name": "LedgeriOS/LedgeriOS/Services/ItemTagExtractionService.swift",
@@ -23296,6 +23513,58 @@
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
+      "id": "SWIFT-4F36B1F525D0",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ProjectArchiveBrowserStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ProjectArchiveBrowserStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "cb7f79f07e6616817111c3da66a40aba3655c32ab76a38c67588f04d56790cb9",
+      "acknowledgedSourceHash": "cb7f79f07e6616817111c3da66a40aba3655c32ab76a38c67588f04d56790cb9",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed READY boundary for a thin archive/operation-state target runtime adapter; it defines no executable adapter or UI behavior.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "thin Account-bound archive and operation-observation runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose no database, SQL, endpoint, credential or Account rebinding"
+        ],
+        "syncRequirements": [
+          "Forward typed archive and exact operation-state streams without rewriting semantics"
+        ]
+      },
+      "migration": {
+        "rule": "Adapt only the isolated target runtime.",
+        "reconciliation": [
+          "Never access Firebase code or data"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "target environment checks and both staging builds"
+        ],
+        "acceptance": [
+          "Only the thin app adapter imports PowerSync"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only READY adapter scaffold; all provider and policy ownership stays outside the app target.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
+    },
+    {
       "id": "SWIFT-4F3C3856E659",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Modals/ProjectPickerList.swift",
@@ -23584,6 +23853,61 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-53B8C9C37D3F",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift"
+        }
+      ],
+      "observedSourceHash": "7b78c35b5116dcf27d0b4f438fedcdf28819b58d14372b62cb3ccfcf22be7b9d",
+      "acknowledgedSourceHash": "7b78c35b5116dcf27d0b4f438fedcdf28819b58d14372b62cb3ccfcf22be7b9d",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed READY contract for encrypted offline Project-archive acceptance, lifecycle overlay and reconciliation; it defines no executable type or database behavior.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "encrypted Project archive acceptance and exact optimistic lifecycle reconciliation"
+        ],
+        "securityRequirements": [
+          "Bind exact Account, actor, Operation, Project, contract, fingerprint and expected revision",
+          "Keep archive optimism local-only and enqueue only the immutable command"
+        ],
+        "syncRequirements": [
+          "Pending create/archive FIFO, restart, rejection rollback and authoritative archived-readback cleanup remain exact"
+        ]
+      },
+      "migration": {
+        "rule": "Create no Firebase adapter or dual-write path.",
+        "reconciliation": [
+          "Applied optimism remains until exact archived or newer authoritative Project evidence; rejection removes only its matching overlay"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectArchivePowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "Implementation replaces this comment-only scaffold only from an immutable green READY baseline"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only READY scaffold; existing schema, query, upload and runtime files remain shared touchpoints with their existing primary owners.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
       "id": "SWIFT-54042738FD68",
@@ -34009,6 +34333,58 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-D58BDD1F45EE",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/ProjectArchiveBrowserStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/ProjectArchiveBrowserStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "b079de9943b69b63675565e2aa9d6751154c2f771fff93ae21856623d0976105",
+      "acknowledgedSourceHash": "b079de9943b69b63675565e2aa9d6751154c2f771fff93ae21856623d0976105",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Contains only the reviewed READY boundary for Core-only Project archive confirmation/submission/retry/operation-state orchestration over existing browser evidence; it defines no executable type.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "current-evidence-bound archive submission and exact operation-state application model"
+        ],
+        "securityRequirements": [
+          "Consume only typed Account-bound Core evidence and bounded diagnostics"
+        ],
+        "syncRequirements": [
+          "Preserve queued/applying/applied/rejected truth, stable ambiguous retry and full cancellation/drainage"
+        ]
+      },
+      "migration": {
+        "rule": "Compose target Core contracts only.",
+        "reconciliation": [
+          "A rejected conflict requires refreshed active evidence and a new explicit command identity"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ProjectArchiveBrowserStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Submission, operation observation, retry and lifecycle matrices pass deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only READY AppModel scaffold; it neither interprets provider rows nor grants archive authority.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
+    },
+    {
       "id": "SWIFT-D5CAB6DD5FDC",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/DetailRow.swift",
@@ -39714,6 +40090,61 @@
       "classificationBatch": "M0-MEDIA-LIFECYCLE-001"
     },
     {
+      "id": "TEST-475355568D74",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift"
+        }
+      ],
+      "observedSourceHash": "564e11ab07d6a0fd430c56e911c84951d0ffdcf387d645b09d8119c97eb27b95",
+      "acknowledgedSourceHash": "564e11ab07d6a0fd430c56e911c84951d0ffdcf387d645b09d8119c97eb27b95",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the reviewed READY test inventory for Project archive persistence, overlay, order, replay, conflict, rejection, reconciliation, scoping and preservation; it runs no tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "deterministic Project archive PowerSync vertical-slice matrix"
+        ],
+        "securityRequirements": [
+          "Negative scope, malformed evidence, credential and unauthorized-local-row cases are mandatory"
+        ],
+        "syncRequirements": [
+          "Encrypted restart, FIFO, terminal-state, conflict, rejection and readback reconciliation cases are mandatory"
+        ]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities and disposable encrypted databases.",
+        "reconciliation": [
+          "Prove exact allowed mutation set and preservation of all represented related evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectArchivePowerSyncVerticalSliceTests"
+        ],
+        "acceptance": [
+          "Every frozen provider case is executable before status advancement"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [
+        "A-003",
+        "A-004"
+      ],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only synthetic provider-test scaffold.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
+    },
+    {
       "id": "TEST-49D678CB6929",
       "kind": "existing_test_evidence",
       "name": "LedgeriOS/LedgeriOSTests/InvoiceServiceTests.swift",
@@ -44758,6 +45189,58 @@
       ],
       "notes": "M2 withheld: O-023 changes the archive, review/attachment removal, work-queue or optimistic-operation boundary for this source responsibility; generic Space CRUD/delete is not provisional target authority.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
+    },
+    {
+      "id": "TEST-EAAB5CD74000",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "135558a27811c2a69ba86e7ed44cac1bb98e46318e94f1f160108f5bcb462831",
+      "acknowledgedSourceHash": "135558a27811c2a69ba86e7ed44cac1bb98e46318e94f1f160108f5bcb462831",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Contains only the reviewed READY test inventory for Project archive confirmation/admission, identity, operation state, recovery, cancellation and restart; it runs no tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": [
+          "deterministic archive-through-browser application test matrix"
+        ],
+        "securityRequirements": [
+          "Use synthetic typed identity/readiness/revision/failure evidence only"
+        ],
+        "syncRequirements": [
+          "Exercise active-to-archived projection, exact rejection recovery, termination, stop and restart isolation"
+        ]
+      },
+      "migration": {
+        "rule": "Use no source export or hosted data.",
+        "reconciliation": [
+          "Assert exact current presentation evidence before every command"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectArchiveBrowserStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Every frozen application case passes deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Comment-only synthetic AppModel-test scaffold.",
+      "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
       "id": "TEST-EBA9C48BC4EE",

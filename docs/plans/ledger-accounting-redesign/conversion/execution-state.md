@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 304
+State version: 305
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-BROWSING-STAGING-APPLICATION-FLOW-VERIFIED
+- Checkpoint: PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-READY-CANDIDATE-AWAITING-INDEPENDENT-REVIEW
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,14 +34,16 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Whole-program completion remains approximately **12–16%**. Separately, 175
-  of 649 target-relevant surfaces (27.0%) are implemented or verified. The
+  of 658 target-relevant surfaces (26.6%) are implemented or verified; the
+  denominator grew by nine newly discovered comment-only future implementation
+  leaves, not because completed behavior regressed. The
   broader percentage measures executable Supabase/PowerSync product behavior
   through rehearsal and cutover readiness, not document volume or provider-free
   contract count. The broad range is a readiness forecast, not an incremental
   progress counter; every checkpoint must report the exact surface numerator
   and completed user workflow instead of repeating the range alone.
-- The implementation tracker currently contains 272 status-bearing rows: 68
-  done, eight verified, six implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 273 status-bearing rows: 68
+  done, eight verified, six implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -68,6 +70,36 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Prepared a root-reviewed comment-only READY candidate for archiving one active
+  Project through the verified local browser. Nine new leaves reserve the exact
+  PowerSync acceptance/RPC/provider tests, Core-only confirmation/application
+  model, thin adapter and non-executable Postgres/pgTAP/Data API boundaries.
+  Existing schema/upload/query/runtime/view/shell/control files remain bounded
+  shared touchpoints with their primary owners. The flow preserves the current
+  explicit confirmation safety interaction, binds confirmation to exact current
+  Project/lifecycle/revision evidence, rejects cancel or stale confirmation with
+  zero calls, accepts offline into a separate encrypted lifecycle overlay, moves
+  the stable row Active to Archived immediately as partial evidence, survives
+  restart, uploads FIFO, reconciles exact applied/rejected/readback evidence and
+  mutates only authoritative lifecycle/revision/server time. Root review rejected
+  an executable placeholder assertion and a proposed narrowing of the global
+  run-all pgTAP command; the corrected test reservation is `.sql.ready` and the
+  global gate stays unchanged. Independent review then caught its path-derived
+  identity transition: implementation must retain `CONFIG-062839A9903C`
+  byte-for-byte as an inert retired marker with replacement evidence, use the
+  authorized conversion-control touchpoint to register runnable
+  `CONFIG-CAB6A5DAD1C0`, classify/claim the new identity, update every owner path
+  and retain exactly one runnable pgTAP leaf plus the inert marker without a new
+  missing-surface warning. Final current-byte re-review returned GO with no
+  P0-P3; all local controls, 455 tests, database lint/42 pgTAP/two RPC suites
+  and both staging builds pass. An exact READY commit and all immutable jobs
+  remain required before executable work. The nine target-mapped
+  leaves expand the current denominator from 649 to 658 and mapped-or-later from
+  465 to 474; implemented-or-verified remains 175. Restore/delete/rename/details/
+  Client reassignment/media/target MCP/Auth/hosted/Firebase/migration/production/
+  cutover remain excluded; A-003/A-004 remain proposed;
+  `EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001`.
 
 - Verified the Client-browsing staging application flow after exact
   comment-only READY commit `db89ef36339f48bff249b2973ea3bc9c5607bb61`

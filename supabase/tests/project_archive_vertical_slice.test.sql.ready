@@ -1,0 +1,13 @@
+-- READY scaffold only: this non-runnable reservation contains no executable
+-- Project archive assertion and is excluded by the root run-all *.sql discovery.
+--
+-- Implementation must replace this `.ready` leaf with the runnable `.sql` path
+-- and prove exact/changed/lost-response replay, cross-command OperationID refusal,
+-- active exact-revision apply, already-archived and stale/future/out-of-signed-range
+-- conflicts, signed-bigint exhaustion, true parallel same-revision one-apply/
+-- one-conflict behavior, monotonic revision/time, exact mutation columns, and
+-- byte-identical preservation of the Project relationship, display/description/
+-- creation audit plus all represented Client/category/allocation and child/history
+-- rows. It must prove owner success, restricted/revoked/anonymous/actor-mismatch/
+-- cross-Account denial and non-enumeration, direct-write denial, immutable
+-- terminal-result scope, and no restore/delete/rename/reassignment/media behavior.

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T09:51:07.487Z",
+  "generatedFromManifestSync": "2026-09-05T10:39:52.108Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 909,
-    "targetRelevantSurfaces": 649,
-    "batches": 32,
-    "productScopeSurfaces": 738,
+    "surfaces": 918,
+    "targetRelevantSurfaces": 658,
+    "batches": 33,
+    "productScopeSurfaces": 747,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -72,26 +72,28 @@
         "M0-CLIENT-RENAME-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-INVENTORY-TRANSACTION-001",
+        "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 497,
-      "targetRelevantSurfaceCount": 381
+      "surfaceCount": 506,
+      "targetRelevantSurfaceCount": 390
     },
     {
       "path": "docs/specs/projects.md",
       "batchIds": [
         "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
+        "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "surfaceCount": 130,
-      "targetRelevantSurfaceCount": 128
+      "surfaceCount": 139,
+      "targetRelevantSurfaceCount": 137
     },
     {
       "path": "docs/specs/spaces.md",
@@ -2044,6 +2046,99 @@
         "TEST-DE986CFD8624",
         "TEST-E323BA653B17",
         "TEST-ECE08B24ADCE"
+      ]
+    },
+    {
+      "batchId": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
+      "title": "Project archive through the isolated target browser",
+      "scope": "product",
+      "rationale": "This isolated archive-through-browser slice composes the verified Project archive command/use case and Project browsing evidence into one exact revision-safe offline lifecycle mutation while preserving every relationship and historical record and leaving restore, delete, rename, reassignment and media mutation outside.",
+      "surfaceCount": 9,
+      "targetRelevantSurfaceCount": 9,
+      "authorities": [
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-operation-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-archive-use-case-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-USE-CASE-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-062839A9903C",
+        "CONFIG-20D251EF21F6",
+        "CONFIG-78696A3C79AA",
+        "SWIFT-0753297CA29A",
+        "SWIFT-4F36B1F525D0",
+        "SWIFT-53B8C9C37D3F",
+        "SWIFT-D58BDD1F45EE",
+        "TEST-475355568D74",
+        "TEST-EAAB5CD74000"
       ]
     },
     {
