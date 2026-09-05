@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-04
-State version: 285
+State version: 286
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-CI-HARNESS-CORRECTED-RERUN-PENDING
+- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-IMPLEMENTED-IMMUTABLE-CI-PASSED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -92,8 +92,11 @@ without modifying the running Firebase application before hard cutover.
   its fail-closed integration control now require `--no-parallel`; focused
   runtime tests retain simultaneous databases, operations, four watches and
   close concurrency. Independent diagnosis agreed this is the smallest robust
-  containment and found no shared fixture path. The corrected synchronized
-  commit and immutable rerun remain the next action. The runtime is
+  containment and found no shared fixture path. Corrected implementation and
+  CI-harness commit `f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4` then passed
+  all three immutable jobs in Actions run `33941609019`, including the
+  process-wide nonparallel 403-test gate, both staging builds, clean generated
+  artifacts and disposable local Supabase verification. The runtime is
   explicitly not `AccountSessionEnding`; no sync, result resolution, upload
   verification, deletion, cleanup, signout, workspace switch, hosted access,
   Firebase work, migration, production or cutover behavior exists, and

@@ -1,6 +1,6 @@
 # EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001 — Account Workspace Pending-Work Runtime
 
-- Status: implemented and independently reviewed; exact implementation CI pending
+- Status: implemented, independently reviewed, and exact implementation CI passed
 - Date: 2026-09-04
 - Environment: isolated target worktree and disposable encrypted local fixtures only
 - Production/Firebase impact: none
@@ -31,10 +31,13 @@ passed all 403 tests in 6.8 seconds, and independent diagnosis found no shared
 fixture path or deterministic test failure. The workflow and its fail-closed
 integration control now require `--no-parallel`; the focused tests still drive
 simultaneous databases, operations, four watches, ABA callers and close callers
-inside the production-relevant boundaries. The corrected synchronized commit
-and Actions run remain pending. Until they pass, operational verification
-`WORKRUNTIME-TEST-009` remains planned and this evidence does not claim
-immutable implementation CI.
+inside the production-relevant boundaries. Implementation and CI-harness
+commit `f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4` passed all three jobs in
+immutable Actions run `33941609019`: conversion controls, the macOS target job
+with the process-wide nonparallel 403-test gate and both staging builds, and
+disposable local Supabase verification. Operational verification
+`WORKRUNTIME-TEST-009` is therefore passed. Failed run `33939963766` remains
+part of the evidence history rather than being replaced by the corrected run.
 
 ## Implemented Boundary
 
@@ -119,12 +122,16 @@ sentinel or runtime lifecycle.
 - `LedgerTargetStaging` builds successfully for macOS and the generic iOS
   Simulator destination.
 - Local Supabase database verification was not rerun in this shell because no
-  disposable local Supabase database is listening on `127.0.0.1:54322`; the
-  immutable workflow starts its own isolated local Supabase stack and remains
-  the required evidence for `WORKRUNTIME-TEST-009`.
+  disposable local Supabase database is listening on `127.0.0.1:54322`; exact-
+  head Actions run `33941609019` started its own isolated local Supabase stack
+  and passed that verification.
 - Actions run `33939963766` proves its conversion-control and disposable-local-
   Supabase jobs. Its macOS test-process timeout is recorded as failed evidence,
   not promoted or silently retried.
+- Exact-head Actions run `33941609019` proves all three jobs on
+  `f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4`, including 403 nonparallel Swift
+  tests, both staging builds, clean generated artifacts, and disposable local
+  Supabase checks.
 
 ## Frozen Affected Surfaces
 
