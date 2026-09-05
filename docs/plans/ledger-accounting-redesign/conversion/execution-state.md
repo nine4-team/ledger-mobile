@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 292
+State version: 294
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: BUDGET-CATEGORY-REFERENCE-POWERSYNC-VERIFIED
+- Checkpoint: PROJECT-SETUP-EXISTING-CLIENT-APPLICATION-FLOW-READY-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,11 +33,13 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Whole-program completion is currently estimated at **12–16%**. This measures
-  executable Supabase/PowerSync product behavior through rehearsal and cutover
-  readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 269 status-bearing rows: 68
-  done, five verified, six implemented, zero ready, zero awaiting verification,
+- Whole-program completion remains approximately **12–16%**. Separately, 161
+  of 639 target-relevant surfaces (25.2%) are implemented or verified. The
+  broader percentage measures executable Supabase/PowerSync product behavior
+  through rehearsal and cutover readiness, not document volume or provider-free
+  contract count.
+- The implementation tracker currently contains 270 status-bearing rows: 68
+  done, five verified, six implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -64,6 +66,25 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Selected and prepared the next user-visible slice: existing-Client Project
+  Setup in the isolated target staging app. Four comment-only leaves now freeze
+  a backend-neutral executable AppModel/test target, a thin PowerSync runtime
+  adapter and a dynamic SwiftUI form. The package consumes verified Client,
+  category, form, use-case, provider and operation-receipt meanings; it never
+  auto-selects a Client/category, permits zero or selected-null categories,
+  keeps partial/stale/ready and false-empty evidence honest, and constructs no
+  Project command in app code. Independent review initially returned NO-GO on
+  missing classification/discoverer acknowledgment and required a stronger
+  dependency, stable-retry-ID, exact-receipt, accessibility and frozen shared-
+  touchpoint matrix. The corrected synchronized READY candidate addresses those
+  findings. A second review then required explicit simultaneous-submit,
+  ambiguous-retry identity, all-six-receipt-state and concrete accessibility
+  proof; the frozen test matrix now includes each requirement and awaits final
+  exact-package re-review plus immutable READY CI.
+  O-043/O-026/O-040, hosted/Auth/media/MCP/schema/RLS/Sync, Firebase, migration,
+  production, release and cutover remain unadvanced;
+  `EVID-PROJECT-SETUP-APPLICATION-FLOW-001`.
 
 - Implemented the local budget-category reference provider after exact READY
   commit `8eafd6c9` passed all three jobs in immutable run `33943581567`. One

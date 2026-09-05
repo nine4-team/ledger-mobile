@@ -1,0 +1,110 @@
+{
+  "batchId": "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
+  "title": "Existing-Client Project Setup target application flow",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-PROJECT-SETUP-APPLICATION-FLOW-001",
+    "EVID-PROJECT-SETUP-FORM-PRESENTATION-001",
+    "EVID-PROJECT-SETUP-USE-CASE-001",
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-64E1171C47C5",
+      "acknowledgeSourceHash": "f2d249166c21a21024cc6a396b7e79ed96c41db5fcd264498c689c222c9d01d4",
+      "currentBehavior": "Comment-only READY scaffold for an executable backend-neutral existing-Client Project Setup application model.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+      "notes": "No executable behavior exists before the exact READY checkpoint passes.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["two-stream form preparation, stable selection state, and one ProjectSetupUseCase submission"],
+        "securityRequirements": ["Accept only already-materialized Account-bound typed snapshots and expose no provider, SQL, credential, or caller-authored scope"],
+        "syncRequirements": ["Preserve partial, stale, ready, incomplete, and authoritative-empty distinctions without inventing completeness"]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": ["Use stable typed Client/category identities rather than copied display text"]
+      },
+      "verification": {
+        "tests": ["LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"],
+        "acceptance": ["The real model passes two-stream, selection, submission, receipt, cancellation, and error tests"]
+      }
+    },
+    {
+      "id": "TEST-E92B32DB7642",
+      "acknowledgeSourceHash": "63a6f3e7062e3e41ea49245c977df74b1d1f34a95781b20552769d82dc170fe6",
+      "currentBehavior": "Comment-only READY scaffold for executable Project Setup application-model tests.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+      "notes": "The future suite uses controlled async streams and a fake backend-neutral setup operator.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["deterministic application-model test matrix"],
+        "securityRequirements": ["Use synthetic Account, Principal, Client, Project, category, and Operation identities only"],
+        "syncRequirements": ["Exercise both stream arrival orders, readiness changes, cancellation, and post-cancel silence"]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": ["Assert exact form preparation and operation receipts"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter ProjectSetupStagingExerciseTests"],
+        "acceptance": ["All frozen Project Setup application-model cases pass deterministically"]
+      }
+    },
+    {
+      "id": "SWIFT-99B1B3CFBB7A",
+      "acknowledgeSourceHash": "249f00dd85ce93c9f59a34959c589378ff1c405ce82a4cfdd3c24453628ad85b",
+      "currentBehavior": "Comment-only READY scaffold for the thin target-app adapter from LedgerOfflineClientRuntime to the backend-neutral application-model protocol.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+      "notes": "The adapter may forward only Account-bound Client/category watches and Project setup; policy remains in verified Core contracts.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["thin PowerSync runtime adapter"],
+        "securityRequirements": ["Expose no raw Account rebinding, database, query, SQL, visibility policy, or credential"],
+        "syncRequirements": ["Forward runtime snapshots and cancellation without rewriting their readiness evidence"]
+      },
+      "migration": {
+        "rule": "Adapt target runtime only.",
+        "reconciliation": ["Do not access source Firebase code or data"]
+      },
+      "verification": {
+        "tests": ["target environment source/build-boundary checks and complete staging builds"],
+        "acceptance": ["The app adapter remains the only PowerSync-aware Project Setup application-flow leaf"]
+      }
+    },
+    {
+      "id": "SWIFT-1F2F5FE68160",
+      "acknowledgeSourceHash": "bb3c57f63de05946926c7d0523423a0bc8885219efe9dc65a4a99f2afd2380ee",
+      "currentBehavior": "Comment-only READY scaffold for the existing-Client Project Setup staging view.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
+      "notes": "The future view renders typed model state and constructs no Project command.",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": ["existing-Client Project Setup staging form and local receipt presentation"],
+        "securityRequirements": ["Display bounded diagnostics and readiness only; never expose private payloads or provider details"],
+        "syncRequirements": ["Show honest Client/category partial, stale, ready, incomplete, and empty local evidence"]
+      },
+      "migration": {
+        "rule": "Render isolated target-local state only.",
+        "reconciliation": ["Do not imply hosted synchronization or production readiness"]
+      },
+      "verification": {
+        "tests": ["application-model tests, exact source checks, and iOS/macOS staging builds"],
+        "acceptance": ["No hardcoded category, new-Client branch, direct command construction, or false-ready UI remains"]
+      }
+    }
+  ]
+}

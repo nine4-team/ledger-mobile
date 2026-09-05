@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T05:49:31.057Z",
+  "generatedFromManifestSync": "2026-09-05T06:23:44.428Z",
   "totals": {
-    "slices": 77,
-    "claimedTargetSurfaces": 213,
+    "slices": 78,
+    "claimedTargetSurfaces": 217,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 161
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 6,
     "verified": 67,
@@ -766,6 +766,23 @@
       "verificationCount": 10,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-rename-use-case-contracts.json"
+    },
+    {
+      "sliceId": "project-setup-existing-client-application-flow",
+      "title": "Create a Project for an existing Client from honest local Client and category evidence",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Project Setup Application Flow",
+      "surfaceIds": [
+        "SWIFT-1F2F5FE68160",
+        "SWIFT-64E1171C47C5",
+        "SWIFT-99B1B3CFBB7A",
+        "TEST-E92B32DB7642"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 9,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/project-setup-existing-client-application-flow.json"
     },
     {
       "sliceId": "project-setup-form-presentation-contracts",

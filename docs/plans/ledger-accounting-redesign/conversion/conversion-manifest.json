@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T05:49:31.057Z",
+    "lastSynchronizedAt": "2026-09-05T06:23:44.428Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -3180,10 +3180,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "37fee832e3705ef98ed55ecaa76691f1441dc0bf9fd18096c424feb3733626fd",
-      "acknowledgedSourceHash": "37fee832e3705ef98ed55ecaa76691f1441dc0bf9fd18096c424feb3733626fd",
+      "observedSourceHash": "a0fd62a93119370cc0c2e5fb83fa946aad690b5248971b43e18e62fc9bd4b2b4",
+      "acknowledgedSourceHash": "a0fd62a93119370cc0c2e5fb83fa946aad690b5248971b43e18e62fc9bd4b2b4",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, the draft source-query reconciliation control leaves, and each explicitly reviewed local Supabase migration/pgTAP/Data API runner; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target application-model, composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, the draft source-query reconciliation control leaves, and each explicitly reviewed local Supabase migration/pgTAP/Data API runner; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3233,7 +3233,7 @@
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001",
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. This re-acknowledgment adds exact CONFIG discovery for the Client-rename migration, pgTAP suite and local Data API runner so their hashes are enforced rather than recorded only in prose. Direct architecture-decisions authority is supplied by the reviewed product-authority crosswalk, not a validator exception. No status or ownership change is claimed for this existing control.",
+      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate application-model, composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. This deliberate re-acknowledgment adds the application-model source/test roots needed for executable app orchestration tests; it changes no product lifecycle status or existing ownership. Direct architecture-decisions authority is supplied by the reviewed product-authority crosswalk, not a validator exception.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -19661,6 +19661,58 @@
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
     },
     {
+      "id": "SWIFT-1F2F5FE68160",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "bb3c57f63de05946926c7d0523423a0bc8885219efe9dc65a4a99f2afd2380ee",
+      "acknowledgedSourceHash": "bb3c57f63de05946926c7d0523423a0bc8885219efe9dc65a4a99f2afd2380ee",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for the existing-Client Project Setup staging view.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": [
+          "existing-Client Project Setup staging form and local receipt presentation"
+        ],
+        "securityRequirements": [
+          "Display bounded diagnostics and readiness only; never expose private payloads or provider details"
+        ],
+        "syncRequirements": [
+          "Show honest Client/category partial, stale, ready, incomplete, and empty local evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Render isolated target-local state only.",
+        "reconciliation": [
+          "Do not imply hosted synchronization or production readiness"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "application-model tests, exact source checks, and iOS/macOS staging builds"
+        ],
+        "acceptance": [
+          "No hardcoded category, new-Client branch, direct command construction, or false-ready UI remains"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
+      ],
+      "notes": "The future view renders typed model state and constructs no Project command.",
+      "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
+    },
+    {
       "id": "SWIFT-1FDB27E18B95",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/SpaceChecklistRevisionUseCase.swift",
@@ -25023,6 +25075,58 @@
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
     },
     {
+      "id": "SWIFT-64E1171C47C5",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/ProjectSetupStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/ProjectSetupStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "f2d249166c21a21024cc6a396b7e79ed96c41db5fcd264498c689c222c9d01d4",
+      "acknowledgedSourceHash": "f2d249166c21a21024cc6a396b7e79ed96c41db5fcd264498c689c222c9d01d4",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for an executable backend-neutral existing-Client Project Setup application model.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": [
+          "two-stream form preparation, stable selection state, and one ProjectSetupUseCase submission"
+        ],
+        "securityRequirements": [
+          "Accept only already-materialized Account-bound typed snapshots and expose no provider, SQL, credential, or caller-authored scope"
+        ],
+        "syncRequirements": [
+          "Preserve partial, stale, ready, incomplete, and authoritative-empty distinctions without inventing completeness"
+        ]
+      },
+      "migration": {
+        "rule": "Create no source import or transformation.",
+        "reconciliation": [
+          "Use stable typed Client/category identities rather than copied display text"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"
+        ],
+        "acceptance": [
+          "The real model passes two-stream, selection, submission, receipt, cancellation, and error tests"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
+      ],
+      "notes": "No executable behavior exists before the exact READY checkpoint passes.",
+      "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
+    },
+    {
       "id": "SWIFT-674F92BED6F7",
       "kind": "swift_view",
       "name": "LedgeriOS/LedgeriOS/Views/Inventory/InventoryTransactionsSubTab.swift",
@@ -28859,6 +28963,58 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-99B1B3CFBB7A",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "249f00dd85ce93c9f59a34959c589378ff1c405ce82a4cfdd3c24453628ad85b",
+      "acknowledgedSourceHash": "249f00dd85ce93c9f59a34959c589378ff1c405ce82a4cfdd3c24453628ad85b",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for the thin target-app adapter from LedgerOfflineClientRuntime to the backend-neutral application-model protocol.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": [
+          "thin PowerSync runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose no raw Account rebinding, database, query, SQL, visibility policy, or credential"
+        ],
+        "syncRequirements": [
+          "Forward runtime snapshots and cancellation without rewriting their readiness evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Adapt target runtime only.",
+        "reconciliation": [
+          "Do not access source Firebase code or data"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "target environment source/build-boundary checks and complete staging builds"
+        ],
+        "acceptance": [
+          "The app adapter remains the only PowerSync-aware Project Setup application-flow leaf"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
+      ],
+      "notes": "The adapter may forward only Account-bound Client/category watches and Project setup; policy remains in verified Core contracts.",
+      "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {
       "id": "SWIFT-99CD48FC486A",
@@ -43981,6 +44137,58 @@
       ],
       "notes": "Verified target-only deterministic tests at exact implementation commit b421f41948a23fa0918b5e33c0a4d436e5b87080 and immutable Actions run 33618364544 prove exact Account/Project/note/content-or-tombstone/audit/order/cursor/history-readiness truth, byte-identical restart, malformed/rebound refusal, exact request matching and no false page. Four focused/all 124 tests, graph/contracts, both staging builds and clean artifacts pass. No physical local durability, authorization, note mutation, schema/RLS/Sync/provider behavior, app/MCP/search parity, migration or production behavior is claimed.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-E92B32DB7642",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "63a6f3e7062e3e41ea49245c977df74b1d1f34a95781b20552769d82dc170fe6",
+      "acknowledgedSourceHash": "63a6f3e7062e3e41ea49245c977df74b1d1f34a95781b20552769d82dc170fe6",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only READY scaffold for executable Project Setup application-model tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Project Setup Application Flow",
+        "surfaces": [
+          "deterministic application-model test matrix"
+        ],
+        "securityRequirements": [
+          "Use synthetic Account, Principal, Client, Project, category, and Operation identities only"
+        ],
+        "syncRequirements": [
+          "Exercise both stream arrival orders, readiness changes, cancellation, and post-cancel silence"
+        ]
+      },
+      "migration": {
+        "rule": "Use no Firebase export or hosted target data.",
+        "reconciliation": [
+          "Assert exact form preparation and operation receipts"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ProjectSetupStagingExerciseTests"
+        ],
+        "acceptance": [
+          "All frozen Project Setup application-model cases pass deterministically"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
+      ],
+      "notes": "The future suite uses controlled async streams and a fake backend-neutral setup operator.",
+      "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {
       "id": "TEST-E97A8051035C",

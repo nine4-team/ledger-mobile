@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T05:49:31.057Z",
+  "generatedFromManifestSync": "2026-09-05T06:23:44.428Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 895,
-    "targetRelevantSurfaces": 635,
-    "batches": 29,
-    "productScopeSurfaces": 724,
+    "surfaces": 899,
+    "targetRelevantSurfaces": 639,
+    "batches": 30,
+    "productScopeSurfaces": 728,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -73,20 +73,22 @@
         "M0-INVENTORY-TRANSACTION-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
+        "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 483,
-      "targetRelevantSurfaceCount": 367
+      "surfaceCount": 487,
+      "targetRelevantSurfaceCount": 371
     },
     {
       "path": "docs/specs/projects.md",
       "batchIds": [
         "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
-        "M0-PROJECT-POWERSYNC-PROVIDER-001"
+        "M0-PROJECT-POWERSYNC-PROVIDER-001",
+        "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "surfaceCount": 122,
-      "targetRelevantSurfaceCount": 120
+      "surfaceCount": 126,
+      "targetRelevantSurfaceCount": 124
     },
     {
       "path": "docs/specs/spaces.md",
@@ -2233,6 +2235,82 @@
         "SWIFT-5D88C2B47970",
         "SWIFT-7FCF476FF67C",
         "TEST-3F2CAFC760D5"
+      ]
+    },
+    {
+      "batchId": "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
+      "title": "Existing-Client Project Setup target application flow",
+      "scope": "product",
+      "rationale": "This bounded target application flow turns already-verified existing-Client selection, category-reference, Project-setup form/use-case and local provider contracts into one user-visible offline staging form without deciding new-Client validation, category administration, defaults, hosted authorization or production behavior.",
+      "surfaceCount": 4,
+      "targetRelevantSurfaceCount": 4,
+      "authorities": [
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-EXISTING-CLIENT-SELECTION-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-SETUP-FORM-PRESENTATION-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-SETUP-USE-CASE-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-SETUP-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-OPERATION-CORE-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-1F2F5FE68160",
+        "SWIFT-64E1171C47C5",
+        "SWIFT-99B1B3CFBB7A",
+        "TEST-E92B32DB7642"
       ]
     },
     {
