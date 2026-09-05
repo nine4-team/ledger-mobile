@@ -51,6 +51,8 @@ The root integrator independently inspected, extended and reran the delegated ch
 
 The first exact implementation commit `27cb52e7f19c6a53e2506a337e4e8fb1dadb9037` passed conversion and disposable-local-Supabase CI but exposed one scheduler-dependent test setup in the macOS job: provider shutdown could run before the controlled completeness stream had emitted any evidence, making a zero-termination count a valid pre-start outcome. The corrected test first observes the combined row/completeness result, then invokes provider shutdown and proves both active sources terminate exactly once. Thirty consecutive focused-suite repetitions pass locally; no production implementation behavior changed.
 
+Corrected exact implementation commit `7d42bad01aa5473750d212a631158b079629d3d6` passed all three immutable jobs in Actions run `33998369665`: conversion state and traceability, the isolated target environment with all 546 Swift tests and both builds, and the disposable local Supabase provider suite.
+
 ## Local Verification
 
 - clean local Supabase reset: passed all migrations and seed
@@ -71,6 +73,6 @@ The first exact implementation commit `27cb52e7f19c6a53e2506a337e4e8fb1dadb9037`
 
 ## Remaining Gates
 
-`PROJECTARCHIVALREVIEW-TEST-010` remains planned until the corrected exact implementation commit passes immutable CI. The first exact commit's failed macOS job is retained above rather than hidden. `PROJECTARCHIVALREVIEW-TEST-011` remains planned until a real isolated authenticated PowerSync session proves exact authorized receipt and membership-revocation eviction. Local static configuration, fake freshness sources and SQLite tests do not prove that hosted behavior.
+`PROJECTARCHIVALREVIEW-TEST-010` passed at corrected exact implementation commit `7d42bad01aa5473750d212a631158b079629d3d6` in immutable Actions run `33998369665`. The first exact commit's failed macOS job is retained above rather than hidden. `PROJECTARCHIVALREVIEW-TEST-011` remains planned until a real isolated authenticated PowerSync session proves exact authorized receipt and membership-revocation eviction. Local static configuration, fake freshness sources and SQLite tests do not prove that hosted behavior.
 
 A-003 and A-004 therefore remain proposed. This implementation does not authorize hosted Supabase/PowerSync resources, source import, Firebase changes, production access, migration, deployment, release or cutover. Product specs and the decision log remain product authority.

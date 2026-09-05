@@ -44,9 +44,10 @@ Sync, causally fresh encrypted keyset pages, active/archived browser continuity,
 byte-identical archive preservation and gated unregistered MCP transport pass
 three independent review rounds after substantive corrections. All 546 Swift
 tests in 88 suites, 256 pgTAP assertions, 26 MCP tests, eight local Data API/RPC
-runners, database lint, controls and both builds pass. Exact-commit CI and a
-real authenticated PowerSync authorization/revocation rehearsal remain
-pending; A-003/A-004 stay proposed. Note writes/search, a capped/evicting
+runners, database lint, controls and both builds pass. Corrected exact
+implementation `7d42bad0` passed all three immutable jobs in run `33998369665`;
+only the real authenticated PowerSync authorization/revocation rehearsal
+remains pending. A-003/A-004 stay proposed. Note writes/search, a capped/evicting
 history window, live registration, hosted resources, Firebase, migration,
 production, and cutover remain excluded;
 `EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001`. The derived Transfer destination picker is implemented locally in six target

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 324
+State version: 325
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-ARCHIVAL-REVIEW-IMPLEMENTED-LOCAL
+- Checkpoint: PROJECT-ARCHIVAL-REVIEW-IMPLEMENTED-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -96,9 +96,11 @@ without modifying the running Firebase application before hard cutover.
   classification, local keyset indexing, MCP non-registration and combined
   archive continuity. All 546 Swift tests in 88 suites, 256 pgTAP assertions,
   26 MCP tests, eight local Data API/RPC runners, database lint, target controls
-  and both staging builds pass locally. Exact-commit CI remains pending and the
-  real authenticated PowerSync authorization/revocation rehearsal remains
-  planned, so A-003/A-004 stay proposed and no hosted, Firebase, migration,
+  and both staging builds pass locally. Corrected exact implementation
+  `7d42bad01aa5473750d212a631158b079629d3d6` passed all three immutable jobs in
+  run `33998369665`. Only the real authenticated PowerSync authorization/
+  revocation rehearsal remains planned, so A-003/A-004 stay proposed and no
+  hosted, Firebase, migration,
   production or cutover authority advances;
   `EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001`.
 
@@ -4266,23 +4268,20 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and push the independently reviewed Project archival-review READY
-checkpoint and require immutable exact-head CI. Then implement the whole batch:
-Project-note Postgres schema/read surface and RLS, exact on-demand PowerSync
-history, encrypted local keyset provider, browser-owned note presentation,
-gated MCP list/archive parity, and archive-preservation tests. Run independent
-security and offline-concurrency review on the executable diff, correct every
-finding, then run complete local gates and immutable exact-commit CI before
-promoting any claimed surface beyond `target_mapped`.
+Select the next decision-independent vertical slice from canonical target
+specs, the implementation tracker, residual-decision register and existing
+verified dependencies. Freeze one coherent dossier at an honest status before
+executable work, preserve every open product/architecture gate, and implement
+only after conversion checks and independent preflight review pass.
 
-For this batch, bounded means a 1...200 page over the complete exact-Project
-replica; do not invent physical history caps, eviction, refill or tombstone
-retention. Do not implement note creation/edit/delete/search under O-039, broad
-Project MCP behavior under O-040, restore/delete/reassignment/media choices, or
-change the verified archive command/store/RPC. Do not weaken the blocked direct
-Space-create dossier or implement O-044/O-045/O-046. Do not infer real
-PowerSync/Auth authorization from local proof, advance A-003/A-004, provision
-hosted resources, access production, migrate source data or modify Firebase.
+The Project archival-review slice remains `implemented`, not `verified`, until
+`PROJECTARCHIVALREVIEW-TEST-011` proves real authenticated PowerSync receipt and
+membership-revocation eviction. Do not implement note creation/edit/delete/
+search under O-039, broad Project MCP behavior under O-040, restore/delete/
+reassignment/media choices, or weaken the blocked direct Space-create dossier
+under O-044/O-045/O-046. Do not infer real PowerSync/Auth authorization from
+local proof, advance A-003/A-004, provision hosted resources, access
+production, migrate source data or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 
