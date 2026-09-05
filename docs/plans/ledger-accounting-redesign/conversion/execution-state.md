@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 306
+State version: 307
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-IMPLEMENTED-IMMUTABLE-CI-GREEN
+- Checkpoint: CLIENT-ARCHIVE-BROWSER-COMMENT-ONLY-READY-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,15 +34,15 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Whole-program completion is approximately **14%** (a reasonable uncertainty
-  range is 13–15%). Separately, 184 of 658 target-relevant surfaces (28.0%) are
+  range is 13–15%). Separately, 184 of 668 target-relevant surfaces (27.5%) are
   implemented or verified. The
   broader percentage measures executable Supabase/PowerSync product behavior
   through rehearsal and cutover readiness, not document volume or provider-free
   contract count. The broad range is a readiness forecast, not an incremental
   progress counter; every checkpoint must report the exact surface numerator
   and completed user workflow instead of repeating the range alone.
-- The implementation tracker currently contains 273 status-bearing rows: 68
-  done, eight verified, seven implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 274 status-bearing rows: 68
+  done, eight verified, seven implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -70,6 +70,40 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Prepared the complete comment-only READY candidate for archiving one currently
+  observed active Client offline through the isolated Client browser while
+  preserving every Project and all history. Ten newly discovered and classified
+  leaves freeze a generic Account-bound operation identity primitive,
+  Client-archive AppModel/adapter/PowerSync/RPC/provider tests, an inert pgTAP
+  reservation, local Data API runner reservation and a pinned-CLI migration
+  scaffold. The Account-bound identity is exactly
+  `client-archive-<sha256(account UTF-8)>-<lowercase canonical UUID>`; Project
+  archive must reuse the generic primitive without changing accepted bytes. The
+  shared result boundary reserves `client-archive-` against non-archive
+  squatting and cross-Account/cross-command disclosure/rebinding. Client archive
+  optimism feeds the shared Client directory so both Client browsing and Project
+  Setup immediately see Archived/partial evidence; Project Setup also rejects
+  new or not-yet-accepted stale/current post-archive local acceptance, while an
+  exact replay accepted before archive returns its prior receipt before overlay
+  validation. Earlier queued/applying Client
+  creation and Project setup wait FIFO; terminally rejected Client creation
+  unblocks authoritative archive disposition without fabricating a local server
+  result or retrying forever, rejected Project setup unblocks archive, and applied
+  Project setup stays preserved. Server Client archive and existing-Client
+  Project setup must serialize on the same Client lock; both orderings, durable
+  `project_setup_client_not_selectable`, no deadlock and no post-archive Project
+  success are required. Current physical proof is limited to every represented
+  related row plus a no-cascade/no-related-write boundary, and every later related
+  table must extend the preservation regression. Canonical authority does not
+  decide already-archived resubmission, so this slice admits only current active
+  evidence and requires trusted non-active rejection without claiming a general
+  no-op policy. Exact counts are 184/668 implemented-or-later (27.5%) and
+  484/668 mapped-or-later. Independent review and immutable READY CI remain
+  pending; no executable behavior exists. O-023/O-024/O-025/O-040/O-042/O-043
+  and A-003/A-004 stay unadvanced; no target MCP, hosted, Firebase, migration,
+  production or cutover authority exists;
+  `EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001`.
 
 - Implemented archiving one active Project through the verified local browser
   after exact READY commit `089dc562` passed immutable Actions run
@@ -4090,16 +4124,22 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Preserve verified `client-browsing-staging-application-flow` and
-`EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001` as the standalone local
-Client directory/detail staging boundary, then select the next coherent
-decision-independent slice through feature-specific product-authority
-preflight. Preserve the six implementation hashes, exact upstream Client
-order, Core/AppModel/PowerSync containment, both drain-before-close paths and
-the existing post-create confirmation. Keep related Projects, sorting/search/
-cards/routes, raw-name input, mutation, Auth, hosted Sync, A-003/A-004/A-007/
-A-015/A-016, O-023/O-024/O-025/O-040/O-042/O-043, migration and cutover open.
-Do not provision hosted resources, access production or modify Firebase.
+Preserve exact Project archive implementation evidence and the ten comment-only
+Client archive READY leaves. Complete root and independent review of
+`client-archive-browser-supabase-powersync-vertical-slice`; correct any finding,
+then commit the synchronized comment-only package and require all three immutable
+jobs to pass on that exact READY commit. Only after green READY CI may one bounded
+implementation checkpoint replace the nine change-authorized scaffolds, add
+runnable pgTAP leaf `CONFIG-86F1E734BC70`, and modify the explicitly frozen shared
+touchpoints; inert marker `CONFIG-2DBC5A626444` must remain physically present,
+byte-identical, and linked by explicit replacement evidence. It must prove
+generic Account-bound identity, active-only admission,
+shared Client directory/Project Setup optimism, terminal dependency disposition,
+archive/Project-create Client-lock serialization, namespace reservation, exact
+replay/rejection/readback, represented-row preservation plus future-table
+regression rule, drainage and source/provider isolation. Do not implement a broad
+already-archived no-op policy; do not provision hosted resources, access
+production, migrate data, add target MCP behavior or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 

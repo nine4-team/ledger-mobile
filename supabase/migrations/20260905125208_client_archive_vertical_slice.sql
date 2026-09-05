@@ -1,0 +1,30 @@
+-- READY scaffold only — this migration creates or mutates no schema object.
+--
+-- The executable slice may extend the existing spike operation-result contract
+-- for archive_client and add one auth-first, search-path-pinned Client archive
+-- handler plus authenticated public RPC. The handler binds exact client-archive-
+-- v1 command/fingerprint and account-bound OperationID, authenticates the actor,
+-- verifies active Account membership and Client-management capability before
+-- disclosure, locks one exact Account/Client row, requires lifecycle active and
+-- exact UInt64 expected revision without signed-bigint wrap, and updates only
+-- lifecycle, revision and server-maintained update time. Exact replay returns the
+-- immutable result; changed/cross-command reuse cannot rebind; concurrent same-
+-- revision archive yields one apply/one conflict.
+-- The shared operation-result boundary reserves the full `client-archive-`
+-- namespace: only a canonical same-Account Client-archive identity may use it,
+-- and every non-archive command is rejected before it can squat that prefix.
+--
+-- Archive and spike_create_project must serialize on the same deterministic
+-- Client-row lock, including the existing-client Project-setup branch that
+-- currently has a check-then-insert race. Project-create first may apply and
+-- archive then preserves it; archive first makes later Project creation return an
+-- immutable `project_setup_client_not_selectable` rejection rather than a raw
+-- trigger/error retry. No successful Project may attach after authoritative
+-- archive and the two handlers must not deadlock.
+--
+-- Client identity/name/creation audit and every currently represented Project and
+-- related/history record remain untouched. The handler contains no cascade or
+-- related-row mutation path; every later related table must add a preservation
+-- regression. Already-archived submission is a bounded trusted-
+-- handler rejection for this slice, not a general product no-op decision.
+-- Restore, delete, rename, merge, reassignment and cascade are absent.

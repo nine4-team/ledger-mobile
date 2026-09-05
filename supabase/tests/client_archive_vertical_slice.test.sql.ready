@@ -1,0 +1,21 @@
+-- READY scaffold only: this non-runnable reservation contains no executable
+-- Client archive assertion and is excluded by root run-all *.sql discovery.
+--
+-- Implementation must retain this `.ready` marker byte-for-byte while adding a
+-- separately registered runnable `.sql` test leaf. It must prove account-bound
+-- OperationID validation; exact/changed/lost-response replay; cross-command reuse
+-- refusal; active exact-revision apply; already-archived and stale/future/out-of-
+-- signed-range conflict; signed-bigint exhaustion; true same-revision one-apply/
+-- one-conflict concurrency; and archive/create-Project serialization on the same
+-- Client lock with both orderings, durable project_setup_client_not_selectable,
+-- no post-archive Project success and no deadlock.
+-- The shared result table must reserve `client-archive-`: non-archive commands
+-- cannot squat the prefix, and cross-Account/cross-command results neither
+-- disclose nor rebind Client archive identity.
+-- It must prove monotonic revision/time, exact mutation columns, byte-identical
+-- Client identity/name/creation audit and every currently represented Project/
+-- related/history row, plus a no-cascade/no-related-write SQL boundary. Every
+-- later related table must add the same preservation regression.
+-- Owner success, restricted/revoked/anonymous/actor-mismatch/cross-Account denial,
+-- auth-first non-enumeration, direct-write denial, immutable result scope and no
+-- restore/delete/rename/merge/reassignment/cascade behavior are mandatory.

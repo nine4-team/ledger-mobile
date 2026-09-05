@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T12:40:04.860Z",
+  "generatedFromManifestSync": "2026-09-05T13:26:08.785Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 919,
-    "targetRelevantSurfaces": 658,
-    "batches": 33,
-    "productScopeSurfaces": 748,
+    "surfaces": 929,
+    "targetRelevantSurfaces": 668,
+    "batches": 34,
+    "productScopeSurfaces": 758,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -65,6 +65,7 @@
         "M0-BACKEND-AUTH-001",
         "M0-BACKEND-FUNCTIONS-001",
         "M0-BACKEND-RULES-001",
+        "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "M0-CLIENT-POWERSYNC-PROVIDER-001",
         "M0-CLIENT-POWERSYNC-SPIKE-001",
@@ -79,12 +80,13 @@
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 507,
-      "targetRelevantSurfaceCount": 390
+      "surfaceCount": 517,
+      "targetRelevantSurfaceCount": 400
     },
     {
       "path": "docs/specs/projects.md",
       "batchIds": [
+        "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001",
         "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
         "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
@@ -92,8 +94,8 @@
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "surfaceCount": 140,
-      "targetRelevantSurfaceCount": 137
+      "surfaceCount": 150,
+      "targetRelevantSurfaceCount": 147
     },
     {
       "path": "docs/specs/spaces.md",
@@ -888,6 +890,112 @@
         "CONFIG-ED6818A70D4E",
         "FILE-208B7E9D7F47",
         "FILE-7FD1F9FEF537"
+      ]
+    },
+    {
+      "batchId": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001",
+      "title": "Client archive through the isolated target browser",
+      "scope": "product",
+      "rationale": "This isolated archive-through-browser slice composes verified Client archive command/use-case and Client browsing evidence into one exact revision-safe offline lifecycle mutation that hides the Client from new-Project selection while preserving every Project and historical record. Project Archive supplies implementation-pattern evidence only, and no broader already-archived no-op behavior is inferred.",
+      "surfaceCount": 10,
+      "targetRelevantSurfaceCount": 10,
+      "authorities": [
+        {
+          "path": "docs/specs/client-identity-and-project-transfers.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/projects-clients-settings-and-reference-data.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-operation-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-use-case-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-ARCHIVE-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-ARCHIVE-USE-CASE-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-CORE-DETAILS-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-2DBC5A626444",
+        "CONFIG-8A30E46E3901",
+        "CONFIG-8F9EA6CCC0DB",
+        "SWIFT-35D653A39618",
+        "SWIFT-375BF832F772",
+        "SWIFT-4D4DB03E0A24",
+        "SWIFT-BD7BF890CB6C",
+        "SWIFT-E431F314B326",
+        "TEST-3B1F3E444423",
+        "TEST-E65089F7DC26"
       ]
     },
     {

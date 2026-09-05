@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T12:40:04.860Z",
+  "generatedFromManifestSync": "2026-09-05T13:26:08.785Z",
   "totals": {
-    "slices": 81,
-    "claimedTargetSurfaces": 236,
+    "slices": 82,
+    "claimedTargetSurfaces": 246,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 184
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 7,
     "verified": 70,
@@ -139,6 +139,29 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-read-contracts.json"
+    },
+    {
+      "sliceId": "client-archive-browser-supabase-powersync-vertical-slice",
+      "title": "Archive one active Client offline through the isolated Client browser",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Client Archive Browser Vertical Slice",
+      "surfaceIds": [
+        "CONFIG-2DBC5A626444",
+        "CONFIG-8A30E46E3901",
+        "CONFIG-8F9EA6CCC0DB",
+        "SWIFT-35D653A39618",
+        "SWIFT-375BF832F772",
+        "SWIFT-4D4DB03E0A24",
+        "SWIFT-BD7BF890CB6C",
+        "SWIFT-E431F314B326",
+        "TEST-3B1F3E444423",
+        "TEST-E65089F7DC26"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/client-archive-browser-supabase-powersync-vertical-slice.json"
     },
     {
       "sliceId": "client-archive-operation-contracts",
