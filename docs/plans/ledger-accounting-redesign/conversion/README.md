@@ -18,8 +18,9 @@ Data API proof. Root and independent executable review returned GO after
 corrections; 28 focused and all 473 Swift tests, 123 pgTAP assertions including
 81 archive assertions, zero database-lint findings, target controls and both
 builds pass locally. Runnable CONFIG-CAB6A5DAD1C0 replaces but does not delete
-byte-identical inert marker CONFIG-062839A9903C. Implementation commit/CI and
-real authenticated PowerSync TEST-012 remain pending; A-003/A-004 stay proposed
+byte-identical inert marker CONFIG-062839A9903C. Exact implementation commit
+`939d7453` passed all three jobs in immutable run `33966132401`; real
+authenticated PowerSync TEST-012 remains pending, A-003/A-004 stay proposed,
 and this grants no hosted/migration/cutover authority. The local Client/Project PowerSync directory and browse
 provider is implemented with 16 focused tests and independent review; exact
 implementation commit `a1b57a37` passes immutable run `33918240622`. Hosted

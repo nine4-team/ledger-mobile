@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-IMPLEMENTED-LOCALLY-AWAITING-CHECKPOINT-CI
+- Checkpoint: PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-IMPLEMENTED-IMMUTABLE-CI-GREEN
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -95,8 +95,9 @@ without modifying the running Firebase application before hard cutover.
   pgTAP including 81/81 archive, zero database-lint findings, scoped Data API,
   target checker, XcodeGen and both staging builds pass locally. The exact count
   advances from 175/658 to 184/658 implemented-or-verified (28.0%);
-  mapped-or-later remains 474/658. Implementation checkpoint/immutable CI remain
-  pending. TEST-012 real authenticated PowerSync, restore/delete/rename/details/
+  mapped-or-later remains 474/658. Exact implementation commit `939d7453`
+  passed all three jobs in immutable Actions run `33966132401`. TEST-012 real
+  authenticated PowerSync, restore/delete/rename/details/
   Client reassignment/media/target MCP/Auth/hosted/Firebase/migration/production/
   cutover remain excluded; A-003/A-004 remain proposed;
   `EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001`.

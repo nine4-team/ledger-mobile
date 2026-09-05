@@ -1,11 +1,14 @@
 # EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001 — Project Archive Through Browser Implementation
 
-- Status: locally implemented and independently reviewed GO with no P0-P3;
-  implementation commit and immutable CI pending
+- Status: locally implemented; independently reviewed GO with no P0-P3; exact
+  implementation commit passed all immutable CI jobs
 - Date: 2026-09-05
 - Reviewed base: `318ff300e03bff123c39480cba15dac84911dbcc`
 - Exact green READY checkpoint: commit `089dc562`, immutable Actions run
   `33961281661`
+- Exact green implementation checkpoint: commit
+  `939d745319794936daf66832d5fec77f30b20762`, immutable Actions run
+  `33966132401`
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
 - Slice: `project-archive-browser-supabase-powersync-vertical-slice`
@@ -229,9 +232,9 @@ Local executable evidence is:
 - repeatable XcodeGen plus both iOS and macOS staging builds passed.
 
 Conversion synchronization/check/report, product-authority and implementation-
-slice freshness, residual controls and the cumulative M0 gate are required in
-this same promotion checkpoint. Implementation commit/immutable CI evidence
-will be added after the synchronized checkpoint exists. Real authenticated
+slice freshness, residual controls and the cumulative M0 gate passed in exact
+implementation commit `939d745319794936daf66832d5fec77f30b20762` and all
+three immutable jobs passed in Actions run `33966132401`. Real authenticated
 PowerSync authorization remains planned as PARCHIVEBROWSER-TEST-012, so A-003
 and A-004 remain proposed and no hosted result is inferred from local proof.
 
