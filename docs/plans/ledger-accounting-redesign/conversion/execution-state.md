@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 290
+State version: 291
 
 ## Objective
 
@@ -79,9 +79,16 @@ without modifying the running Firebase application before hard cutover.
   module-internal drain before either database closes; the shared touchpoint was
   explicitly refrozen to authorize this internal lifecycle obligation without
   adding a public shutdown API. Corrected-diff review returned GO with no
-  remaining P0-P3 finding. Twelve provider tests, 14 runtime tests, all 417
-  Swift tests in 74 suites, target-environment checks and both staging builds
-  pass locally. Exact implementation CI remains pending. O-026 and A-003/A-004/
+  remaining P0-P3 finding. Implementation checkpoint `376685f5` did not pass:
+  immutable run `33945825011` timed out in the macOS test process, and local
+  repetition then exposed a row/completeness scheduling race on repeat eight.
+  The corrected query waits for initial evidence from both sources before its
+  first snapshot. Thirty consecutive affected-suite repetitions pass. An
+  independent correction review required deterministic proof for both arrival
+  orders and pre-snapshot cancellation/drainage; those tests are now executable.
+  Fourteen focused provider and all 419 Swift tests in 74 suites pass locally.
+  Exact corrected implementation CI
+  remains pending. O-026 and A-003/A-004/
   A-007/A-016 remain unadvanced; no category administration, app UI, MCP,
   hosted access, Firebase work, migration, production or cutover action exists;
   `EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001`.
@@ -3970,15 +3977,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and push the independently reviewed exact comment-only
-`budget-category-reference-powersync-provider` READY candidate, and require all
-three immutable workflow jobs to pass before executable work. Then implement
-only the frozen module-internal local query, independent incomplete-first
-completeness, exact row mapping/content version, runtime-bound category watch
-and existing stream-lease cancellation/drainage. Run focused and complete local
-verification, obtain independent executable review, correct findings,
-synchronize the implemented dossier/evidence, commit and push, and require all
-three immutable jobs on the exact implementation checkpoint before promotion.
+Synchronize, commit and push the corrected
+`budget-category-reference-powersync-provider` implementation after its failed
+exact run exposed a row/completeness scheduling race. Require all three immutable
+workflow jobs to pass on that exact corrected commit before promoting the slice
+or beginning downstream executable work. Do not treat cancelled run
+`33945825011` as passing evidence.
 
 After that provider is proven, implement the separately traced existing-Client
 Project-setup staging UI through ProjectSetupFormPreparation and

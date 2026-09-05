@@ -11,7 +11,7 @@
   "surfaces": [
     {
       "id": "SWIFT-241B51091042",
-      "acknowledgeSourceHash": "5a2d5627a1df31a976a1c2e875b6c45a94a4f1942cbefd3f2469ac664b633796",
+      "acknowledgeSourceHash": "95c3d027f1619ae9fef2aec68626e9f0a38903361d74b1afc2d0bf972dcd15ad",
       "currentBehavior": "Executable module-internal Account/Principal-bound BudgetCategoryReferenceQuerying PowerSync adapter over already-materialized local category rows with independently reactive completeness, membership-gated authority and no local visibility decision.",
       "disposition": "redesign",
       "status": "implemented",
@@ -20,7 +20,7 @@
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Implemented locally after the exact READY checkpoint passed immutable CI. Executable review found and corrected provider-drain, reciprocal-version and cancellation-proof gaps; final corrected-diff review returned GO. Exact implementation CI remains pending. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
+      "notes": "Implemented locally after the exact READY checkpoint passed immutable CI. Executable review found and corrected provider-drain, reciprocal-version and cancellation-proof gaps; final corrected-diff review returned GO. Implementation checkpoint 376685f5 did not pass run 33945825011: the macOS test process timed out, and local repetition exposed nondeterministic row/completeness ordering. The corrected provider waits for evidence from both sources before emitting; exact corrected implementation CI remains pending. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
       "target": {
         "owner": "Budget Category Reference Provider",
         "surfaces": [
@@ -55,8 +55,8 @@
     },
     {
       "id": "TEST-53618161645B",
-      "acknowledgeSourceHash": "bccd4d78bf11a445f5d398147c97cd23c415094469929a18eadce2f6046bd873",
-      "currentBehavior": "Executable real encrypted local category-provider suite covering same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed rows, restart, cancellation and runtime-close drainage.",
+      "acknowledgeSourceHash": "093db9fb6160df97737d5fa1f527486a8a0c4214f1a19a2e4880394a1889d6be",
+      "currentBehavior": "Executable real encrypted local category-provider suite covering deterministic two-source startup ordering, pre-snapshot drainage, same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed rows, restart, cancellation and runtime-close drainage.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
@@ -64,7 +64,7 @@
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Twelve focused provider tests pass locally after executable review strengthened reciprocal field/version and post-cancellation proof. Fixtures preserve every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss clears formerly emitted rows even if completeness stays true. Exact implementation CI remains pending.",
+      "notes": "Fourteen focused provider tests pass locally after executable review strengthened reciprocal field/version, deterministic two-source startup, pre-snapshot drain, and post-cancellation proof. Fixtures preserve every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss clears formerly emitted rows even if completeness stays true. Exact corrected implementation CI remains pending.",
       "target": {
         "owner": "Budget Category Reference Provider",
         "surfaces": [

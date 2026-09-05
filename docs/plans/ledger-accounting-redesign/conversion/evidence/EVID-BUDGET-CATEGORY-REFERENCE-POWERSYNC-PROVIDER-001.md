@@ -141,11 +141,24 @@ ordering, source termination, same-public-stream termination, literal Account
 ownership, all category fields, row membership, scope, completeness, quality,
 canonical order, fingerprint, and LocalDataVersion axes.
 
-Final corrected-diff review returned GO with no remaining P0-P3 finding. Twelve
-focused provider tests, 14 focused runtime tests, all 417 Swift tests in 74
+Final corrected-diff review returned GO with no remaining P0-P3 finding. Fourteen
+focused provider tests, 14 focused runtime tests, all 419 Swift tests in 74
 suites, target-environment checks, and both staging builds pass locally. Exact
-implementation CI remains required before operational verification and evidence
-promotion.
+implementation checkpoint `376685f5` then exposed a nondeterministic provider
+ordering defect in immutable run `33945825011`: the macOS job timed out after
+the test process stopped advancing, and local repetition independently produced
+an out-of-order readiness failure on repeat eight. The provider now waits for
+both its row source and explicit completeness source before emitting a snapshot,
+instead of treating task scheduling order as completeness evidence. The affected
+provider/pending-work suites pass 30 consecutive serialized repetitions. An
+independent correction review then returned NO-GO on one proof gap: repetition
+was not deterministic evidence of both source-arrival orders or cancellation
+before the first combined snapshot. A testable module-internal accumulator now
+proves both orders, and a real provider test proves cancellation drains both
+observers without an initial completeness value or public emission. All 419
+tests pass after the correction. A new exact implementation CI run remains
+required before operational verification and evidence promotion; the cancelled
+run is not passing evidence.
 
 ## Independent Review Correction
 
@@ -167,5 +180,5 @@ caused conservative Firebase-coupling metadata. This corrected candidate:
   checks added to the frozen environment script; and
 - removes the misleading source token from the test scaffold.
 
-Final independent re-review returned GO with no remaining P0-P3 finding.
-Immutable READY CI remains required.
+Final independent re-review returned GO with no remaining P0-P3 finding. Exact
+corrected implementation CI remains required.

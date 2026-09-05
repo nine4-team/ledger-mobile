@@ -155,7 +155,7 @@ final class BudgetCategoryReferencePowerSyncQuery:
         await watchRegistry.cancelAndDrain()
     }
 
-    private enum Event: Sendable {
+    enum Event: Sendable {
         case rows([BudgetCategoryPowerSyncRow])
         case completeness(Bool)
     }
@@ -190,18 +190,13 @@ final class BudgetCategoryReferencePowerSyncQuery:
         }
 
         do {
-            var latestRows: [BudgetCategoryPowerSyncRow]?
-            var completenessIsObserved = false
+            var observedState = BudgetCategoryReferenceObservedState()
 
             for try await event in eventChannel.stream {
                 try Task.checkCancellation()
-                switch event {
-                case .rows(let rows):
-                    latestRows = rows
-                case .completeness(let isComplete):
-                    completenessIsObserved = isComplete
-                }
-                guard let observedRows = latestRows else { continue }
+                guard let evidence = observedState.observe(event) else { continue }
+                let observedRows = evidence.rows
+                let completenessIsObserved = evidence.completeness
 
                 let scopeIsActive = try Self.validateScope(rows: observedRows)
                 let definitions = try observedRows.compactMap {
@@ -340,6 +335,32 @@ final class BudgetCategoryReferencePowerSyncQuery:
         let rows: [BudgetCategoryDefinitionSnapshot]
     }
 
+}
+
+struct BudgetCategoryReferenceCombinedEvidence: Equatable, Sendable {
+    let rows: [BudgetCategoryPowerSyncRow]
+    let completeness: Bool
+}
+
+struct BudgetCategoryReferenceObservedState: Sendable {
+    private var latestRows: [BudgetCategoryPowerSyncRow]?
+    private var latestCompleteness: Bool?
+
+    mutating func observe(
+        _ event: BudgetCategoryReferencePowerSyncQuery.Event
+    ) -> BudgetCategoryReferenceCombinedEvidence? {
+        switch event {
+        case .rows(let rows):
+            latestRows = rows
+        case .completeness(let completeness):
+            latestCompleteness = completeness
+        }
+        guard let latestRows, let latestCompleteness else { return nil }
+        return BudgetCategoryReferenceCombinedEvidence(
+            rows: latestRows,
+            completeness: latestCompleteness
+        )
+    }
 }
 
 private final class BudgetCategoryReferenceWatchTaskHandle: @unchecked Sendable {

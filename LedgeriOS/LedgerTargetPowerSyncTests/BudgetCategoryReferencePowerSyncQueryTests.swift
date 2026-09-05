@@ -107,6 +107,27 @@ struct BudgetCategoryReferencePowerSyncQueryTests {
         proof.continuation.finish()
     }
 
+    @Test("CATPOWER-TEST-002 initial snapshots require both sources in either order")
+    func initialSnapshotCombinesBothSourceOrders() throws {
+        let rows = [Self.row()]
+
+        var rowsFirst = BudgetCategoryReferenceObservedState()
+        let beforeCompleteness = rowsFirst.observe(.rows(rows))
+        #expect(beforeCompleteness == nil)
+        let rowsFirstCombined = rowsFirst.observe(.completeness(false))
+        let rowsFirstEvidence = try #require(rowsFirstCombined)
+        #expect(rowsFirstEvidence.rows == rows)
+        #expect(!rowsFirstEvidence.completeness)
+
+        var completenessFirst = BudgetCategoryReferenceObservedState()
+        let beforeRows = completenessFirst.observe(.completeness(true))
+        #expect(beforeRows == nil)
+        let completenessFirstCombined = completenessFirst.observe(.rows(rows))
+        let completenessFirstEvidence = try #require(completenessFirstCombined)
+        #expect(completenessFirstEvidence.rows == rows)
+        #expect(completenessFirstEvidence.completeness)
+    }
+
     @Test("Cached local rows are stale, never complete, without explicit proof")
     func cachedRowsAreStaleWithoutCompleteness() async throws {
         let reader = ControlledBudgetCategoryReader(
@@ -590,6 +611,38 @@ struct BudgetCategoryReferencePowerSyncQueryTests {
         firstEmission.continuation.finish()
     }
 
+    @Test("CATPOWER-TEST-004 shutdown drains before initial completeness evidence")
+    func providerShutdownBeforeFirstCombinedSnapshot() async throws {
+        let reader = ControlledBudgetCategoryReader(
+            initialRows: [Self.row()],
+            hasLastSyncedAt: false
+        )
+        let proof = ControlledCategoryCompleteness(initialValue: nil)
+        let emissionCounter = LockedCategoryEmissionCounter()
+        let query = Self.query(reader, completeness: proof.stream)
+        let consumer = Task {
+            do {
+                for try await _ in query.watchBudgetCategories(accountId: Self.accountId) {
+                    emissionCounter.increment()
+                }
+            } catch {
+                Issue.record("Provider shutdown must terminate normally")
+            }
+        }
+
+        for _ in 0..<100 where reader.observationCount == 0 {
+            await Task.yield()
+        }
+        #expect(reader.observationCount == 1)
+        #expect(emissionCounter.value == 0)
+
+        await query.cancelAndDrainWatches()
+        await consumer.value
+        #expect(emissionCounter.value == 0)
+        #expect(reader.terminationCount == 1)
+        #expect(proof.terminationCount == 1)
+    }
+
     private static let accountId = try! AccountID(validating: "account-primary")
     private static let principalId = try! PrincipalID(validating: "principal-owner")
     private static let observedAt = Date(timeIntervalSince1970: 1_788_600_000)
@@ -794,7 +847,7 @@ private final class ControlledCategoryCompleteness: @unchecked Sendable {
     private var terminations = 0
     let stream: AsyncStream<Bool>
 
-    init(initialValue: Bool) {
+    init(initialValue: Bool?) {
         var captured: AsyncStream<Bool>.Continuation?
         stream = AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
             captured = continuation
@@ -803,7 +856,9 @@ private final class ControlledCategoryCompleteness: @unchecked Sendable {
         continuation?.onTermination = { [weak self] _ in
             self?.lock.withLock { self?.terminations += 1 }
         }
-        continuation?.yield(initialValue)
+        if let initialValue {
+            continuation?.yield(initialValue)
+        }
     }
 
     var terminationCount: Int {
