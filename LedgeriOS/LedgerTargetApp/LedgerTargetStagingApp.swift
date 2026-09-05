@@ -117,6 +117,7 @@ private struct OfflineProviderSpikeView: View {
             }
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
+        ClientBrowsingStagingExerciseView(model: model.clientBrowser)
         ProjectBrowsingStagingExerciseView(model: model.projectBrowser)
         .task {
             await model.start(validatedEnvironment: environment)
@@ -137,6 +138,9 @@ private final class OfflineClientSpikeModel {
     private var startInProgress = false
     private let accountId = try! AccountID(validating: "account-primary")
     private let principalId = try! PrincipalID(validating: "principal-owner")
+    let clientBrowser = ClientBrowsingStagingExercise(
+        accountId: try! AccountID(validating: "account-primary")
+    )
     let projectBrowser = ProjectBrowsingStagingExercise(
         accountId: try! AccountID(validating: "account-primary")
     )
@@ -179,12 +183,16 @@ private final class OfflineClientSpikeModel {
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
             projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
+            await clientBrowser.start(
+                runtime: ClientBrowsingStagingRuntimeAdapter.adapt(runtime)
+            )
             await projectBrowser.start(
                 runtime: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
             databaseState = "Encrypted (\(cipher))"
             pendingUploadCount = String(pendingCount)
             await waitForCancellation()
+            await clientBrowser.stop()
             await projectBrowser.stop()
             projectSetup.stop()
             openedRuntime = nil
@@ -202,6 +210,7 @@ private final class OfflineClientSpikeModel {
     }
 
     private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
+        await clientBrowser.stop()
         await projectBrowser.stop()
         projectSetup.stop()
         if let openedRuntime {

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T09:00:49.011Z",
+    "lastSynchronizedAt": "2026-09-05T09:40:38.839Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1467,10 +1467,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "760337535add5769bc3f086103d0d42be71ec2210656bce08d07d44dfd92caf9",
-      "acknowledgedSourceHash": "760337535add5769bc3f086103d0d42be71ec2210656bce08d07d44dfd92caf9",
+      "observedSourceHash": "13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18",
+      "acknowledgedSourceHash": "13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18",
       "metadata": {},
-      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; LedgerTargetAppModel depends only on Core; exact PowerSync/encrypted-SQLite versions and adapter boundaries hold; Project browsing uses the thin adapter and model-owned lifecycle with drain-before-runtime-close ordering; exact accessibility/direct-command guards hold; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; LedgerTargetAppModel depends only on Core; exact PowerSync/encrypted-SQLite versions and adapter boundaries hold; Project and Client browsing use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; exact accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -1514,7 +1514,8 @@
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
         "EVID-TARGET-COMPOSITION-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -5393,10 +5394,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "760337535add5769bc3f086103d0d42be71ec2210656bce08d07d44dfd92caf9",
-      "acknowledgedSourceHash": "760337535add5769bc3f086103d0d42be71ec2210656bce08d07d44dfd92caf9",
+      "observedSourceHash": "13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18",
+      "acknowledgedSourceHash": "13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project browsing adapter/wiring/accessibility/drainage surfaces, public lifecycle-owned providers, dependency drift, and target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project or Client browsing adapter/wiring/accessibility/drainage surfaces, loss of Client creation post-create confirmation, public lifecycle-owned providers, dependency drift, and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -5435,7 +5436,8 @@
         "EVID-DETERMINISTIC-TEST-SUPPORT-001",
         "EVID-TARGET-COMPOSITION-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -17554,12 +17556,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "fd18a09b2d45dd6114fc9fd5a0bdc1e155e66984f22a658e832d9dab34b6a31a",
-      "acknowledgedSourceHash": "fd18a09b2d45dd6114fc9fd5a0bdc1e155e66984f22a658e832d9dab34b6a31a",
+      "observedSourceHash": "0efbb8fec335ce5ae6789bed11e3d6bdeaeecc9807cf3073295d99c7041aefb8",
+      "acknowledgedSourceHash": "0efbb8fec335ce5ae6789bed11e3d6bdeaeecc9807cf3073295d99c7041aefb8",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, permanently displays the local-only banner, hosts the Core-only Project Setup and Project browsing application models, and drains Project observations before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, permanently displays the local-only banner, hosts the Core-only Project Setup plus Project and Client browsing application models, and drains both browsing lifecycles before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -17600,7 +17602,8 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -22092,12 +22095,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "3170f9ec899eca9df5d328c6142d9eadd3c0f45cd09965ea14777427a68d3b13",
-      "acknowledgedSourceHash": "3170f9ec899eca9df5d328c6142d9eadd3c0f45cd09965ea14777427a68d3b13",
+      "observedSourceHash": "f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03",
+      "acknowledgedSourceHash": "f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only scaffold reserved for standalone Client directory and exact Client detail staging presentation.",
+      "currentBehavior": "Renders the standalone typed active/archived Client directory, selected Client and exact local detail state in staging with stable ClientID-based accessibility identities.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -22125,12 +22128,12 @@
           "Stable segment-plus-Client accessibility identities and exact directory/detail status surfaces are present"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "The future view renders typed model state only and introduces no related Projects, sorting, search, cards, routes, mutation, or raw-name-input policy.",
+      "notes": "The view renders typed model state only, preserves upstream order, and introduces no related Projects, sorting, search, cards, routes, mutation, or raw-name-input policy. Source checks and both staging builds pass locally; exact implementation CI remains pending.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
@@ -25997,12 +26000,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "cead16690a9906f41669ee6d8f69596b29720f98fe81f6b531947d8591235248",
-      "acknowledgedSourceHash": "cead16690a9906f41669ee6d8f69596b29720f98fe81f6b531947d8591235248",
+      "observedSourceHash": "f6303fe7299475655fae9fd9dbb246a9d5c3b5ff5957f94e2a76b23bafa3aa04",
+      "acknowledgedSourceHash": "f6303fe7299475655fae9fd9dbb246a9d5c3b5ff5957f94e2a76b23bafa3aa04",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only scaffold reserved for a thin Account-bound runtime-to-Client-browser adapter.",
+      "currentBehavior": "Implements the thin target-app adapter that forwards only the runtime Client directory and exact Client-detail watches into the Core-only application model.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -26030,12 +26033,12 @@
           "The app adapter remains the only PowerSync-aware Client browsing application-flow leaf"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "The future adapter may forward only Client directory and exact Client detail watches; policy remains in verified Core contracts.",
+      "notes": "Provider containment and exact forwarding pass local source controls and both staging builds; policy remains in Core contracts. Exact implementation CI is pending.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
@@ -34480,12 +34483,12 @@
           "path": "LedgeriOS/LedgerTargetCore/ClientBrowsingPresentation.swift"
         }
       ],
-      "observedSourceHash": "7636b2bc46a342acd0f64a064ac8ecdab2bfd58c374200399166a3dd78104213",
-      "acknowledgedSourceHash": "7636b2bc46a342acd0f64a064ac8ecdab2bfd58c374200399166a3dd78104213",
+      "observedSourceHash": "89c7ce7ebadab4d15ea2870c54a286408acf6795229a8ef83673d537280df366",
+      "acknowledgedSourceHash": "89c7ce7ebadab4d15ea2870c54a286408acf6795229a8ef83673d537280df366",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only scaffold reserved for pure Core Client directory, stable selection, and exact Client detail presentation contracts.",
+      "currentBehavior": "Implements pure atomic active/archived Client directory presentation, current-snapshot stable selection, and exhaustive exact Client-detail presentation over existing typed local evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -34513,12 +34516,12 @@
           "Pure presentation tests pass the frozen directory, selection, detail-state, and false-empty matrix"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "Executable presentation work is prohibited until the exact reviewed comment-only READY checkpoint passes immutable CI.",
+      "notes": "Exact READY db89ef36339f48bff249b2973ea3bc9c5607bb61 / run 33956835407 passed before implementation. The executable candidate passed root and independent review plus focused tests, but remains implemented rather than verified until its exact synchronized implementation commit passes immutable CI.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
@@ -36212,12 +36215,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ClientBrowsingStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "7b491c5e4ebaa46d53778a23287853494e42b9fe22ea7d6271ed20ecf4e5fd2b",
-      "acknowledgedSourceHash": "7b491c5e4ebaa46d53778a23287853494e42b9fe22ea7d6271ed20ecf4e5fd2b",
+      "observedSourceHash": "5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67",
+      "acknowledgedSourceHash": "5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only scaffold reserved for a Core-only reactive Client directory, current-evidence selection, and detail application model.",
+      "currentBehavior": "Implements the Core-only observable Client directory/detail model with honest unknown counts, current-evidence selection, bounded diagnostics, continuous updates, cancellation/join, termination, reselection, and restart-generation isolation.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -36245,12 +36248,12 @@
           "The application model passes failure, termination, cancellation, rapid-reselection, restart, and shutdown tests"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "Executable application logic is prohibited until the exact reviewed comment-only READY checkpoint passes immutable CI.",
+      "notes": "Root and independent executable review found no remaining P0-P3 issue after lifecycle proof was strengthened; exact synchronized implementation CI remains pending.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
@@ -40241,12 +40244,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "89afb864ed0fcaf6ad9c1dcca27a58ad2511109277f690dc1297f296bb8d1ddc",
-      "acknowledgedSourceHash": "89afb864ed0fcaf6ad9c1dcca27a58ad2511109277f690dc1297f296bb8d1ddc",
+      "observedSourceHash": "1348abb5b309a410fcdf0af63748e3fc899ce1ef0419c4769d1be1a56740a114",
+      "acknowledgedSourceHash": "1348abb5b309a410fcdf0af63748e3fc899ce1ef0419c4769d1be1a56740a114",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only scaffold reserved for deterministic Client browsing application-model tests.",
+      "currentBehavior": "Provides deterministic directory/detail failure matrices, exact selection/refusal, active-detail and full-stop drainage, noncooperative rapid reselection, restart isolation, and post-stop silence tests.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -40274,12 +40277,12 @@
           "Every frozen Client browsing application case passes deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "Controlled directory/detail streams must exercise every frozen termination and lifecycle case and complete without unbounded waits.",
+      "notes": "The initial suite was strengthened with a delayed noncooperative A-to-B join proof and a separate both-active-observations stop/join test. Ten AppModel tests plus four Core tests and the complete 455-test suite pass locally; immutable implementation CI remains pending.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {
@@ -42812,12 +42815,12 @@
           "path": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift"
         }
       ],
-      "observedSourceHash": "e161939cb3bbcc67a55adc8a63c5eb8cdd198ad3d27d4dd758d3725cbe0ead49",
-      "acknowledgedSourceHash": "e161939cb3bbcc67a55adc8a63c5eb8cdd198ad3d27d4dd758d3725cbe0ead49",
+      "observedSourceHash": "a83ee126bf318154e8766284cdd3668880bf5f739221e9219fa55cb19d5f8259",
+      "acknowledgedSourceHash": "a83ee126bf318154e8766284cdd3668880bf5f739221e9219fa55cb19d5f8259",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only scaffold reserved for deterministic Client browsing Core-presentation tests.",
+      "currentBehavior": "Provides deterministic Core tests for atomic segmentation, reciprocal false-empty truth, exact order and identity, current-snapshot selection, tamper refusal, and exhaustive detail-state/revision presentation.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -42845,12 +42848,12 @@
           "Every frozen pure-presentation case passes deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
       ],
-      "notes": "The future suite must prove atomic segmentation, reciprocal false-empty truth, stable identity and exact request/detail projection without unbounded waits.",
+      "notes": "Four focused Core tests pass locally and contribute to the 14-test Client browsing candidate; exact synchronized implementation CI remains pending.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
     },
     {

@@ -1,2 +1,11 @@
-// READY scaffold only. Client browsing runtime adapter logic is prohibited until the
-// client-browsing-staging-application-flow slice passes READY review and immutable CI.
+import LedgerTargetAppModel
+import LedgerTargetPowerSync
+
+enum ClientBrowsingStagingRuntimeAdapter {
+    static func adapt(_ runtime: LedgerOfflineClientRuntime) -> ClientBrowsingStagingRuntime {
+        ClientBrowsingStagingRuntime(
+            watchClients: { runtime.watchClients() },
+            watchClient: { request in runtime.watchClient(request) }
+        )
+    }
+}

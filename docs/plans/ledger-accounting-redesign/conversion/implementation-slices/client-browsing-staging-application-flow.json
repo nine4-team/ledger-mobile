@@ -3,7 +3,7 @@
   "sliceId": "client-browsing-staging-application-flow",
   "title": "Browse locally represented Clients and preserve exact Client detail truth",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client Browsing Staging Application Flow",
   "surfaceIds": [
     "SWIFT-D8A992D1F8C1",
@@ -153,8 +153,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift",
       "covers": ["CBROWSEAPP-REQ-001", "CBROWSEAPP-REQ-002", "CBROWSEAPP-REQ-003", "CBROWSEAPP-REQ-005", "CBROWSEAPP-REQ-009"],
       "expected": "One directory emission atomically produces active and archived rows with exact upstream order, duplicate-name stable identity, exact lifecycle segmentation and no inferred comparator.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingPresentationTests.atomicLifecycleProjection", "ClientBrowsingStagingExerciseTests.atomicDirectoryAndHonestCounts"]
     },
     {
       "id": "CBROWSEAPP-TEST-002",
@@ -162,8 +162,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift and LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-003", "CBROWSEAPP-REQ-004", "CBROWSEAPP-REQ-005", "CBROWSEAPP-REQ-009"],
       "expected": "Ready, partial, stale, incomplete, source-nonexhaustive and authoritative-empty evidence remain distinct and reciprocal for both active and archived segments; pre-evidence counts are unknown rather than zero.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingPresentationTests.reciprocalEmptyAuthority", "ClientBrowsingStagingExerciseTests.atomicDirectoryAndHonestCounts"]
     },
     {
       "id": "CBROWSEAPP-TEST-003",
@@ -171,8 +171,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift and LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-001", "CBROWSEAPP-REQ-005", "CBROWSEAPP-REQ-006", "CBROWSEAPP-REQ-008"],
       "expected": "Selection derives one exact captured ClientCoreDetailsRequest only from the represented current segment snapshot. Missing, opposite-segment, cross-Account, malformed or stale-captured evidence dispatches no detail watch; a new explicit selection captured from the current snapshot may dispatch one.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingPresentationTests.selectionAndTamperRefusal", "ClientBrowsingStagingExerciseTests.currentSelectionAndRefreshRefusal"]
     },
     {
       "id": "CBROWSEAPP-TEST-004",
@@ -180,8 +180,8 @@
       "owner": "LedgeriOS/LedgerTargetCoreTests/ClientBrowsingPresentationTests.swift and LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-001", "CBROWSEAPP-REQ-002", "CBROWSEAPP-REQ-003", "CBROWSEAPP-REQ-006", "CBROWSEAPP-REQ-009"],
       "expected": "A table-driven detail projection preserves every waiting readiness variant; found ready, partial and stale content; every incomplete variant; authoritative absence; unavailable; retryable cached/uncached; and required-update cached/uncached state. Reactive newer detail evidence updates display name, lifecycle, audit fields and locally observed revision without changing stable identity.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingPresentationTests.detailStateMatrix", "ClientBrowsingStagingExerciseTests.completeDetailStateMatrix"]
     },
     {
       "id": "CBROWSEAPP-TEST-005",
@@ -189,8 +189,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-004", "CBROWSEAPP-REQ-007", "CBROWSEAPP-REQ-010"],
       "expected": "Cross-Account or malformed directory evidence and deterministic pre/post-first-snapshot throw, spontaneous cancellation or unexpected normal completion fail closed, invoke directory-source termination exactly once, clear prior authority, and cancel/join any active detail source before lifecycle drainage completes.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingStagingExerciseTests.directoryTerminationFailsClosed", "ClientBrowsingStagingExerciseTests.invalidEvidenceFailsClosed", "ClientBrowsingStagingExerciseTests.directoryTerminationDrainsDetail"]
     },
     {
       "id": "CBROWSEAPP-TEST-006",
@@ -198,8 +198,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-006", "CBROWSEAPP-REQ-007"],
       "expected": "Mismatched/malformed detail evidence and deterministic pre/post-first-detail throw, spontaneous cancellation or unexpected normal completion fail closed, invoke detail-source termination exactly once, preserve no stale authority and permit no late mutation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingStagingExerciseTests.detailTerminationFailsClosed", "ClientBrowsingStagingExerciseTests.invalidEvidenceFailsClosed"]
     },
     {
       "id": "CBROWSEAPP-TEST-007",
@@ -207,8 +207,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-005", "CBROWSEAPP-REQ-006", "CBROWSEAPP-REQ-007"],
       "expected": "Rapid A-to-B selection cancels and joins A before observing B; late A events and directory refresh cannot mutate or silently rebind B, while a later explicit selection uses current evidence.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingStagingExerciseTests.currentSelectionAndRefreshRefusal", "ClientBrowsingStagingExerciseTests.rapidReselection"]
     },
     {
       "id": "CBROWSEAPP-TEST-008",
@@ -216,8 +216,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ClientBrowsingStagingExerciseTests.swift",
       "covers": ["CBROWSEAPP-REQ-004", "CBROWSEAPP-REQ-007", "CBROWSEAPP-REQ-008", "CBROWSEAPP-REQ-010"],
       "expected": "Stopping before first evidence and while both observations are active completes within bounded time, cancels/joins both, receives both termination callbacks and prevents post-stop mutation. Restart generation isolation rejects noncooperative late directory and detail values from the prior run.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["ClientBrowsingStagingExerciseTests.stopDrainsBothActiveObservations", "ClientBrowsingStagingExerciseTests.restartGenerationIsolation"]
     },
     {
       "id": "CBROWSEAPP-TEST-009",
@@ -225,8 +225,8 @@
       "owner": "scripts/check-target-environment.mjs and LedgerTarget staging builds",
       "covers": ["CBROWSEAPP-REQ-004", "CBROWSEAPP-REQ-007", "CBROWSEAPP-REQ-008", "CBROWSEAPP-REQ-010"],
       "expected": "The pure presenter lives in Core, AppModel imports only Core, the app adapter alone imports PowerSync, the standalone browser is wired without replacing post-create watchClient confirmation, all frozen source-level accessibility identifiers are present, normal and failed cleanup drain before runtime close, and both staging destinations compile. No interactive accessibility claim is made without UI tests.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["npm run target:environment:check", "npm run target:staging:build:macos", "npm run target:staging:build:ios"]
     },
     {
       "id": "CBROWSEAPP-TEST-010",
@@ -234,8 +234,8 @@
       "owner": "app data-read checklist/logical-authority controls, scripts/check-target-environment.mjs and target MCP controls",
       "covers": ["CBROWSEAPP-REQ-008", "CBROWSEAPP-REQ-009", "CBROWSEAPP-REQ-010"],
       "expected": "TQUERY-2ACE415664D8 and TQUERY-136644A3C02A remain source-exhaustive and signature-bound; implementation preserves upstream Client order, invents no unresolved sorting policy, uses only the exact two runtime watches, and adds no MCP or provider-boundary behavior.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["npm run target:query-ports:check", "npm run target:query-authority:check", "npm run target:environment:check", "npm run target:mcp:test"]
     },
     {
       "id": "CBROWSEAPP-TEST-011",
@@ -243,8 +243,8 @@
       "owner": ".github/workflows/supabase-conversion-control.yml",
       "covers": ["CBROWSEAPP-REQ-008", "CBROWSEAPP-REQ-010"],
       "expected": "The exact independently reviewed READY commit changes only comment scaffolds, deterministic generated membership and synchronized control/evidence artifacts, passes all three immutable jobs, and leaves executable application/provider/schema/MCP/Firebase behavior unchanged.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["commit db89ef36339f48bff249b2973ea3bc9c5607bb61", "GitHub Actions run 33956835407: conversion 38s, disposable local Supabase 1m41s, isolated target 6m40s; all passed"]
     },
     {
       "id": "CBROWSEAPP-TEST-012",
@@ -256,8 +256,16 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": [
+    "Exact READY commit db89ef36339f48bff249b2973ea3bc9c5607bb61 passed all three immutable jobs in GitHub Actions run 33956835407: conversion 38 seconds, disposable local Supabase 1 minute 41 seconds, isolated target 6 minutes 40 seconds.",
+    "Fourteen focused ClientBrowsing presentation and AppModel tests pass locally, including both six-case termination matrices, current-snapshot refusal, full observation drainage, delayed noncooperative reselection, and old-generation directory/detail rejection.",
+    "Target environment, target contracts, target MCP/query controls, repeatable project generation, all 455 nonparallel Swift tests in 78 suites, and both macOS and iOS Simulator staging builds pass locally.",
+    "Disposable local Supabase verification passes 42 pgTAP checks plus Client and Project RPC checks, and the local stack stopped cleanly.",
+    "Root review hardened adapter/view containment, exact staging ownership and wiring, both drain-before-close paths, all accessibility identities, and preservation of Client creation's one-shot watchClient confirmation in scripts/check-target-environment.mjs.",
+    "The initial test candidate was strengthened so rapid A-to-B reselection proves B cannot start before a noncooperative A joins and a dedicated test proves stop waits for both active directory and detail observations. Independent executable review then returned GO with no P0-P3 finding.",
+    "Implementation hashes: Core 89c7ce7ebadab4d15ea2870c54a286408acf6795229a8ef83673d537280df366; Core tests a83ee126bf318154e8766284cdd3668880bf5f739221e9219fa55cb19d5f8259; AppModel 5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67; AppModel tests 1348abb5b309a410fcdf0af63748e3fc899ce1ef0419c4769d1be1a56740a114; adapter f6303fe7299475655fae9fd9dbb246a9d5c3b5ff5957f94e2a76b23bafa3aa04; view f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03; shell 0efbb8fec335ce5ae6789bed11e3d6bdeaeecc9807cf3073295d99c7041aefb8; environment guard 13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18; generated project af1a6f6c7039b10a9e6649918aa3a7096ea5f97978a284d47af59eaca5d17ae8."
+  ],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY candidate on exact verified Project-browsing promotion baseline 4b9aecae / immutable run 33955342320. A fresh read-only preflight returned GO only for this standalone read-only Client directory/detail staging flow. The six claimed files remain comment-only; executable work is prohibited until the exact reviewed READY commit passes immutable CI. Package.swift and LedgerTargetProject.yml need no change because their existing recursive declarations already include the new Core/CoreTests/AppModel/AppModelTests/app paths. XcodeGen has deterministically added the two app files to the generated project. Frozen implementation touchpoints are LedgerTargetStagingApp.swift, scripts/check-target-environment.mjs and that generated project only. Existing Client directory/detail contracts, PowerSync queries, LedgerOfflineClientRuntime and its workspace lifecycle implementation remain byte-unchanged. The post-create one-shot watchClient confirmation remains owned by Client creation and is not replaced. No A-/O- decision blocks this read-only local boundary; all named product, hosted, authorization, mutation, migration and cutover gates remain open and unadvanced."
+  "notes": "Implemented candidate after exact READY db89ef36339f48bff249b2973ea3bc9c5607bb61 / immutable run 33956835407 passed all three jobs. Six leaves now provide the pure atomic Core presenter/tests, Core-only observable AppModel/tests, thin adapter and typed staging view. Root review hardened the shared environment checks and strengthened noncooperative reselection plus full stop/join proof; independent executable review returned GO with no P0-P3. Fourteen focused tests, all 455 tests in 78 suites, 42 local pgTAP checks plus Client/Project RPC checks, a clean local-stack stop, and both staging builds pass. The exact synchronized implementation commit and immutable implementation CI are still pending, so the slice remains implemented rather than verified. Existing Client contracts/providers/runtime and the post-create one-shot watchClient confirmation retain their owners. No A-/O- gate or excluded product, hosted, authorization, mutation, migration, Firebase, production or cutover behavior advanced."
 }

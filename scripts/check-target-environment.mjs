@@ -608,6 +608,73 @@ if (
       }
     }
   }
+  const clientBrowsingAdapterPath = path.join(
+    targetAppRoot,
+    "ClientBrowsingStagingRuntimeAdapter.swift",
+  );
+  if (!fs.existsSync(clientBrowsingAdapterPath)) {
+    fail(
+      "target_client_browsing_adapter_missing",
+      relative(clientBrowsingAdapterPath),
+    );
+  } else {
+    const adapter = fs.readFileSync(clientBrowsingAdapterPath, "utf8");
+    for (const required of [
+      "import LedgerTargetAppModel",
+      "import LedgerTargetPowerSync",
+      "runtime.watchClients()",
+      "runtime.watchClient(request)",
+    ]) {
+      if (!adapter.includes(required)) {
+        fail("target_client_browsing_adapter_incomplete", required);
+      }
+    }
+  }
+  const clientBrowsingViewPath = path.join(
+    targetAppRoot,
+    "ClientBrowsingStagingExerciseView.swift",
+  );
+  if (!fs.existsSync(clientBrowsingViewPath)) {
+    fail(
+      "target_client_browsing_view_missing",
+      relative(clientBrowsingViewPath),
+    );
+  } else if (
+    fs
+      .readFileSync(clientBrowsingViewPath, "utf8")
+      .includes("import LedgerTargetPowerSync")
+  ) {
+    fail(
+      "target_client_browsing_view_provider_contamination",
+      relative(clientBrowsingViewPath),
+    );
+  }
+  for (const forbiddenInlineClientBrowsing of [
+    "ClientDirectoryPresentationProjector.project(",
+    "ClientDetailPresentationProjector.project(",
+    "activeClientDirectory",
+    "archivedClientDirectory",
+    "clientDetailsTask",
+  ]) {
+    if (stagingAppSource.includes(forbiddenInlineClientBrowsing)) {
+      fail(
+        "target_client_browsing_inline_ownership",
+        forbiddenInlineClientBrowsing,
+      );
+    }
+  }
+  for (const requiredClientBrowsingWiring of [
+    "ClientBrowsingStagingExerciseView(model: model.clientBrowser)",
+    "ClientBrowsingStagingRuntimeAdapter.adapt(runtime)",
+    "await clientBrowser.start(",
+  ]) {
+    if (!stagingAppSource.includes(requiredClientBrowsingWiring)) {
+      fail(
+        "target_client_browsing_staging_wiring_incomplete",
+        requiredClientBrowsingWiring,
+      );
+    }
+  }
   const projectBrowsingViewPath = path.join(
     targetAppRoot,
     "ProjectBrowsingStagingExerciseView.swift",
@@ -685,6 +752,28 @@ if (
       const close = source.indexOf(closeCall);
       return stop >= 0 && close > stop;
     };
+    const clientStopBeforeClose = (source, closeCall) => {
+      const stop = source.indexOf("await clientBrowser.stop()");
+      const close = source.indexOf(closeCall);
+      return stop >= 0 && close > stop;
+    };
+    if (!clientStopBeforeClose(startBody, "try await runtime.close()")) {
+      fail(
+        "target_client_browsing_normal_cleanup_order",
+        "Client browsing observations must drain before normal runtime close.",
+      );
+    }
+    if (
+      !clientStopBeforeClose(
+        failedCleanupBody,
+        "try? await openedRuntime.close()",
+      )
+    ) {
+      fail(
+        "target_client_browsing_failed_cleanup_order",
+        "Client browsing observations must drain before failed-start runtime close.",
+      );
+    }
     if (!stopBeforeClose(startBody, "try await runtime.close()")) {
       fail(
         "target_project_browsing_normal_cleanup_order",
@@ -748,6 +837,39 @@ if (
       fail(
         "target_project_browsing_accessibility_incomplete",
         requiredProjectBrowsingUI,
+      );
+    }
+  }
+  for (const requiredClientBrowsingUI of [
+    '"target-client-directory-status"',
+    '"target-client-active-count"',
+    '"target-client-archived-count"',
+    '"target-client-row-\\(segment.rawValue)-\\(row.clientId.rawValue)"',
+    '"target-client-browser-selected-name"',
+    '"target-client-detail-state"',
+    '"target-client-detail-readiness"',
+    '"target-client-directory-diagnostic"',
+    '"target-client-detail-diagnostic"',
+  ]) {
+    if (!targetAppSource.includes(requiredClientBrowsingUI)) {
+      fail(
+        "target_client_browsing_accessibility_incomplete",
+        requiredClientBrowsingUI,
+      );
+    }
+  }
+  const createClientSource = createClientBoundary >= 0
+    ? stagingAppSource.slice(createClientBoundary)
+    : "";
+  for (const requiredPostCreateConfirmation of [
+    "let request = try ClientCoreDetailsRequest(",
+    "for try await update in runtime.watchClient(request)",
+    "lastCreatedName =",
+  ]) {
+    if (!createClientSource.includes(requiredPostCreateConfirmation)) {
+      fail(
+        "target_client_creation_confirmation_missing",
+        requiredPostCreateConfirmation,
       );
     }
   }
