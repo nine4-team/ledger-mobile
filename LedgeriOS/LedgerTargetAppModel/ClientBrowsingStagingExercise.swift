@@ -69,12 +69,34 @@ public final class ClientBrowsingStagingExercise {
     public var detailReadiness: String { detailViewState.readinessLabel }
     public var detailDiagnostic: String? { detailViewState.diagnostic?.rawValue }
 
+    public var selectedClientArchiveEvidence: ClientArchiveBrowserEvidence? {
+        guard let selection = detailViewState.selection,
+              let content = detailViewState.presentation?.state.content,
+              let revision = selectedClientRevision,
+              selection.lifecycle == .active,
+              content.lifecycle == .active,
+              content.clientId == selection.clientId,
+              content.displayName == selection.displayName,
+              directoryViewState.presentation?.active.rows.first(where: {
+                  $0.clientId == selection.clientId
+              }) == selection else {
+            return nil
+        }
+        return ClientArchiveBrowserEvidence(
+            accountId: accountId,
+            clientId: selection.clientId,
+            expectedRevision: revision,
+            selectionGeneration: detailGeneration
+        )
+    }
+
     private let accountId: AccountID
     private var runtime: ClientBrowsingStagingRuntime?
     private var directoryViewState: DirectoryViewState = .loading
     private var detailViewState: DetailViewState = .notSelected
     private var directoryTask: Task<Void, Never>?
     private var detailTask: Task<Void, Never>?
+    private var selectedClientRevision: ExpectedClientRevision?
     private var lifecycleGeneration: UInt64 = 0
     private var detailGeneration: UInt64 = 0
 
@@ -94,6 +116,7 @@ public final class ClientBrowsingStagingExercise {
         self.runtime = nil
         directoryViewState = .loading
         detailViewState = .notSelected
+        selectedClientRevision = nil
         oldDirectoryTask?.cancel()
         oldDetailTask?.cancel()
         await oldDetailTask?.value
@@ -118,6 +141,7 @@ public final class ClientBrowsingStagingExercise {
         runtime = nil
         directoryViewState = .stopped
         detailViewState = .stopped
+        selectedClientRevision = nil
         oldDirectoryTask?.cancel()
         oldDetailTask?.cancel()
         await oldDetailTask?.value
@@ -140,6 +164,7 @@ public final class ClientBrowsingStagingExercise {
         let oldDetailTask = detailTask
         detailTask = nil
         detailViewState = .notSelected
+        selectedClientRevision = nil
         oldDetailTask?.cancel()
         await oldDetailTask?.value
 
@@ -226,6 +251,7 @@ public final class ClientBrowsingStagingExercise {
                           self.detailGeneration == detailGeneration else {
                         return
                     }
+                    selectedClientRevision = Self.locallyObservedRevision(from: update)
                     detailViewState = .represented(
                         selection: selection,
                         presentation: presentation
@@ -276,6 +302,7 @@ public final class ClientBrowsingStagingExercise {
         let oldDetailTask = detailTask
         detailTask = nil
         detailViewState = .notSelected
+        selectedClientRevision = nil
         oldDetailTask?.cancel()
         await oldDetailTask?.value
 
@@ -291,7 +318,18 @@ public final class ClientBrowsingStagingExercise {
     ) {
         guard self.lifecycleGeneration == lifecycleGeneration,
               self.detailGeneration == detailGeneration else { return }
+        selectedClientRevision = nil
         detailViewState = .blocked(selection: selection, diagnostic: diagnostic)
+    }
+
+    private static func locallyObservedRevision(
+        from update: ClientCoreDetailsUpdate
+    ) -> ExpectedClientRevision? {
+        switch update.state {
+        case .waiting: nil
+        case .snapshot(let snapshot): snapshot.row?.locallyObservedRevision
+        case .failed(_, let cached): cached?.row?.locallyObservedRevision
+        }
     }
 
     private func snapshot(for segment: ClientDirectorySegment)

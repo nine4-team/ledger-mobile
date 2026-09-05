@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T13:26:08.785Z",
+  "generatedFromManifestSync": "2026-09-05T15:55:38.737Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 929,
+    "surfaces": 930,
     "targetRelevantSurfaces": 668,
     "batches": 34,
-    "productScopeSurfaces": 758,
+    "productScopeSurfaces": 759,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -80,7 +80,7 @@
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 517,
+      "surfaceCount": 518,
       "targetRelevantSurfaceCount": 400
     },
     {
@@ -94,7 +94,7 @@
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "surfaceCount": 150,
+      "surfaceCount": 151,
       "targetRelevantSurfaceCount": 147
     },
     {
@@ -897,7 +897,7 @@
       "title": "Client archive through the isolated target browser",
       "scope": "product",
       "rationale": "This isolated archive-through-browser slice composes verified Client archive command/use-case and Client browsing evidence into one exact revision-safe offline lifecycle mutation that hides the Client from new-Project selection while preserving every Project and historical record. Project Archive supplies implementation-pattern evidence only, and no broader already-archived no-op behavior is inferred.",
-      "surfaceCount": 10,
+      "surfaceCount": 11,
       "targetRelevantSurfaceCount": 10,
       "authorities": [
         {
@@ -987,6 +987,7 @@
       ],
       "surfaceIds": [
         "CONFIG-2DBC5A626444",
+        "CONFIG-86F1E734BC70",
         "CONFIG-8A30E46E3901",
         "CONFIG-8F9EA6CCC0DB",
         "SWIFT-35D653A39618",

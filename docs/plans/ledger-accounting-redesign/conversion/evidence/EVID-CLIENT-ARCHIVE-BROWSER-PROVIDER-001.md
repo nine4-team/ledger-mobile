@@ -1,19 +1,21 @@
-# EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001 — Client Archive Browser Supabase/PowerSync READY Boundary
+# EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001 — Client Archive Browser Supabase/PowerSync Implementation
 
 - Timestamp: 2026-09-05
-- Class: implementation plan / comment-only READY candidate
+- Class: local implementation / independently reviewed executable vertical slice
 - Source baseline: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6` on
   `firebase`; source worktree and released Firebase app remain unchanged
 - Target baseline: `574f285b67a9779a45a9bfc7ce22d6d7cee0323a` on
   `codex/supabase-powersync-implementation`
+- Exact green READY checkpoint: commit `7187fa1e1415a0f820554e7f78cc62e1e42a34f4`,
+  immutable Actions run `33968952286`
 - Slice dossier:
   `conversion/implementation-slices/client-archive-browser-supabase-powersync-vertical-slice.json`
-- Claimed target surfaces: `CONFIG-2DBC5A626444`, `CONFIG-8A30E46E3901`,
+- Claimed target surfaces: `CONFIG-2DBC5A626444`, `CONFIG-86F1E734BC70`, `CONFIG-8A30E46E3901`,
   `CONFIG-8F9EA6CCC0DB`, `SWIFT-35D653A39618`, `SWIFT-375BF832F772`,
   `SWIFT-4D4DB03E0A24`, `SWIFT-BD7BF890CB6C`, `SWIFT-E431F314B326`,
   `TEST-3B1F3E444423`, `TEST-E65089F7DC26`
-- Verification state: comment-only READY candidate; exact READY commit,
-  independent review and immutable CI are pending
+- Verification state: locally implemented and independently reviewed GO with no
+  P0-P3; implementation commit and immutable implementation CI are pending
 
 ## Selected Outcome and Product Authority
 
@@ -59,43 +61,33 @@ The bounded slice instead:
 The client-archive command cannot restore/unarchive, hard-delete, rename, merge,
 reassign or cascade. O-023/O-024/O-025/O-040/O-042/O-043 remain unselected.
 
-## Frozen Comment-Only Leaves
+## Implemented Leaves and Retired Marker
 
-Exactly ten new target leaves are reserved by this synchronized READY package.
-Only nine may become executable after independent review and immutable CI; the
-  `.sql.ready` marker in item 9 must remain physically present and byte-identical.
-  Its frozen replacement identity is `CONFIG-86F1E734BC70` for
-  `supabase/tests/client_archive_vertical_slice.test.sql`:
+| Manifest identity | Exact path | Current SHA-256 | Implemented responsibility |
+| --- | --- | --- | --- |
+| `SWIFT-35D653A39618` | `LedgeriOS/LedgerTargetPowerSync/AccountBoundOperationIdentity.swift` | `d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5` | generic trusted-prefix, Account-digest and canonical-UUID identity used by both archive families |
+| `SWIFT-E431F314B326` | `LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift` | `a4f3077f9a310fc7e062da11d54d9d5bef1c9fe912282604121e908edb256df7` | encrypted atomic acceptance, exact replay, dependency ordering and strict reconciliation |
+| `SWIFT-375BF832F772` | `LedgeriOS/LedgerTargetPowerSync/SupabaseClientArchiveRPC.swift` | `e313791f9593fe4d3a53c8201121d02c702ab66fcf55aa1cbd29303c91a874b8` | scoped-user RPC and strict terminal-result validation |
+| `TEST-3B1F3E444423` | `LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift` | `2ce1e381c0f0181560ecddd661feda3cf6828d7a499fc12c6e85184428a5d917` | 12-test deterministic provider/reconciliation/security matrix |
+| `SWIFT-4D4DB03E0A24` | `LedgeriOS/LedgerTargetAppModel/ClientArchiveBrowserStagingExercise.swift` | `b9bcc3e51b3bcd992d10dbb337525d746575b499dfee129742b81f246049a897` | Core-only admission, submission/retry and operation-state orchestration |
+| `TEST-E65089F7DC26` | `LedgeriOS/LedgerTargetAppModelTests/ClientArchiveBrowserStagingExerciseTests.swift` | `90406a19380221995d6926adfe7c1d7e358000dd16557e7e5581af0a03845c18` | 9-test browser lifecycle, failure and drainage matrix |
+| `SWIFT-BD7BF890CB6C` | `LedgeriOS/LedgerTargetApp/ClientArchiveBrowserStagingRuntimeAdapter.swift` | `4a8104ee8fabaf829e6cf4c4675fc3b42359f18b5e933f79cdf89bdaccfdf84e` | thin runtime forwarding only |
+| `CONFIG-8F9EA6CCC0DB` | `supabase/migrations/20260905125208_client_archive_vertical_slice.sql` | `8014b85dd620e47dabfe1f5d4608116c01453f1e4f9cf5653572797bb65aec76` | auth-first Client archive handler/RPC and Project-setup locking repair |
+| `CONFIG-86F1E734BC70` | `supabase/tests/client_archive_vertical_slice.test.sql` | `3977c2391a394cba7b440abc6b619403bc1469cc0c551a96d553cb25a46147f5` | runnable 53-assertion database/RLS/replay/concurrency suite |
+| `CONFIG-8A30E46E3901` | `scripts/test-local-client-archive-rpc.mjs` | `9005840174642c6d2cbcbdab37abbdf515aaef1ed52fe6ec92ab4f125b5f0890` | disposable scoped-user local Data API verification |
 
-1. `LedgeriOS/LedgerTargetPowerSync/AccountBoundOperationIdentity.swift` — one
-   generic trusted-prefix + Account-digest + canonical-UUID primitive used by
-   both archive families;
-2. `LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift` — atomic
-   encrypted operation/command/overlay acceptance, dependency ordering and
-   reconciliation;
-3. `LedgeriOS/LedgerTargetPowerSync/SupabaseClientArchiveRPC.swift` — scoped-user
-   Client archive request/result adapter;
-4. `LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift`;
-5. `LedgeriOS/LedgerTargetAppModel/ClientArchiveBrowserStagingExercise.swift`;
-6. `LedgeriOS/LedgerTargetAppModelTests/ClientArchiveBrowserStagingExerciseTests.swift`;
-7. `LedgeriOS/LedgerTargetApp/ClientArchiveBrowserStagingRuntimeAdapter.swift`;
-8. `supabase/migrations/20260905125208_client_archive_vertical_slice.sql`,
-   created by pinned `supabase@2.116.0 migration new`;
-9. `supabase/tests/client_archive_vertical_slice.test.sql.ready`, an inert,
-   non-runnable reservation; and
-10. `scripts/test-local-client-archive-rpc.mjs`, a no-request runner reservation.
-
-At READY every leaf contains comments only. The synchronized scaffold hashes are
-recorded in `M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001.json`; the
-`CONFIG-2DBC5A626444` `.sql.ready` hash must remain byte-identical through
-implementation, when it is retired with explicit replacement evidence pointing
-to separately registered runnable `CONFIG-86F1E734BC70`, and every planned
-database-test owner path must move from `.sql.ready` to `.sql` in that same
-synchronized checkpoint.
+Retired in place: `CONFIG-2DBC5A626444`,
+`supabase/tests/client_archive_vertical_slice.test.sql.ready`, remains
+byte-identical at SHA-256
+`ca53ebcb44c7556f12cb34122a221501779e5e0f712d410f843837f9d807a17d`.
+Its sole runnable replacement is `CONFIG-86F1E734BC70`, and every database-test
+owner now names the runnable `.sql` leaf. The root `package.json` remains
+byte-identical at
+`640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89`.
 
 ## Frozen Shared Touchpoints
 
-Implementation may change only the minimum reviewed portions of these existing
+Implementation changed only the minimum reviewed portions of these existing
 target surfaces; they retain their current primary owners and are not silently
 claimed by this slice:
 
@@ -105,7 +97,8 @@ claimed by this slice:
   `ClientCoreDetailsPowerSyncQuery.swift` — merge the same exact Client archive
   overlay into directory and detail truth so every consumer sees one lifecycle
   outcome without changing order, readiness, or source completeness;
-- `ProjectSetupPowerSyncStore.swift` — refuse stale or current local Project
+- `ProjectSetupPowerSyncStore.swift` — resolve exact replay accepted before
+  archive first, then refuse only new or not-yet-accepted stale/current Project
   acceptance when its existing Client is effectively archived;
 - `LedgerPowerSyncUploadConnector.swift` — upload client-archive-v1 FIFO, resolve
   terminal dependencies, validate exact result linkage and retain transient work;
@@ -133,21 +126,21 @@ claimed by this slice:
   `LedgeriOS/Package.swift`, `LedgeriOS/LedgerTargetProject.yml`,
   `powersync/sync-streams.yaml` and root `package.json` must remain byte-identical.
 
-Baseline hashes for review are recorded before implementation:
+Current hashes of the bounded shared touchpoints are:
 
-- Client directory query `82a351eb5589801e009c4d5a398db0440c9ecbd22aeffee121e1ab657389c51f`;
-- Client detail query `23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745`;
-- PowerSync schema `c4c3755977832d6626e42b3ad66358d819cb850043774e619b98cdffc17c888e`;
-- Project Setup store `d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598`;
-- upload connector `4efeb90c96f7a5165ba0db49bd2402e2e941b1bfbae5e901ff99fc76eba23182`;
-- Account runtime `cb49720cb9eda68fe92e07e02e0ac6fd35bba29f9c71dbd8036c7012f62fe7f5`;
-- offline Client runtime `644eb3a6386f1430bf293a1ea6c418bfe143ab0df2df0e103c11cd0a5119ab10`;
-- staging app `8ca878f9464a87b0249514e16380a868b100296bec748459781c590b91e1cf68`;
-- Client browser model `5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67`;
-- Client browser view `f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03`;
-- Project archive store `72ac2c1ed552299dba0658bc3a10894da1cb2d7ea675086eb0dc2694e322e479`;
-- target checker `c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113`;
-- conversion discovery control `68e2190d72494bdc620559782df150382e6d229642629e7276d6848af6089852`;
+- Client directory query `655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b`;
+- Client detail query `652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726`;
+- PowerSync schema `6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8`;
+- Project Setup store `c77ca15a1d5c998569ec2d6cd79bf1783f18f1c867ea16f6159479ef48b775f6`;
+- upload connector `e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940`;
+- Account runtime `6b56658bdf353eb19cfae79c2d9b94c6b41806bf69f13ee0c2746982ae2afff6`;
+- offline Client runtime `6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d`;
+- staging app `672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29`;
+- Client browser model `130e391cb72cc4f6a3ad6283a2753949d0b4dc0bc1a1947394caba1caed419c8`;
+- Client browser view `536f567812a276ca7b157703d234da04493f5d89e6584da02f01d3b03286b8cd`;
+- Project archive store `139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd`;
+- target checker `baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092`;
+- conversion discovery control `cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6`;
 - existing Project-setup migration `e3da858f16caee3dd6a7f6e0c686ed3f7662006f078712ac1d348de29afb68c4`;
 - Sync Streams `bc694cc89c4723fbd7fd7fbda6b2129123c5d3f96b65e70920620cd45aebe528`;
 - root package `640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89`;
@@ -211,11 +204,10 @@ setup returns an immutable `project_setup_client_not_selectable` outcome rather
 than raw constraint failure/retry. Neither interleaving deadlocks, and no
 successful Project can attach after authoritative archive.
 
-## Required Executable Proof
+## Executable Review and Verification
 
-`CARCHIVEBROWSER-TEST-001` already passes through the verified provider-free
-Client archive operation and use-case suites. Implementation must make
-`CARCHIVEBROWSER-TEST-002` through `-011` and `-013` executable and passing:
+`CARCHIVEBROWSER-TEST-001` remains covered by the verified provider-free Client
+archive operation/use-case suites. Tests `-002` through `-011` now pass locally:
 
 - exact mutation-set, no-cascade/no-related-write and byte-identical preservation
   for every currently represented related row, with the same regression required
@@ -230,21 +222,33 @@ Client archive operation and use-case suites. Implementation must make
   cancellation, termination, restart and drainage;
 - byte-identical Project archive identity regression;
 - schema/RLS/index/lock/numeric/advisor review; and
-- exact READY and implementation immutable-CI checkpoints.
+- exact READY checkpoint preservation through the local implementation.
+
+The exact local results are 12/12 focused provider tests, 9/9 focused
+AppModel/browser tests, and 494/494 complete Swift tests in 82 suites. A clean
+local database reset and lint passed with zero findings; pgTAP passed 176/176
+assertions overall including 53/53 Client archive assertions; all four local
+Data API runners passed; target environment/contracts/read controls and both
+staging builds passed. Root and independent executable review closed strict
+replay/terminal linkage, canonical numeric parsing, missing-overlay Project
+Setup admission, negative timestamp, principal binding, proof-matrix and
+sensitive-logging defects; final review returned GO with no P0-P3.
 
 `CARCHIVEBROWSER-TEST-012` remains planned until real isolated authenticated
 PowerSync proves authorized row receipt and unauthorized local-row absence.
-A-003/A-004 therefore remain proposed.
+A-003/A-004 therefore remain proposed. `CARCHIVEBROWSER-TEST-013` remains
+planned until the exact implementation commit passes immutable implementation
+CI; neither is claimed yet.
 
-## READY Gate and Permanent Exclusions
+## Gate State and Permanent Exclusions
 
-Before executable work, root and an independent reviewer must return GO on the
-complete comment-only diff. The exact READY commit must pass all three immutable
-workflow jobs: conversion control, disposable local Supabase and isolated target
-tests/builds. Only then may the nine change-authorized READY leaves, the frozen
-shared touchpoints above, and separately registered runnable pgTAP leaf
-`CONFIG-86F1E734BC70` change in one synchronized `implemented` checkpoint. The
-inert `CONFIG-2DBC5A626444` `.sql.ready` marker is never change-authorized.
+Exact READY commit `7187fa1e1415a0f820554e7f78cc62e1e42a34f4` passed all
+three immutable jobs in Actions run `33968952286` before executable work. The
+nine change-authorized READY leaves, bounded shared touchpoints and separately
+registered runnable pgTAP leaf `CONFIG-86F1E734BC70` are now implemented and
+locally verified. The inert `CONFIG-2DBC5A626444` `.sql.ready` marker was never
+modified. An exact implementation commit and immutable implementation CI remain
+required before evidence promotion.
 
 This package does not implement or authorize Client restore/delete/rename/merge,
 Project reassignment/deletion, cascade, accounting rewrite, preference behavior,

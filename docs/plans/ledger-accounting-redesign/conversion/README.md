@@ -7,7 +7,8 @@ Neither term refers to Ledger's Business Inventory product area.
 
 Status: M0 backend-surface classification complete; 484 of 668 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
-to decisions/spikes/production evidence. Decision-independent target
+to decisions/spikes/production evidence. Of those target surfaces, 194 are now
+implemented or verified. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
 by this directory. The Project archive browser slice is implemented locally
@@ -48,22 +49,24 @@ GO with no P0-P3 finding; all 391 target tests in 72 suites and both staging
 builds pass locally. Exact implementation `3ac05bd0` passed all three jobs in
 immutable run `33932915626`, including isolated Supabase provider checks. It does not
 synchronize, delete, sign out, touch hosted services, or implement session end.
-The next bounded slice is frozen as a ten-leaf comment-only READY candidate:
-archive one currently observed active Client offline through the isolated Client
-browser while preserving every Project and all history. It introduces no
-executable behavior before independent GO and exact immutable READY CI. The
-frozen implementation must reuse a generic Account-bound archive identity,
-reserve `client-archive-` against result squatting, project lifecycle optimism
-through every shared Client-directory consumer, refuse stale/current Project
-setup locally only for new or not-yet-accepted operations while preserving exact
-replay of a Project setup accepted before archive, serialize server archive and existing-Client Project creation on
-one Client lock, and distinguish queued from terminal dependency outcomes. The
-canonical target does not decide already-archived resubmission, so no broad no-op
-policy is inferred. Current physical preservation proof is limited to represented
-related rows plus a no-cascade/no-related-write boundary that every later table
-must extend. O-023/O-024/O-025/O-040/O-042/O-043 and A-003/A-004 remain
-unadvanced; no target MCP, hosted, Firebase, migration, production or cutover
-behavior is authorized; `EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001`.
+The Client archive browser slice is implemented locally from exact green READY
+commit `7187fa1e` / immutable run `33968952286`. Nine executable READY leaves
+plus runnable pgTAP CONFIG-86F1E734BC70 now provide generic Account-bound
+identity, encrypted offline archive optimism/reconciliation, dependency-aware
+FIFO upload, principal-bound shared Client projection, exact pre-archive Project
+setup replay with fail-closed new admission, Core-only browser orchestration,
+scoped-user RPC and auth-first Postgres handling. The byte-identical inert marker
+CONFIG-2DBC5A626444 is retired in place. Root and independent executable review
+closed strict terminal/linkage, missing-overlay admission, negative timestamp,
+principal binding, canonical numeric parsing, test-matrix and sensitive-logging
+defects and returned GO with no P0-P3. All 21 focused Client Archive tests and
+494/494 Swift tests in 82 suites, 176/176 pgTAP including 53/53 Client archive,
+zero database-lint findings, four local Data API runners, target controls and
+both builds pass locally. Implementation commit/immutable implementation CI and
+real authenticated PowerSync TEST-012 remain pending; A-003/A-004 stay proposed.
+O-023/O-024/O-025/O-040/O-042/O-043 remain unadvanced, and no target MCP,
+hosted, Firebase, migration, production or cutover behavior is authorized;
+`EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001`.
 The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

@@ -372,6 +372,7 @@ if (
   ].map((match) => match[1]);
   const expectedPublicRuntimeFunctions = [
     "archive",
+    "archive",
     "captureAttachment",
     "close",
     "createClient",
@@ -381,6 +382,7 @@ if (
     "pendingWorkSummary",
     "watchBudgetCategories",
     "watchClient",
+    "watchClientArchiveOperation",
     "watchClients",
     "watchOperation",
     "watchProject",
@@ -665,6 +667,54 @@ if (
       }
     }
   }
+  const clientArchiveAdapterPath = path.join(
+    targetAppRoot,
+    "ClientArchiveBrowserStagingRuntimeAdapter.swift",
+  );
+  if (!fs.existsSync(clientArchiveAdapterPath)) {
+    fail(
+      "target_client_archive_adapter_missing",
+      relative(clientArchiveAdapterPath),
+    );
+  } else {
+    const adapter = fs.readFileSync(clientArchiveAdapterPath, "utf8");
+    for (const required of [
+      "import LedgerTargetAppModel",
+      "import LedgerTargetPowerSync",
+      "runtime.archive($0)",
+      "runtime.watchClientArchiveOperation($0)",
+    ]) {
+      if (!adapter.includes(required)) {
+        fail("target_client_archive_adapter_incomplete", required);
+      }
+    }
+    if (
+      /import LedgerTargetCore|PowerSyncDatabaseProtocol|\bSQL\b|Supabase|URLSession/.test(
+        adapter,
+      )
+    ) {
+      fail(
+        "target_client_archive_adapter_scope_escape",
+        relative(clientArchiveAdapterPath),
+      );
+    }
+  }
+  const clientArchiveStorePath = path.join(
+    powerSyncRoot,
+    "ClientArchivePowerSyncStore.swift",
+  );
+  if (!fs.existsSync(clientArchiveStorePath)) {
+    fail("target_client_archive_store_missing", relative(clientArchiveStorePath));
+  } else if (
+    /\b(?:print|debugPrint|dump|NSLog)\s*\(/.test(
+      fs.readFileSync(clientArchiveStorePath, "utf8"),
+    )
+  ) {
+    fail(
+      "target_client_archive_sensitive_debug_logging",
+      relative(clientArchiveStorePath),
+    );
+  }
   const clientBrowsingViewPath = path.join(
     targetAppRoot,
     "ClientBrowsingStagingExerciseView.swift",
@@ -699,9 +749,13 @@ if (
     }
   }
   for (const requiredClientBrowsingWiring of [
-    "ClientBrowsingStagingExerciseView(model: model.clientBrowser)",
+    "ClientBrowsingStagingExerciseView(",
+    "model: model.clientBrowser",
+    "archive: model.clientArchive",
     "ClientBrowsingStagingRuntimeAdapter.adapt(runtime)",
     "await clientBrowser.start(",
+    "ClientArchiveBrowserStagingRuntimeAdapter.adapt(runtime)",
+    "await clientArchive.start(",
   ]) {
     if (!stagingAppSource.includes(requiredClientBrowsingWiring)) {
       fail(
@@ -801,6 +855,11 @@ if (
       const close = source.indexOf(closeCall);
       return stop >= 0 && close > stop;
     };
+    const clientArchiveStopBeforeClose = (source, closeCall) => {
+      const stop = source.indexOf("await clientArchive.stop()");
+      const close = source.indexOf(closeCall);
+      return stop >= 0 && close > stop;
+    };
     if (!clientStopBeforeClose(startBody, "try await runtime.close()")) {
       fail(
         "target_client_browsing_normal_cleanup_order",
@@ -822,6 +881,23 @@ if (
       fail(
         "target_project_archive_normal_cleanup_order",
         "Project archive observation must drain before normal runtime close.",
+      );
+    }
+    if (!clientArchiveStopBeforeClose(startBody, "try await runtime.close()")) {
+      fail(
+        "target_client_archive_normal_cleanup_order",
+        "Client archive observation must drain before normal runtime close.",
+      );
+    }
+    if (
+      !clientArchiveStopBeforeClose(
+        failedCleanupBody,
+        "try? await openedRuntime.close()",
+      )
+    ) {
+      fail(
+        "target_client_archive_failed_cleanup_order",
+        "Client archive observation must drain before failed-start runtime close.",
       );
     }
     if (
@@ -863,6 +939,12 @@ if (
     fail(
       "target_project_archive_direct_command",
       "The target app must submit through ProjectArchiveUseCase, not construct ArchiveProjectCommand.",
+    );
+  }
+  if (targetAppSource.includes("ArchiveClientCommand(")) {
+    fail(
+      "target_client_archive_direct_command",
+      "The target app must submit through ClientArchiveUseCase, not construct ArchiveClientCommand.",
     );
   }
   for (const forbiddenProjectSetupUI of [
@@ -925,6 +1007,14 @@ if (
     '"target-client-detail-readiness"',
     '"target-client-directory-diagnostic"',
     '"target-client-detail-diagnostic"',
+    '"target-client-archive-action"',
+    '"target-client-archive-confirm"',
+    '"target-client-archive-cancel"',
+    '"target-client-archive-state"',
+    '"target-client-archive-diagnostic"',
+    '"target-client-archive-retry"',
+    ".onChange(of: model.selectedClientArchiveEvidence)",
+    "await archive.selectionDidSettle()",
   ]) {
     if (!targetAppSource.includes(requiredClientBrowsingUI)) {
       fail(

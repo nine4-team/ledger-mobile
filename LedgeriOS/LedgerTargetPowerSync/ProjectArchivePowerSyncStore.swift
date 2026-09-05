@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import LedgerTargetCore
 import PowerSync
@@ -12,27 +11,19 @@ enum ProjectArchivePowerSyncFailure: Error, Equatable, Sendable {
 
 public enum ProjectArchiveOperationIdentity {
     public static func make(accountId: AccountID, uuid: UUID) throws -> OperationID {
-        let accountSHA256 = SHA256.hash(data: Data(accountId.rawValue.utf8))
-            .map { String(format: "%02x", $0) }
-            .joined()
-        return try OperationID(
-            validating: "project-archive-\(accountSHA256)-\(uuid.uuidString.lowercased())"
+        try AccountBoundOperationIdentity.make(
+            family: .projectArchive,
+            accountId: accountId,
+            uuid: uuid
         )
     }
 
     static func isValid(_ operationId: OperationID, accountId: AccountID) -> Bool {
-        let accountSHA256 = SHA256.hash(data: Data(accountId.rawValue.utf8))
-            .map { String(format: "%02x", $0) }
-            .joined()
-        let prefix = "project-archive-\(accountSHA256)-"
-        guard operationId.rawValue.hasPrefix(prefix) else { return false }
-        let uuidText = String(operationId.rawValue.dropFirst(prefix.count))
-        guard let uuid = UUID(uuidString: uuidText),
-              uuidText == uuid.uuidString.lowercased(),
-              let rebuilt = try? make(accountId: accountId, uuid: uuid) else {
-            return false
-        }
-        return rebuilt == operationId
+        AccountBoundOperationIdentity.isValid(
+            operationId,
+            family: .projectArchive,
+            accountId: accountId
+        )
     }
 }
 

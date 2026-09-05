@@ -3,10 +3,10 @@
   "sliceId": "client-archive-browser-supabase-powersync-vertical-slice",
   "title": "Archive one active Client offline through the isolated Client browser",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Client Archive Browser Vertical Slice",
   "surfaceIds": [
-    "CONFIG-2DBC5A626444",
+    "CONFIG-86F1E734BC70",
     "CONFIG-8A30E46E3901",
     "CONFIG-8F9EA6CCC0DB",
     "SWIFT-35D653A39618",
@@ -194,7 +194,7 @@
     },
     "rolloutRollback": {
       "items": [
-        "The READY package contains only ten comment scaffolds, deterministic project membership and synchronized controls. After exact independently reviewed green READY CI, retain CONFIG-2DBC5A626444 `.sql.ready` physically and byte-identically as an inert retired marker with explicit replacement evidence while separately registered runnable CONFIG-86F1E734BC70 `.sql` is created/discovered/classified/claimed; exactly one runnable Client-archive pgTAP leaf exists and run-all discovery remains unchanged.",
+        "Exact independently reviewed READY commit 7187fa1e passed immutable run 33968952286 before implementation. CONFIG-2DBC5A626444 `.sql.ready` remains physically present and byte-identical as an inert retired marker with explicit replacement evidence; separately registered runnable CONFIG-86F1E734BC70 `.sql` is discovered/classified/claimed, exactly one runnable Client-archive pgTAP leaf exists and run-all discovery remains unchanged.",
         "Frozen implementation touchpoints are the local PowerSync schema, shared Client directory and core-detail projections, Project Setup local acceptance, upload connector/operation-result vocabulary, Account-workspace and offline-Client runtime composition, target app wiring/environment checks, Project archive identity wrapper, conversion discovery control and the bounded new migration repair of server Project setup locking. None changes product ownership beyond this slice.",
         "The implementation remains spike-prefixed/local-only in the isolated target app. Rollback is source reversion/disposal of synthetic local target data; Firebase and production remain untouched.",
         "Restore, delete, rename, merge, reassignment, cascade, accounting, media, preferences, target MCP, hosted resources, migration, release and cutover are excluded."
@@ -215,38 +215,38 @@
     {
       "id": "CARCHIVEBROWSER-TEST-002",
       "kind": "database_invariant",
-      "owner": "supabase/tests/client_archive_vertical_slice.test.sql.ready",
+      "owner": "supabase/tests/client_archive_vertical_slice.test.sql",
       "covers": ["CARCHIVEBROWSER-REQ-001", "CARCHIVEBROWSER-REQ-002", "CARCHIVEBROWSER-REQ-003", "CARCHIVEBROWSER-REQ-007", "CARCHIVEBROWSER-REQ-008"],
       "expected": "Clean local reset proves exact active-to-archived mutation, monotonic revision/time, signed boundaries, no cascade/related mutation, and byte-identical preservation of Client identity/name/creation audit plus every currently represented Project/related/history row; every later related table must extend this regression.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-003",
       "kind": "handler_idempotency",
-      "owner": "supabase/tests/client_archive_vertical_slice.test.sql.ready and scripts/test-local-client-archive-rpc.mjs",
+      "owner": "supabase/tests/client_archive_vertical_slice.test.sql and scripts/test-local-client-archive-rpc.mjs",
       "covers": ["CARCHIVEBROWSER-REQ-002", "CARCHIVEBROWSER-REQ-003", "CARCHIVEBROWSER-REQ-006", "CARCHIVEBROWSER-REQ-007", "CARCHIVEBROWSER-REQ-008"],
       "expected": "Exact/lost-response replay return one immutable result; changed/cross-command reuse cannot rebind and non-archive commands cannot squat client-archive-; parallel archives yield one apply/one conflict; archive versus existing-Client Project setup serializes on one Client lock in both orderings with durable project_setup_client_not_selectable, preserved earlier Project, no post-archive success and no deadlock.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-004",
       "kind": "rls_positive",
-      "owner": "supabase/tests/client_archive_vertical_slice.test.sql.ready and scripts/test-local-client-archive-rpc.mjs",
+      "owner": "supabase/tests/client_archive_vertical_slice.test.sql and scripts/test-local-client-archive-rpc.mjs",
       "covers": ["CARCHIVEBROWSER-REQ-008"],
       "expected": "An authenticated active Client manager can archive one exact same-Account active Client and read authorized Client, Project and terminal-result rows.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-005",
       "kind": "rls_negative",
-      "owner": "supabase/tests/client_archive_vertical_slice.test.sql.ready and scripts/test-local-client-archive-rpc.mjs",
+      "owner": "supabase/tests/client_archive_vertical_slice.test.sql and scripts/test-local-client-archive-rpc.mjs",
       "covers": ["CARCHIVEBROWSER-REQ-008", "CARCHIVEBROWSER-REQ-010"],
       "expected": "Restricted, revoked, anonymous, actor-mismatched and cross-Account callers cannot archive or directly mutate/enumerate unauthorized Client/results; authorization occurs before operation/subject disclosure, and cross-Account/cross-command result probes cannot reveal or rebind reserved Client-archive identity.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-006",
@@ -254,8 +254,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift",
       "covers": ["CARCHIVEBROWSER-REQ-001", "CARCHIVEBROWSER-REQ-002", "CARCHIVEBROWSER-REQ-004", "CARCHIVEBROWSER-REQ-005", "CARCHIVEBROWSER-REQ-006", "CARCHIVEBROWSER-REQ-007", "CARCHIVEBROWSER-REQ-009"],
       "expected": "Atomic encrypted acceptance/replay/restart preserves exact command/overlay bytes; queued/applying Client-create and Project-setup dependencies precede archive FIFO; exact replay of a Project-setup operation accepted before archive returns its prior receipt before overlay validation; all shared consumers show the same stable Client archived/partial, Project Setup excludes it for new operations, and every earlier accepted Project remains.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-007",
@@ -263,8 +263,8 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift",
       "covers": ["CARCHIVEBROWSER-REQ-002", "CARCHIVEBROWSER-REQ-005", "CARCHIVEBROWSER-REQ-006", "CARCHIVEBROWSER-REQ-007", "CARCHIVEBROWSER-REQ-009"],
       "expected": "Transient failure retains work; rejected Client creation unblocks trusted archive disposition without fabricated local result or infinite retry and retains optimism until authoritative terminal archive evidence; rejected Project setup unblocks archive; malformed linkage/results fail closed; durable archive rejection removes exact optimism and reveals exact underlying/refreshed evidence without forcing Active; only refreshed current-active evidence enables new-ID retry; applied waits for archived/newer authority and stale/late evidence cannot clear or resurrect optimism.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-008",
@@ -272,8 +272,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ClientArchiveBrowserStagingExerciseTests.swift and scripts/check-target-environment.mjs",
       "covers": ["CARCHIVEBROWSER-REQ-001", "CARCHIVEBROWSER-REQ-003", "CARCHIVEBROWSER-REQ-004", "CARCHIVEBROWSER-REQ-005", "CARCHIVEBROWSER-REQ-007", "CARCHIVEBROWSER-REQ-009"],
       "expected": "Current active detail evidence dispatches exactly once; invalid/archived/stale-selection states make zero calls; ambiguous retry is byte-identical; all six states render; archive optimism updates Client browser and Project Setup together; every new/unaccepted stale or current post-archive Project creation refuses while exact replay of a pre-archive accepted Project setup retains its prior receipt; conflict recovery requires refreshed current-active evidence/new ID; target MCP remains unchanged/unregistered.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-009",
@@ -281,8 +281,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ClientArchiveBrowserStagingExerciseTests.swift and LedgerTarget runtime tests",
       "covers": ["CARCHIVEBROWSER-REQ-005", "CARCHIVEBROWSER-REQ-006", "CARCHIVEBROWSER-REQ-009"],
       "expected": "Operation observation terminates correctly before/after evidence; selection change, stop/restart and runtime close cancel/join archive/browser streams, reject post-stop/noncooperative old-generation values and drain before database close.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-010",
@@ -290,8 +290,8 @@
       "owner": "scripts/check-target-environment.mjs, scripts/supabase-conversion-ledger.mjs, focused Swift tests and both LedgerTarget staging builds",
       "covers": ["CARCHIVEBROWSER-REQ-003", "CARCHIVEBROWSER-REQ-004", "CARCHIVEBROWSER-REQ-009", "CARCHIVEBROWSER-REQ-010"],
       "expected": "Core-only model, generic identity primitive, thin adapter and exact accessibility literals compile; existing Client order/readiness/selection/detail, Project Setup and cleanup paths remain; Project archive accepted bytes stay unchanged; inline policy, target MCP, Firebase and excluded mutations are absent. Inert CONFIG-2DBC5A626444 `.sql.ready` is retained byte-identically with explicit replacement evidence when runnable CONFIG-86F1E734BC70 `.sql` is registered/classified/claimed and every planned database-test owner path moves to `.sql`; package run-all discovery remains unchanged.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-011",
@@ -299,8 +299,8 @@
       "owner": "Supabase Postgres security, indexing, locking, numeric-precision and mutation-set review",
       "covers": ["CARCHIVEBROWSER-REQ-002", "CARCHIVEBROWSER-REQ-007", "CARCHIVEBROWSER-REQ-008", "CARCHIVEBROWSER-REQ-010"],
       "expected": "Review confirms least privilege, auth-first private handler, indexed exact scope/lock paths, deterministic result/Client locking shared with Project setup, bounded transactions, exact revision parsing/no wrap, durable race outcomes and no related-row mutation.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"]
     },
     {
       "id": "CARCHIVEBROWSER-TEST-012",
@@ -324,5 +324,5 @@
   "implementationEvidence": ["EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Comment-only READY candidate. Ten reserved leaves freeze the shared account-bound operation identity primitive, Client archive browser/app/provider/RPC/test boundaries and local-only Postgres/Data API scaffolds. Project Archive is implementation-pattern evidence only, never Client product authority. Canonical Client identity/lifecycle authorizes archive with complete Project/history preservation and removal from new-Project selection. Broader already-archived resubmission/no-op behavior is not authoritative, so UI admits only currently observed active evidence and the handler durably rejects non-active state without claiming general policy. Shared touchpoints are frozen for Client directory overlay projection, Project Setup refusal of new or not-yet-accepted stale/current operations while exact pre-archive accepted replay remains stable, queued dependency resolution, server-side Project-setup Client locking, upload/runtime/app wiring and byte-identical Project archive identity behavior. O-023/O-024/O-025/O-040/O-042/O-043 and A-003/A-004/A-007/A-015/A-016 remain excluded/unadvanced. No executable implementation, target MCP, source migration, hosted resource, Firebase work, production access, release or cutover is authorized."
+  "notes": "Implemented locally from exact green READY commit 7187fa1e1415a0f820554e7f78cc62e1e42a34f4 and immutable Actions run 33968952286. Nine executable READY leaves plus runnable pgTAP replacement CONFIG-86F1E734BC70 provide generic Account-bound identity, encrypted atomic Client archive acceptance, strict replay/terminal validation, dependency-aware FIFO upload, principal-bound directory/detail overlays, exact pre-archive Project-setup replay with fail-closed new admission, browser orchestration, scoped-user RPC, auth-first Postgres handling, 53-assertion pgTAP and disposable Data API proof. CONFIG-2DBC5A626444 remains physically present, byte-identical and retired as the inert READY marker. Root and independent executable review closed strict terminal/linkage, missing-overlay admission, negative timestamp, principal binding, canonical numeric parsing, test-matrix and sensitive logging defects; final review returned GO with no P0-P3. All 21 focused Client Archive tests and all 494 Swift tests in 82 suites pass; local pgTAP passes 176/176 overall and 53/53 for Client archive, database lint reports zero, four Data API runners, target controls and both staging builds pass locally. Implementation commit and immutable implementation CI remain pending. CARCHIVEBROWSER-TEST-012 remains planned for real isolated authenticated PowerSync authorization; A-003/A-004 remain proposed. O-023/O-024/O-025/O-040/O-042/O-043 and A-007/A-015/A-016 remain excluded/unadvanced. No restore/delete/rename/merge/reassignment/cascade/accounting/media/target MCP/source migration/hosted/Firebase/production/release/cutover behavior or authority is claimed."
 }

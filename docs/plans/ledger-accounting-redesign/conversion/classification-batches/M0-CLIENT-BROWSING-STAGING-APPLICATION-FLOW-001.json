@@ -61,12 +61,12 @@
     },
     {
       "id": "SWIFT-EDBCE3C0BC96",
-      "acknowledgeSourceHash": "5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67",
-      "currentBehavior": "Implements the Core-only observable Client directory/detail model with honest unknown counts, current-evidence selection, bounded diagnostics, continuous updates, cancellation/join, termination, reselection, and restart-generation isolation.",
+      "acknowledgeSourceHash": "130e391cb72cc4f6a3ad6283a2753949d0b4dc0bc1a1947394caba1caed419c8",
+      "currentBehavior": "Implements the Core-only observable Client directory/detail model with honest unknown counts, current-evidence selection, bounded diagnostics, continuous updates, cancellation/join, termination, reselection and restart-generation isolation, and composes the separate Client archive application model without taking archive policy ownership.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
       "notes": "Root and independent executable review found no remaining P0-P3 issue after lifecycle proof was strengthened; exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 passed immutable run 33958657934.",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -133,12 +133,12 @@
     },
     {
       "id": "SWIFT-438CDD8B6992",
-      "acknowledgeSourceHash": "f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03",
-      "currentBehavior": "Renders the standalone typed active/archived Client directory, selected Client and exact local detail state in staging with stable ClientID-based accessibility identities.",
+      "acknowledgeSourceHash": "536f567812a276ca7b157703d234da04493f5d89e6584da02f01d3b03286b8cd",
+      "currentBehavior": "Renders the standalone typed active/archived Client directory, selected Client, exact local detail state and confirmation-bound Client archive controls/status in staging with stable ClientID-based accessibility identities.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "evidence": ["EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
       "notes": "The view renders typed model state only, preserves upstream order, and introduces no related Projects, sorting, search, cards, routes, mutation, or raw-name-input policy. Source checks and both staging builds passed exact immutable implementation CI.",
       "target": {
         "owner": "Client Browsing Staging Application Flow",

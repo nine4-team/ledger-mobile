@@ -117,8 +117,8 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113",
-      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; LedgerTargetAppModel depends only on Core; exact PowerSync/encrypted-SQLite versions and adapter boundaries hold; Project and Client browsing plus Project archive use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; exact archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
+      "acknowledgeSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -132,7 +132,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "target": {
@@ -185,7 +186,7 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing, implemented Project archive and comment-only Client archive READY Swift files are included. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The Firebase application Xcode project is unchanged.",
       "target": {
         "owner": "Environment and Composition Control",
         "surfaces": [
@@ -305,8 +306,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "8ca878f9464a87b0249514e16380a868b100296bec748459781c590b91e1cf68",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, permanently displays the local-only banner, hosts Project Setup plus Project/Client browsing and the Core-only Project archive flow, and drains archive plus both browsing lifecycles before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its fixed unprovisioned environment, permanently displays the local-only banner, hosts Project Setup plus Project/Client browsing and both Core-only archive flows, and drains archive and browsing lifecycles before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -319,7 +320,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "target": {
@@ -356,8 +358,8 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113",
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or Project-archive adapter/wiring/accessibility/drainage surfaces, loss of Client creation post-create confirmation, public lifecycle-owned providers, dependency drift, and target-only paths in the Firebase application project.",
+      "acknowledgeSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -369,7 +371,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "target": {

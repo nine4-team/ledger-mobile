@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T13:26:08.785Z",
+    "lastSynchronizedAt": "2026-09-05T15:55:38.737Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -532,12 +532,12 @@
       "observedSourceHash": "ca53ebcb44c7556f12cb34122a221501779e5e0f712d410f843837f9d807a17d",
       "acknowledgedSourceHash": "ca53ebcb44c7556f12cb34122a221501779e5e0f712d410f843837f9d807a17d",
       "metadata": {},
-      "currentBehavior": "Contains only the reviewed READY inventory for Client archive Postgres tests; it executes and asserts nothing.",
-      "disposition": "redesign",
+      "currentBehavior": "Retains the exact reviewed comment-only READY inventory as a physically present inert marker; executable Client archive pgTAP ownership moved to CONFIG-86F1E734BC70.",
+      "disposition": "retire",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
         "surfaces": [
-          "Client archive invariants, preservation, replay, concurrency, Project-setup serialization and RLS tests"
+          "retired READY reservation for Client archive database tests; replaced by CONFIG-86F1E734BC70"
         ],
         "securityRequirements": [
           "Prove manager success and restricted/revoked/anonymous/cross-Account denial",
@@ -548,9 +548,9 @@
         ]
       },
       "migration": {
-        "rule": "Use synthetic local fixtures only; retain this reservation through explicit retired/replacement evidence.",
+        "rule": "Retain this reservation byte-for-byte as an inert historical marker; runnable synthetic local proof is owned by CONFIG-86F1E734BC70.",
         "reconciliation": [
-          "No statement or archive behavior executes at READY"
+          "No statement or archive behavior executes from this retained marker"
         ]
       },
       "verification": {
@@ -558,17 +558,15 @@
           "npm run target:supabase:test:db"
         ],
         "acceptance": [
-          "Every planned database/security/concurrency case becomes executable before implementation status"
+          "CONFIG-2DBC5A626444 remains physically present and byte-identical while CONFIG-86F1E734BC70 is the sole runnable classified and claimed Client archive pgTAP leaf"
         ]
       },
-      "status": "target_mapped",
-      "blockers": [
-        "A-003"
-      ],
+      "status": "retired",
+      "blockers": [],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only `.sql.ready` reservation outside run-all pgTAP discovery; implementation retains it byte-identically as an inert retired marker when registering one runnable replacement.",
+      "notes": "Retired in place, byte-for-byte, by runnable replacement CONFIG-86F1E734BC70. The inert `.sql.ready` marker remains outside normal pgTAP discovery at SHA-256 ca53ebcb44c7556f12cb34122a221501779e5e0f712d410f843837f9d807a17d; package.json remains unchanged.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -628,7 +626,7 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing, implemented Project archive and comment-only Client archive READY Swift files are included. The Firebase application Xcode project is unchanged.",
+      "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
@@ -1680,10 +1678,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113",
-      "acknowledgedSourceHash": "c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113",
+      "observedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "acknowledgedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
       "metadata": {},
-      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; LedgerTargetAppModel depends only on Core; exact PowerSync/encrypted-SQLite versions and adapter boundaries hold; Project and Client browsing plus Project archive use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; exact archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -1729,10 +1727,64 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-86F1E734BC70",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/client_archive_vertical_slice.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/client_archive_vertical_slice.test.sql"
+        }
+      ],
+      "observedSourceHash": "3977c2391a394cba7b440abc6b619403bc1469cc0c551a96d553cb25a46147f5",
+      "acknowledgedSourceHash": "3977c2391a394cba7b440abc6b619403bc1469cc0c551a96d553cb25a46147f5",
+      "metadata": {},
+      "currentBehavior": "Runs 53 Client archive pgTAP assertions covering narrow lifecycle mutation and preservation, exact replay/request binding, full revision boundaries, archive/Project-setup concurrency, reserved OperationID namespace, RLS and direct-write denial.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Client Archive Browser Vertical Slice",
+        "surfaces": [
+          "runnable Client archive invariants, preservation, replay, concurrency, Project-setup serialization and RLS tests"
+        ],
+        "securityRequirements": [
+          "Prove manager success and restricted/revoked/anonymous/cross-Account denial",
+          "Prove direct-write denial and auth-first non-enumeration"
+        ],
+        "syncRequirements": [
+          "Validate exact terminal result/revision evidence consumed by local reconciliation"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic local fixtures only.",
+        "reconciliation": [
+          "Replace only retired inert CONFIG-2DBC5A626444 while preserving it physically and byte-identically"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "npm run target:supabase:test:db"
+        ],
+        "acceptance": [
+          "All 53 Client archive and 176 cumulative pgTAP assertions pass"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-003"
+      ],
+      "evidence": [
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+      ],
+      "notes": "Runnable replacement for retired inert READY marker CONFIG-2DBC5A626444. It is the sole runnable Client archive pgTAP leaf and is discovered by the authorized conversion-control touchpoint.",
+      "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
       "id": "CONFIG-8A30E46E3901",
@@ -1745,10 +1797,10 @@
           "path": "scripts/test-local-client-archive-rpc.mjs"
         }
       ],
-      "observedSourceHash": "927b1846712df4fdc24d2b80cd530cffe706a943b24d93a917481ae53b06c001",
-      "acknowledgedSourceHash": "927b1846712df4fdc24d2b80cd530cffe706a943b24d93a917481ae53b06c001",
+      "observedSourceHash": "9005840174642c6d2cbcbdab37abbdf515aaef1ed52fe6ec92ab4f125b5f0890",
+      "acknowledgedSourceHash": "9005840174642c6d2cbcbdab37abbdf515aaef1ed52fe6ec92ab4f125b5f0890",
       "metadata": {},
-      "currentBehavior": "Contains only a comment-only reviewed READY boundary for disposable local Client-archive Data API tests; it makes no request.",
+      "currentBehavior": "Runs disposable local scoped-user Data API verification for valid Client archive apply/replay, Account-bound identity, archive/Project-setup concurrency, authorization, operation-result scoping and immutable terminal binding.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -1777,14 +1829,14 @@
           "Later runner proves apply, replay, concurrency and scoped access"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-003"
       ],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only runner scaffold; hosted endpoints and service-role credentials are prohibited.",
+      "notes": "Executable local-only runner passed together with the Client creation, Project setup and Project archive runners; hosted endpoints and service-role credentials remain prohibited.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -1798,10 +1850,10 @@
           "path": "supabase/migrations/20260905125208_client_archive_vertical_slice.sql"
         }
       ],
-      "observedSourceHash": "1f2a2c6d0f977f04e81d092195ffcda72b1556ef9be76bd030d71538b10ca64d",
-      "acknowledgedSourceHash": "1f2a2c6d0f977f04e81d092195ffcda72b1556ef9be76bd030d71538b10ca64d",
+      "observedSourceHash": "8014b85dd620e47dabfe1f5d4608116c01453f1e4f9cf5653572797bb65aec76",
+      "acknowledgedSourceHash": "8014b85dd620e47dabfe1f5d4608116c01453f1e4f9cf5653572797bb65aec76",
       "metadata": {},
-      "currentBehavior": "Contains only the reviewed READY contract for local Client-archive Postgres and Project-setup lock repair; it creates or mutates no schema object.",
+      "currentBehavior": "Implements the local Client-archive Postgres handler and authenticated RPC plus bounded Project-setup serialization repair with auth-first capability checks, exact Account-bound identity/request binding, deterministic Client locking, narrow lifecycle/revision/time mutation and immutable terminal results.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -1831,14 +1883,14 @@
           "Later DDL passes reset, lint, pgTAP, Data API, concurrency/security review while inert marker remains"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-003"
       ],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Filename generated by pinned Supabase CLI; executable DDL is absent.",
+      "notes": "Filename was generated by the pinned Supabase CLI. Clean local reset, 176/176 pgTAP assertions, zero database-lint findings and scoped Data API verification pass.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -3557,10 +3609,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "68e2190d72494bdc620559782df150382e6d229642629e7276d6848af6089852",
-      "acknowledgedSourceHash": "68e2190d72494bdc620559782df150382e6d229642629e7276d6848af6089852",
+      "observedSourceHash": "cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6",
+      "acknowledgedSourceHash": "cc7fd00f869eba5d75861d7b4ff246b4f92221b7c6d530f033b611998bae7ef6",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the isolated Ledger target app/core/tests, separately isolated target application-model, composition, migration-core and test-support modules/tests, target MCP TypeScript projections, target contract configuration/resources, the target query controls, the draft source-query reconciliation control leaves, and each explicitly reviewed local Supabase migration/pgTAP/Data API runner. It explicitly discovers the retained inert Project-archive READY marker and its runnable replacement plus the new inert Client-archive READY marker and comment-only migration/runner reservations; applies bounded classification batches; detects disappearance and live source drift; validates evidence requirements, product authority and vertical-slice implementation dossiers; emits coverage/authority/slice audits; and enforces cumulative M0-M5 gates. Both `.sql.ready` markers remain explicitly discovered but non-runnable; only the separately registered Project-archive `.sql` replacement is currently runnable, and the root run-all database test command remains unchanged. Query-control leaves are explicitly path-excluded from Firebase audit/repair discovery even when their tests contain source fixtures. Initial acknowledgment remains one-time; deliberate re-acknowledgment requires an exact reviewed acknowledgeSourceHash that matches the newly observed hash.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, applies bounded classification batches, detects disappearance and live source drift, validates evidence requirements, product authority and vertical-slice dossiers, emits generated audits and enforces cumulative M0-M5 gates. It explicitly retains both inert archive READY markers and separately discovers the runnable Project-archive and Client-archive pgTAP replacements; the root run-all database command remains unchanged.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3612,7 +3664,7 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "The explicit hash workflow prevents agents from silently blessing source drift after a characterized file changes. Product-authority roles prevent current or historical Firebase-era specs from silently becoming redesigned target authority. Slice gates prevent implementation/status claims from outrunning exact requirements, contracts, verification and evidence. Separate application-model, composition, migration-control and test-support module roots are discovered without placing any of them into Firebase runtime authority. This deliberate re-acknowledgment retains exact discovery for runnable Project-archive pgTAP replacement CONFIG-CAB6A5DAD1C0 and inert marker CONFIG-062839A9903C, and adds the comment-only Client-archive migration/runner plus inert marker CONFIG-2DBC5A626444; it changes no validator semantics, package command, product authority or existing primary ownership. Direct architecture-decisions authority is supplied by the reviewed product-authority crosswalk, not a validator exception.",
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment retains exact discovery for Project replacement CONFIG-CAB6A5DAD1C0 and marker CONFIG-062839A9903C, adds runnable Client replacement CONFIG-86F1E734BC70 while retaining marker CONFIG-2DBC5A626444 byte-identically, and changes no validator semantics, package command, product authority or existing primary ownership.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -5770,10 +5822,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113",
-      "acknowledgedSourceHash": "c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113",
+      "observedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
+      "acknowledgedSourceHash": "baccb3f0d5aabc01a4984995fa59d62a1011cdb64982daf84937947a96da0092",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or Project-archive adapter/wiring/accessibility/drainage surfaces, loss of Client creation post-create confirmation, public lifecycle-owned providers, dependency drift, and target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -5814,7 +5866,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -17933,12 +17986,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "8ca878f9464a87b0249514e16380a868b100296bec748459781c590b91e1cf68",
-      "acknowledgedSourceHash": "8ca878f9464a87b0249514e16380a868b100296bec748459781c590b91e1cf68",
+      "observedSourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
+      "acknowledgedSourceHash": "672a8a4dcb1f0eaf2a83bbc3aa385eb3d5501a7b6b01b60cb2641c8fdba77c29",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, permanently displays the local-only banner, hosts Project Setup plus Project/Client browsing and the Core-only Project archive flow, and drains archive plus both browsing lifecycles before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its fixed unprovisioned environment, permanently displays the local-only banner, hosts Project Setup plus Project/Client browsing and both Core-only archive flows, and drains archive and browsing lifecycles before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -17981,7 +18034,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -19688,12 +19742,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "c4c3755977832d6626e42b3ad66358d819cb850043774e619b98cdffc17c888e",
-      "acknowledgedSourceHash": "c4c3755977832d6626e42b3ad66358d819cb850043774e619b98cdffc17c888e",
+      "observedSourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
+      "acknowledgedSourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project/archive commands, local-only optimistic aggregates/archive lifecycle overlays/operation evidence, immutable server results and a local-only pending-work observation journal.",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project/Project-archive/Client-archive commands, local-only optimistic aggregates and lifecycle overlays, immutable server results and pending-work observation journal.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -19728,9 +19782,10 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Target provider layer only. The pending-work provider uses the local-only observation journal and Project archive uses a local-only lifecycle overlay; primary ownership remains here and hosted schema authority is unchanged.",
+      "notes": "Target provider layer only. Pending-work and Project/Client archive overlays remain local-only; primary ownership and hosted schema authority are unchanged.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -20736,12 +20791,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientCoreDetailsPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745",
-      "acknowledgedSourceHash": "23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745",
+      "observedSourceHash": "652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726",
+      "acknowledgedSourceHash": "652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative plus exact caller-owned local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority is visible and may remove the linked pending overlay only while active membership is locally present.",
+      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative and exact caller-owned local-only pending rows, merging only principal-bound Client archive overlays with explicit waiting, partial, stale and ready truth while failing closed on malformed or unauthorized overlay evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -20777,7 +20832,8 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "The concrete adapter is module-internal and lifecycle-owned; no direct network or backend SDK leaks through the core query port.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
@@ -21370,12 +21426,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountBoundOperationIdentity.swift"
         }
       ],
-      "observedSourceHash": "e2cf916b3582c159cdd523a09fe73698ef476d7d48173073a41e4d6f287912a0",
-      "acknowledgedSourceHash": "e2cf916b3582c159cdd523a09fe73698ef476d7d48173073a41e4d6f287912a0",
+      "observedSourceHash": "d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5",
+      "acknowledgedSourceHash": "d8a2c63b39e2f7ca808f2b3d3e0fd00410ff7537af5b175c7afadc7ee53e3ef5",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed READY contract for a generic account-bound operation identity primitive; it defines no executable type.",
+      "currentBehavior": "Implements generic Account-bound operation identity construction and validation for Client archive while preserving the existing Project archive operation bytes.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -21405,12 +21461,12 @@
           "Both operation families prove exact Account binding and Project archive regression"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY scaffold; Project archive public identity behavior must remain byte-identical when it delegates here.",
+      "notes": "Executable local-only implementation independently reviewed GO; Project archive identity behavior remained byte-identical under regression proof.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -21480,12 +21536,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/SupabaseClientArchiveRPC.swift"
         }
       ],
-      "observedSourceHash": "f7adcb1cdf6faa5c6dd6246502528dee8c67ebc3759dad3d58ada0414cd64949",
-      "acknowledgedSourceHash": "f7adcb1cdf6faa5c6dd6246502528dee8c67ebc3759dad3d58ada0414cd64949",
+      "observedSourceHash": "e313791f9593fe4d3a53c8201121d02c702ab66fcf55aa1cbd29303c91a874b8",
+      "acknowledgedSourceHash": "e313791f9593fe4d3a53c8201121d02c702ab66fcf55aa1cbd29303c91a874b8",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed READY contract for a scoped-user Supabase Client-archive RPC adapter; it makes no network request.",
+      "currentBehavior": "Implements the scoped-user Supabase Client-archive RPC adapter with exact command encoding, Account-bound OperationID validation and strict terminal-result identity, hash, timestamp and revision validation.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -21515,14 +21571,14 @@
           "Malformed credentials and mismatched/unknown results fail closed"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-003"
       ],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY scaffold with no endpoint or credential.",
+      "notes": "Executable adapter uses only injected isolated-target endpoint, publishable key and scoped user token; no hosted endpoint or service-role credential is embedded.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -22641,12 +22697,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ClientBrowsingStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03",
-      "acknowledgedSourceHash": "f13948872c11e0fc95d43e793a49e63da590532819c75598e60c81d604954d03",
+      "observedSourceHash": "536f567812a276ca7b157703d234da04493f5d89e6584da02f01d3b03286b8cd",
+      "acknowledgedSourceHash": "536f567812a276ca7b157703d234da04493f5d89e6584da02f01d3b03286b8cd",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Renders the standalone typed active/archived Client directory, selected Client and exact local detail state in staging with stable ClientID-based accessibility identities.",
+      "currentBehavior": "Renders the standalone typed active/archived Client directory, selected Client, exact local detail state and confirmation-bound Client archive controls/status in staging with stable ClientID-based accessibility identities.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -22677,7 +22733,8 @@
       "status": "verified",
       "blockers": [],
       "evidence": [
-        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "The view renders typed model state only, preserves upstream order, and introduces no related Projects, sorting, search, cards, routes, mutation, or raw-name-input policy. Source checks and both staging builds passed exact immutable implementation CI.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
@@ -23699,12 +23756,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ClientArchiveBrowserStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "84b1ac05ea20af67885ac59dc85548eb7c200115636e1dfeda2be30da5400236",
-      "acknowledgedSourceHash": "84b1ac05ea20af67885ac59dc85548eb7c200115636e1dfeda2be30da5400236",
+      "observedSourceHash": "b9bcc3e51b3bcd992d10dbb337525d746575b499dfee129742b81f246049a897",
+      "acknowledgedSourceHash": "b9bcc3e51b3bcd992d10dbb337525d746575b499dfee129742b81f246049a897",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed READY boundary for Core-only Client archive submission/retry/operation-state orchestration over existing browser evidence; it defines no executable type.",
+      "currentBehavior": "Implements Core-only Client archive admission, exact current-evidence revalidation, stable ambiguous retry, operation observation, stale-generation rejection and bounded six-state presentation over the existing Client browser.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -23732,12 +23789,12 @@
           "Admission, operation, retry and lifecycle matrices pass deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY AppModel scaffold; it neither interprets provider rows nor grants archive authority.",
+      "notes": "Executable AppModel remains backend-neutral, interprets no provider rows and grants no archive authority.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -24246,8 +24303,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "72ac2c1ed552299dba0658bc3a10894da1cb2d7ea675086eb0dc2694e322e479",
-      "acknowledgedSourceHash": "72ac2c1ed552299dba0658bc3a10894da1cb2d7ea675086eb0dc2694e322e479",
+      "observedSourceHash": "139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd",
+      "acknowledgedSourceHash": "139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -24285,9 +24342,10 @@
         "A-004"
       ],
       "evidence": [
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Executable local-only implementation reviewed GO with no P0-P3; existing schema, query, upload and runtime files remain shared touchpoints with their existing primary owners.",
+      "notes": "Executable local-only implementation reviewed GO with no P0-P3; it now delegates identity validation to the generic Account-bound primitive while regression tests preserve Project archive behavior.",
       "classificationBatch": "M0-PROJECT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -24343,12 +24401,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "644eb3a6386f1430bf293a1ea6c418bfe143ab0df2df0e103c11cd0a5119ab10",
-      "acknowledgedSourceHash": "644eb3a6386f1430bf293a1ea6c418bfe143ab0df2df0e103c11cd0a5119ab10",
+      "observedSourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
+      "acknowledgedSourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope operations and exposes Client/Project creation and watches, Project archive plus exact operation observation, an Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close without exposing its concrete resources or initializer.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes Client/Project creation and watches, Project and Client archive plus exact operation observation, Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -24387,9 +24445,10 @@
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including Project archive observation, to the single Account-workspace lifecycle owner; pending-work and attachment composition is implemented locally but session ending remains separate.",
+      "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families, to the single Account-workspace lifecycle owner; session ending remains separate.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -25296,12 +25355,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598",
-      "acknowledgedSourceHash": "d1e8cce89445e70d0b026a45e8e4a1893ecc69ae01baa5c633d862f0cf6af598",
+      "observedSourceHash": "c77ca15a1d5c998569ec2d6cd79bf1783f18f1c867ea16f6159479ef48b775f6",
+      "acknowledgedSourceHash": "c77ca15a1d5c998569ec2d6cd79bf1783f18f1c867ea16f6159479ef48b775f6",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, an optional new-Client overlay, a Project overlay, the complete allocation overlays and one insert-only upload command; exact replay is stable and changed replay is refused.",
+      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence and overlays; exact replay remains stable before Client archive validation, while new or not-yet-accepted setup fails closed when authoritative lifecycle or valid pending Client-archive evidence makes the existing Client unselectable.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -25335,7 +25394,8 @@
       ],
       "evidence": [
         "EVID-PROJECT-SETUP-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "The concrete store is module-internal and lifecycle-owned. All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
@@ -26817,12 +26877,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "cb49720cb9eda68fe92e07e02e0ac6fd35bba29f9c71dbd8036c7012f62fe7f5",
-      "acknowledgedSourceHash": "cb49720cb9eda68fe92e07e02e0ac6fd35bba29f9c71dbd8036c7012f62fe7f5",
+      "observedSourceHash": "6b56658bdf353eb19cfae79c2d9b94c6b41806bf69f13ee0c2746982ae2afff6",
+      "acknowledgedSourceHash": "6b56658bdf353eb19cfae79c2d9b94c6b41806bf69f13ee0c2746982ae2afff6",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores, Project archive store and six read/operation streams behind one close-aware lease gate without implementing session ending.",
+      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores, Project and Client archive stores and their read/operation streams behind one close-aware lease gate without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -26857,7 +26917,8 @@
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
@@ -31377,12 +31438,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncUploadConnector.swift"
         }
       ],
-      "observedSourceHash": "4efeb90c96f7a5165ba0db49bd2402e2e941b1bfbae5e901ff99fc76eba23182",
-      "acknowledgedSourceHash": "4efeb90c96f7a5165ba0db49bd2402e2e941b1bfbae5e901ff99fc76eba23182",
+      "observedSourceHash": "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
+      "acknowledgedSourceHash": "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Dispatches one insert-only Client, Project or Project-archive command per PowerSync transaction, validates its exact local operation and optimistic aggregate/lifecycle-overlay linkage, calls the matching trusted handler, and drains only a matching applied or durable rejected terminal result.",
+      "currentBehavior": "Dispatches one insert-only Client, Project, Project-archive or Client-archive command per PowerSync transaction, validates exact local operation/command/optimistic linkage and strict terminal evidence, calls the matching trusted handler and drains only matching applied or durable rejected results.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -31420,9 +31481,10 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "The concrete connector is module-internal and lifecycle-owned. Project archive dispatch preserves FIFO after pending Project creation and validates exact overlay/terminal evidence. Credentials and command applier are injected; no production endpoint is embedded.",
+      "notes": "The concrete connector is module-internal and lifecycle-owned. Both archive families preserve dependency FIFO and validate exact overlay/terminal evidence. Credentials and command appliers are injected; no production endpoint is embedded.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -32085,12 +32147,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientProjectDirectoryPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "82a351eb5589801e009c4d5a398db0440c9ecbd22aeffee121e1ab657389c51f",
-      "acknowledgedSourceHash": "82a351eb5589801e009c4d5a398db0440c9ecbd22aeffee121e1ab657389c51f",
+      "observedSourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b",
+      "acknowledgedSourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements the Account/Principal-bound PowerSync ClientProjectDirectoryQuerying adapter: it combines local rows with independently reactive Client/Project completeness, exposes only caller-owned pending creates before membership as partial, gates authoritative rows and reconciliation on active membership, merges validated Project archive lifecycle/revision overlays, preserves incomplete Project-to-Client joins, derives content-bound local versions, and cancels both observations with the consumer.",
+      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions and cancels all observations with the consumer.",
       "disposition": "redesign",
       "target": {
         "owner": "Client and Project Directory",
@@ -32132,7 +32194,8 @@
       "evidence": [
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "The concrete adapter is module-internal and all four streams are lifecycle-owned and drained on close. Real hosted Sync authorization remains required before verification/rehearsal.",
       "classificationBatch": "M0-CLIENT-PROJECT-DIRECTORY-POWERSYNC-001"
@@ -32746,12 +32809,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ClientArchiveBrowserStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "b0740b920a3edeac7f019fd66d942529d89ff042c69cd4c4b9fc758d44e68e45",
-      "acknowledgedSourceHash": "b0740b920a3edeac7f019fd66d942529d89ff042c69cd4c4b9fc758d44e68e45",
+      "observedSourceHash": "4a8104ee8fabaf829e6cf4c4675fc3b42359f18b5e933f79cdf89bdaccfdf84e",
+      "acknowledgedSourceHash": "4a8104ee8fabaf829e6cf4c4675fc3b42359f18b5e933f79cdf89bdaccfdf84e",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed READY boundary for a thin Client archive/operation-state runtime adapter; it defines no executable adapter or UI behavior.",
+      "currentBehavior": "Implements the thin Account-bound target runtime adapter that forwards Client archive submission and exact operation-state observation without embedding provider policy.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -32779,12 +32842,12 @@
           "Only thin app adapter imports PowerSync"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY adapter scaffold; provider and policy ownership stays outside app target.",
+      "notes": "Executable adapter keeps provider and policy ownership outside the app target.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -36230,12 +36293,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ClientArchivePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "f3dc7a71140e00ac553d9dee84387963076cbbed40dfb5a07830e3466e4bfece",
-      "acknowledgedSourceHash": "f3dc7a71140e00ac553d9dee84387963076cbbed40dfb5a07830e3466e4bfece",
+      "observedSourceHash": "a4f3077f9a310fc7e062da11d54d9d5bef1c9fe912282604121e908edb256df7",
+      "acknowledgedSourceHash": "a4f3077f9a310fc7e062da11d54d9d5bef1c9fe912282604121e908edb256df7",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Contains only the reviewed READY contract for encrypted offline Client-archive acceptance, lifecycle overlay, dependency resolution and reconciliation; it defines no executable type or database behavior.",
+      "currentBehavior": "Implements encrypted atomic Client-archive acceptance, exact Account-bound identity and replay, dependency-aware FIFO state, local lifecycle overlay and strict terminal/readback reconciliation without mutating synchronized rows.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -36264,14 +36327,14 @@
           "Implementation replaces this comment-only scaffold only from immutable green READY"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-004"
       ],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only READY scaffold; existing schema, directory, Project setup, upload and runtime files remain frozen shared touchpoints.",
+      "notes": "Executable local-only implementation independently reviewed GO; existing schema, directory, Project setup, upload and runtime files remain bounded shared touchpoints.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -37085,12 +37148,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ClientBrowsingStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67",
-      "acknowledgedSourceHash": "5f14814fb7c7892eee8ae7fa515d6424ac112f4cec36238d5844e9f57b64ad67",
+      "observedSourceHash": "130e391cb72cc4f6a3ad6283a2753949d0b4dc0bc1a1947394caba1caed419c8",
+      "acknowledgedSourceHash": "130e391cb72cc4f6a3ad6283a2753949d0b4dc0bc1a1947394caba1caed419c8",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implements the Core-only observable Client directory/detail model with honest unknown counts, current-evidence selection, bounded diagnostics, continuous updates, cancellation/join, termination, reselection, and restart-generation isolation.",
+      "currentBehavior": "Implements the Core-only observable Client directory/detail model with honest unknown counts, current-evidence selection, bounded diagnostics, continuous updates, cancellation/join, termination, reselection and restart-generation isolation, and composes the separate Client archive application model without taking archive policy ownership.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Browsing Staging Application Flow",
@@ -37121,7 +37184,8 @@
       "status": "verified",
       "blockers": [],
       "evidence": [
-        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
+        "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "Root and independent executable review found no remaining P0-P3 issue after lifecycle proof was strengthened; exact implementation 872e7fc990dba23a5ebaaa3ab7662ba5e5806886 passed immutable run 33958657934.",
       "classificationBatch": "M0-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001"
@@ -40216,12 +40280,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ClientArchivePowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "72f684641922d9f39f405a50048c212a394c06e326645806ff4ac4a89b030e6a",
-      "acknowledgedSourceHash": "72f684641922d9f39f405a50048c212a394c06e326645806ff4ac4a89b030e6a",
+      "observedSourceHash": "2ce1e381c0f0181560ecddd661feda3cf6828d7a499fc12c6e85184428a5d917",
+      "acknowledgedSourceHash": "2ce1e381c0f0181560ecddd661feda3cf6828d7a499fc12c6e85184428a5d917",
       "metadata": {
-        "firebaseCoupled": false
+        "firebaseCoupled": true
       },
-      "currentBehavior": "Contains only the reviewed READY test inventory for Client archive identity, persistence, dependency order, overlay, replay, rejection, reconciliation, scoping and preservation; it runs no tests.",
+      "currentBehavior": "Runs the deterministic Client archive PowerSync matrix for identity, atomic persistence, dependencies, overlay projection, replay, strict terminal validation, rejection, reconciliation, scope, preservation and runtime drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -40249,7 +40313,7 @@
           "Every frozen provider case is executable before advancement"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [
         "A-003",
         "A-004"
@@ -40257,7 +40321,7 @@
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only synthetic provider-test scaffold.",
+      "notes": "Executable synthetic provider tests pass 12/12 focused and in the 494-test complete nonparallel Swift suite.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {
@@ -45484,12 +45548,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ClientArchiveBrowserStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "ab7fe7c7b81e1c8af1e10c1b2372771b88186ea50a573e0293a209f8b5961bd8",
-      "acknowledgedSourceHash": "ab7fe7c7b81e1c8af1e10c1b2372771b88186ea50a573e0293a209f8b5961bd8",
+      "observedSourceHash": "90406a19380221995d6926adfe7c1d7e358000dd16557e7e5581af0a03845c18",
+      "acknowledgedSourceHash": "90406a19380221995d6926adfe7c1d7e358000dd16557e7e5581af0a03845c18",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Contains only the reviewed READY test inventory for Client archive admission, identity, shared Project-setup eligibility, operation state, recovery, cancellation and restart; it runs no tests.",
+      "currentBehavior": "Runs deterministic Client archive browser/AppModel tests for unavailable and current evidence, exact dispatch/retry, shared Project-setup eligibility, six operation states, selection changes, recovery, cancellation, stop/restart and runtime-close drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Archive Browser Vertical Slice",
@@ -45517,12 +45581,12 @@
           "Every frozen application case passes deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
-      "notes": "Comment-only synthetic AppModel-test scaffold.",
+      "notes": "Executable synthetic AppModel tests pass 9/9 focused and in the 494-test complete nonparallel Swift suite.",
       "classificationBatch": "M0-CLIENT-ARCHIVE-BROWSER-VERTICAL-SLICE-001"
     },
     {

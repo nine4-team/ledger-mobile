@@ -70,6 +70,116 @@ actor ProjectSetupPowerSyncStore: ProjectSetupOperating {
                     )
                 }
 
+                // Replay is deliberately resolved above. An operation accepted
+                // before Client archive keeps its exact receipt; only a new
+                // acceptance is subject to current effective lifecycle.
+                if case .existing = command.draft.clientSelection {
+                    let clientRows = try transaction.getAll(
+                        sql: """
+                        SELECT lifecycle
+                        FROM (
+                          SELECT authoritative.lifecycle, 0 AS source_order
+                          FROM \(LedgerPowerSyncTable.clients) AS authoritative
+                          WHERE authoritative.account_id = ? AND authoritative.id = ?
+                          UNION ALL
+                          SELECT pending.lifecycle, 1 AS source_order
+                          FROM \(LedgerPowerSyncTable.pendingClients) AS pending
+                          WHERE pending.account_id = ? AND pending.id = ?
+                            AND pending.created_by_principal_id = ?
+                            AND NOT EXISTS (
+                              SELECT 1 FROM \(LedgerPowerSyncTable.clients) AS authoritative
+                              WHERE authoritative.account_id = pending.account_id
+                                AND authoritative.id = pending.id
+                            )
+                        )
+                        ORDER BY source_order
+                        """,
+                        parameters: [
+                            command.envelope.accountId.rawValue,
+                            command.draft.clientSelection.clientId.rawValue,
+                            command.envelope.accountId.rawValue,
+                            command.draft.clientSelection.clientId.rawValue,
+                            command.envelope.actorPrincipalId.rawValue
+                        ]
+                    ) { try $0.getString(name: "lifecycle") }
+                    let archiveOverlayCount = try transaction.get(
+                        sql: """
+                        SELECT count(*)
+                        FROM \(LedgerPowerSyncTable.clientArchiveOverlays)
+                        WHERE account_id = ? AND client_id = ?
+                        """,
+                        parameters: [
+                            command.envelope.accountId.rawValue,
+                            command.draft.clientSelection.clientId.rawValue
+                        ]
+                    ) { try $0.getInt64(index: 0) }
+                    let archiveOperationMissingOverlayCount = try transaction.get(
+                        sql: """
+                        SELECT count(*)
+                        FROM \(LedgerPowerSyncTable.localOperations) AS operation
+                        WHERE operation.account_id = ?
+                          AND operation.subject_id = ?
+                          AND operation.command_type = 'archive_client'
+                          AND operation.local_state IN ('queued', 'applying', 'applied')
+                          AND NOT EXISTS (
+                            SELECT 1
+                            FROM \(LedgerPowerSyncTable.clientArchiveOverlays) AS overlay
+                            WHERE overlay.operation_id = operation.id
+                              AND overlay.account_id = operation.account_id
+                              AND overlay.actor_principal_id = operation.actor_principal_id
+                              AND overlay.client_id = operation.subject_id
+                              AND overlay.fingerprint = operation.fingerprint
+                              AND overlay.expected_revision = operation.command_expected_revision
+                              AND overlay.lifecycle = 'archived'
+                          )
+                          AND (
+                            operation.local_state IN ('queued', 'applying')
+                            OR (
+                              operation.local_state = 'applied'
+                              AND NOT (
+                                operation.command_expected_revision IS NOT NULL
+                                AND CAST(CAST(operation.command_expected_revision AS INTEGER) AS TEXT)
+                                  = operation.command_expected_revision
+                                AND CAST(operation.command_expected_revision AS INTEGER) > 0
+                                AND CAST(operation.command_expected_revision AS INTEGER)
+                                  < 9223372036854775807
+                                AND EXISTS (
+                                  SELECT 1
+                                  FROM \(LedgerPowerSyncTable.clients) AS authoritative
+                                  WHERE authoritative.account_id = operation.account_id
+                                    AND authoritative.id = operation.subject_id
+                                    AND (
+                                      authoritative.revision
+                                        > CAST(operation.command_expected_revision AS INTEGER) + 1
+                                      OR (
+                                        authoritative.revision
+                                          = CAST(operation.command_expected_revision AS INTEGER) + 1
+                                        AND authoritative.lifecycle = 'archived'
+                                      )
+                                    )
+                                )
+                              )
+                            )
+                          )
+                        """,
+                        parameters: [
+                            command.envelope.accountId.rawValue,
+                            command.draft.clientSelection.clientId.rawValue
+                        ]
+                    ) { try $0.getInt64(index: 0) }
+                    // Some previously admitted typed selections predate a local
+                    // Client row. Preserve that behavior while still refusing
+                    // every represented non-active Client and every archive
+                    // overlay. The trusted handler remains authoritative when
+                    // the local Client row is absent.
+                    guard clientRows.count <= 1,
+                          clientRows.allSatisfy({ $0 == "active" }),
+                          archiveOverlayCount == 0,
+                          archiveOperationMissingOverlayCount == 0 else {
+                        throw ProjectSetupFailure.localAcceptanceFailed
+                    }
+                }
+
                 _ = try transaction.execute(
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.localOperations) (

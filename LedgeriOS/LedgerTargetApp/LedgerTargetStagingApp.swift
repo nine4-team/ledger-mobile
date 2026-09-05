@@ -117,7 +117,10 @@ private struct OfflineProviderSpikeView: View {
             }
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
-        ClientBrowsingStagingExerciseView(model: model.clientBrowser)
+        ClientBrowsingStagingExerciseView(
+            model: model.clientBrowser,
+            archive: model.clientArchive
+        )
         ProjectBrowsingStagingExerciseView(
             model: model.projectBrowser,
             archive: model.projectArchive
@@ -142,6 +145,7 @@ private final class OfflineClientSpikeModel {
     private let accountId: AccountID
     private let principalId: PrincipalID
     let clientBrowser: ClientBrowsingStagingExercise
+    let clientArchive: ClientArchiveBrowserStagingExercise
     let projectBrowser: ProjectBrowsingStagingExercise
     let projectArchive: ProjectArchiveBrowserStagingExercise
     let projectSetup: ProjectSetupStagingExercise
@@ -153,7 +157,25 @@ private final class OfflineClientSpikeModel {
 
         self.accountId = accountId
         self.principalId = principalId
-        clientBrowser = ClientBrowsingStagingExercise(accountId: accountId)
+        let clientBrowser = ClientBrowsingStagingExercise(accountId: accountId)
+        self.clientBrowser = clientBrowser
+        clientArchive = ClientArchiveBrowserStagingExercise(
+            accountId: accountId,
+            actorPrincipalId: principalId,
+            operationContractVersion: try! OperationContractVersion(
+                validating: "client-archive-v1"
+            ),
+            browser: clientBrowser,
+            makeIdentity: {
+                try ClientArchiveSubmissionIdentity(
+                    operationId: ClientArchiveOperationIdentity.make(
+                        accountId: accountId,
+                        uuid: UUID()
+                    )
+                )
+            },
+            now: Date.init
+        )
         self.projectBrowser = projectBrowser
         projectArchive = ProjectArchiveBrowserStagingExercise(
             accountId: accountId,
@@ -215,6 +237,9 @@ private final class OfflineClientSpikeModel {
             await clientBrowser.start(
                 runtime: ClientBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
+            await clientArchive.start(
+                runtime: ClientArchiveBrowserStagingRuntimeAdapter.adapt(runtime)
+            )
             await projectBrowser.start(
                 runtime: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
@@ -225,6 +250,7 @@ private final class OfflineClientSpikeModel {
             pendingUploadCount = String(pendingCount)
             await waitForCancellation()
             await projectArchive.stop()
+            await clientArchive.stop()
             await clientBrowser.stop()
             await projectBrowser.stop()
             projectSetup.stop()
@@ -244,6 +270,7 @@ private final class OfflineClientSpikeModel {
 
     private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
         await projectArchive.stop()
+        await clientArchive.stop()
         await clientBrowser.stop()
         await projectBrowser.stop()
         projectSetup.stop()

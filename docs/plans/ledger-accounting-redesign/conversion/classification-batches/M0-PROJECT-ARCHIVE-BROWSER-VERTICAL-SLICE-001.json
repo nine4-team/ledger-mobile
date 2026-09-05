@@ -13,13 +13,13 @@
   "surfaces": [
     {
       "id": "SWIFT-53B8C9C37D3F",
-      "acknowledgeSourceHash": "72ac2c1ed552299dba0658bc3a10894da1cb2d7ea675086eb0dc2694e322e479",
+      "acknowledgeSourceHash": "139bb47e03652990c511b87dcc65825392aa40de0caa2c4c4a12775168ffe0dd",
       "currentBehavior": "Implements encrypted atomic Project-archive acceptance, exact Account-bound operation identity, local lifecycle overlay, replay, FIFO upload state and authoritative/rejected reconciliation without mutating synchronized rows.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
-      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Executable local-only implementation reviewed GO with no P0-P3; existing schema, query, upload and runtime files remain shared touchpoints with their existing primary owners.",
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Executable local-only implementation reviewed GO with no P0-P3; it now delegates identity validation to the generic Account-bound primitive while regression tests preserve Project archive behavior.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["encrypted Project archive acceptance and exact optimistic lifecycle reconciliation"],

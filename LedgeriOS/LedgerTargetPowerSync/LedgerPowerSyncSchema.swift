@@ -15,6 +15,8 @@ public enum LedgerPowerSyncTable {
     public static let projectCommands = "spike_project_commands"
     public static let projectArchiveCommands = "spike_project_archive_commands"
     public static let projectArchiveOverlays = "spike_project_archive_overlays"
+    public static let clientArchiveCommands = "spike_client_archive_commands"
+    public static let clientArchiveOverlays = "spike_client_archive_overlays"
     public static let localOperations = "spike_local_operations"
     public static let pendingWorkObservations = "spike_pending_work_observations"
     public static let operationResults = "spike_operation_results"
@@ -209,6 +211,37 @@ public enum LedgerPowerSyncSchema {
                 ),
                 .ascending(
                     name: "project_archive_overlay_operation",
+                    columns: ["operation_id"]
+                )
+            ],
+            localOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.clientArchiveCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .integer("client_created_at_ms"),
+                .text("client_id"), .text("expected_revision"),
+                .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.clientArchiveOverlays,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"),
+                .text("client_id"), .text("operation_id"),
+                .text("fingerprint"), .text("expected_revision"),
+                .integer("projected_revision"), .text("lifecycle"),
+                .integer("accepted_at_ms")
+            ],
+            indexes: [
+                .ascending(
+                    name: "client_archive_overlay_account_client",
+                    columns: ["account_id", "client_id"]
+                ),
+                .ascending(
+                    name: "client_archive_overlay_operation",
                     columns: ["operation_id"]
                 )
             ],

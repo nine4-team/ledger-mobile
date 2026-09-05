@@ -15,12 +15,12 @@
   "surfaces": [
     {
       "id": "SWIFT-B23F91245E50",
-      "acknowledgeSourceHash": "82a351eb5589801e009c4d5a398db0440c9ecbd22aeffee121e1ab657389c51f",
-      "currentBehavior": "Implements the Account/Principal-bound PowerSync ClientProjectDirectoryQuerying adapter: it combines local rows with independently reactive Client/Project completeness, exposes only caller-owned pending creates before membership as partial, gates authoritative rows and reconciliation on active membership, merges validated Project archive lifecycle/revision overlays, preserves incomplete Project-to-Client joins, derives content-bound local versions, and cancels both observations with the consumer.",
+      "acknowledgeSourceHash": "655c27d2cb6033ae6742e0277449531b669015f884dd7272cdfac3006a3b528b",
+      "currentBehavior": "Implements the Account/Principal-bound Client/Project directory adapter: it combines local rows with independently reactive completeness, gates authority on active membership, merges validated Project and principal-bound Client archive overlays, preserves incomplete joins, derives content-bound local versions and cancels all observations with the consumer.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "evidence": ["EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"],
       "notes": "The concrete adapter is module-internal and all four streams are lifecycle-owned and drained on close. Real hosted Sync authorization remains required before verification/rehearsal.",
       "target": {
         "owner": "Client and Project Directory",

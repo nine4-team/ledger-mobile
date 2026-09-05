@@ -88,10 +88,10 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "c4c3755977832d6626e42b3ad66358d819cb850043774e619b98cdffc17c888e",
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project/archive commands, local-only optimistic aggregates/archive lifecycle overlays/operation evidence, immutable server results and a local-only pending-work observation journal.",
+      "acknowledgeSourceHash": "6678300e8281b1120bef06610b91ecb97bf7352eeadde488c666643d057a67a8",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project/Project-archive/Client-archive commands, local-only optimistic aggregates and lifecycle overlays, immutable server results and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "Target provider layer only. The pending-work provider uses the local-only observation journal and Project archive uses a local-only lifecycle overlay; primary ownership remains here and hosted schema authority is unchanged.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "Target provider layer only. Pending-work and Project/Client archive overlays remain local-only; primary ownership and hosted schema authority are unchanged.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync schema"], "securityRequirements": ["Command payload is insert-only and local operation state is never synchronized as authority"], "syncRequirements": ["Local columns align with streamed server rows while pending_operation_id remains local optimism evidence"]},
       "migration": {"rule": "Schema evolution remains isolated until compatibility testing closes A-004.", "reconciliation": ["Schema validates before database open"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["PowerSync schema validation succeeds and exact CRUD transaction shape is asserted"]}
@@ -99,10 +99,10 @@
     {
       "id": "SWIFT-2ADDF7B64EA0",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "23b7f779871cd613cc5a945449c3c24c167ea26260c2b9c37466234551a19745",
-      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative plus exact caller-owned local-only pending PowerSync rows with explicit waiting, partial, stale and ready truth; authority is visible and may remove the linked pending overlay only while active membership is locally present.",
+      "acknowledgeSourceHash": "652405ab61f5675865259134db3b80da043eb820dbffc08c3c5684d396b0e726",
+      "currentBehavior": "Implements Account/Principal-bound Client core-details observation from authoritative and exact caller-owned local-only pending rows, merging only principal-bound Client archive overlays with explicit waiting, partial, stale and ready truth while failing closed on malformed or unauthorized overlay evidence.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"], "notes": "The concrete adapter is module-internal and lifecycle-owned; no direct network or backend SDK leaks through the core query port.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The concrete adapter is module-internal and lifecycle-owned; no direct network or backend SDK leaks through the core query port.",
       "target": {"owner": "Client Identity", "surfaces": ["PowerSync Client core-details query adapter"], "securityRequirements": ["Queries bind exact Account and Client identifiers"], "syncRequirements": ["Pending local operation evidence overrides earlier has-synced state and keeps the view partial"]},
       "migration": {"rule": "Use target local rows only; do not read Firebase cache through this adapter.", "reconciliation": ["Server-synchronized rows clear local optimism and may become ready"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.optimisticReadinessIsHonest", "LedgerPowerSyncVerticalSliceTests.pendingRowRemainsPartialAfterEarlierSync"], "acceptance": ["Optimistic rows render immediately but never as authoritative"]}
@@ -121,10 +121,10 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "644eb3a6386f1430bf293a1ea6c418bfe143ab0df2df0e103c11cd0a5119ab10",
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope operations and exposes Client/Project creation and watches, Project archive plus exact operation observation, an Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close without exposing its concrete resources or initializer.",
+      "acknowledgeSourceHash": "6c4e4fa03f17e18c251af121668673f798258ee471874f5c24bab66cbd39d02d",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes Client/Project creation and watches, Project and Client archive plus exact operation observation, Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including Project archive observation, to the single Account-workspace lifecycle owner; pending-work and attachment composition is implemented locally but session ending remains separate.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families, to the single Account-workspace lifecycle owner; session ending remains separate.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
       "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}
@@ -143,10 +143,10 @@
     {
       "id": "SWIFT-A9F7D22095F8",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "4efeb90c96f7a5165ba0db49bd2402e2e941b1bfbae5e901ff99fc76eba23182",
-      "currentBehavior": "Dispatches one insert-only Client, Project or Project-archive command per PowerSync transaction, validates its exact local operation and optimistic aggregate/lifecycle-overlay linkage, calls the matching trusted handler, and drains only a matching applied or durable rejected terminal result.",
+      "acknowledgeSourceHash": "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
+      "currentBehavior": "Dispatches one insert-only Client, Project, Project-archive or Client-archive command per PowerSync transaction, validates exact local operation/command/optimistic linkage and strict terminal evidence, calls the matching trusted handler and drains only matching applied or durable rejected results.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The concrete connector is module-internal and lifecycle-owned. Project archive dispatch preserves FIFO after pending Project creation and validates exact overlay/terminal evidence. Credentials and command applier are injected; no production endpoint is embedded.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"], "notes": "The concrete connector is module-internal and lifecycle-owned. Both archive families preserve dependency FIFO and validate exact overlay/terminal evidence. Credentials and command appliers are injected; no production endpoint is embedded.",
       "target": {"owner": "Client Identity", "surfaces": ["PowerSync upload connector", "Client command transaction validator"], "securityRequirements": ["Unexpected row count/table/op/data or optimistic-command mismatch fails closed"], "syncRequirements": ["Queue completion occurs only after a matching terminal server result; permanent rejection cannot poison later uploads"]},
       "migration": {"rule": "Connect only inside an authorized isolated target environment.", "reconciliation": ["One accepted local transaction produces one handler call and one terminal local operation state"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests.encryptedRestartDurabilityAndUpload", "LedgerPowerSyncVerticalSliceTests.durableRejectionDoesNotPoisonQueue"], "acceptance": ["Applied and rejected terminal results drain once; malformed shape does not"]}

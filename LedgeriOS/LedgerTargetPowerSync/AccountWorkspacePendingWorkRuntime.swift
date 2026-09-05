@@ -69,6 +69,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
     case archiveProject
+    case archiveClient
     case pendingUploadCount
     case encryptionCipher
     case captureAttachment
@@ -82,6 +83,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case projectDirectory
     case budgetCategories
     case projectArchiveOperation
+    case clientArchiveOperation
 }
 
 struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
@@ -268,6 +270,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let detailsQuery: ClientCoreDetailsPowerSyncQuery
     let projectSetupStore: ProjectSetupPowerSyncStore
     let projectArchiveStore: ProjectArchivePowerSyncStore
+    let clientArchiveStore: ClientArchivePowerSyncStore
     let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
     let directoryQuery: ClientProjectDirectoryPowerSyncQuery
     let attachmentStore: any AccountWorkspaceAttachmentStoring
@@ -323,6 +326,12 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         )
         projectSetupStore = ProjectSetupPowerSyncStore(database: structuredDatabase, now: now)
         projectArchiveStore = ProjectArchivePowerSyncStore(
+            database: structuredDatabase,
+            accountId: accountId,
+            principalId: principalId,
+            now: now
+        )
+        clientArchiveStore = ClientArchivePowerSyncStore(
             database: structuredDatabase,
             accountId: accountId,
             principalId: principalId,
@@ -406,6 +415,18 @@ actor AccountWorkspacePendingWorkRuntime {
                 throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
             }
             return try await resources.projectArchiveStore.archive(command)
+        }
+    }
+
+    func archiveClient(_ command: ArchiveClientCommand) async throws -> OperationReceipt {
+        try await withFiniteLease(.archiveClient) { resources in
+            guard command.envelope.accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            guard command.envelope.actorPrincipalId == resources.principalId else {
+                throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+            }
+            return try await resources.clientArchiveStore.archive(command)
         }
     }
 
@@ -534,6 +555,22 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in },
             makeStream: { resources in
                 resources.projectArchiveStore.watchOperation(operationId)
+            }
+        )
+    }
+
+    func startClientArchiveOperationWatch(
+        id: UUID,
+        operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .clientArchiveOperation,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.clientArchiveStore.watchOperation(operationId)
             }
         )
     }

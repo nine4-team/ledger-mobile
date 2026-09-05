@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T13:26:08.785Z",
+  "generatedFromManifestSync": "2026-09-05T15:55:38.737Z",
   "totals": {
     "slices": 82,
     "claimedTargetSurfaces": 246,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 184
+    "implementationAdvancedTargetSurfaces": 194
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 7,
+    "implemented": 8,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -144,10 +144,10 @@
       "sliceId": "client-archive-browser-supabase-powersync-vertical-slice",
       "title": "Archive one active Client offline through the isolated Client browser",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Client Archive Browser Vertical Slice",
       "surfaceIds": [
-        "CONFIG-2DBC5A626444",
+        "CONFIG-86F1E734BC70",
         "CONFIG-8A30E46E3901",
         "CONFIG-8F9EA6CCC0DB",
         "SWIFT-35D653A39618",
