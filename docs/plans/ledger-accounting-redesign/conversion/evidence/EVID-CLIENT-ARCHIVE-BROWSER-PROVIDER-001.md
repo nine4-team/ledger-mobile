@@ -8,6 +8,9 @@
   `codex/supabase-powersync-implementation`
 - Exact green READY checkpoint: commit `7187fa1e1415a0f820554e7f78cc62e1e42a34f4`,
   immutable Actions run `33968952286`
+- Exact green implementation checkpoint: commit
+  `f2b9945b163e8cf64561facb2e57b7cf54941b0b`, immutable Actions run
+  `33976469527`
 - Slice dossier:
   `conversion/implementation-slices/client-archive-browser-supabase-powersync-vertical-slice.json`
 - Claimed target surfaces: `CONFIG-2DBC5A626444`, `CONFIG-86F1E734BC70`, `CONFIG-8A30E46E3901`,
@@ -15,7 +18,7 @@
   `SWIFT-4D4DB03E0A24`, `SWIFT-BD7BF890CB6C`, `SWIFT-E431F314B326`,
   `TEST-3B1F3E444423`, `TEST-E65089F7DC26`
 - Verification state: locally implemented and independently reviewed GO with no
-  P0-P3; implementation commit and immutable implementation CI are pending
+  P0-P3; exact implementation commit passed all three immutable CI jobs
 
 ## Selected Outcome and Product Authority
 
@@ -236,9 +239,10 @@ sensitive-logging defects; final review returned GO with no P0-P3.
 
 `CARCHIVEBROWSER-TEST-012` remains planned until real isolated authenticated
 PowerSync proves authorized row receipt and unauthorized local-row absence.
-A-003/A-004 therefore remain proposed. `CARCHIVEBROWSER-TEST-013` remains
-planned until the exact implementation commit passes immutable implementation
-CI; neither is claimed yet.
+A-003/A-004 therefore remain proposed. Exact implementation commit
+`f2b9945b163e8cf64561facb2e57b7cf54941b0b` passed all three immutable jobs in
+Actions run `33976469527`, satisfying `CARCHIVEBROWSER-TEST-013` without
+claiming the separate real authenticated Sync proof.
 
 ## Gate State and Permanent Exclusions
 
@@ -247,8 +251,9 @@ three immutable jobs in Actions run `33968952286` before executable work. The
 nine change-authorized READY leaves, bounded shared touchpoints and separately
 registered runnable pgTAP leaf `CONFIG-86F1E734BC70` are now implemented and
 locally verified. The inert `CONFIG-2DBC5A626444` `.sql.ready` marker was never
-modified. An exact implementation commit and immutable implementation CI remain
-required before evidence promotion.
+modified. Exact implementation commit `f2b9945b163e8cf64561facb2e57b7cf54941b0b`
+passed all three immutable jobs in Actions run `33976469527` before this
+evidence-promotion checkpoint.
 
 This package does not implement or authorize Client restore/delete/rename/merge,
 Project reassignment/deletion, cascade, accounting rewrite, preference behavior,

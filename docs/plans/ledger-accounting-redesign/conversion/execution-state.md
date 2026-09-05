@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 308
+State version: 309
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-ARCHIVE-BROWSER-IMPLEMENTED-LOCALLY-AWAITING-CHECKPOINT-CI
+- Checkpoint: CLIENT-ARCHIVE-BROWSER-IMPLEMENTED-IMMUTABLE-CI-GREEN
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -57,9 +57,8 @@ without modifying the running Firebase application before hard cutover.
   submission parity for Client creation and only the new-Client Project branch;
   current Swift, MCP and PostgreSQL validators disagree on edge inputs, so the
   ordinary-name fixture is not final validation evidence. The exact Project
-  archive implementation checkpoint passes immutable CI; the Client archive
-  implementation checkpoint is locally ready for exact CI. Both archive slices
-  remain incomplete until a real isolated PowerSync/Auth round-trip passes. Account
+  archive and Client archive implementation checkpoints pass immutable CI. Both
+  archive slices remain incomplete until a real isolated PowerSync/Auth round-trip passes. Account
   discovery is intentionally local-only and cannot advance beyond implemented
   until safe hosted identity bootstrap and authorization are proven.
 - One supporting provider slice now durably accepts encrypted attachment bytes
@@ -94,8 +93,9 @@ without modifying the running Firebase application before hard cutover.
   including 53/53 Client archive, zero database-lint findings, four Data API
   runners, target controls and both staging builds pass locally. Exact counts are
   194/668 implemented-or-later (29.0%) and 484/668 mapped-or-later. The
-  implementation commit/immutable implementation CI and TEST-012 real
-  authenticated PowerSync remain pending; A-003/A-004 stay proposed.
+  exact implementation commit `f2b9945b` passed all three immutable jobs in
+  Actions run `33976469527`. TEST-012 real authenticated PowerSync remains
+  pending; A-003/A-004 stay proposed.
   O-023/O-024/O-025/O-040/O-042/O-043 remain unadvanced; no target MCP, hosted,
   Firebase, migration, production or cutover authority exists;
   `EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001`.
@@ -4119,10 +4119,10 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit the synchronized, independently reviewed Client archive implementation
-checkpoint, push it, and require all three immutable jobs to pass on that exact
-commit. Only after green implementation CI may the separate evidence-promotion
-checkpoint mark `CARCHIVEBROWSER-TEST-013` passed and record the exact commit/run.
+Select the next coherent decision-independent end-user workflow through feature-
+specific product-authority preflight, produce its exact bounded READY package,
+and require independent actual-diff review plus immutable READY-commit CI before
+executable implementation.
 Preserve byte-identical inert marker `CONFIG-2DBC5A626444`, runnable replacement
 `CONFIG-86F1E734BC70`, package.json and Sync Streams. `CARCHIVEBROWSER-TEST-012`
 remains planned; do not infer real PowerSync/Auth authorization from local proof,
