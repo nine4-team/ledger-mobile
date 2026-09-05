@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T07:02:45.803Z",
+    "lastSynchronizedAt": "2026-09-05T07:15:39.837Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19704,7 +19704,7 @@
           "No hardcoded category, new-Client branch, direct command construction, or false-ready UI remains"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
@@ -25118,7 +25118,7 @@
           "The real model passes two-stream, selection, submission, receipt, cancellation, and error tests"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
@@ -29008,7 +29008,7 @@
           "The app adapter remains the only PowerSync-aware Project Setup application-flow leaf"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
@@ -44182,7 +44182,7 @@
           "All frozen Project Setup application-model cases pass deterministically"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"

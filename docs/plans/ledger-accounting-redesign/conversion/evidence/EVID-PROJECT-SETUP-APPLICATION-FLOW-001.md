@@ -1,6 +1,8 @@
 # EVID-PROJECT-SETUP-APPLICATION-FLOW-001 — Existing-Client Project Setup Application Flow
 
-- Status: implemented, independently reviewed; exact implementation CI pending
+- Status: verified at exact implementation commit
+  `2dc519e64d5cde4e716cbff68f6443fe8f1989b4`; independently reviewed and
+  immutable CI passed
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -66,7 +68,12 @@ Nine focused application-model tests pass, including six parameterized receipt
 states. The complete process-wide nonparallel package run passes 428 tests in
 75 suites. Target environment controls, repeatable Xcode generation,
 `git diff --check`, and macOS and iOS Simulator staging builds pass locally.
-Exact implementation CI remains required before verified promotion.
+Exact implementation commit `2dc519e64d5cde4e716cbff68f6443fe8f1989b4`
+passed all three jobs in immutable Actions run `33951550789`: conversion state
+and traceability, disposable local Supabase schema/RLS/RPC checks, all 428
+nonparallel target tests, target boundaries/contracts, both staging builds, and
+clean tracked artifacts. This satisfies `PROJECTSETUPAPP-TEST-009` and promotes
+the bounded application flow to verified.
 
 ## Frozen READY Boundary
 

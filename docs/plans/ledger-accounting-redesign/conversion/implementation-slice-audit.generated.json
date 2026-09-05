@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T07:02:45.803Z",
+  "generatedFromManifestSync": "2026-09-05T07:15:39.837Z",
   "totals": {
     "slices": 78,
     "claimedTargetSurfaces": 217,
@@ -11,8 +11,8 @@
     "draft": 1,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 7,
-    "verified": 67,
+    "implemented": 6,
+    "verified": 68,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -771,7 +771,7 @@
       "sliceId": "project-setup-existing-client-application-flow",
       "title": "Create a Project for an existing Client from honest local Client and category evidence",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Project Setup Application Flow",
       "surfaceIds": [
         "SWIFT-1F2F5FE68160",
