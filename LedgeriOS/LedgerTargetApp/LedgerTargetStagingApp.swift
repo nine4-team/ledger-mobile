@@ -117,45 +117,7 @@ private struct OfflineProviderSpikeView: View {
             }
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
-        Section("Local Client & Project Browser") {
-            LabeledContent("Client data", value: model.clientDirectoryStatus)
-            LabeledContent("Project data", value: model.projectDirectoryStatus)
-            LabeledContent("Selectable Clients", value: String(model.selectableClients.count))
-            LabeledContent("Active Projects", value: String(model.activeProjects.count))
-            ForEach(model.activeProjects, id: \.projectId) { row in
-                Button {
-                    Task { await model.openProject(row.projectId, segment: .active) }
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(row.projectDisplayName.rawValue)
-                        Text(row.clientDisplayName.rawValue)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            LabeledContent("Archived Projects", value: String(model.archivedProjects.count))
-            ForEach(model.archivedProjects, id: \.projectId) { row in
-                Button {
-                    Task { await model.openProject(row.projectId, segment: .archived) }
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(row.projectDisplayName.rawValue)
-                        Text(row.clientDisplayName.rawValue)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            if let selectedProjectDetails = model.selectedProjectDetails {
-                LabeledContent("Selected Project", value: selectedProjectDetails)
-            }
-            if let directoryDiagnostic = model.directoryDiagnostic {
-                Text(directoryDiagnostic)
-                    .foregroundStyle(.red)
-                    .accessibilityIdentifier("target-directory-diagnostic")
-            }
-        }
+        ProjectBrowsingStagingExerciseView(model: model.projectBrowser)
         .task {
             await model.start(validatedEnvironment: environment)
         }
@@ -170,21 +132,14 @@ private final class OfflineClientSpikeModel {
     private(set) var pendingUploadCount = "—"
     private(set) var lastCreatedName: String?
     private(set) var diagnostic: String?
-    private(set) var selectableClients: [ClientSummary] = []
-    private(set) var activeProjects: [ProjectDirectoryCoreRow] = []
-    private(set) var archivedProjects: [ProjectDirectoryCoreRow] = []
-    private(set) var selectedProjectDetails: String?
-    private(set) var directoryDiagnostic: String?
-    private(set) var clientDirectoryStatus = "loading"
-    private(set) var projectDirectoryStatus = "loading"
 
     private var runtime: LedgerOfflineClientRuntime?
     private var startInProgress = false
-    private var activeProjectDirectory: ProjectDirectoryPresentationSnapshot?
-    private var archivedProjectDirectory: ProjectDirectoryPresentationSnapshot?
-    private var projectDetailsTask: Task<Void, Never>?
     private let accountId = try! AccountID(validating: "account-primary")
     private let principalId = try! PrincipalID(validating: "principal-owner")
+    let projectBrowser = ProjectBrowsingStagingExercise(
+        accountId: try! AccountID(validating: "account-primary")
+    )
     let projectSetup = ProjectSetupStagingExercise(
         accountId: try! AccountID(validating: "account-primary"),
         actorPrincipalId: try! PrincipalID(validating: "principal-owner"),
@@ -224,21 +179,16 @@ private final class OfflineClientSpikeModel {
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
             projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
+            await projectBrowser.start(
+                runtime: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime)
+            )
             databaseState = "Encrypted (\(cipher))"
             pendingUploadCount = String(pendingCount)
-            await withTaskGroup(of: Void.self) { group in
-                group.addTask { [weak self] in
-                    await self?.watchClientDirectory(runtime)
-                }
-                group.addTask { [weak self] in
-                    await self?.watchProjectDirectory(runtime)
-                }
-                await group.waitForAll()
-            }
-            projectDetailsTask?.cancel()
+            await waitForCancellation()
+            await projectBrowser.stop()
             projectSetup.stop()
-            try await runtime.close()
             openedRuntime = nil
+            try await runtime.close()
             self.runtime = nil
             databaseState = "Closed"
         } catch is CancellationError {
@@ -252,7 +202,7 @@ private final class OfflineClientSpikeModel {
     }
 
     private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
-        projectDetailsTask?.cancel()
+        await projectBrowser.stop()
         projectSetup.stop()
         if let openedRuntime {
             try? await openedRuntime.close()
@@ -304,94 +254,10 @@ private final class OfflineClientSpikeModel {
         }
     }
 
-    func openProject(_ projectId: ProjectID, segment: ProjectDirectorySegment) async {
-        guard let runtime else { return }
-        projectDetailsTask?.cancel()
-        selectedProjectDetails = nil
-        directoryDiagnostic = nil
-        let presentation = segment == .active
-            ? activeProjectDirectory
-            : archivedProjectDirectory
-        guard let presentation else {
-            directoryDiagnostic = "project_directory_not_loaded"
-            return
+    private func waitForCancellation() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 60_000_000_000)
         }
-        do {
-            let selection = try presentation.selection(projectId: projectId)
-            let request = try selection.detailRequest(validating: presentation)
-            projectDetailsTask = Task { [weak self] in
-                do {
-                    for try await update in runtime.watchProject(request) {
-                        let header = try ProjectDetailHeaderPresentationProjector.project(
-                            update,
-                            validating: request
-                        )
-                        if let content = header.state.content {
-                            self?.selectedProjectDetails =
-                                "\(content.projectDisplayName.rawValue) — \(content.clientDisplayName.rawValue)"
-                            return
-                        }
-                    }
-                } catch is CancellationError {
-                    return
-                } catch {
-                    self?.directoryDiagnostic = "project_detail_local_failed"
-                }
-            }
-        } catch {
-            directoryDiagnostic = "project_directory_selection_invalid"
-        }
-    }
-
-    private func watchClientDirectory(_ runtime: LedgerOfflineClientRuntime) async {
-        do {
-            for try await directory in runtime.watchClients() {
-                let selection = try ProjectExistingClientSelectionSnapshot(directory: directory)
-                selectableClients = selection.activeClients
-                clientDirectoryStatus = Self.directoryStatus(
-                    quality: directory.local.quality,
-                    isComplete: directory.local.isCompleteForQuery
-                )
-            }
-        } catch is CancellationError {
-            return
-        } catch {
-            directoryDiagnostic = "client_directory_local_failed"
-        }
-    }
-
-    private func watchProjectDirectory(_ runtime: LedgerOfflineClientRuntime) async {
-        do {
-            for try await directory in runtime.watchProjects() {
-                projectDirectoryStatus = Self.directoryStatus(
-                    quality: directory.local.quality,
-                    isComplete: directory.local.isCompleteForQuery
-                )
-                let active = try ProjectDirectoryPresentationProjector.project(
-                    directory,
-                    segment: .active
-                )
-                let archived = try ProjectDirectoryPresentationProjector.project(
-                    directory,
-                    segment: .archived
-                )
-                activeProjectDirectory = active
-                archivedProjectDirectory = archived
-                activeProjects = active.rows
-                archivedProjects = archived.rows
-            }
-        } catch is CancellationError {
-            return
-        } catch {
-            directoryDiagnostic = "project_directory_local_failed"
-        }
-    }
-
-    private static func directoryStatus(
-        quality: ListSnapshotQuality,
-        isComplete: Bool
-    ) -> String {
-        "\(quality.rawValue) • \(isComplete ? "complete" : "incomplete")"
     }
 }
 

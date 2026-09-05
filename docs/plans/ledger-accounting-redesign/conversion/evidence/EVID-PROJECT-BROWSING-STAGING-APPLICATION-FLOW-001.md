@@ -1,6 +1,6 @@
 # EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001 — Project Browsing Staging Application Flow
 
-- Status: READY candidate; executable work prohibited until exact immutable CI passes
+- Status: implemented candidate; exact synchronized implementation CI pending
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -119,8 +119,65 @@ the frozen shared dependency boundary was generic; stale versus newly captured
 selection language and state enumeration were ambiguous; and architecture-
 decision authority plus generated progress figures were inconsistent. This
 revision makes each obligation explicit. Final correction re-review returned GO
-with no remaining P0-P3 finding; exact immutable READY CI remains required
-before executable work.
+with no remaining P0-P3 finding; the exact immutable READY result is recorded
+below.
+
+## Exact READY Gate
+
+Exact comment-only READY commit
+`9087403111d5a77f9577f9552347f86513e6b7a5` passed all three immutable jobs in
+GitHub Actions run `33953298649`: conversion controls, disposable local
+Supabase verification, and the isolated macOS target job. This authorized only
+the frozen executable boundary above.
+
+## Implemented Boundary
+
+| Manifest identity | Exact path | Implementation hash | Implemented responsibility |
+| --- | --- | --- | --- |
+| `SWIFT-CAB085E24751` | `LedgeriOS/LedgerTargetAppModel/ProjectBrowsingStagingExercise.swift` | `b5f8a92f92ef3347086257d3951cd674d1367b9f10e7ba36f29b183ab61f4c7d` | Core-only atomic directory, evidence-bound selection, exact detail state, honest count labels, diagnostics, generation isolation and lifecycle drainage |
+| `TEST-5C7E5E715EAE` | `LedgeriOS/LedgerTargetAppModelTests/ProjectBrowsingStagingExerciseTests.swift` | `ccf2b062c6e6c96f3c45aef2a3bfb2a873ca783c8f0a47f1c71c3c9519a7eb41` | thirteen deterministic tests covering the frozen matrix |
+| `SWIFT-AA91CE0C3FAB` | `LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingRuntimeAdapter.swift` | `f8b3ba21024d29ec5aa8da47a8f6e0db0f51817bca0ab42a6d33169d19de922f` | thin forwarding of the two typed runtime watches |
+| `SWIFT-07427FF0DA84` | `LedgeriOS/LedgerTargetApp/ProjectBrowsingStagingExerciseView.swift` | `6e05906efccea572bbc772fe5efa9a82df06289b65ad4841d085fae3a5d6ffca` | typed active/archived rows, unknown-before-evidence counts, exact detail/readiness and bounded diagnostics |
+| `SWIFT-061553E63650` | `LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift` | `fd18a09b2d45dd6114fc9fd5a0bdc1e155e66984f22a658e832d9dab34b6a31a` | model ownership and normal/failed cleanup drainage before runtime close |
+| `CONFIG-81235587F306` / `FILE-A6E49E3815F4` | `scripts/check-target-environment.mjs` | `760337535add5769bc3f086103d0d42be71ec2210656bce08d07d44dfd92caf9` | exact import, adapter, inline-ownership, wiring, accessibility and cleanup-order controls |
+
+The frozen Package, XcodeGen specification, Project directory/detail contracts,
+PowerSync query implementations and Account runtime remain byte-unchanged.
+There is no target schema, RLS, Sync Stream, MCP, migration or hosted change.
+
+## Executable Review Corrections
+
+Root review required deterministic active-detail drainage proof and corrected
+selected names to prefer newer found/cached detail content while retaining the
+captured directory row during waiting or uncached states.
+
+Independent executable review then found one P1 presentation defect: loading,
+blocked and stopped states rendered numeric zero counts even though no validated
+directory presentation existed. The model/view now render `unknown` until
+represented evidence exists. Review also found missing reciprocal proof for
+ready+complete but source-nonexhaustive empty segments and missing deterministic
+late old-detail evidence during restart. The tests now mirror both segments and
+use a noncooperative old detail source. Final actual-diff re-review returned GO
+with no P0-P3 findings.
+
+## Local Implementation Verification
+
+- `swift test --package-path LedgeriOS --no-parallel --filter ProjectBrowsingStagingExerciseTests`
+  — 13 tests in one suite passed;
+- `swift test --package-path LedgeriOS --no-parallel` — 441 tests in 76 suites
+  passed;
+- `npm run target:environment:check`, `npm run target:contracts:check`, and
+  `npm run target:mcp:test` — passed;
+- `npm run target:supabase:test:db` — 42 pgTAP assertions passed, and
+  `npm run target:supabase:test:rpc` — Client/Project replay, RLS and direct-
+  write protections passed against the disposable local stack;
+- `npm run target:staging:build:macos` and
+  `npm run target:staging:build:ios` — passed; and
+- `git diff --check` — passed.
+
+The slice is an implemented candidate only. Exact synchronized implementation
+commit CI is still required for `PBROWSEAPP-TEST-010`; verified promotion is not
+yet authorized.
 
 ## Explicit Exclusions
 

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T07:42:11.125Z",
+  "generatedFromManifestSync": "2026-09-05T08:19:17.915Z",
   "totals": {
     "slices": 79,
     "claimedTargetSurfaces": 221,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 165
+    "implementationAdvancedTargetSurfaces": 169
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 6,
+    "implemented": 7,
     "verified": 68,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -561,7 +561,7 @@
       "sliceId": "project-browsing-staging-application-flow",
       "title": "Browse locally represented Projects and preserve exact Project detail truth",
       "kind": "product",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Browsing Staging Application Flow",
       "surfaceIds": [
         "SWIFT-07427FF0DA84",

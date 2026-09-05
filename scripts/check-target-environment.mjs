@@ -514,6 +514,13 @@ if (
   const targetAppSource = swiftFiles(targetAppRoot)
     .map((filePath) => fs.readFileSync(filePath, "utf8"))
     .join("\n");
+  const stagingAppPath = path.join(
+    targetAppRoot,
+    "LedgerTargetStagingApp.swift",
+  );
+  const stagingAppSource = fs.existsSync(stagingAppPath)
+    ? fs.readFileSync(stagingAppPath, "utf8")
+    : "";
   const requiredProjectionText = [
     "supportedDestinations:",
     "- iOS",
@@ -579,6 +586,123 @@ if (
       }
     }
   }
+  const projectBrowsingAdapterPath = path.join(
+    targetAppRoot,
+    "ProjectBrowsingStagingRuntimeAdapter.swift",
+  );
+  if (!fs.existsSync(projectBrowsingAdapterPath)) {
+    fail(
+      "target_project_browsing_adapter_missing",
+      relative(projectBrowsingAdapterPath),
+    );
+  } else {
+    const adapter = fs.readFileSync(projectBrowsingAdapterPath, "utf8");
+    for (const required of [
+      "import LedgerTargetAppModel",
+      "import LedgerTargetPowerSync",
+      "runtime.watchProjects()",
+      "runtime.watchProject(request)",
+    ]) {
+      if (!adapter.includes(required)) {
+        fail("target_project_browsing_adapter_incomplete", required);
+      }
+    }
+  }
+  const projectBrowsingViewPath = path.join(
+    targetAppRoot,
+    "ProjectBrowsingStagingExerciseView.swift",
+  );
+  if (!fs.existsSync(projectBrowsingViewPath)) {
+    fail(
+      "target_project_browsing_view_missing",
+      relative(projectBrowsingViewPath),
+    );
+  } else if (
+    fs
+      .readFileSync(projectBrowsingViewPath, "utf8")
+      .includes("import LedgerTargetPowerSync")
+  ) {
+    fail(
+      "target_project_browsing_view_provider_contamination",
+      relative(projectBrowsingViewPath),
+    );
+  }
+  for (const forbiddenInlineProjectBrowsing of [
+    "ProjectDirectoryPresentationProjector.project(",
+    "ProjectDetailHeaderPresentationProjector.project(",
+    "runtime.watchProjects()",
+    "runtime.watchProject(request)",
+    "activeProjectDirectory",
+    "archivedProjectDirectory",
+    "projectDetailsTask",
+  ]) {
+    if (stagingAppSource.includes(forbiddenInlineProjectBrowsing)) {
+      fail(
+        "target_project_browsing_inline_ownership",
+        forbiddenInlineProjectBrowsing,
+      );
+    }
+  }
+  for (const requiredProjectBrowsingWiring of [
+    "ProjectBrowsingStagingExerciseView(model: model.projectBrowser)",
+    "ProjectBrowsingStagingRuntimeAdapter.adapt(runtime)",
+    "await projectBrowser.start(",
+  ]) {
+    if (!stagingAppSource.includes(requiredProjectBrowsingWiring)) {
+      fail(
+        "target_project_browsing_staging_wiring_incomplete",
+        requiredProjectBrowsingWiring,
+      );
+    }
+  }
+  const startBoundary = stagingAppSource.indexOf(
+    "func start(validatedEnvironment:",
+  );
+  const failedCleanupBoundary = stagingAppSource.indexOf(
+    "private func closeAfterFailedStart(",
+  );
+  const createClientBoundary = stagingAppSource.indexOf("func createClient()");
+  if (
+    startBoundary < 0 ||
+    failedCleanupBoundary <= startBoundary ||
+    createClientBoundary <= failedCleanupBoundary
+  ) {
+    fail(
+      "target_project_browsing_cleanup_boundary_missing",
+      relative(stagingAppPath),
+    );
+  } else {
+    const startBody = stagingAppSource.slice(
+      startBoundary,
+      failedCleanupBoundary,
+    );
+    const failedCleanupBody = stagingAppSource.slice(
+      failedCleanupBoundary,
+      createClientBoundary,
+    );
+    const stopBeforeClose = (source, closeCall) => {
+      const stop = source.indexOf("await projectBrowser.stop()");
+      const close = source.indexOf(closeCall);
+      return stop >= 0 && close > stop;
+    };
+    if (!stopBeforeClose(startBody, "try await runtime.close()")) {
+      fail(
+        "target_project_browsing_normal_cleanup_order",
+        "Project browsing observations must drain before normal runtime close.",
+      );
+    }
+    if (
+      !stopBeforeClose(
+        failedCleanupBody,
+        "try? await openedRuntime.close()",
+      )
+    ) {
+      fail(
+        "target_project_browsing_failed_cleanup_order",
+        "Project browsing observations must drain before failed-start runtime close.",
+      );
+    }
+  }
   if (targetAppSource.includes("CreateProjectCommand(")) {
     fail(
       "target_project_setup_direct_command",
@@ -606,6 +730,25 @@ if (
   ]) {
     if (!targetAppSource.includes(requiredProjectSetupUI)) {
       fail("target_project_setup_accessibility_incomplete", requiredProjectSetupUI);
+    }
+  }
+  for (const requiredProjectBrowsingUI of [
+    '"target-project-directory-status"',
+    '"target-project-active-count"',
+    '"target-project-archived-count"',
+    '"target-project-row-\\(segment.rawValue)-\\(row.projectId.rawValue)"',
+    '"target-selected-project-name"',
+    '"target-selected-client-name"',
+    '"target-project-detail-state"',
+    '"target-project-detail-readiness"',
+    '"target-project-directory-diagnostic"',
+    '"target-project-detail-diagnostic"',
+  ]) {
+    if (!targetAppSource.includes(requiredProjectBrowsingUI)) {
+      fail(
+        "target_project_browsing_accessibility_incomplete",
+        requiredProjectBrowsingUI,
+      );
     }
   }
   for (const forbiddenProductionIdentifier of [

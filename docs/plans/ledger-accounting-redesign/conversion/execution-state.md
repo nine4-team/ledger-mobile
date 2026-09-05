@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 298
+State version: 299
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-BROWSING-STAGING-APPLICATION-FLOW-READY-CANDIDATE
+- Checkpoint: PROJECT-BROWSING-STAGING-APPLICATION-FLOW-IMPLEMENTED-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,15 +33,15 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Whole-program completion remains approximately **12–16%**. Separately, 165
-  of 643 target-relevant surfaces (25.7%) are implemented or verified. The
+- Whole-program completion remains approximately **12–16%**. Separately, 169
+  of 643 target-relevant surfaces (26.3%) are implemented or verified. The
   broader percentage measures executable Supabase/PowerSync product behavior
   through rehearsal and cutover readiness, not document volume or provider-free
   contract count. The broad range is a readiness forecast, not an incremental
   progress counter; every checkpoint must report the exact surface numerator
   and completed user workflow instead of repeating the range alone.
 - The implementation tracker currently contains 271 status-bearing rows: 68
-  done, six verified, six implemented, one ready, zero awaiting verification,
+  done, six verified, seven implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -69,16 +69,23 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
-- Registered four comment-only Project-browsing staging application leaves,
-  increasing the exact target-relevant denominator from 639 to 643 without
-  increasing implemented behavior. The coherent current measures are therefore
-  165/643 implemented-or-later (25.7%) and 459/643 mapped-or-later; the tracker
-  now contains 271 status-bearing rows. The first actual-diff review rejected
-  incomplete lifecycle proof, generic frozen ownership, ambiguous state/
-  selection language and stale progress figures. All findings were corrected;
-  final independent re-review returned GO with no P0-P3. The slice is a READY
-  candidate, but executable work remains prohibited until its exact immutable
-  READY checkpoint passes.
+- Implemented the Project-browsing staging application candidate after exact
+  comment-only READY commit `90874031` passed all three immutable jobs in run
+  `33953298649`. Four claimed leaves now advance the exact implementation count
+  from 165/643 (25.7%) to 169/643 (26.3%); mapped-or-later remains 459/643 and
+  the tracker remains 271 status-bearing rows. A Core-only observable model,
+  thin runtime adapter and typed SwiftUI view replace the staging shell's inline
+  Project directory projection, stable-ID selection and detail observation.
+  Thirteen focused and all 441 Swift tests in 76 suites, exact target controls,
+  MCP tests and both staging builds pass locally. Root review added active-
+  detail drainage and newer-detail-name semantics. Independent executable
+  review caught false numeric-zero counts before represented evidence, missing
+  reciprocal source-exhaustiveness proof and missing noncooperative late-detail
+  restart proof; all were corrected and final re-review returned GO with no
+  P0-P3. Exact synchronized implementation CI remains required before verified
+  promotion. Full Project shell, schema/RLS/Sync/MCP changes, hosted resources,
+  Firebase, migration, production and cutover remain unadvanced;
+  `EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001`.
 
 - Verified existing-Client Project Setup after exact READY commit
   `bc2de1ba` passed all three jobs in run `33949737440`. A Core-only observable
@@ -4017,19 +4024,16 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and pass immutable CI for the exact reviewed comment-only
-`project-browsing-staging-application-flow` READY candidate before changing any
-executable behavior. Only after that exact checkpoint is green, implement the
-frozen boundary: replace the staging shell's inline Project directory
-projection, stable-ID selection and detail observation with the claimed Core-
-only application model, thin runtime adapter and SwiftUI view over the verified
-Project browsing and detail-header contracts. Preserve exact active/archived
-order, honest local readiness and false-empty meaning, every detail state,
-termination callbacks, cancellation/join and drain-before-runtime-close
-ordering. Keep sorting/search, cards, budgets, media, mutation, routes/workspace
-activation, Auth, hosted Sync, A-003/A-004/A-007/A-015/A-016, O-023/O-024/O-025/
-O-040/O-042/O-043, migration and cutover open. Do not provision hosted
-resources, access production or modify Firebase.
+Commit the exact synchronized `project-browsing-staging-application-flow`
+implemented candidate and require all three immutable jobs to pass on that
+commit. Reconfirm the exact six-file executable/control diff, 13 focused and
+complete nonparallel Swift tests, local Supabase regressions, source/contract/
+MCP controls, repeatable target generation, both staging builds and clean
+artifacts. Only then create the docs-only verified promotion and require its
+own exact immutable CI. Keep sorting/search, cards, budgets, media, mutation,
+routes/workspace activation, Auth, hosted Sync, A-003/A-004/A-007/A-015/A-016,
+O-023/O-024/O-025/O-040/O-042/O-043, migration and cutover open. Do not
+provision hosted resources, access production or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 
