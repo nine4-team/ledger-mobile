@@ -154,7 +154,9 @@ final class ClientProjectDirectoryPowerSyncQuery:
                         guard let observedRows = latestRows else { continue }
                         let scopeIsActive = observedRows.first?.scopeIsActive == true
                         let materialRows = observedRows.filter { $0.projectId != nil }
-                        let projects = try materialRows.compactMap { try $0.projectSummary() }
+                        let projects = try materialRows.compactMap {
+                            try $0.projectSummary(expectedPrincipalId: principalId.rawValue)
+                        }
                         let relationshipIsComplete = projects.count == materialRows.count
                         let hasPending = materialRows.contains { $0.isPending }
                         let isComplete = scopeIsActive
@@ -208,6 +210,15 @@ final class ClientProjectDirectoryPowerSyncQuery:
                                     clientId: clientId,
                                     accountId: accountId.rawValue,
                                     operationId: operationId
+                                )
+                            }
+                            if let projectId = row.projectId,
+                               let archiveOperationId = row.archiveOperationId {
+                                try await PowerSyncOverlayReconciler.reconcileProjectArchive(
+                                    database: database,
+                                    projectId: projectId,
+                                    accountId: accountId.rawValue,
+                                    operationId: archiveOperationId
                                 )
                             }
                         }
@@ -481,7 +492,7 @@ final class ClientProjectDirectoryPowerSyncQuery:
           SELECT authoritative.id, authoritative.account_id,
                  authoritative.client_id, authoritative.display_name,
                  authoritative.description, authoritative.lifecycle,
-                 authoritative.revision,
+                 authoritative.revision AS base_revision,
                  NULL AS pending_operation_id,
                  pending.operation_id AS reconciliation_operation_id,
                  NULL AS local_actor_principal_id
@@ -495,7 +506,7 @@ final class ClientProjectDirectoryPowerSyncQuery:
           UNION ALL
           SELECT pending.id, pending.account_id, pending.client_id,
                  pending.display_name, pending.description, pending.lifecycle,
-                 pending.revision, pending.operation_id,
+                 pending.revision AS base_revision, pending.operation_id,
                  NULL AS reconciliation_operation_id,
                  pending.created_by_principal_id AS local_actor_principal_id
           FROM spike_pending_projects AS pending
@@ -513,8 +524,19 @@ final class ClientProjectDirectoryPowerSyncQuery:
         SELECT scope.is_active,
                project.id AS project_id, project.account_id,
                project.client_id, project.display_name AS project_display_name,
-               project.description, project.lifecycle AS project_lifecycle,
-               project.revision AS project_revision,
+               project.description,
+               CASE
+                 WHEN archive.operation_id IS NOT NULL
+                  AND project.base_revision <= archive.projected_revision
+                 THEN archive.lifecycle ELSE project.lifecycle
+               END AS project_lifecycle,
+               CASE
+                 WHEN archive.operation_id IS NOT NULL
+                  AND project.base_revision <= archive.projected_revision
+                 THEN archive.projected_revision ELSE project.base_revision
+               END AS project_revision,
+               project.lifecycle AS project_base_lifecycle,
+               project.base_revision AS project_base_revision,
                project.pending_operation_id AS project_pending_operation_id,
                project.reconciliation_operation_id AS project_reconciliation_operation_id,
                client.id AS joined_client_id,
@@ -523,13 +545,73 @@ final class ClientProjectDirectoryPowerSyncQuery:
                client.created_at_ms AS client_created_at_ms,
                client.updated_at_ms AS client_updated_at_ms,
                client.pending_operation_id AS client_pending_operation_id,
-               client.reconciliation_operation_id AS client_reconciliation_operation_id
+               client.reconciliation_operation_id AS client_reconciliation_operation_id,
+               archive.operation_id AS archive_operation_id,
+               archive.account_id AS archive_account_id,
+               archive.actor_principal_id AS archive_actor_principal_id,
+               archive.project_id AS archive_project_id,
+               archive.fingerprint AS archive_fingerprint,
+               archive.expected_revision AS archive_expected_revision,
+               archive.projected_revision AS archive_projected_revision,
+               archive.lifecycle AS archive_lifecycle,
+               archive.accepted_at_ms AS archive_accepted_at_ms,
+               archive_operation.account_id AS archive_operation_account_id,
+               archive_operation.actor_principal_id AS archive_operation_actor_principal_id,
+               archive_operation.contract_version AS archive_operation_contract_version,
+               archive_operation.fingerprint AS archive_operation_fingerprint,
+               archive_operation.subject_id AS archive_operation_subject_id,
+               archive_operation.local_state AS archive_operation_state,
+               archive_operation.command_type AS archive_operation_command_type,
+               archive_operation.command_expected_revision AS archive_operation_expected_revision,
+               archive_operation.command_envelope_json AS archive_operation_envelope_json,
+               count(archive.id) OVER (
+                 PARTITION BY project.account_id, project.id
+               ) AS archive_overlay_count,
+               (
+                 SELECT count(*)
+                 FROM \(LedgerPowerSyncTable.localOperations) AS applied_archive
+                 WHERE applied_archive.account_id = project.account_id
+                   AND applied_archive.subject_id = project.id
+                   AND applied_archive.contract_version = 'project-archive-v1'
+                   AND applied_archive.local_state IN ('queued', 'applying', 'applied')
+                   AND NOT EXISTS (
+                     SELECT 1
+                     FROM \(LedgerPowerSyncTable.projectArchiveOverlays) AS retained_archive
+                     WHERE retained_archive.operation_id = applied_archive.id
+                   )
+                   AND (
+                     applied_archive.local_state IN ('queued', 'applying')
+                     OR (
+                       applied_archive.local_state = 'applied'
+                       AND NOT (
+                         applied_archive.command_expected_revision IS NOT NULL
+                         AND CAST(CAST(applied_archive.command_expected_revision AS INTEGER) AS TEXT)
+                           = applied_archive.command_expected_revision
+                         AND CAST(applied_archive.command_expected_revision AS INTEGER) > 0
+                         AND (
+                           project.base_revision
+                             > CAST(applied_archive.command_expected_revision AS INTEGER) + 1
+                           OR (
+                             project.base_revision
+                               = CAST(applied_archive.command_expected_revision AS INTEGER) + 1
+                             AND project.lifecycle = 'archived'
+                           )
+                         )
+                       )
+                     )
+                   )
+               ) AS missing_applied_archive_overlay_count
         FROM scope
         LEFT JOIN selected_projects AS project
           ON scope.is_active OR project.local_actor_principal_id = ?
         LEFT JOIN selected_clients AS client
           ON client.account_id = project.account_id
          AND client.id = project.client_id
+        LEFT JOIN \(LedgerPowerSyncTable.projectArchiveOverlays) AS archive
+          ON archive.account_id = project.account_id
+         AND archive.project_id = project.id
+        LEFT JOIN \(LedgerPowerSyncTable.localOperations) AS archive_operation
+          ON archive_operation.id = archive.operation_id
         ORDER BY project.id
         """
 }
@@ -562,6 +644,47 @@ enum PowerSyncOverlayReconciler {
             WHERE id = ? AND account_id = ? AND operation_id = ?
             """,
             parameters: [projectId, accountId, operationId]
+        )
+    }
+
+    static func reconcileProjectArchive(
+        database: any PowerSyncDatabaseProtocol,
+        projectId: String,
+        accountId: String,
+        operationId: String
+    ) async throws {
+        _ = try await database.execute(
+            sql: """
+            DELETE FROM \(LedgerPowerSyncTable.projectArchiveOverlays)
+            WHERE operation_id = ?
+              AND account_id = ?
+              AND project_id = ?
+              AND lifecycle = 'archived'
+              AND EXISTS (
+                SELECT 1
+                FROM \(LedgerPowerSyncTable.localOperations) AS operation
+                WHERE operation.id = \(LedgerPowerSyncTable.projectArchiveOverlays).operation_id
+                  AND operation.account_id = \(LedgerPowerSyncTable.projectArchiveOverlays).account_id
+                  AND operation.actor_principal_id = \(LedgerPowerSyncTable.projectArchiveOverlays).actor_principal_id
+                  AND operation.fingerprint = \(LedgerPowerSyncTable.projectArchiveOverlays).fingerprint
+                  AND operation.subject_id = \(LedgerPowerSyncTable.projectArchiveOverlays).project_id
+                  AND operation.local_state = 'applied'
+              )
+              AND EXISTS (
+                SELECT 1
+                FROM \(LedgerPowerSyncTable.projects) AS authoritative
+                WHERE authoritative.account_id = \(LedgerPowerSyncTable.projectArchiveOverlays).account_id
+                  AND authoritative.id = \(LedgerPowerSyncTable.projectArchiveOverlays).project_id
+                  AND (
+                    authoritative.revision > \(LedgerPowerSyncTable.projectArchiveOverlays).projected_revision
+                    OR (
+                      authoritative.revision = \(LedgerPowerSyncTable.projectArchiveOverlays).projected_revision
+                      AND authoritative.lifecycle = 'archived'
+                    )
+                  )
+              )
+            """,
+            parameters: [operationId, accountId, projectId]
         )
     }
 }
@@ -629,9 +752,33 @@ private struct PowerSyncDirectoryProjectRow: Codable, Sendable {
     let clientUpdatedAtMilliseconds: Int64?
     let clientPendingOperationId: String?
     let clientReconciliationOperationId: String?
+    let projectBaseLifecycle: String?
+    let projectBaseRevision: Int64?
+    let archiveOperationId: String?
+    let archiveAccountId: String?
+    let archiveActorPrincipalId: String?
+    let archiveProjectId: String?
+    let archiveFingerprint: String?
+    let archiveExpectedRevision: String?
+    let archiveProjectedRevision: Int64?
+    let archiveLifecycle: String?
+    let archiveAcceptedAtMilliseconds: Int64?
+    let archiveOperationAccountId: String?
+    let archiveOperationActorPrincipalId: String?
+    let archiveOperationContractVersion: String?
+    let archiveOperationFingerprint: String?
+    let archiveOperationSubjectId: String?
+    let archiveOperationState: String?
+    let archiveOperationCommandType: String?
+    let archiveOperationExpectedRevision: String?
+    let archiveOperationEnvelopeJSON: String?
+    let archiveOverlayCount: Int64
+    let missingAppliedArchiveOverlayCount: Int64
 
     var isPending: Bool {
-        projectPendingOperationId != nil || clientPendingOperationId != nil
+        projectPendingOperationId != nil
+            || clientPendingOperationId != nil
+            || archiveOperationId != nil
     }
 
     var hasCompleteRelationship: Bool {
@@ -673,9 +820,57 @@ private struct PowerSyncDirectoryProjectRow: Codable, Sendable {
         clientReconciliationOperationId = try cursor.getStringOptional(
             name: "client_reconciliation_operation_id"
         )
+        projectBaseLifecycle = try cursor.getStringOptional(name: "project_base_lifecycle")
+        projectBaseRevision = try cursor.getInt64Optional(name: "project_base_revision")
+        archiveOperationId = try cursor.getStringOptional(name: "archive_operation_id")
+        archiveAccountId = try cursor.getStringOptional(name: "archive_account_id")
+        archiveActorPrincipalId = try cursor.getStringOptional(
+            name: "archive_actor_principal_id"
+        )
+        archiveProjectId = try cursor.getStringOptional(name: "archive_project_id")
+        archiveFingerprint = try cursor.getStringOptional(name: "archive_fingerprint")
+        archiveExpectedRevision = try cursor.getStringOptional(
+            name: "archive_expected_revision"
+        )
+        archiveProjectedRevision = try cursor.getInt64Optional(
+            name: "archive_projected_revision"
+        )
+        archiveLifecycle = try cursor.getStringOptional(name: "archive_lifecycle")
+        archiveAcceptedAtMilliseconds = try cursor.getInt64Optional(
+            name: "archive_accepted_at_ms"
+        )
+        archiveOperationAccountId = try cursor.getStringOptional(
+            name: "archive_operation_account_id"
+        )
+        archiveOperationActorPrincipalId = try cursor.getStringOptional(
+            name: "archive_operation_actor_principal_id"
+        )
+        archiveOperationContractVersion = try cursor.getStringOptional(
+            name: "archive_operation_contract_version"
+        )
+        archiveOperationFingerprint = try cursor.getStringOptional(
+            name: "archive_operation_fingerprint"
+        )
+        archiveOperationSubjectId = try cursor.getStringOptional(
+            name: "archive_operation_subject_id"
+        )
+        archiveOperationState = try cursor.getStringOptional(name: "archive_operation_state")
+        archiveOperationCommandType = try cursor.getStringOptional(
+            name: "archive_operation_command_type"
+        )
+        archiveOperationExpectedRevision = try cursor.getStringOptional(
+            name: "archive_operation_expected_revision"
+        )
+        archiveOperationEnvelopeJSON = try cursor.getStringOptional(
+            name: "archive_operation_envelope_json"
+        )
+        archiveOverlayCount = try cursor.getInt64(name: "archive_overlay_count")
+        missingAppliedArchiveOverlayCount = try cursor.getInt64(
+            name: "missing_applied_archive_overlay_count"
+        )
     }
 
-    func projectSummary() throws -> ProjectSummary? {
+    func projectSummary(expectedPrincipalId: String) throws -> ProjectSummary? {
         guard let projectId else {
             return nil
         }
@@ -684,6 +879,11 @@ private struct PowerSyncDirectoryProjectRow: Codable, Sendable {
               let projectRevision, projectRevision > 0 else {
             throw ClientProjectDirectoryPowerSyncFailure.malformedProjectRow
         }
+        try validateArchiveOverlay(
+            accountId: accountId,
+            projectId: projectId,
+            expectedPrincipalId: expectedPrincipalId
+        )
         guard let projectLifecycle = DirectoryLifecycleState(rawValue: projectLifecycle) else {
             throw ClientProjectDirectoryPowerSyncFailure.malformedProjectRow
         }
@@ -721,5 +921,110 @@ private struct PowerSyncDirectoryProjectRow: Codable, Sendable {
             description: description,
             lifecycle: projectLifecycle
         )
+    }
+
+    private func validateArchiveOverlay(
+        accountId: String,
+        projectId: String,
+        expectedPrincipalId: String
+    ) throws {
+        guard missingAppliedArchiveOverlayCount == 0 else {
+            throw ClientProjectDirectoryPowerSyncFailure.malformedProjectRow
+        }
+        guard let archiveOperationId else {
+            guard archiveOverlayCount == 0 else {
+                throw ClientProjectDirectoryPowerSyncFailure.malformedProjectRow
+            }
+            return
+        }
+        guard archiveOverlayCount == 1,
+              archiveAccountId == accountId,
+              archiveProjectId == projectId,
+              archiveActorPrincipalId == expectedPrincipalId,
+              archiveLifecycle == "archived",
+              let archiveActorPrincipalId,
+              let archiveFingerprint,
+              let archiveExpectedRevision,
+              let expected = UInt64(archiveExpectedRevision),
+              String(expected) == archiveExpectedRevision,
+              expected > 0,
+              expected < UInt64(Int64.max),
+              archiveProjectedRevision == Int64(expected) + 1,
+              let archiveAcceptedAtMilliseconds,
+              archiveAcceptedAtMilliseconds >= 0,
+              archiveOperationAccountId == accountId,
+              archiveOperationActorPrincipalId == archiveActorPrincipalId,
+              archiveOperationFingerprint == archiveFingerprint,
+              archiveOperationSubjectId == projectId,
+              ["queued", "applying", "applied"].contains(archiveOperationState),
+              archiveOperationContractVersion == "project-archive-v1",
+              archiveOperationCommandType == "archive_project",
+              archiveOperationExpectedRevision == archiveExpectedRevision,
+              let archiveOperationEnvelopeJSON,
+              (try? OperationID(validating: archiveOperationId)) != nil,
+              (try? OperationFingerprint(validating: archiveFingerprint)) != nil,
+              projectBaseLifecycle != nil,
+              projectBaseRevision != nil else {
+            throw ClientProjectDirectoryPowerSyncFailure.malformedProjectRow
+        }
+        guard ProjectArchiveOverlayCommandValidator.isValid(
+            operationId: archiveOperationId,
+            accountId: accountId,
+            actorPrincipalId: archiveActorPrincipalId,
+            contractVersion: "project-archive-v1",
+            projectId: projectId,
+            expectedRevision: expected,
+            fingerprint: archiveFingerprint,
+            envelopeJSON: archiveOperationEnvelopeJSON
+        ) else {
+            throw ClientProjectDirectoryPowerSyncFailure.malformedProjectRow
+        }
+    }
+}
+
+enum ProjectArchiveOverlayCommandValidator {
+    static func isValid(
+        operationId: String,
+        accountId: String,
+        actorPrincipalId: String,
+        contractVersion: String,
+        projectId: String,
+        expectedRevision: UInt64,
+        fingerprint: String,
+        envelopeJSON: String
+    ) -> Bool {
+        guard let typedOperationId = try? OperationID(validating: operationId),
+              let typedAccountId = try? AccountID(validating: accountId),
+              ProjectArchiveOperationIdentity.isValid(
+                typedOperationId,
+                accountId: typedAccountId
+              ),
+              let data = envelopeJSON.data(using: .utf8),
+              let envelope = try? OperationContractCodec.decode(
+                OperationEnvelope<ArchiveProjectPayload>.self,
+                from: data
+              ),
+              let canonical = try? OperationContractCodec.encode(envelope),
+              canonical == data,
+              envelope.operationId.rawValue == operationId,
+              envelope.accountId.rawValue == accountId,
+              envelope.actorPrincipalId.rawValue == actorPrincipalId,
+              envelope.contractVersion.rawValue == contractVersion,
+              envelope.payload.projectId.rawValue == projectId,
+              let entityId = try? EntityID(validating: projectId),
+              envelope.preconditions == [
+                .expectedRevision(
+                    subject: LedgerEntityReference(
+                        kind: .project,
+                        id: entityId
+                    ),
+                    revision: expectedRevision
+                )
+              ],
+              let typedFingerprint = try? OperationFingerprint(validating: fingerprint),
+              (try? OperationFingerprint.make(for: envelope)) == typedFingerprint else {
+            return false
+        }
+        return true
     }
 }

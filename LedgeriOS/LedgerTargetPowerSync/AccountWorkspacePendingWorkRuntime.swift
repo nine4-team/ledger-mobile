@@ -68,6 +68,7 @@ extension BudgetCategoryReferencePowerSyncQuery: AccountWorkspaceBudgetCategoryQ
 enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
+    case archiveProject
     case pendingUploadCount
     case encryptionCipher
     case captureAttachment
@@ -80,6 +81,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case clientDirectory
     case projectDirectory
     case budgetCategories
+    case projectArchiveOperation
 }
 
 struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
@@ -265,6 +267,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let creationStore: ClientCreationPowerSyncStore
     let detailsQuery: ClientCoreDetailsPowerSyncQuery
     let projectSetupStore: ProjectSetupPowerSyncStore
+    let projectArchiveStore: ProjectArchivePowerSyncStore
     let projectDetailsQuery: ProjectCoreDetailsPowerSyncQuery
     let directoryQuery: ClientProjectDirectoryPowerSyncQuery
     let attachmentStore: any AccountWorkspaceAttachmentStoring
@@ -319,6 +322,12 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
             now: now
         )
         projectSetupStore = ProjectSetupPowerSyncStore(database: structuredDatabase, now: now)
+        projectArchiveStore = ProjectArchivePowerSyncStore(
+            database: structuredDatabase,
+            accountId: accountId,
+            principalId: principalId,
+            now: now
+        )
         projectDetailsQuery = ProjectCoreDetailsPowerSyncQuery(
             database: structuredDatabase,
             principalId: principalId,
@@ -385,6 +394,18 @@ actor AccountWorkspacePendingWorkRuntime {
                 throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
             }
             return try await resources.projectSetupStore.create(command)
+        }
+    }
+
+    func archiveProject(_ command: ArchiveProjectCommand) async throws -> OperationReceipt {
+        try await withFiniteLease(.archiveProject) { resources in
+            guard command.envelope.accountId == resources.accountId else {
+                throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch
+            }
+            guard command.envelope.actorPrincipalId == resources.principalId else {
+                throw LedgerOfflineClientRuntimeFailure.principalScopeMismatch
+            }
+            return try await resources.projectArchiveStore.archive(command)
         }
     }
 
@@ -497,6 +518,22 @@ actor AccountWorkspacePendingWorkRuntime {
                 resources.budgetCategoryQuery.watchBudgetCategories(
                     accountId: resources.accountId
                 )
+            }
+        )
+    }
+
+    func startProjectArchiveOperationWatch(
+        id: UUID,
+        operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .projectArchiveOperation,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.projectArchiveStore.watchOperation(operationId)
             }
         )
     }

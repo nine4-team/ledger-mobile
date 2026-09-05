@@ -5,12 +5,22 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 449 of 633 target-relevant
+Status: M0 backend-surface classification complete; 474 of 658 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
-by this directory. The local Client/Project PowerSync directory and browse
+by this directory. The Project archive browser slice is implemented locally
+from exact green READY commit `089dc562` / immutable run `33961281661`: nine
+claimed leaves provide confirmation-bound offline archive, encrypted PowerSync
+optimism/reconciliation, auth-first Postgres/RLS/RPC, runnable pgTAP and scoped
+Data API proof. Root and independent executable review returned GO after
+corrections; 28 focused and all 473 Swift tests, 123 pgTAP assertions including
+81 archive assertions, zero database-lint findings, target controls and both
+builds pass locally. Runnable CONFIG-CAB6A5DAD1C0 replaces but does not delete
+byte-identical inert marker CONFIG-062839A9903C. Implementation commit/CI and
+real authenticated PowerSync TEST-012 remain pending; A-003/A-004 stay proposed
+and this grants no hosted/migration/cutover authority. The local Client/Project PowerSync directory and browse
 provider is implemented with 16 focused tests and independent review; exact
 implementation commit `a1b57a37` passes immutable run `33918240622`. Hosted
 Auth/Sync proof remains pending. A separate four-leaf local-only Account

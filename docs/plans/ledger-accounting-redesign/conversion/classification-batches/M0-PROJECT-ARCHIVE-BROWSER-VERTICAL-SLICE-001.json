@@ -13,13 +13,13 @@
   "surfaces": [
     {
       "id": "SWIFT-53B8C9C37D3F",
-      "acknowledgeSourceHash": "7b78c35b5116dcf27d0b4f438fedcdf28819b58d14372b62cb3ccfcf22be7b9d",
-      "currentBehavior": "Contains only the reviewed READY contract for encrypted offline Project-archive acceptance, lifecycle overlay and reconciliation; it defines no executable type or database behavior.",
+      "acknowledgeSourceHash": "72ac2c1ed552299dba0658bc3a10894da1cb2d7ea675086eb0dc2694e322e479",
+      "currentBehavior": "Implements encrypted atomic Project-archive acceptance, exact Account-bound operation identity, local lifecycle overlay, replay, FIFO upload state and authoritative/rejected reconciliation without mutating synchronized rows.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-004"],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only READY scaffold; existing schema, query, upload and runtime files remain shared touchpoints with their existing primary owners.",
+      "notes": "Executable local-only implementation reviewed GO with no P0-P3; existing schema, query, upload and runtime files remain shared touchpoints with their existing primary owners.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["encrypted Project archive acceptance and exact optimistic lifecycle reconciliation"],
@@ -27,17 +27,17 @@
         "syncRequirements": ["Pending create/archive FIFO, restart, rejection rollback and authoritative archived-readback cleanup remain exact"]
       },
       "migration": {"rule": "Create no Firebase adapter or dual-write path.", "reconciliation": ["Applied optimism remains until exact archived or newer authoritative Project evidence; rejection removes only its matching overlay"]},
-      "verification": {"tests": ["ProjectArchivePowerSyncVerticalSliceTests"], "acceptance": ["Implementation replaces this comment-only scaffold only from an immutable green READY baseline"]}
+      "verification": {"tests": ["ProjectArchivePowerSyncVerticalSliceTests"], "acceptance": ["Focused and full nonparallel Swift suites prove atomic acceptance, replay, restart, FIFO, rejection and exact authoritative reconciliation"]}
     },
     {
       "id": "SWIFT-0753297CA29A",
-      "acknowledgeSourceHash": "f8d2a610c3405229a65de9f61761e23265a1d0279943b042e2873f8ce1e755e5",
-      "currentBehavior": "Contains only the reviewed READY contract for a scoped-user Supabase Project-archive RPC adapter; it makes no network request.",
+      "acknowledgeSourceHash": "7dfc97dc8fa344fc460d73a06238a8d3e71ef87bd5967f5a44a17458ceba55a2",
+      "currentBehavior": "Implements the scoped-user Supabase Project-archive RPC adapter with exact command encoding, Account-bound OperationID validation and terminal-result identity/fingerprint validation.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-003"],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only READY scaffold with no endpoint or credential.",
+      "notes": "Executable adapter uses injected local target endpoint, publishable key and scoped user token only; no hosted endpoint or service-role credential is embedded.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["Swift scoped-user Project archive RPC adapter"],
@@ -49,13 +49,13 @@
     },
     {
       "id": "TEST-475355568D74",
-      "acknowledgeSourceHash": "564e11ab07d6a0fd430c56e911c84951d0ffdcf387d645b09d8119c97eb27b95",
-      "currentBehavior": "Contains only the reviewed READY test inventory for Project archive persistence, overlay, order, replay, conflict, rejection, reconciliation, scoping and preservation; it runs no tests.",
+      "acknowledgeSourceHash": "bb45930f943dcdbf2494064ed40453598b71da692a31fb5d3334cecae70041ad",
+      "currentBehavior": "Runs the deterministic Project archive PowerSync matrix for acceptance, persistence, restart, overlay, FIFO order, replay, rejection, reconciliation, scope and malformed-evidence refusal.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only synthetic provider-test scaffold.",
+      "notes": "Executable synthetic provider tests pass as part of the 28 focused ProjectArchive tests and 473-test complete nonparallel suite.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["deterministic Project archive PowerSync vertical-slice matrix"],
@@ -67,13 +67,13 @@
     },
     {
       "id": "SWIFT-D58BDD1F45EE",
-      "acknowledgeSourceHash": "b079de9943b69b63675565e2aa9d6751154c2f771fff93ae21856623d0976105",
-      "currentBehavior": "Contains only the reviewed READY boundary for Core-only Project archive confirmation/submission/retry/operation-state orchestration over existing browser evidence; it defines no executable type.",
+      "acknowledgeSourceHash": "d4522a1f3f7d14ad87ce97e2aa48a1234223df1078354bbf8e9ee01289670451",
+      "currentBehavior": "Implements Core-only Project archive confirmation, exact current-evidence revalidation, stable submission/retry identity, operation observation and bounded six-state presentation over the existing Project browser.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only READY AppModel scaffold; it neither interprets provider rows nor grants archive authority.",
+      "notes": "Executable AppModel remains backend-neutral, interprets no provider row and grants no archive authority.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["current-evidence-bound archive submission and exact operation-state application model"],
@@ -85,13 +85,13 @@
     },
     {
       "id": "TEST-EAAB5CD74000",
-      "acknowledgeSourceHash": "135558a27811c2a69ba86e7ed44cac1bb98e46318e94f1f160108f5bcb462831",
-      "currentBehavior": "Contains only the reviewed READY test inventory for Project archive confirmation/admission, identity, operation state, recovery, cancellation and restart; it runs no tests.",
+      "acknowledgeSourceHash": "a792b675301c16ef6807088e7d230f907be3e08aa94573ac3ee288a25468decb",
+      "currentBehavior": "Runs deterministic Project archive AppModel tests for confirmation/admission, stale-evidence refusal, stable identity, six operation states, selection changes, recovery, cancellation and restart drainage.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only synthetic AppModel-test scaffold.",
+      "notes": "Executable synthetic AppModel tests pass in the focused ProjectArchive and complete nonparallel Swift suites.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["deterministic archive-through-browser application test matrix"],
@@ -103,13 +103,13 @@
     },
     {
       "id": "SWIFT-4F36B1F525D0",
-      "acknowledgeSourceHash": "cb7f79f07e6616817111c3da66a40aba3655c32ab76a38c67588f04d56790cb9",
-      "currentBehavior": "Contains only the reviewed READY boundary for a thin archive/operation-state target runtime adapter; it defines no executable adapter or UI behavior.",
+      "acknowledgeSourceHash": "fc460794ca7f6cee07ff2401778463cb8ef4bb599ac1d6ddde0fe30f073e513f",
+      "currentBehavior": "Implements the thin Account-bound target runtime adapter that forwards archive submission and exact operation-state observation without embedding provider policy.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only READY adapter scaffold; all provider and policy ownership stays outside the app target.",
+      "notes": "Executable adapter keeps all provider and policy ownership outside the app target.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["thin Account-bound archive and operation-observation runtime adapter"],
@@ -121,13 +121,13 @@
     },
     {
       "id": "CONFIG-20D251EF21F6",
-      "acknowledgeSourceHash": "f6ee6c04b8c91ecf49cd35896b4e52b30eab3bf7d513207913a79850edc19c0f",
-      "currentBehavior": "Contains only the reviewed READY contract for a local Project-archive Postgres migration; it creates or mutates no schema object.",
+      "acknowledgeSourceHash": "e45ef69c82363a384a559d1991cf5a1080ec3dc6f9901defaf0e52345c8f5269",
+      "currentBehavior": "Implements the local Project-archive Postgres handler and authenticated RPC with auth-first scope/capability checks, exact Account-bound operation identity, deterministic locking, narrow lifecycle/revision/time mutation and immutable terminal results.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-003"],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "The filename was generated by the pinned Supabase CLI; executable DDL is absent.",
+      "notes": "The filename was generated by the pinned Supabase CLI. Local reset, 123/123 pgTAP assertions, zero database-lint findings and scoped Data API verification pass.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["trusted Project archive handler and authenticated scoped RPC"],
@@ -135,35 +135,53 @@
         "syncRequirements": ["One immutable operation result and authoritative Project row drive reconciliation"]
       },
       "migration": {"rule": "Apply only to a disposable isolated target database; read no Firebase data.", "reconciliation": ["All existing and future Project-related rows remain untouched by archive"]},
-      "verification": {"tests": ["supabase/tests/project_archive_vertical_slice.test.sql.ready", "scripts/test-local-project-archive-rpc.mjs"], "acceptance": ["Implementation retains the non-runnable `.sql.ready` marker and adds a separately discovered runnable `.sql` suite; later DDL passes reset, lint, pgTAP, Data API, concurrency and security review"]}
+      "verification": {"tests": ["supabase/tests/project_archive_vertical_slice.test.sql", "scripts/test-local-project-archive-rpc.mjs"], "acceptance": ["Implementation retains the inert `.sql.ready` marker while the separately discovered runnable `.sql` suite passes reset, lint, 81 archive pgTAP assertions, Data API, concurrency and security review"]}
     },
     {
       "id": "CONFIG-062839A9903C",
       "acknowledgeSourceHash": "964cc5e8caa6a377393e51d063b7e03ad1d3c6fcc66530926f91ce93c37129c6",
-      "currentBehavior": "Contains only the reviewed READY inventory for Project archive Postgres tests; it executes and asserts nothing.",
-      "disposition": "redesign",
-      "status": "target_mapped",
-      "blockers": ["A-003"],
+      "currentBehavior": "Retains the exact reviewed comment-only READY inventory as a physically present inert marker; executable Project archive pgTAP ownership moved to CONFIG-CAB6A5DAD1C0.",
+      "disposition": "retire",
+      "status": "retired",
+      "blockers": [],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only `.sql.ready` reservation outside normal run-all pgTAP discovery. At implementation, retain it byte-for-byte as an inert marker and retire path-derived CONFIG-062839A9903C with replacement evidence in the same synchronized checkpoint that creates, registers, discovers, classifies and claims runnable `.sql` CONFIG-CAB6A5DAD1C0; move every test-owner path, retain exactly one runnable pgTAP leaf plus the inert marker and leave package.json unchanged.",
+      "notes": "Retired in place, byte-for-byte, by runnable replacement CONFIG-CAB6A5DAD1C0. The inert `.sql.ready` marker remains outside normal pgTAP discovery at SHA-256 964cc5e8caa6a377393e51d063b7e03ad1d3c6fcc66530926f91ce93c37129c6; package.json remains unchanged.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
-        "surfaces": ["Project archive database invariant, preservation, replay, concurrency and RLS tests"],
+        "surfaces": ["retired READY reservation for Project archive database tests; replaced by CONFIG-CAB6A5DAD1C0"],
         "securityRequirements": ["Prove positive manager access and restricted/revoked/anonymous/cross-Account denial", "Prove direct-write denial and auth-first non-enumeration"],
         "syncRequirements": ["Validate exact terminal result/revision evidence consumed by local reconciliation"]
       },
-      "migration": {"rule": "Use synthetic local fixtures only; retain this reservation as an inert marker and transition its identity through explicit retirement/replacement evidence, never disappearance.", "reconciliation": ["No statement or archive behavior executes at READY"]},
-      "verification": {"tests": ["npm run target:supabase:test:db"], "acceptance": ["Every planned database/security case becomes executable before implementation status, with retained CONFIG-062839A9903C retired and CONFIG-CAB6A5DAD1C0 registered/classified/claimed without a new missing-surface warning"]}
+      "migration": {"rule": "Retain this reservation byte-for-byte as an inert historical marker; runnable synthetic local proof is owned by CONFIG-CAB6A5DAD1C0.", "reconciliation": ["No statement or archive behavior executes from this retained marker"]},
+      "verification": {"tests": ["npm run target:supabase:test:db"], "acceptance": ["CONFIG-062839A9903C remains physically present and byte-identical while CONFIG-CAB6A5DAD1C0 is the sole runnable classified and claimed Project archive pgTAP leaf"]}
+    },
+    {
+      "id": "CONFIG-CAB6A5DAD1C0",
+      "acknowledgeSourceHash": "9723eb9d935dd0d3aa8d1a0b3ca00d0c5aaff3768151db40af03dc6b11d94412",
+      "currentBehavior": "Runs 81 Project archive pgTAP assertions covering narrow mutation and preservation, exact replay/request binding, revision boundaries and concurrency, Account-bound OperationID non-enumeration, RLS and direct-write denial.",
+      "disposition": "redesign",
+      "status": "implemented",
+      "blockers": ["A-003"],
+      "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
+      "notes": "Runnable replacement for retired inert READY marker CONFIG-062839A9903C. It is the sole runnable Project archive pgTAP leaf and is discovered by the authorized conversion-control touchpoint.",
+      "target": {
+        "owner": "Project Archive Browser Vertical Slice",
+        "surfaces": ["Project archive database invariant, preservation, replay, concurrency, identity and RLS tests"],
+        "securityRequirements": ["Prove positive manager access and restricted, revoked, anonymous, actor-mismatched and cross-Account denial", "Prove direct-write denial, auth-first non-enumeration and Account-bound OperationID refusal before result lookup"],
+        "syncRequirements": ["Validate exact terminal result, request hash and revision evidence consumed by local reconciliation"]
+      },
+      "migration": {"rule": "Use synthetic fixtures against the disposable local Supabase stack only.", "reconciliation": ["Narrow lifecycle/revision/time mutation and immutable result insertion preserve every represented relationship and allocation row"]},
+      "verification": {"tests": ["npm run target:supabase:test:db"], "acceptance": ["All 123 pgTAP assertions pass, including all 81 Project archive assertions, with zero database-lint findings"]}
     },
     {
       "id": "CONFIG-78696A3C79AA",
-      "acknowledgeSourceHash": "5e209e3987f8cd355295b68631d5ad3880d0892cd1b64db7f2bd6d5e5dd40a9e",
-      "currentBehavior": "Contains only a comment-only reviewed READY boundary for a disposable local Project-archive Data API test; it makes no request.",
+      "acknowledgeSourceHash": "f5d1771d40faf1a7b229ceb16465b2239c7598bf6041a4b32e0daa827453a932",
+      "currentBehavior": "Runs a disposable local scoped-user Data API verification for valid archive apply/replay, Account-bound operation identity, concurrency, authorization and terminal-result binding.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": ["A-003"],
       "evidence": ["EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
-      "notes": "Comment-only runner scaffold; hosted endpoints and service-role credentials are prohibited.",
+      "notes": "Executable local-only runner passed; hosted endpoints and service-role credentials remain prohibited.",
       "target": {
         "owner": "Project Archive Browser Vertical Slice",
         "surfaces": ["scoped-user local Data API Project archive verification"],
@@ -171,7 +189,7 @@
         "syncRequirements": ["Exercise exact canonical command text, replay, conflict and terminal result binding"]
       },
       "migration": {"rule": "Call only the disposable local Supabase stack.", "reconciliation": ["No network behavior exists at READY"]},
-      "verification": {"tests": ["node scripts/test-local-project-archive-rpc.mjs"], "acceptance": ["Later executable runner proves apply, replay, concurrency and scoped access"]}
+      "verification": {"tests": ["node scripts/test-local-project-archive-rpc.mjs"], "acceptance": ["Executable runner proves apply, replay, concurrency, Account-bound identity refusal and scoped access"]}
     }
   ]
 }

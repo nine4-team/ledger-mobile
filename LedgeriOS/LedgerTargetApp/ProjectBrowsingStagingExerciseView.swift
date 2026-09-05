@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ProjectBrowsingStagingExerciseView: View {
     @Bindable var model: ProjectBrowsingStagingExercise
+    @Bindable var archive: ProjectArchiveBrowserStagingExercise
 
     var body: some View {
         Section("Local Project Browser") {
@@ -32,6 +33,33 @@ struct ProjectBrowsingStagingExerciseView: View {
             LabeledContent("Detail readiness", value: model.detailReadiness)
                 .accessibilityIdentifier("target-project-detail-readiness")
 
+            Button("Archive Project") {
+                archive.requestArchiveConfirmation()
+            }
+            .disabled(!archive.canRequestArchive)
+            .accessibilityIdentifier("target-project-archive-action")
+
+            LabeledContent("Archive state", value: archive.operationStateLabel)
+                .accessibilityIdentifier("target-project-archive-state")
+
+            if archive.canRetryAmbiguousAcceptance {
+                Button("Retry local acceptance") {
+                    Task { await archive.retryAmbiguousAcceptance() }
+                }
+                .accessibilityIdentifier("target-project-archive-retry")
+            } else if archive.canRetryRejectedArchive {
+                Button("Retry archive") {
+                    archive.requestRejectedRetryConfirmation()
+                }
+                .accessibilityIdentifier("target-project-archive-retry")
+            }
+
+            if let archiveDiagnostic = archive.diagnostic {
+                Text(archiveDiagnostic)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("target-project-archive-diagnostic")
+            }
+
             if let directoryDiagnostic = model.directoryDiagnostic {
                 Text(directoryDiagnostic)
                     .foregroundStyle(.red)
@@ -43,6 +71,27 @@ struct ProjectBrowsingStagingExerciseView: View {
                     .accessibilityIdentifier("target-project-detail-diagnostic")
             }
         }
+        .onChange(of: model.selectedProjectArchiveEvidence) {
+            Task { await archive.selectionDidSettle() }
+        }
+        .alert(
+            "Archive this Project?",
+            isPresented: Binding(
+                get: { archive.isConfirmationPresented },
+                set: { presented in
+                    if !presented { archive.cancelConfirmation() }
+                }
+            )
+        ) {
+            Button("Cancel", role: .cancel) {
+                archive.cancelConfirmation()
+            }
+            .accessibilityIdentifier("target-project-archive-cancel")
+            Button("Archive", role: .destructive) {
+                Task { await archive.confirmArchive() }
+            }
+            .accessibilityIdentifier("target-project-archive-confirm")
+        }
     }
 
     @ViewBuilder
@@ -53,6 +102,7 @@ struct ProjectBrowsingStagingExerciseView: View {
         ForEach(rows, id: \.projectId) { row in
             Button {
                 Task {
+                    await archive.selectionDidChange()
                     await model.select(projectId: row.projectId, segment: segment)
                 }
             } label: {
@@ -63,6 +113,7 @@ struct ProjectBrowsingStagingExerciseView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .disabled(archive.isSubmitting)
             .accessibilityIdentifier(
                 "target-project-row-\(segment.rawValue)-\(row.projectId.rawValue)"
             )

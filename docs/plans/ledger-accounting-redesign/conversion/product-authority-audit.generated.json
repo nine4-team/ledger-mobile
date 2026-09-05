@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T10:39:52.108Z",
+  "generatedFromManifestSync": "2026-09-05T12:26:43.217Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 918,
+    "surfaces": 919,
     "targetRelevantSurfaces": 658,
     "batches": 33,
-    "productScopeSurfaces": 747,
+    "productScopeSurfaces": 748,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -79,7 +79,7 @@
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
         "M0-REPORTING-SEARCH-001"
       ],
-      "surfaceCount": 506,
+      "surfaceCount": 507,
       "targetRelevantSurfaceCount": 390
     },
     {
@@ -92,7 +92,7 @@
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "surfaceCount": 139,
+      "surfaceCount": 140,
       "targetRelevantSurfaceCount": 137
     },
     {
@@ -2053,7 +2053,7 @@
       "title": "Project archive through the isolated target browser",
       "scope": "product",
       "rationale": "This isolated archive-through-browser slice composes the verified Project archive command/use case and Project browsing evidence into one exact revision-safe offline lifecycle mutation while preserving every relationship and historical record and leaving restore, delete, rename, reassignment and media mutation outside.",
-      "surfaceCount": 9,
+      "surfaceCount": 10,
       "targetRelevantSurfaceCount": 9,
       "authorities": [
         {
@@ -2133,6 +2133,7 @@
         "CONFIG-062839A9903C",
         "CONFIG-20D251EF21F6",
         "CONFIG-78696A3C79AA",
+        "CONFIG-CAB6A5DAD1C0",
         "SWIFT-0753297CA29A",
         "SWIFT-4F36B1F525D0",
         "SWIFT-53B8C9C37D3F",

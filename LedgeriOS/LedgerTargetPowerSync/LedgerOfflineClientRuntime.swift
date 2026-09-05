@@ -48,6 +48,22 @@ public final class LedgerOfflineClientRuntime: Sendable {
         try await lifecycleOwner.createProject(command)
     }
 
+    public func archive(_ command: ArchiveProjectCommand) async throws -> OperationReceipt {
+        try await lifecycleOwner.archiveProject(command)
+    }
+
+    public func watchOperation(
+        _ operationId: OperationID
+    ) -> AsyncThrowingStream<OperationSnapshot, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startProjectArchiveOperationWatch(
+                id: id,
+                operationId: operationId,
+                continuation: continuation
+            )
+        }
+    }
+
     public func watchProject(
         _ request: ProjectCoreDetailsRequest
     ) -> AsyncThrowingStream<ProjectCoreDetailsUpdate, Error> {

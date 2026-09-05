@@ -486,7 +486,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all five streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all six streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -506,6 +506,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
 
         _ = try await runtime.createClient(context.clientCommand(id: "gate"))
         _ = try await runtime.createProject(context.projectCommand(id: "gate"))
+        let archiveCommand = try context.archiveCommand(id: "gate")
+        _ = try await runtime.archive(archiveCommand)
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.captureAttachment(context.capture(id: "attachment-gate"))
         _ = try await runtime.pendingWorkSummary()
@@ -524,9 +526,10 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchClients(),
             runtime.watchProjects(),
             runtime.watchBudgetCategories(),
+            runtime.watchOperation(archiveCommand.envelope.operationId),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(5)
+        await streamCounter.waitUntilEntered(6)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
@@ -534,6 +537,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .clientDirectory,
             .projectDirectory,
             .budgetCategories,
+            .projectArchiveOperation,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
         }
@@ -548,6 +552,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
             _ = try await runtime.createProject(context.projectCommand(id: "while-closing"))
+        }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.archive(context.archiveCommand(id: "while-closing"))
         }
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
             _ = try await runtime.pendingUploadCount()
@@ -568,12 +575,14 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchClient(clientRequest))
         try await Self.expectClosed(runtime.watchProject(projectRequest))
         try await Self.expectClosed(runtime.watchBudgetCategories())
+        try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         await finiteGate.release()
         _ = try await finite.value
         try await close.value
         for operation in [
             AccountWorkspaceRuntimeFiniteOperation.createClient,
             .createProject,
+            .archiveProject,
             .pendingUploadCount,
             .encryptionCipher,
             .captureAttachment,
@@ -599,6 +608,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             _ = try await runtime.createProject(context.projectCommand(id: "after-close"))
         }
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.archive(context.archiveCommand(id: "after-close"))
+        }
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
             _ = try await runtime.captureAttachment(
                 context.capture(id: "attachment-after-close")
             )
@@ -611,6 +623,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchClient(clientRequest))
         try await Self.expectClosed(runtime.watchProject(projectRequest))
         try await Self.expectClosed(runtime.watchBudgetCategories())
+        try await Self.expectClosed(runtime.watchOperation(archiveCommand.envelope.operationId))
         context.remove()
     }
 
@@ -1141,6 +1154,38 @@ private final class RuntimeTestContext: @unchecked Sendable {
                 description: nil,
                 categoryAllocations: [],
                 capturedAt: Date(timeIntervalSince1970: 1_788_600_000)
+            )
+        )
+    }
+
+    func archiveCommand(
+        id: String,
+        accountId: AccountID? = nil,
+        principalId: PrincipalID? = nil
+    ) throws -> ArchiveProjectCommand {
+        let archiveAccountId = accountId ?? self.accountId
+        let uuids: [String: String] = [
+            "gate": "00000000-0000-4000-8000-000000000101",
+            "while-closing": "00000000-0000-4000-8000-000000000102",
+            "after-close": "00000000-0000-4000-8000-000000000103"
+        ]
+        guard let uuidText = uuids[id], let uuid = UUID(uuidString: uuidText) else {
+            throw RuntimeInjectedFailure()
+        }
+        return try ArchiveProjectCommand(
+            operationId: ProjectArchiveOperationIdentity.make(
+                accountId: archiveAccountId,
+                uuid: uuid
+            ),
+            draft: ProjectArchiveDraft(
+                accountId: archiveAccountId,
+                actorPrincipalId: principalId ?? self.principalId,
+                operationContractVersion: OperationContractVersion(
+                    validating: "project-archive-v1"
+                ),
+                projectId: ProjectID(validating: "project-runtime-\(id)"),
+                expectedRevision: ExpectedProjectRevision(1),
+                capturedAt: Date(timeIntervalSince1970: 1_788_600_001)
             )
         )
     }

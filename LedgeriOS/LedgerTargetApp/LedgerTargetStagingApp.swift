@@ -118,7 +118,10 @@ private struct OfflineProviderSpikeView: View {
         }
         ProjectSetupStagingExerciseView(model: model.projectSetup)
         ClientBrowsingStagingExerciseView(model: model.clientBrowser)
-        ProjectBrowsingStagingExerciseView(model: model.projectBrowser)
+        ProjectBrowsingStagingExerciseView(
+            model: model.projectBrowser,
+            archive: model.projectArchive
+        )
         .task {
             await model.start(validatedEnvironment: environment)
         }
@@ -136,32 +139,58 @@ private final class OfflineClientSpikeModel {
 
     private var runtime: LedgerOfflineClientRuntime?
     private var startInProgress = false
-    private let accountId = try! AccountID(validating: "account-primary")
-    private let principalId = try! PrincipalID(validating: "principal-owner")
-    let clientBrowser = ClientBrowsingStagingExercise(
-        accountId: try! AccountID(validating: "account-primary")
-    )
-    let projectBrowser = ProjectBrowsingStagingExercise(
-        accountId: try! AccountID(validating: "account-primary")
-    )
-    let projectSetup = ProjectSetupStagingExercise(
-        accountId: try! AccountID(validating: "account-primary"),
-        actorPrincipalId: try! PrincipalID(validating: "principal-owner"),
-        operationContractVersion: try! OperationContractVersion(
-            validating: "project-create-v1"
-        ),
-        makeIdentity: {
-            try ProjectSetupSubmissionIdentity(
-                projectId: ProjectID(
-                    validating: "project-\(UUID().uuidString.lowercased())"
-                ),
-                operationId: OperationID(
-                    validating: "operation-\(UUID().uuidString.lowercased())"
+    private let accountId: AccountID
+    private let principalId: PrincipalID
+    let clientBrowser: ClientBrowsingStagingExercise
+    let projectBrowser: ProjectBrowsingStagingExercise
+    let projectArchive: ProjectArchiveBrowserStagingExercise
+    let projectSetup: ProjectSetupStagingExercise
+
+    init() {
+        let accountId = try! AccountID(validating: "account-primary")
+        let principalId = try! PrincipalID(validating: "principal-owner")
+        let projectBrowser = ProjectBrowsingStagingExercise(accountId: accountId)
+
+        self.accountId = accountId
+        self.principalId = principalId
+        clientBrowser = ClientBrowsingStagingExercise(accountId: accountId)
+        self.projectBrowser = projectBrowser
+        projectArchive = ProjectArchiveBrowserStagingExercise(
+            accountId: accountId,
+            actorPrincipalId: principalId,
+            operationContractVersion: try! OperationContractVersion(
+                validating: "project-archive-v1"
+            ),
+            browser: projectBrowser,
+            makeIdentity: {
+                try ProjectArchiveSubmissionIdentity(
+                    operationId: ProjectArchiveOperationIdentity.make(
+                        accountId: accountId,
+                        uuid: UUID()
+                    )
                 )
-            )
-        },
-        now: Date.init
-    )
+            },
+            now: Date.init
+        )
+        projectSetup = ProjectSetupStagingExercise(
+            accountId: accountId,
+            actorPrincipalId: principalId,
+            operationContractVersion: try! OperationContractVersion(
+                validating: "project-create-v1"
+            ),
+            makeIdentity: {
+                try ProjectSetupSubmissionIdentity(
+                    projectId: ProjectID(
+                        validating: "project-\(UUID().uuidString.lowercased())"
+                    ),
+                    operationId: OperationID(
+                        validating: "operation-\(UUID().uuidString.lowercased())"
+                    )
+                )
+            },
+            now: Date.init
+        )
+    }
 
     var canCreate: Bool {
         runtime != nil && !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -189,9 +218,13 @@ private final class OfflineClientSpikeModel {
             await projectBrowser.start(
                 runtime: ProjectBrowsingStagingRuntimeAdapter.adapt(runtime)
             )
+            await projectArchive.start(
+                runtime: ProjectArchiveBrowserStagingRuntimeAdapter.adapt(runtime)
+            )
             databaseState = "Encrypted (\(cipher))"
             pendingUploadCount = String(pendingCount)
             await waitForCancellation()
+            await projectArchive.stop()
             await clientBrowser.stop()
             await projectBrowser.stop()
             projectSetup.stop()
@@ -210,6 +243,7 @@ private final class OfflineClientSpikeModel {
     }
 
     private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
+        await projectArchive.stop()
         await clientBrowser.stop()
         await projectBrowser.stop()
         projectSetup.stop()

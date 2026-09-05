@@ -371,6 +371,7 @@ if (
     ...runtimeSource.matchAll(/public\s+func\s+(\w+)/g),
   ].map((match) => match[1]);
   const expectedPublicRuntimeFunctions = [
+    "archive",
     "captureAttachment",
     "close",
     "createClient",
@@ -381,6 +382,7 @@ if (
     "watchBudgetCategories",
     "watchClient",
     "watchClients",
+    "watchOperation",
     "watchProject",
     "watchProjects",
   ];
@@ -466,6 +468,7 @@ if (
     "LedgerPowerSyncUploadConnector",
     "PendingWorkPowerSyncQuery",
     "ProjectCoreDetailsPowerSyncQuery",
+    "ProjectArchivePowerSyncStore",
     "ProjectSetupPowerSyncStore",
   ];
   for (const typeName of lifecycleOwnedTypes) {
@@ -608,6 +611,38 @@ if (
       }
     }
   }
+  const projectArchiveAdapterPath = path.join(
+    targetAppRoot,
+    "ProjectArchiveBrowserStagingRuntimeAdapter.swift",
+  );
+  if (!fs.existsSync(projectArchiveAdapterPath)) {
+    fail(
+      "target_project_archive_adapter_missing",
+      relative(projectArchiveAdapterPath),
+    );
+  } else {
+    const adapter = fs.readFileSync(projectArchiveAdapterPath, "utf8");
+    for (const required of [
+      "import LedgerTargetAppModel",
+      "import LedgerTargetPowerSync",
+      "runtime.archive($0)",
+      "runtime.watchOperation($0)",
+    ]) {
+      if (!adapter.includes(required)) {
+        fail("target_project_archive_adapter_incomplete", required);
+      }
+    }
+    if (
+      /import LedgerTargetCore|PowerSyncDatabaseProtocol|\bSQL\b|Supabase|URLSession/.test(
+        adapter,
+      )
+    ) {
+      fail(
+        "target_project_archive_adapter_scope_escape",
+        relative(projectArchiveAdapterPath),
+      );
+    }
+  }
   const clientBrowsingAdapterPath = path.join(
     targetAppRoot,
     "ClientBrowsingStagingRuntimeAdapter.swift",
@@ -711,9 +746,13 @@ if (
     }
   }
   for (const requiredProjectBrowsingWiring of [
-    "ProjectBrowsingStagingExerciseView(model: model.projectBrowser)",
+    "ProjectBrowsingStagingExerciseView(",
+    "model: model.projectBrowser",
+    "archive: model.projectArchive",
     "ProjectBrowsingStagingRuntimeAdapter.adapt(runtime)",
     "await projectBrowser.start(",
+    "ProjectArchiveBrowserStagingRuntimeAdapter.adapt(runtime)",
+    "await projectArchive.start(",
   ]) {
     if (!stagingAppSource.includes(requiredProjectBrowsingWiring)) {
       fail(
@@ -757,6 +796,11 @@ if (
       const close = source.indexOf(closeCall);
       return stop >= 0 && close > stop;
     };
+    const archiveStopBeforeClose = (source, closeCall) => {
+      const stop = source.indexOf("await projectArchive.stop()");
+      const close = source.indexOf(closeCall);
+      return stop >= 0 && close > stop;
+    };
     if (!clientStopBeforeClose(startBody, "try await runtime.close()")) {
       fail(
         "target_client_browsing_normal_cleanup_order",
@@ -772,6 +816,23 @@ if (
       fail(
         "target_client_browsing_failed_cleanup_order",
         "Client browsing observations must drain before failed-start runtime close.",
+      );
+    }
+    if (!archiveStopBeforeClose(startBody, "try await runtime.close()")) {
+      fail(
+        "target_project_archive_normal_cleanup_order",
+        "Project archive observation must drain before normal runtime close.",
+      );
+    }
+    if (
+      !archiveStopBeforeClose(
+        failedCleanupBody,
+        "try? await openedRuntime.close()",
+      )
+    ) {
+      fail(
+        "target_project_archive_failed_cleanup_order",
+        "Project archive observation must drain before failed-start runtime close.",
       );
     }
     if (!stopBeforeClose(startBody, "try await runtime.close()")) {
@@ -796,6 +857,12 @@ if (
     fail(
       "target_project_setup_direct_command",
       "The target app must submit through ProjectSetupUseCase, not construct CreateProjectCommand.",
+    );
+  }
+  if (targetAppSource.includes("ArchiveProjectCommand(")) {
+    fail(
+      "target_project_archive_direct_command",
+      "The target app must submit through ProjectArchiveUseCase, not construct ArchiveProjectCommand.",
     );
   }
   for (const forbiddenProjectSetupUI of [
@@ -832,6 +899,14 @@ if (
     '"target-project-detail-readiness"',
     '"target-project-directory-diagnostic"',
     '"target-project-detail-diagnostic"',
+    '"target-project-archive-action"',
+    '"target-project-archive-confirm"',
+    '"target-project-archive-cancel"',
+    '"target-project-archive-state"',
+    '"target-project-archive-diagnostic"',
+    '"target-project-archive-retry"',
+    ".onChange(of: model.selectedProjectArchiveEvidence)",
+    "await archive.selectionDidSettle()",
   ]) {
     if (!targetAppSource.includes(requiredProjectBrowsingUI)) {
       fail(

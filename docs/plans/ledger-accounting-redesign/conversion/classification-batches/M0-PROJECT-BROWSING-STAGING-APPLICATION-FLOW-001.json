@@ -12,12 +12,12 @@
   "surfaces": [
     {
       "id": "SWIFT-CAB085E24751",
-      "acknowledgeSourceHash": "b5f8a92f92ef3347086257d3951cd674d1367b9f10e7ba36f29b183ab61f4c7d",
-      "currentBehavior": "Implements the Core-only reactive Project directory, evidence-bound selection, exact detail-presentation, false-empty, bounded-diagnostic, cancellation, restart-generation, and lifecycle-drainage application model.",
+      "acknowledgeSourceHash": "da3874dfb1f911da0bc2d9b202f2a22f3f49a020f6e5bd389451857b82e2617c",
+      "currentBehavior": "Implements the Core-only reactive Project directory, evidence-bound selection, exact detail-presentation and archive-intent derivation, false-empty truth, bounded diagnostics, cancellation, restart generation and lifecycle drainage.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
       "notes": "Verified after exact READY commit 90874031 / run 33953298649 and exact synchronized implementation commit 547af4d7 / run 33954955566 passed all immutable jobs.",
       "target": {
         "owner": "Project Browsing Staging Application Flow",
@@ -84,12 +84,12 @@
     },
     {
       "id": "SWIFT-07427FF0DA84",
-      "acknowledgeSourceHash": "6e05906efccea572bbc772fe5efa9a82df06289b65ad4841d085fae3a5d6ffca",
-      "currentBehavior": "Renders typed active/archived Project rows and exact detail state in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
+      "acknowledgeSourceHash": "2bc3cf4d58889b1ec3b5c27595db6116bf236bebd280cc779e114e4caae13363",
+      "currentBehavior": "Renders typed active/archived Project rows, exact detail state and explicit Project archive confirmation/retry/operation truth in staging, using unknown rather than numeric zero until a validated directory presentation exists.",
       "disposition": "redesign",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001"],
+      "evidence": ["EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
       "notes": "The view renders typed model state only and introduces no sorting, search, card, route, budget, media, or mutation policy; source-level accessibility identities and both staging builds pass locally.",
       "target": {
         "owner": "Project Browsing Staging Application Flow",

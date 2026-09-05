@@ -110,12 +110,12 @@
     },
     {
       "id": "SWIFT-56CB8BCDD85C",
-      "acknowledgeSourceHash": "983e5d79a903893f509e3ac2caf4add5b90c15be794faa200f232325d8a08b09",
-      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
+      "acknowledgeSourceHash": "32e0bcc431035a15945a0beaa3047437c4524527bc6e7d6ed093050b92871632",
+      "currentBehavior": "Observes one Project and its Client through an Account/Principal-bound local PowerSync query, preserves exact caller-owned pending Project/new-Client setup while membership is absent, merges and safely reconciles a validated Project archive lifecycle/revision overlay, and removes only matching Project/Client core overlays after membership-visible authoritative core readback; pending category allocations remain until a later aggregate-aware query proves their authoritative replacement.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": ["A-004"],
-      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"],
+      "evidence": ["EVID-PROJECT-SETUP-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"],
       "notes": "The concrete query is module-internal and lifecycle-owned. It currently owns Project core details only; budget-segment and history queries remain separate slices.",
       "target": {
         "owner": "Project Setup",

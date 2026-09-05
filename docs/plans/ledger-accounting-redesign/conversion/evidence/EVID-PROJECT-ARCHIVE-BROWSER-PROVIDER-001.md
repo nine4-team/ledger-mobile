@@ -1,13 +1,16 @@
-# EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001 — Project Archive Through Browser READY Candidate
+# EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001 — Project Archive Through Browser Implementation
 
-- Status: independently reviewed comment-only READY candidate; exact commit and
-  immutable CI pending
+- Status: locally implemented and independently reviewed GO with no P0-P3;
+  implementation commit and immutable CI pending
 - Date: 2026-09-05
 - Reviewed base: `318ff300e03bff123c39480cba15dac84911dbcc`
+- Exact green READY checkpoint: commit `089dc562`, immutable Actions run
+  `33961281661`
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
 - Slice: `project-archive-browser-supabase-powersync-vertical-slice`
-- Claimed target surfaces: nine new comment/placeholder leaves listed below
+- Claimed target surfaces: nine executable leaves listed below; the original
+  `.sql.ready` identity remains physically present and retired as inert evidence
 
 ## Selected Outcome and Authority
 
@@ -37,45 +40,41 @@ unarchive, rename, reassign, media mutation and every other lifecycle operation
 are expressly excluded. A-003/A-004 remain proposed and prevent hosted or
 architecture-promotion claims, not this isolated local implementation.
 
-## Reserved Comment-Only Leaves
+## Implemented Leaves and Retired Marker
 
-| Manifest identity | Exact path | READY hash | Future responsibility |
+| Manifest identity | Exact path | Current hash | Implemented responsibility |
 | --- | --- | --- | --- |
-| `SWIFT-53B8C9C37D3F` | `LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift` | `7b78c35b5116dcf27d0b4f438fedcdf28819b58d14372b62cb3ccfcf22be7b9d` | encrypted atomic archive acceptance, exact overlay and reconciliation |
-| `SWIFT-0753297CA29A` | `LedgeriOS/LedgerTargetPowerSync/SupabaseProjectArchiveRPC.swift` | `f8d2a610c3405229a65de9f61761e23265a1d0279943b042e2873f8ce1e755e5` | scoped-user archive RPC and terminal-result validation |
-| `TEST-475355568D74` | `LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift` | `564e11ab07d6a0fd430c56e911c84951d0ffdcf387d645b09d8119c97eb27b95` | deterministic offline/provider/reconciliation/preservation matrix |
-| `SWIFT-D58BDD1F45EE` | `LedgeriOS/LedgerTargetAppModel/ProjectArchiveBrowserStagingExercise.swift` | `b079de9943b69b63675565e2aa9d6751154c2f771fff93ae21856623d0976105` | Core-only evidence-bound confirmation, submission, operation truth and retry lifecycle |
-| `TEST-EAAB5CD74000` | `LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift` | `135558a27811c2a69ba86e7ed44cac1bb98e46318e94f1f160108f5bcb462831` | deterministic confirmation, browser/archive admission, recovery and drainage matrix |
-| `SWIFT-4F36B1F525D0` | `LedgeriOS/LedgerTargetApp/ProjectArchiveBrowserStagingRuntimeAdapter.swift` | `cb7f79f07e6616817111c3da66a40aba3655c32ab76a38c67588f04d56790cb9` | thin runtime archive/operation-state forwarding only |
-| `CONFIG-20D251EF21F6` | `supabase/migrations/20260905095803_project_archive_vertical_slice.sql` | `f6ee6c04b8c91ecf49cd35896b4e52b30eab3bf7d513207913a79850edc19c0f` | trusted Postgres handler and authenticated RPC |
-| `CONFIG-062839A9903C` | `supabase/tests/project_archive_vertical_slice.test.sql.ready` | `964cc5e8caa6a377393e51d063b7e03ad1d3c6fcc66530926f91ce93c37129c6` | non-runnable reservation for database/RLS/replay/concurrency/preservation tests; implementation retains the file as an inert retired marker with replacement evidence when runnable `.sql` becomes `CONFIG-CAB6A5DAD1C0` |
-| `CONFIG-78696A3C79AA` | `scripts/test-local-project-archive-rpc.mjs` | `5e209e3987f8cd355295b68631d5ad3880d0892cd1b64db7f2bd6d5e5dd40a9e` | disposable scoped-user local Data API verification |
+| `SWIFT-53B8C9C37D3F` | `LedgeriOS/LedgerTargetPowerSync/ProjectArchivePowerSyncStore.swift` | `72ac2c1ed552299dba0658bc3a10894da1cb2d7ea675086eb0dc2694e322e479` | encrypted atomic archive acceptance, Account-bound identity, exact overlay and reconciliation |
+| `SWIFT-0753297CA29A` | `LedgeriOS/LedgerTargetPowerSync/SupabaseProjectArchiveRPC.swift` | `7dfc97dc8fa344fc460d73a06238a8d3e71ef87bd5967f5a44a17458ceba55a2` | scoped-user archive RPC, exact command encoding and terminal-result validation |
+| `TEST-475355568D74` | `LedgeriOS/LedgerTargetPowerSyncTests/ProjectArchivePowerSyncVerticalSliceTests.swift` | `bb45930f943dcdbf2494064ed40453598b71da692a31fb5d3334cecae70041ad` | deterministic offline/provider/reconciliation/identity matrix |
+| `SWIFT-D58BDD1F45EE` | `LedgeriOS/LedgerTargetAppModel/ProjectArchiveBrowserStagingExercise.swift` | `d4522a1f3f7d14ad87ce97e2aa48a1234223df1078354bbf8e9ee01289670451` | Core-only evidence-bound confirmation, submission, operation truth and retry lifecycle |
+| `TEST-EAAB5CD74000` | `LedgeriOS/LedgerTargetAppModelTests/ProjectArchiveBrowserStagingExerciseTests.swift` | `a792b675301c16ef6807088e7d230f907be3e08aa94573ac3ee288a25468decb` | deterministic confirmation, admission, selection/retry, recovery and drainage matrix |
+| `SWIFT-4F36B1F525D0` | `LedgeriOS/LedgerTargetApp/ProjectArchiveBrowserStagingRuntimeAdapter.swift` | `fc460794ca7f6cee07ff2401778463cb8ef4bb599ac1d6ddde0fe30f073e513f` | thin runtime archive/operation-state forwarding only |
+| `CONFIG-20D251EF21F6` | `supabase/migrations/20260905095803_project_archive_vertical_slice.sql` | `e45ef69c82363a384a559d1991cf5a1080ec3dc6f9901defaf0e52345c8f5269` | trusted Postgres handler and authenticated RPC |
+| `CONFIG-CAB6A5DAD1C0` | `supabase/tests/project_archive_vertical_slice.test.sql` | `9723eb9d935dd0d3aa8d1a0b3ca00d0c5aaff3768151db40af03dc6b11d94412` | runnable 81-assertion database/RLS/replay/concurrency/preservation suite |
+| `CONFIG-78696A3C79AA` | `scripts/test-local-project-archive-rpc.mjs` | `f5d1771d40faf1a7b229ceb16465b2239c7598bf6041a4b32e0daa827453a932` | disposable scoped-user local Data API verification |
+
+Retired in place: `CONFIG-062839A9903C`,
+`supabase/tests/project_archive_vertical_slice.test.sql.ready`, remains
+byte-identical at SHA-256
+`964cc5e8caa6a377393e51d063b7e03ad1d3c6fcc66530926f91ce93c37129c6`.
+Its sole runnable replacement is `CONFIG-CAB6A5DAD1C0`.
 
 The migration filename was generated with
 `npx --yes supabase@2.116.0 migration new project_archive_vertical_slice`.
-Every leaf is comment-only. The `.sql.ready` reservation is not a runnable SQL
-test and remains outside the existing run-all pgTAP discovery until an exact
-green READY commit authorizes adding the real `.sql` suite. The
-run-all database-test command remains unchanged. There is no executable Swift,
-DDL/DML, request, MCP registration or product UI at this checkpoint.
-
-Because conversion identity is path-derived, implementation must perform one
-explicit synchronized replacement rather than an ordinary rename: retain the
-`.sql.ready` file byte-for-byte as an inert marker, retire
-`CONFIG-062839A9903C` with this evidence and the new test identity as its
-replacement, create/discover/classify/claim runnable
-`supabase/tests/project_archive_vertical_slice.test.sql` as
-`CONFIG-CAB6A5DAD1C0`, and update every slice/test-owner path to the runnable
-file. The authorized conversion-control touchpoint must add literal discovery
-of that runnable path without changing validator semantics or suppressing
-warnings. That checkpoint must contain exactly one runnable Project-archive
-pgTAP leaf plus the inert marker, no new missing-surface warning, and
-byte-unchanged package.json run-all test discovery.
+Implementation began only after exact READY commit `089dc562` passed immutable
+Actions run `33961281661`. The authorized discovery touchpoint now registers
+the runnable `.sql` identity without changing validation or warning semantics.
+The `.sql.ready` marker remains outside pgTAP execution, exactly one runnable
+Project-archive pgTAP leaf exists, and package.json remains byte-identical at
+`640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89`.
+No target MCP behavior, hosted access, Firebase work, production data access,
+migration, release or cutover authority is introduced.
 
 ## Frozen Existing Touchpoints
 
-The later executable checkpoint may modify only these existing shared surfaces,
-for the stated rule, while preserving their current primary owner:
+The executable checkpoint modified only these existing shared surfaces for the
+stated rule while preserving their primary owner:
 
 | Manifest identity | Exact path | READY-preparation hash | Permitted archive-only change |
 | --- | --- | --- | --- |
@@ -91,7 +90,21 @@ for the stated rule, while preserving their current primary owner:
 | `CONFIG-81235587F306` / `FILE-A6E49E3815F4` | `scripts/check-target-environment.mjs` | `13dbb0e3df7413d1e1d759aa15ad2796bc4551eb92d602f3da9e5fa9d83ded18` | add exact containment, wiring, exclusions, preservation and accessibility-source checks |
 | `FILE-208B7E9D7F47` | `scripts/supabase-conversion-ledger.mjs` | `eff99a0d15c8601192105bb74e132d6fc3d6e9e563ab0666d3f0409c7123f2c5` | add literal discovery of runnable `supabase/tests/project_archive_vertical_slice.test.sql` and refresh this control's existing owner hash/evidence only; do not change validation or warning semantics |
 | `CONFIG-7AE45AD102EA` | `package.json` | `640c8f0da118503fe14f93437385f049fcf5183ea290069e2f06e9bddda8fd89` | remain byte-unchanged; run-all pgTAP discovery executes `.sql`, never the retained `.sql.ready` marker |
-| `CONFIG-2EBA890AF767` | `LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj` | `63e896b09c19330a0b22e8b5707b21816dfc2246dbc803a2b237b0d959c8ca9d` | deterministic XcodeGen membership only; later implementation must regenerate reproducibly |
+| `CONFIG-2EBA890AF767` | `LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj` | `63e896b09c19330a0b22e8b5707b21816dfc2246dbc803a2b237b0d959c8ca9d` | deterministic XcodeGen membership only; regenerated reproducibly and remained byte-identical |
+
+The bounded shared touchpoints currently hash to:
+
+- schema `c4c3755977832d6626e42b3ad66358d819cb850043774e619b98cdffc17c888e`;
+- upload connector `4efeb90c96f7a5165ba0db49bd2402e2e941b1bfbae5e901ff99fc76eba23182`;
+- directory query `82a351eb5589801e009c4d5a398db0440c9ecbd22aeffee121e1ab657389c51f`;
+- detail query `32e0bcc431035a15945a0beaa3047437c4524527bc6e7d6ed093050b92871632`;
+- offline runtime `644eb3a6386f1430bf293a1ea6c418bfe143ab0df2df0e103c11cd0a5119ab10`;
+- workspace runtime `cb49720cb9eda68fe92e07e02e0ac6fd35bba29f9c71dbd8036c7012f62fe7f5`;
+- Project browser AppModel `da3874dfb1f911da0bc2d9b202f2a22f3f49a020f6e5bd389451857b82e2617c`;
+- Project browser view `2bc3cf4d58889b1ec3b5c27595db6116bf236bebd280cc779e114e4caae13363`;
+- staging shell `8ca878f9464a87b0249514e16380a868b100296bec748459781c590b91e1cf68`;
+- target checker `c0f0258eead43671e04dfa8fd661ce162f784b95a4ff047a65a7902782eec113`; and
+- conversion discovery control `5ce47fe0d1758bcede282d4ba5a0067a5908c4e204b6b1fc9603e05871a4e68b`.
 
 These dependencies are exact and must remain byte-unchanged:
 
@@ -192,29 +205,35 @@ The handler contains no delete or update of note, attachment/media, Item, Space,
 Transaction, Invoice or accounting/history relations.
 
 The current isolated spike does not yet physically represent every future child
-and accounting table. This READY candidate therefore freezes their strict
+and accounting table. This implementation therefore enforces their strict
 non-mutation contract but does not overclaim physical row proof. Each later
 schema slice must repeat archive-preservation regression before promotion. No
 trigger/cascade may turn the lifecycle update into child mutation or deletion.
 
-## Required Gate and Exclusions
+## Executable Review and Verification
 
-Before executable work, an independent reviewer must verify this exact package,
-the nine leaf hashes, all shared touchpoints, reciprocal requirements/tests,
-scope exclusions and generated outputs. The reviewed READY commit must then pass
-all immutable jobs. Only that exact green commit authorizes implementation of
-the other eight reserved leaves, creation of the separately tracked runnable
-`.sql` leaf and bounded shared edits; the `.sql.ready` marker stays byte-unchanged.
+Independent review returned GO with no P0-P3 after root and reviewer-driven
+corrections closed Account-bound OperationID enumeration, exact request replay
+binding, local command/overlay validation, device-clock regression, browser
+selection/retry ownership and observation drainage. The retained marker hash,
+package.json hash and unchanged PowerSync Sync Streams were rechecked.
 
-Required implementation checks include conversion sync/check/report, residual
-and product-authority generation/check, target environment/contracts/query/MCP
-checks, focused and complete nonparallel Swift tests, clean local Supabase reset,
-lint, pgTAP and scoped Data API tests, repeatable XcodeGen, both staging builds,
-clean artifacts and independent executable review. Hosted Sync authorization and
-real device/reconnect evidence remain planned and cannot be inferred locally.
-The same implementation gate must prove the retained inert `.sql.ready`
-retirement marker and separately discovered runnable `.sql` replacement
-transition described above before any surface advances.
+Local executable evidence is:
+
+- 28/28 focused ProjectArchive Swift tests passed;
+- 473/473 Swift tests in 80 suites passed with process-wide nonparallel execution;
+- 123/123 pgTAP assertions passed, including 81/81 Project archive assertions;
+- Supabase database lint reported zero findings;
+- the disposable scoped-user Project archive Data API runner passed;
+- the target-environment checker passed; and
+- repeatable XcodeGen plus both iOS and macOS staging builds passed.
+
+Conversion synchronization/check/report, product-authority and implementation-
+slice freshness, residual controls and the cumulative M0 gate are required in
+this same promotion checkpoint. Implementation commit/immutable CI evidence
+will be added after the synchronized checkpoint exists. Real authenticated
+PowerSync authorization remains planned as PARCHIVEBROWSER-TEST-012, so A-003
+and A-004 remain proposed and no hosted result is inferred from local proof.
 
 Restore/unarchive, delete, rename, details edit, Client reassignment/merge,
 category/note/media/Item/Space/Transaction/Invoice/accounting mutation, new child

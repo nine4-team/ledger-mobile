@@ -1384,6 +1384,7 @@ function discoverConfiguration() {
     "supabase/seed.sql",
     "supabase/tests/client_creation_vertical_slice.test.sql",
     "supabase/tests/client_rename_vertical_slice.test.sql",
+    "supabase/tests/project_archive_vertical_slice.test.sql",
     "supabase/tests/project_archive_vertical_slice.test.sql.ready",
     "supabase/tests/project_setup_vertical_slice.test.sql",
     "mcp-server/Dockerfile",

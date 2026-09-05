@@ -95,12 +95,42 @@ public final class ProjectBrowsingStagingExercise {
     public var detailReadiness: String { detailViewState.readinessLabel }
     public var detailDiagnostic: String? { detailViewState.diagnostic?.rawValue }
 
+    /// Exact, current browser evidence that may be captured for an archive
+    /// confirmation. This remains nil unless the selected active directory row
+    /// and represented detail content agree field-for-field and carry a local
+    /// revision. The selection generation makes an away-and-back reselection a
+    /// different confirmation target even when it resolves to the same Project.
+    public var selectedProjectArchiveEvidence: ProjectArchiveBrowserEvidence? {
+        guard let selection = detailViewState.selection,
+              let content = detailViewState.presentation?.state.content,
+              let revision = selectedProjectRevision,
+              selection.projectLifecycle == .active,
+              content.projectLifecycle == .active,
+              content.projectId == selection.projectId,
+              content.projectDisplayName == selection.projectDisplayName,
+              content.clientId == selection.clientId,
+              content.clientDisplayName == selection.clientDisplayName,
+              content.clientLifecycle == selection.clientLifecycle,
+              directoryViewState.presentation?.active.rows.first(where: {
+                  $0.projectId == selection.projectId
+              }) == selection else {
+            return nil
+        }
+        return ProjectArchiveBrowserEvidence(
+            accountId: accountId,
+            projectId: selection.projectId,
+            expectedRevision: revision,
+            selectionGeneration: detailGeneration
+        )
+    }
+
     private let accountId: AccountID
     private var runtime: ProjectBrowsingStagingRuntime?
     private var directoryViewState: DirectoryViewState = .loading
     private var detailViewState: DetailViewState = .notSelected
     private var directoryTask: Task<Void, Never>?
     private var detailTask: Task<Void, Never>?
+    private var selectedProjectRevision: ExpectedProjectRevision?
     private var lifecycleGeneration: UInt64 = 0
     private var detailGeneration: UInt64 = 0
 
@@ -120,6 +150,7 @@ public final class ProjectBrowsingStagingExercise {
         self.runtime = nil
         directoryViewState = .loading
         detailViewState = .notSelected
+        selectedProjectRevision = nil
         oldDirectoryTask?.cancel()
         oldDetailTask?.cancel()
         await oldDetailTask?.value
@@ -144,6 +175,7 @@ public final class ProjectBrowsingStagingExercise {
         runtime = nil
         directoryViewState = .stopped
         detailViewState = .stopped
+        selectedProjectRevision = nil
         oldDirectoryTask?.cancel()
         oldDetailTask?.cancel()
         await oldDetailTask?.value
@@ -169,6 +201,7 @@ public final class ProjectBrowsingStagingExercise {
         let oldDetailTask = detailTask
         detailTask = nil
         detailViewState = .notSelected
+        selectedProjectRevision = nil
         oldDetailTask?.cancel()
         await oldDetailTask?.value
 
@@ -260,6 +293,7 @@ public final class ProjectBrowsingStagingExercise {
                           self.detailGeneration == detailGeneration else {
                         return
                     }
+                    selectedProjectRevision = Self.locallyObservedRevision(from: update)
                     detailViewState = .represented(
                         selection: selection,
                         presentation: presentation
@@ -313,6 +347,7 @@ public final class ProjectBrowsingStagingExercise {
         let oldDetailTask = detailTask
         detailTask = nil
         detailViewState = .notSelected
+        selectedProjectRevision = nil
         oldDetailTask?.cancel()
         await oldDetailTask?.value
 
@@ -332,7 +367,21 @@ public final class ProjectBrowsingStagingExercise {
               self.detailGeneration == detailGeneration else {
             return
         }
+        selectedProjectRevision = nil
         detailViewState = .blocked(selection: selection, diagnostic: diagnostic)
+    }
+
+    private static func locallyObservedRevision(
+        from update: ProjectCoreDetailsUpdate
+    ) -> ExpectedProjectRevision? {
+        switch update.state {
+        case .waiting:
+            nil
+        case .snapshot(let snapshot):
+            snapshot.row?.locallyObservedRevision
+        case .failed(_, let cached):
+            cached?.row?.locallyObservedRevision
+        }
     }
 
     private func snapshot(

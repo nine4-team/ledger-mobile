@@ -12,13 +12,14 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "aa0dfd77900dd4eb7c06f0940d362ad7bdd2958e3499fa04aa37e9192880d6da",
-      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and five read streams behind one close-aware lease gate without implementing session ending.",
+      "acknowledgeSourceHash": "cb49720cb9eda68fe92e07e02e0ac6fd35bba29f9c71dbd8036c7012f62fe7f5",
+      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores, Project archive store and six read/operation streams behind one close-aware lease gate without implementing session ending.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "target": {
@@ -53,13 +54,14 @@
     },
     {
       "id": "TEST-8D6A15063B2D",
-      "acknowledgeSourceHash": "073d00c37343ee3a159ed89a5031aef0a49854d58e9d3a6bea0a76bedcfe942c",
-      "currentBehavior": "Fourteen executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream and provider-observer drainage, deterministic terminal close and negative API boundaries.",
+      "acknowledgeSourceHash": "cfd89dc204f2dbba8f6467c9df02075d86e463bbb3e53ab2802dbf81a27977cf",
+      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, Project archive operation drainage, restart, every partial-open fault, real PowerSync stream/provider drainage, deterministic terminal close and negative API boundaries.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001"
       ],
       "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
       "target": {
