@@ -22,15 +22,20 @@ configuration or activate a workspace. Account workspace database/key isolation
 by validated bundle, environment, persistence-relevant manifest, Principal and
 Account is implemented; exact READY `428f5225` / run `33927257913` and exact
 implementation `3bf8e9ed` / run `33928708863` pass all three immutable jobs. A
-new comment-only READY candidate now defines the local pending-work summary
-provider over exact operation and protected attachment evidence with stable
-restart-safe observation identity and fail-closed cross-store collection. Its
-initial independent review found and the corrected package now covers
-queue-free vault orphans, post-journal races, concurrent callers, and explicit
-missing/corrupt versus unavailable attachment evidence. Corrected-diff review
-is GO with no remaining P0-P3; immutable READY CI remains pending. It
-does not synchronize, delete, sign out, touch hosted services, or implement the
-later physical session-ending coordinator.
+local pending-work summary provider is now implemented over exact operation and
+protected attachment evidence with stable restart-safe observation identity and
+fail-closed cross-store collection. Exact corrected READY `2072af47` passed
+immutable run `33930443887`. Executable review found and drove corrections for
+Swift actor reentrancy/ABA, unsafe extreme-time conversion, missing real
+store/restart/fault cases, and a false runtime-composition claim. The corrected
+provider has explicit whole-summary serialization, final journal reread,
+queue-free vault-orphan refusal, and distinct missing/corrupt versus unavailable
+attachment evidence. It intentionally remains uncomposed: the later physical
+session-ending slice must own one provider instance and the attachment
+database/vault/key lifecycle. Final independent corrected-diff review returned
+GO with no P0-P3 finding; all 391 target tests in 72 suites and both staging
+builds pass locally. Exact implementation CI is pending. It does not
+synchronize, delete, sign out, touch hosted services, or implement session end.
 The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
 taxonomy/Transfer-identity slice is verified at exact implementation commit

@@ -88,10 +88,10 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "669344548be498d1dd0a065f78de7e47d6048110203bab27468d44fa65adec1a",
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project commands, local-only optimistic aggregates/operation evidence and immutable server results.",
+      "acknowledgeSourceHash": "a11de86c5552eac7cc6597ae3f144b04e501f2afe99634c970a4635925bbcbed",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project commands, local-only optimistic aggregates/operation evidence, immutable server results and a local-only pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"], "notes": "Target provider layer only. The pending-work READY package freezes this shared surface at its current hash for one local-only observation journal; primary ownership remains here.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"], "notes": "Target provider layer only. The pending-work provider now uses the local-only observation journal; primary ownership remains here and hosted schema authority is unchanged.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync schema"], "securityRequirements": ["Command payload is insert-only and local operation state is never synchronized as authority"], "syncRequirements": ["Local columns align with streamed server rows while pending_operation_id remains local optimism evidence"]},
       "migration": {"rule": "Schema evolution remains isolated until compatibility testing closes A-004.", "reconciliation": ["Schema validates before database open"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["PowerSync schema validation succeeds and exact CRUD transaction shape is asserted"]}
@@ -124,7 +124,7 @@
       "acknowledgeSourceHash": "ff86a0126707ff116529582644e93c91c938fd4c4a1ac4261f1264ef919ad565",
       "currentBehavior": "Composes the encrypted validated-environment/Principal/Account local target runtime, rejects cross-Account reads/writes and cross-Principal writes before dispatch, exposes Client/Project creation, detail and directory watches, pending-upload count and cipher inspection, and permits only non-destructive ordinary close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"], "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified by the Account workspace runtime isolation slice. The pending-work READY package freezes this shared surface at its current hash for one internal actor-owned summary provider; primary ownership remains here.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"], "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified. Pending-work and attachment lifecycle composition remains a later slice, so this runtime is unchanged by EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.",
       "target": {"owner": "Target Provider Runtime", "surfaces": ["Per-Principal/Account offline runtime", "Protected local bootstrap"], "securityRequirements": ["Database path and Keychain service are namespaced by validated local environment, Principal and Account"], "syncRequirements": ["Runtime exposes pending queue evidence and explicit lifecycle boundaries"]},
       "migration": {"rule": "Never reuse the Firebase cache or production bundle namespace.", "reconciliation": ["Close/reopen restores encrypted bytes for the same namespace"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["Encrypted local runtime composes and survives process-style restart"]}

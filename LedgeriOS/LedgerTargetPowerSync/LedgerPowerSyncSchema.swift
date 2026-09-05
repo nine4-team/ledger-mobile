@@ -14,6 +14,7 @@ public enum LedgerPowerSyncTable {
     public static let pendingProjectCategoryAllocations = "spike_pending_project_category_allocations"
     public static let projectCommands = "spike_project_commands"
     public static let localOperations = "spike_local_operations"
+    public static let pendingWorkObservations = "spike_pending_work_observations"
     public static let operationResults = "spike_operation_results"
 }
 
@@ -191,6 +192,15 @@ public enum LedgerPowerSyncSchema {
             indexes: [
                 .ascending(name: "local_operation_account", columns: ["account_id"]),
                 .ascending(name: "local_operation_state", columns: ["local_state"])
+            ],
+            localOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.pendingWorkObservations,
+            columns: [
+                .text("environment"), .text("principal_id"), .text("account_id"),
+                .text("evidence_sha256"), .integer("snapshot_revision"),
+                .integer("observed_at_ms")
             ],
             localOnly: true
         ),

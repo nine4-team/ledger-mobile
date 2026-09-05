@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-04T23:41:09.961Z",
+    "lastSynchronizedAt": "2026-09-05T00:24:31.659Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19191,12 +19191,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "669344548be498d1dd0a065f78de7e47d6048110203bab27468d44fa65adec1a",
-      "acknowledgedSourceHash": "669344548be498d1dd0a065f78de7e47d6048110203bab27468d44fa65adec1a",
+      "observedSourceHash": "a11de86c5552eac7cc6597ae3f144b04e501f2afe99634c970a4635925bbcbed",
+      "acknowledgedSourceHash": "a11de86c5552eac7cc6597ae3f144b04e501f2afe99634c970a4635925bbcbed",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project commands, local-only optimistic aggregates/operation evidence and immutable server results.",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget category/allocation, insert-only Client/Project commands, local-only optimistic aggregates/operation evidence, immutable server results and a local-only pending-work observation journal.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -19232,7 +19232,7 @@
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "Target provider layer only. The pending-work READY package freezes this shared surface at its current hash for one local-only observation journal; primary ownership remains here.",
+      "notes": "Target provider layer only. The pending-work provider now uses the local-only observation journal; primary ownership remains here and hosted schema authority is unchanged.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -22356,12 +22356,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/PendingWorkPowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "7edf895286fd9d19a0c733cd41aa4607a6504dbc3e91135be34bc6eaab7e19b6",
-      "acknowledgedSourceHash": "7edf895286fd9d19a0c733cd41aa4607a6504dbc3e91135be34bc6eaab7e19b6",
+      "observedSourceHash": "036ea69b475795f04ce5820f4884969cd02461948a9ac40e9ac13f86d3d11bf1",
+      "acknowledgedSourceHash": "036ea69b475795f04ce5820f4884969cd02461948a9ac40e9ac13f86d3d11bf1",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only corrected READY scaffold for exact scope-bound operation, attachment queue and vault-orphan observation with serialized transactional journaling, post-commit revalidation and durable stable summary evidence.",
+      "currentBehavior": "Implements exact scope-bound operation plus attachment queue/vault-orphan observation, explicit whole-summary serialization, transactional durable journaling, post-evidence journal revalidation and stable restart-safe summary evidence.",
       "disposition": "redesign",
       "target": {
         "owner": "Session Ending and Pending-Work Provider",
@@ -22391,12 +22391,12 @@
           "Exact counts, terminal exclusion, stable/monotonic observation, restart, scope and failure behavior pass without physical session ending"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "No executable behavior before exact READY review and immutable CI.",
+      "notes": "Exact READY commit 2072af47 passed immutable run 33930443887 before executable work. The internal provider remains uncomposed; later AccountSessionEnding composition must own exactly one instance.",
       "classificationBatch": "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
     },
     {
@@ -23453,10 +23453,9 @@
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
         "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
-        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
+        "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified by the Account workspace runtime isolation slice. The pending-work READY package freezes this shared surface at its current hash for one internal actor-owned summary provider; primary ownership remains here.",
+      "notes": "The local staging shell opens no hosted connection. Environment-bound namespace and non-destructive-close hardening are implemented and locally verified. Pending-work and attachment lifecycle composition remains a later slice, so this runtime is unchanged by EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -25067,12 +25066,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentLocalByteVault.swift"
         }
       ],
-      "observedSourceHash": "fd6100a7efefbbf2196dea9e8c66d12d5473a21675dee1b08ec082e025901483",
-      "acknowledgedSourceHash": "fd6100a7efefbbf2196dea9e8c66d12d5473a21675dee1b08ec082e025901483",
+      "observedSourceHash": "9581e01d5087e2fa39f12906c8022bf5e5db21e076a16db454bf4340c4829dcb",
+      "acknowledgedSourceHash": "9581e01d5087e2fa39f12906c8022bf5e5db21e076a16db454bf4340c4829dcb",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, and explicit orphan evidence.",
+      "currentBehavior": "Implemented encrypted attachment-byte vault with validated namespace partitioning, directory-descriptor-relative byte operations, authenticated metadata, bounded ciphertext reads, durable staging/promotion, explicit orphan evidence and a bounded unavailable-inventory failure checkpoint.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -25107,9 +25106,10 @@
       ],
       "evidence": [
         "EVID-ATTACHMENT-CAPTURE-001",
-        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001"
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+        "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "Local disposable provider only. It does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
+      "notes": "Local disposable provider only. Pending-work tests can deterministically prove unavailable orphan enumeration refuses; this does not prove physical-device protection, process-kill durability, hosted upload, retention or deletion.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -36618,12 +36618,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentCapturePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "d5fc58365db81a619d1600208997d0108a19c701486a02f88a7139263600fade",
-      "acknowledgedSourceHash": "d5fc58365db81a619d1600208997d0108a19c701486a02f88a7139263600fade",
+      "observedSourceHash": "349110050cd2ed4b8b8fbca8393ab8e13599e79ce5d523f9e200725e20458850",
+      "acknowledgedSourceHash": "349110050cd2ed4b8b8fbca8393ab8e13599e79ce5d523f9e200725e20458850",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Implemented backend-neutral attachment-capture adapter with an encrypted, scope-bound isolated PowerSync database, localOnly queue/binding tables, exact replay protection, pending evidence, and non-consuming verified upload candidates.",
+      "currentBehavior": "Implemented backend-neutral attachment-capture adapter with an encrypted, scope-bound isolated PowerSync database, localOnly queue/binding tables, exact replay protection, non-consuming verified upload candidates and strict path-free pending-work queue-plus-orphan observation.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -36661,7 +36661,7 @@
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized. The pending-work READY package freezes this shared surface at its current hash for one path-free queue-plus-orphan observation API that distinguishes blocking missing/corrupt evidence from unavailable/interrupted observation; primary ownership remains here.",
+      "notes": "No network uploader, remote completion, reference mutation, discard, eviction, cleanup or shared-runtime composition is authorized. The pending-work implementation distinguishes blocking missing/corrupt evidence from unavailable/interrupted observation; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -37968,12 +37968,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/PendingWorkPowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "37d2888f2fffb13a924976c0dd8efa553f46a3e51e7e0127529b694935b9e38d",
-      "acknowledgedSourceHash": "37d2888f2fffb13a924976c0dd8efa553f46a3e51e7e0127529b694935b9e38d",
+      "observedSourceHash": "31edc5a70e6711b69ae36746ab9409815c8af547351a689f64cf5da6b01b801f",
+      "acknowledgedSourceHash": "31edc5a70e6711b69ae36746ab9409815c8af547351a689f64cf5da6b01b801f",
       "metadata": {
         "firebaseCoupled": true
       },
-      "currentBehavior": "Comment-only corrected READY scaffold for exact counts, queue-free orphan refusal, failure distinction, restart, post-journal concurrency, scope and fail-closed provider tests.",
+      "currentBehavior": "Implements deterministic provider tests for exact counts/state transitions, malformed and cross-scope refusal, ps_crud divergence, encrypted restart, same- and cross-instance ABA windows, clock/revision overflow, real attachment-store orphan restart, unavailable enumeration, policy composition and bounded diagnostics.",
       "disposition": "redesign",
       "target": {
         "owner": "Session Ending and Pending-Work Provider",
@@ -38003,12 +38003,12 @@
           "All local provider obligations pass before implementation status advances"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "Synthetic local evidence only; no deletion, signout, hosted Sync, Firebase or cutover claim.",
+      "notes": "Disposable encrypted local evidence only; real attachment-store fixtures remain local and synthetic. No deletion, signout, hosted Sync, Firebase or cutover claim.",
       "classificationBatch": "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
     },
     {
@@ -42558,12 +42558,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift"
         }
       ],
-      "observedSourceHash": "2a648c0affc727337a7936f1a3789c1b170e876666d37b2f9b80376fc76a86c9",
-      "acknowledgedSourceHash": "2a648c0affc727337a7936f1a3789c1b170e876666d37b2f9b80376fc76a86c9",
+      "observedSourceHash": "c4964bc23dd67aebf6e9eb6425f668ebfb3aa7f103db6237759405aae27185d1",
+      "acknowledgedSourceHash": "c4964bc23dd67aebf6e9eb6425f668ebfb3aa7f103db6237759405aae27185d1",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Implemented deterministic local attachment durability tests for encryption, restart, interruption, wrong-key/corruption, concurrent replay, scope/database binding, SQLCipher leakage, localOnly isolation, path/link defense, and non-consuming reads.",
+      "currentBehavior": "Implemented deterministic local attachment durability tests for encryption, restart, interruption, wrong-key/corruption, concurrent replay, scope/database binding, SQLCipher leakage, localOnly isolation, path/link defense, non-consuming reads, queue-plus-orphan restart evidence and unavailable inventory/state-write refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -42602,7 +42602,7 @@
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. The pending-work READY package freezes this shared surface at its current hash for queue-plus-orphan and failure-distinction regressions; primary ownership remains here.",
+      "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. Pending-work queue-plus-orphan and failure-distinction regressions now pass; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
     },
     {

@@ -11,13 +11,13 @@
   "surfaces": [
     {
       "id": "SWIFT-4AB6FC526AA5",
-      "acknowledgeSourceHash": "7edf895286fd9d19a0c733cd41aa4607a6504dbc3e91135be34bc6eaab7e19b6",
-      "currentBehavior": "Comment-only corrected READY scaffold for exact scope-bound operation, attachment queue and vault-orphan observation with serialized transactional journaling, post-commit revalidation and durable stable summary evidence.",
+      "acknowledgeSourceHash": "036ea69b475795f04ce5820f4884969cd02461948a9ac40e9ac13f86d3d11bf1",
+      "currentBehavior": "Implements exact scope-bound operation plus attachment queue/vault-orphan observation, explicit whole-summary serialization, transactional durable journaling, post-evidence journal revalidation and stable restart-safe summary evidence.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
-      "notes": "No executable behavior before exact READY review and immutable CI.",
+      "notes": "Exact READY commit 2072af47 passed immutable run 33930443887 before executable work. The internal provider remains uncomposed; later AccountSessionEnding composition must own exactly one instance.",
       "target": {
         "owner": "Session Ending and Pending-Work Provider",
         "surfaces": ["Local PowerSync pending-work summary query"],
@@ -45,13 +45,13 @@
     },
     {
       "id": "TEST-2053D13BB3B5",
-      "acknowledgeSourceHash": "37d2888f2fffb13a924976c0dd8efa553f46a3e51e7e0127529b694935b9e38d",
-      "currentBehavior": "Comment-only corrected READY scaffold for exact counts, queue-free orphan refusal, failure distinction, restart, post-journal concurrency, scope and fail-closed provider tests.",
+      "acknowledgeSourceHash": "31edc5a70e6711b69ae36746ab9409815c8af547351a689f64cf5da6b01b801f",
+      "currentBehavior": "Implements deterministic provider tests for exact counts/state transitions, malformed and cross-scope refusal, ps_crud divergence, encrypted restart, same- and cross-instance ABA windows, clock/revision overflow, real attachment-store orphan restart, unavailable enumeration, policy composition and bounded diagnostics.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-PENDING-WORK-POWERSYNC-PROVIDER-001"],
-      "notes": "Synthetic local evidence only; no deletion, signout, hosted Sync, Firebase or cutover claim.",
+      "notes": "Disposable encrypted local evidence only; real attachment-store fixtures remain local and synthetic. No deletion, signout, hosted Sync, Firebase or cutover claim.",
       "target": {
         "owner": "Session Ending and Pending-Work Provider",
         "surfaces": ["Pending-work PowerSync provider verification"],

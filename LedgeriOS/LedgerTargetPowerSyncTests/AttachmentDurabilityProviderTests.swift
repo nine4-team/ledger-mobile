@@ -89,6 +89,15 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
                 if observed == checkpoint { throw InjectedFailure() }
             }
             let store = fixture.makeStore(database: database, vault: vault)
+            if checkpoint == .beforeOrphanInventory {
+                await #expect(throws: AttachmentCapturePowerSyncStoreFailure.mediaFailure(
+                    .interrupted(.beforeOrphanInventory)
+                )) {
+                    _ = try await store.pendingWorkObservation()
+                }
+                try await database.close()
+                continue
+            }
             #expect(try await store.orphanInventory().isEmpty)
             await #expect(throws: (any Error).self) {
                 try await store.enqueue(fixture.capture())
@@ -276,7 +285,10 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         let healthy = fixture.makeStore(database: database, vault: healthyVault)
         let accepted = try await healthy.enqueue(fixture.capture(id: "attachment-006-accepted"))
 
-        for (index, checkpoint) in AttachmentVaultCheckpoint.allCases.enumerated() {
+        let persistenceCheckpoints = AttachmentVaultCheckpoint.allCases.filter {
+            $0 != .beforeOrphanInventory
+        }
+        for (index, checkpoint) in persistenceCheckpoints.enumerated() {
             let failingVault = try fixture.makeVault { observed in
                 if observed == checkpoint { throw InjectedFailure() }
             }
@@ -527,6 +539,138 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         #expect(metadataEvidence.count == 1)
         #expect(metadataEvidence[0].receipt == nil)
         #expect(metadataEvidence[0].state == .corrupt)
+        try await database.close()
+    }
+
+    @Test("ATTACHDUR-TEST-012 pending-work observation validates queue and inventories orphans")
+    func pendingWorkObservation() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let vault = try fixture.makeVault()
+        let store = fixture.makeStore(database: database, vault: vault)
+
+        let pending = try await store.enqueue(
+            fixture.capture(id: "attachment-012-a-pending")
+        )
+        let missing = try await store.enqueue(
+            fixture.capture(id: "attachment-012-b-missing")
+        )
+        let missingURL = try await vault.objectFileURLForTesting(missing.localObjectId)
+        try FileManager.default.removeItem(at: missingURL)
+        let corrupt = try await store.enqueue(
+            fixture.capture(id: "attachment-012-c-corrupt")
+        )
+        let corruptURL = try await vault.objectFileURLForTesting(corrupt.localObjectId)
+        try Data(try Data(contentsOf: corruptURL).prefix(8)).write(to: corruptURL)
+
+        let stagingVault = try fixture.makeVault { checkpoint in
+            if checkpoint == .afterStagingWrite { throw InjectedFailure() }
+        }
+        let stagingStore = fixture.makeStore(database: database, vault: stagingVault)
+        await #expect(throws: (any Error).self) {
+            _ = try await stagingStore.enqueue(
+                fixture.capture(id: "attachment-012-d-staging-orphan")
+            )
+        }
+        let finalVault = try fixture.makeVault { checkpoint in
+            if checkpoint == .afterPromotion { throw InjectedFailure() }
+        }
+        let finalStore = fixture.makeStore(database: database, vault: finalVault)
+        await #expect(throws: (any Error).self) {
+            _ = try await finalStore.enqueue(
+                fixture.capture(id: "attachment-012-e-final-orphan")
+            )
+        }
+
+        let observation = try await store.pendingWorkObservation()
+        #expect(observation.queue.map(\.receipt) == [pending, missing, corrupt])
+        #expect(observation.queue.map(\.state) == [.pending, .missing, .corrupt])
+        #expect(observation.orphans.map(\.kind) == [.finalObject, .staging])
+        #expect(observation.orphans.allSatisfy { !$0.opaqueIdentity.isEmpty })
+        #expect(observation.orphans.allSatisfy { !$0.opaqueIdentity.contains("/") })
+
+        let repeated = try await store.pendingWorkObservation()
+        #expect(repeated == observation)
+        try await database.close()
+
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        let afterRestart = try await restored.pendingWorkObservation()
+        #expect(afterRestart == observation)
+        try await reopened.close()
+    }
+
+    @Test("ATTACHDUR-TEST-013 pending-work observation refuses foreign and malformed rows")
+    func pendingWorkObservationRefusesInvalidRows() async throws {
+        let foreignFixture = try Fixture()
+        defer { foreignFixture.removeDirectory() }
+        let foreignDatabase = try foreignFixture.openDatabase()
+        let foreignStore = foreignFixture.makeStore(
+            database: foreignDatabase,
+            vault: try foreignFixture.makeVault()
+        )
+        _ = try await foreignStore.enqueue(
+            foreignFixture.capture(id: "attachment-013-foreign")
+        )
+        _ = try await foreignDatabase.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET principal_id = ?",
+            parameters: ["principal-foreign"]
+        )
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.scopeMismatch) {
+            _ = try await foreignStore.pendingWorkObservation()
+        }
+        try await foreignDatabase.close()
+
+        let malformedFixture = try Fixture()
+        defer { malformedFixture.removeDirectory() }
+        let malformedDatabase = try malformedFixture.openDatabase()
+        let malformedStore = malformedFixture.makeStore(
+            database: malformedDatabase,
+            vault: try malformedFixture.makeVault()
+        )
+        _ = try await malformedStore.enqueue(
+            malformedFixture.capture(id: "attachment-013-malformed")
+        )
+        _ = try await malformedDatabase.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET receipt_json = NULL",
+            parameters: nil
+        )
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence) {
+            _ = try await malformedStore.pendingWorkObservation()
+        }
+        try await malformedDatabase.close()
+    }
+
+    @Test("ATTACHDUR-TEST-014 pending-work observation propagates state-write failure")
+    func pendingWorkObservationPropagatesStateWriteFailure() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let vault = try fixture.makeVault()
+        let store = fixture.makeStore(database: database, vault: vault)
+        let receipt = try await store.enqueue(
+            fixture.capture(id: "attachment-014-state-write")
+        )
+        let objectURL = try await vault.objectFileURLForTesting(receipt.localObjectId)
+        try FileManager.default.removeItem(at: objectURL)
+        _ = try await database.execute(
+            """
+            CREATE TRIGGER fail_attachment_state_update
+            INSTEAD OF UPDATE OF state ON \(AttachmentCapturePowerSyncTable.queue)
+            BEGIN
+              SELECT RAISE(ABORT, 'injected state write failure');
+            END
+            """
+        )
+
+        await #expect(throws: AttachmentCapturePowerSyncStoreFailure.queuePersistenceFailed) {
+            _ = try await store.pendingWorkObservation()
+        }
+        let state = try await database.get(
+            "SELECT state FROM \(AttachmentCapturePowerSyncTable.queue)"
+        ) { try $0.getString(index: 0) }
+        #expect(state == AttachmentPendingState.pending.rawValue)
         try await database.close()
     }
 }

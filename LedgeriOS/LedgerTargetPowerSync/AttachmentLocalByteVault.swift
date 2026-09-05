@@ -57,6 +57,7 @@ public enum AttachmentVaultCheckpoint: String, CaseIterable, Sendable {
     case afterStagingSynchronization
     case beforePromotion
     case afterPromotion
+    case beforeOrphanInventory
 }
 
 public enum AttachmentLocalByteVaultFailure: Error, Equatable, Sendable {
@@ -355,6 +356,7 @@ public actor AttachmentLocalByteVault {
         referencedObjectIDs: Set<AttachmentLocalObjectID>
     ) throws -> [AttachmentVaultOrphan] {
         do {
+            try invoke(.beforeOrphanInventory)
             let referenced = Set(referencedObjectIDs.map(\.rawValue))
             let staging = try Self.directoryEntryNames(stagingDescriptor).map {
                 AttachmentVaultOrphan(kind: .staging, opaqueIdentity: $0)

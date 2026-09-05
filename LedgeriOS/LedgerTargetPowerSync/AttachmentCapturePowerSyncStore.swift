@@ -73,6 +73,42 @@ public struct AttachmentPendingEvidence: Equatable, Sendable {
     public let state: AttachmentPendingState
 }
 
+public struct AttachmentPendingWorkQueueEvidence: Equatable, Sendable {
+    public let receipt: AttachmentLocalDurabilityReceipt
+    public let state: AttachmentPendingState
+
+    public init(
+        receipt: AttachmentLocalDurabilityReceipt,
+        state: AttachmentPendingState
+    ) {
+        self.receipt = receipt
+        self.state = state
+    }
+}
+
+public struct AttachmentPendingWorkObservation: Equatable, Sendable {
+    public let queue: [AttachmentPendingWorkQueueEvidence]
+    public let orphans: [AttachmentVaultOrphan]
+
+    public init(
+        queue: [AttachmentPendingWorkQueueEvidence],
+        orphans: [AttachmentVaultOrphan]
+    ) {
+        self.queue = queue.sorted {
+            ($0.receipt.persistedAt.rawValue, $0.receipt.attachmentId.rawValue) <
+                ($1.receipt.persistedAt.rawValue, $1.receipt.attachmentId.rawValue)
+        }
+        self.orphans = orphans.sorted {
+            ($0.kind.rawValue, $0.opaqueIdentity) <
+                ($1.kind.rawValue, $1.opaqueIdentity)
+        }
+    }
+}
+
+public protocol AttachmentPendingWorkObserving: Sendable {
+    func pendingWorkObservation() async throws -> AttachmentPendingWorkObservation
+}
+
 public struct AttachmentVerifiedUploadCandidate: Equatable, Sendable {
     public let receipt: AttachmentLocalDurabilityReceipt
     public let bytes: Data
@@ -113,7 +149,10 @@ public enum AttachmentCapturePowerSyncStoreFailure: Error, Equatable, Sendable {
 
 /// Local-only acceptance adapter. There is intentionally no API here to mark an
 /// item uploaded, detach it, delete it, discard it, clean it up, or evict it.
-public actor AttachmentCapturePowerSyncStore: AttachmentCaptureStoring {
+public actor AttachmentCapturePowerSyncStore:
+    AttachmentCaptureStoring,
+    AttachmentPendingWorkObserving
+{
     private let database: any PowerSyncDatabaseProtocol
     private let vault: AttachmentLocalByteVault
     private let scope: AttachmentDurabilityNamespaceScope
@@ -321,6 +360,58 @@ public actor AttachmentCapturePowerSyncStore: AttachmentCaptureStoring {
         return try await vault.orphanInventory(referencedObjectIDs: referenced)
     }
 
+    public func pendingWorkObservation() async throws -> AttachmentPendingWorkObservation {
+        try await ensureScopeBinding()
+        let rows = try await scopedRows()
+        var queue: [AttachmentPendingWorkQueueEvidence] = []
+        var referencedObjectIDs: Set<AttachmentLocalObjectID> = []
+        queue.reserveCapacity(rows.count)
+
+        for row in rows {
+            guard let environment = row.environment,
+                  let principalID = row.principalID,
+                  let accountID = row.accountID else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+            guard environment == scope.environment.rawValue,
+                  principalID == scope.principalId.rawValue,
+                  accountID == scope.accountId.rawValue else {
+                throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+            }
+            guard let record = row.validatedRecord,
+                  record.receipt.scope.environment == scope.environment,
+                  record.receipt.scope.principalId == scope.principalId,
+                  record.receipt.scope.accountId == scope.accountId else {
+                throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
+            }
+
+            let state = try await pendingWorkState(for: record)
+            if state != row.state {
+                try await setState(state, rowID: row.id)
+            }
+            queue.append(
+                AttachmentPendingWorkQueueEvidence(
+                    receipt: record.receipt,
+                    state: state
+                )
+            )
+            referencedObjectIDs.insert(record.receipt.localObjectId)
+        }
+
+        let orphans: [AttachmentVaultOrphan]
+        do {
+            orphans = try await vault.orphanInventory(
+                referencedObjectIDs: referencedObjectIDs
+            )
+        } catch let failure as AttachmentLocalByteVaultFailure {
+            throw translate(failure)
+        } catch {
+            throw AttachmentCapturePowerSyncStoreFailure.mediaFailure(.storageFailure)
+        }
+
+        return AttachmentPendingWorkObservation(queue: queue, orphans: orphans)
+    }
+
     private func timestamp(_ date: Date) throws -> AttachmentEpochMilliseconds {
         let milliseconds = date.timeIntervalSince1970 * 1_000
         guard milliseconds.isFinite, milliseconds >= 0, milliseconds <= Double(Int64.max) else {
@@ -382,11 +473,46 @@ public actor AttachmentCapturePowerSyncStore: AttachmentCaptureStoring {
         failure == .missingObject ? .missing : .corrupt
     }
 
+    private func pendingWorkState(
+        for record: QueueRecord
+    ) async throws -> AttachmentPendingState {
+        do {
+            _ = try await vault.verifiedBytes(for: record.persistedEvidence)
+            return .pending
+        } catch let failure as AttachmentLocalByteVaultFailure {
+            switch failure {
+            case .missingObject:
+                return .missing
+            case .invalidLocalObjectIdentity, .linkSubstitution, .corruptObject:
+                return .corrupt
+            default:
+                throw translate(failure)
+            }
+        } catch {
+            throw AttachmentCapturePowerSyncStoreFailure.mediaFailure(.storageFailure)
+        }
+    }
+
     private func setState(_ state: AttachmentPendingState, rowID: String) async throws {
-        _ = try await database.execute(
-            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET state = ? WHERE id = ?",
-            parameters: [state.rawValue, rowID]
-        )
+        do {
+            _ = try await database.execute(
+                sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET state = ? WHERE id = ?",
+                parameters: [state.rawValue, rowID]
+            )
+            let persistedState = try await database.getOptional(
+                sql: "SELECT state FROM \(AttachmentCapturePowerSyncTable.queue) WHERE id = ?",
+                parameters: [rowID]
+            ) { cursor in
+                try cursor.getStringOptional(name: "state")
+            }
+            guard persistedState == state.rawValue else {
+                throw AttachmentCapturePowerSyncStoreFailure.queuePersistenceFailed
+            }
+        } catch let failure as AttachmentCapturePowerSyncStoreFailure {
+            throw failure
+        } catch {
+            throw AttachmentCapturePowerSyncStoreFailure.queuePersistenceFailed
+        }
     }
 
     private func ensureScopeBinding() async throws {

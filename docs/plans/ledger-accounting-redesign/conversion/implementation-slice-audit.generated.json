@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-04T23:41:09.961Z",
+  "generatedFromManifestSync": "2026-09-05T00:24:31.659Z",
   "totals": {
     "slices": 75,
     "claimedTargetSurfaces": 209,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 155
+    "implementationAdvancedTargetSurfaces": 157
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 4,
+    "implemented": 5,
     "verified": 66,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -454,7 +454,7 @@
       "sliceId": "pending-work-powersync-provider",
       "title": "Derive an exact restart-safe local pending-work summary without manufacturing a clean state",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Session Ending and Pending-Work Provider",
       "surfaceIds": [
         "SWIFT-4AB6FC526AA5",

@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PENDING-WORK-POWERSYNC-PROVIDER-READY
+- Checkpoint: PENDING-WORK-POWERSYNC-PROVIDER-IMPLEMENTED-LOCAL-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -103,24 +103,27 @@ without modifying the running Firebase application before hard cutover.
   the local pending-work summary provider; physical synchronization, logout,
   deletion, Auth and workspace switching remain excluded.
 
-- Prepared a comment-only READY candidate for the target-local pending-work
-  summary provider. It freezes exact operation lifecycle and protected
-  attachment evidence, stable restart-safe revision/time/fingerprint,
-  same-count identity change detection, bounded cross-store consistency and
-  fail-closed scope/storage/journal behavior. The two new executable leaves are
-  comments only; all affected/shared schema, runtime, attachment and policy
-  surfaces remain byte-unchanged pending independent review and immutable READY
-  CI. The slice performs no synchronization, cleanup, signout, Auth, workspace
-  switching, hosted access, migration, Firebase work or cutover action.
-  Initial independent review returned NO-GO because queue-free vault orphans
-  could appear clean, an older digest could race journal commit, the current
-  attachment evidence API collapses unavailable vault failures into corrupt
-  evidence, and shared surfaces were vague. The corrected candidate now refuses
-  orphan inventory, serializes callers, transactionally updates then
-  post-validates the journal, defines a path-free failure-distinguishing
-  attachment observation, and freezes exact affected surface IDs/hashes.
-  Independent corrected-diff review is GO with no remaining P0-P3 finding;
-  immutable READY CI on the exact comment-only checkpoint is next.
+- Implemented the target-local pending-work summary provider after exact
+  corrected READY commit `2072af47c908738fd01f4fa6405074c87ee1df95`
+  passed all three jobs in immutable run `33930443887`. It derives exact scoped
+  operation and protected attachment evidence, refuses orphaned or unavailable
+  vault evidence, and preserves restart-stable identity-bearing journal state.
+  The first executable review returned NO-GO because Swift actor reentrancy
+  allowed an ABA revision regression, the draft falsely claimed normal runtime
+  composition, extreme finite time conversion could trap, and real
+  store/restart/fault coverage was incomplete. The corrected provider holds an
+  explicit permit across the whole summary operation, rereads the journal after
+  final cross-store validation, uses exact nontrapping time conversion, and has
+  16 focused provider plus 13 attachment-provider tests including same-instance
+  ABA, completed cross-instance defense-in-depth, real orphan restart and
+  unavailable enumeration. `LedgerOfflineClientRuntime` remains unchanged: a
+  later physical session-ending composition must own exactly one provider
+  instance and the attachment database/vault/key lifecycle. Final independent
+  corrected-diff review returned GO with no P0-P3 finding and independently
+  reran all 16 provider tests. All 391 target tests in 72 suites and both staging
+  builds pass locally. Exact implementation CI is pending. No synchronization,
+  cleanup, signout, Auth, workspace switch,
+  hosted access, migration, Firebase work or cutover action exists.
 
 - Implemented the four-leaf local-only Account discovery provider slice after
   exact corrected READY commit `5a5f2defbdaf15a8198fb4ce22b27a41216e93af`
