@@ -1,0 +1,99 @@
+{
+  "batchId": "M0-BUDGET-CATEGORY-REFERENCE-POWERSYNC-001",
+  "title": "Target local PowerSync budget-category reference provider",
+  "reviewedAt": "2026-09-05",
+  "evidence": [
+    "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
+    "EVID-BUDGET-CATEGORY-REFERENCE-001",
+    "EVID-PROJECT-SETUP-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-241B51091042",
+      "acknowledgeSourceHash": "9f51edff333e387ecd731e29c4516f8e7f230f0bb3e01623783ea047a1debfd8",
+      "currentBehavior": "Comment-only READY candidate for a module-internal Account/Principal-bound BudgetCategoryReferenceQuerying PowerSync adapter over already-materialized local category rows with independent completeness and no local visibility decision.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
+        "EVID-BUDGET-CATEGORY-REFERENCE-001"
+      ],
+      "notes": "Executable work is forbidden until the synchronized comment-only READY checkpoint passes final independent review and immutable CI. Exact shared implementation touchpoints, pre-implementation hashes and responsibilities are frozen without changing their primary owners. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
+      "target": {
+        "owner": "Budget Category Reference Provider",
+        "surfaces": [
+          "Account/Principal-bound PowerSync BudgetCategoryReferenceQuerying adapter"
+        ],
+        "securityRequirements": [
+          "Exact Account binding and active local membership sentinel before emitting materialized rows",
+          "No local visibility_class, financial_access, role or hidden-count decision",
+          "Typed local scope is not fresh authorization or hosted completeness proof"
+        ],
+        "syncRequirements": [
+          "Independent query-specific completeness is false by default and cannot be inferred from cached rows or generic PowerSync sync metadata",
+          "Database rows and completeness remain independently reactive and cancellation drains both observations",
+          "Content-bound local versions preserve exact already-materialized category fields and readiness"
+        ]
+      },
+      "migration": {
+        "rule": "Read only synthetic target-local category rows; decode no Firebase category preset or source export.",
+        "reconciliation": [
+          "Visible count equals only the emitted local subset and never implies the number of server-hidden rows"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "BudgetCategoryReferencePowerSyncQueryTests",
+          "AccountWorkspacePendingWorkRuntimeTests"
+        ],
+        "acceptance": [
+          "Exact local scope, row validation, ordering, readiness, restart and lifecycle behavior pass without final visibility or hosted authority claims"
+        ]
+      }
+    },
+    {
+      "id": "TEST-53618161645B",
+      "acknowledgeSourceHash": "29fa433e29065ef33d98947d8e16029e2fea4e11d3bd8d014e71e3a680d15005",
+      "currentBehavior": "Comment-only READY candidate freezing real encrypted local category-provider, same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed-row, restart, cancellation and runtime-close verification.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
+        "EVID-BUDGET-CATEGORY-REFERENCE-001"
+      ],
+      "notes": "No executable test exists before the reviewed READY checkpoint. Fixtures must prove the adapter preserves every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss must clear formerly emitted rows even if completeness stays true.",
+      "target": {
+        "owner": "Budget Category Reference Provider",
+        "surfaces": [
+          "PowerSync budget-category reference provider test suite"
+        ],
+        "securityRequirements": [
+          "Negative Account, Principal and membership cases yield no false snapshot",
+          "Fixtures reveal neither hidden server-row counts nor credentials or production identifiers"
+        ],
+        "syncRequirements": [
+          "Explicit completeness alone may advance a locally scoped stream to ready",
+          "Restart, cancellation and runtime close prove incomplete-first and deterministic drainage"
+        ]
+      },
+      "migration": {
+        "rule": "Use disposable encrypted local databases and synthetic identities only.",
+        "reconciliation": [
+          "Tests distinguish materialized local subset validity from final download authorization and hosted completeness"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter BudgetCategoryReferencePowerSyncQueryTests",
+          "swift test --package-path LedgeriOS --filter AccountWorkspacePendingWorkRuntimeTests"
+        ],
+        "acceptance": [
+          "All frozen provider and runtime lifecycle obligations pass before status advances"
+        ]
+      }
+    }
+  ]
+}

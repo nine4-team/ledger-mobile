@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
-Last updated: 2026-09-04
-State version: 286
+Last updated: 2026-09-05
+State version: 289
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-IMPLEMENTED-IMMUTABLE-CI-PASSED
+- Checkpoint: BUDGET-CATEGORY-REFERENCE-POWERSYNC-READY-CANDIDATE-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -36,8 +36,8 @@ without modifying the running Firebase application before hard cutover.
 - Whole-program completion is currently estimated at **12–16%**. This measures
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
-- The implementation tracker currently contains 268 status-bearing rows: 68
-  done, four verified, six implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 269 status-bearing rows: 68
+  done, four verified, six implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -64,6 +64,33 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Promoted the Account-workspace pending-work runtime after corrected exact-head
+  implementation/harness commit `f41a5ab7` passed all three jobs in run
+  `33941609019`; the evidence-only promotion commit `819900b2` also passed all
+  three jobs in run `33942161659`. Independent next-slice audits then correctly
+  rejected physical session ending/workspace activation because A-007/A-016/
+  O-023 and hosted authority remain open, and rejected a proposed Transfer-
+  destination provider because the current directory erases authoritative-
+  versus-pending Project provenance even though canonical Transfer eligibility
+  requires authoritative Client identity. Those Transfer scaffolds were removed
+  before classification or commit. Selected the next unblocked enabling slice:
+  an incomplete-first local BudgetCategoryReferenceQuerying PowerSync provider
+  over only already-materialized rows. The first exact comment-only review
+  returned NO-GO before executable work: shared runtime/control touchpoints were
+  not frozen by manifest ID/hash; same-watch membership-loss clearing was
+  absent; the enabling provider was incorrectly labeled a product outcome; the
+  literal-field/version matrix was incomplete; symbol-graph proof exceeded the
+  actual tooling; and one scaffold token caused conservative source-coupling
+  metadata. The corrected technical-control candidate freezes exact shared
+  touchpoints and primary ownership, requires live active-to-revoked/deleted
+  row retraction with completeness still true, adds reciprocal field/version/
+  fingerprint proof, narrows the public-boundary claim to concrete compile-time
+  and source/build checks, and removes the misleading token. Final exact-diff
+  re-review returned GO with no remaining P0-P3 finding; immutable READY CI is
+  now the remaining pre-implementation gate. O-026 remains fully open for
+  administration and final download visibility; existing schema/RLS/Sync/app/MCP stay unchanged;
+  `EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001`.
 
 - Implemented the normal Account-workspace pending-work and attachment runtime
   after corrected READY commit `15218cbbc44b7e7c28ef718c1770c7b6294a03c4`
@@ -3922,22 +3949,23 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Complete the corrected independent review of the exact comment-only
-`account-workspace-pending-work-runtime` READY candidate. Correct every
-substantive finding, synchronize generated controls, commit and push that exact
-READY package, and require all three immutable workflow jobs to pass before any
-executable change. Then implement only the frozen async bootstrap, runtime-wide
-finite-call/stream lease gate, exact one-query/store/vault composition, shared
-SQLCipher versus distinct media-key enforcement, partial-open cleanup and
-deterministic terminal close state machine. Run focused and complete local
+Commit and push the independently reviewed exact comment-only
+`budget-category-reference-powersync-provider` READY candidate, and require all
+three immutable workflow jobs to pass before executable work. Then implement
+only the frozen module-internal local query, independent incomplete-first
+completeness, exact row mapping/content version, runtime-bound category watch
+and existing stream-lease cancellation/drainage. Run focused and complete local
 verification, obtain independent executable review, correct findings,
 synchronize the implemented dossier/evidence, commit and push, and require all
 three immutable jobs on the exact implementation checkpoint before promotion.
 
-Keep physical Account session ending, Auth, hosted Sync, workspace switching,
-destructive deletion, retention selection, A-003/A-004/A-007/A-016/O-023,
-migration and cutover open. Do not provision hosted resources, access production
-or modify Firebase.
+After that provider is proven, implement the separately traced existing-Client
+Project-setup staging UI through ProjectSetupFormPreparation and
+ProjectSetupUseCase, replacing the staging shell's hardcoded Furnishings toggle
+and direct command construction. Keep new-Client input/O-043, category
+administration/O-026, O-040 defaults/card policy, physical session ending, Auth,
+hosted Sync, workspace switching, A-003/A-004/A-007/A-016, migration and cutover
+open. Do not provision hosted resources, access production or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 

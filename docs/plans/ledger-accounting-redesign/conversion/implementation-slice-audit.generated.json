@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T03:42:44.334Z",
+  "generatedFromManifestSync": "2026-09-05T04:04:04.988Z",
   "totals": {
-    "slices": 76,
-    "claimedTargetSurfaces": 211,
+    "slices": 77,
+    "claimedTargetSurfaces": 213,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 159
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 6,
     "verified": 66,
@@ -109,6 +109,21 @@
       "verificationCount": 11,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-local-byte-durability-provider.json"
+    },
+    {
+      "sliceId": "budget-category-reference-powersync-provider",
+      "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
+      "kind": "technical_control",
+      "status": "ready",
+      "owner": "Budget Category Reference Provider",
+      "surfaceIds": [
+        "SWIFT-241B51091042",
+        "TEST-53618161645B"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 9,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-powersync-provider.json"
     },
     {
       "sliceId": "budget-category-reference-read-contracts",
