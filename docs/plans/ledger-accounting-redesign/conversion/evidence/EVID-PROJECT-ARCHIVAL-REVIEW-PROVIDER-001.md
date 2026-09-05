@@ -49,6 +49,8 @@ Three independent reviews examined database/MCP/contracts/Sync configuration, no
 
 The root integrator independently inspected, extended and reran the delegated changes. A later local implementation review also found and closed the equivalent older Client-archive observer-drain race.
 
+The first exact implementation commit `27cb52e7f19c6a53e2506a337e4e8fb1dadb9037` passed conversion and disposable-local-Supabase CI but exposed one scheduler-dependent test setup in the macOS job: provider shutdown could run before the controlled completeness stream had emitted any evidence, making a zero-termination count a valid pre-start outcome. The corrected test first observes the combined row/completeness result, then invokes provider shutdown and proves both active sources terminate exactly once. Thirty consecutive focused-suite repetitions pass locally; no production implementation behavior changed.
+
 ## Local Verification
 
 - clean local Supabase reset: passed all migrations and seed
@@ -59,6 +61,7 @@ The root integrator independently inspected, extended and reran the delegated ch
 - MCP typecheck and tests: 26/26 passed
 - complete Swift package: 546/546 tests in 88 suites passed
 - Project-note provider: 11/11 passed
+- Project-note provider repeated after the CI test-harness correction: 30 consecutive suites passed
 - Project archive provider: 8/8 passed
 - Project archive browser: 13/13 passed
 - Account workspace runtime: 18/18 passed
@@ -68,6 +71,6 @@ The root integrator independently inspected, extended and reran the delegated ch
 
 ## Remaining Gates
 
-`PROJECTARCHIVALREVIEW-TEST-010` remains planned until the exact implementation commit passes immutable CI. `PROJECTARCHIVALREVIEW-TEST-011` remains planned until a real isolated authenticated PowerSync session proves exact authorized receipt and membership-revocation eviction. Local static configuration, fake freshness sources and SQLite tests do not prove that hosted behavior.
+`PROJECTARCHIVALREVIEW-TEST-010` remains planned until the corrected exact implementation commit passes immutable CI. The first exact commit's failed macOS job is retained above rather than hidden. `PROJECTARCHIVALREVIEW-TEST-011` remains planned until a real isolated authenticated PowerSync session proves exact authorized receipt and membership-revocation eviction. Local static configuration, fake freshness sources and SQLite tests do not prove that hosted behavior.
 
 A-003 and A-004 therefore remain proposed. This implementation does not authorize hosted Supabase/PowerSync resources, source import, Firebase changes, production access, migration, deployment, release or cutover. Product specs and the decision log remain product authority.

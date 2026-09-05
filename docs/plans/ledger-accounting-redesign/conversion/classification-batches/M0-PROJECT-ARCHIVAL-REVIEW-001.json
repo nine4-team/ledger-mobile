@@ -67,8 +67,8 @@
     },
     {
       "id": "TEST-A920874A5571",
-      "acknowledgeSourceHash": "f93f65ef22814566843d53f80777a967ae4e37c39f287ce7be8f8df062e1020a",
-      "currentBehavior": "Executable encrypted local suite proves pagination, causal completeness, restart, membership loss/reactivation and observer drainage.",
+      "acknowledgeSourceHash": "9adbafa6c5237e54551fe439b7521ad8041e8f743459e90915dee7734d9fa3ca",
+      "currentBehavior": "Executable encrypted local suite proves pagination, causal completeness, restart, membership loss/reactivation and observer drainage after both owned sources are demonstrably active.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
@@ -76,7 +76,7 @@
       "target": {"owner": "Project Archival Review", "surfaces": ["PowerSync note-history provider test suite"], "securityRequirements": ["Cross-Account/Project and malformed evidence fail closed"], "syncRequirements": ["Prove exact cursor, freshness, restart and cancellation behavior"]},
       "migration": {"rule": "Use disposable encrypted local databases only.", "reconciliation": ["Compare raw and canonical note snapshots around archival"]},
       "verification": {"tests": ["swift test --package-path LedgeriOS --filter ProjectNotePowerSyncQueryTests"], "acceptance": ["Every frozen provider obligation is executable"]},
-      "notes": "No hosted synchronization claim is made."
+      "notes": "The provider-shutdown test waits for the first combined row/completeness result before cancellation, preventing scheduler speed from deciding whether the owned streams were ever entered. No hosted synchronization claim is made."
     },
     {
       "id": "SWIFT-754648D5F97F",

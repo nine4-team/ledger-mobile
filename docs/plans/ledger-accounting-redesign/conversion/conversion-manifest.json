@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T23:02:04.359Z",
+    "lastSynchronizedAt": "2026-09-05T23:18:36.868Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -45402,12 +45402,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectNotePowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "f93f65ef22814566843d53f80777a967ae4e37c39f287ce7be8f8df062e1020a",
-      "acknowledgedSourceHash": "f93f65ef22814566843d53f80777a967ae4e37c39f287ce7be8f8df062e1020a",
+      "observedSourceHash": "9adbafa6c5237e54551fe439b7521ad8041e8f743459e90915dee7734d9fa3ca",
+      "acknowledgedSourceHash": "9adbafa6c5237e54551fe439b7521ad8041e8f743459e90915dee7734d9fa3ca",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executable encrypted local suite proves pagination, causal completeness, restart, membership loss/reactivation and observer drainage.",
+      "currentBehavior": "Executable encrypted local suite proves pagination, causal completeness, restart, membership loss/reactivation and observer drainage after both owned sources are demonstrably active.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Archival Review",
@@ -45441,7 +45441,7 @@
         "EVID-PROJECT-ARCHIVAL-REVIEW-READY-001",
         "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
-      "notes": "No hosted synchronization claim is made.",
+      "notes": "The provider-shutdown test waits for the first combined row/completeness result before cancellation, preventing scheduler speed from deciding whether the owned streams were ever entered. No hosted synchronization claim is made.",
       "classificationBatch": "M0-PROJECT-ARCHIVAL-REVIEW-001"
     },
     {

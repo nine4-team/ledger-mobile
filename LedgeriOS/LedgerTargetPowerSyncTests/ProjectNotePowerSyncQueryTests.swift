@@ -418,16 +418,20 @@ struct ProjectNotePowerSyncQueryTests {
             initialRows: [Self.row(id: "note-z")],
             hasLastSyncedAt: false
         )
-        let shutdownCompletion = ControlledProjectNoteCompleteness(initialValue: nil)
+        let shutdownCompletion = ControlledProjectNoteCompleteness(initialValue: false)
         let shutdownQuery = Self.query(shutdownReader, completeness: shutdownCompletion.stream)
+        let shutdownSignal = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
         let shutdownConsumer = Task {
             do {
-                for try await _ in shutdownQuery.watchNotes(try Self.request(pageSize: 20)) {}
+                for try await _ in shutdownQuery.watchNotes(try Self.request(pageSize: 20)) {
+                    shutdownSignal.continuation.yield(())
+                }
             } catch {
                 Issue.record("Provider shutdown must finish normally")
             }
         }
-        for _ in 0..<100 where shutdownReader.observationCount == 0 { await Task.yield() }
+        var shutdownIterator = shutdownSignal.stream.makeAsyncIterator()
+        _ = await shutdownIterator.next()
         await shutdownQuery.cancelAndDrainWatches()
         await shutdownConsumer.value
         for _ in 0..<100
@@ -437,6 +441,7 @@ struct ProjectNotePowerSyncQueryTests {
         }
         #expect(shutdownReader.terminationCount == 1)
         #expect(shutdownCompletion.terminationCount == 1)
+        shutdownSignal.continuation.finish()
     }
 
     @Test("Encrypted local paging survives lifecycle change and restart without retaining completeness")
