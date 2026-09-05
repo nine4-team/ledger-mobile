@@ -1,0 +1,8 @@
+-- DRAFT scaffold only: no executable pgTAP assertions exist at this checkpoint.
+--
+-- The READY contract must require executable proof for Project and Business
+-- Inventory creation, duplicate names, canonical name/notes bytes, exact
+-- same-Account Project-parent validation, server-owned active lifecycle,
+-- revision 1 and audit fields, exact replay, changed replay, identity races,
+-- anonymous/revoked/cross-Account denial, direct-DML denial, and absence of
+-- every unrelated Item/accounting/media/template/checklist/review side effect.

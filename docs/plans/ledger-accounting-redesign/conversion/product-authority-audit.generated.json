@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T19:08:11.079Z",
+  "generatedFromManifestSync": "2026-09-05T19:49:02.187Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 939,
-    "targetRelevantSurfaces": 677,
-    "batches": 34,
-    "productScopeSurfaces": 768,
+    "surfaces": 951,
+    "targetRelevantSurfaces": 689,
+    "batches": 35,
+    "productScopeSurfaces": 780,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -92,19 +92,21 @@
         "M0-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
-        "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
+        "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
+        "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 151,
-      "targetRelevantSurfaceCount": 147
+      "surfaceCount": 163,
+      "targetRelevantSurfaceCount": 159
     },
     {
       "path": "docs/specs/spaces.md",
       "batchIds": [
         "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 178,
-      "targetRelevantSurfaceCount": 172
+      "surfaceCount": 190,
+      "targetRelevantSurfaceCount": 184
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -2816,6 +2818,94 @@
       ],
       "surfaceIds": [
         "FILE-0FD95E417B30"
+      ]
+    },
+    {
+      "batchId": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
+      "title": "Provider-backed direct Space creation",
+      "scope": "product",
+      "rationale": "The isolated direct Space-create provider slice must preserve stable Account/scope identity and zero accounting effects while proving encrypted offline acceptance, non-enumerating trusted authorization, exact local readback and app/MCP parity. O-044/O-045/O-046 remain explicit product blockers rather than inferred implementation policy.",
+      "surfaceCount": 12,
+      "targetRelevantSurfaceCount": 12,
+      "authorities": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-operation-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/direct-space-creation-use-case-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-47B4E611F656",
+        "CONFIG-D480EE9180E9",
+        "CONFIG-D810BACE7514",
+        "MCPMOD-6041493AFB54",
+        "MCPMOD-96D987A7F175",
+        "SWIFT-4A4871681A0C",
+        "SWIFT-81770E563598",
+        "SWIFT-A3C39A0A230C",
+        "SWIFT-D0265A748544",
+        "SWIFT-E759DC8D7078",
+        "TEST-0FCB8A65AEFB",
+        "TEST-987BC22BCDF4"
       ]
     },
     {

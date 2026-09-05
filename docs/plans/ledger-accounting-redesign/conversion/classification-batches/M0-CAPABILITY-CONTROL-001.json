@@ -20,17 +20,17 @@
     },
     {
       "id": "FILE-208B7E9D7F47",
-      "acknowledgeSourceHash": "2f7cf19eb6133a14961ad233d5620efab575a9d179ea512fec10dbcb8cbb049d",
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination migration, pgTAP leaf and local Data API runner; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "acknowledgeSourceHash": "c89e553ebec36911d8e2e546626b096ab19c6ea75d64ac61718841f7edebf2c6",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination and direct-creation migration, pgTAP and local Data API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "status": "verified",
       "blockers": [],
-      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "evidence": ["EVID-CONTROL-001", "EVID-CAPABILITY-001", "EVID-PRODUCT-AUTHORITY-001", "EVID-SLICE-METHOD-001", "EVID-CONTRACT-CATALOG-001", "EVID-MIGRATION-RUN-INTEGRITY-001", "EVID-TARGET-QUERY-PORT-INVENTORY-001", "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001", "EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-SPACE-CREATION-PROVIDER-READY-001"],
       "verification": {
         "tests": ["node --check scripts/supabase-conversion-ledger.mjs", "npm run conversion:sync", "npm run conversion:check", "generated product-authority and implementation-slice JSON/Markdown freshness checks", "valid ready-slice positive control", "invalid ready-slice negative control", "implemented-surface-without-slice negative control", "intentional mismatched acknowledgeSourceHash negative check", "intentional live source-hash drift negative check", "npm run conversion:report", "npm run conversion:gate:m0"],
         "acceptance": ["Discovery and validation complete with zero structural errors and only explicitly explained retired-surface warnings", "Every surface resolves through exactly one classification batch to reviewed product or technical authorities", "Every registered canonical target spec appears in the reviewed crosswalk and stale generated authority artifacts fail checking", "A target slice cannot reach ready without exact authority requirements, complete contract applicability and derived verification obligations", "A target surface cannot advance to implemented or later without exactly one correspondingly advanced slice with required evidence", "A mismatched explicit acknowledgment fails", "A source edit made after manifest synchronization fails checking", "Incomplete M0 exits nonzero with cumulative blockers"]
       },
-      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment retains exact discovery for Project replacement CONFIG-CAB6A5DAD1C0 and marker CONFIG-062839A9903C, adds runnable Client replacement CONFIG-86F1E734BC70 while retaining marker CONFIG-2DBC5A626444 byte-identically, and changes no validator semantics, package command, product authority or existing primary ownership."
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated direct Space-create migration, planned pgTAP leaf and planned local Data API runner; it changes no validator semantics, product authority, status rule or existing primary ownership."
     },
     {
       "id": "CONFIG-9B16CFCB67A4",

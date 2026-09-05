@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 318
+State version: 319
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-IMPLEMENTATION-CI-GREEN
+- Checkpoint: SPACE-CREATION-PROVIDER-DRAFT-BLOCKED-TRANSFER-DESTINATION-NEXT
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,9 +33,10 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **493 of 677 target-relevant surfaces mapped or
-  later (72.8%)** after the current slice is synchronized. Local surface-
-  implementation coverage is **203 of 677 implemented or verified (30.0%)**.
+- Planning/control coverage is **505 of 689 target-relevant surfaces mapped or
+  later (73.3%)** after the blocked Space-create DRAFT is synchronized. Local
+  surface-implementation coverage is **203 of 689 implemented or verified
+  (29.5%)**.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -50,9 +51,9 @@ without modifying the running Firebase application before hard cutover.
   migration/reconciliation, operational rollout/rollback, and cutover. Progress
   reports must lead with the exact four lanes above rather than repeat a broad
   estimate without its basis.
-- The implementation tracker currently contains 275 status-bearing rows: 68
+- The implementation tracker currently contains 276 status-bearing rows: 68
   done, eight verified, nine implemented, zero ready, zero awaiting verification,
-  12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
+  12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
 - Seven provider-backed product slices have working local behavior: Client
@@ -81,6 +82,23 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Audited provider-backed direct Space creation before implementation and
+  stopped it at DRAFT after independent review found three missing product
+  authorities: exact cross-runtime Space name/notes acceptance, command-specific
+  writer authorization, and archived-Project parent eligibility. O-044/O-045/
+  O-046 and one combined decision packet now own those choices. Twelve
+  machine-discovered comment-only target leaves, a full verification matrix and
+  every shared implementation touchpoint are recorded; none executes Swift,
+  TypeScript, SQL, a Data API request or a test. Immediate destination-picker
+  readback is explicitly partial, exact Principal/Account/scope-bound and causal:
+  membership loss cannot be bypassed, result arrival cannot clear optimism before
+  authoritative row readback, and durable rejection removes only matching work.
+  Broad source Space UI/CRUD surfaces remain mapped rather than falsely advanced;
+  `EVID-SPACE-CREATION-PROVIDER-READY-001`. The next selected candidate is the
+  provider-backed Transfer destination picker derived from the already-verified
+  local Project directory, because its mapped query has no unresolved logical
+  axis and requires no schema, handler, RLS, Sync, upload or MCP change.
 
 - Implemented the provider-backed offline Space assignment-destination picker
   from exact green READY commit `5f3888b2` plus public-facade correction
@@ -4201,21 +4219,27 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit the reviewed public-runtime-facade touchpoint correction and require
-immutable exact-head CI before any executable implementation. The
-original READY package already passed exact-head run `33979632287`; the delta
-adds no executable behavior and permits only one typed-scope forwarding watch.
-The completed broader review confirmed the pinned-CLI-generated
-Postgres migration, runnable pgTAP, disposable Data API runner, active-only RLS,
-separate parameterized Project/Inventory Sync Streams and exact-subscription
-first-sync completeness are owned obligations rather than optional synthetic
-fixtures. `EVID-SPACE-ASSIGNMENT-DESTINATION-001` and the verified Core contract
-must remain byte-identical. During implementation, new physical leaves must be
-machine-discovered, classified and claimed in the same synchronized checkpoint.
-Do not freeze unspecified production selection-retention policy, infer real
-PowerSync/Auth authorization from local proof, advance A-003/A-004, add Item
-selection or Assign/Clear/Space mutation/MCP behavior, provision hosted
-resources, access production, migrate source data or modify Firebase.
+Prepare the provider-backed Transfer destination picker as one comment-only
+DRAFT/READY candidate, then require independent review and immutable exact-head
+CI before executable work. Reuse `TQUERY-2D53E545A090`,
+`TACCESS-626ED0857269`, `EVID-TRANSFER-DESTINATION-001` and the existing local
+Client/Project directory provider rather than creating SQL, schema, RLS, Sync,
+handler, upload, MCP or another Project authority. The derived projection may
+show only other active Projects with the exact same non-null ClientID in the
+same Account, preserve upstream order, distinguish complete authoritative empty
+from incomplete/partial/stale evidence, and bind selection to a currently
+represented stable ProjectID. Add only the PowerSync composition leaf/tests,
+Core-only AppModel/tests, thin target runtime adapter/view and exact shared
+runtime/staging/checker/project-generation touchpoints.
+
+Source-Project selection is isolated-harness plumbing only. Do not infer
+production Items-action eligibility, archived-source availability, confirmation,
+Item selection, Transfer pair/command, amount, Invoice effect, destination Space,
+accounting, correction or any O-002/O-011–O-015/D-017 behavior. Do not weaken the
+blocked direct Space-create dossier or implement O-044/O-045/O-046. Do not infer
+real PowerSync/Auth authorization from local proof, advance A-003/A-004,
+provision hosted resources, access production, migrate source data or modify
+Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 

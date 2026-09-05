@@ -1,0 +1,140 @@
+{
+  "batchId": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
+  "title": "Provider-backed direct Space creation",
+  "reviewedAt": "2026-09-05",
+  "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+  "surfaces": [
+    {
+      "id": "CONFIG-47B4E611F656",
+      "acknowledgeSourceHash": "8cc8aa7620fc121ce2279135833897e34f1ac981dbf5785ec6bab6c84a52c304",
+      "currentBehavior": "Comment-only local Data API scaffold; performs no request.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for disposable scoped-user Space-create RPC verification only.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["local scoped-user Space-create RPC verification runner"], "securityRequirements": ["Use only synthetic local identities; prove non-enumerating denial and no direct writes"], "syncRequirements": ["Verify server apply/replay/readback independently of hosted Sync"]},
+      "migration": {"rule": "No source data is read or transformed.", "reconciliation": ["Exact synthetic command/result/Space identity reconciles once"]},
+      "verification": {"tests": ["Disposable local Data API positive and denial matrix"], "acceptance": ["Both scopes apply once; unauthorized requests reveal no row/result"]}
+    },
+    {
+      "id": "CONFIG-D480EE9180E9",
+      "acknowledgeSourceHash": "a19a8836b174c0f795d9eea03ac09e72e20b45d619453338e806335bf89cfc07",
+      "currentBehavior": "CLI-generated comment-only migration scaffold; defines no database object.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for the isolated create_space transaction only.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["spike Space-create schema and trusted transaction"], "securityRequirements": ["Auth-first active-membership scope checks and denied direct writes"], "syncRequirements": ["Produce authoritative Space and immutable result rows for existing exact-scope streams"]},
+      "migration": {"rule": "Add isolated spike-prefixed target schema only.", "reconciliation": ["No Firebase or production source rows are imported"]},
+      "verification": {"tests": ["Runnable pgTAP schema, handler, replay, authorization and side-effect assertions"], "acceptance": ["One authorized command creates exactly one active revision-1 Space and result"]}
+    },
+    {
+      "id": "CONFIG-D810BACE7514",
+      "acknowledgeSourceHash": "0939ed35fd91680f6297d20b56601d4bddadc12e230aa23fcec85ffcc3135f0d",
+      "currentBehavior": "Comment-only pgTAP scaffold; executes no assertion.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for runnable database invariants and RLS/handler tests.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["Space-create pgTAP suite"], "securityRequirements": ["Positive, negative, cross-tenant, direct-DML and non-enumeration proof"], "syncRequirements": ["Prove rows contain exact authoritative fields needed for readback"]},
+      "migration": {"rule": "Synthetic fixtures only.", "reconciliation": ["Exact Space/result counts and unrelated-table non-effects"]},
+      "verification": {"tests": ["Clean local Supabase reset and pgTAP run"], "acceptance": ["Every named assertion passes with no warning-level database lint"]}
+    },
+    {
+      "id": "MCPMOD-6041493AFB54",
+      "acknowledgeSourceHash": "61c47fd5a4ac94ca152eb72e584b3c26dc3d6f3cb8ab82381d3b598cf7d2b0bf",
+      "currentBehavior": "Comment-only target MCP test scaffold; executes no test.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for cross-runtime create-space contract parity.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["target MCP Space-create tests"], "securityRequirements": ["Prove scoped-user credentials and privacy-safe failures"], "syncRequirements": ["Prove identical command/result bytes independent of local Swift optimism"]},
+      "migration": {"rule": "No source MCP behavior is copied.", "reconciliation": ["Swift and TypeScript fixture bytes/fingerprint match"]},
+      "verification": {"tests": ["Strict TypeScript tests and target MCP isolation checks"], "acceptance": ["MCP cannot choose different identity, normalization, scope or result semantics"]}
+    },
+    {
+      "id": "MCPMOD-96D987A7F175",
+      "acknowledgeSourceHash": "53a4f18b7ee5c86203bfa12db4da7227df3a12d2d57264ff12bcc1ea73faba60",
+      "currentBehavior": "Comment-only target MCP module scaffold; registers no tool and performs no call.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for the gated target create_space command boundary.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["target MCP create_space operation"], "securityRequirements": ["Derive Account/Principal from authenticated context and prohibit service-role input"], "syncRequirements": ["Use the shared command bytes/RPC/result contract"]},
+      "migration": {"rule": "Replace only the direct-create subset of the source tool.", "reconciliation": ["Broad source CRUD responsibilities remain independently mapped"]},
+      "verification": {"tests": ["Canonical-byte, fingerprint, RPC and result validation tests"], "acceptance": ["App and MCP submit the same bounded intent"]}
+    },
+    {
+      "id": "SWIFT-4A4871681A0C",
+      "acknowledgeSourceHash": "e0312cee82b49ec315b7bdcab0a3f70f42d29a2b9415b321d558c16bf9259447",
+      "currentBehavior": "Comment-only PowerSync store scaffold; persists no row.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for encrypted atomic operation/command/pending-Space acceptance and reconciliation.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["SpaceCreating PowerSync adapter and optimistic Space projection"], "securityRequirements": ["Bind every row to one validated Principal/Account workspace"], "syncRequirements": ["Retain optimism until exact terminal evidence plus authoritative readback"]},
+      "migration": {"rule": "No source local database is read.", "reconciliation": ["Pending and authoritative Space identities converge without resurrection"]},
+      "verification": {"tests": ["Encrypted restart, replay, rejection, membership and readback tests"], "acceptance": ["Accepted offline creation is durable and immediately visible as partial"]}
+    },
+    {
+      "id": "SWIFT-81770E563598",
+      "acknowledgeSourceHash": "307479684cbe35ee70afd42e6b5399c4729991c5d79d0800690b2ed5c3f3ffa7",
+      "currentBehavior": "Comment-only target-app runtime-adapter scaffold; exposes no method.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for thin create/watch forwarding only.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["target staging Space-create runtime adapter"], "securityRequirements": ["Expose typed scope only; no database/provider/auth object"], "syncRequirements": ["Forward through the shared close-aware Account runtime"]},
+      "migration": {"rule": "No source runtime adapter is modified.", "reconciliation": ["No second queue or domain policy exists"]},
+      "verification": {"tests": ["Build-boundary and lifecycle-drain tests"], "acceptance": ["Adapter remains thin and target-only"]}
+    },
+    {
+      "id": "SWIFT-A3C39A0A230C",
+      "acknowledgeSourceHash": "3fee556c03c50993009787367dac7db55bac2379f5263aa7aabfd0f8fa427443",
+      "currentBehavior": "Comment-only provider-free AppModel scaffold; exposes no state.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for Core-only create/readback orchestration.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["Space-create staging AppModel"], "securityRequirements": ["Import no provider or authorization implementation"], "syncRequirements": ["Preserve exact partial/authoritative/failure truth"]},
+      "migration": {"rule": "No source view-model behavior is copied.", "reconciliation": ["Represented stable SpaceID binds creation to directory readback"]},
+      "verification": {"tests": ["Provider-free state-machine and stale-result tests"], "acceptance": ["Presentation never manufactures completeness or success"]}
+    },
+    {
+      "id": "SWIFT-D0265A748544",
+      "acknowledgeSourceHash": "24797398e09de38d1b9310035e641d90df9d39267e980154ae698f70a33086fb",
+      "currentBehavior": "Comment-only isolated SwiftUI scaffold; renders no view.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for one synthetic staging exercise, not a production route.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["isolated Space-create staging view"], "securityRequirements": ["No hosted or production identity/configuration"], "syncRequirements": ["Render only AppModel-projected local truth"]},
+      "migration": {"rule": "The Firebase NewSpaceView remains unchanged.", "reconciliation": ["Only direct-create scope is exercised"]},
+      "verification": {"tests": ["Target build and structural isolation checks"], "acceptance": ["The staging view cannot reach Firebase or production"]}
+    },
+    {
+      "id": "SWIFT-E759DC8D7078",
+      "acknowledgeSourceHash": "49c30e03c69e27b7b6f0a241d8040e2098f0c5ec43ea9cdead6827e42c7cbb0d",
+      "currentBehavior": "Comment-only scoped RPC scaffold; performs no call.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for exact create-space command/result transport.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["Supabase scoped-user Space-create RPC client"], "securityRequirements": ["Accept no service-role credential and log no payload text"], "syncRequirements": ["Validate immutable terminal result identity before local reconciliation"]},
+      "migration": {"rule": "No source network call is reused.", "reconciliation": ["Canonical command bytes and terminal result match Core"]},
+      "verification": {"tests": ["Transport/result decoding and bounded-error tests"], "acceptance": ["Malformed or mismatched results fail closed"]}
+    },
+    {
+      "id": "TEST-0FCB8A65AEFB",
+      "acknowledgeSourceHash": "e73bf1a16a1e92bc930da0a2e982fd58707c1d7e3ac1bffbbf00e13701f9b746",
+      "currentBehavior": "Comment-only AppModel test scaffold; executes no test.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for direct-create presentation/readback state proof.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["Space-create AppModel tests"], "securityRequirements": ["Provider-free fixtures only"], "syncRequirements": ["Prove partial/readback/failure truth and observation drainage"]},
+      "migration": {"rule": "No source test is treated as target proof.", "reconciliation": ["Exact represented SpaceID ties submission to readback"]},
+      "verification": {"tests": ["Deterministic AppModel tests"], "acceptance": ["Stale or late results cannot corrupt current state"]}
+    },
+    {
+      "id": "TEST-987BC22BCDF4",
+      "acknowledgeSourceHash": "f0b7393f14a019b58f6248e765b503cbe7f40abbe1cc6f7db70984be5573da46",
+      "currentBehavior": "Comment-only provider test scaffold; executes no test.",
+      "disposition": "redesign", "status": "target_mapped", "blockers": [],
+      "evidence": ["EVID-SPACE-CREATION-PROVIDER-READY-001"],
+      "notes": "Reserved for encrypted local/provider behavior and parity proof.",
+      "target": {"owner": "Space Creation Provider", "surfaces": ["Space-create PowerSync vertical-slice tests"], "securityRequirements": ["Prove Account/scope isolation and fail-closed malformed evidence"], "syncRequirements": ["Prove offline acceptance, FIFO upload, reconciliation and restart"]},
+      "migration": {"rule": "Synthetic target-only fixtures.", "reconciliation": ["Pending/result/authoritative evidence converges once"]},
+      "verification": {"tests": ["Focused and full encrypted provider suites"], "acceptance": ["No accepted offline operation is lost or falsely authoritative"]}
+    }
+  ]
+}

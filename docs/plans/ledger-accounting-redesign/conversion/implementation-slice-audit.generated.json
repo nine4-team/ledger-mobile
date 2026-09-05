@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T19:08:11.079Z",
+  "generatedFromManifestSync": "2026-09-05T19:49:02.187Z",
   "totals": {
-    "slices": 83,
-    "claimedTargetSurfaces": 255,
+    "slices": 84,
+    "claimedTargetSurfaces": 267,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 203
   },
   "statusCounts": {
-    "draft": 1,
+    "draft": 2,
     "ready": 0,
     "in_progress": 3,
     "implemented": 9,
@@ -1134,6 +1134,31 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-operation-contracts.json"
+    },
+    {
+      "sliceId": "space-creation-supabase-powersync-vertical-slice",
+      "title": "Create one Space offline and read it back in the exact local destination directory",
+      "kind": "product",
+      "status": "draft",
+      "owner": "Space Creation Provider",
+      "surfaceIds": [
+        "CONFIG-47B4E611F656",
+        "CONFIG-D480EE9180E9",
+        "CONFIG-D810BACE7514",
+        "MCPMOD-6041493AFB54",
+        "MCPMOD-96D987A7F175",
+        "SWIFT-4A4871681A0C",
+        "SWIFT-81770E563598",
+        "SWIFT-A3C39A0A230C",
+        "SWIFT-D0265A748544",
+        "SWIFT-E759DC8D7078",
+        "TEST-0FCB8A65AEFB",
+        "TEST-987BC22BCDF4"
+      ],
+      "requirementCount": 10,
+      "verificationCount": 12,
+      "blockerCount": 3,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-creation-supabase-powersync-vertical-slice.json"
     },
     {
       "sliceId": "space-details-update-operation-contracts",

@@ -5,10 +5,10 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 493 of 677 target-relevant
+Status: M0 backend-surface classification complete; 505 of 689 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Of those target surfaces, 203 are now
-implemented or verified. This 30.0% is local surface-implementation coverage,
+implemented or verified. This 29.5% is local surface-implementation coverage,
 not shipped-app or cutover readiness. Seven provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
 zero. Decision-independent target
@@ -26,7 +26,15 @@ both builds pass locally. Exact implementation `f89e9bda` passed all three
 immutable jobs in run `33985685659`; TEST-012 hosted authenticated Sync remains
 pending. A-003/A-004 remain proposed and no
 Space/Item mutation, migration, Firebase, production or cutover authority is
-granted; `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001`. The Project archive browser slice is implemented locally
+granted; `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001`. The proposed
+direct Space-create provider is deliberately DRAFT: twelve comment-only leaves
+and a complete cross-layer test matrix are recorded, but independent authority
+review found that cross-runtime Space text, exact writer authorization and
+archived-Project child creation are not decided. O-044/O-045/O-046 now own those
+choices, so no executable writer began; `EVID-SPACE-CREATION-PROVIDER-READY-001`.
+The next locally safe candidate is the provider-backed Transfer destination
+picker derived from the existing Project directory; it performs no Transfer or
+accounting mutation. The Project archive browser slice is implemented locally
 from exact green READY commit `089dc562` / immutable run `33961281661`: nine
 claimed leaves provide confirmation-bound offline archive, encrypted PowerSync
 optimism/reconciliation, auth-first Postgres/RLS/RPC, runnable pgTAP and scoped

@@ -1,0 +1,15 @@
+-- DRAFT scaffold only: no executable DDL exists at this checkpoint.
+--
+-- A later synchronized READY checkpoint may extend the existing isolated
+-- spike_spaces relation and immutable spike_operation_results for one
+-- create_space operation. The trusted transaction must authenticate first,
+-- bind the payload actor to auth.uid(), require active Account membership,
+-- validate a Project parent by exact same-Account identity when scope is
+-- project, allocate no server identity, and insert exactly one active Space at
+-- revision 1 with server-owned creation/update audit values.
+--
+-- Business Inventory uses the owning Account with no synthetic Project. Direct
+-- writes remain denied. Exact OperationID replay returns one immutable result;
+-- changed reuse cannot rebind or disclose another scope. The mutation may not
+-- create or alter Items, placement, Transactions, Invoices, budgets, media,
+-- templates, checklists, review state, archive state, or source data.

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T19:08:11.079Z",
+    "lastSynchronizedAt": "2026-09-05T19:49:02.187Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1077,6 +1077,56 @@
       ],
       "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
+    },
+    {
+      "id": "CONFIG-47B4E611F656",
+      "kind": "release_or_build_tool",
+      "name": "scripts/test-local-space-creation-rpc.mjs",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "scripts/test-local-space-creation-rpc.mjs"
+        }
+      ],
+      "observedSourceHash": "8cc8aa7620fc121ce2279135833897e34f1ac981dbf5785ec6bab6c84a52c304",
+      "acknowledgedSourceHash": "8cc8aa7620fc121ce2279135833897e34f1ac981dbf5785ec6bab6c84a52c304",
+      "metadata": {},
+      "currentBehavior": "Comment-only local Data API scaffold; performs no request.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "local scoped-user Space-create RPC verification runner"
+        ],
+        "securityRequirements": [
+          "Use only synthetic local identities; prove non-enumerating denial and no direct writes"
+        ],
+        "syncRequirements": [
+          "Verify server apply/replay/readback independently of hosted Sync"
+        ]
+      },
+      "migration": {
+        "rule": "No source data is read or transformed.",
+        "reconciliation": [
+          "Exact synthetic command/result/Space identity reconciles once"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Disposable local Data API positive and denial matrix"
+        ],
+        "acceptance": [
+          "Both scopes apply once; unauthorized requests reveal no row/result"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for disposable scoped-user Space-create RPC verification only.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "CONFIG-50FA673297B2",
@@ -2772,6 +2822,56 @@
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
+      "id": "CONFIG-D480EE9180E9",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/migrations/20260905192135_space_creation_vertical_slice.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/migrations/20260905192135_space_creation_vertical_slice.sql"
+        }
+      ],
+      "observedSourceHash": "a19a8836b174c0f795d9eea03ac09e72e20b45d619453338e806335bf89cfc07",
+      "acknowledgedSourceHash": "a19a8836b174c0f795d9eea03ac09e72e20b45d619453338e806335bf89cfc07",
+      "metadata": {},
+      "currentBehavior": "CLI-generated comment-only migration scaffold; defines no database object.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "spike Space-create schema and trusted transaction"
+        ],
+        "securityRequirements": [
+          "Auth-first active-membership scope checks and denied direct writes"
+        ],
+        "syncRequirements": [
+          "Produce authoritative Space and immutable result rows for existing exact-scope streams"
+        ]
+      },
+      "migration": {
+        "rule": "Add isolated spike-prefixed target schema only.",
+        "reconciliation": [
+          "No Firebase or production source rows are imported"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Runnable pgTAP schema, handler, replay, authorization and side-effect assertions"
+        ],
+        "acceptance": [
+          "One authorized command creates exactly one active revision-1 Space and result"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for the isolated create_space transaction only.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "CONFIG-D74F97384F03",
       "kind": "release_or_build_tool",
       "name": "scripts/package.json",
@@ -2824,6 +2924,56 @@
       ],
       "notes": "Pin and audit release tool dependencies. M2 map reviewed under target-mapping-method.md; source-provider/build mechanics do not become target application authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "CONFIG-D810BACE7514",
+      "kind": "application_or_backend_configuration",
+      "name": "supabase/tests/space_creation_vertical_slice.test.sql",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "supabase/tests/space_creation_vertical_slice.test.sql"
+        }
+      ],
+      "observedSourceHash": "0939ed35fd91680f6297d20b56601d4bddadc12e230aa23fcec85ffcc3135f0d",
+      "acknowledgedSourceHash": "0939ed35fd91680f6297d20b56601d4bddadc12e230aa23fcec85ffcc3135f0d",
+      "metadata": {},
+      "currentBehavior": "Comment-only pgTAP scaffold; executes no assertion.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "Space-create pgTAP suite"
+        ],
+        "securityRequirements": [
+          "Positive, negative, cross-tenant, direct-DML and non-enumeration proof"
+        ],
+        "syncRequirements": [
+          "Prove rows contain exact authoritative fields needed for readback"
+        ]
+      },
+      "migration": {
+        "rule": "Synthetic fixtures only.",
+        "reconciliation": [
+          "Exact Space/result counts and unrelated-table non-effects"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Clean local Supabase reset and pgTAP run"
+        ],
+        "acceptance": [
+          "Every named assertion passes with no warning-level database lint"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for runnable database invariants and RLS/handler tests.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "CONFIG-D94C7653FB36",
@@ -3773,10 +3923,10 @@
           "path": "scripts/supabase-conversion-ledger.mjs"
         }
       ],
-      "observedSourceHash": "2f7cf19eb6133a14961ad233d5620efab575a9d179ea512fec10dbcb8cbb049d",
-      "acknowledgedSourceHash": "2f7cf19eb6133a14961ad233d5620efab575a9d179ea512fec10dbcb8cbb049d",
+      "observedSourceHash": "c89e553ebec36911d8e2e546626b096ab19c6ea75d64ac61718841f7edebf2c6",
+      "acknowledgedSourceHash": "c89e553ebec36911d8e2e546626b096ab19c6ea75d64ac61718841f7edebf2c6",
       "metadata": {},
-      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination migration, pgTAP leaf and local Data API runner; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
+      "currentBehavior": "Discovers repository-backed conversion surfaces, including the Space destination and direct-creation migration, pgTAP and local Data API leaves; applies bounded classification batches, detects disappearance/live drift, validates evidence/product authority/slice dossiers, emits generated audits, and enforces cumulative M0-M5 gates.",
       "disposition": "preserve",
       "target": {
         "owner": "",
@@ -3827,9 +3977,10 @@
         "EVID-SOURCE-QUERY-RECONCILIATION-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
       ],
-      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment retains exact discovery for Project replacement CONFIG-CAB6A5DAD1C0 and marker CONFIG-062839A9903C, adds runnable Client replacement CONFIG-86F1E734BC70 while retaining marker CONFIG-2DBC5A626444 byte-identically, and changes no validator semantics, package command, product authority or existing primary ownership.",
+      "notes": "The explicit hash workflow prevents silent blessing of source drift. This deliberate re-acknowledgment adds only deterministic discovery of the CLI-generated direct Space-create migration, planned pgTAP leaf and planned local Data API runner; it changes no validator semantics, product authority, status rule or existing primary ownership.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -9743,6 +9894,58 @@
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
     },
     {
+      "id": "MCPMOD-6041493AFB54",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/tests/spaceCreation.test.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/tests/spaceCreation.test.ts"
+        }
+      ],
+      "observedSourceHash": "61c47fd5a4ac94ca152eb72e584b3c26dc3d6f3cb8ab82381d3b598cf7d2b0bf",
+      "acknowledgedSourceHash": "61c47fd5a4ac94ca152eb72e584b3c26dc3d6f3cb8ab82381d3b598cf7d2b0bf",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target MCP test scaffold; executes no test.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "target MCP Space-create tests"
+        ],
+        "securityRequirements": [
+          "Prove scoped-user credentials and privacy-safe failures"
+        ],
+        "syncRequirements": [
+          "Prove identical command/result bytes independent of local Swift optimism"
+        ]
+      },
+      "migration": {
+        "rule": "No source MCP behavior is copied.",
+        "reconciliation": [
+          "Swift and TypeScript fixture bytes/fingerprint match"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Strict TypeScript tests and target MCP isolation checks"
+        ],
+        "acceptance": [
+          "MCP cannot choose different identity, normalization, scope or result semantics"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for cross-runtime create-space contract parity.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "MCPMOD-68F7991697DD",
       "kind": "mcp_module",
       "name": "LedgerTargetMCP/src/clientCreation.ts",
@@ -10251,6 +10454,58 @@
       ],
       "notes": "Retain deterministic formatting with explicit currency/locale contracts.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "MCPMOD-96D987A7F175",
+      "kind": "mcp_module",
+      "name": "LedgerTargetMCP/src/spaceCreation.ts",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgerTargetMCP/src/spaceCreation.ts"
+        }
+      ],
+      "observedSourceHash": "53a4f18b7ee5c86203bfa12db4da7227df3a12d2d57264ff12bcc1ea73faba60",
+      "acknowledgedSourceHash": "53a4f18b7ee5c86203bfa12db4da7227df3a12d2d57264ff12bcc1ea73faba60",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only target MCP module scaffold; registers no tool and performs no call.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "target MCP create_space operation"
+        ],
+        "securityRequirements": [
+          "Derive Account/Principal from authenticated context and prohibit service-role input"
+        ],
+        "syncRequirements": [
+          "Use the shared command bytes/RPC/result contract"
+        ]
+      },
+      "migration": {
+        "rule": "Replace only the direct-create subset of the source tool.",
+        "reconciliation": [
+          "Broad source CRUD responsibilities remain independently mapped"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Canonical-byte, fingerprint, RPC and result validation tests"
+        ],
+        "acceptance": [
+          "App and MCP submit the same bounded intent"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for the gated target create_space command boundary.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "MCPMOD-A23569C60118",
@@ -23400,6 +23655,58 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-4A4871681A0C",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SpaceCreationPowerSyncStore.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SpaceCreationPowerSyncStore.swift"
+        }
+      ],
+      "observedSourceHash": "e0312cee82b49ec315b7bdcab0a3f70f42d29a2b9415b321d558c16bf9259447",
+      "acknowledgedSourceHash": "e0312cee82b49ec315b7bdcab0a3f70f42d29a2b9415b321d558c16bf9259447",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only PowerSync store scaffold; persists no row.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "SpaceCreating PowerSync adapter and optimistic Space projection"
+        ],
+        "securityRequirements": [
+          "Bind every row to one validated Principal/Account workspace"
+        ],
+        "syncRequirements": [
+          "Retain optimism until exact terminal evidence plus authoritative readback"
+        ]
+      },
+      "migration": {
+        "rule": "No source local database is read.",
+        "reconciliation": [
+          "Pending and authoritative Space identities converge without resurrection"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Encrypted restart, replay, rejection, membership and readback tests"
+        ],
+        "acceptance": [
+          "Accepted offline creation is durable and immediately visible as partial"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for encrypted atomic operation/command/pending-Space acceptance and reconciliation.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-4AB6FC526AA5",
       "kind": "swift_application_file",
       "name": "LedgeriOS/LedgerTargetPowerSync/PendingWorkPowerSyncQuery.swift",
@@ -28200,6 +28507,58 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-81770E563598",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/SpaceCreationStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/SpaceCreationStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "307479684cbe35ee70afd42e6b5399c4729991c5d79d0800690b2ed5c3f3ffa7",
+      "acknowledgedSourceHash": "307479684cbe35ee70afd42e6b5399c4729991c5d79d0800690b2ed5c3f3ffa7",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only target-app runtime-adapter scaffold; exposes no method.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "target staging Space-create runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose typed scope only; no database/provider/auth object"
+        ],
+        "syncRequirements": [
+          "Forward through the shared close-aware Account runtime"
+        ]
+      },
+      "migration": {
+        "rule": "No source runtime adapter is modified.",
+        "reconciliation": [
+          "No second queue or domain policy exists"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Build-boundary and lifecycle-drain tests"
+        ],
+        "acceptance": [
+          "Adapter remains thin and target-only"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for thin create/watch forwarding only.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-8210E6F74339",
       "kind": "swift_ui_component",
       "name": "LedgeriOS/LedgeriOS/Components/ListSelectAllRow.swift",
@@ -31209,6 +31568,58 @@
       ],
       "notes": "New target-only shared contract surface claimed by operation-lifecycle-and-readiness; it imports no Firebase, Supabase, or PowerSync SDK and chooses no provider-specific optimism or persistence mechanism.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "SWIFT-A3C39A0A230C",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/SpaceCreationStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/SpaceCreationStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "3fee556c03c50993009787367dac7db55bac2379f5263aa7aabfd0f8fa427443",
+      "acknowledgedSourceHash": "3fee556c03c50993009787367dac7db55bac2379f5263aa7aabfd0f8fa427443",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only provider-free AppModel scaffold; exposes no state.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "Space-create staging AppModel"
+        ],
+        "securityRequirements": [
+          "Import no provider or authorization implementation"
+        ],
+        "syncRequirements": [
+          "Preserve exact partial/authoritative/failure truth"
+        ]
+      },
+      "migration": {
+        "rule": "No source view-model behavior is copied.",
+        "reconciliation": [
+          "Represented stable SpaceID binds creation to directory readback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Provider-free state-machine and stale-result tests"
+        ],
+        "acceptance": [
+          "Presentation never manufactures completeness or success"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for Core-only create/readback orchestration.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-A3E38557F13F",
@@ -34920,6 +35331,58 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-D0265A748544",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/SpaceCreationStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/SpaceCreationStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "24797398e09de38d1b9310035e641d90df9d39267e980154ae698f70a33086fb",
+      "acknowledgedSourceHash": "24797398e09de38d1b9310035e641d90df9d39267e980154ae698f70a33086fb",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only isolated SwiftUI scaffold; renders no view.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "isolated Space-create staging view"
+        ],
+        "securityRequirements": [
+          "No hosted or production identity/configuration"
+        ],
+        "syncRequirements": [
+          "Render only AppModel-projected local truth"
+        ]
+      },
+      "migration": {
+        "rule": "The Firebase NewSpaceView remains unchanged.",
+        "reconciliation": [
+          "Only direct-create scope is exercised"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Target build and structural isolation checks"
+        ],
+        "acceptance": [
+          "The staging view cannot reach Firebase or production"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for one synthetic staging exercise, not a production route.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
+    },
+    {
       "id": "SWIFT-D0BC2109537E",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/ScopedRouteResolution.swift",
@@ -36995,6 +37458,58 @@
       ],
       "notes": "Target audit derives exact line equation and integrity/readiness from stable historical relationships. M2 map reviewed under target-mapping-method.md; real money, physical custody, planning and correction remain separate authorities.",
       "classificationBatch": "M0-INVENTORY-TRANSACTION-001"
+    },
+    {
+      "id": "SWIFT-E759DC8D7078",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/SupabaseSpaceCreationRPC.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/SupabaseSpaceCreationRPC.swift"
+        }
+      ],
+      "observedSourceHash": "49c30e03c69e27b7b6f0a241d8040e2098f0c5ec43ea9cdead6827e42c7cbb0d",
+      "acknowledgedSourceHash": "49c30e03c69e27b7b6f0a241d8040e2098f0c5ec43ea9cdead6827e42c7cbb0d",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only scoped RPC scaffold; performs no call.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "Supabase scoped-user Space-create RPC client"
+        ],
+        "securityRequirements": [
+          "Accept no service-role credential and log no payload text"
+        ],
+        "syncRequirements": [
+          "Validate immutable terminal result identity before local reconciliation"
+        ]
+      },
+      "migration": {
+        "rule": "No source network call is reused.",
+        "reconciliation": [
+          "Canonical command bytes and terminal result match Core"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Transport/result decoding and bounded-error tests"
+        ],
+        "acceptance": [
+          "Malformed or mismatched results fail closed"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for exact create-space command/result transport.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "SWIFT-E793B24EEB18",
@@ -39583,6 +40098,58 @@
       ],
       "notes": "Port behavioral expectations to the target media adapter and add offline/auth/storage-policy integration tests. M2 map reviewed under target-mapping-method.md; target authority is capability-specific and contains no Firebase application adapter.",
       "classificationBatch": "M0-BACKEND-STORAGE-001"
+    },
+    {
+      "id": "TEST-0FCB8A65AEFB",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/SpaceCreationStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/SpaceCreationStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "e73bf1a16a1e92bc930da0a2e982fd58707c1d7e3ac1bffbbf00e13701f9b746",
+      "acknowledgedSourceHash": "e73bf1a16a1e92bc930da0a2e982fd58707c1d7e3ac1bffbbf00e13701f9b746",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only AppModel test scaffold; executes no test.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "Space-create AppModel tests"
+        ],
+        "securityRequirements": [
+          "Provider-free fixtures only"
+        ],
+        "syncRequirements": [
+          "Prove partial/readback/failure truth and observation drainage"
+        ]
+      },
+      "migration": {
+        "rule": "No source test is treated as target proof.",
+        "reconciliation": [
+          "Exact represented SpaceID ties submission to readback"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Deterministic AppModel tests"
+        ],
+        "acceptance": [
+          "Stale or late results cannot corrupt current state"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for direct-create presentation/readback state proof.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "TEST-10C486B0508C",
@@ -43792,6 +44359,58 @@
       ],
       "notes": "Verified target-only deterministic tests at exact implementation commit 59526ccc and immutable Actions run 33624655214. They prove exact Account/Principal/Project scope, ordered unique pinned category IDs, revision, ready/partial/stale/authoritative-empty restart, authoritative not-stored versus not-available lookup, malformed/scope/duplicate/fingerprint/request refusal and no false read result. Four focused/all 132 tests, graph/contracts, both staging builds and clean artifacts pass. No physical durability, authorization, preference write, budget calculation, schema/RLS/Sync/provider, app/MCP, migration or production behavior is claimed.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "TEST-987BC22BCDF4",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCreationPowerSyncVerticalSliceTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/SpaceCreationPowerSyncVerticalSliceTests.swift"
+        }
+      ],
+      "observedSourceHash": "f0b7393f14a019b58f6248e765b503cbe7f40abbe1cc6f7db70984be5573da46",
+      "acknowledgedSourceHash": "f0b7393f14a019b58f6248e765b503cbe7f40abbe1cc6f7db70984be5573da46",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only provider test scaffold; executes no test.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Space Creation Provider",
+        "surfaces": [
+          "Space-create PowerSync vertical-slice tests"
+        ],
+        "securityRequirements": [
+          "Prove Account/scope isolation and fail-closed malformed evidence"
+        ],
+        "syncRequirements": [
+          "Prove offline acceptance, FIFO upload, reconciliation and restart"
+        ]
+      },
+      "migration": {
+        "rule": "Synthetic target-only fixtures.",
+        "reconciliation": [
+          "Pending/result/authoritative evidence converges once"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "Focused and full encrypted provider suites"
+        ],
+        "acceptance": [
+          "No accepted offline operation is lost or falsely authoritative"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-SPACE-CREATION-PROVIDER-READY-001"
+      ],
+      "notes": "Reserved for encrypted local/provider behavior and parity proof.",
+      "classificationBatch": "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
     },
     {
       "id": "TEST-99B322EB971A",
