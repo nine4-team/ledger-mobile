@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T16:09:41.464Z",
+  "generatedFromManifestSync": "2026-09-05T17:00:02.829Z",
   "totals": {
-    "slices": 82,
-    "claimedTargetSurfaces": 246,
+    "slices": 83,
+    "claimedTargetSurfaces": 252,
     "unclaimedTargetSurfaces": 422,
     "implementationAdvancedTargetSurfaces": 194
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 8,
     "verified": 70,
@@ -1022,6 +1022,25 @@
       "verificationCount": 10,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json"
+    },
+    {
+      "sliceId": "space-assignment-destination-powersync-picker",
+      "title": "Browse and select active same-scope Space assignment destinations from one encrypted local workspace",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Space Assignment Destination Picker",
+      "surfaceIds": [
+        "SWIFT-0A528DE84879",
+        "SWIFT-62E2D7E9B40E",
+        "SWIFT-698CCC538675",
+        "SWIFT-A1156933E12E",
+        "TEST-0126A06E52D0",
+        "TEST-33BFA84BCBB2"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-assignment-destination-powersync-picker.json"
     },
     {
       "sliceId": "space-assignment-destination-read-contracts",

@@ -3,7 +3,8 @@
   "title": "Spaces, review, and work queues",
   "reviewedAt": "2026-08-31",
   "evidence": [
-    "EVID-CAPABILITY-SPACES-REVIEW-001"
+    "EVID-CAPABILITY-SPACES-REVIEW-001",
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
   ],
   "surfaces": [
     {
@@ -2174,6 +2175,161 @@
       "verification": {
         "tests": ["swift test --package-path LedgeriOS --filter ItemSpaceClearingUseCaseTests"],
         "acceptance": ["Implementation tests must prove only the frozen provider-free Item Space-clearing use case and exclusions"]
+      }
+    },
+    {
+      "id": "SWIFT-0A528DE84879",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "d6230e3b529e2488b8c7193af42a64167d48f76380c8d8d923eacabfdd174faf",
+      "currentBehavior": "Contains only the comment-frozen READY boundary for a module-internal PowerSync implementation of the verified Space assignment-destination query; it has no executable declaration or behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-CAPABILITY-SPACES-REVIEW-001",
+        "EVID-M2-SPACES-REVIEW-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-001",
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"
+      ],
+      "notes": "Comment-only READY reservation. Future implementation consumes SWIFT-164554FA1456/TQUERY-A95F4BE0B9D8 unchanged, reads only synchronized active same-scope Space rows behind active local membership, establishes completeness only from its exact Project-or-Inventory Sync Stream subscription, fails closed, unsubscribes and drains every observer. No executable provider, schema, RLS, Sync, Item/Space mutation, hosted or production behavior exists at READY.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query",
+        "surfaces": ["SpaceAssignmentDestinationPowerSyncQuery", "exact Account/scope row observation", "typed Project/Inventory subscription and first-sync completeness", "provider unsubscribe, cancellation and drain"],
+        "securityRequirements": ["Treat RLS/Sync as authorization boundaries and local membership/scope filtering as fail-closed projection evidence only; never reveal foreign, archived, malformed or hidden-count rows"],
+        "syncRequirements": ["Own the exact ProjectID- or Inventory-AccountID-parameterized active-membership subscription, start incomplete until that subscription's first sync, preserve partial/stale/empty/failure truth and unsubscribe/drain row and completeness observation before database close"]
+      },
+      "migration": {
+        "rule": "Read only target Space rows; decode no Firebase Space DTO, nullable projectId convention, AccountContext array, route state or source export.",
+        "reconciliation": ["Synthetic provider tests reconcile exact server/local columns to the verified destination row while source migration remains excluded"]
+      },
+      "verification": {
+        "tests": ["Encrypted Project/Inventory scope, canonical order, readiness/startup-order, membership-loss, malformed-row, cancellation, restart and runtime-drain tests"],
+        "acceptance": ["The provider emits only verified active exact-scope directory snapshots and never manufactures completeness or authorization"]
+      }
+    },
+    {
+      "id": "TEST-33BFA84BCBB2",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "83dfb2b2de07653f2f083587715b886eea7c82b08d67f2e82b78e50963104b37",
+      "currentBehavior": "Contains only the comment-frozen READY test boundary for the Space assignment-destination PowerSync query; it has no executable test declaration or evidence.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
+      "notes": "Comment-only READY reservation for reciprocal encrypted local-provider proof. It does not pass a future verification, create a schema row, contact Supabase/PowerSync, or reinterpret the existing read-contract evidence.",
+      "target": {
+        "owner": "Space Assignment Destination PowerSync Query Tests",
+        "surfaces": ["real encrypted local database fixtures", "six-axis reciprocal row/readiness matrix", "restart, rejection, cancellation and drain fixtures"],
+        "securityRequirements": ["Use synthetic identities only; prove foreign/revoked/malformed evidence yields no mixed snapshot or sensitive diagnostic"],
+        "syncRequirements": ["Prove exact Project/Inventory subscription identity, both row/first-sync startup orders, fresh-completeness reset on restart, local membership loss, canonical ordering, unsubscribe and observer drainage"]
+      },
+      "migration": {
+        "rule": "Seed only target test rows and no source export or migration fixture.",
+        "reconciliation": ["Every literal provider input must own its expected Core output or bounded refusal without mirrored fixture derivation"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationPowerSyncQueryTests"],
+        "acceptance": ["Future tests must prove the frozen provider contract over real encrypted local storage without hosted or source claims"]
+      }
+    },
+    {
+      "id": "SWIFT-62E2D7E9B40E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "10423903b300be66fab630cb5fbf9879e50216a4a13f0669073dc6710f6e5169",
+      "currentBehavior": "Contains only the comment-frozen READY boundary for a Core-only destination-picker AppModel with honest local states and stable-ID selection; it has no executable declaration or behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
+      "notes": "Comment-only READY reservation. Future user selection may target only a represented stable SpaceID and never creates an Item assignment intent. The slice does not freeze unspecified production selection-retention or clearing policy.",
+      "target": {
+        "owner": "Space Assignment Destination Picker AppModel",
+        "surfaces": ["SpaceAssignmentDestinationStagingExercise", "executable waiting/partial/stale/ready/authoritative-empty/failure presenter state", "represented stable SpaceID selection"],
+        "securityRequirements": ["Import only verified Core evidence and never treat local row/readiness/selection as authorization"],
+        "syncRequirements": ["Replace requests generation-safely and ignore late old-scope events without inventing product selection-retention policy"]
+      },
+      "migration": {
+        "rule": "Create target-only presentation state and no source modal/route/Account array migration.",
+        "reconciliation": ["Presentation tests reconcile each verified directory state to one explicit picker state without changing provider data"]
+      },
+      "verification": {
+        "tests": ["Executable six-state presenter fixtures, represented stable-ID selection, request replacement and late-event tests"],
+        "acceptance": ["The model presents the full honest local state machine and cannot dispatch Assign/Clear or Space mutation"]
+      }
+    },
+    {
+      "id": "TEST-0126A06E52D0",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "295b1ef902e008b12bd81d16795cd490a56792d239c60285081035e6179c50af",
+      "currentBehavior": "Contains only the comment-frozen READY test boundary for destination-picker AppModel state and selection; it has no executable test declaration or evidence.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
+      "notes": "Comment-only READY reservation. No future AppModel behavior is marked passed; tests must be ordinary imports and prove literal reciprocal state/selection ownership plus permanent mutation/MCP exclusions.",
+      "target": {
+        "owner": "Space Assignment Destination Picker AppModel Tests",
+        "surfaces": ["six-state executable presentation fixtures", "represented stable-ID selection fixtures", "request replacement and cancellation fixtures"],
+        "securityRequirements": ["Synthetic fixtures reveal no production identity and prove selection/readiness never becomes authorization"],
+        "syncRequirements": ["Prove late-event rejection and exact presenter behavior across partial/stale/ready/empty/failure transitions without freezing unspecified selection retention"]
+      },
+      "migration": {
+        "rule": "Use target-only synthetic directory snapshots and no source UI or data fixture.",
+        "reconciliation": ["Literal inputs and expected states remain independently authored for every readiness and selection axis"]
+      },
+      "verification": {
+        "tests": ["swift test --package-path LedgeriOS --filter SpaceAssignmentDestinationStagingExerciseTests"],
+        "acceptance": ["Future tests must prove honest presenter states and represented stable-ID selection with zero mutation surface without freezing unspecified production retention policy"]
+      }
+    },
+    {
+      "id": "SWIFT-698CCC538675",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "506117fed436a09ac1fbd6278f4b6f8ab84232f93122d27e3bf741e721cf6e73",
+      "currentBehavior": "Contains only the comment-frozen READY boundary for a thin target-app runtime adapter from typed placement scope to the Account-bound destination watch; it has no executable declaration or behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
+      "notes": "Comment-only READY reservation for one thin composition adapter. It exposes no database, SQL, provider, Account rebinding, completeness injection, mutation or MCP boundary.",
+      "target": {
+        "owner": "Space Assignment Destination Staging Runtime Adapter",
+        "surfaces": ["typed ItemPlacementScope forwarding", "Account-bound destination stream", "cancellation-preserving adapter"],
+        "securityRequirements": ["Account remains bound by validated runtime; callers cannot inject authorization, provider or database evidence"],
+        "syncRequirements": ["Forward the exact runtime stream and cancellation without caching, filtering or reinterpreting completeness"]
+      },
+      "migration": {
+        "rule": "Add only target app composition; preserve source SetSpaceModal and Firebase service unchanged.",
+        "reconciliation": ["Compile/source controls prove the adapter has no independent data or mutation semantics"]
+      },
+      "verification": {
+        "tests": ["Compiler and source-boundary checks plus AppModel integration tests"],
+        "acceptance": ["The adapter can only open the exact typed-scope read stream and preserves cancellation"]
+      }
+    },
+    {
+      "id": "SWIFT-A1156933E12E",
+      "acknowledgeCurrentSource": true,
+      "acknowledgeSourceHash": "a07520760bcf323c59def6167977f218c1dc006a587090fbcf112ef56f385745",
+      "currentBehavior": "Contains only the comment-frozen READY boundary for an isolated staging destination picker showing honest local state and stable-ID selection; it has no executable declaration or behavior.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-CAPABILITY-SPACES-REVIEW-001", "EVID-M2-SPACES-REVIEW-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001"],
+      "notes": "Comment-only READY reservation. The future staging view is a thin renderer over executable presenter/AppModel state: browse canonical active same-scope destinations and select only a represented stable SpaceID. It defines no final production selection-retention policy and has no Item picker, Save/Assign/Clear, Space editor/archive, production route or MCP.",
+      "target": {
+        "owner": "Space Assignment Destination Staging Picker",
+        "surfaces": ["presenter-driven destination presentation", "canonical destination rows", "represented stable SpaceID picker action"],
+        "securityRequirements": ["Present local quality explicitly and never label cached/readiness evidence as current authorization"],
+        "syncRequirements": ["Render only AppModel state; no view-owned filtering, query, listener or hidden row/count logic"]
+      },
+      "migration": {
+        "rule": "Build an isolated target staging exercise only; do not alter or port the source SetSpaceModal.",
+        "reconciliation": ["Source/build controls preserve every excluded Item/mutation/MCP/production surface"]
+      },
+      "verification": {
+        "tests": ["Executable presenter/AppModel tests, exact source-boundary checks and both target staging builds"],
+        "acceptance": ["The view renders only tested state and forwards represented stable-ID selection without independent filtering, state semantics or mutation affordance; builds are not behavioral rendering proof"]
       }
     }
   ]

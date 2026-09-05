@@ -5,7 +5,7 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 484 of 668 target-relevant
+Status: M0 backend-surface classification complete; 490 of 674 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Of those target surfaces, 194 are now
 implemented or verified. Decision-independent target
@@ -62,8 +62,10 @@ principal binding, canonical numeric parsing, test-matrix and sensitive-logging
 defects and returned GO with no P0-P3. All 21 focused Client Archive tests and
 494/494 Swift tests in 82 suites, 176/176 pgTAP including 53/53 Client archive,
 zero database-lint findings, four local Data API runners, target controls and
-both builds pass locally. Implementation commit/immutable implementation CI and
-real authenticated PowerSync TEST-012 remain pending; A-003/A-004 stay proposed.
+both builds pass locally. Exact implementation `f2b9945b` passed all three jobs
+in immutable run `33976469527`; evidence promotion `ec5960ef` passed all three
+jobs in immutable run `33977030349`. Real authenticated PowerSync TEST-012
+remains pending; A-003/A-004 stay proposed.
 O-023/O-024/O-025/O-040/O-042/O-043 remain unadvanced, and no target MCP,
 hosted, Firebase, migration, production or cutover behavior is authorized;
 `EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001`.

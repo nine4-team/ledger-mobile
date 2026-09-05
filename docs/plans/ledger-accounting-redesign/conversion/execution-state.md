@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 309
+State version: 312
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: CLIENT-ARCHIVE-BROWSER-IMPLEMENTED-IMMUTABLE-CI-GREEN
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-REVIEWED-AWAITING-READY-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -34,15 +34,15 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Whole-program completion remains approximately **14%** (a reasonable uncertainty
-  range is 13–15%). Separately, 194 of 668 target-relevant surfaces (29.0%) are
+  range is 13–15%). Separately, 194 of 674 target-relevant surfaces (28.8%) are
   implemented or verified. The
   broader percentage measures executable Supabase/PowerSync product behavior
   through rehearsal and cutover readiness, not document volume or provider-free
   contract count. The broad range is a readiness forecast, not an incremental
   progress counter; every checkpoint must report the exact surface numerator
   and completed user workflow instead of repeating the range alone.
-- The implementation tracker currently contains 274 status-bearing rows: 68
-  done, eight verified, eight implemented, zero ready, zero awaiting verification,
+- The implementation tracker currently contains 275 status-bearing rows: 68
+  done, eight verified, eight implemented, one ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -71,6 +71,38 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Prepared the comment-only READY candidate for the provider-backed offline
+  Space assignment-destination picker. Six automatically discovered target
+  leaves reserve the PowerSync query/tests, Core-only AppModel/tests, thin
+  runtime adapter and isolated staging picker without executable declarations.
+  Canonical `spaces.md#Item Assignment`, `TACCESS-14FBA8E573D3` /
+  `TQUERY-A95F4BE0B9D8`, verified `SWIFT-164554FA1456` /
+  `TEST-A3D73145E3EC` and its unchanged evidence freeze all six logical axes:
+  already-authorized local scope only, name/name/ID ordering, unpaged shape,
+  distinct authoritative-empty/incomplete/partial/stale/failure, active stable
+  ID/name/revision result and exact Account plus Project-or-Business-Inventory
+  scope. `unresolvedAxes` is empty. The corrected physical contract is not a
+  synthetic-row-only picker: future implementation must create, discover,
+  classify and claim the pinned-CLI-generated `spike_spaces` active-only SELECT/
+  RLS migration, runnable pgTAP leaf and disposable Data API runner; add separate
+  exact ProjectID and Inventory-AccountID on-demand Sync Streams; then implement
+  subscription-first-sync completeness, encrypted local membership-loss/restart/
+  cancellation/drainage and presenter-tested represented-SpaceID selection. The
+  package deliberately does not freeze unspecified production selection-retention
+  policy. The six new mapped leaves
+  increase target-relevant inventory from 668 to 674 and mapped-or-later from
+  484 to 490; implemented-or-verified remains 194 (28.8%). A-003/A-004 remain
+  proposed because this package executes no SQL/Sync/provider/app behavior and
+  proves no hosted authorization. Item selection, Assign/Clear, Space create/
+  update/archive, MCP, source-data migration, hosted calls, Firebase, production,
+  release and cutover remain excluded;
+  `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-READY-001`.
+  The first independent review rejected eight authority, security, discovery,
+  scope, migration and test-proof gaps. After correction, a narrow re-review
+  found one remaining rollout-boundary omission; that was corrected, and final
+  independent review returned GO with no remaining finding. Immutable exact-head
+  READY CI is the only remaining gate before executable implementation.
 
 - Implemented archiving one currently observed active Client through the isolated
   Client browser after exact READY commit `7187fa1e` passed immutable Actions
@@ -4119,15 +4151,19 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Select the next coherent decision-independent end-user workflow through feature-
-specific product-authority preflight, produce its exact bounded READY package,
-and require independent actual-diff review plus immutable READY-commit CI before
-executable implementation.
-Preserve byte-identical inert marker `CONFIG-2DBC5A626444`, runnable replacement
-`CONFIG-86F1E734BC70`, package.json and Sync Streams. `CARCHIVEBROWSER-TEST-012`
-remains planned; do not infer real PowerSync/Auth authorization from local proof,
-implement a broad already-archived no-op policy, provision hosted resources,
-access production, migrate data, add target MCP behavior or modify Firebase.
+Commit the independently reviewed bounded Space-assignment destination picker
+READY candidate and require immutable exact-head READY CI before any executable
+implementation. The completed review confirmed the pinned-CLI-generated
+Postgres migration, runnable pgTAP, disposable Data API runner, active-only RLS,
+separate parameterized Project/Inventory Sync Streams and exact-subscription
+first-sync completeness are owned obligations rather than optional synthetic
+fixtures. `EVID-SPACE-ASSIGNMENT-DESTINATION-001` and the verified Core contract
+must remain byte-identical. During implementation, new physical leaves must be
+machine-discovered, classified and claimed in the same synchronized checkpoint.
+Do not freeze unspecified production selection-retention policy, infer real
+PowerSync/Auth authorization from local proof, advance A-003/A-004, add Item
+selection or Assign/Clear/Space mutation/MCP behavior, provision hosted
+resources, access production, migrate source data or modify Firebase.
 
 Continue without waiting on the two M1 evidence blockers:
 
