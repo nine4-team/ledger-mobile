@@ -1,6 +1,6 @@
 # EVID-PENDING-WORK-POWERSYNC-PROVIDER-001 — Local Pending-Work Summary Provider
 
-- Status: locally implemented and independently reviewed; exact implementation CI pending
+- Status: implemented and independently reviewed; exact implementation CI passed
 - Date: 2026-09-04
 - Environment: isolated target worktree and disposable encrypted local fixtures only
 - Production/Firebase impact: none
@@ -17,6 +17,10 @@ evaluate clean, sync-first, or explicitly destructive dispositions.
 The exact corrected READY commit
 `2072af47c908738fd01f4fa6405074c87ee1df95` passed all three jobs in immutable
 Actions run `33930443887` before executable work began.
+
+The exact synchronized implementation commit
+`3ac05bd01399e6b2043f57fcc22fd4d5bb3eb0ed` passed all three jobs in immutable
+Actions run `33932915626`.
 
 ## Exact Evidence Boundary
 
@@ -135,8 +139,9 @@ six implementation-file hashes recorded below.
 - all 16 focused provider tests and all 13 attachment-provider tests pass;
 - all 391 target Swift tests in 72 suites and both staging builds pass locally;
   and
-- exact synchronized implementation CI and local Supabase checks remain to be
-  recorded on the implementation commit.
+- exact synchronized implementation CI passes conversion controls, all target
+  tests, both staging builds, and isolated local Supabase schema/RLS/RPC/replay
+  checks on commit `3ac05bd0` in run `33932915626`.
 
 ## Hard Boundary
 

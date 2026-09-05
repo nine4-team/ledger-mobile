@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PENDING-WORK-POWERSYNC-PROVIDER-IMPLEMENTED-LOCAL-CI-PENDING
+- Checkpoint: PENDING-WORK-POWERSYNC-PROVIDER-IMPLEMENTED-CI-PASSED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -121,8 +121,10 @@ without modifying the running Firebase application before hard cutover.
   instance and the attachment database/vault/key lifecycle. Final independent
   corrected-diff review returned GO with no P0-P3 finding and independently
   reran all 16 provider tests. All 391 target tests in 72 suites and both staging
-  builds pass locally. Exact implementation CI is pending. No synchronization,
-  cleanup, signout, Auth, workspace switch,
+  builds pass locally. Exact synchronized implementation commit
+  `3ac05bd01399e6b2043f57fcc22fd4d5bb3eb0ed` passed all three jobs, including
+  isolated Supabase schema/RLS/RPC/replay checks, in immutable run
+  `33932915626`. No synchronization, cleanup, signout, Auth, workspace switch,
   hosted access, migration, Firebase work or cutover action exists.
 
 - Implemented the four-leaf local-only Account discovery provider slice after

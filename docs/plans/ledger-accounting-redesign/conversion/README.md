@@ -34,7 +34,8 @@ attachment evidence. It intentionally remains uncomposed: the later physical
 session-ending slice must own one provider instance and the attachment
 database/vault/key lifecycle. Final independent corrected-diff review returned
 GO with no P0-P3 finding; all 391 target tests in 72 suites and both staging
-builds pass locally. Exact implementation CI is pending. It does not
+builds pass locally. Exact implementation `3ac05bd0` passed all three jobs in
+immutable run `33932915626`, including isolated Supabase provider checks. It does not
 synchronize, delete, sign out, touch hosted services, or implement session end.
 The provider-free Client/Project directory read-contract slice is verified
 at exact implementation commit `3c0b58b6`; the provider-free Transaction
