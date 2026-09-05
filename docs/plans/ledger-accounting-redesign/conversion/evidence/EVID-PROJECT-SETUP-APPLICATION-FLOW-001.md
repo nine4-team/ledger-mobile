@@ -1,7 +1,6 @@
 # EVID-PROJECT-SETUP-APPLICATION-FLOW-001 — Existing-Client Project Setup Application Flow
 
-- Status: READY candidate; executable implementation prohibited until exact
-  immutable READY CI passes
+- Status: implemented, independently reviewed; exact implementation CI pending
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -43,6 +42,31 @@ category intent. Existing verified dependencies own all deeper meaning:
 
 The application flow may consume these meanings but may not recreate or extend
 them.
+
+## Implementation Outcome
+
+Exact READY commit `bc2de1ba71c6723c26f6bbc5af339a321e5d5d5a` passed all
+three immutable jobs in Actions run `33949737440` before executable work began.
+
+The implementation adds a Core-only `LedgerTargetAppModel` target and tests, a
+thin target-app adapter over `LedgerOfflineClientRuntime`, and a dynamic SwiftUI
+staging form. It combines independently arriving Client and category snapshots,
+preserves ready/partial/stale and complete/incomplete/authoritative-empty truth,
+never auto-selects a choice, and invalidates removed, failed, malformed, or
+cross-Account evidence before submission. Typed text survives those failures.
+
+Submission creates the verified form selection and delegates command creation
+to `ProjectSetupUseCase`. One Project ID, Operation ID, and captured timestamp
+are frozen together for an ambiguous attempt, so explicit retry produces an
+identical command and fingerprint. Simultaneous submits dispatch once. Exact
+queued, applying, applied, rejected, superseded, and resolved local receipt
+states are exposed without claiming remote synchronization.
+
+Nine focused application-model tests pass, including six parameterized receipt
+states. The complete process-wide nonparallel package run passes 428 tests in
+75 suites. Target environment controls, repeatable Xcode generation,
+`git diff --check`, and macOS and iOS Simulator staging builds pass locally.
+Exact implementation CI remains required before verified promotion.
 
 ## Frozen READY Boundary
 
@@ -100,7 +124,24 @@ adds those controls. The second review confirmed those findings closed but
 returned NO-GO because simultaneous submission, ambiguous retry, all six local
 receipt states and the promised accessibility surface were not explicit in the
 test matrix. Those exact cases are now frozen. A final exact-package re-review
-is still required before the READY commit.
+was completed before the READY commit and returned GO with no P0-P3 finding.
+
+## Independent Executable Review
+
+The executable reviewer found and drove correction of four issues:
+
+1. Ambiguous retry regenerated `capturedAt`, changing the fingerprint while
+   reusing an Operation ID. Identity and capture time are now frozen together,
+   and an advancing-clock test proves identical retry commands.
+2. Empty-state, scope/contract forwarding, typed-failure, and cancellation-retry
+   proof was incomplete. The focused suite now covers each boundary.
+3. Cancellation and suspended-operation probes could hang until outer CI
+   timeout. Every asynchronous test wait is now bounded.
+4. Invalid newer or cross-Account evidence left the older preparation
+   submittable. Projection and stream failures now clear affected evidence,
+   mark that source blocked, retain typed text, and dispatch nothing.
+
+Final corrected-diff review returned GO with no remaining P0-P3 finding.
 
 ## Explicit Exclusions
 

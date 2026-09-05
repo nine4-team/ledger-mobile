@@ -1,4 +1,5 @@
 import LedgerTargetCore
+import LedgerTargetAppModel
 import LedgerTargetPowerSync
 import Observation
 import SwiftUI
@@ -115,49 +116,7 @@ private struct OfflineProviderSpikeView: View {
                     .accessibilityIdentifier("target-client-diagnostic")
             }
         }
-        Section("Offline Project Creation") {
-            TextField("Project name", text: $model.projectName)
-                .textFieldStyle(.roundedBorder)
-                .accessibilityIdentifier("target-project-name")
-            Toggle("Create a new Client", isOn: $model.projectUsesNewClient)
-            if model.projectUsesNewClient {
-                TextField("New Client name", text: $model.projectClientName)
-                    .textFieldStyle(.roundedBorder)
-            } else {
-                Picker("Existing Client", selection: $model.selectedExistingClientId) {
-                    if model.selectableClients.isEmpty {
-                        Text("No selectable Client in local data").tag("")
-                    }
-                    ForEach(model.selectableClients, id: \.id) { client in
-                        Text(client.displayName.rawValue).tag(client.id.rawValue)
-                    }
-                }
-            }
-            TextField("Description (optional)", text: $model.projectDescription)
-                .textFieldStyle(.roundedBorder)
-            Toggle("Enable Furnishings budget", isOn: $model.enablesFurnishings)
-            if model.enablesFurnishings {
-                TextField(
-                    "Allocation in cents (blank means enabled without allocation)",
-                    text: $model.furnishingsMinorUnits
-                )
-                .textFieldStyle(.roundedBorder)
-            }
-            Button("Create Project while offline") {
-                Task { await model.createProject() }
-            }
-            .disabled(!model.canCreateProject)
-            .accessibilityIdentifier("target-create-project")
-
-            if let lastCreatedProject = model.lastCreatedProject {
-                LabeledContent("Local Project", value: lastCreatedProject)
-            }
-            if let diagnostic = model.projectDiagnostic {
-                Text(diagnostic)
-                    .foregroundStyle(.red)
-                    .accessibilityIdentifier("target-project-diagnostic")
-            }
-        }
+        ProjectSetupStagingExerciseView(model: model.projectSetup)
         Section("Local Client & Project Browser") {
             LabeledContent("Client data", value: model.clientDirectoryStatus)
             LabeledContent("Project data", value: model.projectDirectoryStatus)
@@ -207,19 +166,10 @@ private struct OfflineProviderSpikeView: View {
 @Observable
 private final class OfflineClientSpikeModel {
     var displayName = ""
-    var projectName = ""
-    var projectClientName = ""
-    var projectDescription = ""
-    var projectUsesNewClient = true
-    var enablesFurnishings = true
-    var furnishingsMinorUnits = ""
-    var selectedExistingClientId = ""
     private(set) var databaseState = "Opening…"
     private(set) var pendingUploadCount = "—"
     private(set) var lastCreatedName: String?
     private(set) var diagnostic: String?
-    private(set) var lastCreatedProject: String?
-    private(set) var projectDiagnostic: String?
     private(set) var selectableClients: [ClientSummary] = []
     private(set) var activeProjects: [ProjectDirectoryCoreRow] = []
     private(set) var archivedProjects: [ProjectDirectoryCoreRow] = []
@@ -230,28 +180,32 @@ private final class OfflineClientSpikeModel {
 
     private var runtime: LedgerOfflineClientRuntime?
     private var startInProgress = false
-    private var existingClientSelection: ProjectExistingClientSelectionSnapshot?
     private var activeProjectDirectory: ProjectDirectoryPresentationSnapshot?
     private var archivedProjectDirectory: ProjectDirectoryPresentationSnapshot?
     private var projectDetailsTask: Task<Void, Never>?
     private let accountId = try! AccountID(validating: "account-primary")
     private let principalId = try! PrincipalID(validating: "principal-owner")
+    let projectSetup = ProjectSetupStagingExercise(
+        accountId: try! AccountID(validating: "account-primary"),
+        actorPrincipalId: try! PrincipalID(validating: "principal-owner"),
+        operationContractVersion: try! OperationContractVersion(
+            validating: "project-create-v1"
+        ),
+        makeIdentity: {
+            try ProjectSetupSubmissionIdentity(
+                projectId: ProjectID(
+                    validating: "project-\(UUID().uuidString.lowercased())"
+                ),
+                operationId: OperationID(
+                    validating: "operation-\(UUID().uuidString.lowercased())"
+                )
+            )
+        },
+        now: Date.init
+    )
 
     var canCreate: Bool {
         runtime != nil && !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    var canCreateProject: Bool {
-        guard runtime != nil,
-              !projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return false
-        }
-        if projectUsesNewClient {
-            return !projectClientName.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-        }
-        return !selectedExistingClientId.isEmpty
     }
 
     func start(validatedEnvironment: ValidatedLedgerEnvironment) async {
@@ -269,6 +223,7 @@ private final class OfflineClientSpikeModel {
             let cipher = try await runtime.encryptionCipher()
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
+            projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
             databaseState = "Encrypted (\(cipher))"
             pendingUploadCount = String(pendingCount)
             await withTaskGroup(of: Void.self) { group in
@@ -281,6 +236,7 @@ private final class OfflineClientSpikeModel {
                 await group.waitForAll()
             }
             projectDetailsTask?.cancel()
+            projectSetup.stop()
             try await runtime.close()
             openedRuntime = nil
             self.runtime = nil
@@ -297,6 +253,7 @@ private final class OfflineClientSpikeModel {
 
     private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
         projectDetailsTask?.cancel()
+        projectSetup.stop()
         if let openedRuntime {
             try? await openedRuntime.close()
         }
@@ -326,7 +283,6 @@ private final class OfflineClientSpikeModel {
                 )
             )
             _ = try await runtime.createClient(command)
-            selectedExistingClientId = clientId.rawValue
             pendingUploadCount = String(try await runtime.pendingUploadCount())
 
             let request = try ClientCoreDetailsRequest(
@@ -345,94 +301,6 @@ private final class OfflineClientSpikeModel {
             diagnostic = failure.diagnosticCode
         } catch {
             diagnostic = "client_creation_local_failed"
-        }
-    }
-
-    func createProject() async {
-        guard let runtime else { return }
-        projectDiagnostic = nil
-        do {
-            let selection: ProjectClientSelectionInput
-            if projectUsesNewClient {
-                selection = try ProjectClientSelectionInput(
-                    newClientId: ClientID(
-                        validating: "client-\(UUID().uuidString.lowercased())"
-                    ),
-                    displayName: ClientDisplayName(validating: projectClientName)
-                )
-            } else if !selectedExistingClientId.isEmpty,
-                      let existingClientSelection {
-                selection = try existingClientSelection.selection(
-                    clientId: ClientID(validating: selectedExistingClientId)
-                )
-            } else {
-                projectDiagnostic = "project_setup_client_selection_invalid"
-                return
-            }
-
-            var allocations: [NullableCategoryAllocation] = []
-            if enablesFurnishings {
-                let money: Money?
-                if furnishingsMinorUnits.isEmpty {
-                    money = nil
-                } else if let minorUnits = Int64(furnishingsMinorUnits), minorUnits >= 0 {
-                    money = Money(
-                        minorUnits: minorUnits,
-                        currency: try CurrencyCode(validating: "USD")
-                    )
-                } else {
-                    projectDiagnostic = "project_setup_category_allocation_invalid"
-                    return
-                }
-                allocations.append(try NullableCategoryAllocation(
-                    categoryId: BudgetCategoryID(validating: "category-furnishings"),
-                    allocation: money
-                ))
-            }
-
-            let projectId = try ProjectID(
-                validating: "project-\(UUID().uuidString.lowercased())"
-            )
-            let command = try CreateProjectCommand(
-                operationId: OperationID(
-                    validating: "operation-\(UUID().uuidString.lowercased())"
-                ),
-                draft: ProjectSetupDraft(
-                    accountId: accountId,
-                    actorPrincipalId: principalId,
-                    operationContractVersion: OperationContractVersion(
-                        validating: "project-create-v1"
-                    ),
-                    projectId: projectId,
-                    clientSelection: selection,
-                    displayName: ProjectDisplayName(validating: projectName),
-                    description: ProjectDescriptionReplacement(projectDescription).value,
-                    categoryAllocations: allocations,
-                    capturedAt: Date()
-                )
-            )
-            _ = try await runtime.createProject(command)
-            pendingUploadCount = String(try await runtime.pendingUploadCount())
-
-            let request = try ProjectCoreDetailsRequest(
-                accountId: accountId,
-                projectId: projectId
-            )
-            for try await update in runtime.watchProject(request) {
-                if case .snapshot(let snapshot) = update.state,
-                   let project = snapshot.row?.project {
-                    lastCreatedProject = "\(project.displayName.rawValue) — queued locally"
-                    break
-                }
-            }
-            projectName = ""
-            projectClientName = ""
-            projectDescription = ""
-            furnishingsMinorUnits = ""
-        } catch let failure as ProjectSetupFailure {
-            projectDiagnostic = failure.diagnosticCode
-        } catch {
-            projectDiagnostic = "project_setup_local_failed"
         }
     }
 
@@ -479,16 +347,11 @@ private final class OfflineClientSpikeModel {
         do {
             for try await directory in runtime.watchClients() {
                 let selection = try ProjectExistingClientSelectionSnapshot(directory: directory)
-                existingClientSelection = selection
                 selectableClients = selection.activeClients
                 clientDirectoryStatus = Self.directoryStatus(
                     quality: directory.local.quality,
                     isComplete: directory.local.isCompleteForQuery
                 )
-                let availableIds = Set(selectableClients.map { $0.id.rawValue })
-                if !availableIds.contains(selectedExistingClientId) {
-                    selectedExistingClientId = selectableClients.first?.id.rawValue ?? ""
-                }
             }
         } catch is CancellationError {
             return

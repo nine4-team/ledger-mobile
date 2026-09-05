@@ -7,11 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */; };
+		4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */; };
 		91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */ = {isa = PBXBuildFile; productRef = EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */; };
 		95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */; };
 		A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */; };
 		DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */; };
-		E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetPowerSync in Frameworks */ = {isa = PBXBuildFile; productRef = 60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */; };
+		E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetAppModel in Frameworks */ = {isa = PBXBuildFile; productRef = 9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */; };
+		EAB7FF4D64697365F0B5EB14 /* LedgerTargetPowerSync in Frameworks */ = {isa = PBXBuildFile; productRef = 60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +23,8 @@
 		86109C0CC4785A451308867C /* LedgeriOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LedgeriOS; path = .; sourceTree = SOURCE_ROOT; };
 		BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerTargetStagingApp.swift; sourceTree = "<group>"; };
 		BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryStagingExercise.swift; sourceTree = "<group>"; };
+		CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSetupStagingExerciseView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -28,7 +33,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				91973E0E31F3265D8D596AEF /* LedgerTargetCore in Frameworks */,
-				E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetPowerSync in Frameworks */,
+				E9AB90C1B77EE4FC57FF4A69 /* LedgerTargetAppModel in Frameworks */,
+				EAB7FF4D64697365F0B5EB14 /* LedgerTargetPowerSync in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -49,6 +55,8 @@
 				BDDCF06871017ADBC8A44A41 /* AccountDiscoveryStagingExercise.swift */,
 				76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */,
 				BA49B42B19DB9BE19F577D5C /* LedgerTargetStagingApp.swift */,
+				E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */,
+				CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */,
 			);
 			path = LedgerTargetApp;
 			sourceTree = "<group>";
@@ -87,6 +95,7 @@
 			name = LedgerTargetStaging;
 			packageProductDependencies = (
 				EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */,
+				9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */,
 				60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */,
 			);
 			productName = LedgerTargetStaging;
@@ -132,6 +141,8 @@
 				DA1E64670BE43B580FE62387 /* AccountDiscoveryStagingExercise.swift in Sources */,
 				A944E31BD34C471CF8ED4E8D /* ClientRenameStagingExercise.swift in Sources */,
 				95EC9FB726E0969C03DA5551 /* LedgerTargetStagingApp.swift in Sources */,
+				4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */,
+				4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,6 +362,10 @@
 		60BCEF04947B05986F5E18B4 /* LedgerTargetPowerSync */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LedgerTargetPowerSync;
+		};
+		9D52F1108F2B9B4AAE431601 /* LedgerTargetAppModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LedgerTargetAppModel;
 		};
 		EF5F89EE055BD916DFF93A5E /* LedgerTargetCore */ = {
 			isa = XCSwiftPackageProductDependency;

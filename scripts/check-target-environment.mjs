@@ -25,6 +25,8 @@ const compositionTestRoot = path.join(
   packageRoot,
   "LedgerTargetCompositionTests",
 );
+const appModelRoot = path.join(packageRoot, "LedgerTargetAppModel");
+const appModelTestRoot = path.join(packageRoot, "LedgerTargetAppModelTests");
 const powerSyncRoot = path.join(packageRoot, "LedgerTargetPowerSync");
 const powerSyncTestRoot = path.join(packageRoot, "LedgerTargetPowerSyncTests");
 const targetAppRoot = path.join(packageRoot, "LedgerTargetApp");
@@ -122,6 +124,8 @@ if (description) {
   const testSupportTests = targets.get("LedgerTargetTestSupportTests");
   const composition = targets.get("LedgerTargetComposition");
   const compositionTests = targets.get("LedgerTargetCompositionTests");
+  const appModel = targets.get("LedgerTargetAppModel");
+  const appModelTests = targets.get("LedgerTargetAppModelTests");
   const powerSync = targets.get("LedgerTargetPowerSync");
   const powerSyncTests = targets.get("LedgerTargetPowerSyncTests");
   if (!core) {
@@ -225,6 +229,32 @@ if (description) {
       );
     }
   }
+  if (!appModel) {
+    fail("target_app_model_missing", "LedgerTargetAppModel");
+  } else {
+    const dependencies = new Set(appModel.target_dependencies ?? []);
+    if (dependencies.size !== 1 || !dependencies.has("LedgerTargetCore")) {
+      fail(
+        "target_app_model_dependency_boundary",
+        "LedgerTargetAppModel may depend only on LedgerTargetCore.",
+      );
+    }
+  }
+  if (!appModelTests) {
+    fail("target_app_model_tests_missing", "LedgerTargetAppModelTests");
+  } else {
+    const dependencies = new Set(appModelTests.target_dependencies ?? []);
+    if (
+      dependencies.size !== 2 ||
+      !dependencies.has("LedgerTargetCore") ||
+      !dependencies.has("LedgerTargetAppModel")
+    ) {
+      fail(
+        "target_app_model_test_dependency_boundary",
+        "LedgerTargetAppModelTests may depend only on LedgerTargetCore and LedgerTargetAppModel.",
+      );
+    }
+  }
   if (!powerSync) {
     fail("target_powersync_missing", "LedgerTargetPowerSync");
   } else {
@@ -274,6 +304,8 @@ for (const filePath of [
   ...swiftFiles(testSupportTestRoot),
   ...swiftFiles(compositionRoot),
   ...swiftFiles(compositionTestRoot),
+  ...swiftFiles(appModelRoot),
+  ...swiftFiles(appModelTestRoot),
   ...swiftFiles(targetAppRoot),
 ]) {
   const match = fs.readFileSync(filePath, "utf8").match(forbiddenImport);
@@ -498,6 +530,7 @@ if (
     "apps.nine4.ledger.staging",
     "Ledger STAGING",
     "LedgerTargetCore",
+    "LedgerTargetAppModel",
     "LedgerTargetPowerSync",
   ]) {
     if (!project.includes(required)) {
@@ -512,6 +545,68 @@ if (
   }
   if (!targetAppSource.includes("unprovisioned-powersync-staging")) {
     fail("target_staging_unprovisioned_marker_missing", relative(targetAppRoot));
+  }
+  const appModelSource = swiftFiles(appModelRoot)
+    .map((filePath) => fs.readFileSync(filePath, "utf8"))
+    .join("\n");
+  if (
+    /Firebase|Firestore|Supabase|PowerSync|\bSQL\b|credential|service[_ ]?role|bearer|https?:\/\//i.test(
+      appModelSource,
+    )
+  ) {
+    fail(
+      "target_app_model_provider_contamination",
+      "LedgerTargetAppModel contains a provider, SQL, credential, or endpoint token.",
+    );
+  }
+  const runtimeAdapterPath = path.join(
+    targetAppRoot,
+    "ProjectSetupStagingRuntimeAdapter.swift",
+  );
+  if (!fs.existsSync(runtimeAdapterPath)) {
+    fail("target_project_setup_adapter_missing", relative(runtimeAdapterPath));
+  } else {
+    const adapter = fs.readFileSync(runtimeAdapterPath, "utf8");
+    for (const required of [
+      "import LedgerTargetAppModel",
+      "import LedgerTargetPowerSync",
+      "runtime.watchClients()",
+      "runtime.watchBudgetCategories()",
+      "runtime.createProject(command)",
+    ]) {
+      if (!adapter.includes(required)) {
+        fail("target_project_setup_adapter_incomplete", required);
+      }
+    }
+  }
+  if (targetAppSource.includes("CreateProjectCommand(")) {
+    fail(
+      "target_project_setup_direct_command",
+      "The target app must submit through ProjectSetupUseCase, not construct CreateProjectCommand.",
+    );
+  }
+  for (const forbiddenProjectSetupUI of [
+    "Create a new Client",
+    "Enable Furnishings budget",
+    "category-furnishings",
+  ]) {
+    if (targetAppSource.includes(forbiddenProjectSetupUI)) {
+      fail("target_project_setup_provisional_ui", forbiddenProjectSetupUI);
+    }
+  }
+  for (const requiredProjectSetupUI of [
+    '"target-project-name"',
+    '"target-project-existing-client"',
+    '"target-project-category-\\(category.id.rawValue)"',
+    '"target-create-project"',
+    '"target-project-client-readiness"',
+    '"target-project-category-readiness"',
+    '"target-project-diagnostic"',
+    '"target-project-receipt"',
+  ]) {
+    if (!targetAppSource.includes(requiredProjectSetupUI)) {
+      fail("target_project_setup_accessibility_incomplete", requiredProjectSetupUI);
+    }
   }
   for (const forbiddenProductionIdentifier of [
     '"ledger-nine4"',
@@ -578,6 +673,8 @@ if (!fs.existsSync(sourceProject)) {
     "LedgerTargetTestSupportTests",
     "LedgerTargetComposition",
     "LedgerTargetCompositionTests",
+    "LedgerTargetAppModel",
+    "LedgerTargetAppModelTests",
     "LedgerTargetPowerSync",
     "LedgerTargetPowerSyncTests",
   ]) {

@@ -10,6 +10,7 @@ let package = Package(
     ],
     products: [
         .library(name: "LedgerTargetCore", targets: ["LedgerTargetCore"]),
+        .library(name: "LedgerTargetAppModel", targets: ["LedgerTargetAppModel"]),
         .library(
             name: "LedgerTargetPowerSync",
             targets: ["LedgerTargetPowerSync"]
@@ -47,6 +48,16 @@ let package = Package(
             name: "LedgerTargetCoreTests",
             dependencies: ["LedgerTargetCore"],
             path: "LedgerTargetCoreTests"
+        ),
+        .target(
+            name: "LedgerTargetAppModel",
+            dependencies: ["LedgerTargetCore"],
+            path: "LedgerTargetAppModel"
+        ),
+        .testTarget(
+            name: "LedgerTargetAppModelTests",
+            dependencies: ["LedgerTargetCore", "LedgerTargetAppModel"],
+            path: "LedgerTargetAppModelTests"
         ),
         .target(
             name: "LedgerTargetPowerSync",

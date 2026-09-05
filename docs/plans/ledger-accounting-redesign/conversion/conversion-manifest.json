@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T06:23:44.428Z",
+    "lastSynchronizedAt": "2026-09-05T07:02:45.803Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -90,10 +90,10 @@
           "path": "LedgeriOS/Package.swift"
         }
       ],
-      "observedSourceHash": "dade86ebb76053a86801818138c4b31e2a831d1abc22ca5037098b0cced18d13",
-      "acknowledgedSourceHash": "dade86ebb76053a86801818138c4b31e2a831d1abc22ca5037098b0cced18d13",
+      "observedSourceHash": "fb9b93c681860bab95a6fc18fc2f1962aff9f99da2367d188082fc5569736c9c",
+      "acknowledgedSourceHash": "fb9b93c681860bab95a6fc18fc2f1962aff9f99da2367d188082fc5569736c9c",
       "metadata": {},
-      "currentBehavior": "Defines the provider-free target libraries plus an isolated LedgerTargetPowerSync provider product and focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product.",
+      "currentBehavior": "Defines provider-free Core and AppModel libraries plus isolated LedgerTargetPowerSync and supporting target products with focused tests. PowerSync 1.16.1 and encrypted CSQLite 3.51.2 are exact direct dependencies; only the separate target staging app links the provider product.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -424,10 +424,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "32d8f2f3de271894567930a0731eb1ca6d874168d34cd30c8420fc771bb64d8c",
-      "acknowledgedSourceHash": "32d8f2f3de271894567930a0731eb1ca6d874168d34cd30c8420fc771bb64d8c",
+      "observedSourceHash": "a17d88f394748672b41963f8f8e661cc15962d9726bc7c6ec6c9fd430b069c54",
+      "acknowledgedSourceHash": "a17d88f394748672b41963f8f8e661cc15962d9726bc7c6ec6c9fd430b069c54",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore and isolated LedgerTargetPowerSync package-product dependencies.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing one multi-destination staging application target with local LedgerTargetCore, Core-only LedgerTargetAppModel, and isolated LedgerTargetPowerSync package-product dependencies.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -1316,10 +1316,10 @@
           "path": "LedgeriOS/LedgerTargetProject.yml"
         }
       ],
-      "observedSourceHash": "a5db07061d0dce3604c389a6665f47423e397f50dc27db4eb70386cbc1112ef8",
-      "acknowledgedSourceHash": "a5db07061d0dce3604c389a6665f47423e397f50dc27db4eb70386cbc1112ef8",
+      "observedSourceHash": "e74a2659e366d98f41181318a8e5ea1d259888b0e1f8555af797b0cdf02196c9",
+      "acknowledgedSourceHash": "e74a2659e366d98f41181318a8e5ea1d259888b0e1f8555af797b0cdf02196c9",
       "metadata": {},
-      "currentBehavior": "Declares a reproducible multi-destination LedgerTargetStaging application project with fixed staging identity, generated Info.plist, no signing authority, and local LedgerTargetCore plus LedgerTargetPowerSync dependencies.",
+      "currentBehavior": "Declares a reproducible multi-destination LedgerTargetStaging application project with fixed staging identity, generated Info.plist, no signing authority, and local LedgerTargetCore, LedgerTargetAppModel, and LedgerTargetPowerSync dependencies.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -1466,10 +1466,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
-      "acknowledgedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
+      "observedSourceHash": "1b212c23faa4cc557d0812a42f50906b8caa8b056637db8435464b6b1d1cd599",
+      "acknowledgedSourceHash": "1b212c23faa4cc557d0812a42f50906b8caa8b056637db8435464b6b1d1cd599",
       "metadata": {},
-      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; lifecycle-owned provider types are not public; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
+      "currentBehavior": "Fails closed unless provider-free target layers remain isolated; LedgerTargetAppModel depends only on Core; exact PowerSync/encrypted-SQLite versions and adapter boundaries hold; lifecycle-owned provider types remain internal; accessibility/direct-command guards hold; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -5391,10 +5391,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
-      "acknowledgedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
+      "observedSourceHash": "1b212c23faa4cc557d0812a42f50906b8caa8b056637db8435464b6b1d1cd599",
+      "acknowledgedSourceHash": "1b212c23faa4cc557d0812a42f50906b8caa8b056637db8435464b6b1d1cd599",
       "metadata": {},
-      "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, public lifecycle-owned provider declarations, provider imports outside LedgerTargetPowerSync, dependency-version drift, and target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete accessibility surfaces, public lifecycle-owned providers, dependency drift, and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -17551,12 +17551,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839",
-      "acknowledgedSourceHash": "ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839",
+      "observedSourceHash": "dd4f9cea4058e5af50c542d6f1de50093b677e679a0bfe12899f1827062cb240",
+      "acknowledgedSourceHash": "dd4f9cea4058e5af50c542d6f1de50093b677e679a0bfe12899f1827062cb240",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS Ledger target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, serializes startup and cleans any post-open failure, permanently displays a LOCAL SPIKE / NO HOSTED SERVICES banner, and exercises encrypted offline Client/Project, attachment and pending-work behavior without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell, retains its validated fixed unprovisioned environment through async Account-workspace bootstrap, permanently displays the local-only banner, hosts the Core-only existing-Client Project Setup model, and exercises local behavior without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19671,12 +19671,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "bb3c57f63de05946926c7d0523423a0bc8885219efe9dc65a4a99f2afd2380ee",
-      "acknowledgedSourceHash": "bb3c57f63de05946926c7d0523423a0bc8885219efe9dc65a4a99f2afd2380ee",
+      "observedSourceHash": "98a8082a035da0093bd92c3ed4224769fbc2e984b901bf88b846d9c40689e91c",
+      "acknowledgedSourceHash": "98a8082a035da0093bd92c3ed4224769fbc2e984b901bf88b846d9c40689e91c",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for the existing-Client Project Setup staging view.",
+      "currentBehavior": "Dynamic existing-Client Project Setup staging form renders exact Client/category readiness, stable-identity controls, bounded diagnostics and exact local operation receipts.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -19704,12 +19704,12 @@
           "No hardcoded category, new-Client branch, direct command construction, or false-ready UI remains"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "notes": "The future view renders typed model state and constructs no Project command.",
+      "notes": "The view renders typed model state, exposes stable accessibility identities and constructs no Project command.",
       "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {
@@ -25085,12 +25085,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/ProjectSetupStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "f2d249166c21a21024cc6a396b7e79ed96c41db5fcd264498c689c222c9d01d4",
-      "acknowledgedSourceHash": "f2d249166c21a21024cc6a396b7e79ed96c41db5fcd264498c689c222c9d01d4",
+      "observedSourceHash": "1a03b56d20bd72cf08115dc18557b16859e6ea7bb798e9d35c25803c730d78cd",
+      "acknowledgedSourceHash": "1a03b56d20bd72cf08115dc18557b16859e6ea7bb798e9d35c25803c730d78cd",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for an executable backend-neutral existing-Client Project Setup application model.",
+      "currentBehavior": "Core-only observable existing-Client Project Setup application model combines exact local evidence, manages fail-closed selection and stable retry identity, and submits through ProjectSetupUseCase.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -25118,12 +25118,12 @@
           "The real model passes two-stream, selection, submission, receipt, cancellation, and error tests"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "notes": "No executable behavior exists before the exact READY checkpoint passes.",
+      "notes": "Exact READY CI passed before implementation; independent executable review returned final GO after four corrections.",
       "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {
@@ -28975,12 +28975,12 @@
           "path": "LedgeriOS/LedgerTargetApp/ProjectSetupStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "249f00dd85ce93c9f59a34959c589378ff1c405ce82a4cfdd3c24453628ad85b",
-      "acknowledgedSourceHash": "249f00dd85ce93c9f59a34959c589378ff1c405ce82a4cfdd3c24453628ad85b",
+      "observedSourceHash": "b7c56c8c3ef5d2a7ab54319368a4c512e98446de1d959fa2d0821c85c244ed43",
+      "acknowledgedSourceHash": "b7c56c8c3ef5d2a7ab54319368a4c512e98446de1d959fa2d0821c85c244ed43",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for the thin target-app adapter from LedgerOfflineClientRuntime to the backend-neutral application-model protocol.",
+      "currentBehavior": "Thin target-app adapter forwards the Account-bound runtime Client/category streams and Project setup operation into the backend-neutral application-model runtime value.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -29008,7 +29008,7 @@
           "The app adapter remains the only PowerSync-aware Project Setup application-flow leaf"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
@@ -44149,12 +44149,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "63a6f3e7062e3e41ea49245c977df74b1d1f34a95781b20552769d82dc170fe6",
-      "acknowledgedSourceHash": "63a6f3e7062e3e41ea49245c977df74b1d1f34a95781b20552769d82dc170fe6",
+      "observedSourceHash": "f6aca99da4db4715bc5eeeaa3bcdec86968d9872ab8790276a43144584bf8a0b",
+      "acknowledgedSourceHash": "f6aca99da4db4715bc5eeeaa3bcdec86968d9872ab8790276a43144584bf8a0b",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for executable Project Setup application-model tests.",
+      "currentBehavior": "Nine deterministic Project Setup application-model tests cover independently arriving evidence, false-empty meaning, selection, exact submission, failures, retry, receipts, cancellation and shutdown.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup Application Flow",
@@ -44182,12 +44182,12 @@
           "All frozen Project Setup application-model cases pass deterministically"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-PROJECT-SETUP-APPLICATION-FLOW-001"
       ],
-      "notes": "The future suite uses controlled async streams and a fake backend-neutral setup operator.",
+      "notes": "Controlled streams, an advancing clock and fake backend-neutral setup operator provide bounded deterministic proof.",
       "classificationBatch": "M0-PROJECT-SETUP-APPLICATION-FLOW-001"
     },
     {

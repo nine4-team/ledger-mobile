@@ -3,7 +3,7 @@
   "sliceId": "project-setup-existing-client-application-flow",
   "title": "Create a Project for an existing Client from honest local Client and category evidence",
   "kind": "product",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Project Setup Application Flow",
   "surfaceIds": [
     "SWIFT-64E1171C47C5",
@@ -132,8 +132,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
       "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-006"],
       "expected": "Both stream arrival orders produce the same preparation; subsequent Client/category changes preserve exact canonical rows and readiness without a ready-only gate.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-002",
@@ -141,8 +141,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
       "covers": ["PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-006"],
       "expected": "Partial, stale, ready, incomplete empty and authoritative empty Client/category snapshots remain distinguishable; configurable rows are active non-system only and zero categories remains submittable.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-003",
@@ -150,8 +150,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
       "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-005"],
       "expected": "No Client or category is silently preselected; represented Client/category IDs can be selected under ready, partial, or stale evidence; removed or ineligible choices are pruned before submission; every selected category maps to allocation nil.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-004",
@@ -159,8 +159,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
       "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-005", "PROJECTSETUPAPP-REQ-006", "PROJECTSETUPAPP-REQ-007"],
       "expected": "Valid input invokes ProjectSetupUseCase through the backend-neutral port exactly once with stable Account/Principal/Client/Project/Operation identity, canonical description and complete nil-allocation set; simultaneous submits produce one call; an ambiguous failure followed by explicit retry reuses the identical ProjectID and OperationID; invalid or changed evidence dispatches nothing.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-005",
@@ -168,8 +168,8 @@
       "owner": "LedgeriOS/LedgerTargetAppModelTests/ProjectSetupStagingExerciseTests.swift",
       "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-004", "PROJECTSETUPAPP-REQ-005", "PROJECTSETUPAPP-REQ-006"],
       "expected": "Queued, applying, applied, rejected, superseded and resolved receipts each retain and expose their exact operation identity/state; typed failures, bounded unknown failure and cancellation retain user input, permit retry, and never report false success.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-006",
@@ -177,8 +177,8 @@
       "owner": "LedgeriOS/Package.swift and scripts/check-target-environment.mjs",
       "covers": ["PROJECTSETUPAPP-REQ-005", "PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
       "expected": "LedgerTargetAppModel imports only Core, the app adapter alone imports PowerSync, app UI contains no CreateProjectCommand construction, module tests execute through SwiftPM, and Firebase/provider/SQL/backend tokens are rejected from the application model.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-007",
@@ -186,8 +186,8 @@
       "owner": "LedgerTargetStaging iOS and macOS builds plus exact source checks",
       "covers": ["PROJECTSETUPAPP-REQ-001", "PROJECTSETUPAPP-REQ-002", "PROJECTSETUPAPP-REQ-003", "PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
       "expected": "Both staging destinations compile the dynamic existing-Client/category form with honest readiness and receipt presentation; exact stable accessibility identifiers or labels/status values exist for Project name, existing-Client picker, every category control keyed by stable category identity, submit, Client readiness, category readiness, diagnostic and receipt; the old new-Client toggle, hardcoded Furnishings control, and direct command construction are absent.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-008",
@@ -195,8 +195,8 @@
       "owner": ".github/workflows/supabase-conversion-control.yml",
       "covers": ["PROJECTSETUPAPP-REQ-007", "PROJECTSETUPAPP-REQ-008"],
       "expected": "The exact READY commit changes only comment scaffolds and synchronized control/evidence artifacts, passes all three immutable jobs, and leaves executable application/provider/schema/MCP/Firebase behavior unchanged.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"]
     },
     {
       "id": "PROJECTSETUPAPP-TEST-009",
@@ -208,8 +208,8 @@
       "evidence": []
     }
   ],
-  "implementationEvidence": [],
+  "implementationEvidence": ["EVID-PROJECT-SETUP-APPLICATION-FLOW-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "READY candidate only. Exact primary leaves are SWIFT-64E1171C47C5 at f2d249166c21a21024cc6a396b7e79ed96c41db5fcd264498c689c222c9d01d4, TEST-E92B32DB7642 at 63a6f3e7062e3e41ea49245c977df74b1d1f34a95781b20552769d82dc170fe6, SWIFT-99B1B3CFBB7A at 249f00dd85ce93c9f59a34959c589378ff1c405ce82a4cfdd3c24453628ad85b and SWIFT-1F2F5FE68160 at bb3c57f63de05946926c7d0523423a0bc8885219efe9dc65a4a99f2afd2380ee. Frozen shared touchpoints are CONFIG-031396750B85 Package.swift at dade86ebb76053a86801818138c4b31e2a831d1abc22ca5037098b0cced18d13; CONFIG-77D38BB6819B LedgerTargetProject.yml at a5db07061d0dce3604c389a6665f47423e397f50dc27db4eb70386cbc1112ef8; CONFIG-2EBA890AF767 generated project.pbxproj at 32d8f2f3de271894567930a0731eb1ca6d874168d34cd30c8420fc771bb64d8c; SWIFT-061553E63650 LedgerTargetStagingApp.swift at ed81e5d9171f89deafe255fcbfcd5d2f59c7ef152fece0c4f25762403b3fd839; and CONFIG-81235587F306/FILE-A6E49E3815F4 check-target-environment.mjs at 17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e. Permitted shared changes are limited to adding/linking AppModel plus tests; replacing only the inline Project Setup form/model logic with the new view/model adapter; and exact isolation/source-contract checks. FILE-208B7E9D7F47 is deliberately re-acknowledged only to discover the new AppModel source/test roots and retains its existing verified control ownership. Two independent reviews required and the corrected matrix now freezes exact discovery/classification, dependencies, simultaneous-submit single dispatch, ambiguous-retry identity reuse, all six local receipt states, accessibility surfaces and byte-unchanged runtime/Core/provider dependencies. Any other executable path or hash drift requires renewed READY review. New-Client/O-043, category administration/O-026, budget-pin/default/card policy/O-040, hosted/production/Firebase/migration/cutover and A-003/A-004/A-007/A-016 remain open and unadvanced."
+  "notes": "Implementation checkpoint candidate after exact READY commit bc2de1ba and immutable run 33949737440 passed all three jobs. The executable AppModel is Core-only; the app adapter alone bridges LedgerOfflineClientRuntime; the staging form uses represented existing Client and active non-system category identities, no default selection, zero or selected-null categories, exact readiness/empty/failure state and exact local receipts. Independent executable review found and drove correction of regenerated capturedAt on ambiguous retry, incomplete failure proof, unbounded test waits, and stale submission after invalid newer evidence; final re-review returned GO with no P0-P3. Nine focused tests, all 428 Swift tests in 75 suites, environment controls and both staging builds pass locally. Implementation immutable CI remains required before verified promotion. O-043 new Client, O-026 administration, O-040 defaults/cards, hosted/Auth/production/Firebase/migration/cutover and A-003/A-004/A-007/A-016 remain open and unadvanced."
 }

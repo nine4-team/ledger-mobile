@@ -23,6 +23,8 @@ targets:
       - package: LedgerTargetCore
         product: LedgerTargetCore
       - package: LedgerTargetCore
+        product: LedgerTargetAppModel
+      - package: LedgerTargetCore
         product: LedgerTargetPowerSync
     settings:
       base:
