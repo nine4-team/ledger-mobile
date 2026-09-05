@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 291
+State version: 292
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: BUDGET-CATEGORY-REFERENCE-POWERSYNC-IMPLEMENTED-LOCAL-CI-PENDING
+- Checkpoint: BUDGET-CATEGORY-REFERENCE-POWERSYNC-VERIFIED
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -37,7 +37,7 @@ without modifying the running Firebase application before hard cutover.
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
 - The implementation tracker currently contains 269 status-bearing rows: 68
-  done, four verified, seven implemented, zero ready, zero awaiting verification,
+  done, five verified, six implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -87,8 +87,10 @@ without modifying the running Firebase application before hard cutover.
   independent correction review required deterministic proof for both arrival
   orders and pre-snapshot cancellation/drainage; those tests are now executable.
   Fourteen focused provider and all 419 Swift tests in 74 suites pass locally.
-  Exact corrected implementation CI
-  remains pending. O-026 and A-003/A-004/
+  Final independent re-review returned GO with no remaining P0-P3 finding.
+  Exact corrected implementation `9eecacfd` passed all three immutable jobs in
+  run `33947678048`, including conversion controls, disposable local Supabase,
+  the complete target suite and both staging builds. O-026 and A-003/A-004/
   A-007/A-016 remain unadvanced; no category administration, app UI, MCP,
   hosted access, Firebase work, migration, production or cutover action exists;
   `EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001`.
@@ -3977,15 +3979,8 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Synchronize, commit and push the corrected
-`budget-category-reference-powersync-provider` implementation after its failed
-exact run exposed a row/completeness scheduling race. Require all three immutable
-workflow jobs to pass on that exact corrected commit before promoting the slice
-or beginning downstream executable work. Do not treat cancelled run
-`33945825011` as passing evidence.
-
-After that provider is proven, implement the separately traced existing-Client
-Project-setup staging UI through ProjectSetupFormPreparation and
+Implement the separately traced existing-Client Project-setup staging UI
+through ProjectSetupFormPreparation and
 ProjectSetupUseCase, replacing the staging shell's hardcoded Furnishings toggle
 and direct command construction. Keep new-Client input/O-043, category
 administration/O-026, O-040 defaults/card policy, physical session ending, Auth,

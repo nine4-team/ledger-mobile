@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T05:36:23.673Z",
+    "lastSynchronizedAt": "2026-09-05T05:49:31.057Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19851,13 +19851,13 @@
           "Exact local scope, row validation, ordering, readiness, restart and lifecycle behavior pass without final visibility or hosted authority claims"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Implemented locally after the exact READY checkpoint passed immutable CI. Executable review found and corrected provider-drain, reciprocal-version and cancellation-proof gaps; final corrected-diff review returned GO. Implementation checkpoint 376685f5 did not pass run 33945825011: the macOS test process timed out, and local repetition exposed nondeterministic row/completeness ordering. The corrected provider waits for evidence from both sources before emitting; exact corrected implementation CI remains pending. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
+      "notes": "Verified locally after the exact READY checkpoint and corrected implementation checkpoint passed immutable CI. Executable review found and corrected provider-drain, reciprocal-version and cancellation-proof gaps; final corrected-diff review returned GO. Implementation checkpoint 376685f5 did not pass run 33945825011: the macOS test process timed out, and local repetition exposed nondeterministic row/completeness ordering. The corrected provider waits for evidence from both sources before emitting, and deterministic tests prove both arrival orders plus pre-snapshot cancellation/drainage. Exact corrected implementation 9eecacfd0e686b932b1568aa333deaefc0dbdf21 passed all three jobs in run 33947678048. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
       "classificationBatch": "M0-BUDGET-CATEGORY-REFERENCE-POWERSYNC-001"
     },
     {
@@ -39434,13 +39434,13 @@
           "All frozen provider and runtime lifecycle obligations pass before status advances"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Fourteen focused provider tests pass locally after executable review strengthened reciprocal field/version, deterministic two-source startup, pre-snapshot drain, and post-cancellation proof. Fixtures preserve every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss clears formerly emitted rows even if completeness stays true. Exact corrected implementation CI remains pending.",
+      "notes": "Fourteen focused provider tests pass locally and at exact corrected implementation 9eecacfd0e686b932b1568aa333deaefc0dbdf21 / immutable run 33947678048 after executable review strengthened reciprocal field/version, deterministic two-source startup, pre-snapshot drain, and post-cancellation proof. Fixtures preserve every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss clears formerly emitted rows even if completeness stays true.",
       "classificationBatch": "M0-BUDGET-CATEGORY-REFERENCE-POWERSYNC-001"
     },
     {

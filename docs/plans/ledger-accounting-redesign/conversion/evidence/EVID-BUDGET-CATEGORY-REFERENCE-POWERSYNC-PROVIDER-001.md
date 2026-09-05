@@ -1,7 +1,8 @@
 # EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001 — Local Budget-Category Reference Provider
 
-- Status: implemented locally and independently reviewed; exact implementation
-  CI pending
+- Status: verified locally at exact corrected implementation commit
+  `9eecacfd0e686b932b1568aa333deaefc0dbdf21`; independently reviewed and
+  immutable CI passed
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -156,9 +157,12 @@ was not deterministic evidence of both source-arrival orders or cancellation
 before the first combined snapshot. A testable module-internal accumulator now
 proves both orders, and a real provider test proves cancellation drains both
 observers without an initial completeness value or public emission. All 419
-tests pass after the correction. A new exact implementation CI run remains
-required before operational verification and evidence promotion; the cancelled
-run is not passing evidence.
+tests pass after the correction. Exact corrected implementation commit
+`9eecacfd0e686b932b1568aa333deaefc0dbdf21` then passed all three jobs in
+immutable Actions run `33947678048`: conversion state and traceability, the
+disposable local Supabase provider checks, all 419 nonparallel target tests,
+target boundaries/contracts, and both staging builds. The cancelled predecessor
+run remains recorded as non-passing evidence.
 
 ## Independent Review Correction
 
@@ -180,5 +184,6 @@ caused conservative Firebase-coupling metadata. This corrected candidate:
   checks added to the frozen environment script; and
 - removes the misleading source token from the test scaffold.
 
-Final independent re-review returned GO with no remaining P0-P3 finding. Exact
-corrected implementation CI remains required.
+Final independent re-review returned GO with no remaining P0-P3 finding. The
+exact corrected implementation commit and immutable run above satisfy
+`CATPOWER-TEST-007` and promote this bounded local provider slice to verified.
