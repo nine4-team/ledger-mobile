@@ -203,6 +203,60 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("CATPOWER-TEST-005 runtime close and reopen preserve local category rows")
+    func categoryRowsSurviveRuntimeRestartWithoutCompletenessClaim() async throws {
+        let context = try RuntimeTestContext(suffix: "category-restart")
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(
+                sql: """
+                INSERT INTO spike_account_memberships (
+                  id, account_id, principal_id, role, state,
+                  can_manage_clients, can_manage_projects,
+                  can_manage_project_budgets, financial_access
+                ) VALUES (?, ?, ?, 'owner', 'active', 1, 1, 1, 'full')
+                """,
+                parameters: [
+                    "membership-category-runtime",
+                    context.accountId.rawValue,
+                    context.principalId.rawValue,
+                ]
+            )
+            _ = try await database.execute(
+                sql: """
+                INSERT INTO spike_budget_categories (
+                  id, account_id, display_name, kind, lifecycle, is_system,
+                  excludes_from_overall_budget, visibility_class,
+                  presentation_order, revision, created_at_ms, updated_at_ms
+                ) VALUES (?, ?, 'Furnishings', 'itemized', 'active', 0,
+                          0, 'ordinary', 1, 3, 1788500000000, 1788500001000)
+                """,
+                parameters: ["category-runtime", context.accountId.rawValue]
+            )
+        }
+
+        let first = try await context.openRuntime(dependencies: dependencies)
+        var firstIterator = first.watchBudgetCategories().makeAsyncIterator()
+        let beforeRestart = try #require(try await firstIterator.next())
+        #expect(beforeRestart.local.rows.map(\.id.rawValue) == ["category-runtime"])
+        #expect(beforeRestart.local.quality == .partial)
+        #expect(!beforeRestart.local.isCompleteForQuery)
+        try await first.close()
+
+        let reopened = try await context.openRuntime()
+        var reopenedIterator = reopened.watchBudgetCategories().makeAsyncIterator()
+        let afterRestart = try #require(try await reopenedIterator.next())
+        #expect(afterRestart.local.rows == beforeRestart.local.rows)
+        #expect(afterRestart.local.quality == .partial)
+        #expect(!afterRestart.local.isCompleteForQuery)
+        #expect(afterRestart.local.queryFingerprint == beforeRestart.local.queryFingerprint)
+        #expect(afterRestart.local.localDataVersion == beforeRestart.local.localDataVersion)
+        try await reopened.close()
+        context.remove()
+    }
+
     @Test("WORKRUNTIME-TEST-005 every staged bootstrap failure closes opened stores in order")
     func stagedBootstrapCleanupMatrix() async throws {
         let cases:
@@ -222,6 +276,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 (.mediaVaultOpen, .succeeded, .succeeded),
                 (.attachmentStoreConstruction, .succeeded, .succeeded),
                 (.pendingWorkQueryConstruction, .succeeded, .succeeded),
+                (.budgetCategoryQueryConstruction, .succeeded, .succeeded),
                 (.runtimeConstruction, .succeeded, .succeeded),
             ]
 
@@ -431,7 +486,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         unavailableContext.remove()
     }
 
-    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all four streams")
+    @Test("WORKRUNTIME-TEST-007 one gate drains finite work and all five streams")
     func lifecycleGateDrainsAndRejectsPostClose() async throws {
         let context = try RuntimeTestContext(suffix: "lifecycle")
         let finiteGate = ManualGate()
@@ -468,15 +523,17 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             runtime.watchProject(projectRequest),
             runtime.watchClients(),
             runtime.watchProjects(),
+            runtime.watchBudgetCategories(),
         ]
         _ = streams
-        await streamCounter.waitUntilEntered(4)
+        await streamCounter.waitUntilEntered(5)
         let enteredStreams = await streamCounter.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
             .projectDetails,
             .clientDirectory,
             .projectDirectory,
+            .budgetCategories,
         ] {
             #expect(enteredStreams.filter { $0 == operation }.count == 1)
         }
@@ -510,6 +567,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchProjects())
         try await Self.expectClosed(runtime.watchClient(clientRequest))
         try await Self.expectClosed(runtime.watchProject(projectRequest))
+        try await Self.expectClosed(runtime.watchBudgetCategories())
         await finiteGate.release()
         _ = try await finite.value
         try await close.value
@@ -552,6 +610,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchProjects())
         try await Self.expectClosed(runtime.watchClient(clientRequest))
         try await Self.expectClosed(runtime.watchProject(projectRequest))
+        try await Self.expectClosed(runtime.watchBudgetCategories())
         context.remove()
     }
 
@@ -643,22 +702,68 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 operation: .projectDirectory,
                 requiredEmissions: 1,
                 progress: progress
+            ),
+            Self.consumeUntilTermination(
+                runtime.watchBudgetCategories(),
+                operation: .budgetCategories,
+                requiredEmissions: 1,
+                progress: progress
             )
         ]
 
-        await progress.waitUntilEntered(8)
+        await progress.waitUntilEntered(10)
         try await runtime.close()
         for consumer in consumers { await consumer.value }
-        await progress.waitUntilEntered(12)
+        await progress.waitUntilEntered(15)
         let observations = await progress.values()
         for operation in [
             AccountWorkspaceRuntimeStreamOperation.clientDetails,
             .projectDetails,
             .clientDirectory,
             .projectDirectory,
+            .budgetCategories,
         ] {
             #expect(observations.filter { $0 == operation }.count == 3)
         }
+        context.remove()
+    }
+
+    @Test("CATPOWER-TEST-005 provider drainage completes before database close")
+    func categoryProviderDrainPrecedesDatabaseClose() async throws {
+        let context = try RuntimeTestContext(suffix: "category-drain-order")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let streamStarted = EntryCounter()
+        let drainGate = ManualGate()
+        var dependencies = context.dependencies(events: events)
+        dependencies.streamOperationCheckpoint = { operation in
+            await streamStarted.enter(operation)
+        }
+        dependencies.makeBudgetCategoryQuery = { _, _, _, _ in
+            BlockingDrainBudgetCategoryQuery(drainGate: drainGate)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let consumer = Task {
+            do {
+                for try await _ in runtime.watchBudgetCategories() {}
+            } catch {
+                // Runtime close cancels the public stream.
+            }
+        }
+        await streamStarted.waitUntilEntered(1)
+
+        let close = Task { try await runtime.close() }
+        await drainGate.waitUntilEntered()
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+
+        await drainGate.release()
+        try await close.value
+        await consumer.value
+        #expect(
+            events.values.filter {
+                $0 == .attachmentDatabaseCloseAttempted || $0 == .structuredDatabaseCloseAttempted
+            }.suffix(2) == [.attachmentDatabaseCloseAttempted, .structuredDatabaseCloseAttempted]
+        )
         context.remove()
     }
 
@@ -727,6 +832,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let runtime: LedgerOfflineClientRuntime = try await context.openRuntime()
         _ = runtime.watchClients()
         _ = runtime.watchProjects()
+        _ = runtime.watchBudgetCategories()
         _ = try await runtime.pendingUploadCount()
         _ = try await runtime.encryptionCipher()
         _ = try await runtime.pendingWorkSummary()
@@ -743,6 +849,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             .vaultConstructed,
             .attachmentStoreConstructed,
             .pendingWorkQueryConstructed,
+            .budgetCategoryQueryConstructed,
             .lifecycleOwnerConstructed,
         ] {
             #expect(events.filter { $0 == event }.count == 1)
@@ -804,6 +911,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let makeVault = dependencies.makeVault
         let makeStore = dependencies.makeAttachmentStore
         let makeQuery = dependencies.makePendingWorkQuery
+        let makeBudgetCategoryQuery = dependencies.makeBudgetCategoryQuery
 
         if stage == .databaseKeyLoad {
             dependencies.loadDatabaseKey = { _, _ in throw RuntimeInjectedFailure() }
@@ -852,6 +960,13 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         } else {
             dependencies.makePendingWorkQuery = makeQuery
         }
+        if stage == .budgetCategoryQueryConstruction {
+            dependencies.makeBudgetCategoryQuery = { _, _, _, _ in
+                throw RuntimeInjectedFailure()
+            }
+        } else {
+            dependencies.makeBudgetCategoryQuery = makeBudgetCategoryQuery
+        }
         if stage == .runtimeConstruction {
             dependencies.makeLifecycleOwner = { _ in throw RuntimeInjectedFailure() }
         }
@@ -894,6 +1009,26 @@ struct AccountWorkspacePendingWorkRuntimeTests {
 }
 
 private struct RuntimeInjectedFailure: Error {}
+
+private final class BlockingDrainBudgetCategoryQuery:
+    AccountWorkspaceBudgetCategoryQuerying, @unchecked Sendable
+{
+    private let drainGate: ManualGate
+
+    init(drainGate: ManualGate) {
+        self.drainGate = drainGate
+    }
+
+    func watchBudgetCategories(
+        accountId: AccountID
+    ) -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error> {
+        AsyncThrowingStream { _ in }
+    }
+
+    func cancelAndDrainWatches() async {
+        await drainGate.wait()
+    }
+}
 
 private actor FailingPendingWorkSummary: AccountWorkspacePendingWorkSummarizing {
     func summary() async throws -> PendingLocalWorkSummary {

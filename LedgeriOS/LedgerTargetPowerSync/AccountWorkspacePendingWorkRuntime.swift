@@ -16,6 +16,7 @@ public enum LedgerPowerSyncLocalBootstrapStage: String, Equatable, Sendable {
     case mediaVaultOpen
     case attachmentStoreConstruction
     case pendingWorkQueryConstruction
+    case budgetCategoryQueryConstruction
     case runtimeConstruction
 }
 
@@ -58,6 +59,12 @@ protocol AccountWorkspacePendingWorkSummarizing: Sendable {
 
 extension PendingWorkPowerSyncQuery: AccountWorkspacePendingWorkSummarizing {}
 
+protocol AccountWorkspaceBudgetCategoryQuerying: BudgetCategoryReferenceQuerying {
+    func cancelAndDrainWatches() async
+}
+
+extension BudgetCategoryReferencePowerSyncQuery: AccountWorkspaceBudgetCategoryQuerying {}
+
 enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case createClient
     case createProject
@@ -72,6 +79,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case projectDetails
     case clientDirectory
     case projectDirectory
+    case budgetCategories
 }
 
 struct AccountWorkspaceOpenedDatabase: @unchecked Sendable {
@@ -123,6 +131,13 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
             AccountID,
             @Sendable @escaping () -> Date
         ) throws -> any AccountWorkspacePendingWorkSummarizing
+    var makeBudgetCategoryQuery:
+        @Sendable (
+            any PowerSyncDatabaseProtocol,
+            PrincipalID,
+            AccountID,
+            @Sendable @escaping () -> Date
+        ) throws -> any AccountWorkspaceBudgetCategoryQuerying
     var makeLifecycleOwner:
         @Sendable (
             AccountWorkspaceRuntimeResources
@@ -214,6 +229,14 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
                 now: now
             )
         },
+        makeBudgetCategoryQuery: { database, principalId, accountId, now in
+            BudgetCategoryReferencePowerSyncQuery(
+                database: database,
+                principalId: principalId,
+                accountId: accountId,
+                now: now
+            )
+        },
         makeLifecycleOwner: { AccountWorkspacePendingWorkRuntime(resources: $0) },
         finiteOperationCheckpoint: { _ in },
         streamOperationCheckpoint: { _ in },
@@ -228,6 +251,7 @@ enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
     case vaultConstructed
     case attachmentStoreConstructed
     case pendingWorkQueryConstructed
+    case budgetCategoryQueryConstructed
     case lifecycleOwnerConstructed
     case derivedResourcesReleased
     case vaultReleased
@@ -245,6 +269,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let directoryQuery: ClientProjectDirectoryPowerSyncQuery
     let attachmentStore: any AccountWorkspaceAttachmentStoring
     let pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing
+    let budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying
     let vault: AttachmentLocalByteVault
     let closeAttachmentDatabase: @Sendable () async throws -> Void
     let closeStructuredDatabase: @Sendable () async throws -> Void
@@ -266,6 +291,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         attachmentDatabase: any PowerSyncDatabaseProtocol,
         attachmentStore: any AccountWorkspaceAttachmentStoring,
         pendingWorkQuery: any AccountWorkspacePendingWorkSummarizing,
+        budgetCategoryQuery: any AccountWorkspaceBudgetCategoryQuerying,
         vault: AttachmentLocalByteVault,
         closeAttachmentDatabase: @Sendable @escaping () async throws -> Void,
         closeStructuredDatabase: @Sendable @escaping () async throws -> Void,
@@ -307,6 +333,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         )
         self.attachmentStore = attachmentStore
         self.pendingWorkQuery = pendingWorkQuery
+        self.budgetCategoryQuery = budgetCategoryQuery
         self.vault = vault
         self.closeAttachmentDatabase = closeAttachmentDatabase
         self.closeStructuredDatabase = closeStructuredDatabase
@@ -457,6 +484,23 @@ actor AccountWorkspacePendingWorkRuntime {
         )
     }
 
+    func startBudgetCategoryWatch(
+        id: UUID,
+        continuation: AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>.Continuation
+    ) {
+        startStream(
+            id: id,
+            operation: .budgetCategories,
+            continuation: continuation,
+            validate: { _ in },
+            makeStream: { resources in
+                resources.budgetCategoryQuery.watchBudgetCategories(
+                    accountId: resources.accountId
+                )
+            }
+        )
+    }
+
     func cancelStream(id: UUID) {
         if let task = streamTasks[id] {
             task.cancel()
@@ -564,6 +608,8 @@ actor AccountWorkspacePendingWorkRuntime {
             return result
         }
 
+        await resources.budgetCategoryQuery.cancelAndDrainWatches()
+
         var attachmentFailed = false
         var structuredFailed = false
         resources.lifecycleEvent(.attachmentDatabaseCloseAttempted)
@@ -653,6 +699,7 @@ public enum LedgerPowerSyncLocalBootstrap {
         var vault: AttachmentLocalByteVault?
         var attachmentStore: (any AccountWorkspaceAttachmentStoring)?
         var pendingWorkQuery: (any AccountWorkspacePendingWorkSummarizing)?
+        var budgetCategoryQuery: (any AccountWorkspaceBudgetCategoryQuerying)?
         var runtimeResources: AccountWorkspaceRuntimeResources?
 
         do {
@@ -745,11 +792,22 @@ public enum LedgerPowerSyncLocalBootstrap {
             pendingWorkQuery = madePendingWorkQuery
             dependencies.lifecycleEvent(.pendingWorkQueryConstructed)
 
+            stage = .budgetCategoryQueryConstruction
+            let madeBudgetCategoryQuery = try dependencies.makeBudgetCategoryQuery(
+                openedStructured.database,
+                principalId,
+                accountId,
+                dependencies.now
+            )
+            budgetCategoryQuery = madeBudgetCategoryQuery
+            dependencies.lifecycleEvent(.budgetCategoryQueryConstructed)
+
             let madeRuntimeResources = AccountWorkspaceRuntimeResources(
                 structuredDatabase: openedStructured.database,
                 attachmentDatabase: openedAttachment.database,
                 attachmentStore: madeAttachmentStore,
                 pendingWorkQuery: madePendingWorkQuery,
+                budgetCategoryQuery: madeBudgetCategoryQuery,
                 vault: openedVault,
                 closeAttachmentDatabase: openedAttachment.closePreservingData,
                 closeStructuredDatabase: openedStructured.closePreservingData,
@@ -770,9 +828,11 @@ public enum LedgerPowerSyncLocalBootstrap {
         } catch {
             let hadDerivedResources =
                 runtimeResources != nil
+                || budgetCategoryQuery != nil
                 || pendingWorkQuery != nil
                 || attachmentStore != nil
             runtimeResources = nil
+            budgetCategoryQuery = nil
             pendingWorkQuery = nil
             attachmentStore = nil
             if vault != nil {

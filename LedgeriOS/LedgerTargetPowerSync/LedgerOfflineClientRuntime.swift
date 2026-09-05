@@ -78,6 +78,17 @@ public final class LedgerOfflineClientRuntime: Sendable {
         }
     }
 
+    public func watchBudgetCategories()
+        -> AsyncThrowingStream<BudgetCategoryReferenceSnapshot, Error>
+    {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startBudgetCategoryWatch(
+                id: id,
+                continuation: continuation
+            )
+        }
+    }
+
     public func pendingUploadCount() async throws -> Int64 {
         try await lifecycleOwner.pendingUploadCount()
     }

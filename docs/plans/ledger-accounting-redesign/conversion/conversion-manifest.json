@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-05T04:04:04.988Z",
+    "lastSynchronizedAt": "2026-09-05T04:53:09.408Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1466,8 +1466,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
-      "acknowledgedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "observedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
+      "acknowledgedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
       "metadata": {},
       "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; lifecycle-owned provider types are not public; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
       "disposition": "redesign",
@@ -5391,8 +5391,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
-      "acknowledgedSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "observedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
+      "acknowledgedSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
       "metadata": {},
       "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, public lifecycle-owned provider declarations, provider imports outside LedgerTargetPowerSync, dependency-version drift, and target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -19813,12 +19813,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/BudgetCategoryReferencePowerSyncQuery.swift"
         }
       ],
-      "observedSourceHash": "9f51edff333e387ecd731e29c4516f8e7f230f0bb3e01623783ea047a1debfd8",
-      "acknowledgedSourceHash": "9f51edff333e387ecd731e29c4516f8e7f230f0bb3e01623783ea047a1debfd8",
+      "observedSourceHash": "5a2d5627a1df31a976a1c2e875b6c45a94a4f1942cbefd3f2469ac664b633796",
+      "acknowledgedSourceHash": "5a2d5627a1df31a976a1c2e875b6c45a94a4f1942cbefd3f2469ac664b633796",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY candidate for a module-internal Account/Principal-bound BudgetCategoryReferenceQuerying PowerSync adapter over already-materialized local category rows with independent completeness and no local visibility decision.",
+      "currentBehavior": "Executable module-internal Account/Principal-bound BudgetCategoryReferenceQuerying PowerSync adapter over already-materialized local category rows with independently reactive completeness, membership-gated authority and no local visibility decision.",
       "disposition": "redesign",
       "target": {
         "owner": "Budget Category Reference Provider",
@@ -19851,13 +19851,13 @@
           "Exact local scope, row validation, ordering, readiness, restart and lifecycle behavior pass without final visibility or hosted authority claims"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "Executable work is forbidden until the synchronized comment-only READY checkpoint passes final independent review and immutable CI. Exact shared implementation touchpoints, pre-implementation hashes and responsibilities are frozen without changing their primary owners. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
+      "notes": "Implemented locally after the exact READY checkpoint passed immutable CI. Executable review found and corrected provider-drain, reciprocal-version and cancellation-proof gaps; final corrected-diff review returned GO. Exact implementation CI remains pending. O-026 remains outside: this adapter consumes only the subset already present locally and neither decides visibility nor claims hidden counts.",
       "classificationBatch": "M0-BUDGET-CATEGORY-REFERENCE-POWERSYNC-001"
     },
     {
@@ -23475,12 +23475,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61",
-      "acknowledgedSourceHash": "20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61",
+      "observedSourceHash": "efe7838b0b73e340da27891d21684704ca3ae1c1ac9f4e0a0dd21c16ac597fcc",
+      "acknowledgedSourceHash": "efe7838b0b73e340da27891d21684704ca3ae1c1ac9f4e0a0dd21c16ac597fcc",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope operations and exposes Client/Project creation and watches, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close without exposing its concrete resources or initializer.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope operations and exposes Client/Project creation and watches, an Account-bound budget-category watch, pending diagnostics, attachment capture, fresh pending-work summary and non-destructive close without exposing its concrete resources or initializer.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -25843,12 +25843,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
-      "acknowledgedSourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
+      "observedSourceHash": "aa0dfd77900dd4eb7c06f0940d362ad7bdd2958e3499fa04aa37e9192880d6da",
+      "acknowledgedSourceHash": "aa0dfd77900dd4eb7c06f0940d362ad7bdd2958e3499fa04aa37e9192880d6da",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and all four read streams behind one close-aware lease gate without implementing session ending.",
+      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and five read streams behind one close-aware lease gate without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -25884,7 +25884,7 @@
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations and streams and preserves all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; no hosted, cleanup, signout or session-ending action exists.",
+      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
     },
     {
@@ -39398,12 +39398,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "29fa433e29065ef33d98947d8e16029e2fea4e11d3bd8d014e71e3a680d15005",
-      "acknowledgedSourceHash": "29fa433e29065ef33d98947d8e16029e2fea4e11d3bd8d014e71e3a680d15005",
+      "observedSourceHash": "bccd4d78bf11a445f5d398147c97cd23c415094469929a18eadce2f6046bd873",
+      "acknowledgedSourceHash": "bccd4d78bf11a445f5d398147c97cd23c415094469929a18eadce2f6046bd873",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY candidate freezing real encrypted local category-provider, same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed-row, restart, cancellation and runtime-close verification.",
+      "currentBehavior": "Executable real encrypted local category-provider suite covering same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed rows, restart, cancellation and runtime-close drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Budget Category Reference Provider",
@@ -39434,13 +39434,13 @@
           "All frozen provider and runtime lifecycle obligations pass before status advances"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
         "EVID-BUDGET-CATEGORY-REFERENCE-001"
       ],
-      "notes": "No executable test exists before the reviewed READY checkpoint. Fixtures must prove the adapter preserves every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss must clear formerly emitted rows even if completeness stays true.",
+      "notes": "Twelve focused provider tests pass locally after executable review strengthened reciprocal field/version and post-cancellation proof. Fixtures preserve every already-materialized category, including restricted-class rows, rather than implementing O-026 locally; a live membership loss clears formerly emitted rows even if completeness stays true. Exact implementation CI remains pending.",
       "classificationBatch": "M0-BUDGET-CATEGORY-REFERENCE-POWERSYNC-001"
     },
     {
@@ -41206,12 +41206,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137",
-      "acknowledgedSourceHash": "f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137",
+      "observedSourceHash": "073d00c37343ee3a159ed89a5031aef0a49854d58e9d3a6bea0a76bedcfe942c",
+      "acknowledgedSourceHash": "073d00c37343ee3a159ed89a5031aef0a49854d58e9d3a6bea0a76bedcfe942c",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Twelve executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream drainage, deterministic terminal close and negative API boundaries.",
+      "currentBehavior": "Fourteen executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream and provider-observer drainage, deterministic terminal close and negative API boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -41247,7 +41247,7 @@
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "All twelve focused tests and the complete 403-test/73-suite Swift package pass locally and in corrected exact-head Actions run 33941609019.",
+      "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
     },
     {

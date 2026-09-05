@@ -12,15 +12,15 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
-      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and all four read streams behind one close-aware lease gate without implementing session ending.",
+      "acknowledgeSourceHash": "aa0dfd77900dd4eb7c06f0940d362ad7bdd2958e3499fa04aa37e9192880d6da",
+      "currentBehavior": "Executable async-bootstrapped Account-workspace lifecycle owner composing the verified pending-work query, separate encrypted attachment queue, authenticated protected-byte vault, Client/Project stores and five read streams behind one close-aware lease gate without implementing session ending.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations and streams and preserves all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; no hosted, cleanup, signout or session-ending action exists.",
+      "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
         "surfaces": [
@@ -53,15 +53,15 @@
     },
     {
       "id": "TEST-8D6A15063B2D",
-      "acknowledgeSourceHash": "f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137",
-      "currentBehavior": "Twelve executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream drainage, deterministic terminal close and negative API boundaries.",
+      "acknowledgeSourceHash": "073d00c37343ee3a159ed89a5031aef0a49854d58e9d3a6bea0a76bedcfe942c",
+      "currentBehavior": "Fourteen executable tests exercise real encrypted runtime composition, constructor counts, key-value separation, authenticated media-key refusal, attachment capture, pending summary, restart, every partial-open fault, real PowerSync stream and provider-observer drainage, deterministic terminal close and negative API boundaries.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
       ],
-      "notes": "All twelve focused tests and the complete 403-test/73-suite Swift package pass locally and in corrected exact-head Actions run 33941609019.",
+      "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
         "surfaces": [

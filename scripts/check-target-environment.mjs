@@ -346,6 +346,7 @@ if (
     "encryptionCipher",
     "pendingUploadCount",
     "pendingWorkSummary",
+    "watchBudgetCategories",
     "watchClient",
     "watchClients",
     "watchProject",
@@ -361,6 +362,18 @@ if (
     );
   }
 
+  const budgetCategoryWatchSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+watchBudgetCategories\s*\(\s*\)\s*->\s*AsyncThrowingStream\s*<\s*BudgetCategoryReferenceSnapshot\s*,\s*Error\s*>\s*\{/g,
+    ),
+  ];
+  if (budgetCategoryWatchSignatures.length !== 1) {
+    fail(
+      "target_budget_category_watch_signature",
+      "The public runtime must expose exactly one zero-argument, Account-bound budget-category watch.",
+    );
+  }
+
   const publicRuntimeSignatures = [
     ...runtimeSource.matchAll(/public\s+func\s+\w+[\s\S]*?\{/g),
     ...coordinatorSource.matchAll(/public\s+static\s+func\s+\w+[\s\S]*?\{/g),
@@ -370,6 +383,8 @@ if (
   for (const forbiddenType of [
     "PowerSyncDatabaseProtocol",
     "PendingWorkPowerSyncQuery",
+    "BudgetCategoryReferencePowerSyncQuery",
+    "CompletenessObservation",
     "AttachmentCapturePowerSyncStore",
     "AttachmentLocalByteVault",
     "LedgerPowerSyncEncryptionKey",
@@ -412,6 +427,7 @@ if (
     "ClientCoreDetailsPowerSyncQuery",
     "ClientCreationPowerSyncStore",
     "ClientProjectDirectoryPowerSyncQuery",
+    "BudgetCategoryReferencePowerSyncQuery",
     "LedgerPowerSyncDatabaseFactory",
     "LedgerPowerSyncEncryptionKey",
     "LedgerPowerSyncKeychain",

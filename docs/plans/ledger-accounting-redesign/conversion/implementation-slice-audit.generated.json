@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T04:04:04.988Z",
+  "generatedFromManifestSync": "2026-09-05T04:53:09.408Z",
   "totals": {
     "slices": 77,
     "claimedTargetSurfaces": 213,
     "unclaimedTargetSurfaces": 422,
-    "implementationAdvancedTargetSurfaces": 159
+    "implementationAdvancedTargetSurfaces": 161
   },
   "statusCounts": {
     "draft": 1,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 6,
+    "implemented": 7,
     "verified": 66,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -114,7 +114,7 @@
       "sliceId": "budget-category-reference-powersync-provider",
       "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Budget Category Reference Provider",
       "surfaceIds": [
         "SWIFT-241B51091042",

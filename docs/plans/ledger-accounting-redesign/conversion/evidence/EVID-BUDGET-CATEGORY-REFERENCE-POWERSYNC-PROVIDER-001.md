@@ -1,7 +1,7 @@
 # EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001 — Local Budget-Category Reference Provider
 
-- Status: corrected comment-only READY candidate; exact independent review GO,
-  immutable CI pending
+- Status: implemented locally and independently reviewed; exact implementation
+  CI pending
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -61,7 +61,7 @@ at this READY boundary:
 | Manifest identity | Exact path | READY source hash | Permitted change |
 | --- | --- | --- | --- |
 | `SWIFT-548A8A928FAE` | `LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift` | `20ccef5cbb04e905d113135b87b2bd22c38d75e0aa990021e7ba80faa4012b61` | Account-bound category-watch facade only |
-| `SWIFT-75CFE285AF37` | `LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift` | `608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987` | exactly-one provider construction and existing stream lease only |
+| `SWIFT-75CFE285AF37` | `LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift` | `608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987` | exactly-one provider construction, existing stream lease, and a module-internal provider cancel-and-join before database close; no public lifecycle API |
 | `TEST-8D6A15063B2D` | `LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift` | `f70ed4ea57e30cbc8287b097644b56881b19627b8dd453be92cd85045df47137` | category construction/facade/close/restart proof only |
 | `CONFIG-81235587F306`, `FILE-A6E49E3815F4` | `scripts/check-target-environment.mjs` | `af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd` | exact facade/provider/completeness source and build-graph rejection only |
 
@@ -100,16 +100,52 @@ The exact READY design requires:
   scope, completeness and quality axis; and
 - runtime close cancellation/drainage before either database closes.
 
-## Required Evidence Before Implementation
+Executable review showed that draining only the runtime's forwarding task did
+not prove that the provider-owned row and completeness observers had stopped.
+The runtime touchpoint is therefore explicitly refrozen to include one
+module-internal provider cancel-and-join call during the existing close
+operation, after public stream drainage and before either database close. This
+does not add a second public shutdown path or change the runtime's terminal
+semantics.
+
+## READY Evidence Before Implementation
 
 The independent reviewer inspected the corrected exact comment-only surfaces,
 dossier, classification, affected shared files and test matrix and returned GO
-with no remaining P0-P3 finding. Before executable work begins, the synchronized
-READY commit must still pass all three immutable workflow jobs.
+with no remaining P0-P3 finding. Exact READY commit `8eafd6c9` then passed all
+three jobs in immutable Actions run `33943581567` before executable work began.
 
 Implementation remains separate from verification promotion. It cannot advance
 A-003/A-004/A-007/A-016/O-026, authorize hosted resources, access production,
 read or modify Firebase, migrate data, release, or cut over.
+
+## Executable Review and Local Verification
+
+The implementation provides one module-internal, exact Account/Principal-bound
+PowerSync query over the already-materialized category subset and exposes only
+the zero-argument Account-bound runtime watch. It preserves every literal
+category field, orders canonically, distinguishes partial/stale/ready truth,
+resets completeness after restart, clears rows reactively when local membership
+is revoked or deleted, and refuses malformed, duplicate, overflow, or cross-
+Account evidence atomically.
+
+The first executable review returned NO-GO because runtime shutdown drained the
+public forwarding task without proving the provider-owned database and
+completeness observers had stopped; the reciprocal version matrix and post-
+cancellation proof were also incomplete. The corrected implementation uses a
+race-safe internal watch registry, joins both provider observations, and makes
+runtime close await that internal drain before either database closes. The
+refrozen shared touchpoint explicitly authorizes this internal lifecycle hook
+without adding a public shutdown API. Corrected tests directly prove drain
+ordering, source termination, same-public-stream termination, literal Account
+ownership, all category fields, row membership, scope, completeness, quality,
+canonical order, fingerprint, and LocalDataVersion axes.
+
+Final corrected-diff review returned GO with no remaining P0-P3 finding. Twelve
+focused provider tests, 14 focused runtime tests, all 417 Swift tests in 74
+suites, target-environment checks, and both staging builds pass locally. Exact
+implementation CI remains required before operational verification and evidence
+promotion.
 
 ## Independent Review Correction
 

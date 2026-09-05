@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 289
+State version: 290
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: BUDGET-CATEGORY-REFERENCE-POWERSYNC-READY-CANDIDATE-CI-PENDING
+- Checkpoint: BUDGET-CATEGORY-REFERENCE-POWERSYNC-IMPLEMENTED-LOCAL-CI-PENDING
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -37,7 +37,7 @@ without modifying the running Firebase application before hard cutover.
   executable Supabase/PowerSync product behavior through rehearsal and cutover
   readiness, not document volume or provider-free contract count.
 - The implementation tracker currently contains 269 status-bearing rows: 68
-  done, four verified, six implemented, one ready, zero awaiting verification,
+  done, four verified, seven implemented, zero ready, zero awaiting verification,
   12 in progress, 26 design, 60 blocked, 90 not started, and two existing-source rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -65,6 +65,27 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
+- Implemented the local budget-category reference provider after exact READY
+  commit `8eafd6c9` passed all three jobs in immutable run `33943581567`. One
+  module-internal PowerSync query now maps every already-materialized category
+  field without interpreting visibility, binds exact Account/Principal scope,
+  remains incomplete by default, reacts to explicit completeness and live
+  membership loss, preserves encrypted rows across restart, and exposes only
+  `watchBudgetCategories()` through the Account-bound runtime. The first
+  executable review returned NO-GO because runtime drainage did not join the
+  provider-owned database/completeness observers and the reciprocal version and
+  cancellation tests were incomplete. The corrected provider owns a race-safe
+  watch registry, joins both observations, and runtime close awaits that
+  module-internal drain before either database closes; the shared touchpoint was
+  explicitly refrozen to authorize this internal lifecycle obligation without
+  adding a public shutdown API. Corrected-diff review returned GO with no
+  remaining P0-P3 finding. Twelve provider tests, 14 runtime tests, all 417
+  Swift tests in 74 suites, target-environment checks and both staging builds
+  pass locally. Exact implementation CI remains pending. O-026 and A-003/A-004/
+  A-007/A-016 remain unadvanced; no category administration, app UI, MCP,
+  hosted access, Firebase work, migration, production or cutover action exists;
+  `EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001`.
+
 - Promoted the Account-workspace pending-work runtime after corrected exact-head
   implementation/harness commit `f41a5ab7` passed all three jobs in run
   `33941609019`; the evidence-only promotion commit `819900b2` also passed all
@@ -82,13 +103,13 @@ without modifying the running Firebase application before hard cutover.
   absent; the enabling provider was incorrectly labeled a product outcome; the
   literal-field/version matrix was incomplete; symbol-graph proof exceeded the
   actual tooling; and one scaffold token caused conservative source-coupling
-  metadata. The corrected technical-control candidate freezes exact shared
+  metadata. The corrected technical-control candidate froze exact shared
   touchpoints and primary ownership, requires live active-to-revoked/deleted
   row retraction with completeness still true, adds reciprocal field/version/
   fingerprint proof, narrows the public-boundary claim to concrete compile-time
-  and source/build checks, and removes the misleading token. Final exact-diff
-  re-review returned GO with no remaining P0-P3 finding; immutable READY CI is
-  now the remaining pre-implementation gate. O-026 remains fully open for
+  and source/build checks, and removed the misleading token. Final exact-diff
+  re-review returned GO with no remaining P0-P3 finding; immutable READY commit
+  `8eafd6c9` subsequently passed run `33943581567` before implementation. O-026 remains fully open for
   administration and final download visibility; existing schema/RLS/Sync/app/MCP stay unchanged;
   `EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001`.
 

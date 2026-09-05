@@ -117,7 +117,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "acknowledgeSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
       "currentBehavior": "Fails closed unless provider-free target layers remain isolated; exact reviewed PowerSync and encrypted-SQLite versions are pinned; lifecycle-owned provider types are not public; only LedgerTargetPowerSync imports PowerSync; the target staging app links that provider product; and the source Firebase Xcode project references no target-only provider path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -346,7 +346,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "af4ccc5b6401059f2d26326127a7d482b265cf5383ad18d2008bf542dff965bd",
+      "acknowledgeSourceHash": "17daa2f8e12237f60d0ce8f090ec6397faad5dd9b833a9cfd73bff9728ea190e",
       "currentBehavior": "Provides the same target environment guard through tooling discovery: it rejects known source/production identifiers, public lifecycle-owned provider declarations, provider imports outside LedgerTargetPowerSync, dependency-version drift, and target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",

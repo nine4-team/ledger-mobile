@@ -3,7 +3,7 @@
   "sliceId": "budget-category-reference-powersync-provider",
   "title": "Observe the already-authorized local budget-category subset from one encrypted Account workspace",
   "kind": "technical_control",
-  "status": "ready",
+  "status": "implemented",
   "owner": "Budget Category Reference Provider",
   "surfaceIds": ["SWIFT-241B51091042", "TEST-53618161645B"],
   "implementationTouchpoints": [
@@ -17,7 +17,7 @@
       "surfaceIds": ["SWIFT-75CFE285AF37"],
       "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift",
       "readySourceHash": "608d3d9319cbcc3082dc750e36545f00da43825702d4639b3311ee38038da987",
-      "permittedChange": "Construct exactly one module-internal category query and route its watch through the existing close-aware stream lease; preserve the surface's existing primary owner."
+      "permittedChange": "Construct exactly one module-internal category query, route its watch through the existing close-aware stream lease, and require the owned provider to cancel and join its row/completeness observers before either database closes; preserve the surface's existing primary owner and add no public lifecycle API."
     },
     {
       "surfaceIds": ["TEST-8D6A15063B2D"],
@@ -92,7 +92,7 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md",
       "section": "Implemented Boundary",
-      "invariant": "The Account workspace owns exactly one category query and admits every category watch through the same open/closing/closed stream lease: close rejects new watches, cancels and drains active watches before either database closes, and repeated close retains its existing terminal semantics.",
+      "invariant": "The Account workspace owns exactly one category query and admits every category watch through the same open/closing/closed stream lease: close rejects new watches, cancels and drains the public forwarding task, then invokes the module-internal provider drain that joins its row/completeness observers before either database closes; repeated close retains its existing terminal semantics and no lifecycle API becomes public.",
       "decisionIds": [],
       "verificationIds": ["CATPOWER-TEST-002", "CATPOWER-TEST-004", "CATPOWER-TEST-005", "CATPOWER-TEST-006", "CATPOWER-TEST-007"]
     }
@@ -173,7 +173,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "covers": ["CATPOWER-REQ-001", "CATPOWER-REQ-002", "CATPOWER-REQ-003", "CATPOWER-REQ-004", "CATPOWER-REQ-005", "CATPOWER-REQ-006"],
       "expected": "A real encrypted local database with active exact membership emits every already-materialized ordinary- and restricted-class category in canonical order with exact fields, emitted-row visible count, Account-bound fingerprint and content-bound version, without a local visibility decision.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -182,7 +182,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "covers": ["CATPOWER-REQ-002", "CATPOWER-REQ-004", "CATPOWER-REQ-005", "CATPOWER-REQ-007"],
       "expected": "Independent database and completeness changes emit reactive partial/stale/ready states; close/reopen preserves encrypted category rows but resets completeness until fresh current-process evidence, and only active scope plus explicit true completeness may emit ready or authoritative empty.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -191,7 +191,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "covers": ["CATPOWER-REQ-001", "CATPOWER-REQ-002", "CATPOWER-REQ-003", "CATPOWER-REQ-004", "CATPOWER-REQ-006"],
       "expected": "Cross-Account calls refuse before observation; missing/inactive/cross-Principal membership emits no false complete snapshot; malformed/cross-Account/duplicate/overflow/unknown rows and raw database failure yield no partial snapshot and only bounded diagnostics.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -200,7 +200,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "covers": ["CATPOWER-REQ-002", "CATPOWER-REQ-005", "CATPOWER-REQ-007"],
       "expected": "Consumer cancellation terminates database and completeness observations, stale events cannot emit afterward, and restart or generic PowerSync status alone never promotes completeness.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -209,7 +209,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift",
       "covers": ["CATPOWER-REQ-004", "CATPOWER-REQ-005", "CATPOWER-REQ-006", "CATPOWER-REQ-007"],
       "expected": "Normal bootstrap constructs exactly one category query; runtime watch uses the existing tracked stream lease, close cancels and drains it before both database closes, a concurrent new/post-close watch refuses, and ordinary close/reopen preserves local rows without claiming session ending.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -218,7 +218,7 @@
       "owner": "Swift compile-time facade assertions and scripts/check-target-environment.mjs exact source/build-graph checks",
       "covers": ["CATPOWER-REQ-001", "CATPOWER-REQ-002", "CATPOWER-REQ-003", "CATPOWER-REQ-006", "CATPOWER-REQ-007"],
       "expected": "Compile-time facade assertions plus exact checks on the frozen environment-control script prove the public runtime exposes only zero-argument watchBudgetCategories(), while BudgetCategoryReferencePowerSyncQuery and every raw Account rebinding, database, SQL, completeness source, membership predicate, visibility policy, provider object and category mutation remain non-public; MCP gains no surface. This test claims no compiler symbol-graph tooling.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -236,7 +236,7 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "covers": ["CATPOWER-REQ-004", "CATPOWER-REQ-005"],
       "expected": "On one live watch, active scope plus explicit completeness first emits nonempty ready evidence; changing membership to inactive/revoked and then deleting it clears all previously emitted rows immediately as empty partial, forces isCompleteForQuery false while completeness remains true, and stale completeness events never re-promote ready or authoritative-empty evidence.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     },
     {
@@ -245,12 +245,12 @@
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "covers": ["CATPOWER-REQ-001", "CATPOWER-REQ-002", "CATPOWER-REQ-004", "CATPOWER-REQ-005"],
       "expected": "A reciprocal matrix independently varies Account/category ID, name, all three kinds, both lifecycles, both system/exclusion booleans, presentation order, revision, canonical row membership, scope sentinel, completeness and quality. Literal outputs remain column-owned; LocalDataVersion changes for each content/readiness axis but not SQL input order alone; QueryFingerprint stays stable across content/readiness for one Account and changes across Accounts.",
-      "status": "planned",
+      "status": "passed",
       "evidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"]
     }
   ],
   "implementationEvidence": ["EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Comment-only technical-control READY candidate enabling a later user-visible Project setup slice. O-026 does not block consuming an already-authorized local subset, but it remains fully open for category administration and final category download visibility. A-003/A-004/A-007/A-016 remain proposed or gated and prevent hosted/current-authorization claims, not this honest incomplete-first local projection. Existing schema, RLS, Sync configuration, app UI and MCP remain byte-unchanged. The independent first review returned NO-GO over unfrozen shared touchpoints, live membership-loss clearing, incorrect product classification/authority, incomplete reciprocal field-version proof, an unsupported symbol-graph claim and conservative source-token metadata; this corrected candidate closes all six findings. Final exact-package re-review returned GO with no remaining P0-P3 finding. No executable provider work may begin until this exact synchronized package passes immutable CI."
+  "notes": "Technical-control provider implementation enabling a later user-visible Project setup slice. O-026 does not block consuming an already-authorized local subset, but it remains fully open for category administration and final category download visibility. A-003/A-004/A-007/A-016 remain proposed or gated and prevent hosted/current-authorization claims, not this honest incomplete-first local projection. Existing schema, RLS, Sync configuration, app UI and MCP remain byte-unchanged. The independent first READY review returned NO-GO over unfrozen shared touchpoints, live membership-loss clearing, incorrect product classification/authority, incomplete reciprocal field-version proof, an unsupported symbol-graph claim and conservative source-token metadata; the corrected READY candidate closed all six and passed immutable CI before executable work. Executable review then found that forwarding-task drainage did not join provider-owned row/completeness observers. The corrected implementation adds a module-internal provider drain and this explicitly revised shared-touchpoint scope; runtime close still uses its single public close operation and exposes no new lifecycle API. Final corrected-diff review returned GO with no remaining P0-P3 finding; exact implementation CI remains required before promotion."
 }
