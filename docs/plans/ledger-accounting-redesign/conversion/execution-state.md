@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 317
+State version: 318
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-IMPLEMENTED-LOCAL-REVIEW-GO
+- Checkpoint: SPACE-ASSIGNMENT-DESTINATION-PICKER-IMPLEMENTATION-CI-GREEN
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -94,7 +94,9 @@ without modifying the running Firebase application before hard cutover.
   Fourteen focused provider tests, all 512 Swift tests in 84 suites, all 210
   pgTAP assertions including 34 Space assertions, local Data API denial/read
   proof, zero database-lint errors, target controls, deterministic project
-  generation and both staging builds pass locally. TEST-012 real authenticated
+  generation and both staging builds pass locally. Exact implementation commit
+  `f89e9bda2c7b7192de41a85bbc586cff2519336b` passed all three immutable jobs in
+  run `33985685659`. TEST-012 real authenticated
   PowerSync remains planned; A-003/A-004 remain proposed; no hosted, Firebase,
   source-data migration, production, release or cutover action exists;
   `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001`.

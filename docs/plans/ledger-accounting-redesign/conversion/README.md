@@ -22,8 +22,9 @@ states and represented-ID staging selection. Independent database and Swift
 reviews returned GO after correcting temporal tests, stale-row causality,
 readiness, raw-name preservation and subscription drainage. All 512 Swift tests
 in 84 suites, 210 pgTAP assertions, local Data API checks, target controls and
-both builds pass locally; immutable implementation CI and TEST-012 hosted
-authenticated Sync remain pending. A-003/A-004 remain proposed and no
+both builds pass locally. Exact implementation `f89e9bda` passed all three
+immutable jobs in run `33985685659`; TEST-012 hosted authenticated Sync remains
+pending. A-003/A-004 remain proposed and no
 Space/Item mutation, migration, Firebase, production or cutover authority is
 granted; `EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001`. The Project archive browser slice is implemented locally
 from exact green READY commit `089dc562` / immutable run `33961281661`: nine

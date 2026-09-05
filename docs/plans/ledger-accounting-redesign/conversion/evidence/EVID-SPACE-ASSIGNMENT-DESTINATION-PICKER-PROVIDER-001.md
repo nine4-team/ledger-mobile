@@ -1,6 +1,6 @@
 # EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001 — Local Space Destination Picker
 
-- Status: implemented and independently reviewed locally; immutable CI pending
+- Status: implemented and independently reviewed; immutable implementation CI passed
 - Date: 2026-09-05
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -112,7 +112,14 @@ finding.
   source memberships; and
 - macOS and generic iOS Simulator staging builds pass.
 
-`SPACEDESTPICKER-TEST-001` through `-011` and `-013` pass locally.
+Exact implementation commit
+`f89e9bda2c7b7192de41a85bbc586cff2519336b` passed all three immutable
+GitHub Actions jobs in run `33985685659`, including conversion traceability,
+the disposable local Supabase/RLS/Data API matrix, all target tests, and both
+staging builds with clean-diff enforcement.
+
+`SPACEDESTPICKER-TEST-001` through `-011` and `-013` pass locally and in the
+applicable immutable CI jobs.
 `SPACEDESTPICKER-TEST-012`, the real isolated authenticated PowerSync session,
-remains planned. A-003 and A-004 remain proposed. Immutable exact-head CI is
-still required before this evidence can be promoted to verified.
+remains planned. A-003 and A-004 remain proposed, so the slice correctly stays
+`implemented` rather than advancing to `verified` or hosted readiness.
