@@ -57,3 +57,5 @@ The READY baseline is `1e893c6c02dc22a52cb1332e3a98a26c714d5fba`. Rollback is so
 - MCP/control plane: independent specialist review, GO for a gated umbrella module and NO-GO for live registration or hosted claims.
 
 The integrator remains responsible for implementation, shared-file conflicts, executable verification and correction of all review findings.
+
+Initial READY commit `8acf5310` passed the direct conversion checker and all local target/database suites, but immutable run `33994108306` correctly failed before downstream jobs because the generated M2 residual register had not been refreshed after admitting the ten target surfaces. The follow-up checkpoint regenerates that deterministic artifact; no scope, requirement, executable scaffold or product behavior changed.

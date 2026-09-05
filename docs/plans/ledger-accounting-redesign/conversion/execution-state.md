@@ -97,6 +97,10 @@ without modifying the running Firebase application before hard cutover.
   migration, production, and cutover. The conversion ledger passes with zero
   errors and only the three established retired-surface warnings;
   `EVID-PROJECT-ARCHIVAL-REVIEW-READY-001`.
+  Initial exact commit `8acf5310` failed immutable run `33994108306` only
+  because the generated M2 residual register had not been refreshed after the
+  ten surfaces were admitted. The corrected checkpoint regenerates that
+  artifact and changes no executable or product contract.
 
 - Corrected the blocked Space-create DRAFT's repository-wide pgTAP integration.
   Initial commit `2cf4bdb2` passed conversion and target jobs but immutable run
