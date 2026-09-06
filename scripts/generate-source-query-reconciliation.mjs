@@ -113,6 +113,7 @@ const HASH_PREFIX = Object.freeze({
 });
 const IMPLEMENTATION_BASE = "4618c7e5b9fc3a24cd917239bf795aec6117ea5c";
 const IMPLEMENTATION_CHECKPOINT = "aefa7acd57957ebe4e136540b1f6034ae8131130";
+const VERIFICATION_CHECKPOINT = "ac26010ab720992c2d22d378f78b08e1d1c3760d";
 const IMPLEMENTATION_PATHS = Object.freeze([
   ".github/workflows/supabase-conversion-control.yml",
   "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
@@ -725,7 +726,10 @@ function validateLifecycleAllowlist(root, dossier, { enforceRepositoryDiff = tru
   }
 
   runGit(root, ["cat-file", "-e", `${selected.baseCommit}^{commit}`], "lifecycle base commit");
-  const endpoint = dossier.status === "implemented" ? IMPLEMENTATION_CHECKPOINT : null;
+  const endpoint = {
+    implemented: IMPLEMENTATION_CHECKPOINT,
+    verified: VERIFICATION_CHECKPOINT,
+  }[dossier.status] ?? null;
   if (endpoint !== null) {
     runGit(root, ["cat-file", "-e", `${endpoint}^{commit}`], "lifecycle checkpoint commit");
     runGit(

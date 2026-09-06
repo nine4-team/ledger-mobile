@@ -207,7 +207,7 @@
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "40580600c70f350ba9fd48831d2b2e0e273b5170a2fd4d76b0adb389b33c68d7",
+      "acknowledgeSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
       "disposition": "redesign",
       "target": {

@@ -438,4 +438,8 @@ generate/check pass locally. Final independent re-review reproduced the exact
 386/584 artifact and returned GO with no P0-P3. Exact implementation commit
 `1601580655944e02310927a06345bb448679e003` passed all three immutable jobs in
 run `34066237213`; the control and all ten synchronized classification batches
-therefore advance to `verified`.
+therefore advance to `verified`. The exact 37-path promotion commit
+`ac26010ab720992c2d22d378f78b08e1d1c3760d` then passed all three immutable jobs
+in run `34067592484`; the validator freezes that commit as the historical
+promotion endpoint so later unrelated batches cannot widen the reviewed path
+set.

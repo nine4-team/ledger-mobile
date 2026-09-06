@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T23:30:38.850Z",
+    "lastSynchronizedAt": "2026-09-06T23:53:08.884Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2547,8 +2547,8 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "40580600c70f350ba9fd48831d2b2e0e273b5170a2fd4d76b0adb389b33c68d7",
-      "acknowledgedSourceHash": "40580600c70f350ba9fd48831d2b2e0e273b5170a2fd4d76b0adb389b33c68d7",
+      "observedSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
+      "acknowledgedSourceHash": "04f9e0c91e20e31c32b95c5b06db5691720d1b6e3ba30ed85dec886d90f58393",
       "metadata": {},
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
       "disposition": "redesign",

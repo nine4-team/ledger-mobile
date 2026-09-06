@@ -104,4 +104,6 @@ target-app/build and disposable Supabase provider jobs pass; one exact immutable
 implementation CI run remained required before verified status. Exact
 implementation commit `1601580655944e02310927a06345bb448679e003` then passed
 all three immutable jobs in run `34066237213`; both owned leaves and this
-dossier therefore advance to `verified`.
+dossier therefore advance to `verified`. The exact 37-path promotion commit
+`ac26010ab720992c2d22d378f78b08e1d1c3760d` then passed all three immutable jobs
+in run `34067592484`.

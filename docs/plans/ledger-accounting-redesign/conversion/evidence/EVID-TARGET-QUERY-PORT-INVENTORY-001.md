@@ -343,4 +343,6 @@ All 22 focused tests and generate/check pass. Final independent re-review
 reproduced the 22 focused tests and current artifacts and returned GO with no
 P0-P3. Exact implementation commit
 `1601580655944e02310927a06345bb448679e003` passed all three immutable jobs in
-run `34066237213`; the two CONFIG surfaces therefore return to `verified`.
+run `34066237213`; the two CONFIG surfaces therefore return to `verified`. The
+exact 37-path promotion commit `ac26010ab720992c2d22d378f78b08e1d1c3760d`
+passed all three immutable jobs in run `34067592484`.

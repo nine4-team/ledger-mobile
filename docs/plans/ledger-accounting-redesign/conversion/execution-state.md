@@ -5633,3 +5633,29 @@ Space list and query-lifecycle verified implementation checkpoint later on
 - the physical Space browser and public target MCP remain DRAFT. No Firebase
   worktree, hosted/production resource, migration, release or cutover was
   touched or authorized.
+
+Space list/query-lifecycle promotion and next-batch selection checkpoint later
+on 2026-09-06:
+
+- the exact 37-path promotion commit
+  `ac26010ab720992c2d22d378f78b08e1d1c3760d` passed all three immutable jobs in
+  Actions run `34067592484`: conversion state and traceability in 37 seconds,
+  disposable local Supabase provider slices in 1 minute 46 seconds, and the
+  isolated target environment with all tests plus both staging builds in 6
+  minutes 36 seconds;
+- independent promotion review returned GO with no P0-P3, proving exactly eight
+  implemented-to-verified manifest transitions, exact 37-path coverage, stable
+  query identities/digests/logical authority, unchanged 386-query / 584-outcome
+  source reconciliation and no Firebase/runtime/schema/production changes;
+- the reconciliation validator now freezes `ac26010a` as the historical
+  verified endpoint instead of comparing every future repository change with
+  this completed promotion. Its reviewed 37-path boundary therefore stays
+  exact while later batches can proceed normally; and
+- a read-only next-batch audit selected one coherent three-slice offline Space
+  maintenance workflow: details replacement, complete ordered-checklist
+  replacement and shared staging composition. Six provider-free prerequisites
+  are verified and the two source UI owners are target-mapped without manifest
+  blockers. READY authoring must still freeze archived-Space admission and
+  equal-value/no-change behavior. Local work can reach implemented only; hosted
+  authenticated PowerSync authorization/revocation remains required for
+  verified. No hosted/Firebase/production/migration/cutover action is authorized.
