@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T23:12:09.305Z",
+  "generatedFromManifestSync": "2026-09-06T23:30:38.850Z",
   "totals": {
     "slices": 99,
     "claimedTargetSurfaces": 329,
@@ -11,8 +11,8 @@
     "draft": 5,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 16,
-    "verified": 75,
+    "implemented": 12,
+    "verified": 79,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -1157,7 +1157,7 @@
       "sliceId": "source-query-reconciliation-control",
       "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Source Query Reconciliation Control",
       "surfaceIds": [
         "CONFIG-40F01696B8A6",
@@ -1378,7 +1378,7 @@
       "sliceId": "space-list-read-and-presentation-contracts",
       "title": "Browse active Project or Business Inventory Spaces from exact local evidence",
       "kind": "product",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Space List Read and Presentation Contracts",
       "surfaceIds": [
         "SWIFT-0DCDAFBB4350",
@@ -1451,7 +1451,7 @@
       "sliceId": "target-query-logical-authority-crosswalk-control",
       "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Target Query Logical-Authority Control",
       "surfaceIds": [
         "CONFIG-5422E6C6A047",
@@ -1466,7 +1466,7 @@
       "sliceId": "target-query-port-inventory-control",
       "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Target Query-Port Conversion Control",
       "surfaceIds": [
         "CONFIG-9B16CFCB67A4",

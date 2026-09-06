@@ -5611,3 +5611,25 @@ Active Space query-control lifecycle correction checkpoint later on 2026-09-06:
   complete local batch gate and exact immutable CI. No Firebase worktree,
   hosted/production resource, migration, release or cutover was touched or
   authorized.
+
+Space list and query-lifecycle verified implementation checkpoint later on
+2026-09-06:
+
+- final independent re-review returned GO with no P0-P3 and independently
+  reproduced 71 lifecycle/control tests, six focused Space tests, all 661 Swift
+  tests across 98 suites, the complete conversion controls and clean diff;
+- the root local gate also passed 27 MCP tests, both staging builds, 374 pgTAP
+  assertions, schema lint and the scoped local Space/Project-note/RPC security
+  matrices;
+- exact implementation commit
+  `1601580655944e02310927a06345bb448679e003` passed all three immutable jobs in
+  Actions run `34066237213`: conversion state and traceability, isolated target
+  environment and disposable local Supabase provider slices;
+- `SWIFT-0DCDAFBB4350`, `TEST-54B6515645F8` and the six amended CONFIG surfaces
+  therefore advance from implemented to verified. The query inventory is now
+  17 owners / 17 protocols / 19 methods, while logical authority remains
+  lifecycle-neutral and source reconciliation remains exactly 386 rows / 584
+  outcomes; and
+- the physical Space browser and public target MCP remain DRAFT. No Firebase
+  worktree, hosted/production resource, migration, release or cutover was
+  touched or authorized.

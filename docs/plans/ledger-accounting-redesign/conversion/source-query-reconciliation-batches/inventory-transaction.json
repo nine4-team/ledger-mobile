@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-INVENTORY-TRANSACTION-001",
   "owner": "Inventory, Transactions, and Provenance",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-02EB353513F6",
     "QUERY-045504DEC224",

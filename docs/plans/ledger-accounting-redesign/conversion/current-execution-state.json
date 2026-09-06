@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 14,
+  "stateVersion": 15,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -10,11 +10,11 @@
     "version": 2
   },
   "verifiedCheckpoint": {
-    "name": "MIGRATION-SAFETY-VERIFIED",
-    "commit": "2297e8dbe7f7f0febb7e33b4da0be591d4c82ade",
-    "ciRun": 34059595786,
+    "name": "SPACE-LIST-AND-QUERY-LIFECYCLE-VERIFIED",
+    "commit": "1601580655944e02310927a06345bb448679e003",
+    "ciRun": 34066237213,
     "ciStatus": "passed",
-    "meaning": "Deterministic synthetic Firebase source fixtures and the fail-closed provider-free migration environment guard passed all three immutable CI jobs after two independent correction rounds; no production source, hosted target or migration execution was accessed."
+    "meaning": "The independently corrected provider-free Space list/presentation contract and lifecycle-aware query inventory/logical/source-reconciliation controls passed all three immutable CI jobs. The source reconciliation remains exactly 386 rows / 584 outcomes; no Firebase worktree, hosted target, production source or migration execution was accessed."
   },
   "readyCheckpoint": {
     "name": "SPACE-LIST-READ-PRESENTATION-READY",
@@ -24,9 +24,9 @@
     "meaning": "The independently corrected two-file Space list/presentation boundary passed conversion traceability, isolated local Supabase provider checks, all existing target tests and both staging builds before executable edits; it authorized only the provider-free Core implementation."
   },
   "activeBatch": {
-    "id": "space-browser-contract-foundation",
+    "id": "space-browser-contract-foundation-promotion",
     "status": "ci_verification",
-    "outcome": "Implement the reusable provider-free integrity contract for a future active Project-or-Business-Inventory Space browser and correct the query-control lifecycle so newly implemented query ports can be inventoried without being misrepresented as verified. The inventory exposes current lifecycle while keeping TQUERY identity stable; logical authority is lifecycle-neutral; source reconciliation independently requires verified-or-later current owners for verified-target-query claims. The physical provider remains DRAFT until its three implementation dependencies are verified, and production search, Item count, media and public MCP parity remain required.",
+    "outcome": "Record the verified provider-free Space list/presentation foundation and lifecycle-aware query controls after exact immutable implementation CI, validate the documentation-only promotion checkpoint, and immediately choose the next unblocked coherent workflow batch. The physical Space browser remains DRAFT on three unverified physical dependencies; production search, Item count, media and public MCP parity remain required.",
     "dossiers": [
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
       "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
@@ -44,9 +44,8 @@
       "scripts/tests/generate-source-query-reconciliation.test.mjs"
     ],
     "nextActions": [
-      "Commit and push the reviewed implemented checkpoint, then require all three immutable CI jobs to pass on that exact SHA.",
-      "Promote the two Space surfaces and the six amended control surfaces only after exact implementation commit/run evidence, while keeping physical PowerSync/app and MCP Space dossiers DRAFT.",
-      "Select and begin the next coherent workflow batch immediately after promotion."
+      "Commit and push the exact documentation/control promotion, then require all three immutable CI jobs to remain green.",
+      "Select and begin the next unblocked coherent workflow batch immediately after promotion CI."
     ]
   },
   "progress": {

@@ -101,4 +101,7 @@ passed all 661 tests in 98 suites in 31.175 seconds. Final independent batch
 re-review reproduced all 661 tests, the six focused tests and conversion
 controls and returned GO with no P0-P3. The complete local conversion,
 target-app/build and disposable Supabase provider jobs pass; one exact immutable
-implementation CI run remains required before verified status.
+implementation CI run remained required before verified status. Exact
+implementation commit `1601580655944e02310927a06345bb448679e003` then passed
+all three immutable jobs in run `34066237213`; both owned leaves and this
+dossier therefore advance to `verified`.

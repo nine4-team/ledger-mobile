@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-PLATFORM-CONTROL-001",
   "owner": "Platform, Backend, and Conversion Control",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-0DCB1F5BDFA1",
     "QUERY-10D959B980AD",

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T23:12:09.305Z",
+    "lastSynchronizedAt": "2026-09-06T23:30:38.850Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -1084,8 +1084,8 @@
           "path": "scripts/tests/generate-source-query-reconciliation.test.mjs"
         }
       ],
-      "observedSourceHash": "87fe6029a01623aab9c0b074accaa7a445107ab52f5e7914d7c14f21a37ef0da",
-      "acknowledgedSourceHash": "87fe6029a01623aab9c0b074accaa7a445107ab52f5e7914d7c14f21a37ef0da",
+      "observedSourceHash": "6602c8e76fb8394a412e44f34eb88df91ba58501102bb7b9d68e7ce09d1ece36",
+      "acknowledgedSourceHash": "6602c8e76fb8394a412e44f34eb88df91ba58501102bb7b9d68e7ce09d1ece36",
       "metadata": {},
       "currentBehavior": "Executable 25-test adversarial Node suite covering the exact 386-query/584-outcome baseline, lifecycle-neutral target bindings, verified-or-later acceptance, exhaustive lower/blocked/retired/unknown/missing-owner rejection, closed schemas, source identity, blocker/evidence anti-laundering, retirement/gate order, deterministic output, historical checkpoint diff, fail-closed workflow topology, filesystem containment, atomic writes, read-only checking and exact CLI arity.",
       "disposition": "redesign",
@@ -1119,12 +1119,12 @@
           "All focused structural and adversarial tests pass locally and check mode is byte-exact/read-only"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001"
       ],
-      "notes": "Historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The current lifecycle matrix adds verified-or-later and missing-owner proof; all 25 tests pass locally and exact current-batch CI is pending.",
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The lifecycle matrix adds verified-or-later and missing-owner proof; all 25 tests pass.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -1431,12 +1431,12 @@
           "Implementation rejects stale or internally inconsistent inventory/registry bindings, unsafe roots/symlinks, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "Original 18-row verification remains backed by exact implementation 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. Reopened at implemented for the lifecycle-neutral 19-row Space amendment; 24 focused tests pass locally and exact current-batch CI is pending.",
+      "notes": "Lifecycle-neutral 19-row amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original 18-row verification remains backed by 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. All 24 focused tests pass.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2425,12 +2425,12 @@
           "Check byte-compares deterministic JSON and Markdown without writing"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "Original verification remains backed by exact implementation a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. Reopened at implemented for the lifecycle amendment; 22 focused tests pass locally for the 17-owner/17-protocol/19-method inventory and exact status matrices. Exact current-batch CI is pending.",
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. Twenty-two focused tests cover the 17-owner/17-protocol/19-method inventory and exact status matrices.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2547,8 +2547,8 @@
           "path": "scripts/generate-source-query-reconciliation.mjs"
         }
       ],
-      "observedSourceHash": "4b4576a5b61f175e2c21382c142f47917ac3e3df7d21a949d1e97b5e0feda15b",
-      "acknowledgedSourceHash": "4b4576a5b61f175e2c21382c142f47917ac3e3df7d21a949d1e97b5e0feda15b",
+      "observedSourceHash": "40580600c70f350ba9fd48831d2b2e0e273b5170a2fd4d76b0adb389b33c68d7",
+      "acknowledgedSourceHash": "40580600c70f350ba9fd48831d2b2e0e273b5170a2fd4d76b0adb389b33c68d7",
       "metadata": {},
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
       "disposition": "redesign",
@@ -2583,14 +2583,14 @@
           "Generated JSON binds all 386 occurrences and 584 reviewed outcomes while unresolved counts remain fail-closed"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-SOURCE-QUERY-RECONCILIATION-001",
         "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
         "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"
       ],
-      "notes": "Historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The current lifecycle amendment changes only the exact target-authority binding and verified-owner guard; all 386 classifications and 584 outcomes remain unchanged. All 25 focused tests pass locally; exact current-batch CI is pending.",
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. Only the target-authority binding and verified-owner guard changed; all 386 classifications and 584 outcomes remain unchanged, and all 25 focused tests pass.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -2955,8 +2955,8 @@
           "path": "scripts/tests/generate-target-query-port-inventory.test.mjs"
         }
       ],
-      "observedSourceHash": "3d3d2d8b0f4653feece82d3b095ab6e29037ace3ae48001dcf04d8233ae1e8aa",
-      "acknowledgedSourceHash": "3d3d2d8b0f4653feece82d3b095ab6e29037ace3ae48001dcf04d8233ae1e8aa",
+      "observedSourceHash": "4327c4b2111da008aa5be151eba4c64dd1fa506cd644df9efed220a61b8b1c75",
+      "acknowledgedSourceHash": "4327c4b2111da008aa5be151eba4c64dd1fa506cd644df9efed220a61b8b1c75",
       "metadata": {},
       "currentBehavior": "Twenty-two dependency-free Node tests prove the exact 17-owner/17-protocol/19-method target query-port baseline, positive and negative owner lifecycle matrices, lifecycle-stable identity/signature/digest with visible review-byte changes, deterministic normalization and order, adversarial Swift parsing, fail-closed invalid input, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
       "disposition": "redesign",
@@ -2991,12 +2991,12 @@
           "READY, implementation and promotion allowlists preserve unrelated surfaces"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-PORT-INVENTORY-001"
       ],
-      "notes": "Original verification remains backed by run 33842465485. Reopened at implemented for the lifecycle amendment; all 22 focused tests pass locally and exact current-batch CI is pending.",
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by run 33842465485. All 22 focused tests pass.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -3869,12 +3869,12 @@
           "Tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"
       ],
-      "notes": "Original verification remains backed by run 33853355777. Reopened at implemented for the lifecycle-neutral 19-row amendment; all 24 focused tests pass locally and exact current-batch CI is pending.",
+      "notes": "Lifecycle-neutral 19-row amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by run 33853355777. All 24 focused tests pass.",
       "classificationBatch": "M0-CAPABILITY-CONTROL-001"
     },
     {
@@ -20522,14 +20522,14 @@
           "Only exact-scope complete evidence can produce an authoritative active Space list or selection"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-LIST-READ-PRESENTATION-001"
       ],
-      "notes": "Implemented after root and independent review rejected the first green candidate for a failed-cache false-empty defect and recursive restart/test-proof gaps. The corrected contract downgrades retryable/required-update cache to stale incomplete presentation evidence, validates nested canonical shapes, and preserves the final search/count/media parity obligations for later slices.",
+      "notes": "Verified at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213 after root and independent review rejected the first green candidate for a failed-cache false-empty defect and recursive restart/test-proof gaps. The corrected contract downgrades retryable/required-update cache to stale incomplete presentation evidence, validates nested canonical shapes, and preserves the final search/count/media parity obligations for later slices.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {
@@ -45183,14 +45183,14 @@
           "All exact contract and negative cases pass without a backend dependency"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-CAPABILITY-SPACES-REVIEW-001",
         "EVID-M2-SPACES-REVIEW-001",
         "EVID-SPACE-LIST-READ-PRESENTATION-001"
       ],
-      "notes": "Six focused tests pass after two review-and-correction rounds. They independently reconstruct all three fingerprint bases and directly cover failed cached-empty degradation, wrong Account/scope selection validation, rebound cache refusal, strict nested Codable shapes, unexpected failures and cancellation. Exact implementation CI is still pending.",
+      "notes": "Verified at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213. Six focused tests pass after two review-and-correction rounds; they independently reconstruct all three fingerprint bases and directly cover failed cached-empty degradation, wrong Account/scope selection validation, rebound cache refusal, strict nested Codable shapes, unexpected failures and cancellation.",
       "classificationBatch": "M0-SPACES-REVIEW-001"
     },
     {

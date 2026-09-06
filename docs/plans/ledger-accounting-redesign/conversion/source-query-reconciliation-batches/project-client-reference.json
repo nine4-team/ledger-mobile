@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-PROJECT-CLIENT-REFERENCE-001",
   "owner": "Projects, Clients, and Shared Reference Data",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-0BE29F32C9A0",
     "QUERY-2C1E9DEBF1F7",

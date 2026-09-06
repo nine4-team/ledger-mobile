@@ -308,6 +308,8 @@ artifact deliberately omits lifecycle. `mapped` means the six logical axes were
 reviewed; it is not verification evidence. Status-only promotion therefore
 leaves TACCESS identity, mapping hash, and generated logical-authority bytes
 unchanged. All 24 focused tests and generate/check pass locally. The two CONFIG
-surfaces are reopened at `implemented` pending exact current-batch CI. Final
-independent re-review reproduced the lifecycle-neutral bytes and returned GO
-with no P0-P3; the complete local batch gate also passes.
+surfaces were reopened at `implemented` for the amendment. Final independent
+re-review reproduced the lifecycle-neutral bytes and returned GO with no P0-P3.
+Exact implementation commit `1601580655944e02310927a06345bb448679e003`
+passed all three immutable jobs in run `34066237213`; both surfaces therefore
+return to `verified`.

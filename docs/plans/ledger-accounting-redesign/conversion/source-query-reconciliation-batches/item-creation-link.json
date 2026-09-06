@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-ITEM-CREATION-LINK-001",
   "owner": "Item Creation and Accounting Link",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-0A9CAB36FAF3",
     "QUERY-130E0FE810B2",

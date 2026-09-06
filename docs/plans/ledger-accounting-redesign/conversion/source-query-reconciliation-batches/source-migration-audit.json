@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-SOURCE-MIGRATION-AUDIT-001",
   "owner": "Source Migration, Audit, Repair, and Profiling",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-00401E45CFA6",
     "QUERY-01C2FDCB4E10",

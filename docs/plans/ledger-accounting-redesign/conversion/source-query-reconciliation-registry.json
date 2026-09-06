@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "implemented",
+  "status": "verified",
   "sourceInventory": {
     "path": "docs/plans/ledger-accounting-redesign/conversion/query-contract.generated.json",
     "artifactSha256": "2a43de6e59844d081237c8d9731846662e0862190823ea854c2238256b0a6a14",

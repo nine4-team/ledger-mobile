@@ -432,6 +432,9 @@ test("verified target queries bind exact nonblocked TQUERY/TACCESS/mapping tripl
         const implemented = value.targetAuthority.queries.find(
           (query) => query.tqueryId === "TQUERY-038289DD7D2C",
         );
+        value.manifest.surfaces.find(
+          (surface) => surface.id === implemented.ownerSurfaceId,
+        ).status = "implemented";
         found.tqueryId = implemented.tqueryId;
         found.taccessId = implemented.taccessId;
         found.expectedMappingHash = implemented.mappingHash;

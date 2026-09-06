@@ -697,7 +697,7 @@ test("repository generated JSON and Markdown match and contain no timestamp", ()
   assert.doesNotMatch(artifacts.json, /generatedAt|timestamp/i);
   assert.match(artifacts.markdown, /generated diffs still require human review/i);
   assert.match(artifacts.markdown, /\| TQUERY \| Owner \| Status \|/);
-  assert.match(artifacts.markdown, /\| `TQUERY-038289DD7D2C` \| `SWIFT-0DCDAFBB4350` \| `implemented` \|/);
+  assert.match(artifacts.markdown, /\| `TQUERY-038289DD7D2C` \| `SWIFT-0DCDAFBB4350` \| `verified` \|/);
   assert.match(artifacts.markdown, /does not define product semantics/i);
 });
 

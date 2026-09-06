@@ -3,7 +3,7 @@
   "sliceId": "target-query-logical-authority-crosswalk-control",
   "title": "Require reviewed logical authority and explicit uncertainty for every target query port",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Target Query Logical-Authority Control",
   "surfaceIds": ["CONFIG-5422E6C6A047", "CONFIG-ED6818A70D4E"],
   "requirements": [
@@ -264,5 +264,5 @@
   "implementationEvidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "The original verified 18-row control remains backed by exact implementation 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / immutable run 33853355777. This lifecycle-compatibility amendment reopens the two CONFIG surfaces at honest implemented status pending exact batch CI. The 24-test suite binds the reviewed 19-row registry including SpaceListQuerying, validates implemented-or-later upstream lifecycle, proves logical crosswalk/TACCESS/mapping bytes remain stable across status-only promotion, and preserves the original structural, filesystem, deterministic and no-semantic-inference guarantees. Final independent re-review returned GO with no P0-P3 and the complete local batch gate passes. The 386 source QUERY inventory is unchanged; A-003/A-004 remain deferred."
+  "notes": "VERIFIED lifecycle-neutral amendment at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213; original 18-row verification remains backed by 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. The 24-test suite binds the reviewed 19-row registry including SpaceListQuerying, validates implemented-or-later upstream lifecycle, proves logical crosswalk/TACCESS/mapping bytes remain stable across status-only promotion, and preserves the original structural, filesystem, deterministic and no-semantic-inference guarantees. Final independent re-review returned GO with no P0-P3, and all three immutable jobs passed. The 386 source QUERY inventory is unchanged; A-003/A-004 remain deferred."
 }

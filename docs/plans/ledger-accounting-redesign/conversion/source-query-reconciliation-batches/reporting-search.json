@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-REPORTING-SEARCH-001",
   "owner": "Reporting, Search, and Export",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-12AAD362F616",
     "QUERY-1B022B1C66B1",

@@ -3,7 +3,7 @@
   "sliceId": "source-query-reconciliation-control",
   "title": "Reconcile every frozen source query occurrence to reviewed target or source disposition authority",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Source Query Reconciliation Control",
   "surfaceIds": [
     "CONFIG-A8BD153106B8",
@@ -415,7 +415,49 @@
           "scripts/tests/generate-source-query-reconciliation.test.mjs"
         ]
       },
-      "promotion": {"status":"unfrozen","baseCommit":"pending immutable implementation checkpoint","paths":[]}
+      "promotion": {
+        "status": "frozen",
+        "baseCommit": "1601580655944e02310927a06345bb448679e003",
+        "paths": [
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-CAPABILITY-CONTROL-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/classification-batches/M0-SPACES-REVIEW-001.json",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-coverage.md",
+          "docs/plans/ledger-accounting-redesign/conversion/conversion-manifest.json",
+          "docs/plans/ledger-accounting-redesign/conversion/current-execution-state.json",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence-index.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SOURCE-QUERY-RECONCILIATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-LIST-READ-PRESENTATION-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-PORT-INVENTORY-001.md",
+          "docs/plans/ledger-accounting-redesign/conversion/execution-state.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slice-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/source-query-reconciliation-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-list-read-and-presentation-contracts.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-logical-authority-crosswalk-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/target-query-port-inventory-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/product-authority-audit.generated.md",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/identity-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/inventory-transaction.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/invoicing-budget.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/item-creation-link.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/media-lifecycle.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/platform-control.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/project-client-reference.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/reporting-search.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/source-migration-audit.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-batches/spaces-review.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation-registry.json",
+          "docs/plans/ledger-accounting-redesign/conversion/source-query-reconciliation.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.json",
+          "docs/plans/ledger-accounting-redesign/conversion/target-query-port-inventory.generated.md",
+          "docs/plans/ledger-accounting-redesign/implementation-tracker.md",
+          "scripts/generate-source-query-reconciliation.mjs",
+          "scripts/tests/generate-source-query-reconciliation.test.mjs",
+          "scripts/tests/generate-target-query-port-inventory.test.mjs"
+        ]
+      }
     },
     "allowlistRule": "Every lifecycle checkpoint compares the exact changed-path set against its frozen byte-sorted unique paths array and exact base commit. DRAFT completion changes only comment scaffolds, reviewed metadata, product-decision documentation and regenerated control artifacts. READY/implementation/promotion remain unavailable while status is unfrozen or paths are empty. No allowlist may include source runtime, target query owner, schema, RLS, Sync, provider, hosted, production, release or Firebase implementation paths.",
     "implementationBaselineScaffolds": {
@@ -592,5 +634,5 @@
   "implementationEvidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "IMPLEMENTED contains all 386 independently reviewed rows and 584 outcomes across ten exhaustive batches. Exact complete-DRAFT commit 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 passed immutable Actions run 33871918545; exact READY commit 4618c7e5b9fc3a24cd917239bf795aec6117ea5c passed run 33872927608; exact implementation commit aefa7acd57957ebe4e136540b1f6034ae8131130 passed run 33880331322. The current lifecycle amendment rebinds only the exact new 19-row lifecycle-neutral target-authority hash/digest while preserving all 386 source classifications and 584 outcomes. The 25-test suite now joins verified_target_query_port ownership to current manifest truth, accepts only verified/rehearsed/cutover_ready, and rejects every lower, blocked, retired, unknown or missing owner. Final independent re-review returned GO with no P0-P3 and the complete local batch gate passes; exact current-batch CI remains pending. O-041 remains proposed only; 115 authority-blocked and six evidence-blocked outcomes remain unchanged. No Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access, migration, retirement, production operation or cutover authority is created."
+  "notes": "VERIFIED lifecycle amendment at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213. Historical checkpoints remain complete-DRAFT 92a609a75dd5d3530bcf1a1e61a8d6cb2c72e9b7 / run 33871918545, READY 4618c7e5b9fc3a24cd917239bf795aec6117ea5c / run 33872927608, and original implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322. The amendment rebinds only the exact 19-row lifecycle-neutral target authority while preserving all 386 source classifications and 584 outcomes. The 25-test suite joins verified_target_query_port ownership to current manifest truth, accepts only verified/rehearsed/cutover_ready, and rejects every lower, blocked, retired, unknown or missing owner. Final independent re-review returned GO with no P0-P3, and all three immutable jobs passed. O-041 remains proposed only; 115 authority-blocked and six evidence-blocked outcomes remain unchanged. No Swift/runtime/schema/RLS/Sync/provider/Firebase source change, hosted access, migration, retirement, production operation or cutover authority is created."
 }

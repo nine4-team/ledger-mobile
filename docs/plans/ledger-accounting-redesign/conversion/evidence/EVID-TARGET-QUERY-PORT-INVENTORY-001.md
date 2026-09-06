@@ -339,8 +339,8 @@ review bytes but preserves TQUERY identity, signature hash, and inventory
 digest. The reviewed current inventory is 17 owners, 17 protocols, and 19
 observation methods, including `SpaceListQuerying.watchSpaces` at implemented.
 
-All 22 focused tests and generate/check pass locally. The two CONFIG surfaces
-are reopened at `implemented`; exact current-batch CI is required before they
-return to `verified`. Final independent re-review reproduced the 22 focused
-tests and current artifacts and returned GO with no P0-P3. The complete local
-conversion, target-app/build and disposable Supabase provider jobs also pass.
+All 22 focused tests and generate/check pass. Final independent re-review
+reproduced the 22 focused tests and current artifacts and returned GO with no
+P0-P3. Exact implementation commit
+`1601580655944e02310927a06345bb448679e003` passed all three immutable jobs in
+run `34066237213`; the two CONFIG surfaces therefore return to `verified`.

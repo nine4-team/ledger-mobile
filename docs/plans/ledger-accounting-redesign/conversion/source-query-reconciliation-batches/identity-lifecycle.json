@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-IDENTITY-LIFECYCLE-001",
   "owner": "Identity and Account Lifecycle",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-022A3E82CE10",
     "QUERY-03410F14C4E6",

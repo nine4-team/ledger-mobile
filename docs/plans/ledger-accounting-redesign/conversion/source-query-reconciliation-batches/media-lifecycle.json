@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "batchId": "SQUERY-MEDIA-LIFECYCLE-001",
   "owner": "Media and Attachment Lifecycle",
-  "status": "implemented",
+  "status": "verified",
   "assignedQueryIds": [
     "QUERY-334B5E35D8A6",
     "QUERY-5819775B1FFE",

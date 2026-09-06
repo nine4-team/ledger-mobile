@@ -70,14 +70,14 @@
           "Check byte-compares deterministic JSON and Markdown without writing"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
-      "notes": "Original verification remains backed by exact implementation a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. Reopened at implemented for the lifecycle amendment; 22 focused tests pass locally for the 17-owner/17-protocol/19-method inventory and exact status matrices. Exact current-batch CI is pending."
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. Twenty-two focused tests cover the 17-owner/17-protocol/19-method inventory and exact status matrices."
     },
     {
       "id": "CONFIG-C1C61B2D6569",
-      "acknowledgeSourceHash": "3d3d2d8b0f4653feece82d3b095ab6e29037ace3ae48001dcf04d8233ae1e8aa",
+      "acknowledgeSourceHash": "4327c4b2111da008aa5be151eba4c64dd1fa506cd644df9efed220a61b8b1c75",
       "currentBehavior": "Twenty-two dependency-free Node tests prove the exact 17-owner/17-protocol/19-method target query-port baseline, positive and negative owner lifecycle matrices, lifecycle-stable identity/signature/digest with visible review-byte changes, deterministic normalization and order, adversarial Swift parsing, fail-closed invalid input, stale/missing artifact detection, read-only checking, and exact package/workflow integration.",
       "disposition": "redesign",
       "target": {
@@ -111,10 +111,10 @@
           "READY, implementation and promotion allowlists preserve unrelated surfaces"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
-      "notes": "Original verification remains backed by run 33842465485. Reopened at implemented for the lifecycle amendment; all 22 focused tests pass locally and exact current-batch CI is pending."
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by run 33842465485. All 22 focused tests pass."
     },
     {
       "id": "CONFIG-5422E6C6A047",
@@ -156,10 +156,10 @@
           "Implementation rejects stale or internally inconsistent inventory/registry bindings, unsafe roots/symlinks, unknown keys, invalid types/enums/discriminated unions, non-allowlisted IDs/references and non-deterministic bytes without replacing human semantic review"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
-      "notes": "Original 18-row verification remains backed by exact implementation 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. Reopened at implemented for the lifecycle-neutral 19-row Space amendment; 24 focused tests pass locally and exact current-batch CI is pending."
+      "notes": "Lifecycle-neutral 19-row amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original 18-row verification remains backed by 66d56bf1ee8302e63b5622c879e62dbbe4b7e95e / run 33853355777. All 24 focused tests pass."
     },
     {
       "id": "CONFIG-ED6818A70D4E",
@@ -200,14 +200,14 @@
           "Tests cover exact keys/types/enums/allowlists, references, deterministic bytes, exact stable-ID and canonical-row mapping-hash formulas, missing/stale artifacts and read-only check behavior"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001"],
-      "notes": "Original verification remains backed by run 33853355777. Reopened at implemented for the lifecycle-neutral 19-row amendment; all 24 focused tests pass locally and exact current-batch CI is pending."
+      "notes": "Lifecycle-neutral 19-row amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; original verification remains backed by run 33853355777. All 24 focused tests pass."
     },
     {
       "id": "CONFIG-A8BD153106B8",
-      "acknowledgeSourceHash": "4b4576a5b61f175e2c21382c142f47917ac3e3df7d21a949d1e97b5e0feda15b",
+      "acknowledgeSourceHash": "40580600c70f350ba9fd48831d2b2e0e273b5170a2fd4d76b0adb389b33c68d7",
       "currentBehavior": "Dependency-free source-query reconciliation generator/checker over the exact source inventory, lifecycle-neutral target authority, 386 reviewed source occurrences and 584 outcomes. It permits only exact hash-bound upstream target-authority rebinding inside the otherwise frozen READY semantics, joins verified-target-query owners to the current manifest, accepts only verified/rehearsed/cutover-ready, rejects lower/blocked/retired/unknown/missing owners, and preserves the existing schema, retirement, evidence, deterministic output and workflow guarantees.",
       "disposition": "redesign",
       "target": {
@@ -241,14 +241,14 @@
           "Generated JSON binds all 386 occurrences and 584 reviewed outcomes while unresolved counts remain fail-closed"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-ARCHIVAL-REVIEW-PROVIDER-001"],
-      "notes": "Historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The current lifecycle amendment changes only the exact target-authority binding and verified-owner guard; all 386 classifications and 584 outcomes remain unchanged. All 25 focused tests pass locally; exact current-batch CI is pending."
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. Only the target-authority binding and verified-owner guard changed; all 386 classifications and 584 outcomes remain unchanged, and all 25 focused tests pass."
     },
     {
       "id": "CONFIG-40F01696B8A6",
-      "acknowledgeSourceHash": "87fe6029a01623aab9c0b074accaa7a445107ab52f5e7914d7c14f21a37ef0da",
+      "acknowledgeSourceHash": "6602c8e76fb8394a412e44f34eb88df91ba58501102bb7b9d68e7ce09d1ece36",
       "currentBehavior": "Executable 25-test adversarial Node suite covering the exact 386-query/584-outcome baseline, lifecycle-neutral target bindings, verified-or-later acceptance, exhaustive lower/blocked/retired/unknown/missing-owner rejection, closed schemas, source identity, blocker/evidence anti-laundering, retirement/gate order, deterministic output, historical checkpoint diff, fail-closed workflow topology, filesystem containment, atomic writes, read-only checking and exact CLI arity.",
       "disposition": "redesign",
       "target": {
@@ -281,10 +281,10 @@
           "All focused structural and adversarial tests pass locally and check mode is byte-exact/read-only"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": ["EVID-SOURCE-QUERY-RECONCILIATION-001"],
-      "notes": "Historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The current lifecycle matrix adds verified-or-later and missing-owner proof; all 25 tests pass locally and exact current-batch CI is pending."
+      "notes": "Lifecycle amendment verified at exact implementation 1601580655944e02310927a06345bb448679e003 / run 34066237213; historical implementation aefa7acd57957ebe4e136540b1f6034ae8131130 / run 33880331322 remains valid. The lifecycle matrix adds verified-or-later and missing-owner proof; all 25 tests pass."
     }
   ]
 }

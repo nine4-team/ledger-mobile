@@ -2,7 +2,7 @@
   "batches": [
     {
       "batchId": "SQUERY-IDENTITY-LIFECYCLE-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Identity and Account Lifecycle",
       "rows": [
         {
@@ -1217,7 +1217,7 @@
     },
     {
       "batchId": "SQUERY-PROJECT-CLIENT-REFERENCE-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Projects, Clients, and Shared Reference Data",
       "rows": [
         {
@@ -1599,7 +1599,7 @@
     },
     {
       "batchId": "SQUERY-INVENTORY-TRANSACTION-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Inventory, Transactions, and Provenance",
       "rows": [
         {
@@ -6287,7 +6287,7 @@
     },
     {
       "batchId": "SQUERY-INVOICING-BUDGET-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Invoicing, Collection, and Budget",
       "rows": [
         {
@@ -7738,7 +7738,7 @@
     },
     {
       "batchId": "SQUERY-ITEM-CREATION-LINK-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Item Creation and Accounting Link",
       "rows": [
         {
@@ -8315,7 +8315,7 @@
     },
     {
       "batchId": "SQUERY-MEDIA-LIFECYCLE-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Media and Attachment Lifecycle",
       "rows": [
         {
@@ -8449,7 +8449,7 @@
     },
     {
       "batchId": "SQUERY-SPACES-REVIEW-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Spaces, Checklists, and Review",
       "rows": [
         {
@@ -8758,7 +8758,7 @@
     },
     {
       "batchId": "SQUERY-REPORTING-SEARCH-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Reporting, Search, and Export",
       "rows": [
         {
@@ -9339,7 +9339,7 @@
     },
     {
       "batchId": "SQUERY-SOURCE-MIGRATION-AUDIT-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Source Migration, Audit, Repair, and Profiling",
       "rows": [
         {
@@ -14512,7 +14512,7 @@
     },
     {
       "batchId": "SQUERY-PLATFORM-CONTROL-001",
-      "lifecycle": "implemented",
+      "lifecycle": "verified",
       "owner": "Platform, Backend, and Conversion Control",
       "rows": [
         {
@@ -15189,7 +15189,7 @@
   ],
   "classificationState": "complete_with_unresolved_outcomes",
   "generator": "scripts/generate-source-query-reconciliation.mjs",
-  "lifecycle": "implemented",
+  "lifecycle": "verified",
   "schemaVersion": 1,
   "sourceInventory": {
     "occurrences": 386,

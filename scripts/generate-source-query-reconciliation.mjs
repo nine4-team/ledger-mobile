@@ -32,7 +32,7 @@ const EXPECTED_TARGET_SHA =
 const EXPECTED_TARGET_DIGEST =
   "1091ac8b8e1cdc9de70767f5e261716109aa1d29e542a57e855a4a405287d941";
 const EXPECTED_CONTROL_MODEL_SHA =
-  "d2792fd288184c621a38127b5a7d669dcd4bde4bbb3039556d4e71ee32bd7f84";
+  "e34837b80826dd038cd58a7f2e9659011f8ac2b01f4aab3c0186303c56a9d6a7";
 const EXPECTED_REQUIREMENTS_SHA =
   "63196e3048b49013a56873294dad3584d4d76e04501f062ff22cc147aaff0fa3";
 const EXPECTED_VERIFICATION_STABLE_SHA =
@@ -725,9 +725,7 @@ function validateLifecycleAllowlist(root, dossier, { enforceRepositoryDiff = tru
   }
 
   runGit(root, ["cat-file", "-e", `${selected.baseCommit}^{commit}`], "lifecycle base commit");
-  const endpoint = ["implemented", "verified"].includes(dossier.status)
-    ? IMPLEMENTATION_CHECKPOINT
-    : null;
+  const endpoint = dossier.status === "implemented" ? IMPLEMENTATION_CHECKPOINT : null;
   if (endpoint !== null) {
     runGit(root, ["cat-file", "-e", `${endpoint}^{commit}`], "lifecycle checkpoint commit");
     runGit(

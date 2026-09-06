@@ -3,7 +3,7 @@
   "sliceId": "target-query-port-inventory-control",
   "title": "Fail CI when the complete target query-port method inventory is stale or ambiguous",
   "kind": "technical_control",
-  "status": "implemented",
+  "status": "verified",
   "owner": "Target Query-Port Conversion Control",
   "surfaceIds": ["CONFIG-9B16CFCB67A4", "CONFIG-C1C61B2D6569"],
   "requirements": [
@@ -257,5 +257,5 @@
   "implementationEvidence": ["EVID-TARGET-QUERY-PORT-INVENTORY-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "The original verified scanner remains backed by exact implementation a359c8622069c2dc8b75ca09a8fd89b95713f1bb / immutable run 33842465485. This lifecycle-compatibility amendment reopens the two CONFIG surfaces at honest implemented status pending exact batch CI. The 22-test suite now emits and byte-checks 17 owners / 17 protocols / 19 methods, includes SpaceListQuerying at implemented, displays owner status, accepts only implemented-or-later active lifecycles, rejects every earlier/blocked/retired/unknown state, and proves status-only promotion preserves TQUERY/signature/digest while changing review bytes. Final independent re-review returned GO with no P0-P3 and the complete local batch gate passes. The original parser guarantees remain unchanged. A-003/A-004 and product D/O decisions are not applicable."
+  "notes": "VERIFIED lifecycle amendment at exact implementation commit 1601580655944e02310927a06345bb448679e003 / immutable run 34066237213; original scanner verification remains backed by a359c8622069c2dc8b75ca09a8fd89b95713f1bb / run 33842465485. The 22-test suite emits and byte-checks 17 owners / 17 protocols / 19 methods, displays owner status, accepts only implemented-or-later active lifecycles, rejects every earlier/blocked/retired/unknown state, and proves status-only promotion preserves TQUERY/signature/digest while changing review bytes. Final independent re-review returned GO with no P0-P3, and all three immutable jobs passed. The original parser guarantees remain unchanged. A-003/A-004 and product D/O decisions are not applicable."
 }

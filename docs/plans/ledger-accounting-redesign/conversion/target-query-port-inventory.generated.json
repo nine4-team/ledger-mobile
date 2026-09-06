@@ -141,7 +141,7 @@
       "id": "TQUERY-038289DD7D2C",
       "ownerSurfaceId": "SWIFT-0DCDAFBB4350",
       "ownerPath": "LedgeriOS/LedgerTargetCore/SpaceDirectoryPresentation.swift",
-      "ownerStatus": "implemented",
+      "ownerStatus": "verified",
       "protocol": "SpaceListQuerying",
       "selector": "watchSpaces",
       "category": "observation",
