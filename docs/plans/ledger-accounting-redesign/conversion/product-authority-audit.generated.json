@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-05T23:34:24.898Z",
+  "generatedFromManifestSync": "2026-09-06T00:12:06.515Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 967,
-    "targetRelevantSurfaces": 705,
-    "batches": 37,
-    "productScopeSurfaces": 796,
+    "surfaces": 975,
+    "targetRelevantSurfaces": 713,
+    "batches": 38,
+    "productScopeSurfaces": 804,
     "technicalControlSurfaces": 171
   },
   "canonicalTargetCoverage": [
@@ -95,20 +95,22 @@
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-PROJECT-POWERSYNC-PROVIDER-001",
         "M0-PROJECT-SETUP-APPLICATION-FLOW-001",
+        "M0-SPACE-CORE-DETAILS-PROVIDER-001",
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 173,
-      "targetRelevantSurfaceCount": 169
+      "surfaceCount": 181,
+      "targetRelevantSurfaceCount": 177
     },
     {
       "path": "docs/specs/spaces.md",
       "batchIds": [
         "M0-PROJECT-CLIENT-REFERENCE-001",
+        "M0-SPACE-CORE-DETAILS-PROVIDER-001",
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 190,
-      "targetRelevantSurfaceCount": 184
+      "surfaceCount": 198,
+      "targetRelevantSurfaceCount": 192
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -2898,6 +2900,94 @@
       ],
       "surfaceIds": [
         "FILE-0FD95E417B30"
+      ]
+    },
+    {
+      "batchId": "M0-SPACE-CORE-DETAILS-PROVIDER-001",
+      "title": "Read one complete Space core record from an encrypted local workspace",
+      "scope": "product",
+      "rationale": "The isolated Space core-details read workflow reconstructs one exact active or archived Space with immutable scope, name/notes, exact record timestamps and ordered relational checklist hierarchy from an encrypted local replica with honest readiness. It reuses the verified Core contract and existing Space destination foundation without claiming audit provenance or advancing any writer, archive effect, Item, media, template, accounting, MCP, hosted or production behavior.",
+      "surfaceCount": 8,
+      "targetRelevantSurfaceCount": 8,
+      "authorities": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/projects.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/capability-dossiers/spaces-review-and-work-queues.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/space-core-details-read-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-CORE-DETAILS-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-TARGET-QUERY-LOGICAL-AUTHORITY-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/target-query-logical-authority-registry.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "CONFIG-55809460A27C",
+        "CONFIG-C07E3326B896",
+        "SWIFT-058F3155F97F",
+        "SWIFT-2335BBE3E8FD",
+        "SWIFT-B762FCFD8525",
+        "SWIFT-C99453DE8B49",
+        "TEST-33D5654E41CA",
+        "TEST-FDF70607A5B4"
       ]
     },
     {

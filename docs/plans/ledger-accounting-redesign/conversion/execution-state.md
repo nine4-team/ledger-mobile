@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-05
-State version: 325
+State version: 326
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: PROJECT-ARCHIVAL-REVIEW-IMPLEMENTED-CI
+- Checkpoint: SPACE-CORE-DETAILS-PROVIDER-READY-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,12 +33,11 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **521 of 705 target-relevant surfaces mapped or
-  later (73.9%)**. Local surface-implementation coverage is **219 of 705
-  implemented or verified (31.1%)**. The ten Project archival-review leaves
-  moved from READY to implemented only after executable code, local provider
-  proof, independent review, and correction; no hosted or cutover credit was
-  added.
+- Planning/control coverage is **529 of 713 target-relevant surfaces mapped or
+  later (74.2%)**. Local surface-implementation coverage is **219 of 713
+  implemented or verified (30.7%)**. Eight new Space core-details scaffolds
+  are READY/target-mapped only; they add no implementation, hosted or cutover
+  credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -51,8 +50,8 @@ without modifying the running Firebase application before hard cutover.
   surfaces do not weight product complexity and repeating it obscured real
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
-- The implementation tracker currently contains 278 status-bearing rows: 68
-  done, eight verified, 11 implemented, zero ready or awaiting verification,
+- The implementation tracker currently contains 279 status-bearing rows: 68
+  done, eight verified, 11 implemented, one ready and zero awaiting verification,
   12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -85,6 +84,26 @@ without modifying the running Firebase application before hard cutover.
 
 ## Corrected at This Checkpoint
 
+- Froze `space-core-details-powersync-provider` at READY after two independent
+  read-only audits converged on exact Space details as the strongest
+  decision-independent next workflow. Eight machine-discovered scaffolds now
+  bind the verified Core query to a separate one-to-one detail relation plus
+  relational checklist/item reads, one exact signed Account/Space stream,
+  positive signed-bigint revision transport, causal encrypted local
+  completeness, close-aware runtime ownership, exhaustive Core-only
+  presentation and isolated staging. The migration remains comment-only, the
+  pgTAP leaf contains one explicitly non-proving runner placeholder and all six
+  Swift leaves remain comment-only. Independent actual-diff review rejected
+  adding columns to the already exposed base relation and rejected an impossible
+  full-UInt64 physical claim and identified the composite key required for exact
+  same-Account child foreign keys. The corrected design preserves the existing
+  seven-column active-only destination rows/Data API/grant/policy/streams while
+  adding only that redundant `(account_id,id)` parent key, bounds nested
+  order to UInt32, proves Spaces under archived Projects, and excludes broad Space UI, every
+  writer/archive effect, Items, media, templates, accounting and MCP. A-003/
+  A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 remain unadvanced;
+  `EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001`.
+
 - Implemented the ten-leaf Project archival-review delivery batch from frozen
   READY `1e893c6c02dc22a52cb1332e3a98a26c714d5fba`. It now provides forced-RLS
   Project-note reads, complete exact-Project on-demand Sync, causally fresh
@@ -111,7 +130,8 @@ without modifying the running Firebase application before hard cutover.
   placeholder and zero Space assertions; its classification/evidence no longer
   calls it comment-only. Database lint, all 211 local pgTAP checks, the Space
   destination Data API matrix and both existing RPC runners pass. Exact-head
-  correction CI remains pending.
+  correction evidence is immutable run `33999054644`, where all three jobs
+  passed at `42d484cf`.
 
 - Implemented the six-leaf target-local Transfer destination picker from exact
   green READY `2f87445cd51d6911a0655ad611fdedf035246665` / immutable run
@@ -4268,13 +4288,17 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Select the next decision-independent vertical slice from canonical target
-specs, the implementation tracker, residual-decision register and existing
-verified dependencies. Freeze one coherent dossier at an honest status before
-executable work, preserve every open product/architecture gate, and implement
-only after conversion checks and independent preflight review pass.
+Complete an independent actual-diff review of the READY Space core-details
+package, correct every finding, run the complete local READY gate, then commit,
+push and require immutable exact-head CI. Only after that exact READY commit is
+green, implement the frozen eight leaves and shared touchpoints as one bounded
+read workflow, review the executable SQL/RLS/Sync and offline/app diffs
+independently, and pass complete local plus immutable exact-commit gates.
 
-The Project archival-review slice remains `implemented`, not `verified`, until
+The Space core-details boundary must keep the existing active-only destination
+RLS policy and streams unchanged, model checklists relationally, derive counts
+only from complete evidence and add no Data API detail surface or writer. The
+Project archival-review slice remains `implemented`, not `verified`, until
 `PROJECTARCHIVALREVIEW-TEST-011` proves real authenticated PowerSync receipt and
 membership-revocation eviction. Do not implement note creation/edit/delete/
 search under O-039, broad Project MCP behavior under O-040, restore/delete/

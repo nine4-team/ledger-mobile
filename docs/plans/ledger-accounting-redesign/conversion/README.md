@@ -5,10 +5,10 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 521 of 705 target-relevant
+Status: M0 backend-surface classification complete; 529 of 713 target-relevant
 surfaces are target-mapped or later and the remaining 184 are explicitly tied
 to decisions/spikes/production evidence. Of those target surfaces, 219 are now
-implemented or verified. This 31.1% is local surface-implementation coverage,
+implemented or verified. This 30.7% is local surface-implementation coverage,
 not shipped-app or cutover readiness. Nine provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
 zero. Decision-independent target
@@ -37,7 +37,24 @@ Initial DRAFT commit `2cf4bdb2` passed conversion and target jobs but failed the
 local database job because a comment-only `.test.sql` file had no TAP plan; the
 corrected one-placeholder/no-Space-assertion scaffold now passes database lint,
 all 211 local pgTAP checks and the existing Data API/RPC runners. Exact-head
-correction CI remains pending.
+correction evidence is immutable run `33999054644`, where conversion, isolated
+target and local Supabase jobs all passed at `42d484cf`.
+The Space core-details PowerSync provider is frozen at READY across eight
+machine-discovered scaffolds. Two independent authority audits converged on
+this decision-independent read and rejected blocked alternatives. The boundary
+adds only separate base/detail/checklist/item read state, an exact signed
+Account/Space stream, causal encrypted offline reconstruction, a Core-only
+presenter and isolated staging detail. The migration is comment-only, the
+pgTAP leaf has one explicitly non-proving runner placeholder, and all Swift
+leaves are comment-only; exact READY CI remains pending. Existing active-only
+Space destination columns/rows/Data API/RLS/streams must remain unchanged; only
+the redundant composite parent key required for exact same-Account child foreign
+keys may be added. Provider
+revision support is honestly bounded to positive signed bigint. A-003/A-004/A-016 and
+O-023/O-026/O-037/O-044/O-045/O-046 stay unadvanced; no writer, archive
+effects, Items, media, templates, accounting, MCP, hosted, Firebase, migration,
+production or cutover authority exists;
+`EVID-SPACE-CORE-DETAILS-PROVIDER-READY-001`.
 The Project archival-review batch is implemented locally across ten claimed
 target leaves. Forced-RLS Project-note reads, complete exact-Project on-demand
 Sync, causally fresh encrypted keyset pages, active/archived browser continuity,

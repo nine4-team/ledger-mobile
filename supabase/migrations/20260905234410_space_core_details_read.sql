@@ -1,0 +1,12 @@
+-- READY scaffold only: no executable Space-details schema change exists here.
+--
+-- The frozen implementation must preserve the seven existing spike_spaces
+-- columns, row bytes, Data API shape, grant, policy, and streams while adding
+-- only a redundant (account_id,id) unique parent key for exact same-Account
+-- child foreign keys. It may add a separate no-client-grant one-to-one detail
+-- relation containing
+-- lossless notes and millisecond-consistent record timestamps, plus relational
+-- checklist/checklist-item children with scoped domain identity, provider row
+-- identity, UInt32 order bounds, and only the indexes/RLS needed by exact-Space
+-- reads. It must add no writer, handler, source row, hosted resource, migration,
+-- or production authority.
