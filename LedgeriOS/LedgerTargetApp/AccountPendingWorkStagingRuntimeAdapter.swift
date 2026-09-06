@@ -1,3 +1,12 @@
-// DRAFT ONLY — no executable Account pending-work runtime adapter.
-// A future implementation may only forward the existing scope-bound
-// LedgerOfflineClientRuntime.pendingWorkSummary() operation.
+import LedgerTargetAppModel
+import LedgerTargetPowerSync
+
+enum AccountPendingWorkStagingRuntimeAdapter {
+    static func adapt(
+        _ runtime: LedgerOfflineClientRuntime
+    ) -> AccountPendingWorkStagingRuntime {
+        AccountPendingWorkStagingRuntime(
+            pendingWorkSummary: { try await runtime.pendingWorkSummary() }
+        )
+    }
+}

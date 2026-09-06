@@ -133,6 +133,9 @@ private struct OfflineProviderSpikeView: View {
         .task {
             await model.start(validatedEnvironment: environment)
         }
+        if let pendingWork = model.pendingWork {
+            AccountPendingWorkStagingExerciseView(model: pendingWork)
+        }
     }
 }
 
@@ -146,6 +149,7 @@ private final class OfflineClientSpikeModel {
     private(set) var diagnostic: String?
 
     private var runtime: LedgerOfflineClientRuntime?
+    private(set) var pendingWork: AccountPendingWorkStagingExercise?
     private var startInProgress = false
     private let accountId: AccountID
     private let principalId: PrincipalID
@@ -269,6 +273,12 @@ private final class OfflineClientSpikeModel {
             let cipher = try await runtime.encryptionCipher()
             let pendingCount = try await runtime.pendingUploadCount()
             self.runtime = runtime
+            pendingWork = AccountPendingWorkStagingExercise(
+                expectedEnvironment: validatedEnvironment.manifest.environment,
+                expectedPrincipalId: principalId,
+                expectedAccountId: accountId,
+                runtime: AccountPendingWorkStagingRuntimeAdapter.adapt(runtime)
+            )
             projectSetup.start(runtime: ProjectSetupStagingRuntimeAdapter.adapt(runtime))
             await spaceDestinations.open(
                 scope: syntheticSpaceScope,
@@ -297,6 +307,9 @@ private final class OfflineClientSpikeModel {
             databaseState = "Encrypted (\(cipher))"
             pendingUploadCount = String(pendingCount)
             await waitForCancellation()
+            let pendingWork = self.pendingWork
+            self.pendingWork = nil
+            await pendingWork?.stop()
             await projectArchive.stop()
             await clientArchive.stop()
             await clientBrowser.stop()
@@ -320,6 +333,9 @@ private final class OfflineClientSpikeModel {
     }
 
     private func closeAfterFailedStart(_ openedRuntime: LedgerOfflineClientRuntime?) async {
+        let pendingWork = self.pendingWork
+        self.pendingWork = nil
+        await pendingWork?.stop()
         await projectArchive.stop()
         await clientArchive.stop()
         await clientBrowser.stop()

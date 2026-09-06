@@ -1,12 +1,13 @@
 # EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001 — Account Pending Work Staging Application Flow
 
-- Status: READY / exact comment-only commit and immutable CI pending
+- Status: IMPLEMENTED locally / exact implementation commit and immutable CI pending
 - Date: 2026-09-06
-- Exact conversion base commit: `1bcfc491386bcb5102bcb1ebe819c7e9f028f618`
+- Exact implementation base: corrected READY commit `eeec46508014e64c8f3876c2157eb1cb6e5e9406`
+- Exact READY CI: Actions run `34021709793` passed all three jobs
 - Environment: dedicated target worktree only
 - Production/Firebase impact: none
 
-## Candidate Outcome
+## Implemented Outcome
 
 Add a read-only target-staging section that manually refreshes the existing
 exact Account-scoped `PendingLocalWorkSummary`. It presents queued operations,
@@ -20,7 +21,7 @@ destructive Account/session cleanup API, sign out, switch Accounts, choose a
 session disposition, or state that work is remotely durable or safe to discard.
 Ordinary model stop/drain and runtime resource teardown remain required.
 
-## Frozen Candidate Boundary
+## Frozen Implementation Boundary
 
 - Reuse the existing summary, encrypted local provider, finite runtime lease and
   public runtime method without changing their semantics.
@@ -30,23 +31,24 @@ Ordinary model stop/drain and runtime resource teardown remain required.
 - Preserve exact scope, four `UInt64` counts, revision, observation time and
   fingerprint in typed state; never aggregate the counts.
 - Register every refresh in a MainActor-serialized admitted-task registry before
-  launch, retain replaced/cancelled tasks until joined, and use generation
-  isolation to reject cooperative and noncooperative late results.
+  launch, retain replaced/cancelled tasks until joined, and use a fresh UUID
+  generation token to reject cooperative and noncooperative late results without
+  relying on a wrapping counter.
 - Stop becomes terminal for that child instance atomically, refuses late
   admission, clears evidence/runtime closure, cancels and drains the complete
   retired-plus-current task set before Account runtime close on every normal or
   failed staging resource-teardown path. Each reopened runtime gets a fresh child.
 - Render bounded diagnostics and stable accessibility identifiers only.
 
-## Comment-Only Candidate Leaves
+## Implemented Leaves
 
 - `SWIFT-5165512013CB` — AppModel
 - `TEST-0B0E0C9D531B` — AppModel tests
 - `SWIFT-BBA33BDFCD93` — thin runtime adapter
 - `SWIFT-87B098BA9F12` — staging view
 
-All four are comments only. No executable candidate behavior exists at this
-checkpoint.
+All four contain the bounded executable implementation and tests. Existing
+Core/provider/runtime dependencies remain byte-identical.
 
 ## Required Review and Proof
 
@@ -59,11 +61,29 @@ feasibility review found that no executable-app test target exists and that a
 stopped child cannot be reused when the staging `.task` reopens. The corrected
 independent re-review is GO with no remaining P0-P3 finding.
 
-The nine frozen tests cover exact count and identity
+The ten frozen verification obligations cover exact count and identity
 projection, every pending class, all-zero truth, failure-not-clean, overlapping
-refresh, multiple noncooperative retired tasks, terminal per-instance stop,
+refresh, retired-plus-current noncooperative tasks, terminal per-instance stop,
 composite staging close-order proof, source containment, full controls/builds
 and immutable CI.
+
+## Implementation Review and Local Proof
+
+Two independent executable reviews found and closed comment/decoy checker
+bypasses, insufficiently exact adapter/constructor/cleanup enforcement, a
+missing late-refresh-during-stop assertion, incomplete status-copy proof, and a
+wrapping generation counter. Final independent re-review is GO with no
+remaining P0-P3 finding.
+
+- Focused AppModel suite: 8 tests passed.
+- Complete Swift package: 585 tests in 92 suites passed.
+- Target environment checker and its syntax check passed.
+- Adversarial mutations proved a commented-out stop and an adapter with an
+  extra runtime call are both rejected, after which the real sources were
+  restored and rechecked.
+- Deterministic target project generation and both macOS and iOS Simulator
+  staging builds passed.
+- Exact implementation commit/CI and verification promotion remain pending.
 
 ## Explicit Non-Advancement
 

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T08:21:07.887Z",
+  "generatedFromManifestSync": "2026-09-06T08:57:45.626Z",
   "totals": {
     "slices": 91,
     "claimedTargetSurfaces": 310,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 231
+    "implementationAdvancedTargetSurfaces": 235
   },
   "statusCounts": {
     "draft": 3,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 13,
+    "implemented": 14,
     "verified": 71,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -53,7 +53,7 @@
       "sliceId": "account-pending-work-staging-application-flow",
       "title": "Present exact Account pending-local-work status in target staging",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Account Pending Work Staging Application Flow",
       "surfaceIds": [
         "SWIFT-5165512013CB",

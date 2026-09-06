@@ -119,8 +119,8 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapter boundaries hold; implemented browsing/archive/Space flows preserve lifecycle and drainage guards; the dedicated Project category-configuration revision has only reviewed production mappings and exact unchanged-authority Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
+      "acknowledgeSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
+      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; pending-status checks are lexical, method/function bounded and exact for adapter, construction and cleanup; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -137,7 +137,8 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
-        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "target": {
@@ -311,8 +312,8 @@
     {
       "id": "SWIFT-061553E63650",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "ec59add355af026be08e2e4eb0f5100c0702555fd45255b474987054cace9ee2",
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client flows, and the local Space destination picker; it drains all owned observations before closing the local runtime without opening a hosted connection.",
+      "acknowledgeSourceHash": "4afb76e9756a8f6a07fbe1514d0b97a45029448b17be6b99f975f931562e3311",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -327,7 +328,8 @@
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "target": {
@@ -364,8 +366,8 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows, freezes exact Project revision schema/local mappings and complete normalized Project Sync queries, keeps O-026-blocked category-provider leaves nonexecutable, and rejects target-only paths in the Firebase application project.",
+      "acknowledgeSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status adapter/construction/cleanup/copy rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",
       "blockers": [],
@@ -378,7 +380,8 @@
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "target": {

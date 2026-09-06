@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T08:21:07.887Z",
+    "lastSynchronizedAt": "2026-09-06T08:57:45.626Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2099,10 +2099,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
-      "acknowledgedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
+      "observedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
+      "acknowledgedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
       "metadata": {},
-      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapter boundaries hold; implemented browsing/archive/Space flows preserve lifecycle and drainage guards; the dedicated Project category-configuration revision has only reviewed production mappings and exact unchanged-authority Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; pending-status checks are lexical, method/function bounded and exact for adapter, construction and cleanup; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -2151,7 +2151,8 @@
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
-        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -6663,10 +6664,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
-      "acknowledgedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
+      "observedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
+      "acknowledgedSourceHash": "f305e5593ac4df57ec19027417c07430be7dd273a5cf3aa3a0200d0b8412e11d",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows, freezes exact Project revision schema/local mappings and complete normalized Project Sync queries, keeps O-026-blocked category-provider leaves nonexecutable, and rejects target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status adapter/construction/cleanup/copy rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -6708,7 +6709,8 @@
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "One file has both configuration/build-tool and Firebase-contamination-audit responsibilities; both discovery surfaces are intentionally claimed by target-environment-isolation.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -19090,12 +19092,12 @@
           "path": "LedgeriOS/LedgerTargetApp/LedgerTargetStagingApp.swift"
         }
       ],
-      "observedSourceHash": "ec59add355af026be08e2e4eb0f5100c0702555fd45255b474987054cace9ee2",
-      "acknowledgedSourceHash": "ec59add355af026be08e2e4eb0f5100c0702555fd45255b474987054cace9ee2",
+      "observedSourceHash": "4afb76e9756a8f6a07fbe1514d0b97a45029448b17be6b99f975f931562e3311",
+      "acknowledgedSourceHash": "4afb76e9756a8f6a07fbe1514d0b97a45029448b17be6b99f975f931562e3311",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client flows, and the local Space destination picker; it drains all owned observations before closing the local runtime without opening a hosted connection.",
+      "currentBehavior": "Compiles the isolated iOS/macOS target staging shell with its fixed unprovisioned environment, existing Project/Client/Space flows, and exact pending-local-work status; it removes and drains every per-runtime child before closing the local runtime without opening a hosted connection.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -19140,7 +19142,8 @@
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -25637,12 +25640,12 @@
           "path": "LedgeriOS/LedgerTargetAppModel/AccountPendingWorkStagingExercise.swift"
         }
       ],
-      "observedSourceHash": "7177723697a2777bc637d9f105c76d31d1aac459e581518cf6b4e436b28eaba7",
-      "acknowledgedSourceHash": "7177723697a2777bc637d9f105c76d31d1aac459e581518cf6b4e436b28eaba7",
+      "observedSourceHash": "6b9eb06b60866c8f5daa3f3226c8069f64360135a207d02ca60309237f5ce689",
+      "acknowledgedSourceHash": "6b9eb06b60866c8f5daa3f3226c8069f64360135a207d02ca60309237f5ce689",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only DRAFT placeholder for a Core-only generation-safe manual-refresh Account pending-work staging AppModel.",
+      "currentBehavior": "Implements a Core-only expected-scope-bound manual-refresh Account pending-work staging AppModel with exact presentation and terminal task drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Pending Work Staging Application Flow",
@@ -25670,7 +25673,7 @@
           "Exact counts, identity, refresh, failure and lifecycle truth pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
@@ -30321,12 +30324,12 @@
           "path": "LedgeriOS/LedgerTargetApp/AccountPendingWorkStagingExerciseView.swift"
         }
       ],
-      "observedSourceHash": "3e10165fd8bfc73b57c22290ca00115627a459c1122c5b32a614a9309f71e322",
-      "acknowledgedSourceHash": "3e10165fd8bfc73b57c22290ca00115627a459c1122c5b32a614a9309f71e322",
+      "observedSourceHash": "0586cec495251643ba8ed79924286139d7301a44ec7a687c53acc14137a28c33",
+      "acknowledgedSourceHash": "0586cec495251643ba8ed79924286139d7301a44ec7a687c53acc14137a28c33",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only DRAFT placeholder for a neutral staging section showing four exact pending-work counts and manual refresh.",
+      "currentBehavior": "Implements a neutral staging section showing four exact pending-work counts, bounded diagnostics and manual refresh.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Pending Work Staging Application Flow",
@@ -30352,7 +30355,7 @@
           "Four separate counts and bounded status compile without actions beyond refresh"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
@@ -35120,12 +35123,12 @@
           "path": "LedgeriOS/LedgerTargetApp/AccountPendingWorkStagingRuntimeAdapter.swift"
         }
       ],
-      "observedSourceHash": "964b47ccf17978d6bfc13e44c08152c4ca9c0878aa63563c0d9de34f920044ce",
-      "acknowledgedSourceHash": "964b47ccf17978d6bfc13e44c08152c4ca9c0878aa63563c0d9de34f920044ce",
+      "observedSourceHash": "856ffdf87ad4f55ad2aff8f7492d32fa8fc29c2c0d6f2d8110153c3918ab61b6",
+      "acknowledgedSourceHash": "856ffdf87ad4f55ad2aff8f7492d32fa8fc29c2c0d6f2d8110153c3918ab61b6",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only DRAFT placeholder for a thin runtime adapter that forwards pendingWorkSummary without rebinding.",
+      "currentBehavior": "Implements the exact thin runtime adapter that forwards one argument-free pendingWorkSummary read without rebinding.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Pending Work Staging Application Flow",
@@ -35151,7 +35154,7 @@
           "Adapter contains no independent policy"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
@@ -41900,12 +41903,12 @@
           "path": "LedgeriOS/LedgerTargetAppModelTests/AccountPendingWorkStagingExerciseTests.swift"
         }
       ],
-      "observedSourceHash": "03d07ef040a47e9d315f80e2c404e81ab2b242a7bc85071f79c405ea254c9780",
-      "acknowledgedSourceHash": "03d07ef040a47e9d315f80e2c404e81ab2b242a7bc85071f79c405ea254c9780",
+      "observedSourceHash": "b3ec6988c6ccc801ed1393239f09738f79a0d4dff1833f1590e13112a07badc6",
+      "acknowledgedSourceHash": "b3ec6988c6ccc801ed1393239f09738f79a0d4dff1833f1590e13112a07badc6",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only DRAFT placeholder for exact-count, fail-closed, generation and drainage verification.",
+      "currentBehavior": "Provides executable exact-count, scope, evidence, copy, failure, UUID-generation and terminal-drainage verification.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Pending Work Staging Application Flow",
@@ -41931,7 +41934,7 @@
           "All frozen application obligations pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"

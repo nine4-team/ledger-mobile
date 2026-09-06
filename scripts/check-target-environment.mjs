@@ -77,6 +77,144 @@ function relative(filePath) {
   return path.relative(repositoryRoot, filePath).split(path.sep).join("/");
 }
 
+function maskSwiftLexical(source, { strings }) {
+  const output = [...source];
+  let index = 0;
+  let blockDepth = 0;
+  let lineComment = false;
+  let stringTerminator = null;
+  let rawHashes = 0;
+
+  const mask = (position) => {
+    if (output[position] !== "\n" && output[position] !== "\r") {
+      output[position] = " ";
+    }
+  };
+
+  while (index < source.length) {
+    if (lineComment) {
+      if (source[index] === "\n" || source[index] === "\r") {
+        lineComment = false;
+      } else {
+        mask(index);
+      }
+      index += 1;
+      continue;
+    }
+
+    if (blockDepth > 0) {
+      if (source.startsWith("/*", index)) {
+        mask(index);
+        mask(index + 1);
+        blockDepth += 1;
+        index += 2;
+      } else if (source.startsWith("*/", index)) {
+        mask(index);
+        mask(index + 1);
+        blockDepth -= 1;
+        index += 2;
+      } else {
+        mask(index);
+        index += 1;
+      }
+      continue;
+    }
+
+    if (stringTerminator) {
+      if (source.startsWith(stringTerminator, index)) {
+        if (strings) {
+          for (let offset = 0; offset < stringTerminator.length; offset += 1) {
+            mask(index + offset);
+          }
+        }
+        index += stringTerminator.length;
+        stringTerminator = null;
+        rawHashes = 0;
+      } else if (rawHashes === 0 && source[index] === "\\") {
+        if (strings) mask(index);
+        index += 1;
+        if (index < source.length) {
+          if (strings) mask(index);
+          index += 1;
+        }
+      } else {
+        if (strings) mask(index);
+        index += 1;
+      }
+      continue;
+    }
+
+    if (source.startsWith("//", index)) {
+      mask(index);
+      mask(index + 1);
+      lineComment = true;
+      index += 2;
+      continue;
+    }
+    if (source.startsWith("/*", index)) {
+      mask(index);
+      mask(index + 1);
+      blockDepth = 1;
+      index += 2;
+      continue;
+    }
+
+    const stringStart = source.slice(index).match(/^(#*)("""|")/);
+    if (stringStart) {
+      const opener = stringStart[0];
+      rawHashes = stringStart[1].length;
+      stringTerminator = `${stringStart[2]}${"#".repeat(rawHashes)}`;
+      if (strings) {
+        for (let offset = 0; offset < opener.length; offset += 1) {
+          mask(index + offset);
+        }
+      }
+      index += opener.length;
+      continue;
+    }
+
+    index += 1;
+  }
+
+  if (blockDepth !== 0 || stringTerminator) return null;
+  return output.join("");
+}
+
+function swiftWithoutComments(source) {
+  return maskSwiftLexical(source, { strings: false });
+}
+
+function swiftCodeOnly(source) {
+  return maskSwiftLexical(source, { strings: true });
+}
+
+function swiftFunctionBody(source, signature) {
+  const code = swiftCodeOnly(source);
+  if (code === null) return null;
+  const signatureIndex = code.indexOf(signature);
+  if (signatureIndex < 0 || code.indexOf(signature, signatureIndex + 1) >= 0) {
+    return null;
+  }
+  const open = code.indexOf("{", signatureIndex + signature.length);
+  if (open < 0) return null;
+  let depth = 1;
+  for (let index = open + 1; index < code.length; index += 1) {
+    if (code[index] === "{") depth += 1;
+    if (code[index] === "}") depth -= 1;
+    if (depth === 0) return code.slice(open + 1, index);
+  }
+  return null;
+}
+
+function compactSwiftCode(source) {
+  const code = swiftCodeOnly(source);
+  return code === null ? null : code.replace(/\s+/g, "");
+}
+
+function countOccurrences(source, value) {
+  return source.split(value).length - 1;
+}
+
 const packageManifest = path.join(packageRoot, "Package.swift");
 if (!fs.existsSync(packageManifest)) {
   fail("target_package_missing", "LedgeriOS/Package.swift");
@@ -1256,6 +1394,244 @@ if (
       );
     }
   }
+  const pendingWorkFiles = {
+    model: path.join(
+      appModelRoot,
+      "AccountPendingWorkStagingExercise.swift",
+    ),
+    modelTests: path.join(
+      appModelTestRoot,
+      "AccountPendingWorkStagingExerciseTests.swift",
+    ),
+    adapter: path.join(
+      targetAppRoot,
+      "AccountPendingWorkStagingRuntimeAdapter.swift",
+    ),
+    view: path.join(
+      targetAppRoot,
+      "AccountPendingWorkStagingExerciseView.swift",
+    ),
+  };
+  for (const filePath of Object.values(pendingWorkFiles)) {
+    if (!fs.existsSync(filePath)) {
+      fail("target_pending_work_staging_leaf_missing", relative(filePath));
+    }
+  }
+  if (Object.values(pendingWorkFiles).every(fs.existsSync)) {
+    const model = fs.readFileSync(pendingWorkFiles.model, "utf8");
+    const adapter = fs.readFileSync(pendingWorkFiles.adapter, "utf8");
+    const view = fs.readFileSync(pendingWorkFiles.view, "utf8");
+    const modelCode = swiftCodeOnly(model);
+    const modelWithoutComments = swiftWithoutComments(model);
+    const adapterCode = compactSwiftCode(adapter);
+    const viewCode = swiftCodeOnly(view);
+    const viewWithoutComments = swiftWithoutComments(view);
+    const stagingCode = swiftCodeOnly(stagingAppSource);
+
+    if (
+      modelCode === null ||
+      modelWithoutComments === null ||
+      adapterCode === null ||
+      viewCode === null ||
+      viewWithoutComments === null ||
+      stagingCode === null
+    ) {
+      fail(
+        "target_pending_work_lexical_structure_invalid",
+        "Pending-work Swift sources must have closed comments and string literals.",
+      );
+    }
+
+    if (
+      /PowerSync|Supabase|Firebase|Firestore|PowerSyncDatabaseProtocol|\bSQL\b|credential|URLSession/.test(
+        modelCode ?? "",
+      )
+    ) {
+      fail(
+        "target_pending_work_model_boundary_escape",
+        relative(pendingWorkFiles.model),
+      );
+    }
+    const pendingRefreshBody = swiftFunctionBody(model, "public func refresh() async");
+    const pendingStopBody = swiftFunctionBody(model, "public func stop() async");
+    const pendingReadBody = swiftFunctionBody(model, "private func readSummary(");
+    const pendingMethodRequirements = [
+      [
+        "refresh",
+        pendingRefreshBody,
+        [
+          "generationToken = activeGeneration",
+          "admittedTasks",
+          "retiredTasks.forEach { $0.cancel() }",
+          "await retiredTask.value",
+          "await task.value",
+        ],
+      ],
+      [
+        "stop",
+        pendingStopBody,
+        [
+          "isStopped = true",
+          "generationToken = UUID()",
+          "runtime = nil",
+          "tasks.forEach { $0.cancel() }",
+          "await task.value",
+          "admittedTasks.removeAll()",
+        ],
+      ],
+      [
+        "readSummary",
+        pendingReadBody,
+        [
+          "summary.environment == expectedEnvironment",
+          "summary.principalId == expectedPrincipalId",
+          "summary.accountId == expectedAccountId",
+          "summary.hasBlockingWork",
+          "generationToken == generation",
+        ],
+      ],
+    ];
+    for (const [method, body, requirements] of pendingMethodRequirements) {
+      if (body === null) {
+        fail("target_pending_work_model_method_boundary", method);
+        continue;
+      }
+      for (const required of requirements) {
+        if (!body.includes(required)) {
+          fail("target_pending_work_model_incomplete", `${method}: ${required}`);
+        }
+      }
+    }
+    if (
+      !/public\s+func\s+pendingWorkSummary\s*\(\s*\)\s*async\s+throws\s*->\s*PendingLocalWorkSummary/.test(
+        modelCode ?? "",
+      )
+    ) {
+      fail(
+        "target_pending_work_port_not_argument_free",
+        relative(pendingWorkFiles.model),
+      );
+    }
+    const exactAdapter = [
+      "importLedgerTargetAppModel",
+      "importLedgerTargetPowerSync",
+      "enumAccountPendingWorkStagingRuntimeAdapter{",
+      "staticfuncadapt(_runtime:LedgerOfflineClientRuntime)",
+      "->AccountPendingWorkStagingRuntime{",
+      "AccountPendingWorkStagingRuntime(",
+      "pendingWorkSummary:{tryawaitruntime.pendingWorkSummary()}",
+      ")}}",
+    ].join("");
+    if (adapterCode !== exactAdapter) {
+      fail(
+        "target_pending_work_adapter_incomplete",
+        "The staging adapter must be the exact one-call pendingWorkSummary forwarding boundary.",
+      );
+    }
+    if (
+      /import LedgerTargetCore|PowerSyncDatabaseProtocol|\bSQL\b|Supabase|Firebase|Firestore|credential|URLSession/.test(
+        adapterCode ?? "",
+      )
+    ) {
+      fail(
+        "target_pending_work_adapter_scope_escape",
+        relative(pendingWorkFiles.adapter),
+      );
+    }
+    for (const required of [
+      'Section("Pending Local Work")',
+      'Button("Refresh")',
+      '"Queued operations"',
+      '"Applying operations"',
+      '"Unresolved rejected operations"',
+      '"Unverified attachments"',
+      'target-pending-work-status',
+      'target-pending-work-refresh',
+      'target-pending-work-queued-count',
+      'target-pending-work-applying-count',
+      'target-pending-work-rejected-count',
+      'target-pending-work-attachment-count',
+      'target-pending-work-diagnostic',
+    ]) {
+      if (!(viewWithoutComments ?? "").includes(required)) {
+        fail("target_pending_work_view_incomplete", required);
+      }
+    }
+    if (
+      /LedgerTargetPowerSync|PowerSync|Supabase|Firebase|Firestore|\bSQL\b/i.test(
+        viewCode ?? "",
+      )
+    ) {
+      fail(
+        "target_pending_work_view_scope_escape",
+        relative(pendingWorkFiles.view),
+      );
+    }
+    if (
+      /PowerSync|Supabase|Firebase|Firestore|\bSQL\b|credential|\bsynced\b|\buploaded\b|remote(?:ly)? durable|safe to log out/i.test(
+        `${modelWithoutComments ?? ""}\n${viewWithoutComments ?? ""}`,
+      )
+    ) {
+      fail(
+        "target_pending_work_copy_overclaim",
+        "Pending-work presentation copy must not claim sync, upload, remote durability, or logout safety.",
+      );
+    }
+    for (const fileName of [
+      "AccountPendingWorkStagingRuntimeAdapter.swift",
+      "AccountPendingWorkStagingExerciseView.swift",
+    ]) {
+      if (!project.includes(fileName)) {
+        fail("target_pending_work_project_membership_missing", fileName);
+      }
+    }
+    for (const required of [
+      "AccountPendingWorkStagingExerciseView(model: pendingWork)",
+    ]) {
+      if (!(stagingCode ?? "").includes(required)) {
+        fail("target_pending_work_staging_wiring_incomplete", required);
+      }
+    }
+    const pendingWorkStartBody = swiftFunctionBody(
+      stagingAppSource,
+      "func start(validatedEnvironment:",
+    );
+    const compactPendingWorkStartBody =
+      pendingWorkStartBody === null
+        ? null
+        : pendingWorkStartBody.replace(/\s+/g, "");
+    if (
+      compactPendingWorkStartBody === null ||
+      countOccurrences(
+        compactPendingWorkStartBody,
+        [
+          "pendingWork=AccountPendingWorkStagingExercise(",
+          "expectedEnvironment:validatedEnvironment.manifest.environment,",
+          "expectedPrincipalId:principalId,",
+          "expectedAccountId:accountId,",
+          "runtime:AccountPendingWorkStagingRuntimeAdapter.adapt(runtime)",
+          ")",
+        ].join(""),
+      ) !== 1
+    ) {
+      fail(
+        "target_pending_work_staging_construction_boundary",
+        "Every runtime opening must construct exactly one fresh pending-work child inside start.",
+      );
+    }
+    for (const source of [modelCode ?? "", adapterCode ?? "", viewCode ?? ""]) {
+      if (
+        /SessionEndDisposition|removeFromDevice|signOut\s*\(|logout\s*\(|delete\w*\s*\(|upload\w*\s*\(|synchroni[sz]e\w*\s*\(|\.close\s*\(/i.test(
+          source,
+        )
+      ) {
+        fail(
+          "target_pending_work_forbidden_action",
+          "Pending-work staging leaves may only read and present local status.",
+        );
+      }
+    }
+  }
   const clientArchiveStorePath = path.join(
     powerSyncRoot,
     "ClientArchivePowerSyncStore.swift",
@@ -1417,6 +1793,49 @@ if (
       const close = source.indexOf(closeCall);
       return stop >= 0 && close > stop;
     };
+    const pendingWorkStopBeforeClose = (signature, compactCloseCall) => {
+      const body = swiftFunctionBody(stagingAppSource, signature);
+      if (body === null) return false;
+      const compactBody = body.replace(/\s+/g, "");
+      const captureCall = "letpendingWork=self.pendingWork";
+      const removeCall = "self.pendingWork=nil";
+      const stopCall = "awaitpendingWork?.stop()";
+      if (
+        countOccurrences(compactBody, captureCall) !== 1 ||
+        countOccurrences(compactBody, removeCall) !== 1 ||
+        countOccurrences(compactBody, stopCall) !== 1 ||
+        countOccurrences(compactBody, compactCloseCall) !== 1
+      ) {
+        return false;
+      }
+      const capture = compactBody.indexOf(captureCall);
+      const remove = compactBody.indexOf(removeCall);
+      const stop = compactBody.indexOf(stopCall);
+      const close = compactBody.indexOf(compactCloseCall);
+      return capture >= 0 && remove > capture && stop > remove && close > stop;
+    };
+    if (
+      !pendingWorkStopBeforeClose(
+        "func start(validatedEnvironment:",
+        "tryawaitruntime.close()",
+      )
+    ) {
+      fail(
+        "target_pending_work_normal_cleanup_order",
+        "The per-runtime pending-work child must leave UI and drain before normal runtime close.",
+      );
+    }
+    if (
+      !pendingWorkStopBeforeClose(
+        "private func closeAfterFailedStart(",
+        "try?awaitopenedRuntime.close()",
+      )
+    ) {
+      fail(
+        "target_pending_work_failed_cleanup_order",
+        "The per-runtime pending-work child must leave UI and drain before failed-start runtime close.",
+      );
+    }
     if (!clientStopBeforeClose(startBody, "try await runtime.close()")) {
       fail(
         "target_client_browsing_normal_cleanup_order",
