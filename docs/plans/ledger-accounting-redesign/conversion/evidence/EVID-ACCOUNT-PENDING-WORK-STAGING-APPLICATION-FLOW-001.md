@@ -1,0 +1,73 @@
+# EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001 — Account Pending Work Staging Application Flow
+
+- Status: READY / exact comment-only commit and immutable CI pending
+- Date: 2026-09-06
+- Exact conversion base commit: `1bcfc491386bcb5102bcb1ebe819c7e9f028f618`
+- Environment: dedicated target worktree only
+- Production/Firebase impact: none
+
+## Candidate Outcome
+
+Add a read-only target-staging section that manually refreshes the existing
+exact Account-scoped `PendingLocalWorkSummary`. It presents queued operations,
+applying operations, unresolved rejected operations, and the count of captured
+attachments whose bytes are not upload-verified as four separate exact counts.
+Only a validated all-zero summary may say there is no pending local work.
+
+This is local status evidence, not a logout screen or a Sync-health claim. It
+does not synchronize, upload, delete Account/database/key/media state, invoke a
+destructive Account/session cleanup API, sign out, switch Accounts, choose a
+session disposition, or state that work is remotely durable or safe to discard.
+Ordinary model stop/drain and runtime resource teardown remain required.
+
+## Frozen Candidate Boundary
+
+- Reuse the existing summary, encrypted local provider, finite runtime lease and
+  public runtime method without changing their semantics.
+- Keep AppModel dependent on Core only; only the thin target-app adapter imports
+  the PowerSync runtime.
+- Manual refresh owns not-requested/loading/clean/pending/failed truth.
+- Preserve exact scope, four `UInt64` counts, revision, observation time and
+  fingerprint in typed state; never aggregate the counts.
+- Register every refresh in a MainActor-serialized admitted-task registry before
+  launch, retain replaced/cancelled tasks until joined, and use generation
+  isolation to reject cooperative and noncooperative late results.
+- Stop becomes terminal for that child instance atomically, refuses late
+  admission, clears evidence/runtime closure, cancels and drains the complete
+  retired-plus-current task set before Account runtime close on every normal or
+  failed staging resource-teardown path. Each reopened runtime gets a fresh child.
+- Render bounded diagnostics and stable accessibility identifiers only.
+
+## Comment-Only Candidate Leaves
+
+- `SWIFT-5165512013CB` — AppModel
+- `TEST-0B0E0C9D531B` — AppModel tests
+- `SWIFT-BBA33BDFCD93` — thin runtime adapter
+- `SWIFT-87B098BA9F12` — staging view
+
+All four are comments only. No executable candidate behavior exists at this
+checkpoint.
+
+## Required Review and Proof
+
+Initial independent READY review returned NO-GO and identified three P1 and five
+P2/P3 recording defects: no exact delivery/touchpoint boundary, broken/stale
+evidence reconciliation, incomplete retired-task drainage, wrong Core API and
+authority heading, unfrozen expected scope, ambiguous cleanup wording, missing
+dependency authorities and an ambiguous attachment-count label. A separate
+feasibility review found that no executable-app test target exists and that a
+stopped child cannot be reused when the staging `.task` reopens. The corrected
+independent re-review is GO with no remaining P0-P3 finding.
+
+The nine frozen tests cover exact count and identity
+projection, every pending class, all-zero truth, failure-not-clean, overlapping
+refresh, multiple noncooperative retired tasks, terminal per-instance stop,
+composite staging close-order proof, source containment, full controls/builds
+and immutable CI.
+
+## Explicit Non-Advancement
+
+A-003/A-004/A-007/A-016 and O-023 remain unadvanced. The candidate adds no
+Postgres, RLS, Data API, Sync Stream, provider, Storage, attachment-byte access,
+MCP, Auth, hosted resource, Firebase, source data, migration, release,
+production access or cutover authority.

@@ -5,6 +5,8 @@
 - Base commit: `f71e75a9c15091a45fb10727d1ec78a27d6f2fc5`
 - Exact implementation commit: `a35926c8fb07be56e218a87926bbc1934c8cb813`
 - Immutable Actions run: `34019611549`
+- Verification-promotion commit: `1bcfc491386bcb5102bcb1ebe819c7e9f028f618`
+- Verification-promotion Actions run: `34020091506`
 - Environment: dedicated target worktree only
 - Production/Firebase impact: none
 
@@ -97,6 +99,9 @@ Exact implementation commit `a35926c8fb07be56e218a87926bbc1934c8cb813`
 passed all three immutable workflow jobs in Actions run `34019611549`:
 conversion state and traceability, the isolated target environment, and local
 Supabase provider slices. The slice is therefore `verified` at this boundary.
+The docs-only verification-promotion commit
+`1bcfc491386bcb5102bcb1ebe819c7e9f028f618` repeated all three jobs successfully
+in Actions run `34020091506`.
 
 ## Explicit Non-Advancement
 

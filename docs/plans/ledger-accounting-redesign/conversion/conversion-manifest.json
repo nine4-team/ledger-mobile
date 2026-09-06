@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T07:47:15.070Z",
+    "lastSynchronizedAt": "2026-09-06T08:21:07.887Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -690,10 +690,10 @@
           "path": "LedgeriOS/LedgerTarget.xcodeproj/project.pbxproj"
         }
       ],
-      "observedSourceHash": "cc7d5bb7d2099b52bdd5a9586908e51139ac860a6a1294ef80c3d832ceac0aa0",
-      "acknowledgedSourceHash": "cc7d5bb7d2099b52bdd5a9586908e51139ac860a6a1294ef80c3d832ceac0aa0",
+      "observedSourceHash": "4b2dbdb9f10ed2f551e98c98745a47e935545ea5733423bb3e9f512479a491c0",
+      "acknowledgedSourceHash": "4b2dbdb9f10ed2f551e98c98745a47e935545ea5733423bb3e9f512479a491c0",
       "metadata": {},
-      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, six comment-only blocked Project-category provider/application placeholders, and two comment-only Vendor-suggestion picker leaves.",
+      "currentBehavior": "Generated standalone LedgerTarget Xcode project containing the isolated multi-destination staging application, existing target slices, six comment-only blocked Project-category provider/application placeholders, two comment-only Vendor-suggestion picker leaves, and two comment-only Account pending-work staging app leaves.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -25627,6 +25627,58 @@
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
     },
     {
+      "id": "SWIFT-5165512013CB",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetAppModel/AccountPendingWorkStagingExercise.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModel/AccountPendingWorkStagingExercise.swift"
+        }
+      ],
+      "observedSourceHash": "7177723697a2777bc637d9f105c76d31d1aac459e581518cf6b4e436b28eaba7",
+      "acknowledgedSourceHash": "7177723697a2777bc637d9f105c76d31d1aac459e581518cf6b4e436b28eaba7",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a Core-only generation-safe manual-refresh Account pending-work staging AppModel.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": [
+          "Core-only staging application model for exact pending-work summary refresh"
+        ],
+        "securityRequirements": [
+          "Preserve exact environment, Principal and Account binding and expose bounded diagnostics only"
+        ],
+        "syncRequirements": [
+          "Present local evidence without claiming remote synchronization, upload or durability"
+        ]
+      },
+      "migration": {
+        "rule": "Use typed synthetic summaries and the isolated target runtime only.",
+        "reconciliation": [
+          "One accepted refresh maps to one exact presentation without count aggregation"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AccountPendingWorkStagingExerciseTests"
+        ],
+        "acceptance": [
+          "Exact counts, identity, refresh, failure and lifecycle truth pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "No session-ending request, sync action, upload, destructive Account/session cleanup, database/key/media deletion or signout; ordinary stop/drain and runtime resource teardown remain required.",
+      "classificationBatch": "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+    },
+    {
       "id": "SWIFT-517FA18158D9",
       "kind": "swift_platform",
       "name": "LedgeriOS/LedgerTargetCore/DirectSpaceCreationUseCase.swift",
@@ -30257,6 +30309,56 @@
       ],
       "notes": "Preserve review interaction over explicit evidence and payer/scope routing. M2 map reviewed under target-mapping-method.md; live demand, immutable collection evidence and stable budget contributions replace Firebase fallbacks.",
       "classificationBatch": "M0-INVOICING-BUDGET-001"
+    },
+    {
+      "id": "SWIFT-87B098BA9F12",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/AccountPendingWorkStagingExerciseView.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/AccountPendingWorkStagingExerciseView.swift"
+        }
+      ],
+      "observedSourceHash": "3e10165fd8bfc73b57c22290ca00115627a459c1122c5b32a614a9309f71e322",
+      "acknowledgedSourceHash": "3e10165fd8bfc73b57c22290ca00115627a459c1122c5b32a614a9309f71e322",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a neutral staging section showing four exact pending-work counts and manual refresh.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": [
+          "Isolated SwiftUI pending-local-work status section"
+        ],
+        "securityRequirements": [
+          "Render typed model state without identity, fingerprint, provider or sensitive diagnostic disclosure"
+        ],
+        "syncRequirements": [
+          "Never label local evidence synced, uploaded, remotely durable or safe to log out"
+        ]
+      },
+      "migration": {
+        "rule": "Compile only into LedgerTargetStaging.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "Environment checker and macOS/iOS staging builds"
+        ],
+        "acceptance": [
+          "Four separate counts and bounded status compile without actions beyond refresh"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "Final logout UI/copy and session disposition remain explicitly outside the slice.",
+      "classificationBatch": "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
     },
     {
       "id": "SWIFT-87F9C321FCB3",
@@ -35006,6 +35108,56 @@
       ],
       "notes": "No target proto port exists; migration uses a separate source decoder/importer.",
       "classificationBatch": "M0-ITEM-CREATION-LINK-001"
+    },
+    {
+      "id": "SWIFT-BBA33BDFCD93",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetApp/AccountPendingWorkStagingRuntimeAdapter.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetApp/AccountPendingWorkStagingRuntimeAdapter.swift"
+        }
+      ],
+      "observedSourceHash": "964b47ccf17978d6bfc13e44c08152c4ca9c0878aa63563c0d9de34f920044ce",
+      "acknowledgedSourceHash": "964b47ccf17978d6bfc13e44c08152c4ca9c0878aa63563c0d9de34f920044ce",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for a thin runtime adapter that forwards pendingWorkSummary without rebinding.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": [
+          "Thin isolated target runtime adapter"
+        ],
+        "securityRequirements": [
+          "Expose no runtime, database, provider, SQL, key, credential or scope override"
+        ],
+        "syncRequirements": [
+          "Forward exactly one close-aware local summary read"
+        ]
+      },
+      "migration": {
+        "rule": "Wire only the target staging composition.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "Target environment checker and staging builds"
+        ],
+        "acceptance": [
+          "Adapter contains no independent policy"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "No provider, MCP or source-app change; ordinary adapter release during runtime resource teardown is permitted.",
+      "classificationBatch": "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
     },
     {
       "id": "SWIFT-BC0B886FC610",
@@ -41736,6 +41888,56 @@
       ],
       "notes": "New target package test surface claimed by target-environment-isolation; it compiles against LedgerTargetCore only, while a passing unit suite still does not close the compiled staging-app projection or all operational obligations.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
+    },
+    {
+      "id": "TEST-0B0E0C9D531B",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetAppModelTests/AccountPendingWorkStagingExerciseTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetAppModelTests/AccountPendingWorkStagingExerciseTests.swift"
+        }
+      ],
+      "observedSourceHash": "03d07ef040a47e9d315f80e2c404e81ab2b242a7bc85071f79c405ea254c9780",
+      "acknowledgedSourceHash": "03d07ef040a47e9d315f80e2c404e81ab2b242a7bc85071f79c405ea254c9780",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Comment-only DRAFT placeholder for exact-count, fail-closed, generation and drainage verification.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Account Pending Work Staging Application Flow",
+        "surfaces": [
+          "Provider-free application-model test suite"
+        ],
+        "securityRequirements": [
+          "Foreign or malformed summary never appears clean"
+        ],
+        "syncRequirements": [
+          "Cooperative and noncooperative late results cannot replace current evidence"
+        ]
+      },
+      "migration": {
+        "rule": "Use deterministic in-memory runtime fakes only.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AccountPendingWorkStagingExerciseTests"
+        ],
+        "acceptance": [
+          "All frozen application obligations pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
+      ],
+      "notes": "A passing unit suite cannot prove hosted authorization, synchronization or logout safety.",
+      "classificationBatch": "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001"
     },
     {
       "id": "TEST-0E4B478B0C55",

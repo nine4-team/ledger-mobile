@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T07:47:15.070Z",
+  "generatedFromManifestSync": "2026-09-06T08:21:07.887Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 996,
-    "targetRelevantSurfaces": 734,
-    "batches": 41,
+    "surfaces": 1000,
+    "targetRelevantSurfaces": 738,
+    "batches": 42,
     "productScopeSurfaces": 815,
-    "technicalControlSurfaces": 181
+    "technicalControlSurfaces": 185
   },
   "canonicalTargetCoverage": [
     {
@@ -125,6 +125,7 @@
     {
       "path": "docs/specs/session-ending-pending-work.md",
       "batchIds": [
+        "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
         "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
         "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
@@ -132,8 +133,8 @@
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 26,
-      "targetRelevantSurfaceCount": 23
+      "surfaceCount": 30,
+      "targetRelevantSurfaceCount": 27
     },
     {
       "path": "docs/specs/budget-management.md",
@@ -214,6 +215,78 @@
         "SWIFT-8AA6BB698C64",
         "SWIFT-A8B0B06147C3",
         "TEST-D960EA615333"
+      ]
+    },
+    {
+      "batchId": "M0-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001",
+      "title": "Present exact Account pending-local-work status in target staging",
+      "scope": "technical_control",
+      "rationale": "This staging-only read surface projects the existing exact Account-scoped pending-work summary as four independent local counts with honest clean, pending, loading and failure truth. It adds no session-ending decision, synchronization, upload, deletion, signout, provider, schema, hosted or production authority.",
+      "surfaceCount": 4,
+      "targetRelevantSurfaceCount": 4,
+      "authorities": [
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/session-ending-pending-work-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-SESSION-ENDING-POLICY-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-PENDING-WORK-POWERSYNC-PROVIDER-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/02-domain-and-application-architecture.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-5165512013CB",
+        "SWIFT-87B098BA9F12",
+        "SWIFT-BBA33BDFCD93",
+        "TEST-0B0E0C9D531B"
       ]
     },
     {

@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 338
+State version: 341
 
 ## Objective
 
@@ -13,9 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-VERIFIED-PROMOTION
+- Checkpoint: ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-READY-COMMIT-AND-CI
 - Branch: `codex/supabase-powersync-implementation`
-- Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
+- Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
+- Current clean conversion base: `1bcfc491386bcb5102bcb1ebe819c7e9f028f618`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -33,12 +34,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **544 of 734 target-relevant surfaces mapped or
-  later (74.1%)**. Local surface-implementation coverage is **231 of 734
-  implemented or later (31.5%)**. The eleven newly tracked Vendor-candidate
-  leaves increase planning coverage only; adversarial review rejected the
-  candidate before executable work, so they add no implementation,
-  provider-backed workflow, hosted-rehearsal or cutover-ready credit.
+- Planning/control coverage is **552 of 738 target-relevant surfaces mapped or
+  later (74.8%)**. Local surface-implementation coverage is **231 of 738
+  implemented or later (31.3%)**. The four newly tracked pending-status
+  candidate leaves increase planning coverage only; they remain comment-only
+  pending independent READY review and add no implementation, provider-backed
+  workflow, hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -51,8 +52,8 @@ without modifying the running Firebase application before hard cutover.
   surfaces do not weight product complexity and repeating it obscured real
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
-- The implementation tracker currently contains 281 status-bearing rows: 68
-  done, nine verified, 12 implemented, zero ready and zero awaiting verification,
+- The implementation tracker currently contains 282 status-bearing rows: 68
+  done, nine verified, 12 implemented, one ready and zero awaiting verification,
   12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -107,6 +108,36 @@ without modifying the running Firebase application before hard cutover.
   Actions run `34019611549`; A-016 and every hosted/media/cutover gate remain
   unadvanced;
   `EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001`.
+
+- The exact resolver verification-promotion commit
+  `1bcfc491386bcb5102bcb1ebe819c7e9f028f618` also passed all three jobs in
+  immutable Actions run `34020091506`; the worktree was clean before the next
+  slice began.
+
+- Independently audited the next executable candidate. No additional end-user
+  writer or media workflow is currently authorized without resolving open
+  product policy. The selected bounded technical prerequisite is a factual,
+  read-only Account pending-local-work status in target staging. Four new leaves
+  are comment-only while a DRAFT dossier freezes exact four-count projection,
+  all-zero-only clean truth, scope/revision/time/fingerprint preservation,
+  manual refresh generation isolation, stop/drain-before-runtime-close and
+  strict non-advancement. Independent READY review and exact READY CI are
+  required before executable work;
+  `EVID-ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-001`.
+
+- Initial independent READY review correctly returned NO-GO. Three P1 findings
+  required an exact hash-bound delivery/touchpoint union, repaired evidence
+  reconciliation, and a MainActor-serialized registry that retains and drains
+  all retired plus current refresh work. P2/P3 corrections replace nonexistent
+  `hasPendingWork` with verified `hasBlockingWork`, bind expected scope at model
+  construction, cite the correct Identity port section, distinguish destructive
+  Account/session cleanup from required resource teardown, add dependency and
+  decision authorities, and clarify the attachment count. Independent
+  feasibility review also removed an impossible executable-app-test claim and
+  requires a fresh terminal child for each reopened runtime. All corrections
+  are applied; corrected independent re-review is GO with no remaining P0-P3,
+  the generated project includes both comment-only app leaves, and all four
+  owned leaves remain comment-only.
 
 - Independent adversarial review rejected the proposed provider-backed Vendor
   suggestion picker before executable work. The initial audits had mistaken a
@@ -4381,23 +4412,21 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit this verification promotion, require immutable exact-head CI for the
-docs-only checkpoint, then freeze the next independently audited implementation
-dossier before touching its executable surfaces. Final executable re-review was
-GO with no remaining P0/P1/P2 finding, the complete local gate is green, and
-exact implementation `a35926c8fb07be56e218a87926bbc1934c8cb813` passed all three
-jobs in immutable Actions run `34019611549`. The reviewed dossier and exact clean base
-`f71e75a9c15091a45fb10727d1ec78a27d6f2fc5` remain the before-code authority.
+Commit the exact independently reviewed comment-only Account pending-local-work
+staging READY checkpoint, require immutable exact-head CI, and only then
+implement the four frozen leaves plus the named shared staging/project/checker
+touchpoints.
 
-The resolver must require the complete immutable receipt, reject namespace
-mismatch before row lookup, resolve the requested receipt rather than FIFO
-upload work, reverify exact queue plus AEAD/count/SHA evidence, preserve queue
-state/order/count and drain as one finite runtime lease. A-016 still gates
-production-facing workspace admission/offline authorization. Do not add an
-Attachment-ID-only lookup, Postgres/RLS/Data API/Sync Stream/Storage surface,
-remote fallback, uploader, renderer/UI/AppModel, O-023 retention/deletion,
-hosted or physical-device claims, Firebase work, production access, migration,
-release or cutover behavior.
+The surface must preserve all four counts separately, exact environment/
+Principal/Account/revision/time/fingerprint evidence and all-zero-only clean
+truth. Manual refresh replacement and stop must cancel and join prior work;
+generation isolation must reject noncooperative late results; staging resource
+teardown must remove and drain the fresh per-runtime child before runtime close.
+Never add logout/session disposition, sync, upload, destructive Account/session
+cleanup, database/key/media deletion, signout, Account switching, remote-durability
+copy, schema/RLS/Data API/Sync Stream/provider/Storage/MCP/Auth/hosted/Firebase/
+migration/production/cutover behavior. A-003/A-004/A-007/A-016 and O-023 remain
+unadvanced.
 
 Continue without waiting on the two M1 evidence blockers:
 
