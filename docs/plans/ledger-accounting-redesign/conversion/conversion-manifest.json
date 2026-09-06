@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T09:35:10.559Z",
+    "lastSynchronizedAt": "2026-09-06T10:06:47.449Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -19678,6 +19678,58 @@
       ],
       "notes": "M2 withheld: O-040 must decide whether personal Project budget pins survive and their exact typed targets, owner, absence/empty/no-pin/default/fallback, order and stale/archive behavior. Current path/listener/merge-write mechanics are source evidence; verified provider-free read/update primitives are not canonical product approval.",
       "classificationBatch": "M0-PROJECT-CLIENT-REFERENCE-001"
+    },
+    {
+      "id": "SWIFT-09809DBC3BA1",
+      "kind": "swift_application_file",
+      "name": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceAssignmentPowerSyncStore.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceAssignmentPowerSyncStore.swift"
+        }
+      ],
+      "observedSourceHash": "56a06699693a23e1d7091a5896cf0acd7690932647fb6957a27d4221d91af5f4",
+      "acknowledgedSourceHash": "56a06699693a23e1d7091a5896cf0acd7690932647fb6957a27d4221d91af5f4",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space assignment command.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Item Space Assignment Local Durability Provider",
+        "surfaces": [
+          "Account-bound PowerSync local command-acceptance store"
+        ],
+        "securityRequirements": [
+          "Reject foreign Account/Principal scope and changed operation evidence before side effects and expose no credential or provider internals"
+        ],
+        "syncRequirements": [
+          "Persist localOnly command evidence without ps_crud or authoritative upload work"
+        ]
+      },
+      "migration": {
+        "rule": "Synthetic isolated target data only; no source import or production access.",
+        "reconciliation": [
+          "One accepted command maps to one generic queued operation and one exact command-evidence row"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "ItemSpaceAssignmentPowerSyncStoreTests"
+        ],
+        "acceptance": [
+          "Atomic acceptance, restart, replay, cancellation, watch and runtime lifecycle obligations pass"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"
+      ],
+      "notes": "No Item/Space row projection, server apply, Postgres/RLS/Sync/RPC/upload, app/MCP, Firebase, migration, production or cutover work.",
+      "classificationBatch": "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"
     },
     {
       "id": "SWIFT-0A528DE84879",
@@ -44360,6 +44412,56 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "TEST-557358553F23",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceAssignmentPowerSyncStoreTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceAssignmentPowerSyncStoreTests.swift"
+        }
+      ],
+      "observedSourceHash": "3151132fe48b621348a073fe70bdaf2145f41a641292d40aa7c89435ce15f0f8",
+      "acknowledgedSourceHash": "3151132fe48b621348a073fe70bdaf2145f41a641292d40aa7c89435ce15f0f8",
+      "metadata": {
+        "firebaseCoupled": true
+      },
+      "currentBehavior": "Comment-only READY scaffold for exact local durability, replay, restart, lifecycle and containment proof.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Item Space Assignment Local Durability Provider",
+        "surfaces": [
+          "Deterministic isolated PowerSync provider and runtime test suite"
+        ],
+        "securityRequirements": [
+          "Prove fail-closed cross-scope and malformed evidence behavior"
+        ],
+        "syncRequirements": [
+          "Prove command evidence is localOnly and leaves ps_crud/upload ordering unchanged"
+        ]
+      },
+      "migration": {
+        "rule": "Use encrypted temporary test databases and typed synthetic commands only.",
+        "reconciliation": []
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter ItemSpaceAssignmentPowerSyncStoreTests"
+        ],
+        "acceptance": [
+          "All frozen dossier obligations pass without hosted resources"
+        ]
+      },
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": [
+        "EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"
+      ],
+      "notes": "Passing local tests do not prove server authorization, authoritative apply, hosted PowerSync Sync, or cutover readiness.",
+      "classificationBatch": "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"
     },
     {
       "id": "TEST-561F3FACCE6F",

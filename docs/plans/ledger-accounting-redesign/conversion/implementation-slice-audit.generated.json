@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T09:35:10.559Z",
+  "generatedFromManifestSync": "2026-09-06T10:06:47.449Z",
   "totals": {
-    "slices": 91,
-    "claimedTargetSurfaces": 310,
+    "slices": 92,
+    "claimedTargetSurfaces": 312,
     "unclaimedTargetSurfaces": 428,
     "implementationAdvancedTargetSurfaces": 235
   },
   "statusCounts": {
     "draft": 3,
-    "ready": 0,
+    "ready": 1,
     "in_progress": 3,
     "implemented": 13,
     "verified": 72,
@@ -433,6 +433,21 @@
       "verificationCount": 4,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/exact-money-and-domain-identity.json"
+    },
+    {
+      "sliceId": "item-space-assignment-local-durability-provider",
+      "title": "Durably accept Item-to-Space assignment in the encrypted local target store",
+      "kind": "product",
+      "status": "ready",
+      "owner": "Item Space Assignment Local Durability Provider",
+      "surfaceIds": [
+        "SWIFT-09809DBC3BA1",
+        "TEST-557358553F23"
+      ],
+      "requirementCount": 8,
+      "verificationCount": 13,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-local-durability-provider.json"
     },
     {
       "sliceId": "item-space-assignment-operation-contracts",

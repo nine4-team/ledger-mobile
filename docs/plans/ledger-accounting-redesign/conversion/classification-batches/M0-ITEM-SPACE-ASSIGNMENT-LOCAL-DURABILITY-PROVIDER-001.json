@@ -1,0 +1,50 @@
+{
+  "batchId": "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
+  "title": "Durably accept Item-to-Space assignment in the encrypted local target store",
+  "reviewedAt": "2026-09-06",
+  "evidence": [
+    "EVID-ITEM-SPACE-ASSIGNMENT-001",
+    "EVID-ITEM-SPACE-ASSIGNMENT-USE-CASE-001",
+    "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
+    "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+    "EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"
+  ],
+  "surfaces": [
+    {
+      "id": "SWIFT-09809DBC3BA1",
+      "acknowledgeSourceHash": "56a06699693a23e1d7091a5896cf0acd7690932647fb6957a27d4221d91af5f4",
+      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space assignment command.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"],
+      "target": {
+        "owner": "Item Space Assignment Local Durability Provider",
+        "surfaces": ["Account-bound PowerSync local command-acceptance store"],
+        "securityRequirements": ["Reject foreign Account/Principal scope and changed operation evidence before side effects and expose no credential or provider internals"],
+        "syncRequirements": ["Persist localOnly command evidence without ps_crud or authoritative upload work"]
+      },
+      "migration": {"rule": "Synthetic isolated target data only; no source import or production access.", "reconciliation": ["One accepted command maps to one generic queued operation and one exact command-evidence row"]},
+      "verification": {"tests": ["ItemSpaceAssignmentPowerSyncStoreTests"], "acceptance": ["Atomic acceptance, restart, replay, cancellation, watch and runtime lifecycle obligations pass"]},
+      "notes": "No Item/Space row projection, server apply, Postgres/RLS/Sync/RPC/upload, app/MCP, Firebase, migration, production or cutover work."
+    },
+    {
+      "id": "TEST-557358553F23",
+      "acknowledgeSourceHash": "3151132fe48b621348a073fe70bdaf2145f41a641292d40aa7c89435ce15f0f8",
+      "currentBehavior": "Comment-only READY scaffold for exact local durability, replay, restart, lifecycle and containment proof.",
+      "disposition": "redesign",
+      "status": "target_mapped",
+      "blockers": [],
+      "evidence": ["EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001"],
+      "target": {
+        "owner": "Item Space Assignment Local Durability Provider",
+        "surfaces": ["Deterministic isolated PowerSync provider and runtime test suite"],
+        "securityRequirements": ["Prove fail-closed cross-scope and malformed evidence behavior"],
+        "syncRequirements": ["Prove command evidence is localOnly and leaves ps_crud/upload ordering unchanged"]
+      },
+      "migration": {"rule": "Use encrypted temporary test databases and typed synthetic commands only.", "reconciliation": []},
+      "verification": {"tests": ["swift test --package-path LedgeriOS --filter ItemSpaceAssignmentPowerSyncStoreTests"], "acceptance": ["All frozen dossier obligations pass without hosted resources"]},
+      "notes": "Passing local tests do not prove server authorization, authoritative apply, hosted PowerSync Sync, or cutover readiness."
+    }
+  ]
+}

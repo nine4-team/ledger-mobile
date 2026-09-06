@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 343
+State version: 346
 
 ## Objective
 
@@ -13,10 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ACCOUNT-PENDING-WORK-STAGING-APPLICATION-FLOW-VERIFICATION-PROMOTION
+- Checkpoint: ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-READY-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current clean conversion base: `67decdd5897af309a98c5067abb647bdc3e0d56c`
+- Current clean conversion base: `762f69e11d6218de635fc46253ecae6e448d59b9`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -34,8 +34,8 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **552 of 738 target-relevant surfaces mapped or
-  later (74.8%)**. Local surface-implementation coverage is **235 of 738
+- Planning/control coverage is **554 of 740 target-relevant surfaces mapped or
+  later (74.9%)**. Local surface-implementation coverage is **235 of 740
   implemented or later (31.8%)**. The four pending-status leaves are now
   implemented locally after two independent executable reviews; this technical
   prerequisite adds no provider-backed product workflow, hosted-rehearsal or
@@ -52,8 +52,8 @@ without modifying the running Firebase application before hard cutover.
   surfaces do not weight product complexity and repeating it obscured real
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
-- The implementation tracker currently contains 282 status-bearing rows: 68
-  done, ten verified, 12 implemented, zero ready and zero awaiting verification,
+- The implementation tracker currently contains 283 status-bearing rows: 68
+  done, ten verified, 12 implemented, one ready and zero awaiting verification,
   12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -4419,13 +4419,13 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit the administrative verification promotion for the Account pending-work
-staging slice and require immutable exact-head CI. Then start the reviewed
-`item-space-assignment-local-durability-provider` boundary: atomically persist
-one canonical `AssignItemsToSpaceCommand` plus one shared queued local operation
-in the encrypted Principal/Account PowerSync database, expose it only through
-the existing Account runtime lifecycle, and prove restart, replay, rollback,
-scope, cancellation and pending-summary behavior.
+Commit the independently reviewed READY package and require immutable exact-head
+CI for `item-space-assignment-local-durability-provider`, then
+replace only its two comment scaffolds and bounded shared touchpoints. Atomically
+persist one canonical `AssignItemsToSpaceCommand` plus one shared queued local
+operation in the encrypted Principal/Account PowerSync database, expose it only
+through the existing Account runtime lifecycle, and prove restart, replay,
+rollback, scope, cancellation and pending-summary behavior.
 
 Do not add authoritative Item/Space apply, optimistic Item projection,
 user-facing assignment UI, upload connector, Postgres/RLS/Sync changes, MCP,

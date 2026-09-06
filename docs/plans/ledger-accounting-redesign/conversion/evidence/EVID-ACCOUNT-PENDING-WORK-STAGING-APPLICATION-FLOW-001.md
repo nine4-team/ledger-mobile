@@ -6,6 +6,8 @@
 - Exact READY CI: Actions run `34021709793` passed all three jobs
 - Exact implementation: `67decdd5897af309a98c5067abb647bdc3e0d56c`
 - Exact implementation CI: Actions run `34023379271` attempt 2 passed all three jobs
+- Verification promotion: `762f69e11d6218de635fc46253ecae6e448d59b9`
+- Verification-promotion CI: Actions run `34025105217` passed all three jobs
 - Environment: dedicated target worktree only
 - Production/Firebase impact: none
 
@@ -91,6 +93,8 @@ remaining P0-P3 finding.
   test. The same exact implementation passed 50 consecutive focused
   Space-creation suites locally and the complete no-parallel Swift suite on
   attempt 2, so the retry is recorded without inventing a product-code fix.
+- Verification-promotion commit `762f69e11d6218de635fc46253ecae6e448d59b9`
+  then passed all three immutable jobs in Actions run `34025105217`.
 
 ## Explicit Non-Advancement
 

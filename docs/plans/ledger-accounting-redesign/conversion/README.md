@@ -5,7 +5,7 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 548 of 738 target-relevant
+Status: M0 backend-surface classification complete; 550 of 740 target-relevant
 surfaces are target-mapped or later and the remaining 190 are explicitly tied
 to decisions/spikes/production evidence. Of those target surfaces, 235 are now
 implemented or later. This 31.8% is local surface-implementation coverage,

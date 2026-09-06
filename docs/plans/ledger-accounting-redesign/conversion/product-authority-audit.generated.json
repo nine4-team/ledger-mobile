@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T09:35:10.559Z",
+  "generatedFromManifestSync": "2026-09-06T10:06:47.449Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 1000,
-    "targetRelevantSurfaces": 738,
-    "batches": 42,
-    "productScopeSurfaces": 815,
+    "surfaces": 1002,
+    "targetRelevantSurfaces": 740,
+    "batches": 43,
+    "productScopeSurfaces": 817,
     "technicalControlSurfaces": 185
   },
   "canonicalTargetCoverage": [
@@ -105,13 +105,14 @@
     {
       "path": "docs/specs/spaces.md",
       "batchIds": [
+        "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
         "M0-PROJECT-CLIENT-REFERENCE-001",
         "M0-SPACE-CORE-DETAILS-PROVIDER-001",
         "M0-SPACE-CREATION-POWERSYNC-PROVIDER-001",
         "M0-SPACES-REVIEW-001"
       ],
-      "surfaceCount": 198,
-      "targetRelevantSurfaceCount": 192
+      "surfaceCount": 200,
+      "targetRelevantSurfaceCount": 194
     },
     {
       "path": "docs/specs/account-discovery-and-workspace-selection.md",
@@ -131,10 +132,11 @@
         "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
         "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
+        "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
         "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 30,
-      "targetRelevantSurfaceCount": 27
+      "surfaceCount": 32,
+      "targetRelevantSurfaceCount": 29
     },
     {
       "path": "docs/specs/budget-management.md",
@@ -1985,6 +1987,80 @@
         "TEST-DA0DC6CF7163",
         "TEST-F63806A8047A",
         "TEST-FCBA68605B98"
+      ]
+    },
+    {
+      "batchId": "M0-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001",
+      "title": "Durably accept Item-to-Space assignment in the encrypted local target store",
+      "scope": "product",
+      "rationale": "The isolated provider accepts the already-verified Item-to-Space command into encrypted Account-local durability while preserving exact scope, replay, operation lifecycle and pending-work truth. It grants no server authority, optimistic Item projection, upload, app/MCP, hosted or production behavior.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/spaces.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-operation-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-assignment-use-case-contracts.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/pending-work-powersync-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/05-supabase-powersync-reference.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/07-migration-release-and-cutover.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-09809DBC3BA1",
+        "TEST-557358553F23"
       ]
     },
     {
