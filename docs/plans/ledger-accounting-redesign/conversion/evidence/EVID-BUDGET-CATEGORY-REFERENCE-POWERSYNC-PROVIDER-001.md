@@ -248,3 +248,24 @@ exit, both staging builds, local Supabase verification, conversion controls and
 clean artifacts. This satisfies `CATPOWER-TEST-010` and re-verifies the provider.
 If a shared-process timeout recurs, process/task/thread stack capture remains
 required before another behavioral change.
+
+## Malformed-Matrix Drainage Correction
+
+Item-to-Space clearing READY run `34048439511` attempt one timed out after all
+17 malformed Budget-category cases began and before any case completed. The
+unchanged attempt-two retry passed the complete Swift suite, so the timeout is
+not evidence of a deterministic production-provider failure. Independent
+read-only review nevertheless found one concrete ownership gap in the test:
+each case discarded its query after observing the public bounded failure and
+did not await the query's owned-watch registry.
+
+The bounded correction changes only
+`BudgetCategoryReferencePowerSyncQueryTests.swift`. It executes the malformed
+matrix as one explicit serial loop, retains each query, awaits
+`cancelAndDrainWatches()` before advancing, and asserts zero emissions, the
+exact bounded failure, one observation, and one source termination. Provider
+source and behavior remain byte-unchanged. `CATPOWER-TEST-010` returns to
+planned until the combined local and immutable implementation gate passes. The
+complete 2026-09-06 local gate now passes the corrected test inside the serial
+Swift package together with conversion controls, MCP, disposable Supabase, and
+both staging builds. Exact synchronized CI remains the sole outstanding proof.

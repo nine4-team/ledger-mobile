@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T17:22:36.921Z",
+    "lastSynchronizedAt": "2026-09-06T18:32:07.862Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2099,8 +2099,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
-      "acknowledgedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
+      "observedSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
+      "acknowledgedSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -6665,8 +6665,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
-      "acknowledgedSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
+      "observedSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
+      "acknowledgedSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -18781,12 +18781,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
-      "acknowledgedSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
+      "observedSourceHash": "c54e5a4b506ebd85c206dc4ba90b67d61bc17ab4ec223b9f5a94a4081ee3c909",
+      "acknowledgedSourceHash": "c54e5a4b506ebd85c206dc4ba90b67d61bc17ab4ec223b9f5a94a4081ee3c909",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command; executable replacement remains gated on exact READY CI.",
+      "currentBehavior": "Executable Account/Principal-bound encrypted local acceptance store for one canonical Item-to-Space clearing command, including exact replay, six-family OperationID refusal, queued-only observation, and runtime drainage.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Clearing Local Durability Provider",
@@ -18814,7 +18814,7 @@
           "Atomic acceptance, restart, replay, collision, cancellation, watch, and runtime lifecycle obligations pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"
@@ -20617,8 +20617,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift"
         }
       ],
-      "observedSourceHash": "574d16dbefcbf4a5da9c3a655b1912de6a7869c6f770885b5962159989f1191e",
-      "acknowledgedSourceHash": "574d16dbefcbf4a5da9c3a655b1912de6a7869c6f770885b5962159989f1191e",
+      "observedSourceHash": "20a8c5c480be02262324ac4895a012d51693d896faaa61e80293bdb0a36b19b9",
+      "acknowledgedSourceHash": "20a8c5c480be02262324ac4895a012d51693d896faaa61e80293bdb0a36b19b9",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
@@ -21231,8 +21231,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "b49c2a16c1f3a37c51c15ad524968c03fa1e5fa2efda2b69cfb3f2e8f960b6b3",
-      "acknowledgedSourceHash": "b49c2a16c1f3a37c51c15ad524968c03fa1e5fa2efda2b69cfb3f2e8f960b6b3",
+      "observedSourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
+      "acknowledgedSourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -21997,7 +21997,7 @@
           "Exact local scope, row validation, ordering, readiness, restart and lifecycle behavior pass without final visibility or hosted authority claims"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
@@ -26102,8 +26102,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "ee60dff41a669eefc0749dcc0c78c566c6177882790ad86cd095bf210df50d34",
-      "acknowledgedSourceHash": "ee60dff41a669eefc0749dcc0c78c566c6177882790ad86cd095bf210df50d34",
+      "observedSourceHash": "9a6e3e918b4c0a397dd4f550a549205f6d6fd41ab696815c5e1740ac2fe9131d",
+      "acknowledgedSourceHash": "9a6e3e918b4c0a397dd4f550a549205f6d6fd41ab696815c5e1740ac2fe9131d",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -28751,8 +28751,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "997b3ea853810f2e5e5fdb8be82d4dab2436a5bb6696f0cf98b24844f1b4db79",
-      "acknowledgedSourceHash": "997b3ea853810f2e5e5fdb8be82d4dab2436a5bb6696f0cf98b24844f1b4db79",
+      "observedSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
+      "acknowledgedSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
@@ -44329,8 +44329,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift"
         }
       ],
-      "observedSourceHash": "56b561f19f0e023ea2efa1dd06ea4e4b5fb772d1f5f2224d1ce57ef2b464052e",
-      "acknowledgedSourceHash": "56b561f19f0e023ea2efa1dd06ea4e4b5fb772d1f5f2224d1ce57ef2b464052e",
+      "observedSourceHash": "cffed10344bbbb3bbf842c5fb3f50cc58d7858cb2f9a6fa6fb5e52aeb35a8119",
+      "acknowledgedSourceHash": "cffed10344bbbb3bbf842c5fb3f50cc58d7858cb2f9a6fa6fb5e52aeb35a8119",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -44429,8 +44429,8 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift"
         }
       ],
-      "observedSourceHash": "093db9fb6160df97737d5fa1f527486a8a0c4214f1a19a2e4880394a1889d6be",
-      "acknowledgedSourceHash": "093db9fb6160df97737d5fa1f527486a8a0c4214f1a19a2e4880394a1889d6be",
+      "observedSourceHash": "b5cbbba25479d6d10450bb930618d7189d3938b4ee3dd15601e66b9304ad396a",
+      "acknowledgedSourceHash": "b5cbbba25479d6d10450bb930618d7189d3938b4ee3dd15601e66b9304ad396a",
       "metadata": {
         "firebaseCoupled": false
       },
@@ -44465,7 +44465,7 @@
           "All frozen provider and runtime lifecycle obligations pass before status advances"
         ]
       },
-      "status": "verified",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
@@ -47075,12 +47075,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ItemSpaceClearingPowerSyncStoreTests.swift"
         }
       ],
-      "observedSourceHash": "13191e51d340f781a7fca3ec489d86cc5cf7aafb130c2e5f4be2566cf3600014",
-      "acknowledgedSourceHash": "13191e51d340f781a7fca3ec489d86cc5cf7aafb130c2e5f4be2566cf3600014",
+      "observedSourceHash": "d9fe91c6a66e2a1ae61011e0a856f05616d19cb91176d7f3d600bd384b55ee41",
+      "acknowledgedSourceHash": "d9fe91c6a66e2a1ae61011e0a856f05616d19cb91176d7f3d600bd384b55ee41",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Comment-only READY scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof; executable replacement remains gated on exact READY CI.",
+      "currentBehavior": "Executable encrypted local clearing-provider suite covering exact evidence, numeric/time bounds, replay, six-family identity, tamper/no-emission, restart, cancellation, runtime lifecycle, pending-work, and containment proof.",
       "disposition": "redesign",
       "target": {
         "owner": "Item Space Clearing Local Durability Provider",
@@ -47106,7 +47106,7 @@
           "All frozen dossier obligations pass without hosted resources"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"

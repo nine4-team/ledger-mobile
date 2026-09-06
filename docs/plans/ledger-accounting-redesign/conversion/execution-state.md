@@ -6,7 +6,7 @@
 > record or the active dossier identifies a specific evidence gap or discrepancy.
 
 Last updated: 2026-09-06
-State version: 355
+State version: 357
 
 ## Objective
 
@@ -18,7 +18,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ITEM-SPACE-CLEARING-LOCAL-DURABILITY-READY-CANDIDATE
+- Checkpoint: ITEM-SPACE-CLEARING-LOCAL-DURABILITY-CI-CANDIDATE
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Current verified conversion base: `5d3d093710178f5f8da85dbc4c7e706b052c97e4`
@@ -41,24 +41,24 @@ without modifying the running Firebase application before hard cutover.
 ## Program Progress Basis
 
 - Planning/control coverage is **554 of 744 target-relevant surfaces mapped or
-  later (74.5%)**. Local surface-implementation coverage is **239 of 744
-  implemented or later (32.1%)**. The current locally green technical-control
-  implementation advances two owned surfaces but no provider-backed product
-  workflow. The prior promotion moves already-
-  implemented surfaces to verified after exact synchronized CI; it adds no new
-  provider-backed product workflow, hosted-rehearsal or cutover-ready credit.
+  later (74.5%)**. Local surface-implementation coverage is **241 of 744
+  implemented or later (32.4%)**. The current reviewed clearing implementation
+  advances one provider-backed mutation workflow and its owned executable
+  surfaces to local implementation; exact synchronized CI is still required
+  before promotion to verified. It adds no hosted-rehearsal or cutover-ready
+  credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
-- Ten provider-backed product workflows have working local behavior after the
-  current slice: four mutations and six reads. Forty-seven additional product
+- Eleven provider-backed product workflows have working local behavior after the
+  current slice: five mutations and six reads. Forty-seven additional product
   slices are verified provider-free contracts, not shipped workflows. Hosted
   authenticated Supabase/PowerSync rehearsal remains zero, and both rehearsed
   and cutover-ready surface counts remain zero.
 - The current practical end-to-end estimate is **about 15% complete**, with a
   deliberately broad **12–18%** range. This is an engineering forecast, not a
-  release gate: ten locally working provider-backed workflows among 57 already-
-  enumerated provider-backed or contract-only product slices imply 17.5% before
+  release gate: eleven locally working provider-backed workflows among 58 already-
+  enumerated provider-backed or contract-only product slices imply 19.0% before
   weighting, while the remaining accounting, Inventory, Invoicing, media,
   hosted Sync/Auth, migration and cutover work is materially harder than the
   completed average. The exact four lanes above remain authoritative evidence;
@@ -68,14 +68,15 @@ without modifying the running Firebase application before hard cutover.
   not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
-- Ten provider-backed product slices have working local behavior: Client
+- Eleven provider-backed product slices have working local behavior: Client
   creation, Project setup, Project archive and Client archive through their
   browsers, the Client/Project directory, Principal-scoped Account discovery,
   the exact Project-or-Business-Inventory Space destination picker, and the
   derived same-Client Transfer destination picker, Project note-history
   continuity across Project archival, and one exact active/archived Space
   core-details read. Four are mutation workflows and six are
-  reads. Client creation and Project setup have local
+  reads, plus Item-to-Space clearing as the fifth mutation workflow. Client
+  creation and Project setup have local
   identity, ordinary-name command, encrypted-offline, RLS, replay and readback
   mechanics; Project archive has the corresponding lifecycle/revision command,
   optimistic overlay and reconciliation mechanics; Client archive adds the
@@ -97,6 +98,32 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Exact clearing READY commit
+  `72b8274f4258936bb35490e4172e4d7684bb28b9` passed all three immutable
+  jobs in workflow run `34048439511` on its unchanged second attempt; the first
+  attempt timed out inside the Budget-category malformed-parameter matrix. That
+  timeout exposed a test-ownership gap: each case returned after its public
+  error without awaiting provider-watch drainage. The separately owned Budget
+  suite now serially retains, terminates, and drains every malformed query; the
+  corrected focused test passes 20/20 repeated runs.
+
+- The bounded Item-to-Space clearing implementation now atomically accepts the
+  canonical local clearing command and generic pending operation, enforces exact
+  Account/Principal/contract/scope/project/item/revision/fingerprint evidence,
+  distinguishes Project and Business Inventory destinations, survives encrypted
+  restart, and exposes only its scoped queued-operation watch. It adds no upload,
+  projection, hosted, migration, or production authority. The shared operation-
+  identity guard now owns the sixth command family and the runtime/facade close
+  path drains its store. Root review and independent executable review are GO
+  with no remaining P0-P3 finding after adding forbidden Inventory-project
+  tamper proof and proving both submission and watch refusal for every malformed
+  command/operation row. Focused verification passes 21/21 clearing tests, 9/9
+  guard tests, the corrected Budget test, and 31/31 combined tests. The one full
+  local implementation gate then passed all conversion controls, complete
+  serial Swift and MCP tests, disposable Supabase lint/374 database assertions/
+  scoped probes, both staging builds, and clean-diff validation. Exact
+  implementation-commit CI remains pending.
 
 - The first post-foundation independent clearing-provider audit returned NO-GO
   for READY. It caught three touchpoint hashes still pinned to the pre-guard
@@ -139,7 +166,7 @@ without modifying the running Firebase application before hard cutover.
   stores were constructor-scoped. A second review correctly rejected an interim
   attempt to model insert-only command-view rows separately from `ps_crud`:
   pinned PowerSync 0.5.3 writes only the queue entry for those inserts. The new
-  comment-only `local-operation-identity-ownership-guard` READY package keeps
+  comment-only `local-operation-identity-ownership-guard` READY package kept
   `spike_local_operations.id` as the normal ownership claim and freezes one
   exhaustive ID-scoped inspection inside every provider write transaction,
   including each exact queue command type while preserving the existing Account-
@@ -151,7 +178,7 @@ without modifying the running Firebase application before hard cutover.
   must validate exactly and incomplete rows fail closed. No new cleanup is
   authorized. The inventory also treats a forbidden local operation-result table
   mutation queued in `ps_crud` as malformed reservation evidence. The
-  exact PowerSync core 0.5.3 revision is now a frozen input with executable
+  exact PowerSync core 0.5.3 revision was a frozen input with executable
   four-view representation proof, and the four stores that previously swallowed
   cancellation may add only default-no-op proof checkpoints plus explicit
   `CancellationError` passthrough. It also requires
@@ -159,9 +186,9 @@ without modifying the running Firebase application before hard cutover.
   exact current-family pair/concurrency/orphan/restart/failure proof, and static
   future-family completeness. A second empty registry table was rejected because
   it would duplicate authority and still miss pre-existing orphan evidence. The
-  two independent final reviews returned GO with no P0-P3 finding; exact READY
-  CI is pending and executable guard work remains forbidden until it passes. The
-  clearing DRAFT now depends on this foundation, registers one sixth family
+  two independent final reviews returned GO with no P0-P3 finding; its exact
+  READY CI and subsequent guard implementation are now verified. The clearing
+  DRAFT depended on this foundation, registers one sixth family
   centrally, removes pairwise provider coupling, and adds the missing high
   positive Date-round-trippable provider-time success case. All changes remain
   documentation/comment-only; no executable provider, schema table, hosted,

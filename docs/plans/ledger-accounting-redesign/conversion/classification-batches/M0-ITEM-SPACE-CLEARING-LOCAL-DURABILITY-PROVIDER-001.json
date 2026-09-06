@@ -13,10 +13,10 @@
   "surfaces": [
     {
       "id": "SWIFT-02B978845267",
-      "acknowledgeSourceHash": "19ea3be129d6c019ed5b25891641d7450d3995f1d70e3cee63e68293d3d50a98",
-      "currentBehavior": "Comment-only READY scaffold for exact encrypted local acceptance of one canonical Item-to-Space clearing command; executable replacement remains gated on exact READY CI.",
+      "acknowledgeSourceHash": "c54e5a4b506ebd85c206dc4ba90b67d61bc17ab4ec223b9f5a94a4081ee3c909",
+      "currentBehavior": "Executable Account/Principal-bound encrypted local acceptance store for one canonical Item-to-Space clearing command, including exact replay, six-family OperationID refusal, queued-only observation, and runtime drainage.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"],
       "target": {
@@ -31,10 +31,10 @@
     },
     {
       "id": "TEST-9E8111F721E6",
-      "acknowledgeSourceHash": "13191e51d340f781a7fca3ec489d86cc5cf7aafb130c2e5f4be2566cf3600014",
-      "currentBehavior": "Comment-only READY scaffold for exact local durability, global cross-command collision, replay, restart, lifecycle, and containment proof; executable replacement remains gated on exact READY CI.",
+      "acknowledgeSourceHash": "d9fe91c6a66e2a1ae61011e0a856f05616d19cb91176d7f3d600bd384b55ee41",
+      "currentBehavior": "Executable encrypted local clearing-provider suite covering exact evidence, numeric/time bounds, replay, six-family identity, tamper/no-emission, restart, cancellation, runtime lifecycle, pending-work, and containment proof.",
       "disposition": "redesign",
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": ["EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001"],
       "target": {

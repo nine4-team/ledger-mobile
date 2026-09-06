@@ -23,7 +23,8 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.pendingProjectCategoryAllocations,
             LedgerPowerSyncTable.projectArchiveOverlays,
             LedgerPowerSyncTable.clientArchiveOverlays,
-            LedgerPowerSyncTable.itemSpaceAssignmentCommands
+            LedgerPowerSyncTable.itemSpaceAssignmentCommands,
+            LedgerPowerSyncTable.itemSpaceClearingCommands
         ]))
         #expect(LocalOperationIdentityGuard.insertOnlyCommandTables == [
             LedgerPowerSyncTable.clientCommands, LedgerPowerSyncTable.projectCommands,
@@ -368,9 +369,13 @@ struct LocalOperationIdentityGuardTests {
             #expect(receipts[0] == receipts[1])
             #expect(try await Self.count(LedgerPowerSyncTable.localOperations, database) == 1)
             let insertOnlyEntries = try await Self.count("ps_crud", database) - baselineCRUD
-            let localOnlyEntries = try await Self.count(
+            let assignmentEntries = try await Self.count(
                 LedgerPowerSyncTable.itemSpaceAssignmentCommands, database
             )
+            let clearingEntries = try await Self.count(
+                LedgerPowerSyncTable.itemSpaceClearingCommands, database
+            )
+            let localOnlyEntries = assignmentEntries + clearingEntries
             #expect(insertOnlyEntries + localOnlyEntries == 1)
             try await database.close(deleteDatabase: true)
             fixture.remove()
@@ -406,9 +411,13 @@ struct LocalOperationIdentityGuardTests {
             #expect(outcomes.filter { $0 == "payloadMismatch" }.count == 1)
             #expect(try await Self.count(LedgerPowerSyncTable.localOperations, database) == 1)
             let insertOnlyEntries = try await Self.count("ps_crud", database) - baselineCRUD
-            let localOnlyEntries = try await Self.count(
+            let assignmentEntries = try await Self.count(
                 LedgerPowerSyncTable.itemSpaceAssignmentCommands, database
             )
+            let clearingEntries = try await Self.count(
+                LedgerPowerSyncTable.itemSpaceClearingCommands, database
+            )
+            let localOnlyEntries = assignmentEntries + clearingEntries
             #expect(insertOnlyEntries + localOnlyEntries == 1)
             try await database.close(deleteDatabase: true)
             fixture.remove()
@@ -481,9 +490,13 @@ struct LocalOperationIdentityGuardTests {
                 #expect(try await Self.count(LedgerPowerSyncTable.localOperations, database) == 1)
                 let insertOnlyEntries = try await Self.count("ps_crud", database)
                     - baselineCRUD
-                let localOnlyEntries = try await Self.count(
+                let assignmentEntries = try await Self.count(
                     LedgerPowerSyncTable.itemSpaceAssignmentCommands, database
                 )
+                let clearingEntries = try await Self.count(
+                    LedgerPowerSyncTable.itemSpaceClearingCommands, database
+                )
+                let localOnlyEntries = assignmentEntries + clearingEntries
                 #expect(insertOnlyEntries + localOnlyEntries == 1)
                 try await Self.expectOneCompleteGraph(
                     operationId: operationId, database: database
@@ -532,6 +545,7 @@ struct LocalOperationIdentityGuardTests {
         try await Self.verifyProjectArchiveCheckpoints()
         try await Self.verifyClientArchiveCheckpoints()
         try await Self.verifyAssignmentCheckpoints()
+        try await Self.verifyClearingCheckpoints()
         try await Self.verifyBoundedRawErrorMapping()
         try await Self.verifyMalformedGuardErrorMapping()
     }
@@ -837,6 +851,51 @@ struct LocalOperationIdentityGuardTests {
         try await database.close(deleteDatabase: true)
     }
 
+    private static func verifyClearingCheckpoints() async throws {
+        let precommit: [ItemSpaceClearingPowerSyncStoreCheckpoint] = [
+            .beforeTransaction, .inventoryConstruction, .inventoryRead,
+            .afterOwnershipInspection,
+            .existingRead, .commandWrite, .operationWrite, .beforeCommit
+        ]
+        for (index, point) in precommit.enumerated() {
+            let fixture = try LocalOperationGuardDatabaseFixture()
+            defer { fixture.remove() }
+            let database = try fixture.open()
+            let command = try clearingCommand(id: "clearing-checkpoint-\(index)")
+            let store = ItemSpaceClearingPowerSyncStore(
+                database: database, accountId: guardAccountId,
+                principalId: guardPrincipalId,
+                now: { guardAcceptedAt },
+                checkpoint: { if $0 == point { throw CancellationError() } }
+            )
+            await #expect(throws: CancellationError.self) {
+                _ = try await store.clearItemSpaceAssignments(command)
+            }
+            #expect(try await count(LedgerPowerSyncTable.localOperations, database) == 0)
+            #expect(try await count(LedgerPowerSyncTable.itemSpaceClearingCommands, database) == 0)
+            #expect(try await count("ps_crud", database) == 0)
+            try await database.close(deleteDatabase: true)
+        }
+
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let database = try fixture.open()
+        let command = try clearingCommand(id: "clearing-checkpoint-after")
+        let store = ItemSpaceClearingPowerSyncStore(
+            database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId,
+            now: { guardAcceptedAt },
+            checkpoint: { if $0 == .afterCommit { throw CancellationError() } }
+        )
+        await #expect(throws: CancellationError.self) {
+            _ = try await store.clearItemSpaceAssignments(command)
+        }
+        #expect(try await count(LedgerPowerSyncTable.localOperations, database) == 1)
+        #expect(try await count(LedgerPowerSyncTable.itemSpaceClearingCommands, database) == 1)
+        #expect(try await count("ps_crud", database) == 0)
+        try await database.close(deleteDatabase: true)
+    }
+
     private static func inspect(
         _ database: any PowerSyncDatabaseProtocol,
         id: OperationID,
@@ -925,6 +984,14 @@ struct LocalOperationIdentityGuardTests {
                 VALUES (?, 'account', 'principal', 'contract', 'space', 'business_inventory',
                         NULL, '1', '[]', ?, '{}', 100)
                 """, parameters: [id, fingerprint])
+        case .clearItemSpaceAssignments:
+            _ = try await database.execute(sql: """
+                INSERT INTO \(LedgerPowerSyncTable.itemSpaceClearingCommands)
+                (id, account_id, actor_principal_id, contract_version, scope_kind,
+                 project_id, items_json, fingerprint, command_json, accepted_at_ms)
+                VALUES (?, 'account', 'principal', 'contract', 'business_inventory',
+                        NULL, '[]', ?, '{}', 100)
+                """, parameters: [id, fingerprint])
         }
     }
 
@@ -964,7 +1031,7 @@ struct LocalOperationIdentityGuardTests {
                  expected_revision, projected_revision, lifecycle, accepted_at_ms)
                 VALUES (?, 'account', 'principal', 'client', ?, ?, '1', 2, 'archived', 100)
                 """, parameters: [id, id, fingerprint])
-        case .assignItemsToSpace:
+        case .assignItemsToSpace, .clearItemSpaceAssignments:
             break
         }
     }
@@ -1090,6 +1157,7 @@ struct LocalOperationIdentityGuardTests {
         case .createClient, .archiveClient: "client"
         case .createProject, .archiveProject: "project"
         case .assignItemsToSpace: "space"
+        case .clearItemSpaceAssignments: "account"
         }
     }
 
@@ -1440,6 +1508,20 @@ struct LocalOperationIdentityGuardTests {
         #expect(try await count(LedgerPowerSyncTable.localOperations, assignmentDatabase) == 0)
         try await assignmentDatabase.close(deleteDatabase: true)
         assignmentFixture.remove()
+
+        let clearingFixture = try LocalOperationGuardDatabaseFixture()
+        let clearingDatabase = try clearingFixture.open()
+        let clearing = try clearingCommand(id: "raw-clearing")
+        await #expect(throws: ItemSpaceClearingFailure.localAcceptanceFailed) {
+            _ = try await ItemSpaceClearingPowerSyncStore(
+                database: clearingDatabase, accountId: guardAccountId,
+                principalId: guardPrincipalId,
+                checkpoint: { if $0 == .inventoryRead { throw LocalOperationGuardInjectedFailure() } }
+            ).clearItemSpaceAssignments(clearing)
+        }
+        #expect(try await count(LedgerPowerSyncTable.localOperations, clearingDatabase) == 0)
+        try await clearingDatabase.close(deleteDatabase: true)
+        clearingFixture.remove()
     }
 
     private static func verifyMalformedGuardErrorMapping() async throws {
@@ -1526,6 +1608,24 @@ struct LocalOperationIdentityGuardTests {
         #expect(try await reservationCounts(assignmentDatabase) == assignmentBaseline)
         try await assignmentDatabase.close(deleteDatabase: true)
         assignmentFixture.remove()
+
+        let clearingFixture = try LocalOperationGuardDatabaseFixture()
+        let clearingDatabase = try clearingFixture.open()
+        let clearing = try clearingCommand(id: "malformed-clearing")
+        try await insertIsolatedRelation(
+            "pending_allocation", id: clearing.envelope.operationId.rawValue,
+            database: clearingDatabase
+        )
+        let clearingBaseline = try await reservationCounts(clearingDatabase)
+        await #expect(throws: ItemSpaceClearingPowerSyncStoreFailure.malformedLocalEvidence) {
+            _ = try await ItemSpaceClearingPowerSyncStore(
+                database: clearingDatabase, accountId: guardAccountId,
+                principalId: guardPrincipalId
+            ).clearItemSpaceAssignments(clearing)
+        }
+        #expect(try await reservationCounts(clearingDatabase) == clearingBaseline)
+        try await clearingDatabase.close(deleteDatabase: true)
+        clearingFixture.remove()
     }
 
     private static let guardAccountId = try! AccountID(validating: "account-guard")
@@ -1607,6 +1707,28 @@ struct LocalOperationIdentityGuardTests {
         )
     }
 
+    private static func clearingCommand(id: String) throws -> ClearItemSpaceAssignmentsCommand {
+        try ClearItemSpaceAssignmentsCommand(
+            operationId: OperationID(validating: id),
+            draft: ItemSpaceClearingDraft(
+                accountId: guardAccountId,
+                actorPrincipalId: guardPrincipalId,
+                operationContractVersion: OperationContractVersion(
+                    validating: "item-space-clearing-v1"
+                ),
+                scope: .businessInventory,
+                items: [
+                    ItemSpaceClearingCandidate(
+                        itemId: ItemID(validating: "item-clear-guard"),
+                        expectedRevision: ExpectedItemPlacementRevision(1),
+                        currentSpaceId: SpaceID(validating: "space-clear-guard")
+                    )
+                ],
+                capturedAt: guardAcceptedAt
+            )
+        )
+    }
+
     private static func concurrentOperationId(
         for families: [LocalOperationCommandFamily],
         index: Int
@@ -1663,6 +1785,11 @@ struct LocalOperationIdentityGuardTests {
                 database: database, accountId: guardAccountId,
                 principalId: guardPrincipalId, now: { guardAcceptedAt }
             ).assignItemsToSpace(assignmentCommand(id: operationId.rawValue))
+        case .clearItemSpaceAssignments:
+            return try await ItemSpaceClearingPowerSyncStore(
+                database: database, accountId: guardAccountId,
+                principalId: guardPrincipalId, now: { guardAcceptedAt }
+            ).clearItemSpaceAssignments(clearingCommand(id: operationId.rawValue))
         }
     }
 
@@ -1806,6 +1933,29 @@ struct LocalOperationIdentityGuardTests {
                 database: database, accountId: guardAccountId,
                 principalId: guardPrincipalId, now: { guardAcceptedAt }
             ).assignItemsToSpace(command)
+        case .clearItemSpaceAssignments:
+            let base = try clearingCommand(id: operationId.rawValue)
+            let command = try ClearItemSpaceAssignmentsCommand(
+                operationId: operationId,
+                draft: ItemSpaceClearingDraft(
+                    accountId: base.envelope.accountId,
+                    actorPrincipalId: base.envelope.actorPrincipalId,
+                    operationContractVersion: base.envelope.contractVersion,
+                    scope: base.draft.scope,
+                    items: [
+                        ItemSpaceClearingCandidate(
+                            itemId: ItemID(validating: "item-clear-guard-changed"),
+                            expectedRevision: ExpectedItemPlacementRevision(1),
+                            currentSpaceId: SpaceID(validating: "space-clear-guard")
+                        )
+                    ],
+                    capturedAt: base.draft.capturedAt
+                )
+            )
+            return try await ItemSpaceClearingPowerSyncStore(
+                database: database, accountId: guardAccountId,
+                principalId: guardPrincipalId, now: { guardAcceptedAt }
+            ).clearItemSpaceAssignments(command)
         }
     }
 

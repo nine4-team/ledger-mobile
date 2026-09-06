@@ -12,7 +12,7 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "997b3ea853810f2e5e5fdb8be82d4dab2436a5bb6696f0cf98b24844f1b4db79",
+      "acknowledgeSourceHash": "c9a23d0c849512c2ddeeb211e26ce357e07e263b7f431bf995f592213fb0f0f4",
       "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows, exact-scope Space destination query, and local Item-to-Space assignment submission/observation behind close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending or authoritative assignment.",
       "disposition": "redesign",
       "status": "implemented",

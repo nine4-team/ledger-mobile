@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stateVersion": 4,
+  "stateVersion": 7,
   "updatedAt": "2026-09-06",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
@@ -18,10 +18,11 @@
   },
   "activeBatch": {
     "id": "item-space-clearing-provider-workflow",
-    "status": "ready",
-    "outcome": "Complete the provider-backed offline Item-to-Space clearing workflow without adding unrelated Item, accounting, media, hosted, migration, or production behavior.",
+    "status": "ci_verification",
+    "outcome": "Complete the provider-backed offline Item-to-Space clearing workflow and its separately owned Budget-category test-drainage correction without adding unrelated Item, accounting, media, hosted, migration, or production behavior.",
     "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json"
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json",
+      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/budget-category-reference-powersync-provider.json"
     ],
     "allowedPaths": [
       "LedgeriOS/LedgerTargetPowerSync/ItemSpaceClearingPowerSyncStore.swift",
@@ -31,23 +32,13 @@
       "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift",
       "LedgeriOS/LedgerTargetPowerSync/LocalOperationIdentityGuard.swift",
       "LedgeriOS/LedgerTargetPowerSyncTests/LocalOperationIdentityGuardTests.swift",
+      "LedgeriOS/LedgerTargetPowerSyncTests/BudgetCategoryReferencePowerSyncQueryTests.swift",
       "scripts/check-target-environment.mjs"
     ],
     "nextActions": [
-      "Synchronize the independently approved comment-only READY package and pass local conversion controls.",
-      "Commit and push the exact READY checkpoint, then require every immutable workflow job to pass.",
-      "Only after exact READY CI, replace the two scaffolds and make the bounded shared schema/runtime/guard/test/checker changes.",
-      "Review the implementation independently, then run one complete local and immutable implementation gate."
-    ]
-  },
-  "followingBatch": {
-    "id": "item-space-clearing-provider-implementation",
-    "status": "blocked_by_ready_gate",
-    "outcome": "Replace the two clearing scaffolds and wire their bounded local-only provider/runtime surface after exact READY CI.",
-    "dossiers": [
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-operation-contracts.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-use-case-contracts.json",
-      "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/item-space-clearing-local-durability-provider.json"
+      "Commit and push the exact reviewed implementation checkpoint that passed the complete local gate.",
+      "Dispatch CI for that exact commit and require every immutable workflow job to pass.",
+      "Promote the clearing provider and Budget operational proof to verified only after exact CI."
     ]
   },
   "progress": {
@@ -58,8 +49,8 @@
     },
     "targetRelevantSurfaces": 744,
     "mappedOrLaterSurfaces": 554,
-    "implementedOrLaterSurfaces": 239,
-    "locallyWorkingProviderWorkflows": 10,
+    "implementedOrLaterSurfaces": 241,
+    "locallyWorkingProviderWorkflows": 11,
     "hostedAuthenticatedRehearsals": 0,
     "cutoverReadyWorkflows": 0
   },

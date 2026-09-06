@@ -119,7 +119,7 @@
     {
       "id": "CONFIG-81235587F306",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
+      "acknowledgeSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapters hold; implemented browsing/archive/Space/pending-status flows preserve scope and drainage guards; the local Item-to-Space assignment boundary has exact comment-stripped schema/store containment, executable-test, live-factory, lease/delegation, facade/watch and drain-order checks; the Project category revision has only reviewed mappings and Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "status": "target_mapped",
@@ -367,7 +367,7 @@
     {
       "id": "FILE-A6E49E3815F4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "5808154f0d6a617b0766bc8f3184f0aee5fa6f227a0537f4cf09ad8e415f8ad3",
+      "acknowledgeSourceHash": "c612ea737860e10c91c71b6b4fcb2b259169d4a94e8dd6d529123f57cb8ff5dc",
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows; enforces lexical, bounded, exact pending-status rules and structural local Item-to-Space assignment schema/store/test/runtime wiring and close-order rules; freezes exact Project revision mappings and Sync queries; keeps O-026-blocked category-provider leaves nonexecutable; and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "status": "target_mapped",

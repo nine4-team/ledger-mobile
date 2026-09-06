@@ -259,43 +259,52 @@ struct BudgetCategoryReferencePowerSyncQueryTests {
         #expect(reader.observationCount == 0)
     }
 
-    @Test("Malformed local evidence fails atomically with bounded errors", arguments: [
-        [],
-        [Self.sentinel(scope: 2)],
-        [Self.sentinel(scope: 0), Self.sentinel(scope: 0)],
-        [Self.row(), Self.sentinel(scope: 0)],
-        [Self.row(scope: 0)],
-        [Self.row(id: "")],
-        [Self.row(name: nil)],
-        [Self.row(accountId: "account-other")],
-        [Self.row(kind: "unknown")],
-        [Self.row(lifecycle: "deleted")],
-        [Self.row(isSystem: 2)],
-        [Self.row(excludesFromOverallBudget: -1)],
-        [Self.row(order: -1)],
-        [Self.row(order: Int64(UInt32.max) + 1)],
-        [Self.row(revision: 0)],
-        [Self.row(revision: -1)],
-        [Self.row(name: "   ")],
-    ])
-    func malformedEvidenceFailsAtomically(rows: [BudgetCategoryPowerSyncRow]) async throws {
-        let reader = ControlledBudgetCategoryReader(
-            initialRows: rows,
-            hasLastSyncedAt: false
-        )
+    @Test("Malformed local evidence fails atomically with bounded errors")
+    func malformedEvidenceFailsAtomically() async throws {
+        let cases: [([BudgetCategoryPowerSyncRow], BudgetCategoryReferenceFailure)] = [
+            ([], .localReadFailed),
+            ([Self.sentinel(scope: 2)], .localReadFailed),
+            ([Self.sentinel(scope: 0), Self.sentinel(scope: 0)], .localReadFailed),
+            ([Self.row(), Self.sentinel(scope: 0)], .localReadFailed),
+            ([Self.row(scope: 0)], .localReadFailed),
+            ([Self.row(id: "")], .localReadFailed),
+            ([Self.row(name: nil)], .localReadFailed),
+            ([Self.row(accountId: "account-other")], .localReadFailed),
+            ([Self.row(kind: "unknown")], .localReadFailed),
+            ([Self.row(lifecycle: "deleted")], .localReadFailed),
+            ([Self.row(isSystem: 2)], .localReadFailed),
+            ([Self.row(excludesFromOverallBudget: -1)], .localReadFailed),
+            ([Self.row(order: -1)], .localReadFailed),
+            ([Self.row(order: Int64(UInt32.max) + 1)], .localReadFailed),
+            ([Self.row(revision: 0)], .localReadFailed),
+            ([Self.row(revision: -1)], .localReadFailed),
+            ([Self.row(name: "   ")], .invalidName),
+        ]
 
-        do {
-            for try await _ in Self.query(reader, complete: true)
-                .watchBudgetCategories(accountId: Self.accountId) {
-                Issue.record("Malformed evidence must not emit a partial snapshot")
+        for (rows, expectedFailure) in cases {
+            let reader = ControlledBudgetCategoryReader(
+                initialRows: rows,
+                hasLastSyncedAt: false
+            )
+            let query = Self.query(reader, complete: true)
+            var emissionCount = 0
+            var observedFailure: BudgetCategoryReferenceFailure?
+
+            do {
+                for try await _ in query.watchBudgetCategories(accountId: Self.accountId) {
+                    emissionCount += 1
+                }
+            } catch let failure as BudgetCategoryReferenceFailure {
+                observedFailure = failure
+            } catch {
+                Issue.record("Expected a bounded Budget-category failure, got \(error)")
             }
-            Issue.record("Expected bounded local-read failure")
-        } catch let failure as BudgetCategoryReferenceFailure {
-            if rows.first?.displayName == "   " {
-                #expect(failure == .invalidName)
-            } else {
-                #expect(failure == .localReadFailed)
-            }
+
+            await query.cancelAndDrainWatches()
+            #expect(emissionCount == 0)
+            #expect(observedFailure == expectedFailure)
+            #expect(reader.observationCount == 1)
+            #expect(reader.terminationCount == 1)
         }
     }
 

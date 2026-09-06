@@ -1,6 +1,6 @@
 # EVID-ITEM-SPACE-CLEARING-LOCAL-DURABILITY-PROVIDER-001 — Item-to-Space Clearing Local Durability Provider
 
-- Status: comment-only READY after independent GO; exact READY CI pending
+- Status: implemented and independently reviewed; complete implementation gate pending
 - Date: 2026-09-06
 - Base commit: `5d3d093710178f5f8da85dbc4c7e706b052c97e4`
 - Environment: dedicated target worktree and disposable encrypted local databases only
@@ -129,3 +129,45 @@ until this exact synchronized READY commit passes every immutable workflow job.
 Passing READY does not authorize
 hosted resources, production access, source-backend changes, migration, release,
 or cutover.
+
+Exact READY commit `72b8274f4258936bb35490e4172e4d7684bb28b9`
+passed all three immutable workflow jobs in run `34048439511` attempt two. The
+first attempt timed out in an existing Budget-category malformed-evidence test;
+the unchanged retry passed the complete Swift suite and both target builds. A
+separate read-only investigation found that the test returned after receiving
+its public failure without awaiting provider-watch drainage. That owning test
+correction is tracked separately in the same integration batch and does not
+widen the clearing provider's eight-path executable authority.
+
+## Executable Implementation and Review
+
+The implementation replaces both comment scaffolds and changes only the six
+reviewed shared schema/runtime/identity/checker surfaces. It creates one
+`localOnly` clearing-command table, atomically admits exactly one canonical
+clearing row plus one queued generic operation, and exposes one finite runtime
+submission and one dedicated queued-operation watch. Project scope uses the
+Project as generic subject; Business Inventory uses the Account. Generic
+expected revision and all terminal fields remain null. No Item, Space, marker,
+attachment, synchronized, `ps_crud`, upload, server, UI, MCP, hosted, Firebase,
+migration, production, or cutover behavior advances.
+
+The first executable review found no production defect and one P2 proof gap:
+the tamper matrix did not cover forbidden non-null `project_id` for Business
+Inventory, and exhaustive corrupt command/operation rows proved submission
+refusal without also proving zero-emission watch refusal. The corrected suite
+adds the Inventory case, asserts exact `malformedLocalEvidence` versus
+scope-filtered `operationNotFound` watch outcomes for every tamper/null/orphan/
+terminal/result shape, and drains each admitted watch. Independent corrected-
+diff re-review returned GO with no P0–P3 finding.
+
+Focused local evidence after correction is 21/21 clearing-provider tests, 9/9
+six-family identity-guard tests, 20/20 Budget malformed-matrix drainage
+repetitions, clean script syntax, the target-environment checker, and compact
+conversion-state validation. The one complete local implementation gate then
+passed on 2026-09-06: all conversion and traceability controls, the complete
+serial Swift package, generated app/MCP contracts and MCP tests, both macOS and
+iOS Simulator staging builds, disposable Supabase lint plus 374 database
+assertions and the scoped read/RPC probes, and clean-diff validation. The slice
+remains `implemented`; `ITEMSPACECLEARLOCAL-TEST-013` cannot pass and the slice
+cannot become verified until this exact synchronized commit also passes every
+immutable CI job.

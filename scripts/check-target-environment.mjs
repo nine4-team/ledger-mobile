@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -522,6 +523,7 @@ if (
     "archive",
     "assignItemsToSpace",
     "captureAttachment",
+    "clearItemSpaceAssignments",
     "close",
     "createClient",
     "createProject",
@@ -534,6 +536,7 @@ if (
     "watchClientArchiveOperation",
     "watchClients",
     "watchItemSpaceAssignmentOperation",
+    "watchItemSpaceClearingOperation",
     "watchOperation",
     "watchProject",
     "watchProjectNotes",
@@ -2287,6 +2290,7 @@ const localOperationAcceptingStores = [
   ["ProjectArchivePowerSyncStore", "ProjectArchivePowerSyncStore.swift", "archiveProject"],
   ["ClientArchivePowerSyncStore", "ClientArchivePowerSyncStore.swift", "archiveClient"],
   ["ItemSpaceAssignmentPowerSyncStore", "ItemSpaceAssignmentPowerSyncStore.swift", "assignItemsToSpace"],
+  ["ItemSpaceClearingPowerSyncStore", "ItemSpaceClearingPowerSyncStore.swift", "clearItemSpaceAssignments"],
 ];
 if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuardTestsPath)) {
   fail("target_local_operation_identity_guard_missing", "guard or executable test leaf");
@@ -2301,6 +2305,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     'casearchiveProject="archive_project"',
     'casearchiveClient="archive_client"',
     'caseassignItemsToSpace="assign_items_to_space"',
+    'caseclearItemSpaceAssignments="clear_item_space_assignments"',
   ];
   for (const familyCase of familyCases) {
     if (!guardCompact.includes(familyCase)) {
@@ -2314,6 +2319,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     "localOperations", "operationResults", "pendingClients", "pendingProjects",
     "pendingProjectCategoryAllocations", "projectArchiveOverlays",
     "clientArchiveOverlays", "itemSpaceAssignmentCommands",
+    "itemSpaceClearingCommands",
   ];
   const registeredRelations = [
     ...relationBlock.matchAll(/LedgerPowerSyncTable\.([A-Za-z]+)/g),
@@ -2438,6 +2444,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     "ClientCreationPowerSyncStore", "ProjectSetupPowerSyncStore",
     "ProjectArchivePowerSyncStore", "ClientArchivePowerSyncStore",
     "ItemSpaceAssignmentPowerSyncStore",
+    "ItemSpaceClearingPowerSyncStore",
   ]) {
     if (!changedSubmissionBody.includes(family)) {
       fail("target_local_operation_identity_changed_race_incomplete", family);
@@ -2500,8 +2507,9 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     !rawFailureBody.includes("ProjectArchiveFailure.localAcceptanceFailed") ||
     !rawFailureBody.includes("ClientArchiveFailure.localAcceptanceFailed") ||
     !rawFailureBody.includes("ItemSpaceAssignmentFailure.localAcceptanceFailed")
+    || !rawFailureBody.includes("ItemSpaceClearingFailure.localAcceptanceFailed")
   ) {
-    fail("target_local_operation_identity_failure_mapping_incomplete", "five providers");
+    fail("target_local_operation_identity_failure_mapping_incomplete", "six providers");
   }
   const malformedFailureBody = swiftFunctionBody(
     guardTests, "func verifyMalformedGuardErrorMapping(",
@@ -2512,6 +2520,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     "ProjectArchivePowerSyncFailure.malformedLocalEvidence",
     "ClientArchivePowerSyncFailure.malformedLocalEvidence",
     "ItemSpaceAssignmentPowerSyncStoreFailure.malformedLocalEvidence",
+    "ItemSpaceClearingPowerSyncStoreFailure.malformedLocalEvidence",
   ]) {
     if (!malformedFailureBody.includes(proof)) {
       fail("target_local_operation_identity_guard_mapping_incomplete", proof);
@@ -2677,6 +2686,7 @@ if (
     "OperationContractFailure.payloadMismatch",
     "ItemSpaceAssignmentFailure.localAcceptanceFailed",
     "CancellationError()",
+    "case beforeTransaction",
     "case beforeCommit",
     "exactDate(milliseconds:",
     "cancelAndDrainWatches()",
@@ -2686,6 +2696,40 @@ if (
   ]) {
     if (!(storeWithoutComments ?? "").includes(required)) {
       fail("target_item_space_assignment_local_store_incomplete", required);
+    }
+  }
+  const frozenDependencies = [
+    [
+      path.join(coreRoot, "ItemSpaceClearingOperation.swift"),
+      "de8eb6c7a67fb5cc77e2c9fa2c279514908a35c76dd977d3288d42dbdc6d06ec",
+    ],
+    [
+      path.join(coreRoot, "ItemSpaceClearingUseCase.swift"),
+      "bec36d9ddbf5be470aa224a108138b71e88f8007632b90a0d039bd2f0e1f7709",
+    ],
+    [
+      path.join(powerSyncRoot, "PendingWorkPowerSyncQuery.swift"),
+      "036ea69b475795f04ce5820f4884969cd02461948a9ac40e9ac13f86d3d11bf1",
+    ],
+    [
+      path.join(powerSyncRoot, "LedgerPowerSyncUploadConnector.swift"),
+      "e3032c3950a524908a0cd89535c3a9556f783b70833910af1bc35adaa495b940",
+    ],
+    [
+      path.join(powerSyncRoot, "ItemSpaceAssignmentPowerSyncStore.swift"),
+      "124b257ced5fc89e4999c49228b804885b5b091bec0ee79f49d284e3b4c4f36e",
+    ],
+    [
+      path.join(scriptDirectory, "supabase-conversion-ledger.mjs"),
+      "94d3c6198cedac57213f00ac5bc171371b9796f6dfdb1fbd9b305516bdb8d624",
+    ],
+  ];
+  for (const [frozenPath, expectedHash] of frozenDependencies) {
+    const actualHash = createHash("sha256")
+      .update(fs.readFileSync(frozenPath))
+      .digest("hex");
+    if (actualHash !== expectedHash) {
+      fail("target_item_space_clearing_frozen_dependency_changed", relative(frozenPath));
     }
   }
   const referencedTables = new Set(
@@ -2723,8 +2767,8 @@ if (
     );
   }
   if (
-    !itemSpaceAssignmentRuntime.includes(
-      "public final class LedgerOfflineClientRuntime: ItemSpaceAssigning, Sendable",
+    !(runtimeCode ?? "").includes(
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,Sendable",
     )
   ) {
     fail(
@@ -2871,6 +2915,318 @@ if (
   ]) {
     if (!tests.includes(requiredTestId)) {
       fail("target_item_space_assignment_local_test_missing", requiredTestId);
+    }
+  }
+}
+
+const itemSpaceClearingStorePath = path.join(
+  powerSyncRoot,
+  "ItemSpaceClearingPowerSyncStore.swift",
+);
+const itemSpaceClearingTestsPath = path.join(
+  powerSyncTestRoot,
+  "ItemSpaceClearingPowerSyncStoreTests.swift",
+);
+for (const requiredPath of [
+  itemSpaceClearingStorePath,
+  itemSpaceClearingTestsPath,
+]) {
+  if (!fs.existsSync(requiredPath)) {
+    fail("target_item_space_clearing_local_leaf_missing", relative(requiredPath));
+  }
+}
+if (
+  fs.existsSync(itemSpaceClearingStorePath) &&
+  fs.existsSync(itemSpaceClearingTestsPath) &&
+  fs.existsSync(powerSyncSchemaPath)
+) {
+  const store = fs.readFileSync(itemSpaceClearingStorePath, "utf8");
+  const tests = fs.readFileSync(itemSpaceClearingTestsPath, "utf8");
+  const schema = fs.readFileSync(powerSyncSchemaPath, "utf8");
+  const itemSpaceClearingRuntime = fs.readFileSync(
+    accountWorkspaceRuntimePath,
+    "utf8",
+  );
+  const itemSpaceClearingCoordinator = fs.readFileSync(
+    accountWorkspaceCoordinatorPath,
+    "utf8",
+  );
+  const storeWithoutComments = swiftWithoutComments(store);
+  const schemaWithoutComments = swiftWithoutComments(schema);
+  const testsWithoutComments = swiftWithoutComments(tests);
+  const coordinatorCode = compactSwiftCode(itemSpaceClearingCoordinator);
+  const runtimeCode = compactSwiftCode(itemSpaceClearingRuntime);
+  if (
+    storeWithoutComments === null ||
+    schemaWithoutComments === null ||
+    testsWithoutComments === null ||
+    coordinatorCode === null ||
+    runtimeCode === null
+  ) {
+    fail(
+      "target_item_space_clearing_lexical_structure_invalid",
+      "Clearing store and runtime sources must have closed comments and string literals.",
+    );
+  }
+  if (
+    !(schemaWithoutComments ?? "").includes(
+      'public static let itemSpaceClearingCommands = "spike_item_space_clearing_commands"',
+    )
+  ) {
+    fail(
+      "target_item_space_clearing_local_table_name",
+      "The local command table name must remain exact.",
+    );
+  }
+  const tableStart = (schemaWithoutComments ?? "").indexOf(
+    "Table(\n            name: LedgerPowerSyncTable.itemSpaceClearingCommands,",
+  );
+  const tableEnd = tableStart < 0
+    ? -1
+    : (schemaWithoutComments ?? "").indexOf("\n        Table(", tableStart + 1);
+  const tableSection = tableStart < 0 || tableEnd < 0
+    ? ""
+    : (schemaWithoutComments ?? "").slice(tableStart, tableEnd);
+  const actualColumns = [
+    ...tableSection.matchAll(/\.(text|integer)\("([^"]+)"\)/g),
+  ].map((match) => `${match[1]}:${match[2]}`);
+  const expectedColumns = [
+    "text:account_id",
+    "text:actor_principal_id",
+    "text:contract_version",
+    "text:scope_kind",
+    "text:project_id",
+    "text:items_json",
+    "text:fingerprint",
+    "text:command_json",
+    "integer:accepted_at_ms",
+  ];
+  if (JSON.stringify(actualColumns) !== JSON.stringify(expectedColumns)) {
+    fail(
+      "target_item_space_clearing_local_table_columns",
+      actualColumns.join(","),
+    );
+  }
+  for (const required of [
+    'name: "item_space_clearing_command_account"',
+    'columns: ["account_id"]',
+    "localOnly: true",
+  ]) {
+    if (!tableSection.includes(required)) {
+      fail("target_item_space_clearing_local_table_contract", required);
+    }
+  }
+  for (const required of [
+    "actor ItemSpaceClearingPowerSyncStore: ItemSpaceAssignmentClearing",
+    "ItemSpaceClearingPowerSyncStoreFailure",
+    "item_space_clearing_acceptance_time_invalid",
+    "item_space_clearing_local_evidence_malformed",
+    "item_space_clearing_operation_not_found",
+    "item_space_clearing_items_v1",
+    "currentSpaceId",
+    '"project"',
+    '"business_inventory"',
+    '"clear_item_space_assignments"',
+    "OperationContractFailure.payloadMismatch",
+    "ItemSpaceClearingFailure.localAcceptanceFailed",
+    "CancellationError()",
+    "case beforeCommit",
+    "case inventoryConstruction",
+    "case inventoryRead",
+    "case afterOwnershipInspection",
+    "exactDate(milliseconds:",
+    "cancelAndDrainWatches()",
+    "operation.id = ?",
+    "operation.account_id = ?",
+    "operation.actor_principal_id = ?",
+  ]) {
+    if (!(storeWithoutComments ?? "").includes(required)) {
+      fail("target_item_space_clearing_local_store_incomplete", required);
+    }
+  }
+  const referencedTables = new Set(
+    [...(storeWithoutComments ?? "").matchAll(/LedgerPowerSyncTable\.(\w+)/g)]
+      .map((match) => match[1]),
+  );
+  const allowedTables = new Set([
+    "itemSpaceClearingCommands",
+    "localOperations",
+    "operationResults",
+  ]);
+  if (
+    [...referencedTables].some((tableName) => !allowedTables.has(tableName)) ||
+    referencedTables.size !== allowedTables.size
+  ) {
+    fail(
+      "target_item_space_clearing_local_projection_escape",
+      [...referencedTables].sort().join(","),
+    );
+  }
+  if (
+    /\bps_crud\b|insertOnly|Supabase|Postgrest|URLSession|Firebase|Firestore/.test(
+      storeWithoutComments ?? "",
+    ) ||
+    /DELETE\s+FROM|UPDATE\s+[^\n]*(?:itemSpaceClearingCommands|spike_item_space_clearing_commands)/i.test(
+      storeWithoutComments ?? "",
+    ) ||
+    /\bfunc\s+(?:delete|remove|repair|reset)\w*\s*\(/i.test(
+      storeWithoutComments ?? "",
+    )
+  ) {
+    fail(
+      "target_item_space_clearing_local_scope_escape",
+      relative(itemSpaceClearingStorePath),
+    );
+  }
+  if (
+    !(runtimeCode ?? "").includes(
+      "publicfinalclassLedgerOfflineClientRuntime:ItemSpaceAssigning,ItemSpaceAssignmentClearing,Sendable",
+    )
+  ) {
+    fail(
+      "target_item_space_clearing_runtime_conformance",
+      "The public runtime must nominally satisfy the verified ItemSpaceAssignmentClearing port.",
+    );
+  }
+  const clearingSubmitBody = swiftFunctionBody(
+    itemSpaceClearingCoordinator,
+    "func clearItemSpaceAssignments(",
+  );
+  const clearingWatchBody = swiftFunctionBody(
+    itemSpaceClearingCoordinator,
+    "func startItemSpaceClearingOperationWatch(",
+  );
+  const closeBody = swiftFunctionBody(
+    itemSpaceClearingCoordinator,
+    "private func performClose() async",
+  );
+  const facadeSubmitBody = swiftFunctionBody(
+    itemSpaceClearingRuntime,
+    "public func clearItemSpaceAssignments(",
+  );
+  const facadeWatchBody = swiftFunctionBody(
+    itemSpaceClearingRuntime,
+    "public func watchItemSpaceClearingOperation(",
+  );
+  const structuralRequirements = [
+    [
+      "live factory",
+      "makeItemSpaceClearingStore:{database,accountId,principalId,nowinItemSpaceClearingPowerSyncStore(database:database,accountId:accountId,principalId:principalId,now:now)}",
+      coordinatorCode ?? "",
+    ],
+    [
+      "bootstrap binding",
+      "dependencies.makeItemSpaceClearingStore(openedStructured.database,accountId,principalId,dependencies.now)",
+      coordinatorCode ?? "",
+    ],
+    [
+      "resource binding",
+      "itemSpaceClearingStore:madeItemSpaceClearingStore",
+      coordinatorCode ?? "",
+    ],
+    [
+      "finite lease",
+      "withFiniteLease(.clearItemSpaceAssignments)",
+      compactSwiftCode(clearingSubmitBody ?? "") ?? "",
+    ],
+    [
+      "finite delegation",
+      "resources.itemSpaceClearingStore.clearItemSpaceAssignments(command)",
+      compactSwiftCode(clearingSubmitBody ?? "") ?? "",
+    ],
+    [
+      "watch route",
+      "resources.itemSpaceClearingStore.watchOperation(operationId)",
+      compactSwiftCode(clearingWatchBody ?? "") ?? "",
+    ],
+    [
+      "facade submit route",
+      "lifecycleOwner.clearItemSpaceAssignments(command)",
+      compactSwiftCode(facadeSubmitBody ?? "") ?? "",
+    ],
+    [
+      "facade watch route",
+      "lifecycleOwner.startItemSpaceClearingOperationWatch(",
+      compactSwiftCode(facadeWatchBody ?? "") ?? "",
+    ],
+  ];
+  for (const [label, required, source] of structuralRequirements) {
+    if (!source.includes(required)) {
+      fail("target_item_space_clearing_runtime_wiring", label);
+    }
+  }
+  const compactCloseBody = compactSwiftCode(closeBody ?? "") ?? "";
+  const clearingDrainIndex = compactCloseBody.indexOf(
+    "awaitresources.itemSpaceClearingStore.cancelAndDrainWatches()",
+  );
+  const structuredCloseIndex = compactCloseBody.indexOf(
+    "tryawaitresources.closeStructuredDatabase()",
+  );
+  if (
+    clearingDrainIndex < 0 ||
+    structuredCloseIndex < 0 ||
+    clearingDrainIndex >= structuredCloseIndex
+  ) {
+    fail(
+      "target_item_space_clearing_runtime_close_order",
+      "Clearing provider drainage must precede structured database close.",
+    );
+  }
+  for (const testFunction of [
+    "exactProjectAndInventoryRows",
+    "numericAndClientTimeBoundaries",
+    "providerTimeBoundaryAndPreDatabaseSentinel",
+    "providerTimeExactRoundTripBoundary",
+    "scopeRefusalBeforeDatabaseAccess",
+    "encryptedRestartRetention",
+    "malformedRestartNeverUpgrades",
+    "exactAndChangedReplay",
+    "commandTamperAndOrphans",
+    "operationTamperAndTerminalEvidence",
+    "concurrentAdmission",
+    "writeFailureMappingAndRollback",
+    "cancellationBoundaries",
+    "queuedOnlyWatchAndDrainage",
+    "watchFailureMappingAndCancellation",
+    "watchRefusalMatrix",
+    "pendingSummaryAndNoUploadWork",
+    "runtimeCloseDrainageAndTerminalRefusal",
+    "runtimeItemSpaceClearingUseCaseIntegration",
+    "liveRuntimeItemSpaceClearingBinding",
+    "boundedDiagnostics",
+  ]) {
+    const escapedTestFunction = testFunction.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const annotatedTest = new RegExp(
+      `@Test\\s*\\([^\\n]*\\)\\s*func\\s+${escapedTestFunction}\\s*\\(`,
+      "g",
+    );
+    const annotatedMatches = [
+      ...(testsWithoutComments ?? "").matchAll(annotatedTest),
+    ];
+    if (
+      annotatedMatches.length !== 1 ||
+      swiftFunctionBody(tests, `func ${testFunction}(`) === null
+    ) {
+      fail("target_item_space_clearing_executable_test_missing", testFunction);
+    }
+  }
+  for (const requiredTestId of [
+    "ITEMSPACECLEARLOCAL-TEST-001",
+    "ITEMSPACECLEARLOCAL-TEST-002",
+    "ITEMSPACECLEARLOCAL-TEST-003",
+    "ITEMSPACECLEARLOCAL-TEST-004",
+    "ITEMSPACECLEARLOCAL-TEST-005",
+    "ITEMSPACECLEARLOCAL-TEST-006",
+    "ITEMSPACECLEARLOCAL-TEST-007",
+    "ITEMSPACECLEARLOCAL-TEST-008",
+    "ITEMSPACECLEARLOCAL-TEST-009",
+    "ITEMSPACECLEARLOCAL-TEST-010",
+    "ITEMSPACECLEARLOCAL-TEST-011",
+    "ITEMSPACECLEARLOCAL-TEST-012",
+    "ITEMSPACECLEARLOCAL-TEST-013",
+  ]) {
+    if (!tests.includes(requiredTestId)) {
+      fail("target_item_space_clearing_local_test_missing", requiredTestId);
     }
   }
 }

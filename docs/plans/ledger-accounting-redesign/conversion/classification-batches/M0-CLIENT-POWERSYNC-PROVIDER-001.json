@@ -88,7 +88,7 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "b49c2a16c1f3a37c51c15ad524968c03fa1e5fa2efda2b69cfb3f2e8f960b6b3",
+      "acknowledgeSourceHash": "10fe108dbc340b64a8ef9f4a58e866b41c816f9df703d7da3a2261d5989f6e7d",
       "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, the local-only Item-to-Space assignment command evidence table, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
@@ -121,7 +121,7 @@
     {
       "id": "SWIFT-548A8A928FAE",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "ee60dff41a669eefc0749dcc0c78c566c6177882790ad86cd095bf210df50d34",
+      "acknowledgeSourceHash": "9a6e3e918b4c0a397dd4f550a549205f6d6fd41ab696815c5e1740ac2fe9131d",
       "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work, nominally satisfies ItemSpaceAssigning, and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, typed Space destination and Item-assignment operation watches, and non-destructive close.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
       "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001", "EVID-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001", "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"], "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including exact full-receipt local-byte resolution, both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",

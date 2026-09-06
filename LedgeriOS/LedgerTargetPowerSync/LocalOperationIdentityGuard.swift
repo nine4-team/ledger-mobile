@@ -8,6 +8,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
     case archiveProject = "archive_project"
     case archiveClient = "archive_client"
     case assignItemsToSpace = "assign_items_to_space"
+    case clearItemSpaceAssignments = "clear_item_space_assignments"
 
     var insertOnlyCommandTable: String? {
         switch self {
@@ -15,7 +16,7 @@ enum LocalOperationCommandFamily: String, CaseIterable, Sendable {
         case .createProject: LedgerPowerSyncTable.projectCommands
         case .archiveProject: LedgerPowerSyncTable.projectArchiveCommands
         case .archiveClient: LedgerPowerSyncTable.clientArchiveCommands
-        case .assignItemsToSpace: nil
+        case .assignItemsToSpace, .clearItemSpaceAssignments: nil
         }
     }
 }
@@ -45,7 +46,8 @@ enum LocalOperationIdentityGuard {
         LedgerPowerSyncTable.pendingProjectCategoryAllocations,
         LedgerPowerSyncTable.projectArchiveOverlays,
         LedgerPowerSyncTable.clientArchiveOverlays,
-        LedgerPowerSyncTable.itemSpaceAssignmentCommands
+        LedgerPowerSyncTable.itemSpaceAssignmentCommands,
+        LedgerPowerSyncTable.itemSpaceClearingCommands
     ]
     static let insertOnlyCommandTables = [
         LedgerPowerSyncTable.clientCommands,
@@ -59,7 +61,8 @@ enum LocalOperationIdentityGuard {
         "ProjectSetupPowerSyncStore",
         "ProjectArchivePowerSyncStore",
         "ClientArchivePowerSyncStore",
-        "ItemSpaceAssignmentPowerSyncStore"
+        "ItemSpaceAssignmentPowerSyncStore",
+        "ItemSpaceClearingPowerSyncStore"
     ]
 
     static func inspect(
@@ -102,6 +105,9 @@ enum LocalOperationIdentityGuard {
         let assignments = try transaction.getAll(sql: assignmentSQL, parameters: [id]) {
             try AssignmentRow(cursor: $0)
         }
+        let clearings = try transaction.getAll(sql: clearingSQL, parameters: [id]) {
+            try ClearingRow(cursor: $0)
+        }
         try checkpoint(.inventoryRead)
 
         let malformedCrudClaimsID = malformedCrudPayloads.contains(where: {
@@ -110,7 +116,8 @@ enum LocalOperationIdentityGuard {
         let hasEvidence = !operations.isEmpty || !results.isEmpty || !crudRows.isEmpty
             || !pendingClients.isEmpty || !pendingProjects.isEmpty
             || !pendingAllocations.isEmpty || !projectOverlays.isEmpty
-            || !clientOverlays.isEmpty || !assignments.isEmpty || malformedCrudClaimsID
+            || !clientOverlays.isEmpty || !assignments.isEmpty
+            || !clearings.isEmpty || malformedCrudClaimsID
         guard hasEvidence else { return .unclaimed }
         guard !malformedCrudClaimsID else {
             throw LocalOperationIdentityGuardFailure.malformedEvidence
@@ -129,7 +136,7 @@ enum LocalOperationIdentityGuard {
         guard commandCrud.count <= 1, results.count <= 1,
               pendingClients.count <= 1, pendingProjects.count <= 1,
               projectOverlays.count <= 1, clientOverlays.count <= 1,
-              assignments.count <= 1 else {
+              assignments.count <= 1, clearings.count <= 1 else {
             throw LocalOperationIdentityGuardFailure.malformedEvidence
         }
 
@@ -194,6 +201,12 @@ enum LocalOperationIdentityGuard {
             }
             families.insert(.assignItemsToSpace)
         }
+        for row in clearings {
+            guard row.matches(operation: operation) else {
+                throw LocalOperationIdentityGuardFailure.malformedEvidence
+            }
+            families.insert(.clearItemSpaceAssignments)
+        }
 
         guard families.count == 1, let ownerFamily = families.first,
               isComplete(
@@ -201,7 +214,8 @@ enum LocalOperationIdentityGuard {
                 results: results, pendingClients: pendingClients,
                 pendingProjects: pendingProjects, pendingAllocations: pendingAllocations,
                 projectOverlays: projectOverlays,
-                clientOverlays: clientOverlays, assignments: assignments
+                clientOverlays: clientOverlays, assignments: assignments,
+                clearings: clearings
               ) else {
             throw LocalOperationIdentityGuardFailure.malformedEvidence
         }
@@ -222,7 +236,8 @@ enum LocalOperationIdentityGuard {
         pendingAllocations: [PendingAllocationRow],
         projectOverlays: [ArchiveOverlayRow],
         clientOverlays: [ArchiveOverlayRow],
-        assignments: [AssignmentRow]
+        assignments: [AssignmentRow],
+        clearings: [ClearingRow]
     ) -> Bool {
         let commandCount = commandCrud.filter { $0.table == family.insertOnlyCommandTable }.count
         switch operation.state {
@@ -236,25 +251,31 @@ enum LocalOperationIdentityGuard {
                     && pendingProjects.isEmpty && pendingAllocations.isEmpty
                     && projectOverlays.isEmpty
                     && clientOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
             case .createProject:
                 return commandCount == 1 && pendingProjects.count == 1
                     && projectOverlays.isEmpty && clientOverlays.isEmpty
-                    && assignments.isEmpty
+                    && assignments.isEmpty && clearings.isEmpty
             case .archiveProject:
                 return commandCount == 1 && projectOverlays.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && clientOverlays.isEmpty
-                    && assignments.isEmpty
+                    && assignments.isEmpty && clearings.isEmpty
             case .archiveClient:
                 return commandCount == 1 && clientOverlays.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && assignments.isEmpty
+                    && assignments.isEmpty && clearings.isEmpty
             case .assignItemsToSpace:
                 return commandCrud.isEmpty && assignments.count == 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && clientOverlays.isEmpty
+                    && clientOverlays.isEmpty && clearings.isEmpty
+            case .clearItemSpaceAssignments:
+                return commandCrud.isEmpty && clearings.count == 1
+                    && pendingClients.isEmpty && pendingProjects.isEmpty
+                    && pendingAllocations.isEmpty && projectOverlays.isEmpty
+                    && clientOverlays.isEmpty && assignments.isEmpty
             }
         case "applied", "rejected", "superseded", "resolved":
             switch family {
@@ -264,17 +285,18 @@ enum LocalOperationIdentityGuard {
                       operation.hasNoTerminalEvidence else { return false }
                 return commandCount <= 1 && projectOverlays.isEmpty
                     && clientOverlays.isEmpty && assignments.isEmpty
+                    && clearings.isEmpty
             case .archiveProject:
                 return operation.hasCompleteTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && clientOverlays.isEmpty
-                    && assignments.isEmpty
+                    && assignments.isEmpty && clearings.isEmpty
             case .archiveClient:
                 return operation.hasCompleteTerminalEvidence && commandCount <= 1
                     && pendingClients.isEmpty && pendingProjects.isEmpty
                     && pendingAllocations.isEmpty && projectOverlays.isEmpty
-                    && assignments.isEmpty
-            case .assignItemsToSpace:
+                    && assignments.isEmpty && clearings.isEmpty
+            case .assignItemsToSpace, .clearItemSpaceAssignments:
                 return false
             }
         default:
@@ -543,6 +565,30 @@ enum LocalOperationIdentityGuard {
                 && fingerprint == operation.fingerprint
         }
     }
+    private struct ClearingRow {
+        let accountId: String; let principalId: String; let contractVersion: String
+        let scopeKind: String; let projectId: String?; let fingerprint: String
+        init(cursor: any SqlCursor) throws {
+            accountId = try cursor.getString(name: "account_id")
+            principalId = try cursor.getString(name: "actor_principal_id")
+            contractVersion = try cursor.getString(name: "contract_version")
+            scopeKind = try cursor.getString(name: "scope_kind")
+            projectId = try cursor.getStringOptional(name: "project_id")
+            fingerprint = try cursor.getString(name: "fingerprint")
+        }
+        func matches(operation: OperationRow) -> Bool {
+            guard accountId == operation.accountId,
+                  principalId == operation.principalId,
+                  contractVersion == operation.contractVersion,
+                  fingerprint == operation.fingerprint else { return false }
+            switch scopeKind {
+            case "project": return projectId == operation.subjectId
+            case "business_inventory":
+                return projectId == nil && operation.subjectId == operation.accountId
+            default: return false
+            }
+        }
+    }
 
     private static let operationSQL = """
         SELECT COALESCE(id, '') AS id, COALESCE(account_id, '') AS account_id,
@@ -654,5 +700,13 @@ enum LocalOperationIdentityGuard {
                COALESCE(destination_space_id, '') AS destination_space_id,
                COALESCE(fingerprint, '') AS fingerprint
         FROM \(LedgerPowerSyncTable.itemSpaceAssignmentCommands) WHERE id = ?
+        """
+    private static let clearingSQL = """
+        SELECT COALESCE(account_id, '') AS account_id,
+               COALESCE(actor_principal_id, '') AS actor_principal_id,
+               COALESCE(contract_version, '') AS contract_version,
+               COALESCE(scope_kind, '') AS scope_kind, project_id,
+               COALESCE(fingerprint, '') AS fingerprint
+        FROM \(LedgerPowerSyncTable.itemSpaceClearingCommands) WHERE id = ?
         """
 }
