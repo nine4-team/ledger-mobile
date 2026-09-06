@@ -19,10 +19,10 @@
     {
       "id": "CONFIG-428FDE11BBE4",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "15504e6b406995f5bcea828be3e665171a45178dfc6240ea02ccf9abb0455836",
-      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
+      "acknowledgeSourceHash": "5461a11a65af8fcd6bf4f91844d064b7ed1df3eeaf254e022a6544694eb977f5",
+      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, explicit Projects with lossless category-configuration revision text, categories/allocations and operation results plus exact on-demand Space destinations, Project note history and Space core details under signed active membership.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-003", "A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"],
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"],
       "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation Sync Stream", "Account bootstrap Sync Stream", "Operation-result Sync Stream"], "securityRequirements": ["Every stream derives tenant scope from auth.user_id() through active membership"], "syncRequirements": ["Client identity and terminal operation evidence synchronize together without trusting client-authored scope"]},
       "migration": {"rule": "Deploy only to an isolated target environment after the vertical-spike gate authorizes it.", "reconciliation": ["Cross-account fixtures yield no Client or operation-result rows"]},
@@ -88,10 +88,10 @@
     {
       "id": "SWIFT-19D4AA7B766B",
       "acknowledgeCurrentSource": true,
-      "acknowledgeSourceHash": "01a016bf9cacf7faefad8e9892c67e4f439a80a67923d363acc459c4e6816d09",
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget categories/allocations, Space destination rows, existing command/optimistic state, immutable results, and pending-work observation journal.",
+      "acknowledgeSourceHash": "8b8cb3f6ea280e4a1c3e8189e645dd13716de2bc882de7ac4b5b9e83c818fbff",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, immutable results, and pending-work observation journal.",
       "disposition": "redesign", "status": "target_mapped", "blockers": ["A-004"],
-      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
+      "evidence": ["EVID-CLIENT-CREATION-PROVIDER-001", "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001", "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001", "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001", "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"], "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
       "target": {"owner": "Client Identity", "surfaces": ["Client creation PowerSync schema"], "securityRequirements": ["Command payload is insert-only and local operation state is never synchronized as authority"], "syncRequirements": ["Local columns align with streamed server rows while pending_operation_id remains local optimism evidence"]},
       "migration": {"rule": "Schema evolution remains isolated until compatibility testing closes A-004.", "reconciliation": ["Schema validates before database open"]},
       "verification": {"tests": ["LedgerPowerSyncVerticalSliceTests"], "acceptance": ["PowerSync schema validation succeeds and exact CRUD transaction shape is asserted"]}

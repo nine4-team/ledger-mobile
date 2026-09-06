@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T02:30:28.389Z",
+  "generatedFromManifestSync": "2026-09-06T04:25:56.819Z",
   "totals": {
     "slices": 88,
     "claimedTargetSurfaces": 293,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 227
+    "implementationAdvancedTargetSurfaces": 229
   },
   "statusCounts": {
     "draft": 2,
-    "ready": 1,
+    "ready": 0,
     "in_progress": 3,
-    "implemented": 12,
+    "implemented": 13,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -695,7 +695,7 @@
       "sliceId": "project-category-configuration-revision-foundation",
       "title": "Persist one independent revision for every Project category-configuration set",
       "kind": "technical_control",
-      "status": "ready",
+      "status": "implemented",
       "owner": "Project Category Configuration",
       "surfaceIds": [
         "CONFIG-3F4DAB40CF04",

@@ -8,9 +8,9 @@
     "productionExportId": null
   },
   "summary": {
-    "targetRelevant": 713,
-    "targetMapped": 529,
-    "residualSurfaces": 184,
+    "targetRelevant": 721,
+    "targetMapped": 531,
+    "residualSurfaces": 190,
     "distinctBlockers": 47
   },
   "blockers": [
@@ -572,6 +572,192 @@
           "disposition": "redesign",
           "status": "characterized",
           "currentBehavior": "Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status."
+        }
+      ]
+    },
+    {
+      "id": "O-026",
+      "kind": "product decision",
+      "owner": "Shared reference-data authorization",
+      "requirement": "Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests",
+      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
+      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
+      "count": 25,
+      "surfaces": [
+        {
+          "batchId": "M0-BACKEND-FUNCTIONS-001",
+          "id": "FUNCMOD-B42AA317B971",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills."
+        },
+        {
+          "batchId": "M0-BACKEND-FUNCTIONS-001",
+          "id": "FUNCTION-24C086150C5D",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "On relevant account budget-category changes, recomputes completeness for category Transactions and budget summaries for every Project in small concurrent batches."
+        },
+        {
+          "batchId": "M0-BACKEND-RULES-001",
+          "id": "RULE-3211FE38A8F0",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Space-template documents below an account preset have account-member CRUD."
+        },
+        {
+          "batchId": "M0-BACKEND-RULES-001",
+          "id": "RULE-79E65DCC45A6",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Account preset document, including default budget category pointer, has account-member CRUD."
+        },
+        {
+          "batchId": "M0-BACKEND-RULES-001",
+          "id": "RULE-AB3E61BAC3E3",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Per-project category allocation records have account-member CRUD and trigger budget-summary recalculation."
+        },
+        {
+          "batchId": "M0-BACKEND-RULES-001",
+          "id": "RULE-AFC1D6191232",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Vendor-default documents below an account preset have account-member CRUD."
+        },
+        {
+          "batchId": "M0-BACKEND-RULES-001",
+          "id": "RULE-C4FE7FBE534A",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Account budget-category definitions and metadata have account-member CRUD and drive completeness and budget-summary Functions."
+        },
+        {
+          "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+          "id": "SWIFT-A3CDC454B0BA",
+          "disposition": "redesign",
+          "status": "blocked",
+          "currentBehavior": "Comment-only Project category PowerSync provider placeholder."
+        },
+        {
+          "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+          "id": "SWIFT-BD6661CFC518",
+          "disposition": "redesign",
+          "status": "blocked",
+          "currentBehavior": "Comment-only future read-only staging-view placeholder."
+        },
+        {
+          "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+          "id": "SWIFT-D2C84703FEEA",
+          "disposition": "redesign",
+          "status": "blocked",
+          "currentBehavior": "Comment-only future AppModel placeholder."
+        },
+        {
+          "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+          "id": "SWIFT-D3652DD63EA1",
+          "disposition": "redesign",
+          "status": "blocked",
+          "currentBehavior": "Comment-only future staging-runtime adapter placeholder."
+        },
+        {
+          "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+          "id": "TEST-5286613EC809",
+          "disposition": "redesign",
+          "status": "blocked",
+          "currentBehavior": "Comment-only future provider-test placeholder."
+        },
+        {
+          "batchId": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+          "id": "TEST-561F3FACCE6F",
+          "disposition": "redesign",
+          "status": "blocked",
+          "currentBehavior": "Comment-only future AppModel-test placeholder."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPMOD-CA75CFB7F29D",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Registers category list and Project category enable/update/read tools while also recomputing current Transaction-only spend via Admin SDK."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPTOOL-9503D6684EDA",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Merge-writes one Project category budgetCents without validating non-negative range, category existence/type, Project existence, permissions or a revision."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "MCPTOOL-DA72457132EF",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Merge-enables one category for a Project with optional budgetCents and process timestamps, without validating parent/category/account relationships or authorization beyond MCP context."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-17BB6ABA1400",
+          "disposition": "redesign",
+          "status": "characterized",
+          "currentBehavior": "Stores vendor suggestions as one ordered string array, seeds a hardcoded default set, listens to the document and performs non-transactional read-modify-write add-if-missing with whitespace/lowercase normalization."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-1E0A38FC6F25",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Manages the vendor string array with optimistic local removal/reorder and silent saves; add uses the service's race-prone read-modify-write path."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-4637466F7F73",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Provides generic Space-template subscribe/create/update/delete and create-from-Space by copying name, notes and checklist state without resetting checked items."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-8D312DD816C5",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Creates, edits, archives/unarchives and reorders categories. Reorder launches an independent silent write per row; UI validation is not backed by trusted system/reference checks."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-AFBB07058144",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Provides generic account budget-category subscribe/create/update/delete against the default presets subcollection."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-BAFED6656104",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Subscribes/sets/deletes Project category allocation documents and also implements Fee installment validation and batch writes in the same source file. Project allocation writes merge budgetCents and optional actor fields."
+        },
+        {
+          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
+          "id": "SWIFT-E00DB27DF0BA",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Manages templates with create/edit/hard-delete and independent per-row reorder writes, suppressing all persistence errors."
+        },
+        {
+          "batchId": "M0-SPACES-REVIEW-001",
+          "id": "MCPMOD-D391DC704D1F",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Implements Firebase Space list/get/create/update tools and generic fields."
+        },
+        {
+          "batchId": "M0-SPACES-REVIEW-001",
+          "id": "SWIFT-5BB6D8BE3292",
+          "disposition": "replace",
+          "status": "characterized",
+          "currentBehavior": "Computes Space checklist progress, template-role availability, and detail summaries."
         }
       ]
     },
@@ -1211,150 +1397,6 @@
           "disposition": "redesign",
           "status": "characterized",
           "currentBehavior": "Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status."
-        }
-      ]
-    },
-    {
-      "id": "O-026",
-      "kind": "product decision",
-      "owner": "Shared reference-data authorization",
-      "requirement": "Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests",
-      "authority": "docs/plans/ledger-accounting-redesign/decision-log.md",
-      "traceability": "docs/architecture/redesign/product-decision-traceability.md",
-      "count": 19,
-      "surfaces": [
-        {
-          "batchId": "M0-BACKEND-FUNCTIONS-001",
-          "id": "FUNCMOD-B42AA317B971",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills."
-        },
-        {
-          "batchId": "M0-BACKEND-FUNCTIONS-001",
-          "id": "FUNCTION-24C086150C5D",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "On relevant account budget-category changes, recomputes completeness for category Transactions and budget summaries for every Project in small concurrent batches."
-        },
-        {
-          "batchId": "M0-BACKEND-RULES-001",
-          "id": "RULE-3211FE38A8F0",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Space-template documents below an account preset have account-member CRUD."
-        },
-        {
-          "batchId": "M0-BACKEND-RULES-001",
-          "id": "RULE-79E65DCC45A6",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Account preset document, including default budget category pointer, has account-member CRUD."
-        },
-        {
-          "batchId": "M0-BACKEND-RULES-001",
-          "id": "RULE-AB3E61BAC3E3",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Per-project category allocation records have account-member CRUD and trigger budget-summary recalculation."
-        },
-        {
-          "batchId": "M0-BACKEND-RULES-001",
-          "id": "RULE-AFC1D6191232",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Vendor-default documents below an account preset have account-member CRUD."
-        },
-        {
-          "batchId": "M0-BACKEND-RULES-001",
-          "id": "RULE-C4FE7FBE534A",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Account budget-category definitions and metadata have account-member CRUD and drive completeness and budget-summary Functions."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "MCPMOD-CA75CFB7F29D",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Registers category list and Project category enable/update/read tools while also recomputing current Transaction-only spend via Admin SDK."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "MCPTOOL-9503D6684EDA",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Merge-writes one Project category budgetCents without validating non-negative range, category existence/type, Project existence, permissions or a revision."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "MCPTOOL-DA72457132EF",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Merge-enables one category for a Project with optional budgetCents and process timestamps, without validating parent/category/account relationships or authorization beyond MCP context."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-17BB6ABA1400",
-          "disposition": "redesign",
-          "status": "characterized",
-          "currentBehavior": "Stores vendor suggestions as one ordered string array, seeds a hardcoded default set, listens to the document and performs non-transactional read-modify-write add-if-missing with whitespace/lowercase normalization."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-1E0A38FC6F25",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Manages the vendor string array with optimistic local removal/reorder and silent saves; add uses the service's race-prone read-modify-write path."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-4637466F7F73",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Provides generic Space-template subscribe/create/update/delete and create-from-Space by copying name, notes and checklist state without resetting checked items."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-8D312DD816C5",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Creates, edits, archives/unarchives and reorders categories. Reorder launches an independent silent write per row; UI validation is not backed by trusted system/reference checks."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-AFBB07058144",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Provides generic account budget-category subscribe/create/update/delete against the default presets subcollection."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-BAFED6656104",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Subscribes/sets/deletes Project category allocation documents and also implements Fee installment validation and batch writes in the same source file. Project allocation writes merge budgetCents and optional actor fields."
-        },
-        {
-          "batchId": "M0-PROJECT-CLIENT-REFERENCE-001",
-          "id": "SWIFT-E00DB27DF0BA",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Manages templates with create/edit/hard-delete and independent per-row reorder writes, suppressing all persistence errors."
-        },
-        {
-          "batchId": "M0-SPACES-REVIEW-001",
-          "id": "MCPMOD-D391DC704D1F",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Implements Firebase Space list/get/create/update tools and generic fields."
-        },
-        {
-          "batchId": "M0-SPACES-REVIEW-001",
-          "id": "SWIFT-5BB6D8BE3292",
-          "disposition": "replace",
-          "status": "characterized",
-          "currentBehavior": "Computes Space checklist progress, template-role availability, and detail summaries."
         }
       ]
     },

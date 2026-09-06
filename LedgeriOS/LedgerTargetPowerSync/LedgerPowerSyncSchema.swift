@@ -168,6 +168,7 @@ public enum LedgerPowerSyncSchema {
             columns: [
                 .text("account_id"), .text("client_id"), .text("display_name"),
                 .text("description"), .text("lifecycle"), .integer("revision"),
+                .text("category_configuration_revision"),
                 .integer("created_at_ms"), .integer("updated_at_ms"),
                 .text("created_by_principal_id")
             ],
@@ -202,6 +203,7 @@ public enum LedgerPowerSyncSchema {
             columns: [
                 .text("account_id"), .text("client_id"), .text("display_name"),
                 .text("description"), .text("lifecycle"), .integer("revision"),
+                .text("category_configuration_revision"),
                 .integer("created_at_ms"), .integer("updated_at_ms"),
                 .text("created_by_principal_id"), .text("operation_id")
             ],

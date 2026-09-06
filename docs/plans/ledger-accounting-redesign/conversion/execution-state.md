@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
-Last updated: 2026-09-05
-State version: 327
+Last updated: 2026-09-06
+State version: 328
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: SPACE-CORE-DETAILS-PROVIDER-IMPLEMENTED-LOCAL
+- Checkpoint: PROJECT-CATEGORY-CONFIGURATION-REVISION-IMPLEMENTED-LOCAL
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,10 +33,11 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **529 of 713 target-relevant surfaces mapped or
-  later (74.2%)**. Local surface-implementation coverage is **227 of 713
-  implemented or verified (31.8%)**. Eight Space core-details leaves now execute
-  locally but add no hosted-rehearsal or cutover-ready credit.
+- Planning/control coverage is **531 of 721 target-relevant surfaces mapped or
+  later (73.6%)**. Local surface-implementation coverage is **229 of 721
+  implemented or later (31.8%)**. The dedicated Project category-configuration
+  revision adds two implemented leaves but no new provider-backed workflow,
+  hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -83,6 +84,23 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Implemented `project-category-configuration-revision-foundation` from frozen
+  READY `dec9a5703fc9d723d02f60ff6b1037f2db8e9dd2`. Every synthetic target
+  Project now has an independent exact numeric full-`UInt64` configuration
+  revision defaulted/backfilled to 1; both existing Project Sync queries project
+  canonical decimal text; authoritative and pending SQLite columns store text;
+  and offline Project creation writes projected 1 in its existing complete-
+  aggregate transaction. Two independent reviews initially rejected weak
+  creation/backfill, access, Sync-scope, restart and rollback proof. After two
+  correction rounds, both returned GO with no P0-P3 findings. Local 33/33
+  focused and 373/373 complete pgTAP, 10/10 focused and 566/566 complete Swift,
+  strict database lint, MCP/contracts and the exact normalized Sync/config guard
+  and both staging builds pass. Immutable implementation CI remains pending at
+  this checkpoint. Six provider/app leaves remain comment-only under O-026; real
+  hosted Auth/Sync, A-003/A-004/A-015, Firebase, migration, production and
+  cutover remain unadvanced;
+  `EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001`.
 
 - Implemented `space-core-details-powersync-provider` from frozen READY
   `9b62bec1403261a7d966c570af981da461d80f12`. Eight claimed leaves now provide

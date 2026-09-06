@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T02:30:28.389Z",
+    "lastSynchronizedAt": "2026-09-06T04:25:56.819Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -734,7 +734,8 @@
         "EVID-ACCOUNT-DISCOVERY-PROVIDER-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
       "notes": "Generated reproducibly from LedgerTargetProject.yml and claimed by target-environment-isolation; verified Project/Client browsing and implemented Project/Client archive Swift files are included. The six Project-category placeholders compile but expose no symbol or behavior while O-026 remains open. The Firebase application Xcode project is unchanged.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -937,10 +938,10 @@
           "path": "supabase/migrations/20260906014441_project_category_configuration_revision.sql"
         }
       ],
-      "observedSourceHash": "bcfeec1c6f4e3cae276f2e306df93fbf3016f1198fa9f4fd980a20ca65718176",
-      "acknowledgedSourceHash": "bcfeec1c6f4e3cae276f2e306df93fbf3016f1198fa9f4fd980a20ca65718176",
+      "observedSourceHash": "5f1dbd33a0864f17acd5c7f53225aee5b2e6caacc236d5d9f1093656f181c881",
+      "acknowledgedSourceHash": "5f1dbd33a0864f17acd5c7f53225aee5b2e6caacc236d5d9f1093656f181c881",
       "metadata": {},
-      "currentBehavior": "Comment-only CLI-created migration scaffold for a dedicated Project category-configuration revision.",
+      "currentBehavior": "Adds one exact integral numeric category-configuration revision to every synthetic target Project, defaulting and backfilling to 1 with the inclusive UInt64 range and an explicit independent-aggregate contract.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Category Configuration",
@@ -968,12 +969,13 @@
           "Exact type/range/default/backfill and independence pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
-      "notes": "READY scaffold; no executable DDL yet.",
+      "notes": "Executable only in the isolated target migration chain; no provider, hosted resource or production deployment.",
       "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
     },
     {
@@ -1134,10 +1136,10 @@
           "path": "powersync/sync-streams.yaml"
         }
       ],
-      "observedSourceHash": "15504e6b406995f5bcea828be3e665171a45178dfc6240ea02ccf9abb0455836",
-      "acknowledgedSourceHash": "15504e6b406995f5bcea828be3e665171a45178dfc6240ea02ccf9abb0455836",
+      "observedSourceHash": "5461a11a65af8fcd6bf4f91844d064b7ed1df3eeaf254e022a6544694eb977f5",
+      "acknowledgedSourceHash": "5461a11a65af8fcd6bf4f91844d064b7ed1df3eeaf254e022a6544694eb977f5",
       "metadata": {},
-      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, Projects, categories/allocations and operation results plus exact on-demand active-member Space destination streams parameterized by Project ID or Business-Inventory Account ID.",
+      "currentBehavior": "Defines edition-3 target Sync Streams for bootstrap, Clients, explicit Projects with lossless category-configuration revision text, categories/allocations and operation results plus exact on-demand Space destinations, Project note history and Space core details under signed active membership.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -1174,7 +1176,8 @@
       ],
       "evidence": [
         "EVID-CLIENT-CREATION-PROVIDER-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
       "notes": "Locally reviewed stream contract only; no hosted PowerSync instance has been provisioned or activated.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
@@ -1789,10 +1792,10 @@
           "path": "supabase/tests/project_category_configuration_revision.test.sql"
         }
       ],
-      "observedSourceHash": "d7d0828bcd88d5e97c7334c94d16100ddc33d1072921bef191eccce0b10a0a6c",
-      "acknowledgedSourceHash": "d7d0828bcd88d5e97c7334c94d16100ddc33d1072921bef191eccce0b10a0a6c",
+      "observedSourceHash": "551fe5783e3e0350a002d14689f8acde64dcf6f7ad6caef06c1d4b1a47463237",
+      "acknowledgedSourceHash": "551fe5783e3e0350a002d14689f8acde64dcf6f7ad6caef06c1d4b1a47463237",
       "metadata": {},
-      "currentBehavior": "One-placeholder pgTAP READY scaffold with no product assertion.",
+      "currentBehavior": "Runs 33 rolled-back pgTAP assertions covering the actual migrated type/range/default/comment, an exact scratch pre-ALTER backfill rehearsal, real empty/nonempty Project-command initialization, revision independence, complete RLS negatives and no direct writer.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Category Configuration",
@@ -1817,15 +1820,16 @@
           "npm run target:supabase:test:db"
         ],
         "acceptance": [
-          "Placeholder is replaced only after READY"
+          "All 33 focused assertions and the complete database suite pass"
         ]
       },
-      "status": "target_mapped",
+      "status": "implemented",
       "blockers": [],
       "evidence": [
-        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001"
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-READY-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
-      "notes": "READY scaffold; one runner-validity assertion only.",
+      "notes": "No source data, production identity or hosted endpoint is used.",
       "classificationBatch": "M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
     },
     {
@@ -2043,10 +2047,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
-      "acknowledgedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
+      "observedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
+      "acknowledgedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
       "metadata": {},
-      "currentBehavior": "Fails closed unless target layers remain isolated; LedgerTargetAppModel depends only on Core; exact dependencies and adapter boundaries hold; Project/Client browsing plus both archive families use thin adapters and model-owned lifecycles with drain-before-runtime-close ordering; archive/accessibility/direct-command/post-create-confirmation guards hold; and the source Firebase project references no target-only path.",
+      "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapter boundaries hold; implemented browsing/archive/Space flows preserve lifecycle and drainage guards; the dedicated Project category-configuration revision has only reviewed production mappings and exact unchanged-authority Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -2093,7 +2097,8 @@
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -6498,10 +6503,10 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
-      "acknowledgedSourceHash": "2da77afda50be7f158764ec7486595c42f0741f8b7430ba26f82bf17ee1b04af",
+      "observedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
+      "acknowledgedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
       "metadata": {},
-      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects source/production identifiers, AppModel provider/SQL contamination, direct app command construction, incomplete Project/Client browsing or either archive adapter/wiring/accessibility/drainage path, loss of post-create confirmation, public lifecycle-owned providers, dependency drift and target-only paths in the Firebase application project.",
+      "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows, freezes exact Project revision schema/local mappings and complete normalized Project Sync queries, keeps O-026-blocked category-provider leaves nonexecutable, and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
       "target": {
         "owner": "Environment and Composition Control",
@@ -20793,12 +20798,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift"
         }
       ],
-      "observedSourceHash": "01a016bf9cacf7faefad8e9892c67e4f439a80a67923d363acc459c4e6816d09",
-      "acknowledgedSourceHash": "01a016bf9cacf7faefad8e9892c67e4f439a80a67923d363acc459c4e6816d09",
+      "observedSourceHash": "8b8cb3f6ea280e4a1c3e8189e645dd13716de2bc882de7ac4b5b9e83c818fbff",
+      "acknowledgedSourceHash": "8b8cb3f6ea280e4a1c3e8189e645dd13716de2bc882de7ac4b5b9e83c818fbff",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project, budget categories/allocations, Space destination rows, existing command/optimistic state, immutable results, and pending-work observation journal.",
+      "currentBehavior": "Defines the PowerSync local schema for Principal, Account, membership, Client, Project with category-configuration revision text, budget categories/allocations, Space and note rows, command/optimistic state, immutable results, and pending-work observation journal.",
       "disposition": "redesign",
       "target": {
         "owner": "Client Identity",
@@ -20835,7 +20840,8 @@
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
       "notes": "Target provider layer only. Pending-work, archive overlays and Space destination rows remain local-only; primary ownership and hosted schema authority are unchanged.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
@@ -26566,12 +26572,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/ProjectSetupPowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "c77ca15a1d5c998569ec2d6cd79bf1783f18f1c867ea16f6159479ef48b775f6",
-      "acknowledgedSourceHash": "c77ca15a1d5c998569ec2d6cd79bf1783f18f1c867ea16f6159479ef48b775f6",
+      "observedSourceHash": "3075ef3d9c123b092495928861e25d2360d265da5a273e4df2b3ae7bde57d0d4",
+      "acknowledgedSourceHash": "3075ef3d9c123b092495928861e25d2360d265da5a273e4df2b3ae7bde57d0d4",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence and overlays; exact replay remains stable before Client archive validation, while new or not-yet-accepted setup fails closed when authoritative lifecycle or valid pending Client-archive evidence makes the existing Client unselectable.",
+      "currentBehavior": "Accepts one CreateProject command offline and atomically persists local operation evidence, projected category-configuration revision text 1 and the complete Client/Project/allocation overlay; exact replay remains stable while new acceptance fails closed for an unselectable existing Client.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -26606,7 +26612,8 @@
       "evidence": [
         "EVID-PROJECT-SETUP-PROVIDER-001",
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
       "notes": "The concrete store is module-internal and lifecycle-owned. All optimistic projection tables are local-only; only the command enters the PowerSync upload queue.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"
@@ -42946,12 +42953,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/ProjectPowerSyncVerticalSliceTests.swift"
         }
       ],
-      "observedSourceHash": "709d0c95ac1f6194e5d4a933278b3da2c22bc984f0c6017c98fd5d7eacaeb6f3",
-      "acknowledgedSourceHash": "709d0c95ac1f6194e5d4a933278b3da2c22bc984f0c6017c98fd5d7eacaeb6f3",
+      "observedSourceHash": "663382adc125b26f87117efbd7992c09d4abbaa9693915224e68a709a2df5fc8",
+      "acknowledgedSourceHash": "663382adc125b26f87117efbd7992c09d4abbaa9693915224e68a709a2df5fc8",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Runs seven target-only PowerSync Project tests for cross-runtime canonical parity, encrypted atomic restart durability, Project/Client core-only authoritative reconciliation with allocation retention, existing/new Client branches, zero categories, complete rejection cleanup, mixed command FIFO dispatch and Int64 RPC precision.",
+      "currentBehavior": "Runs ten target-only PowerSync Project tests covering canonical parity, encrypted complete-aggregate restart, full UInt64 text, injected mid-acceptance rollback, rebound preservation, authoritative core-only reconciliation with allocation retention, existing/new Client branches, rejection cleanup, FIFO dispatch and Int64 RPC precision.",
       "disposition": "redesign",
       "target": {
         "owner": "Project Setup",
@@ -42976,7 +42983,7 @@
           "npm run target:powersync:test"
         ],
         "acceptance": [
-          "All seven Project PowerSync tests pass, including core-only reconciliation that retains all three pending allocations"
+          "All ten Project PowerSync tests pass, including atomic rollback, rebound completeness, restart durability and core-only reconciliation retaining all three pending allocations"
         ]
       },
       "status": "target_mapped",
@@ -42986,7 +42993,8 @@
       ],
       "evidence": [
         "EVID-PROJECT-SETUP-PROVIDER-001",
-        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001"
+        "EVID-CLIENT-PROJECT-DIRECTORY-PROVIDER-001",
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
       ],
       "notes": "Uses disposable encrypted local databases and fake HTTP/upload boundaries only.",
       "classificationBatch": "M0-PROJECT-POWERSYNC-PROVIDER-001"

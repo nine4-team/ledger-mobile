@@ -225,9 +225,10 @@ actor ProjectSetupPowerSyncStore: ProjectSetupOperating {
                     sql: """
                     INSERT INTO \(LedgerPowerSyncTable.pendingProjects) (
                       id, account_id, client_id, display_name, description,
-                      lifecycle, revision, created_at_ms, updated_at_ms,
+                      lifecycle, revision, category_configuration_revision,
+                      created_at_ms, updated_at_ms,
                       created_by_principal_id, operation_id
-                    ) VALUES (?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?, ?)
                     """,
                     parameters: [
                         command.draft.projectId.rawValue,
@@ -235,6 +236,7 @@ actor ProjectSetupPowerSyncStore: ProjectSetupOperating {
                         command.draft.clientSelection.clientId.rawValue,
                         command.draft.displayName.rawValue,
                         command.draft.description,
+                        "1",
                         acceptedAtMilliseconds,
                         acceptedAtMilliseconds,
                         command.envelope.actorPrincipalId.rawValue,

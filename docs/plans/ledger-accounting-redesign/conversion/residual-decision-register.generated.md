@@ -6,9 +6,9 @@ This register is the deterministic queue for target-relevant surfaces that canno
 
 ## Summary
 
-- Target-relevant surfaces: 713
-- Target-mapped or later: 529
-- Residual surfaces: 184
+- Target-relevant surfaces: 721
+- Target-mapped or later: 531
+- Residual surfaces: 190
 - Distinct blockers: 47
 
 A surface may depend on more than one blocker, so blocker counts do not sum to the residual-surface count.
@@ -19,11 +19,11 @@ A surface may depend on more than one blocker, so blocker counts do not sum to t
 |---:|---|---:|---|---|---|
 | 1 | `O-015` | 46 | product decision | Item accounting model | Approved relational model, constraints, query plan, and migration fixture results |
 | 2 | `O-007` | 31 | product decision | Item provenance | Approved authority model, migration mapping, and offline history query tests |
-| 3 | `O-032` | 23 | product decision | Transaction capture/import | Approved posted-versus-draft contract plus offline restart, budget exclusion, completion, import quarantine and concurrency tests |
-| 4 | `O-023` | 22 | product decision | Attachments and retention | Approved detach/delete product behavior plus shared-reference, paid-evidence, retry, retention, and restoration tests |
-| 5 | `O-005` | 20 | product decision | Budget presentation | Approved arithmetic/visual specification and signed-value snapshot tests |
-| 6 | `O-029` | 20 | product decision | Transaction lifecycle | Approved state/dependency policy plus stale-plan, paid/Invoice/Item/lineage/media, retry, human-confirmation and immutable-evidence tests |
-| 7 | `O-026` | 19 | product decision | Shared reference-data authorization | Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests |
+| 3 | `O-026` | 25 | product decision | Shared reference-data authorization | Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests |
+| 4 | `O-032` | 23 | product decision | Transaction capture/import | Approved posted-versus-draft contract plus offline restart, budget exclusion, completion, import quarantine and concurrency tests |
+| 5 | `O-023` | 22 | product decision | Attachments and retention | Approved detach/delete product behavior plus shared-reference, paid-evidence, retry, retention, and restoration tests |
+| 6 | `O-005` | 20 | product decision | Budget presentation | Approved arithmetic/visual specification and signed-value snapshot tests |
+| 7 | `O-029` | 20 | product decision | Transaction lifecycle | Approved state/dependency policy plus stale-plan, paid/Invoice/Item/lineage/media, retry, human-confirmation and immutable-evidence tests |
 | 8 | `O-040` | 17 | product decision | Personal Project budget pinning | Approved feature, target, missing/empty/no-pin/default/card and lifecycle policy plus no-render-write, cross-user, offline conflict/recovery and migration tests |
 | 9 | `O-031` | 16 | product decision | Item price/tax basis | Approved tax-inclusive or explicit per-Item allocation rule with mixed-tax, migration and no-silent-inheritance tests |
 | 10 | `O-009` | 15 | product decision | Invoice sources | Decision to retire adjustments or define typed category, provenance, edit, and audit rules |
@@ -166,6 +166,42 @@ Affected surfaces:
 - `SWIFT-6109B0A97167` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.
 - `TEST-880C5785FD49` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.
 
+### O-026 — 25 surfaces
+
+- Kind: product decision
+- Owning context: Shared reference-data authorization
+- Required closure: Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests
+- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
+- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
+
+Affected surfaces:
+
+- `FUNCMOD-B42AA317B971` — `M0-BACKEND-FUNCTIONS-001` — redesign/characterized: Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills.
+- `FUNCTION-24C086150C5D` — `M0-BACKEND-FUNCTIONS-001` — redesign/characterized: On relevant account budget-category changes, recomputes completeness for category Transactions and budget summaries for every Project in small concurrent batches.
+- `RULE-3211FE38A8F0` — `M0-BACKEND-RULES-001` — replace/characterized: Space-template documents below an account preset have account-member CRUD.
+- `RULE-79E65DCC45A6` — `M0-BACKEND-RULES-001` — replace/characterized: Account preset document, including default budget category pointer, has account-member CRUD.
+- `RULE-AB3E61BAC3E3` — `M0-BACKEND-RULES-001` — redesign/characterized: Per-project category allocation records have account-member CRUD and trigger budget-summary recalculation.
+- `RULE-AFC1D6191232` — `M0-BACKEND-RULES-001` — replace/characterized: Vendor-default documents below an account preset have account-member CRUD.
+- `RULE-C4FE7FBE534A` — `M0-BACKEND-RULES-001` — redesign/characterized: Account budget-category definitions and metadata have account-member CRUD and drive completeness and budget-summary Functions.
+- `SWIFT-A3CDC454B0BA` — `M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001` — redesign/blocked: Comment-only Project category PowerSync provider placeholder.
+- `SWIFT-BD6661CFC518` — `M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001` — redesign/blocked: Comment-only future read-only staging-view placeholder.
+- `SWIFT-D2C84703FEEA` — `M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001` — redesign/blocked: Comment-only future AppModel placeholder.
+- `SWIFT-D3652DD63EA1` — `M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001` — redesign/blocked: Comment-only future staging-runtime adapter placeholder.
+- `TEST-5286613EC809` — `M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001` — redesign/blocked: Comment-only future provider-test placeholder.
+- `TEST-561F3FACCE6F` — `M0-PROJECT-CATEGORY-CONFIGURATION-REVISION-001` — redesign/blocked: Comment-only future AppModel-test placeholder.
+- `MCPMOD-CA75CFB7F29D` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Registers category list and Project category enable/update/read tools while also recomputing current Transaction-only spend via Admin SDK.
+- `MCPTOOL-9503D6684EDA` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Merge-writes one Project category budgetCents without validating non-negative range, category existence/type, Project existence, permissions or a revision.
+- `MCPTOOL-DA72457132EF` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Merge-enables one category for a Project with optional budgetCents and process timestamps, without validating parent/category/account relationships or authorization beyond MCP context.
+- `SWIFT-17BB6ABA1400` — `M0-PROJECT-CLIENT-REFERENCE-001` — redesign/characterized: Stores vendor suggestions as one ordered string array, seeds a hardcoded default set, listens to the document and performs non-transactional read-modify-write add-if-missing with whitespace/lowercase normalization.
+- `SWIFT-1E0A38FC6F25` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Manages the vendor string array with optimistic local removal/reorder and silent saves; add uses the service's race-prone read-modify-write path.
+- `SWIFT-4637466F7F73` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Provides generic Space-template subscribe/create/update/delete and create-from-Space by copying name, notes and checklist state without resetting checked items.
+- `SWIFT-8D312DD816C5` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Creates, edits, archives/unarchives and reorders categories. Reorder launches an independent silent write per row; UI validation is not backed by trusted system/reference checks.
+- `SWIFT-AFBB07058144` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Provides generic account budget-category subscribe/create/update/delete against the default presets subcollection.
+- `SWIFT-BAFED6656104` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Subscribes/sets/deletes Project category allocation documents and also implements Fee installment validation and batch writes in the same source file. Project allocation writes merge budgetCents and optional actor fields.
+- `SWIFT-E00DB27DF0BA` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Manages templates with create/edit/hard-delete and independent per-row reorder writes, suppressing all persistence errors.
+- `MCPMOD-D391DC704D1F` — `M0-SPACES-REVIEW-001` — replace/characterized: Implements Firebase Space list/get/create/update tools and generic fields.
+- `SWIFT-5BB6D8BE3292` — `M0-SPACES-REVIEW-001` — replace/characterized: Computes Space checklist progress, template-role availability, and detail summaries.
+
 ### O-032 — 23 surfaces
 
 - Kind: product decision
@@ -294,36 +330,6 @@ Affected surfaces:
 - `SWIFT-6109B0A97167` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Derives report totals/rows from legacy Transaction movement/reimbursement fields, mutable Items, Invoice status/lines, Fees, and Spaces.
 - `SWIFT-F3BDD0968C6D` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Scans account arrays, shows tab counts/results, resolves context, and performs broad generic bulk mutations from search.
 - `TEST-880C5785FD49` — `M0-REPORTING-SEARCH-001` — redesign/characterized: Tests current report aggregation from reimbursement/movement Transactions, Items, Spaces, and active status.
-
-### O-026 — 19 surfaces
-
-- Kind: product decision
-- Owning context: Shared reference-data authorization
-- Required closure: Approved role/capability matrix plus standard-member, admin, cross-account and system-category negative tests
-- Authority: `docs/plans/ledger-accounting-redesign/decision-log.md`
-- Traceability: `docs/architecture/redesign/product-decision-traceability.md`
-
-Affected surfaces:
-
-- `FUNCMOD-B42AA317B971` — `M0-BACKEND-FUNCTIONS-001` — redesign/characterized: Single Functions entrypoint contains account/invite APIs, starter quota API, lineage/price/Space triggers, accounting audit logic, budget projections, and backfills.
-- `FUNCTION-24C086150C5D` — `M0-BACKEND-FUNCTIONS-001` — redesign/characterized: On relevant account budget-category changes, recomputes completeness for category Transactions and budget summaries for every Project in small concurrent batches.
-- `RULE-3211FE38A8F0` — `M0-BACKEND-RULES-001` — replace/characterized: Space-template documents below an account preset have account-member CRUD.
-- `RULE-79E65DCC45A6` — `M0-BACKEND-RULES-001` — replace/characterized: Account preset document, including default budget category pointer, has account-member CRUD.
-- `RULE-AB3E61BAC3E3` — `M0-BACKEND-RULES-001` — redesign/characterized: Per-project category allocation records have account-member CRUD and trigger budget-summary recalculation.
-- `RULE-AFC1D6191232` — `M0-BACKEND-RULES-001` — replace/characterized: Vendor-default documents below an account preset have account-member CRUD.
-- `RULE-C4FE7FBE534A` — `M0-BACKEND-RULES-001` — redesign/characterized: Account budget-category definitions and metadata have account-member CRUD and drive completeness and budget-summary Functions.
-- `MCPMOD-CA75CFB7F29D` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Registers category list and Project category enable/update/read tools while also recomputing current Transaction-only spend via Admin SDK.
-- `MCPTOOL-9503D6684EDA` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Merge-writes one Project category budgetCents without validating non-negative range, category existence/type, Project existence, permissions or a revision.
-- `MCPTOOL-DA72457132EF` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Merge-enables one category for a Project with optional budgetCents and process timestamps, without validating parent/category/account relationships or authorization beyond MCP context.
-- `SWIFT-17BB6ABA1400` — `M0-PROJECT-CLIENT-REFERENCE-001` — redesign/characterized: Stores vendor suggestions as one ordered string array, seeds a hardcoded default set, listens to the document and performs non-transactional read-modify-write add-if-missing with whitespace/lowercase normalization.
-- `SWIFT-1E0A38FC6F25` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Manages the vendor string array with optimistic local removal/reorder and silent saves; add uses the service's race-prone read-modify-write path.
-- `SWIFT-4637466F7F73` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Provides generic Space-template subscribe/create/update/delete and create-from-Space by copying name, notes and checklist state without resetting checked items.
-- `SWIFT-8D312DD816C5` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Creates, edits, archives/unarchives and reorders categories. Reorder launches an independent silent write per row; UI validation is not backed by trusted system/reference checks.
-- `SWIFT-AFBB07058144` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Provides generic account budget-category subscribe/create/update/delete against the default presets subcollection.
-- `SWIFT-BAFED6656104` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Subscribes/sets/deletes Project category allocation documents and also implements Fee installment validation and batch writes in the same source file. Project allocation writes merge budgetCents and optional actor fields.
-- `SWIFT-E00DB27DF0BA` — `M0-PROJECT-CLIENT-REFERENCE-001` — replace/characterized: Manages templates with create/edit/hard-delete and independent per-row reorder writes, suppressing all persistence errors.
-- `MCPMOD-D391DC704D1F` — `M0-SPACES-REVIEW-001` — replace/characterized: Implements Firebase Space list/get/create/update tools and generic fields.
-- `SWIFT-5BB6D8BE3292` — `M0-SPACES-REVIEW-001` — replace/characterized: Computes Space checklist progress, template-role availability, and detail summaries.
 
 ### O-040 — 17 surfaces
 

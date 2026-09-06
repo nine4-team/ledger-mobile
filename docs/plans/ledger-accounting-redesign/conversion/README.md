@@ -5,16 +5,26 @@ Ledger reads, writes, subscribes, uploads, or invokes backend behavior. The
 narrower **source-query register** records individual source query call sites.
 Neither term refers to Ledger's Business Inventory product area.
 
-Status: M0 backend-surface classification complete; 529 of 713 target-relevant
-surfaces are target-mapped or later and the remaining 184 are explicitly tied
-to decisions/spikes/production evidence. Of those target surfaces, 227 are now
-implemented or verified. This 31.8% is local surface-implementation coverage,
+Status: M0 backend-surface classification complete; 531 of 721 target-relevant
+surfaces are target-mapped or later and the remaining 190 are explicitly tied
+to decisions/spikes/production evidence. Of those target surfaces, 229 are now
+implemented or later. This 31.8% is local surface-implementation coverage,
 not shipped-app or cutover readiness. Ten provider-backed product workflows
 work locally; hosted authenticated rehearsal and cutover-ready counts remain
 zero. Decision-independent target
 foundations are in progress. M1 is blocked only by canonical production-profile
 evidence and O-022 hard-cutover evidence; production migration is not authorized
-by this directory. The Space assignment-destination picker is implemented
+by this directory. The dedicated Project category-configuration revision is
+implemented locally across two claimed leaves from frozen READY `dec9a570`.
+Postgres exact numeric/default/backfill, real Project-create initialization,
+lossless text Sync/local projection, encrypted aggregate restart, injected
+transaction rollback, complete access negatives and exact unchanged-authority
+Sync query guards pass two correction rounds and final independent GO reviews.
+All 373 pgTAP and 566 Swift tests plus strict lint, target controls and both
+staging builds pass locally; immutable implementation CI remains pending. Six
+provider/app leaves remain comment-only under O-026, and real hosted Sync/Auth,
+A-003/A-004/A-015, Firebase, migration, production and cutover remain
+unadvanced; `EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001`. The Space assignment-destination picker is implemented
 locally from exact green READY `5f3888b2` plus facade correction `9afda220`:
 nine target surfaces provide SELECT-only Postgres/RLS, exact Project/Inventory
 on-demand streams, encrypted retained-epoch-safe local reads, honest presenter

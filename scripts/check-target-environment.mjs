@@ -1625,6 +1625,213 @@ if (
   }
 }
 
+const categoryRevisionMigrationPath = path.join(
+  repositoryRoot,
+  "supabase/migrations/20260906014441_project_category_configuration_revision.sql",
+);
+const powerSyncSchemaPath = path.join(
+  powerSyncRoot,
+  "LedgerPowerSyncSchema.swift",
+);
+const projectSetupStorePath = path.join(
+  powerSyncRoot,
+  "ProjectSetupPowerSyncStore.swift",
+);
+const syncStreamsPath = path.join(repositoryRoot, "powersync/sync-streams.yaml");
+for (const requiredPath of [
+  categoryRevisionMigrationPath,
+  powerSyncSchemaPath,
+  projectSetupStorePath,
+  syncStreamsPath,
+]) {
+  if (!fs.existsSync(requiredPath)) {
+    fail("target_project_category_revision_foundation_missing", relative(requiredPath));
+  }
+}
+if (
+  [
+    categoryRevisionMigrationPath,
+    powerSyncSchemaPath,
+    projectSetupStorePath,
+    syncStreamsPath,
+  ].every(fs.existsSync)
+) {
+  const migration = fs.readFileSync(categoryRevisionMigrationPath, "utf8");
+  const schema = fs.readFileSync(powerSyncSchemaPath, "utf8");
+  const store = fs.readFileSync(projectSetupStorePath, "utf8");
+  const sync = fs.readFileSync(syncStreamsPath, "utf8");
+  const projectCategoryDomainPath = path.join(
+    coreRoot,
+    "ProjectCategoryConfigurationData.swift",
+  );
+  const projectCategoryDomain = fs.readFileSync(
+    projectCategoryDomainPath,
+    "utf8",
+  );
+  for (const required of [
+    "add column category_configuration_revision numeric not null default 1",
+    "scale(category_configuration_revision) = 0",
+    "category_configuration_revision >= 1::numeric",
+    "category_configuration_revision <= 18446744073709551615::numeric",
+  ]) {
+    if (!migration.includes(required)) {
+      fail("target_project_category_revision_database_incomplete", required);
+    }
+  }
+  if (
+    (schema.match(/\.text\("category_configuration_revision"\)/g) ?? [])
+      .length !== 2
+  ) {
+    fail(
+      "target_project_category_revision_local_type",
+      "Authoritative and pending Project tables must each store the revision as text.",
+    );
+  }
+  for (const required of [
+    "lifecycle, revision, category_configuration_revision,",
+    'command.draft.description,\n                        "1",',
+  ]) {
+    if (!store.includes(required)) {
+      fail("target_project_category_revision_pending_incomplete", required);
+    }
+  }
+  if (!projectCategoryDomain.includes("public let configurationRevision: UInt64")) {
+    fail(
+      "target_project_category_revision_domain_type",
+      "Project category-configuration snapshots must expose an exact UInt64 revision.",
+    );
+  }
+  const categoryRevisionProductionFiles = [
+    ...swiftFiles(coreRoot),
+    ...swiftFiles(powerSyncRoot),
+    ...swiftFiles(appModelRoot),
+    ...swiftFiles(targetAppRoot),
+  ].filter((filePath) =>
+    /category_configuration_revision/.test(
+      fs.readFileSync(filePath, "utf8"),
+    ),
+  );
+  const allowedCategoryRevisionFiles = new Set([
+    powerSyncSchemaPath,
+    projectSetupStorePath,
+  ]);
+  const unexpectedCategoryRevisionFiles = categoryRevisionProductionFiles.filter(
+    (filePath) => !allowedCategoryRevisionFiles.has(filePath),
+  );
+  if (
+    categoryRevisionProductionFiles.length !== allowedCategoryRevisionFiles.size ||
+    unexpectedCategoryRevisionFiles.length > 0
+  ) {
+    fail(
+      "target_project_category_revision_unreviewed_mapping",
+      `Only the frozen Core type, local schema, and literal pending-Project initialization may map the revision in production Swift before the provider boundary: ${unexpectedCategoryRevisionFiles.map(relative).join(", ")}`,
+    );
+  }
+
+  const streamNames = [
+    ...sync.matchAll(/^  ([a-z][a-z0-9_]*):$/gm),
+  ].map((match) => match[1]);
+  const expectedStreamNames = [
+    "spike_account_bootstrap",
+    "spike_clients",
+    "spike_projects",
+    "spike_operation_results",
+    "space_assignment_project_destinations",
+    "space_assignment_business_inventory_destinations",
+    "project_note_history",
+    "space_core_details",
+  ];
+  if (JSON.stringify(streamNames) !== JSON.stringify(expectedStreamNames)) {
+    fail(
+      "target_project_category_revision_sync_stream_set",
+      "The revision foundation must not add, remove, or rename a Sync Stream.",
+    );
+  }
+  const streamSection = (name) =>
+    sync.match(
+      new RegExp(
+        `^  ${name}:\\n[\\s\\S]*?(?=^  [a-z][a-z0-9_]*:\\n|(?![\\s\\S]))`,
+        "m",
+      ),
+    )?.[0] ?? "";
+  const broadProjectSection = streamSection("spike_projects");
+  const projectNoteSection = streamSection("project_note_history");
+  const normalizedQueries = (section) =>
+    [...section.matchAll(
+      /^      - \|\n([\s\S]*?)(?=^      - \|\n|(?![\s\S]))/gm,
+    )].map((match) => match[1].replace(/\s+/g, " ").trim());
+  const expectedBroadProjectQueries = [
+    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project WHERE project.account_id IN ( SELECT membership.account_id FROM spike_account_memberships AS membership JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' )",
+    "SELECT category.* FROM spike_budget_categories AS category JOIN spike_account_memberships AS membership ON membership.account_id = category.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
+    "SELECT allocation.* FROM spike_project_category_allocations AS allocation JOIN spike_budget_categories AS category ON category.account_id = allocation.account_id AND category.id = allocation.category_id JOIN spike_account_memberships AS membership ON membership.account_id = allocation.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND ( category.visibility_class = 'ordinary' OR membership.financial_access = 'full' )",
+  ];
+  const expectedProjectNoteQueries = [
+    "SELECT project.id, project.account_id, project.client_id, project.display_name, project.description, project.lifecycle, project.revision, project.category_configuration_revision::text AS category_configuration_revision, project.created_at_ms, project.updated_at_ms, project.created_by_principal_id FROM spike_projects AS project JOIN spike_account_memberships AS membership ON membership.account_id = project.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE project.account_id = subscription.parameter('account_id') AND project.id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
+    "SELECT note.id, note.account_id, note.project_id, note.id AS keyset_id, note.content_kind, note.note_text, note.source, note.created_by_principal_id, note.creator_display_name, note.created_at_ms, note.revision::text AS revision, note.last_edited_by_principal_id, note.last_edited_at_ms, note.deleted_by_principal_id, note.deleted_at_ms FROM spike_project_notes AS note JOIN spike_projects AS project ON project.account_id = note.account_id AND project.id = note.project_id JOIN spike_account_memberships AS membership ON membership.account_id = note.account_id JOIN spike_principals AS principal ON principal.id = membership.principal_id WHERE note.account_id = subscription.parameter('account_id') AND note.project_id = subscription.parameter('project_id') AND principal.auth_user_id = auth.user_id() AND membership.state = 'active'",
+  ];
+  if (
+    JSON.stringify(normalizedQueries(broadProjectSection)) !==
+    JSON.stringify(expectedBroadProjectQueries)
+  ) {
+    fail(
+      "target_project_category_revision_sync_broad_exact",
+      "The complete three-query Project stream must remain byte-semantically equal after whitespace normalization.",
+    );
+  }
+  if (
+    JSON.stringify(normalizedQueries(projectNoteSection)) !==
+    JSON.stringify(expectedProjectNoteQueries)
+  ) {
+    fail(
+      "target_project_category_revision_sync_note_exact",
+      "The complete two-query Project-note stream must remain byte-semantically equal after whitespace normalization.",
+    );
+  }
+  if (
+    (sync.match(
+      /project\.category_configuration_revision::text\s+AS category_configuration_revision/g,
+    ) ?? []).length !== 2 ||
+    /SELECT\s+project\.\*/i.test(sync)
+  ) {
+    fail(
+      "target_project_category_revision_sync_incomplete",
+      "Both unchanged-authority Project projections must cast the exact numeric revision to text and neither may use project.*.",
+    );
+  }
+  if (!store.includes('command.draft.description,\n                        "1",')) {
+    fail(
+      "target_project_category_revision_derived",
+      "The only local initialization must remain the reviewed literal generation 1 inside Project acceptance.",
+    );
+  }
+}
+
+const blockedCategoryProviderLeaves = [
+  path.join(powerSyncRoot, "ProjectCategoryConfigurationPowerSyncQuery.swift"),
+  path.join(powerSyncTestRoot, "ProjectCategoryConfigurationPowerSyncQueryTests.swift"),
+  path.join(appModelRoot, "ProjectCategoryConfigurationStagingExercise.swift"),
+  path.join(appModelTestRoot, "ProjectCategoryConfigurationStagingExerciseTests.swift"),
+  path.join(targetAppRoot, "ProjectCategoryConfigurationStagingRuntimeAdapter.swift"),
+  path.join(targetAppRoot, "ProjectCategoryConfigurationStagingExerciseView.swift"),
+];
+for (const filePath of blockedCategoryProviderLeaves) {
+  if (!fs.existsSync(filePath)) {
+    fail("target_project_category_blocked_leaf_missing", relative(filePath));
+    continue;
+  }
+  const substantiveLines = fs
+    .readFileSync(filePath, "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("//"));
+  if (substantiveLines.length !== 0) {
+    fail(
+      "target_project_category_blocked_leaf_executable",
+      `${relative(filePath)} must remain comment-only until O-026 and a separate READY boundary are resolved.`,
+    );
+  }
+}
+
 if (!fs.existsSync(sourceProject)) {
   fail("source_project_missing", "LedgeriOS/LedgeriOS.xcodeproj/project.pbxproj");
 } else {

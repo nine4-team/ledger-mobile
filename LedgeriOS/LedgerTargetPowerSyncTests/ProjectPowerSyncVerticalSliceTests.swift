@@ -71,6 +71,10 @@ struct ProjectPowerSyncVerticalSliceTests {
         #expect(receipt.localState == .queued)
         #expect(try await Self.count("spike_pending_clients", database: database) == 1)
         #expect(try await Self.count("spike_pending_projects", database: database) == 1)
+        #expect(try await Self.count("spike_local_operations", database: database) == 1)
+        let acceptedCommand = try #require(try await database.getNextCrudTransaction())
+        #expect(acceptedCommand.crud.count == 1)
+        #expect(acceptedCommand.crud.first?.table == LedgerPowerSyncTable.projectCommands)
         #expect(
             try await Self.count(
                 "spike_pending_project_category_allocations",
@@ -79,6 +83,22 @@ struct ProjectPowerSyncVerticalSliceTests {
         )
         #expect(try await Self.count("spike_clients", database: database) == 0)
         #expect(try await Self.count("spike_projects", database: database) == 0)
+        #expect(
+            try await Self.text(
+                "category_configuration_revision",
+                from: LedgerPowerSyncTable.pendingProjects,
+                id: command.draft.projectId.rawValue,
+                database: database
+            ) == "1"
+        )
+        #expect(
+            try await Self.text(
+                "typeof(category_configuration_revision)",
+                from: LedgerPowerSyncTable.pendingProjects,
+                id: command.draft.projectId.rawValue,
+                database: database
+            ) == "text"
+        )
 
         try await database.close()
         #expect(!String(
@@ -88,6 +108,20 @@ struct ProjectPowerSyncVerticalSliceTests {
 
         let reopened = try fixture.open()
         #expect(try await Self.count("spike_pending_projects", database: reopened) == 1)
+        #expect(
+            try await Self.text(
+                "category_configuration_revision",
+                from: LedgerPowerSyncTable.pendingProjects,
+                id: command.draft.projectId.rawValue,
+                database: reopened
+            ) == "1"
+        )
+        #expect(
+            try await Self.count(
+                "spike_pending_project_category_allocations",
+                database: reopened
+            ) == 3
+        )
         let queued = try #require(try await reopened.getNextCrudTransaction())
         #expect(queued.crud.count == 1)
         #expect(queued.crud.first?.table == LedgerPowerSyncTable.projectCommands)
@@ -140,6 +174,147 @@ struct ProjectPowerSyncVerticalSliceTests {
         fixture.removeDirectory()
     }
 
+    @Test("Simulated authoritative projection preserves full UInt64 text across restart")
+    func categoryConfigurationRevisionTextDurability() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        _ = try await database.execute(
+            sql: """
+            INSERT INTO \(LedgerPowerSyncTable.projects) (
+              id, account_id, client_id, display_name, lifecycle, revision,
+              category_configuration_revision, created_at_ms, updated_at_ms,
+              created_by_principal_id
+            ) VALUES (
+              'project-config-max', 'account-primary', 'client-existing',
+              'Maximum Configuration Revision', 'active', 1,
+              '18446744073709551615', 1788696000000, 1788696000000,
+              'principal-owner'
+            )
+            """,
+            parameters: nil
+        )
+
+        #expect(
+            try await Self.text(
+                "category_configuration_revision",
+                from: LedgerPowerSyncTable.projects,
+                id: "project-config-max",
+                database: database
+            ) == "18446744073709551615"
+        )
+        #expect(
+            try await Self.text(
+                "typeof(category_configuration_revision)",
+                from: LedgerPowerSyncTable.projects,
+                id: "project-config-max",
+                database: database
+            ) == "text"
+        )
+
+        try await database.close()
+        let reopened = try fixture.open()
+        #expect(
+            try await Self.text(
+                "category_configuration_revision",
+                from: LedgerPowerSyncTable.projects,
+                id: "project-config-max",
+                database: reopened
+            ) == "18446744073709551615"
+        )
+
+        try await reopened.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("A mid-acceptance failure rolls back the complete pending Project aggregate")
+    func failedAcceptanceRollsBackCompleteAggregate() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.newClientCommand()
+        _ = try await database.execute(
+            sql: """
+            CREATE TRIGGER fail_project_allocation_insert
+            INSTEAD OF INSERT ON spike_pending_project_category_allocations
+            BEGIN
+              SELECT RAISE(ABORT, 'injected pending allocation failure');
+            END
+            """,
+            parameters: nil
+        )
+
+        await #expect(throws: (any Error).self) {
+            _ = try await ProjectSetupPowerSyncStore(database: database).create(command)
+        }
+
+        #expect(try await Self.count("spike_local_operations", database: database) == 0)
+        #expect(try await Self.count("spike_pending_clients", database: database) == 0)
+        #expect(try await Self.count("spike_pending_projects", database: database) == 0)
+        #expect(
+            try await Self.count(
+                "spike_pending_project_category_allocations",
+                database: database
+            ) == 0
+        )
+        #expect(try await Self.count("spike_project_commands", database: database) == 0)
+
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
+    @Test("A rebound operation cannot split the pending Project aggregate")
+    func reboundOperationLeavesOriginalAggregate() async throws {
+        let fixture = try ProjectDatabaseFixture()
+        let database = try fixture.open()
+        let command = try Self.newClientCommand()
+        let store = ProjectSetupPowerSyncStore(database: database)
+        _ = try await store.create(command)
+        let rebound = try CreateProjectCommand(
+            operationId: command.envelope.operationId,
+            draft: ProjectSetupDraft(
+                accountId: command.envelope.accountId,
+                actorPrincipalId: command.envelope.actorPrincipalId,
+                operationContractVersion: command.envelope.contractVersion,
+                projectId: ProjectID(validating: "project-rebound"),
+                clientSelection: command.draft.clientSelection,
+                displayName: ProjectDisplayName(validating: "Rebound Project"),
+                description: nil,
+                categoryAllocations: [],
+                capturedAt: Self.capturedAt
+            )
+        )
+
+        await #expect(
+            throws: OperationContractFailure.payloadMismatch(
+                command.envelope.operationId
+            )
+        ) {
+            _ = try await store.create(rebound)
+        }
+        #expect(try await Self.count("spike_pending_projects", database: database) == 1)
+        #expect(try await Self.count("spike_pending_clients", database: database) == 1)
+        #expect(try await Self.count("spike_local_operations", database: database) == 1)
+        let preservedCommand = try #require(try await database.getNextCrudTransaction())
+        #expect(preservedCommand.crud.count == 1)
+        #expect(preservedCommand.crud.first?.table == LedgerPowerSyncTable.projectCommands)
+        #expect(
+            try await Self.count(
+                "spike_pending_project_category_allocations",
+                database: database
+            ) == 3
+        )
+        #expect(
+            try await Self.text(
+                "category_configuration_revision",
+                from: LedgerPowerSyncTable.pendingProjects,
+                id: command.draft.projectId.rawValue,
+                database: database
+            ) == "1"
+        )
+
+        try await database.close(deleteDatabase: true)
+        fixture.removeDirectory()
+    }
+
     @Test("Authoritative core readback retains allocation optimism until aggregate proof")
     func authoritativeReadbackReconcilesOnlyProjectCore() async throws {
         let fixture = try ProjectDatabaseFixture()
@@ -180,9 +355,10 @@ struct ProjectPowerSyncVerticalSliceTests {
             sql: """
             INSERT INTO spike_projects (
               id, account_id, client_id, display_name, description,
-              lifecycle, revision, created_at_ms, updated_at_ms,
+              lifecycle, revision, category_configuration_revision,
+              created_at_ms, updated_at_ms,
               created_by_principal_id
-            ) VALUES (?, ?, ?, ?, ?, 'active', 1, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, 'active', 1, '1', ?, ?, ?)
             """,
             parameters: [
                 command.draft.projectId.rawValue,
@@ -215,6 +391,14 @@ struct ProjectPowerSyncVerticalSliceTests {
             return
         }
         #expect(snapshot.row?.project.id == command.draft.projectId)
+        #expect(
+            try await Self.text(
+                "category_configuration_revision",
+                from: LedgerPowerSyncTable.projects,
+                id: command.draft.projectId.rawValue,
+                database: database
+            ) == "1"
+        )
         #expect(try await Self.count("spike_pending_clients", database: database) == 0)
         #expect(try await Self.count("spike_pending_projects", database: database) == 0)
         #expect(
@@ -493,6 +677,20 @@ struct ProjectPowerSyncVerticalSliceTests {
     ) async throws -> Int64 {
         try await database.get("SELECT count(*) FROM \(table)") { cursor in
             try cursor.getInt64(index: 0)
+        }
+    }
+
+    private static func text(
+        _ expression: String,
+        from table: String,
+        id: String,
+        database: any PowerSyncDatabaseProtocol
+    ) async throws -> String {
+        try await database.get(
+            sql: "SELECT \(expression) FROM \(table) WHERE id = ?",
+            parameters: [id]
+        ) { cursor in
+            try cursor.getString(index: 0)
         }
     }
 
