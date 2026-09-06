@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 337
+State version: 338
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-COMMIT-AND-CI
+- Checkpoint: ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-VERIFIED-PROMOTION
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -52,7 +52,7 @@ without modifying the running Firebase application before hard cutover.
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
 - The implementation tracker currently contains 281 status-bearing rows: 68
-  done, eight verified, 13 implemented, zero ready and zero awaiting verification,
+  done, nine verified, 12 implemented, zero ready and zero awaiting verification,
   12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
@@ -102,8 +102,10 @@ without modifying the running Firebase application before hard cutover.
   state, count and `ps_crud` remain unchanged. Final independent re-review is GO
   with no remaining P0/P1/P2 finding. The complete gate also passes all 577 Swift tests in 91 suites, 374 pgTAP
   assertions, strict database lint, 26 MCP tests, conversion/query controls and
-  both staging builds. Exact commit and immutable CI remain pending; A-016 and
-  every hosted/media/cutover gate remain unadvanced;
+  both staging builds. Exact implementation commit
+  `a35926c8fb07be56e218a87926bbc1934c8cb813` passed all three immutable jobs in
+  Actions run `34019611549`; A-016 and every hosted/media/cutover gate remain
+  unadvanced;
   `EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001`.
 
 - Independent adversarial review rejected the proposed provider-backed Vendor
@@ -4379,10 +4381,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Commit and push the independently reviewed exact local Attachment-byte resolver,
-require immutable exact-head CI, and promote only the evidence that actually
-passed. Final executable re-review is GO with no remaining P0/P1/P2 finding and
-the complete local gate is green. The reviewed dossier and exact clean base
+Commit this verification promotion, require immutable exact-head CI for the
+docs-only checkpoint, then freeze the next independently audited implementation
+dossier before touching its executable surfaces. Final executable re-review was
+GO with no remaining P0/P1/P2 finding, the complete local gate is green, and
+exact implementation `a35926c8fb07be56e218a87926bbc1934c8cb813` passed all three
+jobs in immutable Actions run `34019611549`. The reviewed dossier and exact clean base
 `f71e75a9c15091a45fb10727d1ec78a27d6f2fc5` remain the before-code authority.
 
 The resolver must require the complete immutable receipt, reject namespace

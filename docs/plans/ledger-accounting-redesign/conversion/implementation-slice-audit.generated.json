@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T07:36:05.024Z",
+  "generatedFromManifestSync": "2026-09-06T07:47:15.070Z",
   "totals": {
     "slices": 90,
     "claimedTargetSurfaces": 306,
@@ -11,8 +11,8 @@
     "draft": 3,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 14,
-    "verified": 70,
+    "implemented": 13,
+    "verified": 71,
     "rehearsed": 0,
     "cutover_ready": 0
   },
@@ -98,7 +98,7 @@
       "sliceId": "attachment-exact-local-byte-resolver",
       "title": "Resolve one accepted Attachment receipt to reverified protected local bytes",
       "kind": "technical_control",
-      "status": "implemented",
+      "status": "verified",
       "owner": "Attachment Exact Local Byte Resolver",
       "surfaceIds": [
         "SWIFT-82312CAAB02F",

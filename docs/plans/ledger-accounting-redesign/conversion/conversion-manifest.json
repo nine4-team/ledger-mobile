@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T07:36:05.024Z",
+    "lastSynchronizedAt": "2026-09-06T07:47:15.070Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -29711,7 +29711,7 @@
           "Exact identity, restart, corruption, cancellation and runtime-close tests pass without byte/path/key leakage"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [
         "A-004",
         "A-016"
@@ -47982,7 +47982,7 @@
           "The complete backend-neutral contract test matrix passes before provider integration is promoted"
         ]
       },
-      "status": "implemented",
+      "status": "verified",
       "blockers": [
         "A-004",
         "A-016"

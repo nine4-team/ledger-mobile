@@ -1,8 +1,10 @@
 # EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001 — Exact Local Attachment Byte Resolver
 
-- Status: IMPLEMENTED / exact commit and immutable CI pending
+- Status: VERIFIED
 - Date: 2026-09-06
 - Base commit: `f71e75a9c15091a45fb10727d1ec78a27d6f2fc5`
+- Exact implementation commit: `a35926c8fb07be56e218a87926bbc1934c8cb813`
+- Immutable Actions run: `34019611549`
 - Environment: dedicated target worktree only
 - Production/Firebase impact: none
 
@@ -91,8 +93,10 @@ GO with no remaining P0/P1/P2 finding. Conversion check reports 996 recorded / 9
 discovered / zero errors / three known warnings; the M0 and environment gates and
 diff check pass.
 
-This remains `implemented`, not `verified`: the exact implementation commit and
-immutable CI evidence are still pending.
+Exact implementation commit `a35926c8fb07be56e218a87926bbc1934c8cb813`
+passed all three immutable workflow jobs in Actions run `34019611549`:
+conversion state and traceability, the isolated target environment, and local
+Supabase provider slices. The slice is therefore `verified` at this boundary.
 
 ## Explicit Non-Advancement
 
