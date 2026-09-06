@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "sliceId": "attachment-exact-local-byte-resolver",
+  "title": "Resolve one accepted Attachment receipt to reverified protected local bytes",
+  "kind": "technical_control",
+  "status": "implemented",
+  "owner": "Attachment Exact Local Byte Resolver",
+  "surfaceIds": ["SWIFT-82312CAAB02F", "TEST-CF9AB8ADB530"],
+  "requirements": [
+    {
+      "id": "ATTACHRESOLVE-REQ-001",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Attachments",
+      "invariant": "Inside an already-open Account runtime, one complete immutable AttachmentLocalDurabilityReceipt resolves to its exact protected local bytes only after queue evidence and ciphertext independently reverify; local bytes remain the display source before upload.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHRESOLVE-TEST-001", "ATTACHRESOLVE-TEST-002", "ATTACHRESOLVE-TEST-003", "ATTACHRESOLVE-TEST-004"]
+    },
+    {
+      "id": "ATTACHRESOLVE-REQ-002",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Attachments",
+      "invariant": "A backend-neutral exact-receipt byte-resolution port accepts no Attachment-ID-only shortcut and exposes no PowerSync, database, filesystem, URL, cryptographic-key, upload or remote-storage type.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHRESOLVE-TEST-001", "ATTACHRESOLVE-TEST-007"]
+    },
+    {
+      "id": "ATTACHRESOLVE-REQ-003",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/06-security-and-access-control.md",
+      "section": "Offline Local-Data Security",
+      "invariant": "Namespace mismatch is rejected before row lookup; unknown, rebound, malformed, missing, corrupt, link-substituted or wrong-key evidence returns one bounded non-sensitive failure and never returns bytes from another environment, Principal, Account, parent or Attachment.",
+      "decisionIds": ["A-006", "A-011"],
+      "verificationIds": ["ATTACHRESOLVE-TEST-003", "ATTACHRESOLVE-TEST-004", "ATTACHRESOLVE-TEST-007"]
+    },
+    {
+      "id": "ATTACHRESOLVE-REQ-004",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/03-data-sync-and-offline.md",
+      "section": "Local Database Lifecycle",
+      "invariant": "Resolution is one finite runtime lease: close admits no later resolution, waits for an admitted lookup/decryption to unwind before closing the attachment database or releasing the vault, and cancellation cannot return payload or strand close.",
+      "decisionIds": [],
+      "verificationIds": ["ATTACHRESOLVE-TEST-005", "ATTACHRESOLVE-TEST-006"]
+    },
+    {
+      "id": "ATTACHRESOLVE-REQ-005",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+      "section": "Attachments",
+      "invariant": "Resolution is read-only and non-consuming: it does not change queue count/order/state, create ps_crud or upload work, mark remote success, detach, delete, discard, clean up, retain, evict or choose a renderer or derivative.",
+      "decisionIds": ["O-023"],
+      "verificationIds": ["ATTACHRESOLVE-TEST-001", "ATTACHRESOLVE-TEST-002", "ATTACHRESOLVE-TEST-004", "ATTACHRESOLVE-TEST-007"]
+    },
+    {
+      "id": "ATTACHRESOLVE-REQ-006",
+      "authorityRole": "architecture_authority",
+      "authorityPath": "docs/architecture/redesign/architecture-decisions.md",
+      "section": "A-016 — Offline-Access Lease",
+      "invariant": "This technical implementation operates only after an Account runtime is already open and grants no right to open or retain that runtime; A-016 remains the production-facing activation gate and prevents this slice from claiming authorization or user-facing release readiness.",
+      "decisionIds": ["A-016"],
+      "verificationIds": ["ATTACHRESOLVE-TEST-006", "ATTACHRESOLVE-TEST-008"]
+    },
+    {
+      "id": "ATTACHRESOLVE-REQ-007",
+      "authorityRole": "conversion_control",
+      "authorityPath": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+      "section": "Non-Goals and Safety Boundary",
+      "invariant": "All proof uses disposable local target fixtures and synthetic bytes; no Postgres, RLS, Data API, Sync Stream, Supabase Storage, hosted PowerSync/Auth, Firebase, production data, migration, release or cutover state changes.",
+      "decisionIds": ["A-003", "A-004"],
+      "verificationIds": ["ATTACHRESOLVE-TEST-007", "ATTACHRESOLVE-TEST-008"]
+    }
+  ],
+  "contracts": {
+    "domain": {
+      "items": [
+        "Add AttachmentLocalByteResolving in LedgerTargetCore with the complete AttachmentLocalDurabilityReceipt as its only lookup authority and Data as its success value.",
+        "Expose stable scope-mismatch, not-found, receipt-mismatch, malformed-evidence, missing-bytes, corrupt-bytes and local-read-unavailable failures with non-sensitive diagnostic codes; ordinary Swift cancellation remains control flow rather than a domain success/failure.",
+        "No AttachmentID-only resolver, remote fallback, URL, path, provider handle or implicit current-selection lookup exists."
+      ],
+      "notApplicable": ""
+    },
+    "postgresSchema": {"items": [], "notApplicable": "No Postgres relation, migration, view, index or constraint changes."},
+    "serverHandlers": {"items": [], "notApplicable": "No RPC, Edge Function, upload, verification or remote read handler."},
+    "dataApiGrants": {"items": [], "notApplicable": "No Data API or Storage grant is added."},
+    "rlsPolicies": {"items": [], "notApplicable": "Already-open local runtime isolation is not server authorization; no RLS or Storage policy is claimed."},
+    "syncStreams": {"items": [], "notApplicable": "No shared PowerSync table, connector, subscription or Sync Stream changes; resolution creates no ps_crud work."},
+    "localOffline": {
+      "items": [
+        "The store rejects receipt namespace mismatch before database lookup, validates the exact queue row and complete persisted receipt equality, then delegates AEAD/count/SHA reverification to the existing protected vault.",
+        "Two accepted receipts may be resolved out of FIFO order without substitution; success and failure leave queue state, count, order and pending upload evidence unchanged.",
+        "Close/reopen in the identical namespace and with the identical keys resolves the same receipt byte-identically; another namespace or key cannot do so.",
+        "The Account lifecycle owner wraps resolution in its existing finite lease and closes the attachment database only after every admitted resolution unwinds."
+      ],
+      "notApplicable": ""
+    },
+    "storageMedia": {
+      "items": [
+        "Reuse the existing descriptor-relative bounded ciphertext read, AES-GCM authenticated metadata, byte-count and SHA-256 reverification unchanged.",
+        "Expose no path, locator, key, URL, cache policy, renderer, derivative, upload, deletion or retention operation."
+      ],
+      "notApplicable": ""
+    },
+    "appMcp": {
+      "items": ["Add only one narrow public runtime facade method for an already-open Account runtime; no AppModel, SwiftUI, MCP resource/tool, current-parent lookup or user-facing authorization claim."],
+      "notApplicable": ""
+    },
+    "migrationReconciliation": {"items": [], "notApplicable": "No source attachment, Firebase URL/path/object or production data is read or transformed."},
+    "observabilityRunbooks": {
+      "items": ["Failures expose bounded codes only; receipt IDs, parent IDs, paths, bytes, hashes, keys, SQL and provider details are absent from diagnostics and logs."],
+      "notApplicable": ""
+    },
+    "rolloutRollback": {
+      "items": [
+        "Implementation is confined to the two owned contract leaves plus the frozen shared attachment store/runtime/tests/environment-check touchpoints.",
+        "A-003/A-004/A-016, O-023 and SPIKE-MED-001 remain unadvanced; the implementation is not production/user-facing authorization."
+      ],
+      "notApplicable": ""
+    }
+  },
+  "verification": [
+    {"id": "ATTACHRESOLVE-TEST-001", "kind": "domain", "owner": "LedgeriOS/LedgerTargetCoreTests/AttachmentLocalByteResolutionTests.swift and LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift", "covers": ["ATTACHRESOLVE-REQ-001", "ATTACHRESOLVE-REQ-002", "ATTACHRESOLVE-REQ-005"], "expected": "Provider-free contract values and the real store resolve the requested second of two distinct receipts byte-exactly, never substitute FIFO work, and leave count/order/state unchanged.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-002", "kind": "offline_restart", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift", "covers": ["ATTACHRESOLVE-REQ-001", "ATTACHRESOLVE-REQ-005"], "expected": "Close/reopen with the identical scope and keys resolves the pre-close receipt to identical bytes without consuming or reordering pending evidence.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-003", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift", "covers": ["ATTACHRESOLVE-REQ-001", "ATTACHRESOLVE-REQ-003"], "expected": "Cross-environment, Principal and Account receipts reject before lookup; unknown same-scope receipt, same-ID independently valid changed receipt and malformed/null/rebound queue evidence return their exact bounded failures and no bytes.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-004", "kind": "media_fault", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift", "covers": ["ATTACHRESOLVE-REQ-001", "ATTACHRESOLVE-REQ-003", "ATTACHRESOLVE-REQ-005"], "expected": "Missing, truncated/tampered, symlink/hardlink-substituted, wrong-key and changed count/digest/fingerprint evidence returns no bytes and does not mutate queue count/order/state or remote work. Deterministically injected database lookup and vault storage-read failures return exact localReadUnavailable with diagnostic code attachment_local_byte_read_unavailable rather than leaking provider errors.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-005", "kind": "end_to_end", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift", "covers": ["ATTACHRESOLVE-REQ-001", "ATTACHRESOLVE-REQ-004"], "expected": "A normally bootstrapped public LedgerOfflineClientRuntime captures two distinct Attachments and resolves the requested second receipt to its exact bytes rather than FIFO work. A gated admitted resolution holds one finite lease; concurrent close cannot begin either database close until resolution unwinds, then closes attachment before structured storage.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-006", "kind": "offline_rejection", "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift", "covers": ["ATTACHRESOLVE-REQ-004", "ATTACHRESOLVE-REQ-006"], "expected": "Cancellation returns no payload and releases the lease; reads started after closing begins or after terminal close refuse, repeated close is stable, and the facade never bypasses the lifecycle owner.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-007", "kind": "app_mcp_contract", "owner": "Ledger target source inspection, environment check and complete Swift tests", "covers": ["ATTACHRESOLVE-REQ-002", "ATTACHRESOLVE-REQ-003", "ATTACHRESOLVE-REQ-005", "ATTACHRESOLVE-REQ-007"], "expected": "No AttachmentID-only API, raw store/vault/database/path/key/URL exposure, sensitive diagnostic, queue mutation, ps_crud write, remote fallback, upload, renderer, delete or retention behavior exists.", "status": "passed", "evidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"]},
+    {"id": "ATTACHRESOLVE-TEST-008", "kind": "operational", "owner": ".github/workflows/supabase-conversion-control.yml", "covers": ["ATTACHRESOLVE-REQ-006", "ATTACHRESOLVE-REQ-007"], "expected": "Exact implementation and promotion commits pass conversion controls, complete nonparallel Swift/MCP tests, disposable local Supabase tests, both staging builds and clean artifacts without hosted, Firebase, migration, production or cutover access.", "status": "planned", "evidence": []}
+  ],
+  "implementationEvidence": ["EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"],
+  "rehearsalEvidence": [],
+  "blockers": [],
+  "notes": "Implementation is based on exact clean commit f71e75a9c15091a45fb10727d1ec78a27d6f2fc5 after independent READY review returned GO with no P0-P3 finding. The two owned leaves now contain the backend-neutral contract and tests; frozen shared touchpoints SWIFT-F850F907B87F, TEST-CE5D3D0516D1, SWIFT-75CFE285AF37, TEST-8D6A15063B2D, SWIFT-548A8A928FAE and CONFIG-81235587F306 implement exact scope-first receipt resolution, protected-byte reverification, lifecycle drainage and public-surface containment. Executable review found and closed three P2 issues: helper cancellation preservation, proof of scope refusal before every database access and equal-length AEAD tampering with unchanged queue and ps_crud state. Final re-review is GO with no remaining P0/P1/P2. Complete local gates pass: 577 Swift tests in 91 suites, 374 pgTAP assertions in 11 files, strict database lint, 26 MCP tests, conversion/query/environment/contracts controls and both staging builds. The first parallel iOS/macOS build attempt hit their shared DerivedData lock; serial iOS rerun passed. This target-local prerequisite remains below verified until exact immutable CI passes, and remains non-production-facing while A-016 is unresolved."
+}

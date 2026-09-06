@@ -52,7 +52,7 @@
       "authorityRole": "architecture_authority",
       "authorityPath": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
       "section": "Attachments",
-      "invariant": "The provider implements the existing backend-neutral capture port and exposes only pending count/order plus exact verified bytes for a future uploader; it has no remote-success, detach, delete, discard, cleanup, retention or eviction operation while O-023 remains open.",
+      "invariant": "The provider implements the existing backend-neutral capture port and supplies pending count/order plus exact verified bytes to separately governed full-receipt consumers; it has no Attachment-ID-only lookup, remote-success, detach, delete, discard, cleanup, retention or eviction operation while O-023 remains open.",
       "decisionIds": ["O-023"],
       "verificationIds": ["ATTACHDUR-TEST-001", "ATTACHDUR-TEST-005", "ATTACHDUR-TEST-008", "ATTACHDUR-TEST-009"]
     },

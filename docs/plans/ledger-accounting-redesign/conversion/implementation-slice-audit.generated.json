@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T06:49:01.613Z",
+  "generatedFromManifestSync": "2026-09-06T07:36:05.024Z",
   "totals": {
-    "slices": 89,
-    "claimedTargetSurfaces": 304,
+    "slices": 90,
+    "claimedTargetSurfaces": 306,
     "unclaimedTargetSurfaces": 428,
-    "implementationAdvancedTargetSurfaces": 229
+    "implementationAdvancedTargetSurfaces": 231
   },
   "statusCounts": {
     "draft": 3,
     "ready": 0,
     "in_progress": 3,
-    "implemented": 13,
+    "implemented": 14,
     "verified": 70,
     "rehearsed": 0,
     "cutover_ready": 0
@@ -93,6 +93,21 @@
       "verificationCount": 5,
       "blockerCount": 0,
       "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-capture-and-local-durability-receipt.json"
+    },
+    {
+      "sliceId": "attachment-exact-local-byte-resolver",
+      "title": "Resolve one accepted Attachment receipt to reverified protected local bytes",
+      "kind": "technical_control",
+      "status": "implemented",
+      "owner": "Attachment Exact Local Byte Resolver",
+      "surfaceIds": [
+        "SWIFT-82312CAAB02F",
+        "TEST-CF9AB8ADB530"
+      ],
+      "requirementCount": 7,
+      "verificationCount": 8,
+      "blockerCount": 0,
+      "filePath": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-exact-local-byte-resolver.json"
     },
     {
       "sliceId": "attachment-local-byte-durability-provider",

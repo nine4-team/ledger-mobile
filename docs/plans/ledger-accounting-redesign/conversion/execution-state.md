@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 334
+State version: 337
 
 ## Objective
 
@@ -13,7 +13,7 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: VENDOR-SUGGESTION-PROVIDER-PICKER-REJECTED-DRAFT
+- Checkpoint: ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-COMMIT-AND-CI
 - Branch: `codex/supabase-powersync-implementation`
 - Source commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
@@ -33,9 +33,9 @@ without modifying the running Firebase application before hard cutover.
 
 ## Program Progress Basis
 
-- Planning/control coverage is **542 of 732 target-relevant surfaces mapped or
-  later (74.0%)**. Local surface-implementation coverage is **229 of 732
-  implemented or later (31.3%)**. The eleven newly tracked Vendor-candidate
+- Planning/control coverage is **544 of 734 target-relevant surfaces mapped or
+  later (74.1%)**. Local surface-implementation coverage is **231 of 734
+  implemented or later (31.5%)**. The eleven newly tracked Vendor-candidate
   leaves increase planning coverage only; adversarial review rejected the
   candidate before executable work, so they add no implementation,
   provider-backed workflow, hosted-rehearsal or cutover-ready credit.
@@ -51,9 +51,9 @@ without modifying the running Firebase application before hard cutover.
   surfaces do not weight product complexity and repeating it obscured real
   movement. Progress reports must use the exact four lanes above; a new overall
   percentage may be introduced only with a checked-in weighted scope model.
-- The implementation tracker currently contains 279 status-bearing rows: 68
-  done, eight verified, 12 implemented, zero ready and zero awaiting verification,
-  12 in progress, 27 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
+- The implementation tracker currently contains 281 status-bearing rows: 68
+  done, eight verified, 13 implemented, zero ready and zero awaiting verification,
+  12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
 - Ten provider-backed product slices have working local behavior: Client
@@ -85,6 +85,26 @@ without modifying the running Firebase application before hard cutover.
   denominator stated.
 
 ## Corrected at This Checkpoint
+
+- Implemented the exact full-receipt local Attachment-byte resolver after
+  independent READY review returned GO. The backend-neutral Core port accepts
+  no Attachment-ID-only shortcut; the existing local provider refuses scope
+  mismatch before lookup, requires exact persisted receipt equality and reuses
+  protected-vault AEAD/count/SHA verification without consuming or mutating
+  queue state. The public Account runtime exposes the operation only through
+  its finite lifecycle lease, so close drains admitted resolution and later
+  calls refuse. Two Core contract tests, all 17 attachment-provider tests, all
+  21 Account-runtime tests and the target-environment guard pass locally. The
+  executable review found three P2 defects in cancellation preservation and
+  adversarial proof. The corrected implementation preserves `CancellationError`
+  through both lookup helpers, proves foreign-scope refusal before any database
+  access, and verifies equal-length ciphertext tampering while queue identity,
+  state, count and `ps_crud` remain unchanged. Final independent re-review is GO
+  with no remaining P0/P1/P2 finding. The complete gate also passes all 577 Swift tests in 91 suites, 374 pgTAP
+  assertions, strict database lint, 26 MCP tests, conversion/query controls and
+  both staging builds. Exact commit and immutable CI remain pending; A-016 and
+  every hosted/media/cutover gate remain unadvanced;
+  `EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001`.
 
 - Independent adversarial review rejected the proposed provider-backed Vendor
   suggestion picker before executable work. The initial audits had mistaken a
@@ -4359,24 +4379,21 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Complete an independent actual-diff review of the READY Space core-details
-package, correct every finding, run the complete local READY gate, then commit,
-push and require immutable exact-head CI. Only after that exact READY commit is
-green, implement the frozen eight leaves and shared touchpoints as one bounded
-read workflow, review the executable SQL/RLS/Sync and offline/app diffs
-independently, and pass complete local plus immutable exact-commit gates.
+Commit and push the independently reviewed exact local Attachment-byte resolver,
+require immutable exact-head CI, and promote only the evidence that actually
+passed. Final executable re-review is GO with no remaining P0/P1/P2 finding and
+the complete local gate is green. The reviewed dossier and exact clean base
+`f71e75a9c15091a45fb10727d1ec78a27d6f2fc5` remain the before-code authority.
 
-The Space core-details boundary must keep the existing active-only destination
-RLS policy and streams unchanged, model checklists relationally, derive counts
-only from complete evidence and add no Data API detail surface or writer. The
-Project archival-review slice remains `implemented`, not `verified`, until
-`PROJECTARCHIVALREVIEW-TEST-011` proves real authenticated PowerSync receipt and
-membership-revocation eviction. Do not implement note creation/edit/delete/
-search under O-039, broad Project MCP behavior under O-040, restore/delete/
-reassignment/media choices, or weaken the blocked direct Space-create dossier
-under O-044/O-045/O-046. Do not infer real PowerSync/Auth authorization from
-local proof, advance A-003/A-004, provision hosted resources, access
-production, migrate source data or modify Firebase.
+The resolver must require the complete immutable receipt, reject namespace
+mismatch before row lookup, resolve the requested receipt rather than FIFO
+upload work, reverify exact queue plus AEAD/count/SHA evidence, preserve queue
+state/order/count and drain as one finite runtime lease. A-016 still gates
+production-facing workspace admission/offline authorization. Do not add an
+Attachment-ID-only lookup, Postgres/RLS/Data API/Sync Stream/Storage surface,
+remote fallback, uploader, renderer/UI/AppModel, O-023 retention/deletion,
+hosted or physical-device claims, Firebase work, production access, migration,
+release or cutover behavior.
 
 Continue without waiting on the two M1 evidence blockers:
 

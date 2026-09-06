@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedFromManifestSync": "2026-09-06T06:49:01.613Z",
+  "generatedFromManifestSync": "2026-09-06T07:36:05.024Z",
   "rule": "Every conversion surface inherits this reviewed authority set through its classificationBatch. Canonical target specs and confirmed decision-log entries define redesigned behavior; current-product specs describe shipped behavior or constraints only; architecture and conversion-control documents own technical obligations, not product policy.",
   "totals": {
-    "surfaces": 994,
-    "targetRelevantSurfaces": 732,
-    "batches": 40,
+    "surfaces": 996,
+    "targetRelevantSurfaces": 734,
+    "batches": 41,
     "productScopeSurfaces": 815,
-    "technicalControlSurfaces": 179
+    "technicalControlSurfaces": 181
   },
   "canonicalTargetCoverage": [
     {
@@ -127,12 +127,13 @@
       "batchIds": [
         "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "M0-ACCOUNT-WORKSPACE-RUNTIME-ISOLATION-001",
+        "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
         "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
         "M0-IDENTITY-LIFECYCLE-001",
         "M0-PENDING-WORK-POWERSYNC-PROVIDER-001"
       ],
-      "surfaceCount": 24,
-      "targetRelevantSurfaceCount": 21
+      "surfaceCount": 26,
+      "targetRelevantSurfaceCount": 23
     },
     {
       "path": "docs/specs/budget-management.md",
@@ -513,6 +514,68 @@
       ]
     },
     {
+      "batchId": "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001",
+      "title": "Exact-receipt protected local attachment-byte resolution",
+      "scope": "technical_control",
+      "rationale": "The exact-receipt resolver exposes already-accepted protected local bytes only inside an already-open Account runtime, after immutable receipt, queue and ciphertext evidence reverify. It adds no workspace admission, remote read, rendering, upload, retention/deletion, hosted or production authority; A-016 remains the activation gate.",
+      "surfaceCount": 2,
+      "targetRelevantSurfaceCount": 2,
+      "authorities": [
+        {
+          "path": "docs/specs/offline-first.md",
+          "role": "current_product"
+        },
+        {
+          "path": "docs/specs/session-ending-pending-work.md",
+          "role": "canonical_target"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/decision-log.md",
+          "role": "decision_authority"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/vertical-spike-protocol.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/attachment-local-byte-durability-provider.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/implementation-slices/account-workspace-pending-work-runtime.json",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
+          "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/03-data-sync-and-offline.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/04-backend-ports-and-adapters.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/06-security-and-access-control.md",
+          "role": "architecture_authority"
+        },
+        {
+          "path": "docs/architecture/redesign/08-verification-observability-and-operations.md",
+          "role": "architecture_authority"
+        }
+      ],
+      "surfaceIds": [
+        "SWIFT-82312CAAB02F",
+        "TEST-CF9AB8ADB530"
+      ]
+    },
+    {
       "batchId": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001",
       "title": "Target protected local attachment-byte durability provider",
       "scope": "technical_control",
@@ -539,6 +602,10 @@
         {
           "path": "docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md",
           "role": "conversion_control"
+        },
+        {
+          "path": "docs/architecture/redesign/architecture-decisions.md",
+          "role": "architecture_authority"
         },
         {
           "path": "docs/architecture/redesign/03-data-sync-and-offline.md",

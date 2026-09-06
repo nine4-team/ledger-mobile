@@ -183,6 +183,12 @@ public final class LedgerOfflineClientRuntime: Sendable {
         try await lifecycleOwner.captureAttachment(capture)
     }
 
+    public func resolveLocalAttachmentBytes(
+        for receipt: AttachmentLocalDurabilityReceipt
+    ) async throws -> Data {
+        try await lifecycleOwner.resolveLocalAttachmentBytes(for: receipt)
+    }
+
     public func pendingWorkSummary() async throws -> PendingLocalWorkSummary {
         try await lifecycleOwner.pendingWorkSummary()
     }

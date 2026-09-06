@@ -674,6 +674,292 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         #expect(state == AttachmentPendingState.pending.rawValue)
         try await database.close()
     }
+
+    @Test("ATTACHRESOLVE-TEST-001 exact requested receipt resolves without FIFO substitution or consumption")
+    func exactReceiptResolutionIsNonConsuming() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let firstBytes = Data("first attachment bytes".utf8)
+        let secondBytes = Data("second attachment bytes".utf8)
+        _ = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-a", bytes: firstBytes)
+        )
+        let second = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-b", bytes: secondBytes)
+        )
+        let before = try await Self.queueIdentityAndState(database)
+
+        let resolved = try await store.resolveLocalAttachmentBytes(for: second)
+
+        #expect(resolved == secondBytes)
+        #expect(try await Self.queueIdentityAndState(database) == before)
+        #expect(try await store.pendingCount() == 2)
+        #expect(try await database.get("SELECT count(*) FROM ps_crud") {
+            try $0.getInt64(index: 0)
+        } == 0)
+        try await database.close()
+    }
+
+    @Test("ATTACHRESOLVE-TEST-002 exact receipt and bytes survive close and reopen")
+    func exactReceiptResolutionSurvivesRestart() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let firstDatabase = try fixture.openDatabase()
+        let firstStore = fixture.makeStore(
+            database: firstDatabase,
+            vault: try fixture.makeVault()
+        )
+        let bytes = Data("restart-resolved attachment".utf8)
+        let receipt = try await firstStore.enqueue(
+            fixture.capture(id: "attachment-resolve-restart", bytes: bytes)
+        )
+        let before = try await Self.queueIdentityAndState(firstDatabase)
+        try await firstDatabase.close()
+
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        #expect(try await restored.resolveLocalAttachmentBytes(for: receipt) == bytes)
+        #expect(try await Self.queueIdentityAndState(reopened) == before)
+        try await reopened.close()
+    }
+
+    @Test("ATTACHRESOLVE-TEST-003 scope, identity, receipt, and malformed evidence fail exactly")
+    func exactReceiptResolutionRejectsRebinding() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let store = fixture.makeStore(database: database, vault: try fixture.makeVault())
+        let receipt = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-identity")
+        )
+
+        let unknown = try fixture.receipt(id: "attachment-resolve-unknown")
+        await #expect(throws: AttachmentLocalByteResolutionFailure.receiptNotFound) {
+            _ = try await store.resolveLocalAttachmentBytes(for: unknown)
+        }
+
+        let changedParent = try fixture.receipt(
+            id: receipt.attachmentId.rawValue,
+            parentID: "item-attachment-resolver-other"
+        )
+        await #expect(throws: AttachmentLocalByteResolutionFailure.receiptMismatch) {
+            _ = try await store.resolveLocalAttachmentBytes(for: changedParent)
+        }
+
+        let foreignScopes = [
+            try Fixture.captureScope(environment: .targetStaging),
+            try Fixture.captureScope(principal: "principal-resolver-foreign"),
+            try Fixture.captureScope(account: "account-resolver-foreign")
+        ]
+        for foreignScope in foreignScopes {
+            let foreign = try fixture.receipt(
+                id: receipt.attachmentId.rawValue,
+                scope: foreignScope
+            )
+            await #expect(throws: AttachmentLocalByteResolutionFailure.scopeMismatch) {
+                _ = try await store.resolveLocalAttachmentBytes(for: foreign)
+            }
+        }
+
+        let scopeFirstStore = fixture.makeStore(
+            database: database,
+            vault: try fixture.makeVault(),
+            resolutionDatabaseAccessCheckpoint: { throw InjectedFailure() },
+            resolutionLookupCheckpoint: { throw InjectedFailure() }
+        )
+        let foreignBeforeLookup = try fixture.receipt(
+            id: receipt.attachmentId.rawValue,
+            scope: foreignScopes[0]
+        )
+        await #expect(throws: AttachmentLocalByteResolutionFailure.scopeMismatch) {
+            _ = try await scopeFirstStore.resolveLocalAttachmentBytes(
+                for: foreignBeforeLookup
+            )
+        }
+        await #expect(throws: AttachmentLocalByteResolutionFailure.localReadUnavailable) {
+            _ = try await scopeFirstStore.resolveLocalAttachmentBytes(for: receipt)
+        }
+
+        _ = try await database.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET account_id = ? WHERE id = ?",
+            parameters: ["account-rebound-row", receipt.attachmentId.rawValue]
+        )
+        await #expect(throws: AttachmentLocalByteResolutionFailure.malformedLocalEvidence) {
+            _ = try await store.resolveLocalAttachmentBytes(for: receipt)
+        }
+        _ = try await database.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET account_id = ? WHERE id = ?",
+            parameters: [Fixture.scope.accountId.rawValue, receipt.attachmentId.rawValue]
+        )
+
+        _ = try await database.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET receipt_json = NULL WHERE id = ?",
+            parameters: [receipt.attachmentId.rawValue]
+        )
+        await #expect(throws: AttachmentLocalByteResolutionFailure.malformedLocalEvidence) {
+            _ = try await store.resolveLocalAttachmentBytes(for: receipt)
+        }
+        try await database.close()
+    }
+
+    @Test("ATTACHRESOLVE-TEST-004 media and live read faults return no bytes and mutate no queue state")
+    func exactReceiptResolutionFaultsRemainReadOnly() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let database = try fixture.openDatabase()
+        let vault = try fixture.makeVault()
+        let store = fixture.makeStore(database: database, vault: vault)
+        let missing = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-a-missing")
+        )
+        let corrupt = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-b-corrupt")
+        )
+        let tampered = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-c-tampered")
+        )
+        let linked = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-d-linked")
+        )
+        let symlinked = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-e-symlinked")
+        )
+        let malformedCount = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-f-count")
+        )
+        let malformedDigest = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-g-digest")
+        )
+        let malformedFingerprint = try await store.enqueue(
+            fixture.capture(id: "attachment-resolve-h-fingerprint")
+        )
+        let before = try await Self.queueIdentityAndState(database)
+
+        try FileManager.default.removeItem(
+            at: try await vault.objectFileURLForTesting(missing.localObjectId)
+        )
+        let corruptURL = try await vault.objectFileURLForTesting(corrupt.localObjectId)
+        try Data(try Data(contentsOf: corruptURL).prefix(8)).write(to: corruptURL)
+        let tamperedURL = try await vault.objectFileURLForTesting(tampered.localObjectId)
+        var tamperedCiphertext = try Data(contentsOf: tamperedURL)
+        let tamperIndex = tamperedCiphertext.index(
+            tamperedCiphertext.startIndex,
+            offsetBy: tamperedCiphertext.count / 2
+        )
+        tamperedCiphertext[tamperIndex] ^= 0x01
+        try tamperedCiphertext.write(to: tamperedURL)
+        let linkedURL = try await vault.objectFileURLForTesting(linked.localObjectId)
+        let extraLink = fixture.directory.appendingPathComponent("resolver-extra-link")
+        try FileManager.default.linkItem(at: linkedURL, to: extraLink)
+        let symlinkedURL = try await vault.objectFileURLForTesting(
+            symlinked.localObjectId
+        )
+        let movedSymlinkTarget = fixture.directory.appendingPathComponent(
+            "resolver-moved-symlink-target"
+        )
+        try FileManager.default.moveItem(at: symlinkedURL, to: movedSymlinkTarget)
+        try FileManager.default.createSymbolicLink(
+            at: symlinkedURL,
+            withDestinationURL: movedSymlinkTarget
+        )
+        _ = try await database.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET byte_count = byte_count + 1 WHERE id = ?",
+            parameters: [malformedCount.attachmentId.rawValue]
+        )
+        _ = try await database.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET content_sha256 = ? WHERE id = ?",
+            parameters: [
+                String(repeating: "0", count: 64),
+                malformedDigest.attachmentId.rawValue
+            ]
+        )
+        _ = try await database.execute(
+            sql: "UPDATE \(AttachmentCapturePowerSyncTable.queue) SET receipt_fingerprint = ? WHERE id = ?",
+            parameters: [
+                String(repeating: "0", count: 64),
+                malformedFingerprint.attachmentId.rawValue
+            ]
+        )
+
+        await #expect(throws: AttachmentLocalByteResolutionFailure.missingBytes) {
+            _ = try await store.resolveLocalAttachmentBytes(for: missing)
+        }
+        await #expect(throws: AttachmentLocalByteResolutionFailure.corruptBytes) {
+            _ = try await store.resolveLocalAttachmentBytes(for: corrupt)
+        }
+        await #expect(throws: AttachmentLocalByteResolutionFailure.corruptBytes) {
+            _ = try await store.resolveLocalAttachmentBytes(for: tampered)
+        }
+        await #expect(throws: AttachmentLocalByteResolutionFailure.corruptBytes) {
+            _ = try await store.resolveLocalAttachmentBytes(for: linked)
+        }
+        await #expect(throws: AttachmentLocalByteResolutionFailure.corruptBytes) {
+            _ = try await store.resolveLocalAttachmentBytes(for: symlinked)
+        }
+        for malformed in [malformedCount, malformedDigest, malformedFingerprint] {
+            await #expect(throws: AttachmentLocalByteResolutionFailure.malformedLocalEvidence) {
+                _ = try await store.resolveLocalAttachmentBytes(for: malformed)
+            }
+        }
+
+        let lookupFailure = fixture.makeStore(
+            database: database,
+            vault: vault,
+            resolutionLookupCheckpoint: { throw InjectedFailure() }
+        )
+        await #expect(throws: AttachmentLocalByteResolutionFailure.localReadUnavailable) {
+            _ = try await lookupFailure.resolveLocalAttachmentBytes(for: linked)
+        }
+        let vaultReadFailure = fixture.makeStore(
+            database: database,
+            vault: vault,
+            resolutionRead: { _ in throw AttachmentLocalByteVaultFailure.storageFailure }
+        )
+        await #expect(throws: AttachmentLocalByteResolutionFailure.localReadUnavailable) {
+            _ = try await vaultReadFailure.resolveLocalAttachmentBytes(for: linked)
+        }
+        let lookupCancellation = fixture.makeStore(
+            database: database,
+            vault: vault,
+            resolutionLookupCheckpoint: { throw CancellationError() }
+        )
+        await #expect(throws: CancellationError.self) {
+            _ = try await lookupCancellation.resolveLocalAttachmentBytes(for: linked)
+        }
+        let vaultCancellation = fixture.makeStore(
+            database: database,
+            vault: vault,
+            resolutionRead: { _ in throw CancellationError() }
+        )
+        await #expect(throws: CancellationError.self) {
+            _ = try await vaultCancellation.resolveLocalAttachmentBytes(for: linked)
+        }
+        #expect(
+            AttachmentLocalByteResolutionFailure.localReadUnavailable.diagnosticCode
+                == "attachment_local_byte_read_unavailable"
+        )
+        #expect(try await Self.queueIdentityAndState(database) == before)
+        #expect(try await store.pendingCount() == Int64(before.count))
+        #expect(try await database.get("SELECT count(*) FROM ps_crud") {
+            try $0.getInt64(index: 0)
+        } == 0)
+        #expect(throws: AttachmentLocalByteVaultFailure.invalidMediaKey) {
+            try fixture.makeVault(keyByte: 0x99)
+        }
+        try await database.close()
+    }
+
+    private static func queueIdentityAndState(
+        _ database: any PowerSyncDatabaseProtocol
+    ) async throws -> [String] {
+        try await database.getAll(
+            "SELECT id, state FROM \(AttachmentCapturePowerSyncTable.queue) ORDER BY persisted_at_ms ASC, id ASC"
+        ) { cursor in
+            "\(try cursor.getString(name: "id")):\(try cursor.getString(name: "state"))"
+        }
+    }
 }
 
 private struct InjectedFailure: Error {}
@@ -744,14 +1030,21 @@ private final class Fixture: @unchecked Sendable {
     func makeStore(
         database: any PowerSyncDatabaseProtocol,
         vault: AttachmentLocalByteVault,
-        storeFault: @Sendable @escaping (AttachmentStoreCheckpoint) throws -> Void = { _ in }
+        storeFault: @Sendable @escaping (AttachmentStoreCheckpoint) throws -> Void = { _ in },
+        resolutionRead:
+            (@Sendable (AttachmentPersistedLocalObjectEvidence) async throws -> Data)? = nil,
+        resolutionDatabaseAccessCheckpoint: @Sendable @escaping () async throws -> Void = {},
+        resolutionLookupCheckpoint: @Sendable @escaping () async throws -> Void = {}
     ) -> AttachmentCapturePowerSyncStore {
         AttachmentCapturePowerSyncStore(
             database: database,
             vault: vault,
             scope: Self.scope,
             now: { Self.persistedDate },
-            fault: storeFault
+            fault: storeFault,
+            resolutionRead: resolutionRead,
+            resolutionDatabaseAccessCheckpoint: resolutionDatabaseAccessCheckpoint,
+            resolutionLookupCheckpoint: resolutionLookupCheckpoint
         )
     }
 
@@ -764,6 +1057,48 @@ private final class Fixture: @unchecked Sendable {
             scope: Self.captureScope,
             capturedAt: Self.capturedAt,
             bytes: bytes
+        )
+    }
+
+    func receipt(
+        id: String,
+        scope: AttachmentCaptureScope = Fixture.captureScope,
+        parentID: String? = nil,
+        bytes: Data = Fixture.bytes
+    ) throws -> AttachmentLocalDurabilityReceipt {
+        let effectiveScope: AttachmentCaptureScope
+        if let parentID {
+            effectiveScope = AttachmentCaptureScope(
+                environment: scope.environment,
+                principalId: scope.principalId,
+                accountId: scope.accountId,
+                parent: LedgerEntityReference(
+                    kind: .item,
+                    id: try EntityID(validating: parentID)
+                )
+            )
+        } else {
+            effectiveScope = scope
+        }
+        let capture = try LocalAttachmentCapture(
+            attachmentId: AttachmentID(validating: id),
+            scope: effectiveScope,
+            capturedAt: Self.capturedAt,
+            bytes: bytes
+        )
+        let evidence = try AttachmentPersistedLocalObjectEvidence(
+            attachmentId: capture.attachmentId,
+            scope: effectiveScope,
+            localObjectId: AttachmentLocalObjectID(
+                validating: String(repeating: "d", count: 64)
+            ),
+            byteCount: capture.byteCount,
+            contentSHA256: capture.contentSHA256,
+            persistedAt: try AttachmentEpochMilliseconds(validating: 2_000)
+        )
+        return try AttachmentLocalDurabilityReceipt(
+            accepting: capture,
+            persistedEvidence: evidence
         )
     }
 
@@ -845,6 +1180,19 @@ private final class Fixture: @unchecked Sendable {
                 kind: .item,
                 id: try! EntityID(validating: "item-attachment-provider")
             )
+        )
+    }
+
+    static func captureScope(
+        environment: LedgerEnvironmentKind = scope.environment,
+        principal: String = scope.principalId.rawValue,
+        account: String = scope.accountId.rawValue
+    ) throws -> AttachmentCaptureScope {
+        AttachmentCaptureScope(
+            environment: environment,
+            principalId: try PrincipalID(validating: principal),
+            accountId: try AccountID(validating: account),
+            parent: captureScope.parent
         )
     }
 }

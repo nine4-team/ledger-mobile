@@ -389,6 +389,7 @@ if (
     "encryptionCipher",
     "pendingUploadCount",
     "pendingWorkSummary",
+    "resolveLocalAttachmentBytes",
     "watchBudgetCategories",
     "watchClient",
     "watchClientArchiveOperation",
@@ -420,6 +421,27 @@ if (
     fail(
       "target_budget_category_watch_signature",
       "The public runtime must expose exactly one zero-argument, Account-bound budget-category watch.",
+    );
+  }
+
+  const attachmentResolutionSignatures = [
+    ...runtimeSource.matchAll(
+      /public\s+func\s+resolveLocalAttachmentBytes\s*\(\s*for\s+receipt:\s*AttachmentLocalDurabilityReceipt\s*\)\s*async\s+throws\s*->\s*Data\s*\{/g,
+    ),
+  ];
+  if (attachmentResolutionSignatures.length !== 1) {
+    fail(
+      "target_attachment_local_byte_resolution_signature",
+      "The public runtime must expose exactly one full-receipt local byte resolver.",
+    );
+  }
+  if (
+    /resolveLocalAttachmentBytes\s*\([^)]*AttachmentID/.test(runtimeSource) ||
+    /resolveLocalAttachmentBytes\s*\([^)]*(?:URL|String)\b/.test(runtimeSource)
+  ) {
+    fail(
+      "target_attachment_local_byte_resolution_shortcut",
+      "Attachment local-byte resolution must not accept an ID, path, URL, or string shortcut.",
     );
   }
 

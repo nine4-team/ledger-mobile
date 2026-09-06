@@ -93,7 +93,7 @@
       "authorityRole": "conversion_control",
       "authorityPath": "docs/plans/ledger-accounting-redesign/conversion/evidence/EVID-ATTACHMENT-DURABILITY-PROVIDER-001.md",
       "section": "Outcome",
-      "invariant": "Normal composition constructs exactly one verified AttachmentLocalByteVault and one AttachmentCapturePowerSyncStore for the scoped attachment database, and only the lifecycle-gated capture port and pending observation may reach callers.",
+      "invariant": "Normal composition constructs exactly one verified AttachmentLocalByteVault and one AttachmentCapturePowerSyncStore for the scoped attachment database, and only lifecycle-gated capture, exact full-receipt byte resolution and pending observation may reach callers.",
       "decisionIds": [],
       "verificationIds": ["WORKRUNTIME-TEST-001", "WORKRUNTIME-TEST-003", "WORKRUNTIME-TEST-005", "WORKRUNTIME-TEST-008"]
     },
@@ -143,7 +143,7 @@
         "Resolve scope and locations, load both keys, validate their exact 32-byte values differ, and create contained directories before storage opens. Both SQLite factories receive the exact same workspace SQLCipher key; the vault alone receives the different media key.",
         "Make normal and injected bootstrap async. Open the structured database, then attachment database, then vault; construct exactly one store and query only after all resources succeed. If any later stage fails, release any vault and attempt attachment-then-structured database close, preserving files/bytes/keys and returning the primary stage plus both bounded cleanup outcomes.",
         "Construct exactly one AttachmentLocalByteVault, one AttachmentCapturePowerSyncStore and one PendingWorkPowerSyncQuery over those real resources. Factory-count tests prove one construction each and raw query/store/vault/database references cannot escape the lifecycle owner.",
-        "Every createClient, createProject, pendingUploadCount, encryptionCipher, attachment capture and pendingWorkSummary call acquires one finite-operation lease before touching a dependency and releases it on every outcome.",
+        "Every createClient, createProject, pendingUploadCount, encryptionCipher, attachment capture, exact full-receipt byte resolution and pendingWorkSummary call acquires one finite-operation lease before touching a dependency and releases it on every outcome.",
         "Every Client/Project list or detail watch acquires a tracked stream lease before its underlying database watch starts and releases only after that task terminates. Close atomically changes open to closing, rejects new leases, cancels all tracked streams, and awaits stream plus finite-operation drainage.",
         "After drainage, close attempts the attachment database first and structured database second even if the first fails, then releases query/store/vault/database ownership. Close stores one terminal success or bounded two-database failure; repeated close returns exactly that outcome and never retries resource access.",
         "Ordinary close never deletes a database, vault byte or key. A new runtime opened for the identical scope is the only recovery path and recovers byte-identical pending summary evidence until the evidence changes."
@@ -249,7 +249,7 @@
       "kind": "app_mcp_contract",
       "owner": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift compile-time surface assertions, Swift compiler public symbol graph, plus scripts/check-target-environment.mjs forbidden-symbol inspection",
       "covers": ["WORKRUNTIME-REQ-004", "WORKRUNTIME-REQ-005", "WORKRUNTIME-REQ-006", "WORKRUNTIME-REQ-009", "WORKRUNTIME-REQ-010"],
-      "expected": "Compile-time consumers can reach only lifecycle-gated existing feature APIs, attachment capture, pendingWorkSummary and ordinary close; deterministic source inspection rejects AccountSessionEnding conformance, raw database/query/store/vault/key/path exposure and synchronization, result-resolution, provider-signout, workspace-switch, deletion, cleanup, retention or backend-selection symbols.",
+      "expected": "Compile-time consumers can reach only lifecycle-gated existing feature APIs, attachment capture, exact full-receipt local-byte resolution, pendingWorkSummary and ordinary close; deterministic source inspection rejects Attachment-ID-only lookup, AccountSessionEnding conformance, raw database/query/store/vault/key/path exposure and synchronization, remote-result resolution, provider-signout, workspace-switch, deletion, cleanup, retention or backend-selection symbols.",
       "status": "passed",
       "evidence": ["EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"]
     },

@@ -15,7 +15,7 @@
   },
   "discovery": {
     "generator": "scripts/supabase-conversion-ledger.mjs",
-    "lastSynchronizedAt": "2026-09-06T06:49:01.613Z",
+    "lastSynchronizedAt": "2026-09-06T07:36:05.024Z",
     "scope": [
       "Swift application and existing Swift tests",
       "Firestore rules and Firebase Functions",
@@ -2099,8 +2099,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
-      "acknowledgedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
+      "observedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
+      "acknowledgedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
       "metadata": {},
       "currentBehavior": "Fails closed unless target layers remain isolated; exact dependencies and adapter boundaries hold; implemented browsing/archive/Space flows preserve lifecycle and drainage guards; the dedicated Project category-configuration revision has only reviewed production mappings and exact unchanged-authority Sync queries; blocked category-provider leaves remain comment-only; and the source Firebase project references no target-only path.",
       "disposition": "redesign",
@@ -2150,7 +2150,8 @@
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001"
+        "EVID-PROJECT-CATEGORY-CONFIGURATION-REVISION-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "Operational guard claimed by target-environment-isolation; status remains target_mapped until the complete environment slice and compiled staging projection are verified.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -6662,8 +6663,8 @@
           "path": "scripts/check-target-environment.mjs"
         }
       ],
-      "observedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
-      "acknowledgedSourceHash": "e2fede2eb0cc8f37de96a5fedfdacb2e25c25864f0885a90f04d9c32a176c497",
+      "observedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
+      "acknowledgedSourceHash": "d0370b458ca0c66f75479bf4679ac19e8be176ef7677ff5d4717c434696f0e4c",
       "metadata": {},
       "currentBehavior": "Provides the target environment guard through tooling discovery: it rejects graph/provider/source contamination and incomplete implemented flows, freezes exact Project revision schema/local mappings and complete normalized Project Sync queries, keeps O-026-blocked category-provider leaves nonexecutable, and rejects target-only paths in the Firebase application project.",
       "disposition": "redesign",
@@ -19138,7 +19139,8 @@
         "EVID-PROJECT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-CLIENT-BROWSING-STAGING-APPLICATION-FLOW-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001"
+        "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "This is an intentionally non-networked local vertical-spike shell, not hosted Supabase/PowerSync provisioning or production migration authority.",
       "classificationBatch": "M0-PLATFORM-CONTROL-001"
@@ -25887,12 +25889,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/LedgerOfflineClientRuntime.swift"
         }
       ],
-      "observedSourceHash": "b512c920b50a35bae857cb4276233259f5b76e343c2b1e48b0913f9b17ad7563",
-      "acknowledgedSourceHash": "b512c920b50a35bae857cb4276233259f5b76e343c2b1e48b0913f9b17ad7563",
+      "observedSourceHash": "a38ee0defb0f7b5c142c7df4a994ff440fd1ceff21b6e6bb4e9370a247bade74",
+      "acknowledgedSourceHash": "a38ee0defb0f7b5c142c7df4a994ff440fd1ceff21b6e6bb4e9370a247bade74",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior plus one typed Account-bound Space destination watch and non-destructive close.",
+      "currentBehavior": "Provides the narrow public facade for one lifecycle-owned encrypted validated-environment/Principal/Account runtime; it rejects cross-scope work and exposes existing Client/Project/archive/category/pending/attachment behavior, exact full-receipt local-byte resolution, one typed Account-bound Space destination watch and non-destructive close.",
       "disposition": "redesign",
       "target": {
         "owner": "Target Provider Runtime",
@@ -25933,9 +25935,10 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
-      "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
+      "notes": "The local staging shell opens no hosted connection. The runtime delegates every operation and stream, including exact full-receipt local-byte resolution, both archive families and the Space destination picker, to the single Account-workspace lifecycle owner; session ending remains separate.",
       "classificationBatch": "M0-CLIENT-POWERSYNC-PROVIDER-001"
     },
     {
@@ -28534,12 +28537,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AccountWorkspacePendingWorkRuntime.swift"
         }
       ],
-      "observedSourceHash": "45411fd962b48bb6fa1c9a346746e0f5e7f10f97efe7241031833df23012accf",
-      "acknowledgedSourceHash": "45411fd962b48bb6fa1c9a346746e0f5e7f10f97efe7241031833df23012accf",
+      "observedSourceHash": "df4d6603052c92d1712df394b785ef6011eb51e38eabe41e70cd83a0decc8646",
+      "acknowledgedSourceHash": "df4d6603052c92d1712df394b785ef6011eb51e38eabe41e70cd83a0decc8646",
       "metadata": {
         "firebaseCoupling": "none_detected"
       },
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project detail and directory watches, is cancelled and joined before database close without implementing session ending.",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -28576,7 +28579,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
         "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
@@ -29660,6 +29664,64 @@
       ],
       "notes": "Preserve the observable presentation/pure-computation outcome; consume typed authorized target values and keep business authority outside the component.",
       "classificationBatch": "M0-APP-SHELL-PRESENTATION-001"
+    },
+    {
+      "id": "SWIFT-82312CAAB02F",
+      "kind": "swift_platform",
+      "name": "LedgeriOS/LedgerTargetCore/AttachmentLocalByteResolution.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCore/AttachmentLocalByteResolution.swift"
+        }
+      ],
+      "observedSourceHash": "a5e224b715bab8859c2e374430f32888e65121eef494769403b738b8b38b6758",
+      "acknowledgedSourceHash": "a5e224b715bab8859c2e374430f32888e65121eef494769403b738b8b38b6758",
+      "metadata": {
+        "firebaseCoupling": "none_detected"
+      },
+      "currentBehavior": "Implements the backend-neutral exact-receipt local attachment-byte resolver contract and bounded non-sensitive failures without an Attachment-ID-only shortcut.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Attachment Exact Local Byte Resolver",
+        "surfaces": [
+          "Backend-neutral full-receipt local byte resolution port and bounded failures"
+        ],
+        "securityRequirements": [
+          "Require the complete immutable receipt and return bytes only after exact queue and ciphertext reverification"
+        ],
+        "syncRequirements": [
+          "Local resolution creates no ps_crud work, Sync Stream, remote fallback or success transition"
+        ]
+      },
+      "migration": {
+        "rule": "Use synthetic bytes and disposable target-local fixtures only.",
+        "reconciliation": [
+          "A requested accepted receipt resolves to its exact bytes or one bounded fail-closed outcome without consuming evidence"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "AttachmentLocalByteResolutionTests",
+          "AttachmentDurabilityProviderTests",
+          "AccountWorkspacePendingWorkRuntimeTests"
+        ],
+        "acceptance": [
+          "Exact identity, restart, corruption, cancellation and runtime-close tests pass without byte/path/key leakage"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-004",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+      ],
+      "notes": "The contract operates only inside an already-open Account runtime. It grants no workspace admission, remote read, rendering, upload, deletion, retention, hosted or production authority.",
+      "classificationBatch": "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
     },
     {
       "id": "SWIFT-82AD18E41C5C",
@@ -40810,12 +40872,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSync/AttachmentCapturePowerSyncStore.swift"
         }
       ],
-      "observedSourceHash": "38906911a9166a80aa28627d038795e6218d9447768fadbcc1a635cacde7b61a",
-      "acknowledgedSourceHash": "38906911a9166a80aa28627d038795e6218d9447768fadbcc1a635cacde7b61a",
+      "observedSourceHash": "4a501aacbef0f2a5f6c28dfd8159fe0d351ae9666e4d21ba6becfdd51860c962",
+      "acknowledgedSourceHash": "4a501aacbef0f2a5f6c28dfd8159fe0d351ae9666e4d21ba6becfdd51860c962",
       "metadata": {
         "firebaseCoupling": "api_reference"
       },
-      "currentBehavior": "Implemented backend-neutral attachment-capture adapter with an encrypted, scope-bound isolated PowerSync database, localOnly queue/binding tables, exact replay protection, non-consuming verified upload candidates and strict path-free pending-work queue-plus-orphan observation.",
+      "currentBehavior": "Implemented backend-neutral attachment-capture adapter with an encrypted, scope-bound isolated PowerSync database, localOnly queue/binding tables, exact replay protection, exact full-receipt protected-byte resolution, non-consuming verified upload candidates and strict path-free pending-work queue-plus-orphan observation.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -40852,7 +40914,8 @@
         "EVID-ATTACHMENT-CAPTURE-001",
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "The concrete store and factory are now module-internal and lifecycle-owned by the Account-workspace runtime. No network uploader, remote completion, reference mutation, discard, eviction, cleanup or session-ending action is authorized; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
@@ -45968,12 +46031,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AccountWorkspacePendingWorkRuntimeTests.swift"
         }
       ],
-      "observedSourceHash": "aa1adfbcf4d42329ea5e2dbe380b303d7a8f064ef87ba15b5e4e106280e1ae00",
-      "acknowledgedSourceHash": "aa1adfbcf4d42329ea5e2dbe380b303d7a8f064ef87ba15b5e4e106280e1ae00",
+      "observedSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
+      "acknowledgedSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachments, pending summary, archive operations, exact Project/Inventory Space destination facade identities, subscription/provider drainage, restart, partial-open faults, deterministic close, and negative API boundaries.",
+      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, archive operations, exact Project/Inventory Space destination facade identities, finite-operation and subscription/provider drainage, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
       "disposition": "redesign",
       "target": {
         "owner": "Account Workspace Pending-Work Runtime",
@@ -46009,7 +46072,8 @@
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+        "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
       "classificationBatch": "M0-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
@@ -47825,12 +47889,12 @@
           "path": "LedgeriOS/LedgerTargetPowerSyncTests/AttachmentDurabilityProviderTests.swift"
         }
       ],
-      "observedSourceHash": "859a45c76914eaa3a468beecf1c6f83cdf1af21ad2f73597077d31a05f12c041",
-      "acknowledgedSourceHash": "859a45c76914eaa3a468beecf1c6f83cdf1af21ad2f73597077d31a05f12c041",
+      "observedSourceHash": "c5888632ec16375283b893ec550cba09e0970935cea77e7bb88ae374bfec2ef0",
+      "acknowledgedSourceHash": "c5888632ec16375283b893ec550cba09e0970935cea77e7bb88ae374bfec2ef0",
       "metadata": {
         "firebaseCoupled": false
       },
-      "currentBehavior": "Implemented deterministic local attachment durability tests for encryption, restart, interruption, wrong-key/corruption, concurrent replay, scope/database binding, SQLCipher leakage, localOnly isolation, path/link defense, non-consuming reads, queue-plus-orphan restart evidence and unavailable inventory/state-write refusal.",
+      "currentBehavior": "Implemented deterministic local attachment durability tests for encryption, restart, interruption, wrong-key/corruption, concurrent replay, scope/database binding, SQLCipher leakage, localOnly isolation, path/link defense, exact non-FIFO full-receipt resolution, non-consuming reads, queue-plus-orphan restart evidence and unavailable inventory/state-write refusal.",
       "disposition": "redesign",
       "target": {
         "owner": "Attachment Local Durability Provider",
@@ -47868,10 +47932,66 @@
         "EVID-TARGET-ENVIRONMENT-001",
         "EVID-ATTACHMENT-DURABILITY-PROVIDER-001",
         "EVID-PENDING-WORK-POWERSYNC-PROVIDER-001",
-        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001"
+        "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "Disposable local tests cannot promote SPIKE-MED-001 or substitute for physical-device and hosted private-Storage rehearsal. Wrong media key now refuses at vault construction while original queued evidence remains recoverable; primary ownership remains here.",
       "classificationBatch": "M0-ATTACHMENT-POWERSYNC-PROVIDER-001"
+    },
+    {
+      "id": "TEST-CF9AB8ADB530",
+      "kind": "existing_test_evidence",
+      "name": "LedgeriOS/LedgerTargetCoreTests/AttachmentLocalByteResolutionTests.swift",
+      "discovery": "automatic",
+      "sourcePresence": "present",
+      "sourceRefs": [
+        {
+          "path": "LedgeriOS/LedgerTargetCoreTests/AttachmentLocalByteResolutionTests.swift"
+        }
+      ],
+      "observedSourceHash": "aa7f4077e94e5ae0ab2d227518d14773902277685a7d7f3d4ace25383854e784",
+      "acknowledgedSourceHash": "aa7f4077e94e5ae0ab2d227518d14773902277685a7d7f3d4ace25383854e784",
+      "metadata": {
+        "firebaseCoupled": false
+      },
+      "currentBehavior": "Implements provider-free exact-receipt attachment-byte resolution contract and stable non-sensitive diagnostic-code tests.",
+      "disposition": "redesign",
+      "target": {
+        "owner": "Attachment Exact Local Byte Resolver",
+        "surfaces": [
+          "Provider-free exact-receipt local byte-resolution contract tests"
+        ],
+        "securityRequirements": [
+          "Prove scope-first refusal and stable non-sensitive diagnostics"
+        ],
+        "syncRequirements": [
+          "Prove resolution is non-consuming and has no remote or synchronization effect"
+        ]
+      },
+      "migration": {
+        "rule": "Use only synthetic identities, receipts and bytes.",
+        "reconciliation": [
+          "Each success and failure maps to one exact contract result without inferring production authority"
+        ]
+      },
+      "verification": {
+        "tests": [
+          "swift test --package-path LedgeriOS --filter AttachmentLocalByteResolution"
+        ],
+        "acceptance": [
+          "The complete backend-neutral contract test matrix passes before provider integration is promoted"
+        ]
+      },
+      "status": "implemented",
+      "blockers": [
+        "A-004",
+        "A-016"
+      ],
+      "evidence": [
+        "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
+      ],
+      "notes": "Tests define the narrow local contract only and cannot prove Account authorization lease, physical-device durability, hosted Storage, upload, rendering or production behavior.",
+      "classificationBatch": "M0-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
     },
     {
       "id": "TEST-D1C8EFBDFDDE",

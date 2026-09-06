@@ -50,7 +50,8 @@ public struct LedgerPowerSyncLocalBootstrapFailure: Error, Equatable, Sendable {
 
 protocol AccountWorkspaceAttachmentStoring:
     AttachmentCaptureStoring,
-    AttachmentPendingWorkObserving
+    AttachmentPendingWorkObserving,
+    AttachmentLocalByteResolving
 {}
 
 extension AttachmentCapturePowerSyncStore: AccountWorkspaceAttachmentStoring {}
@@ -106,6 +107,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case pendingUploadCount
     case encryptionCipher
     case captureAttachment
+    case resolveAttachmentBytes
     case pendingWorkSummary
 }
 
@@ -563,6 +565,25 @@ actor AccountWorkspacePendingWorkRuntime {
     ) async throws -> AttachmentLocalDurabilityReceipt {
         try await withFiniteLease(.captureAttachment) { resources in
             try await resources.attachmentStore.enqueue(capture)
+        }
+    }
+
+    func resolveLocalAttachmentBytes(
+        for receipt: AttachmentLocalDurabilityReceipt
+    ) async throws -> Data {
+        try await withFiniteLease(.resolveAttachmentBytes) { resources in
+            guard receipt.scope.environment == resources.environment,
+                  receipt.scope.principalId == resources.principalId else {
+                throw AttachmentLocalByteResolutionFailure.scopeMismatch
+            }
+            guard receipt.scope.accountId == resources.accountId else {
+                throw AttachmentLocalByteResolutionFailure.scopeMismatch
+            }
+            try Task.checkCancellation()
+            let bytes = try await resources.attachmentStore
+                .resolveLocalAttachmentBytes(for: receipt)
+            try Task.checkCancellation()
+            return bytes
         }
     }
 

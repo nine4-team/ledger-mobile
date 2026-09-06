@@ -710,6 +710,93 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         closeContext.remove()
     }
 
+    @Test("ATTACHRESOLVE-TEST-005 public runtime resolves the requested receipt and close drains its lease")
+    func publicAttachmentResolutionAndCloseDrainage() async throws {
+        let successContext = try RuntimeTestContext(suffix: "attachment-resolve-success")
+        let successRuntime = try await successContext.openRuntime()
+        _ = try await successRuntime.captureAttachment(
+            successContext.capture(id: "attachment-runtime-resolve-a")
+        )
+        let secondCapture = try successContext.capture(
+            id: "attachment-runtime-resolve-b"
+        )
+        let secondReceipt = try await successRuntime.captureAttachment(secondCapture)
+
+        #expect(
+            try await successRuntime.resolveLocalAttachmentBytes(for: secondReceipt)
+                == secondCapture.bytes
+        )
+        try await successRuntime.close()
+        successContext.remove()
+
+        let drainContext = try RuntimeTestContext(suffix: "attachment-resolve-drain")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let gate = ManualGate()
+        var dependencies = drainContext.dependencies(events: events)
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .resolveAttachmentBytes { await gate.wait() }
+        }
+        let runtime = try await drainContext.openRuntime(dependencies: dependencies)
+        let capture = try drainContext.capture(id: "attachment-runtime-resolve-drain")
+        let receipt = try await runtime.captureAttachment(capture)
+        let resolution = Task {
+            try await runtime.resolveLocalAttachmentBytes(for: receipt)
+        }
+        await gate.waitUntilEntered()
+        let close = Task { try await runtime.close() }
+        try await Task.sleep(for: .milliseconds(30))
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.resolveLocalAttachmentBytes(for: receipt)
+        }
+
+        await gate.release()
+        #expect(try await resolution.value == capture.bytes)
+        try await close.value
+        #expect(
+            events.values.filter {
+                $0 == .attachmentDatabaseCloseAttempted
+                    || $0 == .structuredDatabaseCloseAttempted
+            }.suffix(2) == [
+                .attachmentDatabaseCloseAttempted,
+                .structuredDatabaseCloseAttempted
+            ]
+        )
+        drainContext.remove()
+    }
+
+    @Test("ATTACHRESOLVE-TEST-006 cancellation releases the lease and terminal close refuses reads")
+    func cancelledAttachmentResolutionCannotStrandClose() async throws {
+        let context = try RuntimeTestContext(suffix: "attachment-resolve-cancel")
+        let gate = ManualGate()
+        var dependencies = context.dependencies()
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .resolveAttachmentBytes { await gate.wait() }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let receipt = try await runtime.captureAttachment(
+            context.capture(id: "attachment-runtime-resolve-cancel")
+        )
+        let resolution = Task {
+            try await runtime.resolveLocalAttachmentBytes(for: receipt)
+        }
+        await gate.waitUntilEntered()
+        resolution.cancel()
+        let close = Task { try await runtime.close() }
+        await gate.release()
+
+        await #expect(throws: CancellationError.self) {
+            _ = try await resolution.value
+        }
+        try await close.value
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.resolveLocalAttachmentBytes(for: receipt)
+        }
+        context.remove()
+    }
+
     @Test("WORKRUNTIME-TEST-007 close drains active real PowerSync watches")
     func closeDrainsActivePowerSyncWatches() async throws {
         let context = try RuntimeTestContext(suffix: "real-watch-close")

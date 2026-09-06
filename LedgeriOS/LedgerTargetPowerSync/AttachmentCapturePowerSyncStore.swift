@@ -151,13 +151,18 @@ public enum AttachmentCapturePowerSyncStoreFailure: Error, Equatable, Sendable {
 /// item uploaded, detach it, delete it, discard it, clean it up, or evict it.
 actor AttachmentCapturePowerSyncStore:
     AttachmentCaptureStoring,
-    AttachmentPendingWorkObserving
+    AttachmentPendingWorkObserving,
+    AttachmentLocalByteResolving
 {
     private let database: any PowerSyncDatabaseProtocol
     private let vault: AttachmentLocalByteVault
     private let scope: AttachmentDurabilityNamespaceScope
     private let now: @Sendable () -> Date
     private let fault: @Sendable (AttachmentStoreCheckpoint) throws -> Void
+    private let resolutionRead:
+        @Sendable (AttachmentPersistedLocalObjectEvidence) async throws -> Data
+    private let resolutionDatabaseAccessCheckpoint: @Sendable () async throws -> Void
+    private let resolutionLookupCheckpoint: @Sendable () async throws -> Void
     private var inFlight: [String: InFlightCapture] = [:]
 
     init(
@@ -165,13 +170,22 @@ actor AttachmentCapturePowerSyncStore:
         vault: AttachmentLocalByteVault,
         scope: AttachmentDurabilityNamespaceScope,
         now: @Sendable @escaping () -> Date = Date.init,
-        fault: @Sendable @escaping (AttachmentStoreCheckpoint) throws -> Void = { _ in }
+        fault: @Sendable @escaping (AttachmentStoreCheckpoint) throws -> Void = { _ in },
+        resolutionRead:
+            (@Sendable (AttachmentPersistedLocalObjectEvidence) async throws -> Data)? = nil,
+        resolutionDatabaseAccessCheckpoint: @Sendable @escaping () async throws -> Void = {},
+        resolutionLookupCheckpoint: @Sendable @escaping () async throws -> Void = {}
     ) {
         self.database = database
         self.vault = vault
         self.scope = scope
         self.now = now
         self.fault = fault
+        self.resolutionRead = resolutionRead ?? { evidence in
+            try await vault.verifiedBytes(for: evidence)
+        }
+        self.resolutionDatabaseAccessCheckpoint = resolutionDatabaseAccessCheckpoint
+        self.resolutionLookupCheckpoint = resolutionLookupCheckpoint
     }
 
     public func enqueue(
@@ -352,6 +366,86 @@ actor AttachmentCapturePowerSyncStore:
         return nil
     }
 
+    func resolveLocalAttachmentBytes(
+        for receipt: AttachmentLocalDurabilityReceipt
+    ) async throws -> Data {
+        // Namespace refusal precedes every database read so a foreign receipt
+        // cannot be used as a local existence oracle.
+        guard scope.contains(receipt.scope) else {
+            throw AttachmentLocalByteResolutionFailure.scopeMismatch
+        }
+        try Task.checkCancellation()
+
+        do {
+            try await resolutionDatabaseAccessCheckpoint()
+            try await ensureScopeBinding()
+        } catch let failure as AttachmentCapturePowerSyncStoreFailure {
+            if failure == .scopeMismatch {
+                throw AttachmentLocalByteResolutionFailure.scopeMismatch
+            }
+            throw AttachmentLocalByteResolutionFailure.localReadUnavailable
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw AttachmentLocalByteResolutionFailure.localReadUnavailable
+        }
+
+        let row: QueueRow
+        do {
+            try await resolutionLookupCheckpoint()
+            guard let existing = try await existingRow(
+                attachmentIdentifier: receipt.attachmentId.rawValue
+            ) else {
+                throw AttachmentLocalByteResolutionFailure.receiptNotFound
+            }
+            row = existing
+        } catch let failure as AttachmentLocalByteResolutionFailure {
+            throw failure
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw AttachmentLocalByteResolutionFailure.localReadUnavailable
+        }
+
+        guard row.environment == scope.environment.rawValue,
+              row.principalID == scope.principalId.rawValue,
+              row.accountID == scope.accountId.rawValue,
+              let record = row.validatedRecord else {
+            throw AttachmentLocalByteResolutionFailure.malformedLocalEvidence
+        }
+        guard record.receipt == receipt else {
+            throw AttachmentLocalByteResolutionFailure.receiptMismatch
+        }
+
+        let evidence: AttachmentPersistedLocalObjectEvidence
+        do {
+            evidence = try record.persistedEvidence
+        } catch {
+            throw AttachmentLocalByteResolutionFailure.malformedLocalEvidence
+        }
+
+        do {
+            let bytes = try await resolutionRead(evidence)
+            try Task.checkCancellation()
+            return bytes
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as AttachmentLocalByteVaultFailure {
+            switch failure {
+            case .scopeMismatch:
+                throw AttachmentLocalByteResolutionFailure.scopeMismatch
+            case .missingObject:
+                throw AttachmentLocalByteResolutionFailure.missingBytes
+            case .invalidLocalObjectIdentity, .linkSubstitution, .corruptObject:
+                throw AttachmentLocalByteResolutionFailure.corruptBytes
+            default:
+                throw AttachmentLocalByteResolutionFailure.localReadUnavailable
+            }
+        } catch {
+            throw AttachmentLocalByteResolutionFailure.localReadUnavailable
+        }
+    }
+
     public func orphanInventory() async throws -> [AttachmentVaultOrphan] {
         try await ensureScopeBinding()
         let referenced = Set(try await scopedRows().compactMap { row in
@@ -429,7 +523,10 @@ actor AttachmentCapturePowerSyncStore:
                 parameters: [attachmentIdentifier],
                 mapper: QueueRow.init(cursor:)
             )
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
+            try Task.checkCancellation()
             throw AttachmentCapturePowerSyncStoreFailure.queuePersistenceFailed
         }
     }
@@ -565,7 +662,10 @@ actor AttachmentCapturePowerSyncStore:
             }
         } catch let failure as AttachmentCapturePowerSyncStoreFailure {
             throw failure
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
+            try Task.checkCancellation()
             throw AttachmentCapturePowerSyncStoreFailure.queuePersistenceFailed
         }
     }

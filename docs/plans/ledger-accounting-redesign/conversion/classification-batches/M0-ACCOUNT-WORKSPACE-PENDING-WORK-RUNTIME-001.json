@@ -12,8 +12,8 @@
   "surfaces": [
     {
       "id": "SWIFT-75CFE285AF37",
-      "acknowledgeSourceHash": "45411fd962b48bb6fa1c9a346746e0f5e7f10f97efe7241031833df23012accf",
-      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware stream lease; every provider-owned observation, including Client/Project detail and directory watches, is cancelled and joined before database close without implementing session ending.",
+      "acknowledgeSourceHash": "df4d6603052c92d1712df394b785ef6011eb51e38eabe41e70cd83a0decc8646",
+      "currentBehavior": "Executable Account-workspace lifecycle owner composing pending work, encrypted attachments, exact full-receipt local-byte resolution, Client/Project stores and archive flows plus one exact-scope Space destination query behind the existing close-aware leases; every finite operation and provider-owned observation is drained before database close without implementing session ending.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
@@ -21,7 +21,8 @@
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
         "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
     "EVID-CLIENT-ARCHIVE-BROWSER-PROVIDER-001",
-    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+    "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "Local target-only implementation. Wrong media keys fail during authenticated vault construction; partial opens close both databases; ordinary close drains operations, public streams and provider-owned budget-category observations before closing either database, while preserving all local work. Corrected implementation/harness commit f41a5ab78df1ec3cc9581fe8f4dad2083c8920f4 passed all three exact-head jobs in Actions run 33941609019; the later budget-category extension awaits its own exact implementation CI. No hosted, cleanup, signout or session-ending action exists.",
       "target": {
@@ -56,15 +57,16 @@
     },
     {
       "id": "TEST-8D6A15063B2D",
-      "acknowledgeSourceHash": "aa1adfbcf4d42329ea5e2dbe380b303d7a8f064ef87ba15b5e4e106280e1ae00",
-      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachments, pending summary, archive operations, exact Project/Inventory Space destination facade identities, subscription/provider drainage, restart, partial-open faults, deterministic close, and negative API boundaries.",
+      "acknowledgeSourceHash": "c91cb8c6e6b245ebc57ed6e10ffa6526e5173feba3d07a0b0dc50e3b6de0855a",
+      "currentBehavior": "Executable tests exercise real encrypted runtime composition, constructor counts, key separation, attachment capture and exact full-receipt byte resolution, pending summary, archive operations, exact Project/Inventory Space destination facade identities, finite-operation and subscription/provider drainage, restart, partial-open faults, deterministic close, cancellation, and negative API boundaries.",
       "disposition": "redesign",
       "status": "implemented",
       "blockers": [],
       "evidence": [
         "EVID-ACCOUNT-WORKSPACE-PENDING-WORK-RUNTIME-001",
     "EVID-PROJECT-ARCHIVE-BROWSER-PROVIDER-001",
-    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001"
+    "EVID-SPACE-ASSIGNMENT-DESTINATION-PICKER-PROVIDER-001",
+    "EVID-ATTACHMENT-EXACT-LOCAL-BYTE-RESOLVER-001"
       ],
       "notes": "The original twelve focused tests and complete 403-test/73-suite Swift package passed corrected exact-head Actions run 33941609019. Fourteen focused tests, including budget-category bootstrap/watch/drain coverage, pass locally; exact CI for the extension remains pending.",
       "target": {
