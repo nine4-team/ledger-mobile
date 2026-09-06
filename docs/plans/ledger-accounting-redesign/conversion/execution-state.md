@@ -96,8 +96,9 @@ without modifying the running Firebase application before hard cutover.
   incomplete evidence; all four defects were corrected. The existing
   seven-column active-only destination rows/Data API/grant/policy/streams remain
   unchanged. Local pgTAP, Data API regression, database lint, provider/runtime/
-  AppModel/complete Swift suites, target controls and both builds pass. Exact-
-  commit CI and real authenticated PowerSync remain pending. A-003/A-004/A-016
+  AppModel/complete Swift suites, target controls and both builds pass. Exact
+  implementation `a1be2ffd` passed all three jobs in immutable run
+  `34003366795`; real authenticated PowerSync remains pending. A-003/A-004/A-016
   and O-023/O-026/O-037/O-044/O-045/O-046 remain unadvanced; broad Space UI,
   every writer/archive effect, Items, media, templates, accounting, MCP, hosted,
   Firebase, migration, production and cutover remain excluded;

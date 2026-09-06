@@ -38,6 +38,8 @@ Independent database/Sync review found two implementation defects, both correcte
 
 The corrected database/Sync re-review returned GO with no P0–P3 finding. A separate offline/app review then found the missing encrypted startup/restart/invalidation proof and incomplete-progress rendering; after correction, its fresh re-review found no code P0–P3 issue. The root integrator independently inspected the delegated SQL, Sync, schema, tests and AppModel work, implemented the provider/runtime/app integration, expanded the executable tests and reran the complete local gates.
 
+Exact implementation commit `a1be2ffdcfb752d396f8526f5fde785284d5027a` passed all three immutable jobs in Actions run `34003366795`: conversion state and traceability, the isolated target environment with all 563 Swift tests and both builds, and the disposable local Supabase provider suite.
+
 ## Local Verification
 
 - clean seeded local Supabase reset: passed all migrations and seed
@@ -55,6 +57,6 @@ The corrected database/Sync re-review returned GO with no P0–P3 finding. A sep
 
 ## Remaining Gates
 
-Immutable exact-commit CI remains pending until the conversion ledger is synchronized and committed. `SPACECOREPROVIDER-TEST-004` remains planned until a real isolated authenticated PowerSync session proves exact authorized receipt and membership-revocation eviction.
+`SPACECOREPROVIDER-TEST-010` passed at exact implementation commit `a1be2ffdcfb752d396f8526f5fde785284d5027a` in immutable Actions run `34003366795`. `SPACECOREPROVIDER-TEST-004` remains planned until a real isolated authenticated PowerSync session proves exact authorized receipt and membership-revocation eviction.
 
 A-003, A-004 and A-016 therefore remain proposed. This implementation does not authorize hosted Supabase/PowerSync resources, source import, Firebase changes, production access, migration, deployment, release or cutover. Product specs and the decision log remain product authority.

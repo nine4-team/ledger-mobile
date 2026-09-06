@@ -406,8 +406,8 @@
       "owner": "Immutable exact-commit CI",
       "covers": ["SPACECOREPROVIDER-REQ-010"],
       "expected": "Conversion state, isolated target environment and disposable local Supabase jobs pass on the exact implementation commit.",
-      "status": "planned",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"]
     },
     {
       "id": "SPACECOREPROVIDER-TEST-011",
@@ -431,5 +431,5 @@
   "implementationEvidence": ["EVID-SPACE-CORE-DETAILS-PROVIDER-001"],
   "rehearsalEvidence": [],
   "blockers": [],
-  "notes": "Implemented and locally verified from frozen READY 9b62bec1403261a7d966c570af981da461d80f12. Eight claimed leaves now provide the additive relational forced-RLS schema, exact signed active/archived stream, encrypted causal local reconstruction, close-aware runtime, Core-only presentation and isolated staging detail. Independent review found and root closed an unapproved timestamp-order constraint, incomplete privilege assertions, missing encrypted restart/startup/invalidation proof and incomplete-progress rendering. The existing seven-column active-only Space destination Data API/RLS/streams remain unchanged. TEST-004 remains planned for real authenticated PowerSync and TEST-010 remains planned until exact-commit CI passes. A-003/A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 stay unadvanced. Broad Space UI, writers, archive effects, Items, media, review, templates, accounting, MCP, hosted resources, Firebase, migration, production, release and cutover remain excluded."
+  "notes": "Implemented and locally verified from frozen READY 9b62bec1403261a7d966c570af981da461d80f12. Eight claimed leaves now provide the additive relational forced-RLS schema, exact signed active/archived stream, encrypted causal local reconstruction, close-aware runtime, Core-only presentation and isolated staging detail. Independent review found and root closed an unapproved timestamp-order constraint, incomplete privilege assertions, missing encrypted restart/startup/invalidation proof and incomplete-progress rendering. The existing seven-column active-only Space destination Data API/RLS/streams remain unchanged. Exact implementation a1be2ffdcfb752d396f8526f5fde785284d5027a passed all three immutable CI jobs in run 34003366795, satisfying TEST-010. TEST-004 remains planned for real authenticated PowerSync. A-003/A-004/A-016 and O-023/O-026/O-037/O-044/O-045/O-046 stay unadvanced. Broad Space UI, writers, archive effects, Items, media, review, templates, accounting, MCP, hosted resources, Firebase, migration, production, release and cutover remain excluded."
 }

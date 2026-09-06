@@ -49,7 +49,8 @@ restart/startup/invalidation coverage and incomplete-progress rendering. The
 existing seven-column active-only Space destination Data API/RLS/streams remain
 unchanged; provider revisions are honestly bounded to positive signed bigint.
 Local database, provider, runtime, complete Swift, target isolation and both
-build gates pass; exact-commit CI remains pending. Real authenticated PowerSync
+build gates pass; exact implementation `a1be2ffd` passed all three immutable CI
+jobs in run `34003366795`. Real authenticated PowerSync
 authorization/revocation also remains planned, so A-003/A-004/A-016 and O-023/
 O-026/O-037/O-044/O-045/O-046 stay unadvanced. No writer, archive effect, Item,
 media, template, accounting, MCP, hosted, Firebase, migration, production or
