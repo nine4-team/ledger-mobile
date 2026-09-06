@@ -1,7 +1,7 @@
 # Supabase Conversion Execution State
 
 Last updated: 2026-09-06
-State version: 349
+State version: 350
 
 ## Objective
 
@@ -13,10 +13,10 @@ without modifying the running Firebase application before hard cutover.
 
 - Phase: provider-backed target implementation is active after the completed
   backend-surface mapping, architecture, and provider-free foundation work
-- Checkpoint: TARGET-LIFECYCLE-DRAINAGE-CORRECTION
+- Checkpoint: TARGET-LIFECYCLE-AND-ITEM-ASSIGNMENT-VERIFIED-PROMOTION
 - Branch: `codex/supabase-powersync-implementation`
 - Firebase source baseline commit: `fe018501d67cc84b6f140b2645b8a8149ea5c4f6`
-- Current committed conversion base: `b7dba780eeac48d514e7bee7523958629f3d54a2`
+- Current committed conversion base: `261de4709237a960eecd995c2733f5f48f31dcc5`
 - Worktree: dedicated conversion branch/worktree. The current Firebase release
   baseline is committed and shared by `firebase` and `main`; conversion planning,
   architecture, control, and evidence remain isolated on this branch.
@@ -36,10 +36,9 @@ without modifying the running Firebase application before hard cutover.
 
 - Planning/control coverage is **550 of 740 target-relevant surfaces mapped or
   later (74.3%)**. Local surface-implementation coverage is **237 of 740
-  implemented or later (32.0%)**. The four pending-status leaves are now
-  implemented locally after two independent executable reviews; this technical
-  prerequisite adds no provider-backed product workflow, hosted-rehearsal or
-  cutover-ready credit.
+  implemented or later (32.0%)**. The current promotion moves already-
+  implemented surfaces to verified after exact synchronized CI; it adds no new
+  provider-backed product workflow, hosted-rehearsal or cutover-ready credit.
   These are repository-surface measures, not percentages of shipped app
   behavior or elapsed implementation time; the implemented/verified numerator
   includes provider-free contracts and technical controls.
@@ -48,13 +47,17 @@ without modifying the running Firebase application before hard cutover.
   slices are verified provider-free contracts, not shipped workflows. Hosted
   authenticated Supabase/PowerSync rehearsal remains zero, and both rehearsed
   and cutover-ready surface counts remain zero.
-- The previous rough 15–20% end-to-end estimate is retired because repository
-  surfaces do not weight product complexity and repeating it obscured real
-  movement. Progress reports must use the exact four lanes above; a new overall
-  percentage may be introduced only with a checked-in weighted scope model.
+- The current practical end-to-end estimate is **about 15% complete**, with a
+  deliberately broad **12–18%** range. This is an engineering forecast, not a
+  release gate: ten locally working provider-backed workflows among 57 already-
+  enumerated provider-backed or contract-only product slices imply 17.5% before
+  weighting, while the remaining accounting, Inventory, Invoicing, media,
+  hosted Sync/Auth, migration and cutover work is materially harder than the
+  completed average. The exact four lanes above remain authoritative evidence;
+  no repository-surface percentage may be presented as app completion.
 - The implementation tracker currently contains 283 status-bearing rows: 68
-  done, nine verified, 13 implemented, one ready and zero awaiting verification,
-  12 in progress, 28 design, 60 blocked, 90 not started, and two existing rows. Most completed rows are
+  done, 11 verified, 12 implemented, 12 in progress, 28 design, 60 blocked, 90
+  not started, and two existing rows. Most completed rows are
   architecture, conversion controls, or provider-free foundations; they are
   prerequisites, not migrated features.
 - Ten provider-backed product slices have working local behavior: Client
@@ -93,7 +96,7 @@ without modifying the running Firebase application before hard cutover.
   macOS staging build, iOS Simulator staging build and clean-artifact checks.
   This clears the non-passing checkpoint but does not retrospectively assign a
   cause to run `34030874960`.
-- A bounded target lifecycle correction is now implemented locally. Project
+- A bounded target lifecycle correction is now verified. Project
   Setup owns every observer and submission in one shared admitted-task registry,
   concurrent start/start, stop/stop and stop/start calls share drainage, only
   the latest generation activates replacement observers, and a cancelled
@@ -102,9 +105,10 @@ without modifying the running Firebase application before hard cutover.
   join producers and use bounded assertions. Independent review twice returned
   NO-GO and drove correction of concrete races; final re-review is GO with no
   P0-P3 finding. Fourteen focused tests, 44/44 affected tests, 100 exact
-  adversarial repetitions and all 611 target tests pass locally. A fresh exact synchronized CI run is
-  still required, so the Project Setup application-flow slice remains
-  `implemented`. The five provider-free read contracts retain their verified
+  adversarial repetitions and all 611 target tests pass locally. Exact corrected
+  commit `261de4709237a960eecd995c2733f5f48f31dcc5` passed every immutable
+  workflow job in run `34035068558`, so the Project Setup application-flow slice
+  is again `verified`. The five provider-free read contracts retain their verified
   implementation status because only bounded test-fixture drainage changed.
 - The first synchronized lifecycle checkpoint `b7dba780` failed fast in
   Actions run `34034920599` before Swift/Supabase/build execution. The Linux
@@ -112,8 +116,11 @@ without modifying the running Firebase application before hard cutover.
   five unchanged verified Core query owners. The corrected ledger restores
   those query implementations and test-only slices to verified, retains their
   strengthened current test hashes, and leaves only the changed Project Setup
-  application flow at `implemented`. The exact complete Linux conversion-control
-  sequence now passes locally; a corrected immutable run is pending.
+  application flow at `implemented` in that corrective checkpoint. Exact
+  corrected commit `261de4709237a960eecd995c2733f5f48f31dcc5` then passed the
+  complete Linux conversion-control sequence, disposable local Supabase job,
+  all 611 serial target tests, both builds and clean-artifact checks in immutable
+  run `34035068558`.
 
 - Committed the separately owned Budget-category shutdown correction as
   `a54719140a305012e3978eb809908ee77a17587a`. Exact Actions run
@@ -4465,20 +4472,12 @@ without modifying the running Firebase application before hard cutover.
 
 ## Next Action
 
-Synchronize, commit and push the independently reviewed target lifecycle
-correction, then require all immutable workflow jobs on that exact commit. The
-checkpoint must retain honest `implemented` status until conversion controls,
-the disposable-local-Supabase job, complete serial target tests, both staging
-builds and clean artifacts pass. If a shared-process timeout recurs, capture the
-actual stalled test-process stack before changing behavior; this correction is
-quality/lifecycle hardening, not a claimed causal diagnosis of the prior runner
-timeout.
+Synchronize and verify this administrative promotion of the lifecycle,
+Budget-category and Item-assignment provider records, then commit, push and
+require all immutable workflow jobs on the exact promotion commit.
 
-After that exact correction run passes, promote the six affected lifecycle/test
-slices together with the Budget-category reliability correction and
-`item-space-assignment-local-durability-provider`, recording immutable
-commit/run evidence. Then create a comment-only READY package
-for `item-space-clearing-local-durability-provider` from that exact base. Two
+From that exact verified base, create a comment-only READY package for
+`item-space-clearing-local-durability-provider`. Two
 independent selection audits agree on the narrow sibling boundary: reuse the
 verified clearing command/use case byte-for-byte, persist one localOnly
 clearing-command row plus one shared queued operation, add no Item/Space/marker

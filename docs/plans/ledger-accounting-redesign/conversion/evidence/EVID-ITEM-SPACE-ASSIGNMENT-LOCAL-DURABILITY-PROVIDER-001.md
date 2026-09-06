@@ -1,7 +1,7 @@
 # EVID-ITEM-SPACE-ASSIGNMENT-LOCAL-DURABILITY-PROVIDER-001 — Item-to-Space Local Durability Provider
 
-- Status: implemented locally and independently reviewed; exact corrected
-  implementation CI pending after a separately owned provider shutdown fix
+- Status: verified at exact corrected implementation commit
+  `261de4709237a960eecd995c2733f5f48f31dcc5`; immutable CI passed
 - Date: 2026-09-06
 - Base commit: `762f69e11d6218de635fc46253ecae6e448d59b9`
 - Base CI: Actions run `34025105217` passed all three jobs
@@ -205,6 +205,14 @@ P0-P3 finding.
   shared-process/lifecycle failure and requires bounded prefix diagnostics, a
   causal correction, and exact synchronized all-job CI before
   `ITEMSPACELOCAL-TEST-013` advances.
+- The separately reviewed target lifecycle correction then joined leaked test
+  producers and closed Project Setup admitted-task drainage without changing
+  Item-assignment code or scope. Exact corrected commit
+  `261de4709237a960eecd995c2733f5f48f31dcc5` passed all three immutable jobs in
+  Actions run `34035068558`: conversion controls, disposable local Supabase,
+  all 611 serial target tests with normal process exit, both staging builds and
+  clean artifacts. This satisfies `ITEMSPACELOCAL-TEST-013` and verifies the
+  bounded local-durability provider.
 
 ## Explicit Non-Advancement
 

@@ -1,7 +1,7 @@
 # EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001 — Local Budget-Category Reference Provider
 
-- Status: implemented locally after a separately reviewed reliability
-  correction; exact synchronized correction CI pending
+- Status: verified after separately reviewed reliability correction at exact
+  commit `261de4709237a960eecd995c2733f5f48f31dcc5`; immutable CI passed
 - Date: 2026-09-06
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -239,10 +239,12 @@ honored. The first run remains valid evidence of the corrected Budget-category
 cancellation defect, while the second is a distinct unresolved shared-process
 failure rather than proof against that correction.
 
-Because the second terminal test performs synchronous codec work, the next
-verification step is bounded execution of that test after its exact preceding
-suite prefix with process/task/thread diagnostics captured before timeout, plus
-an audit that provider/runtime registries and spawned tasks drain at suite
-return. No CI-harness correction or causal explanation is claimed yet. A causal
-correction, independent review and exact synchronized all-job pass remain
-required for `CATPOWER-TEST-010`.
+The separately reviewed target lifecycle correction then joined leaked test
+producers, made Project Setup own/drain every admitted task, and retained the
+honest rule that no cause was assigned to the prior runner timeout. Exact commit
+`261de4709237a960eecd995c2733f5f48f31dcc5` passed every job in Actions run
+`34035068558`, including the complete 611-test serial target process with normal
+exit, both staging builds, local Supabase verification, conversion controls and
+clean artifacts. This satisfies `CATPOWER-TEST-010` and re-verifies the provider.
+If a shared-process timeout recurs, process/task/thread stack capture remains
+required before another behavioral change.

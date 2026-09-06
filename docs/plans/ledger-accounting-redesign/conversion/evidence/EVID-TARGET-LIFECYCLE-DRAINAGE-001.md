@@ -1,6 +1,7 @@
 # EVID-TARGET-LIFECYCLE-DRAINAGE-001 — Target Lifecycle Drainage Correction
 
-- Status: implemented locally and independently reviewed; exact synchronized CI pending
+- Status: verified at exact synchronized commit
+  `261de4709237a960eecd995c2733f5f48f31dcc5`; immutable CI passed
 - Date: 2026-09-06
 - Environment: isolated Supabase/PowerSync target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
@@ -79,9 +80,12 @@ evidence; only the changed Project Setup application-flow implementation stays
 at `implemented`. The complete local Linux control sequence, including all 20
 query-inventory and 23 query-authority tests, passes after correction.
 
-The Project Setup application-flow slice is deliberately `implemented`, not
-`verified`, and its exact-CI obligation is reopened until the synchronized
-correction commit passes every immutable workflow job. The five provider-free
+Exact corrected commit `261de4709237a960eecd995c2733f5f48f31dcc5`
+passed every job in Actions run `34035068558`: Linux conversion controls,
+disposable local Supabase schema/RLS/RPC verification, all 611 serial target
+tests with normal process exit, macOS and iOS Simulator staging builds, and
+clean-artifact checks. The Project Setup application-flow slice can therefore
+return to `verified`. The five provider-free
 read contracts retain their verified domain implementations because only their
 test producer-drain fixtures changed; the strengthened fixtures pass locally
 and remain tied to this evidence. Hosted Swift stack capture remains the

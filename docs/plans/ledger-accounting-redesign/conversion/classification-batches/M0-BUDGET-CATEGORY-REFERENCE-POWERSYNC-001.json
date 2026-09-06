@@ -14,7 +14,7 @@
       "acknowledgeSourceHash": "9a2627996d0541aa3a965a0c0fb57a4c22943af2979107b51508ef1722af826d",
       "currentBehavior": "Executable module-internal Account/Principal-bound BudgetCategoryReferenceQuerying PowerSync adapter over already-materialized local category rows with independently reactive completeness, membership-gated authority and no local visibility decision.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",
@@ -58,7 +58,7 @@
       "acknowledgeSourceHash": "093db9fb6160df97737d5fa1f527486a8a0c4214f1a19a2e4880394a1889d6be",
       "currentBehavior": "Executable real encrypted local category-provider suite covering deterministic two-source startup ordering, pre-snapshot drainage, same-watch membership-loss clearing, reciprocal literal-field/version/fingerprint, completeness, malformed rows, restart, cancellation and runtime-close drainage.",
       "disposition": "redesign",
-      "status": "implemented",
+      "status": "verified",
       "blockers": [],
       "evidence": [
         "EVID-BUDGET-CATEGORY-REFERENCE-POWERSYNC-PROVIDER-001",

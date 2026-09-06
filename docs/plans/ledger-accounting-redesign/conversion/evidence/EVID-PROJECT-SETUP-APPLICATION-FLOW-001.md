@@ -1,11 +1,13 @@
 # EVID-PROJECT-SETUP-APPLICATION-FLOW-001 — Existing-Client Project Setup Application Flow
 
-- Status: verified at exact implementation commit
+- Status: verified at exact lifecycle-corrected commit
+  `261de4709237a960eecd995c2733f5f48f31dcc5`; Actions run `34035068558`
+  passed all three jobs. Original implementation commit
   `2dc519e64d5cde4e716cbff68f6443fe8f1989b4`; independently reviewed and
   immutable CI passed; exact promotion commit
   `1428f53350e0b4ecdf5f19897e969d8faf643073` passed all three jobs in run
   `33952081491`
-- Date: 2026-09-05
+- Date: 2026-09-06
 - Environment: isolated target worktree and synthetic local fixtures only
 - Production/Firebase impact: none
 - Slice: `project-setup-existing-client-application-flow`
@@ -151,6 +153,19 @@ The executable reviewer found and drove correction of four issues:
    mark that source blocked, retain typed text, and dispatch nothing.
 
 Final corrected-diff review returned GO with no remaining P0-P3 finding.
+
+## Lifecycle correction
+
+The application model now owns Client/category observers and admitted Project
+submissions in one shared registry until completion. Concurrent start/start,
+stop/stop and stop/start calls share predecessor drainage; only the latest
+generation activates observers; caller cancellation is rechecked after a
+noncooperative dependency returns; and staging awaits drainage before runtime
+close. Two independent NO-GO passes drove correction of concrete races and test
+cleanup gaps; final re-review returned GO with no P0-P3 finding. Fourteen
+focused tests, 100 exact adversarial lifecycle repetitions, 44/44 affected
+tests and all 611 target tests pass locally. Exact commit `261de470` passed
+Actions run `34035068558`, satisfying the reopened operational obligation.
 
 ## Explicit Exclusions
 
